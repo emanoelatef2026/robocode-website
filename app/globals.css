@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+  --brand-cyan: #19C6F4;
+  --brand-orange: #F97316;
+  --brand-navy: #0B132B;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Offset fixed navbar (≈88px) when jumping to anchor sections */
+section[id] {
+  scroll-margin-top: 5.5rem;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-poppins), sans-serif;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-orbitron), sans-serif;
+}
