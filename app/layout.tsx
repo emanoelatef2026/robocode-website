@@ -17,10 +17,6 @@ export const metadata: Metadata = {
   title: "Robocode School | Future Tech Academy for Kids",
   description:
     "Robocode School teaches kids AI, robotics, game development, and programming. Book a free trial session today.",
-  icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
-  },
 };
 
 export default function RootLayout({

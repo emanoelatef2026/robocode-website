@@ -5,6 +5,7 @@ import Hero from "../components/Hero";
 import Reveal from "../components/Reveal";
 import TrustSection from "../components/TrustSection";
 import WhySection from "../components/WhySection";
+import ProgramsSection from "../components/ProgramsSection";
 import CompetitionsSection from "../components/CompetitionsSection";
 import Footer from "../components/Footer";
 
@@ -26,10 +27,11 @@ export default function Home() {
         <Hero />
         <TrustSection />
         <WhySection />
+        <ProgramsSection />
 
         {/* LEARNING JOURNEY */}
         <Reveal>
-          <section id="programs" className="relative z-10 mx-auto max-w-7xl px-6 pb-32">
+          <section id="learning-journey" className="relative z-10 mx-auto max-w-7xl px-6 pb-32">
 
             <div className="text-center">
               <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#19C6F4]">
