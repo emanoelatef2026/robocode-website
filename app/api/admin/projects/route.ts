@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from("student_projects")
       .select("*")
       .order("sort_order", { ascending: true })
@@ -49,20 +49,20 @@ export async function POST(request: NextRequest) {
       const buffer = Buffer.from(bytes);
       const path   = `${Date.now()}-${imageFile.name.replace(/\s+/g, "-")}`;
 
-      const { error: uploadError } = await supabaseAdmin.storage
+      const { error: uploadError } = await getSupabaseAdmin().storage
         .from("projects")
         .upload(path, buffer, { contentType: imageFile.type, upsert: false });
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabaseAdmin.storage
+      const { data: urlData } = getSupabaseAdmin().storage
         .from("projects")
         .getPublicUrl(path);
 
       image_url = urlData.publicUrl;
     }
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from("student_projects")
       .insert({ title, description, technologies, image_url, video_url, difficulty, age_group, featured })
       .select()

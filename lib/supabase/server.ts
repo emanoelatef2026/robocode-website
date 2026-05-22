@@ -1,9 +1,16 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-// Server-only admin client — uses the service_role key, bypasses RLS.
-// ONLY import this inside app/api/ routes or server components.
-// NEVER import in "use client" files.
-export const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Module-level variable — undefined at build time, populated on first runtime call.
+// Using a lazy singleton so warm Vercel function instances reuse the same client.
+let _client: SupabaseClient | undefined;
+
+export function getSupabaseAdmin(): SupabaseClient {
+  if (!_client) {
+    _client = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false } }
+    );
+  }
+  return _client;
+}

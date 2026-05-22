@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { supabaseAdmin } from "@/lib/supabase/server";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 interface BookingBody {
   name:   string;
@@ -17,6 +15,7 @@ interface BookingBody {
 
 export async function POST(request: Request) {
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const body: BookingBody = await request.json();
 
     // Server-side validation
@@ -26,7 +25,7 @@ export async function POST(request: Request) {
     if (!body.time?.trim())  return validation("Preferred time is required.");
 
     // 1. Save to Supabase
-    const { error: dbError } = await supabaseAdmin
+    const { error: dbError } = await getSupabaseAdmin()
       .from("trial_bookings")
       .insert({
         student_name:   body.name.trim(),

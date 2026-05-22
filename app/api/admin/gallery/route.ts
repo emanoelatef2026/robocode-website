@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from("gallery")
       .select("*")
       .order("created_at", { ascending: false });
@@ -33,17 +33,17 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
     const path   = `${Date.now()}-${imageFile.name.replace(/\s+/g, "-")}`;
 
-    const { error: uploadError } = await supabaseAdmin.storage
+    const { error: uploadError } = await getSupabaseAdmin().storage
       .from("gallery")
       .upload(path, buffer, { contentType: imageFile.type, upsert: false });
 
     if (uploadError) throw uploadError;
 
-    const { data: urlData } = supabaseAdmin.storage
+    const { data: urlData } = getSupabaseAdmin().storage
       .from("gallery")
       .getPublicUrl(path);
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await getSupabaseAdmin()
       .from("gallery")
       .insert({ title, image_url: urlData.publicUrl, alt_text, category })
       .select()

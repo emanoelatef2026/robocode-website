@@ -1,13 +1,13 @@
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 import StatCard    from "@/components/admin/StatCard";
 import StatusBadge from "@/components/admin/StatusBadge";
 import Link        from "next/link";
 
 async function getStats() {
   const [bookingsRes, projectsRes, galleryRes] = await Promise.all([
-    supabaseAdmin.from("trial_bookings").select("id, status, created_at, student_name, preferred_day").order("created_at", { ascending: false }),
-    supabaseAdmin.from("student_projects").select("id", { count: "exact", head: true }),
-    supabaseAdmin.from("gallery").select("id", { count: "exact", head: true }),
+    getSupabaseAdmin().from("trial_bookings").select("id, status, created_at, student_name, preferred_day").order("created_at", { ascending: false }),
+    getSupabaseAdmin().from("student_projects").select("id", { count: "exact", head: true }),
+    getSupabaseAdmin().from("gallery").select("id", { count: "exact", head: true }),
   ]);
 
   const bookings = bookingsRes.data ?? [];

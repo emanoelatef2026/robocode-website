@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 export async function DELETE(
   _request: NextRequest,
@@ -8,7 +8,7 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const { error } = await supabaseAdmin
+    const { error } = await getSupabaseAdmin()
       .from("gallery")
       .delete()
       .eq("id", id);
