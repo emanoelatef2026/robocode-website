@@ -4,25 +4,25 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  try {
-    const { password } = await request.json();
+    try {
+          const { password } = await request.json();
 
-    if (!password || password !== process.env.ADMIN_PASSWORD) {
-      return NextResponse.json({ error: "Invalid password" }, { status: 401 });
+      if (!password || password !== process.env.ADMIN_PASSWORD) {
+              return NextResponse.json({ error: "Invalid password" }, { status: 401 });
+      }
+
+      const response = NextResponse.json({ success: true });
+
+      response.cookies.set("admin_session", process.env.ADMIN_PASSWORD!, {
+              httpOnly: true,
+              secure: process.env.NODE_ENV === "production",
+              sameSite: "lax",
+              maxAge: 60 * 60 * 24 * 7, // 7 days
+              path: "/",
+      });
+
+      return response;
+    } catch {
+          return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
-
-    const response = NextResponse.json({ success: true });
-
-    response.cookies.set("admin_session", process.env.ADMIN_PASSWORD!, {h
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: "/",
-    });
-
-    return response;
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-  }
 }
