@@ -6,15 +6,22 @@
   --brand-cyan: #19C6F4;
   --brand-orange: #F97316;
   --brand-navy: #0B132B;
+
+  /* Single source of truth for the navbar offset.
+     Update this value if the navbar height ever changes.
+     JS side uses the same constant (NAVBAR_OFFSET = 72). */
+  --navbar-offset: 72px;
 }
 
 html {
   scroll-behavior: smooth;
+  /* Native browser anchor navigation respects this */
+  scroll-padding-top: var(--navbar-offset);
 }
 
-/* Offset fixed navbar (≈88px) when jumping to anchor sections */
-section[id] {
-  scroll-margin-top: 5.5rem;
+/* Covers all anchor targets: section, div, footer, etc. */
+[id] {
+  scroll-margin-top: var(--navbar-offset);
 }
 
 body {
