@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function LoginPage() {
-  const router   = useRouter();
   const [pw, setPw]       = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,8 +22,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (res.ok) {
-      router.push("/admin");
-      router.refresh();
+        window.location.href = '/admin';
     } else {
       const data = await res.json().catch(() => ({}));
       setError(data.error ?? "Invalid password");
