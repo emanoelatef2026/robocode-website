@@ -62,10 +62,11 @@ const EMPTY: FormData = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function TrialForm() {
-  const [form,       setForm]       = useState<FormData>(EMPTY);
-  const [loading,    setLoading]    = useState(false);
-  const [submitted,  setSubmitted]  = useState(false);
-  const [showErrors, setShowErrors] = useState(false);
+  const [form,        setForm]        = useState<FormData>(EMPTY);
+  const [loading,     setLoading]     = useState(false);
+  const [submitted,   setSubmitted]   = useState(false);
+  const [showErrors,  setShowErrors]  = useState(false);
+  const [serverError, setServerError] = useState("");
 
   const set = (key: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -82,11 +83,30 @@ export default function TrialForm() {
       setShowErrors(true);
       return;
     }
+
     setLoading(true);
-    // TODO: replace with real API call — full form data is in `form`
-    await new Promise((res) => setTimeout(res, 1500));
-    setLoading(false);
-    setSubmitted(true);
+    setServerError("");
+
+    try {
+      const res  = await fetch("/api/book-session", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify(form),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setServerError(data.error ?? "Something went wrong. Please try again.");
+        return;
+      }
+
+      setSubmitted(true);
+    } catch {
+      setServerError("Network error. Please check your connection and try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -132,7 +152,7 @@ export default function TrialForm() {
               </p>
 
               <button
-                onClick={() => { setSubmitted(false); setForm(EMPTY); setShowErrors(false); }}
+                onClick={() => { setSubmitted(false); setForm(EMPTY); setShowErrors(false); setServerError(""); }}
                 className="mt-10 rounded-full border border-[#0B132B]/20 px-7 py-2.5 text-sm font-medium text-[#0B132B]/60 transition duration-200 hover:border-[#0B132B]/40 hover:text-[#0B132B]"
               >
                 Book Another Session
@@ -290,6 +310,24 @@ export default function TrialForm() {
                   className={`${inputCls} resize-none`}
                 />
               </div>
+
+              {/* Server error */}
+              {serverError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="flex items-start gap-3 rounded-2xl border border-rose-200/70 bg-rose-50/70 px-5 py-4 backdrop-blur-sm"
+                >
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-100">
+                    <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-rose-500">
+                      <path d="M8 5v4M8 11h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                      <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+                    </svg>
+                  </div>
+                  <p className="text-sm leading-relaxed text-rose-600">{serverError}</p>
+                </motion.div>
+              )}
 
               {/* Submit */}
               <motion.button
