@@ -35,9 +35,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F4F7FB] px-4">
       <div className="w-full max-w-sm">
-        {/* Card */}
         <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
-          {/* Logo */}
           <div className="mb-8 flex justify-center">
             <Image src="/logo.png" alt="Robocode" width={140} height={60} className="h-auto w-28" />
           </div>

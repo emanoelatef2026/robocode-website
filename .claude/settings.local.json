@@ -8,7 +8,9 @@
       "Bash(npm install *)",
       "Bash(git add *)",
       "Bash(git push *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(xargs grep -l \"route.group\\\\|routeGroup\")",
+      "Bash(Remove-Item -Recurse -Force \"c:/Users/Emanoel/OneDrive/Desktop/robocode-new/app/admin/\\(auth\\)\")"
     ]
   }
 }
