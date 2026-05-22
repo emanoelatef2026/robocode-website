@@ -1,26 +1,54 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import StatCard    from "@/components/admin/StatCard";
 import StatusBadge from "@/components/admin/StatusBadge";
 import Link        from "next/link";
 
-async function getStats() {
-  const [bookingsRes, projectsRes, galleryRes] = await Promise.all([
-    getSupabaseAdmin().from("trial_bookings").select("id, status, created_at, student_name, preferred_day").order("created_at", { ascending: false }),
-    getSupabaseAdmin().from("student_projects").select("id", { count: "exact", head: true }),
-    getSupabaseAdmin().from("gallery").select("id", { count: "exact", head: true }),
-  ]);
+type RecentBooking = {
+  id: string;
+  student_name: string;
+  preferred_day: string | null;
+  status: string;
+  created_at: string;
+};
 
-  const bookings = bookingsRes.data ?? [];
-  return {
-    totalBookings:     bookings.length,
-    newBookings:       bookings.filter((b) => b.status === "new").length,
-    confirmedBookings: bookings.filter((b) => b.status === "confirmed").length,
-    projectsCount:     projectsRes.count ?? 0,
-    galleryCount:      galleryRes.count ?? 0,
-    recentBookings:    bookings.slice(0, 8),
-  };
+const EMPTY_STATS = {
+  totalBookings:     0,
+  newBookings:       0,
+  confirmedBookings: 0,
+  projectsCount:     0,
+  galleryCount:      0,
+  recentBookings:    [] as RecentBooking[],
+};
+
+async function getStats() {
+  try {
+    const db = getSupabaseAdmin();
+
+    const [bookingsRes, projectsRes, galleryRes] = await Promise.all([
+      db.from("trial_bookings")
+        .select("id, status, created_at, student_name, preferred_day")
+        .order("created_at", { ascending: false }),
+      db.from("student_projects")
+        .select("id", { count: "exact", head: true }),
+      db.from("gallery")
+        .select("id", { count: "exact", head: true }),
+    ]);
+
+    const bookings = bookingsRes.data ?? [];
+    return {
+      totalBookings:     bookings.length,
+      newBookings:       bookings.filter((b) => b.status === "new").length,
+      confirmedBookings: bookings.filter((b) => b.status === "confirmed").length,
+      projectsCount:     projectsRes.count  ?? 0,
+      galleryCount:      galleryRes.count   ?? 0,
+      recentBookings:    bookings.slice(0, 8) as RecentBooking[],
+    };
+  } catch (err) {
+    console.error("[dashboard] getStats failed:", err);
+    return EMPTY_STATS;
+  }
 }
 
 export default async function DashboardPage() {
@@ -92,13 +120,7 @@ export default async function DashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {stats.recentBookings.map((b: {
-                id: string;
-                student_name: string;
-                preferred_day: string | null;
-                status: string;
-                created_at: string;
-              }) => (
+              {stats.recentBookings.map((b) => (
                 <tr key={b.id} className="hover:bg-gray-50/50">
                   <td className="px-6 py-3.5 font-medium text-[#0B132B]">{b.student_name}</td>
                   <td className="px-6 py-3.5 text-gray-500">{b.preferred_day ?? "—"}</td>
@@ -106,7 +128,9 @@ export default async function DashboardPage() {
                     <StatusBadge status={b.status as "new" | "contacted" | "confirmed" | "cancelled"} />
                   </td>
                   <td className="px-6 py-3.5 text-gray-400">
-                    {new Date(b.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                    {new Date(b.created_at).toLocaleDateString("en-GB", {
+                      day: "numeric", month: "short",
+                    })}
                   </td>
                 </tr>
               ))}
