@@ -290,7 +290,7 @@ function ProgramCard({ program, index }: { program: ProgramData; index: number }
       </div>
 
       {/* Mini project examples */}
-      <div className="mt-auto border-t border-[#0B132B]/[0.05] pt-4">
+      <div className="mt-auto border-t border-[#0B132B]/5 pt-4">
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
           Projects
         </p>
@@ -318,7 +318,7 @@ export default function ProgramsSection() {
   return (
     <section
       id="programs"
-      className="relative z-10 mx-auto max-w-7xl px-6 pb-32"
+      className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-32"
     >
       {/* Section header */}
       <motion.div
@@ -341,7 +341,7 @@ export default function ProgramsSection() {
       </motion.div>
 
       {/* Cards grid — 1 col mobile / 2 col tablet / 4 col desktop */}
-      <div className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-10 grid gap-4 sm:grid-cols-2 md:mt-16 md:gap-5 lg:grid-cols-4">
         {PROGRAMS.map((program, i) => (
           <ProgramCard key={program.id} program={program} index={i} />
         ))}

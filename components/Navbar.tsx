@@ -57,7 +57,7 @@ export default function Navbar() {
             alt="Robocode Logo"
             width={180}
             height={80}
-            className="h-auto w-30"
+            className="h-auto w-24 md:w-28 lg:w-30"
             priority
           />
         </Link>
@@ -93,7 +93,7 @@ export default function Navbar() {
         <button
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle navigation menu"
-          className="flex flex-col justify-center gap-1.25 p-2 md:hidden"
+          className="flex flex-col justify-center gap-1.25 p-3 md:hidden"
         >
           <motion.span
             animate={menuOpen ? { rotate: 45, y: 5.5 } : { rotate: 0, y: 0 }}
@@ -124,7 +124,7 @@ export default function Navbar() {
             transition={{ duration: 0.26, ease: "easeInOut" }}
             className="overflow-hidden border-t border-black/6 bg-white/95 backdrop-blur-xl md:hidden"
           >
-            <div className="flex flex-col gap-0.5 px-6 py-4">
+            <div className="flex flex-col gap-1 px-4 py-5">
               {NAV_LINKS.map(({ label, href }) => (
                 <Link
                   key={label}
@@ -133,7 +133,7 @@ export default function Navbar() {
                     handleSectionClick(e, href);
                     setMenuOpen(false);
                   }}
-                  className="rounded-xl px-3 py-3 text-[13.5px] font-semibold text-[#0B132B]/60 transition-colors duration-150 hover:bg-[#19C6F4]/6 hover:text-[#0B132B]"
+                  className="rounded-xl px-4 py-3.5 text-[14px] font-semibold text-[#0B132B]/60 transition-colors duration-150 hover:bg-[#19C6F4]/6 hover:text-[#0B132B]"
                 >
                   {label}
                 </Link>
@@ -142,9 +142,9 @@ export default function Navbar() {
               <Link
                 href="/book-session"
                 onClick={() => setMenuOpen(false)}
-                className="mt-3 block w-full rounded-full bg-[#19C6F4] py-3 text-center text-sm font-semibold text-white shadow-[0_0_18px_rgba(25,198,244,0.3)] transition duration-200 hover:shadow-[0_0_24px_rgba(25,198,244,0.5)]"
+                className="mt-4 block w-full rounded-full bg-[#19C6F4] py-4 text-center text-sm font-semibold text-white shadow-[0_0_18px_rgba(25,198,244,0.3)] transition duration-200 hover:shadow-[0_0_24px_rgba(25,198,244,0.5)]"
               >
-                Book Trial
+                Book Free Trial
               </Link>
             </div>
           </motion.div>

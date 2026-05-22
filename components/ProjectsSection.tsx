@@ -193,7 +193,7 @@ const PARTICLES = [
 
 function ImageArea({ project, featured }: { project: Project; featured: boolean }) {
   const isCyan = project.accent === "cyan";
-  const height = featured ? "h-72" : "h-56";
+  const height = featured ? "h-52 lg:h-72" : "h-44 md:h-56";
 
   return (
     <div className={`relative ${height} overflow-hidden`}>
@@ -261,7 +261,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.55, delay: (index % 3) * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className={`group relative overflow-hidden rounded-3xl bg-white shadow-xl transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl ${colSpan}`}
+      className={`group relative overflow-hidden rounded-2xl bg-white shadow-xl transition-all duration-500 hover:-translate-y-1 md:rounded-3xl md:hover:-translate-y-2 ${colSpan}`}
     >
       {/* Animated border bar (bottom) */}
       <div
@@ -273,7 +273,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       <ImageArea project={project} featured={project.featured} />
 
       {/* Content */}
-      <div className="p-8">
+      <div className="p-6 md:p-8">
         <p
           className="text-xs font-bold uppercase tracking-[0.2em]"
           style={{ color: accentColor }}
@@ -307,7 +307,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
 
 export default function ProjectsSection() {
   return (
-    <section id="projects" className="relative z-10 mx-auto max-w-7xl px-6 pb-32">
+    <section id="projects" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-32">
 
       {/* Decorative background glow */}
       <div className="pointer-events-none absolute left-1/4 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
@@ -340,7 +340,7 @@ export default function ProjectsSection() {
       </motion.div>
 
       {/* Asymmetric grid */}
-      <div className="relative mt-20 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <div className="relative mt-12 grid grid-cols-1 gap-5 md:mt-20 md:grid-cols-2 md:gap-8 lg:grid-cols-3">
 
         {/* Row 1: featured (col-2) + normal (col-1) */}
         <ProjectCard project={PROJECTS[0]} index={0} />

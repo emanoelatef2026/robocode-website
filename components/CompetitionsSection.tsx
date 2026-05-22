@@ -53,7 +53,7 @@ export default function CompetitionsSection() {
     <Reveal>
       <section
         id="competitions"
-        className="relative z-10 mx-auto max-w-7xl px-6 pb-32"
+        className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-32"
       >
         {/* Section header */}
         <div className="text-center">
@@ -70,7 +70,7 @@ export default function CompetitionsSection() {
         </div>
 
         {/* Cards */}
-        <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-4 md:mt-16 md:gap-6 md:grid-cols-2 lg:grid-cols-3">
           {COMPETITIONS.map(({ tag, title, description, gradient }, i) => (
             <motion.div
               key={title}
@@ -83,7 +83,7 @@ export default function CompetitionsSection() {
                 ease: [0.22, 1, 0.36, 1],
               }}
               whileHover={{ y: -6, transition: { duration: 0.22, ease: "easeOut" } }}
-              className="group relative overflow-hidden rounded-3xl border border-white/60 bg-white/70 p-8 shadow-lg backdrop-blur-xl"
+              className="group relative overflow-hidden rounded-2xl border border-white/60 bg-white/70 p-6 shadow-lg backdrop-blur-xl md:rounded-3xl md:p-8"
             >
               {/* Accent bar — expands on hover */}
               <div

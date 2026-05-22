@@ -33,7 +33,7 @@ const labelCls =
   "mb-3 block text-[13px] font-semibold text-[#0B132B]/80";
 
 const chipBase =
-  "rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none";
+  "inline-flex min-h-[44px] items-center rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none";
 
 const chipActive =
   "bg-[#19C6F4] text-white shadow-[0_0_14px_rgba(25,198,244,0.4)]";

@@ -45,7 +45,7 @@ const SOCIALS = [
 export default function Footer() {
   return (
     <footer id="branches" className="relative z-10 bg-[#0B132B] text-white">
-      <div className="mx-auto max-w-7xl px-6 pb-8 pt-20">
+      <div className="mx-auto max-w-7xl px-6 pb-8 pt-14 md:pt-20">
 
         {/* Top grid */}
         <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
@@ -75,7 +75,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className={[
-                    "flex h-9 w-9 items-center justify-center rounded-full border border-white/12 text-[10px] font-semibold text-white/40 transition duration-200",
+                    "flex h-10 w-10 items-center justify-center rounded-full border border-white/12 text-[10px] font-semibold text-white/40 transition duration-200",
                     accent === "orange"
                       ? "hover:border-[#F97316] hover:text-[#F97316]"
                       : "hover:border-[#19C6F4] hover:text-[#19C6F4]",
@@ -128,9 +128,9 @@ export default function Footer() {
         </div>
 
         {/* CTA banner */}
-        <div className="mt-16 flex flex-col items-center justify-between gap-6 rounded-3xl border border-white/10 bg-white/4 px-10 py-10 md:flex-row">
-          <div className="border-l-2 border-[#F97316]/40 pl-5">
-            <h3 className="text-xl font-bold md:text-2xl">
+        <div className="mt-12 flex flex-col items-center justify-between gap-6 rounded-2xl border border-white/10 bg-white/4 px-6 py-8 md:mt-16 md:flex-row md:rounded-3xl md:px-10 md:py-10">
+          <div className="border-l-2 border-[#F97316]/40 pl-5 text-center md:text-left">
+            <h3 className="text-lg font-bold md:text-2xl">
               Ready to start your child&apos;s tech journey?
             </h3>
             <p className="mt-2 text-sm text-white/55">
