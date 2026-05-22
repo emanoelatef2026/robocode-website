@@ -13,7 +13,7 @@ export function middleware(request: NextRequest) {
   }
 
   const session = request.cookies.get("admin_session")?.value;
-  const secret  = process.env.ADMIN_SECRET;
+  const secret  = process.env.ADMIN_PASSWORD;
 
   if (!session || !secret || session !== secret) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
