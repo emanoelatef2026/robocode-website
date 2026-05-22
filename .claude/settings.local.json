@@ -11,7 +11,13 @@
       "Bash(npx tsc *)",
       "Bash(xargs grep -l \"route.group\\\\|routeGroup\")",
       "Bash(Remove-Item -Recurse -Force \"c:/Users/Emanoel/OneDrive/Desktop/robocode-new/app/admin/\\(auth\\)\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(xargs grep -l \"proxy\\\\|middleware\")",
+      "Bash(Start-Sleep -Seconds 8)",
+      "Bash(Invoke-RestMethod -Uri \"http://localhost:3001/api/book-session\" -Method POST -ContentType \"application/json\" -Body '{\"name\":\"Test Student\",\"age\":\"10\",\"school\":\"Test School\",\"phone\":\"01012345678\",\"phone2\":\"\",\"day\":\"Saturday\",\"time\":\"10:00 AM\",\"notes\":\"Local test\"}')",
+      "Bash(ConvertTo-Json)",
+      "PowerShell(cd \"c:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\"; Start-Process -FilePath \"npm\" -ArgumentList \"run\",\"dev\",\"--\",\"--port\",\"3001\" -NoNewWindow -RedirectStandardOutput \"$env:TEMP\\\\next-dev.log\" -RedirectStandardError \"$env:TEMP\\\\next-dev-err.log\"; Start-Sleep -Seconds 12; try { $r = Invoke-RestMethod -Uri \"http://localhost:3001/api/book-session\" -Method POST -ContentType \"application/json\" -Body '{\"name\":\"Test Student\",\"age\":\"10\",\"school\":\"Test School\",\"phone\":\"01012345678\",\"phone2\":\"\",\"day\":\"Saturday\",\"time\":\"10:00 AM\",\"notes\":\"Local test\"}'; $r | ConvertTo-Json } catch { $_.Exception.Response.StatusCode.value__; \\($_ | ConvertFrom-Json -ErrorAction SilentlyContinue\\) })",
+      "Bash(curl -s -X POST http://localhost:3000/api/book-session -H 'Content-Type: application/json' -d '{\"name\":\"Test Student\",\"age\":\"10\",\"school\":\"Test School\",\"phone\":\"01012345678\",\"phone2\":\"\",\"day\":\"Saturday\",\"time\":\"10:00 AM\",\"notes\":\"Local test\"}')"
     ]
   }
 }

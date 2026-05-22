@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow the login page and its API — no auth needed
   if (
     pathname === "/admin/login" ||
     pathname === "/api/admin/login"
@@ -13,7 +12,7 @@ export function middleware(request: NextRequest) {
   }
 
   const session = request.cookies.get("admin_session")?.value;
-  const secret  = process.env.ADMIN_PASSWORD;
+  const secret  = process.env.ADMIN_SECRET;
 
   if (!session || !secret || session !== secret) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
@@ -23,6 +22,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Protect all /admin and /api/admin routes
   matcher: ["/admin/:path*", "/api/admin/:path*"],
 };
