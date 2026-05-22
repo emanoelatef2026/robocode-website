@@ -7,6 +7,7 @@ import TrustSection from "../components/TrustSection";
 import WhySection from "../components/WhySection";
 import ProgramsSection from "../components/ProgramsSection";
 import CompetitionsSection from "../components/CompetitionsSection";
+import ProjectsSection from "../components/ProjectsSection";
 import Footer from "../components/Footer";
 
 export default function Home() {
@@ -27,7 +28,7 @@ export default function Home() {
         <Hero />
         <TrustSection />
         <WhySection />
-        <ProgramsSection />
+ظ        <ProgramsSection />
 
         {/* LEARNING JOURNEY */}
         <Reveal>
@@ -129,67 +130,7 @@ export default function Home() {
 
         {/* STUDENT PROJECTS */}
         <Reveal>
-          <section id="projects" className="relative z-10 mx-auto max-w-7xl px-6 pb-32">
-
-            <div className="text-center">
-              <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#19C6F4]">
-                Student Projects
-              </p>
-              <h2 className="mt-4 text-4xl font-bold md:text-6xl">
-                Students Build Real Technology
-              </h2>
-              <p className="mx-auto mt-6 max-w-3xl text-lg text-slate-700">
-                From AI tools and robotics to games and websites,
-                students create real projects that showcase their skills.
-              </p>
-            </div>
-
-            <div className="mt-20 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-
-              <div className="overflow-hidden rounded-3xl bg-white shadow-xl transition duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                <div className="h-56 bg-linear-to-br from-cyan-400 to-blue-500" />
-                <div className="p-8">
-                  <p className="text-sm font-semibold uppercase tracking-widest text-[#19C6F4]">
-                    Roblox Game
-                  </p>
-                  <h3 className="mt-3 text-2xl font-bold">Obby Adventure</h3>
-                  <p className="mt-4 text-slate-700">
-                    Designed and programmed by students using Roblox Studio
-                    and Lua scripting.
-                  </p>
-                </div>
-              </div>
-
-              <div className="overflow-hidden rounded-3xl bg-white shadow-xl transition duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                <div className="h-56 bg-linear-to-br from-purple-400 to-indigo-500" />
-                <div className="p-8">
-                  <p className="text-sm font-semibold uppercase tracking-widest text-[#19C6F4]">
-                    AI Project
-                  </p>
-                  <h3 className="mt-3 text-2xl font-bold">Smart AI Assistant</h3>
-                  <p className="mt-4 text-slate-700">
-                    Students built AI-powered assistants using automation
-                    and prompt engineering.
-                  </p>
-                </div>
-              </div>
-
-              <div className="overflow-hidden rounded-3xl bg-white shadow-xl transition duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                <div className="h-56 bg-linear-to-br from-[#F97316] to-orange-300" />
-                <div className="p-8">
-                  <p className="text-sm font-semibold uppercase tracking-widest text-[#F97316]">
-                    Robotics
-                  </p>
-                  <h3 className="mt-3 text-2xl font-bold">Smart Robot System</h3>
-                  <p className="mt-4 text-slate-700">
-                    Students programmed sensors, motors, and automation
-                    systems using Arduino.
-                  </p>
-                </div>
-              </div>
-
-            </div>
-          </section>
+          <ProjectsSection />
         </Reveal>
 
         {/* COMPETITIONS */}
