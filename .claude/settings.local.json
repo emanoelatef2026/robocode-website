@@ -3,7 +3,12 @@
     "allow": [
       "Bash(Copy-Item \"C:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\\\\public\\\\logo.png\" \"C:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\\\\app\\\\icon.png\" -Force)",
       "Bash(Remove-Item \"C:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\\\\app\\\\favicon.ico\" -Force)",
-      "Bash(Write-Host \"Done\")"
+      "Bash(Write-Host \"Done\")",
+      "Bash(npm list *)",
+      "Bash(npm install *)",
+      "Bash(git add *)",
+      "Bash(git push *)",
+      "Bash(npx tsc *)"
     ]
   }
 }
