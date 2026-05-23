@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import SectionTitle from "./ui/SectionTitle";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -114,24 +115,24 @@ const ACCENT: Record<AccentColor, {
   glow:        string;
 }> = {
   cyan: {
-    iconBg:    "bg-[#19C6F4]/10",
-    iconColor: "text-[#19C6F4]",
-    chipBg:    "bg-[#19C6F4]/8",
-    chipText:  "text-[#19C6F4]/80",
-    dot:       "bg-[#19C6F4]",
-    bar:       "from-[#19C6F4] to-blue-400",
-    wash:      "from-[#19C6F4]",
-    glow:      "group-hover:shadow-[0_20px_48px_rgba(25,198,244,0.13)]",
+    iconBg:    "bg-[#0B1F3A]/8",
+    iconColor: "text-[#0B1F3A]",
+    chipBg:    "bg-[#0B1F3A]/8",
+    chipText:  "text-[#0B1F3A]",
+    dot:       "bg-[#0B1F3A]",
+    bar:       "from-[#0B1F3A] to-[#163560]",
+    wash:      "from-[#0B1F3A]",
+    glow:      "group-hover:shadow-[0_20px_48px_rgba(11,31,58,0.10)]",
   },
   orange: {
-    iconBg:    "bg-[#F97316]/10",
-    iconColor: "text-[#F97316]",
-    chipBg:    "bg-[#F97316]/8",
-    chipText:  "text-[#F97316]/80",
-    dot:       "bg-[#F97316]",
-    bar:       "from-[#F97316] to-orange-400",
-    wash:      "from-[#F97316]",
-    glow:      "group-hover:shadow-[0_20px_48px_rgba(249,115,22,0.13)]",
+    iconBg:    "bg-[#FF8A1F]/10",
+    iconColor: "text-[#FF8A1F]",
+    chipBg:    "bg-[#FF8A1F]/10",
+    chipText:  "text-[#FF8A1F]",
+    dot:       "bg-[#FF8A1F]",
+    bar:       "from-[#FF8A1F] to-[#FFB15A]",
+    wash:      "from-[#FF8A1F]",
+    glow:      "group-hover:shadow-[0_20px_48px_rgba(255,138,31,0.14)]",
   },
 };
 
@@ -250,7 +251,7 @@ function ProgramCard({ program, index }: { program: ProgramData; index: number }
         ease: [0.22, 1, 0.36, 1],
       }}
       whileHover={{ y: -6, transition: { duration: 0.22, ease: "easeOut" } }}
-      className={`group relative flex flex-col overflow-hidden rounded-3xl border border-white/60 bg-white/70 p-7 shadow-lg backdrop-blur-xl transition-shadow duration-300 ${a.glow}`}
+      className={`group relative flex flex-col overflow-hidden rounded-3xl border border-[#E2E8F0] bg-white p-7 shadow-[0_2px_16px_rgba(11,31,58,0.05)] transition-shadow duration-300 ${a.glow}`}
     >
       {/* Expanding accent bar */}
       <div
@@ -264,7 +265,7 @@ function ProgramCard({ program, index }: { program: ProgramData; index: number }
 
       {/* Title + age badge */}
       <div className="mb-3 flex items-start justify-between gap-2">
-        <h3 className="text-[15px] font-bold leading-snug text-[#0B132B]">
+        <h3 className="text-[15px] font-bold leading-snug text-[#0F172A]">
           {program.title}
         </h3>
         <span className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${a.iconBg} ${a.iconColor}`}>
@@ -273,7 +274,7 @@ function ProgramCard({ program, index }: { program: ProgramData; index: number }
       </div>
 
       {/* Description */}
-      <p className="mb-5 text-[13px] leading-relaxed text-slate-600">
+      <p className="mb-5 text-[13px] leading-relaxed text-[#334155]">
         {program.description}
       </p>
 
@@ -290,13 +291,13 @@ function ProgramCard({ program, index }: { program: ProgramData; index: number }
       </div>
 
       {/* Mini project examples */}
-      <div className="mt-auto border-t border-[#0B132B]/5 pt-4">
-        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+      <div className="mt-auto border-t border-[#E2E8F0] pt-4">
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#94A3B8]">
           Projects
         </p>
         <ul className="space-y-1.5">
           {program.projects.map((proj) => (
-            <li key={proj} className="flex items-center gap-2 text-[12px] text-slate-600">
+            <li key={proj} className="flex items-center gap-2 text-[12px] text-[#334155]">
               <span className={`h-1 w-1 shrink-0 rounded-full ${a.dot}`} />
               {proj}
             </li>
@@ -321,24 +322,11 @@ export default function ProgramsSection() {
       className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-32"
     >
       {/* Section header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.4 }}
-        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-        className="text-center"
-      >
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#19C6F4]">
-          Programs
-        </p>
-        <h2 className="mt-4 text-4xl font-bold tracking-tight text-[#0B132B] md:text-6xl">
-          Future-Ready Learning Paths
-        </h2>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-700">
-          Build real-world skills through AI, robotics, programming, game
-          development, and innovation-focused projects.
-        </p>
-      </motion.div>
+      <SectionTitle
+        eyebrow="Programs"
+        heading={<>Future-Ready <span className="text-[#FF8A1F]">Learning Paths</span></>}
+        body="Build real-world skills through AI, robotics, programming, game development, and innovation-focused projects."
+      />
 
       {/* Cards grid — 1 col mobile / 2 col tablet / 4 col desktop */}
       <div className="mt-10 grid gap-4 sm:grid-cols-2 md:mt-16 md:gap-5 lg:grid-cols-4">

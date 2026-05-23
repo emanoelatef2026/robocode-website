@@ -37,13 +37,13 @@ export default async function Home() {
 
   return (
     <>
-      <main className="relative min-h-screen overflow-hidden bg-[#F4F7FB] text-[#0B132B]">
+      <main className="relative min-h-screen overflow-hidden bg-[#F8FAFC] text-[#0F172A]">
 
-        {/* Background glow — cyan primary */}
-        <div className="pointer-events-none absolute left-1/2 -top-20 h-72 w-72 -translate-x-1/2 rounded-full bg-cyan-400/25 blur-3xl md:-top-50 md:h-125 md:w-125" />
+        {/* Background glow — orange primary, very subtle */}
+        <div className="pointer-events-none absolute left-1/2 -top-20 h-72 w-72 -translate-x-1/2 rounded-full bg-[#FF8A1F]/8 blur-3xl md:-top-50 md:h-125 md:w-125" />
 
-        {/* Decorative orange bloom — bottom right, very subtle */}
-        <div className="pointer-events-none absolute -bottom-32 right-0 h-96 w-96 rounded-full bg-[#F97316]/8 blur-[100px]" />
+        {/* Decorative navy bloom — bottom right */}
+        <div className="pointer-events-none absolute -bottom-32 right-0 h-96 w-96 rounded-full bg-[#0B1F3A]/5 blur-[100px]" />
 
         {/* Subtle grid */}
         <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)] bg-size-[60px_60px]" />

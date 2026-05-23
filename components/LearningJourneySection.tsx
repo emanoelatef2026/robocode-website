@@ -1,34 +1,35 @@
 "use client";
 
 import { motion } from "framer-motion";
+import SectionTitle from "./ui/SectionTitle";
 
 const STAGES = [
   {
     age:   "Ages 6–8",
     title: "Explorer",
     desc:  "Logic building, Scratch programming, LEGO robotics, creativity, and problem solving.",
-    color: "#19C6F4",
+    color: "#0B1F3A",
     side:  "left" as const,
   },
   {
     age:   "Ages 9–11",
     title: "Creator",
     desc:  "Game development, Roblox, Minecraft, animation, robotics, and digital creativity.",
-    color: "#F97316",
+    color: "#FF8A1F",
     side:  "right" as const,
   },
   {
     age:   "Ages 12–14",
     title: "Developer",
     desc:  "Python, web development, Arduino, AI foundations, and real-world coding projects.",
-    color: "#19C6F4",
+    color: "#0B1F3A",
     side:  "left" as const,
   },
   {
     age:   "Ages 15–17",
     title: "Innovator",
     desc:  "AI automation, startups, advanced programming, real applications, and innovation projects.",
-    color: "#F97316",
+    color: "#FF8A1F",
     side:  "right" as const,
   },
 ];
@@ -37,23 +38,17 @@ export default function LearningJourneySection() {
   return (
     <section id="learning-journey" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-32">
 
-      <div className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#19C6F4]">
-          Learning Journey
-        </p>
-        <h2 className="mt-4 text-3xl font-bold md:text-4xl lg:text-6xl">
-          A Complete Future Tech Roadmap
-        </h2>
-        <p className="mx-auto mt-5 max-w-3xl text-base text-slate-700 md:mt-6 md:text-lg">
-          Students progress through a structured learning journey based on age, skills, creativity, and innovation.
-        </p>
-      </div>
+      <SectionTitle
+        eyebrow="Learning Journey"
+        heading={<>A Complete <span className="text-[#FF8A1F]">Future Tech</span> Roadmap</>}
+        body="Students progress through a structured learning journey based on age, skills, creativity, and innovation."
+      />
 
       {/* Timeline */}
       <div className="relative mt-14 md:mt-24">
 
         {/* Center line */}
-        <div className="absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 rounded-full bg-cyan-200/70 md:block" />
+        <div className="absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 rounded-full bg-[#E2E8F0] md:block" />
 
         <div className="space-y-8 md:space-y-16">
           {STAGES.map((stage, i) => (
@@ -68,14 +63,14 @@ export default function LearningJourneySection() {
               {stage.side === "left" ? (
                 <>
                   <div
-                    className="rounded-2xl bg-white/70 p-6 shadow-xl backdrop-blur-xl md:rounded-3xl md:p-10"
+                    className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-[0_2px_16px_rgba(11,31,58,0.05)] md:rounded-3xl md:p-10"
                     style={{ borderLeft: `2px solid ${stage.color}20` }}
                   >
                     <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: stage.color }}>
                       {stage.age}
                     </p>
                     <h3 className="mt-3 text-2xl font-bold md:mt-4 md:text-3xl">{stage.title}</h3>
-                    <p className="mt-3 text-base text-slate-700 md:mt-4 md:text-lg">{stage.desc}</p>
+                    <p className="mt-3 text-base text-[#334155] md:mt-4 md:text-lg">{stage.desc}</p>
                   </div>
                   <div className="hidden md:flex justify-center">
                     <div
@@ -93,14 +88,14 @@ export default function LearningJourneySection() {
                     />
                   </div>
                   <div
-                    className="rounded-2xl bg-white/70 p-6 shadow-xl backdrop-blur-xl md:rounded-3xl md:p-10"
+                    className="rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-[0_2px_16px_rgba(11,31,58,0.05)] md:rounded-3xl md:p-10"
                     style={{ borderLeft: `2px solid ${stage.color}20` }}
                   >
                     <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: stage.color }}>
                       {stage.age}
                     </p>
                     <h3 className="mt-3 text-2xl font-bold md:mt-4 md:text-3xl">{stage.title}</h3>
-                    <p className="mt-3 text-base text-slate-700 md:mt-4 md:text-lg">{stage.desc}</p>
+                    <p className="mt-3 text-base text-[#334155] md:mt-4 md:text-lg">{stage.desc}</p>
                   </div>
                 </>
               )}

@@ -59,7 +59,7 @@ function StudentCard({
       onClick={onClick}
       whileHover={{ y: -6 }}
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative w-[200px] shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-white shadow-lg sm:w-[220px] md:w-[240px]"
+      className="group relative w-50 shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-white shadow-lg sm:w-55 md:w-60"
     >
       {/* Image — portrait aspect ratio */}
       <div className="relative w-full overflow-hidden bg-gray-100" style={{ aspectRatio: "3/4" }}>
@@ -72,14 +72,14 @@ function StudentCard({
         />
 
         {/* Bottom gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0B132B]/85 via-[#0B132B]/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-[#0B132B]/85 via-[#0B132B]/20 to-transparent" />
 
         {/* Play overlay */}
         <PlayOverlay />
 
         {/* Country flag + info */}
         <div className="absolute bottom-0 left-0 right-0 p-4 text-left">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#19C6F4]">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#FF8A1F]">
             {student.country}
           </p>
           <p className="mt-1 font-bold leading-tight text-white" style={{ fontFamily: "var(--font-orbitron), sans-serif" }}>
@@ -89,7 +89,7 @@ function StudentCard({
         </div>
 
         {/* Top-right play badge */}
-        <div className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/20 backdrop-blur-sm transition-all duration-300 group-hover:bg-[#19C6F4] group-hover:border-[#19C6F4]">
+        <div className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/20 backdrop-blur-sm transition-all duration-300 group-hover:bg-[#FF8A1F] group-hover:border-[#FF8A1F]">
           <svg viewBox="0 0 24 24" fill="white" className="h-3.5 w-3.5 translate-x-0.5">
             <path d="M8 5v14l11-7z" />
           </svg>
@@ -167,7 +167,7 @@ function VideoModal({
             />
           </div>
         ) : (
-          <div className="flex aspect-[9/16] items-center justify-center text-sm text-white/40">
+          <div className="flex aspect-9/16 items-center justify-center text-sm text-white/40">
             Invalid video URL
           </div>
         )}
@@ -262,8 +262,8 @@ export default function FeaturedStudentsSection() {
     <section id="featured-students" className="relative z-10 overflow-hidden py-16 md:py-28">
 
       {/* Background decoration */}
-      <div className="pointer-events-none absolute left-1/3 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[#19C6F4]/8 blur-3xl" />
-      <div className="pointer-events-none absolute right-0 bottom-0 h-80 w-80 rounded-full bg-[#F97316]/6 blur-3xl" />
+      <div className="pointer-events-none absolute left-1/3 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[#FF8A1F]/6 blur-3xl" />
+      <div className="pointer-events-none absolute right-0 bottom-0 h-80 w-80 rounded-full bg-[#0B1F3A]/4 blur-3xl" />
 
       {/* Header */}
       <motion.div
@@ -273,25 +273,22 @@ export default function FeaturedStudentsSection() {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="mx-auto mb-10 max-w-7xl px-6 text-center md:mb-14"
       >
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#19C6F4]">
+        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#FF8A1F]">
           Tech Leaders
         </p>
-        <h2 className="mt-4 text-3xl font-bold text-[#0B132B] md:text-5xl lg:text-6xl">
-          Featured{" "}
-          <span className="bg-linear-to-r from-[#19C6F4] to-[#F97316] bg-clip-text text-transparent">
-            Students
-          </span>
+        <h2 className="mt-4 text-3xl font-bold text-[#0F172A] md:text-5xl lg:text-6xl">
+          Featured <span className="text-[#FF8A1F]">Students</span>
         </h2>
-        <p className="mx-auto mt-5 max-w-2xl text-base text-slate-600 md:text-lg">
+        <p className="mx-auto mt-5 max-w-2xl text-base text-[#334155] md:text-lg">
           Meet the builders, innovators, and creators shaping the future — straight from our classrooms.
         </p>
-        <div className="mx-auto mt-6 h-px w-20 bg-linear-to-r from-[#19C6F4] to-[#F97316]" />
+        <div className="mx-auto mt-6 h-0.75 w-14 rounded-full bg-[#FF8A1F]" />
       </motion.div>
 
       {/* Marquee */}
       {loading ? (
         <div className="flex h-48 items-center justify-center">
-          <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#19C6F4] border-t-transparent" />
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
         </div>
       ) : (
         <MarqueeTrack students={students} onSelect={setActive} />

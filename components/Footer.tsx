@@ -67,19 +67,14 @@ export default function Footer() {
             </p>
 
             <div className="mt-8 flex gap-3">
-              {SOCIALS.map(({ label, short, href, accent }) => (
+              {SOCIALS.map(({ label, short, href }) => (
                 <a
                   key={label}
                   href={href}
                   aria-label={label}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={[
-                    "flex h-10 w-10 items-center justify-center rounded-full border border-white/12 text-[10px] font-semibold text-white/40 transition duration-200",
-                    accent === "orange"
-                      ? "hover:border-[#F97316] hover:text-[#F97316]"
-                      : "hover:border-[#19C6F4] hover:text-[#19C6F4]",
-                  ].join(" ")}
+                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/12 text-[10px] font-semibold text-white/40 transition duration-200 hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
                 >
                   {short}
                 </a>
@@ -139,7 +134,7 @@ export default function Footer() {
           </div>
           <Link
             href="/book-session"
-            className="shrink-0 rounded-full bg-[#19C6F4] px-8 py-3 text-sm font-semibold text-white shadow-[0_0_22px_rgba(25,198,244,0.35)] transition duration-200 hover:brightness-110 hover:shadow-[0_0_32px_rgba(25,198,244,0.55)]"
+            className="shrink-0 rounded-full bg-[#FF8A1F] px-8 py-3 text-sm font-semibold text-white shadow-[0_4px_24px_rgba(255,138,31,0.4)] transition duration-200 hover:brightness-110 hover:shadow-[0_8px_32px_rgba(255,138,31,0.5)]"
           >
             Book Free Trial
           </Link>
