@@ -25,7 +25,19 @@
       "Bash(curl -s -X POST http://localhost:3000/api/admin/login -H \"Content-Type: application/json\" -d '{\"password\":\"robocode2026\"}')",
       "Bash(curl -s http://localhost:3000/api/admin/bookings -o /dev/null -w \"%{http_code}\")",
       "Bash(curl -s -m 8 -o /dev/null -w \"%{http_code} %{time_total}s\" \"https://fkqwafedruparlqjjprq.supabase.co/rest/v1/\")",
-      "Bash(xargs cat)"
+      "Bash(xargs cat)",
+      "PowerShell($body = '{\"password\":\"robocode2026\"}'; $res = Invoke-WebRequest -Uri \"http://localhost:3000/api/admin/login\" -Method POST -Body $body -ContentType \"application/json\" -UseBasicParsing; Write-Output \"STATUS: $\\($res.StatusCode\\)\"; Write-Output \"HEADERS:\"; $res.Headers | Format-List; Write-Output \"BODY: $\\($res.Content\\)\")",
+      "PowerShell(curl.exe -s -o NUL -w \"%{http_code}\" -H \"Cookie: admin_session=robocode2026\" -L \"http://localhost:3002/admin\" 2>&1)",
+      "PowerShell(curl.exe -s -o NUL -w \"%{http_code}\" --max-redirs 0 -H \"Cookie: admin_session=robocode2026\" \"http://localhost:3002/admin\" 2>&1)",
+      "Bash(Get-Process node *)",
+      "Bash(Stop-Process -Force)",
+      "Bash(Start-Sleep -Seconds 2)",
+      "Bash(Write-Output \"All node processes killed\")",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
+      "PowerShell(Stop-Process -Force)",
+      "PowerShell(Test-NetConnection -ComputerName localhost -Port 3000 -InformationLevel Quiet 2>$null)",
+      "PowerShell(Set-Location \"C:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\"; Start-Process powershell -ArgumentList \"-NoProfile -Command `\"npm run dev`\"\" -WindowStyle Minimized; Start-Sleep -Seconds 10; Test-NetConnection -ComputerName localhost -Port 3000 -InformationLevel Quiet 2>$null)",
+      "PowerShell($body = '{\"name\":\"Test Student\",\"age\":\"12\",\"school\":\"Test School\",\"phone\":\"01234567890\",\"phone2\":\"\",\"day\":\"Monday\",\"time\":\"Morning\",\"notes\":\"Test booking\"}'; $response = Invoke-WebRequest -Uri \"http://localhost:3000/api/book-session\" -Method POST -ContentType \"application/json\" -Body $body -UseBasicParsing; Write-Output \"Status: $\\($response.StatusCode\\)\"; Write-Output \"Body: $\\($response.Content\\)\")"
     ]
   }
 }

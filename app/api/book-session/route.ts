@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { getSupabasePublic } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 export const runtime  = "nodejs";
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     if (!body.time?.trim())  return validation("Preferred time is required.");
 
     // 1. Save to Supabase
-    const { error: dbError } = await getSupabasePublic()
+    const { error: dbError } = await getSupabaseAdmin()
       .from("trial_bookings")
       .insert({
         student_name:   body.name.trim(),
