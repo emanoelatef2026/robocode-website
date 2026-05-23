@@ -17,7 +17,14 @@
       "Bash(Invoke-RestMethod -Uri \"http://localhost:3001/api/book-session\" -Method POST -ContentType \"application/json\" -Body '{\"name\":\"Test Student\",\"age\":\"10\",\"school\":\"Test School\",\"phone\":\"01012345678\",\"phone2\":\"\",\"day\":\"Saturday\",\"time\":\"10:00 AM\",\"notes\":\"Local test\"}')",
       "Bash(ConvertTo-Json)",
       "PowerShell(cd \"c:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\"; Start-Process -FilePath \"npm\" -ArgumentList \"run\",\"dev\",\"--\",\"--port\",\"3001\" -NoNewWindow -RedirectStandardOutput \"$env:TEMP\\\\next-dev.log\" -RedirectStandardError \"$env:TEMP\\\\next-dev-err.log\"; Start-Sleep -Seconds 12; try { $r = Invoke-RestMethod -Uri \"http://localhost:3001/api/book-session\" -Method POST -ContentType \"application/json\" -Body '{\"name\":\"Test Student\",\"age\":\"10\",\"school\":\"Test School\",\"phone\":\"01012345678\",\"phone2\":\"\",\"day\":\"Saturday\",\"time\":\"10:00 AM\",\"notes\":\"Local test\"}'; $r | ConvertTo-Json } catch { $_.Exception.Response.StatusCode.value__; \\($_ | ConvertFrom-Json -ErrorAction SilentlyContinue\\) })",
-      "Bash(curl -s -X POST http://localhost:3000/api/book-session -H 'Content-Type: application/json' -d '{\"name\":\"Test Student\",\"age\":\"10\",\"school\":\"Test School\",\"phone\":\"01012345678\",\"phone2\":\"\",\"day\":\"Saturday\",\"time\":\"10:00 AM\",\"notes\":\"Local test\"}')"
+      "Bash(curl -s -X POST http://localhost:3000/api/book-session -H 'Content-Type: application/json' -d '{\"name\":\"Test Student\",\"age\":\"10\",\"school\":\"Test School\",\"phone\":\"01012345678\",\"phone2\":\"\",\"day\":\"Saturday\",\"time\":\"10:00 AM\",\"notes\":\"Local test\"}')",
+      "Bash(find . -name \"middleware*\" ! -path \"*/node_modules/*\" ! -path \"*/.next/*\")",
+      "Bash(find . -name \"proxy*\" ! -path \"*/node_modules/*\" ! -path \"*/.next/*\")",
+      "Bash(find . -path \"*/admin/\\\\\\(auth\\\\\\)*\" ! -path \"*/node_modules/*\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/book-session -H \"Content-Type: application/json\" -d '{\"name\":\"Test\",\"age\":\"10\",\"school\":\"\",\"phone\":\"01012345678\",\"phone2\":\"\",\"day\":\"Saturday\",\"time\":\"10:00 AM\",\"notes\":\"\"}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/admin/login -H \"Content-Type: application/json\" -d '{\"password\":\"robocode2026\"}')",
+      "Bash(curl -s http://localhost:3000/api/admin/bookings -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s -m 8 -o /dev/null -w \"%{http_code} %{time_total}s\" \"https://fkqwafedruparlqjjprq.supabase.co/rest/v1/\")"
     ]
   }
 }
