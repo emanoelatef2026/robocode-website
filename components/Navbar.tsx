@@ -14,7 +14,6 @@ const NAV_LINKS = [
   { label: "Branches",     href: "/#branches"    },
 ];
 
-// Must match --navbar-offset in globals.css
 const NAVBAR_OFFSET = 72;
 
 export default function Navbar() {
@@ -28,15 +27,12 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  // Close mobile menu on resize to desktop
   useEffect(() => {
     const handler = () => { if (window.innerWidth >= 768) setMenuOpen(false); };
     window.addEventListener("resize", handler, { passive: true });
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // On "/": smooth-scroll with proper navbar offset.
-  // On any other page: fall through → Next.js navigates to /#section.
   const handleSectionClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
     href: string
@@ -57,11 +53,11 @@ export default function Navbar() {
       className={[
         "fixed inset-x-0 top-0 z-50 transition-[background,box-shadow,border-color] duration-300",
         scrolled
-          ? "border-b border-black/[0.06] bg-white/85 shadow-[0_1px_0_rgba(0,0,0,0.05)] backdrop-blur-xl"
+          ? "border-b border-[#E2E8F0] bg-white/95 shadow-[0_1px_12px_rgba(11,31,58,0.06)] backdrop-blur-xl"
           : "border-b border-transparent bg-transparent",
       ].join(" ")}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-2.5">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
 
         {/* Logo */}
         <Link href="/" aria-label="Robocode home" className="shrink-0">
@@ -76,16 +72,16 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-5 md:flex">
+        <nav className="hidden items-center gap-6 md:flex">
           {NAV_LINKS.map(({ label, href }) => (
             <Link
               key={label}
               href={href}
               onClick={(e) => handleSectionClick(e, href)}
-              className="group relative text-[13px] font-semibold text-[#0B132B]/50 transition-colors duration-200 hover:text-[#0B132B]"
+              className="group relative text-[13px] font-semibold text-[#64748B] transition-colors duration-200 hover:text-[#0B1F3A]"
             >
               {label}
-              <span className="absolute -bottom-0.5 left-0 h-[1.5px] w-0 rounded-full bg-[#19C6F4] transition-all duration-300 group-hover:w-full" />
+              <span className="absolute -bottom-0.5 left-0 h-[2px] w-0 rounded-full bg-[#FF8A1F] transition-all duration-300 group-hover:w-full" />
             </Link>
           ))}
         </nav>
@@ -96,7 +92,7 @@ export default function Navbar() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="inline-flex items-center rounded-full bg-[#19C6F4] px-5 py-2 text-[13px] font-semibold text-white shadow-[0_0_16px_rgba(25,198,244,0.32)] transition-shadow duration-300 hover:shadow-[0_0_26px_rgba(25,198,244,0.52)]"
+            className="inline-flex items-center rounded-full bg-[#FF8A1F] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_2px_16px_rgba(255,138,31,0.35)] transition-shadow duration-300 hover:shadow-[0_4px_24px_rgba(255,138,31,0.5)]"
           >
             Book Trial
           </motion.span>
@@ -112,17 +108,17 @@ export default function Navbar() {
           <motion.span
             animate={menuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
             transition={{ duration: 0.22 }}
-            className="block h-[1.5px] w-5 origin-center rounded-full bg-[#0B132B]"
+            className="block h-[2px] w-5 origin-center rounded-full bg-[#0B1F3A]"
           />
           <motion.span
             animate={menuOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
             transition={{ duration: 0.18 }}
-            className="block h-[1.5px] w-5 rounded-full bg-[#0B132B]"
+            className="block h-[2px] w-5 rounded-full bg-[#0B1F3A]"
           />
           <motion.span
             animate={menuOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
             transition={{ duration: 0.22 }}
-            className="block h-[1.5px] w-5 origin-center rounded-full bg-[#0B132B]"
+            className="block h-[2px] w-5 origin-center rounded-full bg-[#0B1F3A]"
           />
         </button>
       </div>
@@ -136,7 +132,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.24, ease: "easeInOut" }}
-            className="overflow-hidden border-t border-black/[0.05] bg-white/96 backdrop-blur-xl md:hidden"
+            className="overflow-hidden border-t border-[#E2E8F0] bg-white/98 backdrop-blur-xl md:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-4">
               {NAV_LINKS.map(({ label, href }) => (
@@ -147,7 +143,7 @@ export default function Navbar() {
                     handleSectionClick(e, href);
                     setMenuOpen(false);
                   }}
-                  className="rounded-xl px-4 py-3.5 text-[14px] font-semibold text-[#0B132B]/55 transition-colors duration-150 hover:bg-[#19C6F4]/6 hover:text-[#0B132B]"
+                  className="rounded-xl px-4 py-3.5 text-[14px] font-semibold text-[#334155] transition-colors duration-150 hover:bg-[#FF8A1F]/8 hover:text-[#FF8A1F]"
                 >
                   {label}
                 </Link>
@@ -156,7 +152,7 @@ export default function Navbar() {
               <Link
                 href="/book-session"
                 onClick={() => setMenuOpen(false)}
-                className="mt-3 block w-full rounded-full bg-[#19C6F4] py-4 text-center text-sm font-semibold text-white shadow-[0_0_18px_rgba(25,198,244,0.28)] transition duration-200 hover:shadow-[0_0_24px_rgba(25,198,244,0.48)]"
+                className="mt-3 block w-full rounded-full bg-[#FF8A1F] py-4 text-center text-sm font-bold text-white shadow-[0_2px_16px_rgba(255,138,31,0.3)] transition duration-200 hover:brightness-110"
               >
                 Book Free Trial
               </Link>

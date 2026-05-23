@@ -1,39 +1,52 @@
 @import "tailwindcss";
 
+/* ── Design tokens ───────────────────────────────────────────────────────────── */
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
-  --brand-cyan: #19C6F4;
-  --brand-orange: #F97316;
-  --brand-navy: #0B132B;
+  /* Brand */
+  --navy:        #0B1F3A;
+  --navy-light:  #163560;
+  --orange:      #FF8A1F;
+  --orange-soft: #FFB15A;
 
-  /* Single source of truth for the navbar offset.
-     Update this value if the navbar height ever changes.
-     JS side uses the same constant (NAVBAR_OFFSET = 72). */
+  /* Surfaces */
+  --bg:          #F8FAFC;
+  --bg-card:     #FFFFFF;
+  --border:      #E2E8F0;
+
+  /* Typography */
+  --text:        #0F172A;
+  --text-2:      #334155;
+  --muted:       #64748B;
+
+  /* Legacy aliases kept for Tailwind var() usage */
+  --background:  #F8FAFC;
+  --foreground:  #0F172A;
+
+  /* Navbar */
   --navbar-offset: 72px;
 }
 
 html {
   scroll-behavior: smooth;
-  /* Native browser anchor navigation respects this */
   scroll-padding-top: var(--navbar-offset);
 }
 
-/* Covers all anchor targets: section, div, footer, etc. */
 [id] {
   scroll-margin-top: var(--navbar-offset);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-poppins), sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-orbitron), sans-serif;
 }
 
+/* ── Marquee animation (FeaturedStudentsSection) ─────────────────────────────── */
 @keyframes marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
