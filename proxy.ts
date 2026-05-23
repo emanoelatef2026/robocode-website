@@ -4,13 +4,12 @@ import type { NextRequest } from "next/server";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (
-    pathname === "/admin/login" ||
-    pathname === "/api/admin/login"
-  ) {
+  // Login page and its API are always public — never require auth
+  if (pathname === "/admin/login" || pathname === "/api/admin/login") {
     return NextResponse.next();
   }
 
+  // All other /admin/* and /api/admin/* require a valid session cookie
   const session = request.cookies.get("admin_session")?.value;
   const secret  = process.env.ADMIN_SECRET;
 
@@ -21,6 +20,7 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
+// Runs ONLY on admin paths — public routes (/, /book-session, /api/book-session) are never touched
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: ["/admin(.*)", "/api/admin(.*)"],
 };
