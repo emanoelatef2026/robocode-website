@@ -13,19 +13,25 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password: pw }),
-    });
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ password: pw }),
+      });
 
-    setLoading(false);
+      if (res.ok) {
+        window.location.href = "/admin";
+        return;
+      }
 
-    if (res.ok) {
-        window.location.href = '/admin';
-    } else {
       const data = await res.json().catch(() => ({}));
-      setError(data.error ?? "Invalid password");
+      setError(data.error ?? "Login failed. Please try again.");
+    } catch {
+      setError("Network error. Please check your connection and try again.");
+    } finally {
+      setLoading(false);
     }
   };
 

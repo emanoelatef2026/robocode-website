@@ -13,7 +13,7 @@ export async function POST(request: Request) {
 
       const response = NextResponse.json({ success: true });
 
-      response.cookies.set("admin_session", process.env.ADMIN_SECRET!, {
+      response.cookies.set("admin_session", process.env.ADMIN_PASSWORD!, {
               httpOnly: true,
               secure: process.env.NODE_ENV === "production",
               sameSite: "lax",

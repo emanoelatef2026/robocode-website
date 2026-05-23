@@ -10,10 +10,10 @@ export function proxy(request: NextRequest) {
   }
 
   // All other /admin/* and /api/admin/* require a valid session cookie
-  const session = request.cookies.get("admin_session")?.value;
-  const secret  = process.env.ADMIN_SECRET;
+  const session  = request.cookies.get("admin_session")?.value;
+  const password = process.env.ADMIN_PASSWORD;
 
-  if (!session || !secret || session !== secret) {
+  if (!session || !password || session !== password) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
