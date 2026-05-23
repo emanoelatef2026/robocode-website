@@ -1,7 +1,8 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-let _client: SupabaseClient | undefined;
-let _clientUrl: string | undefined;
+// ── Admin client (service_role key — bypasses RLS, used in /api/admin/* routes) ──
+let _adminClient: SupabaseClient | undefined;
+let _adminUrl: string | undefined;
 
 export function getSupabaseAdmin(): SupabaseClient {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -9,16 +10,40 @@ export function getSupabaseAdmin(): SupabaseClient {
 
   if (!url || !key) {
     throw new Error(
-      "[supabase] NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set. " +
-      "Add both to your Vercel environment variables."
+      "[supabase] NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set."
     );
   }
 
-  // Recreate client if URL changed (e.g. after Turbopack hot-reloads .env.local)
-  if (!_client || _clientUrl !== url) {
-    _clientUrl = url;
-    _client = createClient(url, key, { auth: { persistSession: false } });
+  if (!_adminClient || _adminUrl !== url) {
+    _adminUrl = url;
+    _adminClient = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
   }
 
-  return _client;
+  return _adminClient;
+}
+
+// ── Public client (anon key — subject to RLS, used in /api/book-session) ──
+let _publicClient: SupabaseClient | undefined;
+let _publicUrl: string | undefined;
+
+export function getSupabasePublic(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key) {
+    throw new Error(
+      "[supabase] NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set."
+    );
+  }
+
+  if (!_publicClient || _publicUrl !== url) {
+    _publicUrl = url;
+    _publicClient = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+
+  return _publicClient;
 }
