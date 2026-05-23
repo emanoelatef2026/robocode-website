@@ -8,6 +8,7 @@ import WhySection from "../components/WhySection";
 import ProgramsSection from "../components/ProgramsSection";
 import CompetitionsSection from "../components/CompetitionsSection";
 import ProjectsSection from "../components/ProjectsSection";
+import FeaturedStudentsSection from "../components/FeaturedStudentsSection";
 import Footer from "../components/Footer";
 
 export default function Home() {
@@ -131,6 +132,11 @@ export default function Home() {
         {/* STUDENT PROJECTS */}
         <Reveal>
           <ProjectsSection />
+        </Reveal>
+
+        {/* FEATURED STUDENTS */}
+        <Reveal>
+          <FeaturedStudentsSection />
         </Reveal>
 
         {/* COMPETITIONS */}
