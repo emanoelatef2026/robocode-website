@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Orbitron, Poppins } from "next/font/google";
+import { Cairo, Orbitron, Poppins } from "next/font/google";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import "./globals.css";
 
 const orbitron = Orbitron({
@@ -13,6 +14,14 @@ const poppins = Poppins({
   variable: "--font-poppins",
 });
 
+// Arabic companion — loaded at build time, activated via CSS when locale = "ar"
+const cairo = Cairo({
+  subsets: ["arabic", "latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-cairo",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Robocode School | Future Tech Academy for Kids",
   description:
@@ -21,14 +30,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
-className={`${orbitron.variable} ${poppins.variable} antialiased`}    >
-      <body className="min-h-full flex flex-col">{children}</body>
+      dir="ltr"
+      className={`${orbitron.variable} ${poppins.variable} ${cairo.variable} antialiased`}
+    >
+      <body className="flex min-h-full flex-col">
+        <LanguageProvider>{children}</LanguageProvider>
+      </body>
     </html>
   );
 }

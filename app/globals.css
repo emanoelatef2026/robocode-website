@@ -46,8 +46,39 @@ h1, h2, h3, h4 {
   font-family: var(--font-orbitron), sans-serif;
 }
 
+/* ── Arabic locale overrides ─────────────────────────────────────────────────── */
+
+/* Activate Cairo when LanguageProvider adds .font-cairo to <body> */
+body.font-cairo {
+  font-family: var(--font-cairo), 'Cairo', sans-serif;
+}
+
+/* In RTL mode, headings also use Cairo (Orbitron is Latin-only) */
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3,
+[dir="rtl"] h4 {
+  font-family: var(--font-cairo), 'Cairo', sans-serif;
+  font-weight: 700;
+}
+
+/* Preserve letter-spacing intent — Arabic doesn't use tracking */
+[dir="rtl"] * {
+  letter-spacing: 0 !important;
+}
+
+/* Marquee: flip scroll direction for RTL */
+[dir="rtl"] .marquee-track {
+  animation-name: marquee-rtl;
+}
+
 /* ── Marquee animation (FeaturedStudentsSection) ─────────────────────────────── */
 @keyframes marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
+}
+
+@keyframes marquee-rtl {
+  from { transform: translateX(0); }
+  to   { transform: translateX(50%); }
 }

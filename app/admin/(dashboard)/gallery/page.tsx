@@ -2,22 +2,27 @@
 
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
+import EmptyStateCard from "@/components/admin/EmptyStateCard";
+import MediaRequirementsBadge from "@/components/admin/MediaRequirementsBadge";
 
 interface GalleryItem {
-  id: string;
-  title: string | null;
-  image_url: string;
-  category: string | null;
+  id:         string;
+  title:      string | null;
+  image_url:  string;
+  category:   string | null;
   created_at: string;
 }
 
+const INPUT = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
+
 export default function GalleryPage() {
-  const [items, setItems]         = useState<GalleryItem[]>([]);
-  const [loading, setLoading]     = useState(true);
+  const [items,     setItems]     = useState<GalleryItem[]>([]);
+  const [loading,   setLoading]   = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [deleting, setDeleting]   = useState<string | null>(null);
-  const [form, setForm]           = useState({ title: "", category: "" });
-  const [file, setFile]           = useState<File | null>(null);
+  const [deleting,  setDeleting]  = useState<string | null>(null);
+  const [form,      setForm]      = useState({ title: "", category: "" });
+  const [file,      setFile]      = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = () => {
@@ -61,12 +66,17 @@ export default function GalleryPage() {
 
   return (
     <div className="space-y-6">
+
       {/* Upload form */}
       <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-        <h2 className="mb-4 text-[14px] font-semibold text-[#0B132B]">Upload New Image</h2>
+        <h2 className="mb-1 text-[14px] font-semibold text-[#0B1F3A]">Upload New Image</h2>
+        <div className="mb-4">
+          <MediaRequirementsBadge type="image" />
+        </div>
+
         <form onSubmit={handleUpload} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-1">
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400">Image *</label>
+            <label className={LABEL}>Image *</label>
             <input
               ref={fileRef}
               type="file"
@@ -77,28 +87,28 @@ export default function GalleryPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400">Title</label>
+            <label className={LABEL}>Title</label>
             <input
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               placeholder="Optional title"
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B132B] outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+              className={INPUT}
             />
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400">Category</label>
+            <label className={LABEL}>Category</label>
             <input
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
               placeholder="e.g. Robotics, Coding"
-              className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B132B] outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+              className={INPUT}
             />
           </div>
           <div className="flex items-end">
             <button
               type="submit"
               disabled={uploading || !file}
-              className="w-full rounded-lg bg-[#0B132B] py-2.5 text-[13px] font-semibold text-white transition hover:bg-[#19C6F4] disabled:opacity-50"
+              className="w-full rounded-lg bg-[#0B1F3A] py-2.5 text-[13px] font-semibold text-white transition hover:bg-[#38BDF8] disabled:opacity-50"
             >
               {uploading ? "Uploading…" : "Upload"}
             </button>
@@ -109,7 +119,7 @@ export default function GalleryPage() {
       {/* Grid */}
       {loading ? (
         <div className="flex h-40 items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#19C6F4] border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#38BDF8] border-t-transparent" />
         </div>
       ) : (
         <>
@@ -127,7 +137,7 @@ export default function GalleryPage() {
                 </div>
                 <div className="p-3">
                   {item.title && (
-                    <p className="truncate text-[13px] font-medium text-[#0B132B]">{item.title}</p>
+                    <p className="truncate text-[13px] font-medium text-[#0B1F3A]">{item.title}</p>
                   )}
                   {item.category && (
                     <p className="text-[11px] text-gray-400">{item.category}</p>
@@ -142,10 +152,13 @@ export default function GalleryPage() {
                 </div>
               </div>
             ))}
+
             {items.length === 0 && (
-              <div className="col-span-full rounded-xl border border-dashed border-gray-200 py-16 text-center text-gray-400">
-                No images yet — upload your first one above
-              </div>
+              <EmptyStateCard
+                title="No images yet"
+                description="Upload your first gallery image above."
+                size="tall"
+              />
             )}
           </div>
         </>

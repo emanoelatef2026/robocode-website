@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import SectionTitle from "./ui/SectionTitle";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -316,16 +317,17 @@ function ProgramCard({ program, index }: { program: ProgramData; index: number }
 // ── Section ───────────────────────────────────────────────────────────────────
 
 export default function ProgramsSection() {
+  const { t } = useLanguage();
+
   return (
     <section
       id="programs"
       className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-32"
     >
-      {/* Section header */}
       <SectionTitle
-        eyebrow="Programs"
-        heading={<>Future-Ready <span className="text-[#FF8A1F]">Learning Paths</span></>}
-        body="Build real-world skills through AI, robotics, programming, game development, and innovation-focused projects."
+        eyebrow={t("programs.eyebrow")}
+        heading={<>{t("programs.heading1")} <span className="text-[#FF8A1F]">{t("programs.heading2")}</span></>}
+        body={t("programs.body")}
       />
 
       {/* Cards grid — 1 col mobile / 2 col tablet / 4 col desktop */}

@@ -7,13 +7,13 @@ import type { ComponentPropsWithoutRef } from "react";
 
 const VARIANTS = {
   primary:
-    "inline-flex items-center justify-center gap-2 rounded-full bg-[#FF8A1F] px-7 py-3.5 text-sm font-bold text-white shadow-[0_4px_20px_rgba(255,138,31,0.35)] transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_8px_32px_rgba(255,138,31,0.45)] active:translate-y-0 active:shadow-none",
+    "inline-flex items-center justify-center gap-2 rounded-full bg-[#38BDF8] px-7 py-3.5 text-sm font-bold text-white shadow-[0_4px_20px_rgba(56,189,248,0.35)] transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_8px_32px_rgba(56,189,248,0.45)] active:translate-y-0 active:shadow-none",
   secondary:
-    "inline-flex items-center justify-center gap-2 rounded-full border-2 border-[#E2E8F0] bg-white px-7 py-3.5 text-sm font-bold text-[#0B1F3A] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#FF8A1F] hover:text-[#FF8A1F] hover:shadow-[0_4px_16px_rgba(255,138,31,0.12)] active:translate-y-0",
+    "inline-flex items-center justify-center gap-2 rounded-full border-2 border-[#E2E8F0] bg-white px-7 py-3.5 text-sm font-bold text-[#0B1F3A] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#38BDF8] hover:text-[#38BDF8] hover:shadow-[0_4px_16px_rgba(56,189,248,0.12)] active:translate-y-0",
   navy:
     "inline-flex items-center justify-center gap-2 rounded-full bg-[#0B1F3A] px-7 py-3.5 text-sm font-bold text-white shadow-[0_4px_20px_rgba(11,31,58,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#163560] hover:shadow-[0_8px_32px_rgba(11,31,58,0.3)] active:translate-y-0",
   ghost:
-    "inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold text-[#0B1F3A] transition-all duration-300 hover:bg-[#FF8A1F]/8 hover:text-[#FF8A1F]",
+    "inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold text-[#0B1F3A] transition-all duration-300 hover:bg-[#38BDF8]/8 hover:text-[#38BDF8]",
 } as const;
 
 type Variant = keyof typeof VARIANTS;

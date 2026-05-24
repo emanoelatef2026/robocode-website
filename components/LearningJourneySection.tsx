@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import SectionTitle from "./ui/SectionTitle";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -83,6 +84,7 @@ function StagePlaceholder({ title }: { title: string }) {
 // ── Section ───────────────────────────────────────────────────────────────────
 
 export default function LearningJourneySection() {
+  const { t }                     = useLanguage();
   const [stages,    setStages]    = useState<Stage[]>(FALLBACK);
   const [activeIdx, setActiveIdx] = useState(0);
 
@@ -100,9 +102,9 @@ export default function LearningJourneySection() {
     <section id="learning-journey" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24">
 
       <SectionTitle
-        eyebrow="Learning Journey"
-        heading={<>Your Child&apos;s <span className="text-[#FF8A1F]">Tech Roadmap</span></>}
-        body="A structured, age-based progression — from curious beginner to confident builder."
+        eyebrow={t("learningJourney.eyebrow")}
+        heading={<>{t("learningJourney.heading1")} <span className="text-[#FF8A1F]">{t("learningJourney.heading2")}</span></>}
+        body={t("learningJourney.body")}
       />
 
       <div className="mt-10 md:mt-14">
@@ -134,7 +136,7 @@ export default function LearningJourneySection() {
 
                 {/* "ages" — secondary label, cyan when active */}
                 <p className={`mt-1 text-[9px] font-bold uppercase tracking-widest ${isActive ? "text-[#38BDF8]" : "text-[#94A3B8]"}`}>
-                  ages
+                  {t("learningJourney.agesLabel")}
                 </p>
               </button>
             );

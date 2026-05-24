@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
+import SectionEmptyState from "@/components/ui/SectionEmptyState";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -244,6 +246,7 @@ function MarqueeTrack({
 // ── Section ───────────────────────────────────────────────────────────────────
 
 export default function FeaturedStudentsSection() {
+  const { t }                   = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
   const [active,   setActive]   = useState<Student | null>(null);
   const [loading,  setLoading]  = useState(true);
@@ -255,8 +258,6 @@ export default function FeaturedStudentsSection() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
-
-  if (!loading && students.length === 0) return null;
 
   return (
     <section id="featured-students" className="relative z-10 overflow-hidden py-16 md:py-28">
@@ -274,13 +275,13 @@ export default function FeaturedStudentsSection() {
         className="mx-auto mb-10 max-w-7xl px-6 text-center md:mb-14"
       >
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#FF8A1F]">
-          Tech Leaders
+          {t("featuredStudents.eyebrow")}
         </p>
         <h2 className="mt-4 text-3xl font-bold text-[#0F172A] md:text-5xl lg:text-6xl">
-          Featured <span className="text-[#FF8A1F]">Students</span>
+          {t("featuredStudents.heading1")} <span className="text-[#FF8A1F]">{t("featuredStudents.heading2")}</span>
         </h2>
         <p className="mx-auto mt-5 max-w-2xl text-base text-[#334155] md:text-lg">
-          Meet the builders, innovators, and creators shaping the future — straight from our classrooms.
+          {t("featuredStudents.body")}
         </p>
         <div className="mx-auto mt-6 h-0.75 w-14 rounded-full bg-[#FF8A1F]" />
       </motion.div>
@@ -290,6 +291,14 @@ export default function FeaturedStudentsSection() {
         <div className="flex h-48 items-center justify-center">
           <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
         </div>
+      ) : students.length === 0 ? (
+        <div className="mx-auto max-w-7xl px-6">
+          <SectionEmptyState
+            variant="students"
+            heading="Student spotlights coming soon"
+            subtext="Our featured students and their projects will appear here."
+          />
+        </div>
       ) : (
         <MarqueeTrack students={students} onSelect={setActive} />
       )}
@@ -297,7 +306,7 @@ export default function FeaturedStudentsSection() {
       {/* Hint text */}
       {!loading && students.length > 0 && (
         <p className="mt-6 text-center text-xs text-slate-400">
-          Click any card to watch the video
+          {t("featuredStudents.watchHint")}
         </p>
       )}
 

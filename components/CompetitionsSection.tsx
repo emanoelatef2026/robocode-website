@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Reveal from "./Reveal";
 import SectionTitle from "./ui/SectionTitle";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const COMPETITIONS = [
   {
@@ -60,6 +61,8 @@ const HOVER_SHADOW: Record<"orange" | "navy", string> = {
 };
 
 export default function CompetitionsSection() {
+  const { t } = useLanguage();
+
   return (
     <Reveal>
       <section
@@ -67,9 +70,9 @@ export default function CompetitionsSection() {
         className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-32"
       >
         <SectionTitle
-          eyebrow="Competitions"
-          heading={<>Compete. <span className="text-[#FF8A1F]">Innovate.</span> Win.</>}
-          body="Robocode students compete on local, national, and international stages — turning classroom skills into championship results."
+          eyebrow={t("competitions.eyebrow")}
+          heading={<>{t("competitions.heading1")} <span className="text-[#FF8A1F]">{t("competitions.heading2")}</span></>}
+          body={t("competitions.body")}
         />
 
         {/* Cards */}

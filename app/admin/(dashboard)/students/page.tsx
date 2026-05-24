@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import EmptyStateCard from "@/components/admin/EmptyStateCard";
+import MediaRequirementsBadge from "@/components/admin/MediaRequirementsBadge";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Student {
   id:          string;
@@ -15,10 +19,10 @@ interface Student {
   created_at:  string;
 }
 
-const inputCls =
-  "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B132B] outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20";
+// ── Styles ────────────────────────────────────────────────────────────────────
 
-const labelCls = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
+const INPUT = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
 
 const blank = {
   name:        "",
@@ -28,6 +32,8 @@ const blank = {
   featured:    true,
   sort_order:  "0",
 };
+
+// ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StudentsPage() {
   const [students,   setStudents]   = useState<Student[]>([]);
@@ -50,8 +56,6 @@ export default function StudentsPage() {
   };
 
   useEffect(() => { load(); }, []);
-
-  // ── Add ────────────────────────────────────────────────────────────────────
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,8 +85,6 @@ export default function StudentsPage() {
     }
   };
 
-  // ── Edit save ──────────────────────────────────────────────────────────────
-
   const handleEditSave = async () => {
     if (!editing) return;
     setSaving(true);
@@ -108,8 +110,6 @@ export default function StudentsPage() {
     }
   };
 
-  // ── Delete ─────────────────────────────────────────────────────────────────
-
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this student?")) return;
     setDeleting(id);
@@ -117,8 +117,6 @@ export default function StudentsPage() {
     setDeleting(null);
     load();
   };
-
-  // ── Feature toggle ────────────────────────────────────────────────────────
 
   const handleToggleFeatured = async (student: Student) => {
     setToggling(student.id);
@@ -131,62 +129,65 @@ export default function StudentsPage() {
     load();
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-
   return (
     <div className="space-y-6">
 
-      {/* ── Add form ───────────────────────────────────────────────────────── */}
+      {/* Add form */}
       <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
-        <h2 className="mb-5 text-[14px] font-semibold text-[#0B132B]">Add New Student</h2>
+        <h2 className="mb-1 text-[14px] font-semibold text-[#0B1F3A]">Add New Student</h2>
+        <p className="mb-3 text-[12px] text-gray-400">Portrait photo, 3:4 recommended.</p>
+        <div className="mb-4">
+          <MediaRequirementsBadge type="image" compact />
+        </div>
+
         <form onSubmit={handleAdd} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
-              <label className={labelCls}>Name *</label>
+              <label className={LABEL}>Name *</label>
               <input
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="e.g. Ahmed Mohamed"
                 required
-                className={inputCls}
+                className={INPUT}
               />
             </div>
             <div>
-              <label className={labelCls}>Grade *</label>
+              <label className={LABEL}>Grade *</label>
               <input
                 value={form.grade}
                 onChange={(e) => setForm({ ...form, grade: e.target.value })}
                 placeholder="e.g. Grade 8"
                 required
-                className={inputCls}
+                className={INPUT}
               />
             </div>
             <div>
-              <label className={labelCls}>Country *</label>
+              <label className={LABEL}>Country *</label>
               <input
                 value={form.country}
                 onChange={(e) => setForm({ ...form, country: e.target.value })}
                 placeholder="e.g. Egypt"
                 required
-                className={inputCls}
+                className={INPUT}
               />
             </div>
           </div>
 
           <div>
-            <label className={labelCls}>YouTube Shorts URL *</label>
+            <label className={LABEL}>YouTube Shorts URL *</label>
             <input
               value={form.youtube_url}
               onChange={(e) => setForm({ ...form, youtube_url: e.target.value })}
               placeholder="https://youtube.com/shorts/..."
               required
-              className={inputCls}
+              className={INPUT}
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="lg:col-span-2">
-              <label className={labelCls}>Photo *</label>
+              <label className={LABEL}>Photo *</label>
               <input
                 ref={fileRef}
                 type="file"
@@ -197,13 +198,13 @@ export default function StudentsPage() {
               />
             </div>
             <div>
-              <label className={labelCls}>Sort Order</label>
+              <label className={LABEL}>Sort Order</label>
               <input
                 type="number"
                 value={form.sort_order}
                 onChange={(e) => setForm({ ...form, sort_order: e.target.value })}
                 placeholder="0"
-                className={inputCls}
+                className={INPUT}
               />
             </div>
             <div className="flex items-end gap-3">
@@ -212,7 +213,7 @@ export default function StudentsPage() {
                   type="checkbox"
                   checked={form.featured}
                   onChange={(e) => setForm({ ...form, featured: e.target.checked })}
-                  className="h-4 w-4 rounded accent-[#19C6F4]"
+                  className="h-4 w-4 rounded accent-[#38BDF8]"
                 />
                 <span className="text-[13px] font-medium text-gray-600">Featured</span>
               </label>
@@ -223,7 +224,7 @@ export default function StudentsPage() {
             <button
               type="submit"
               disabled={saving || !file}
-              className="rounded-lg bg-[#0B132B] px-6 py-2.5 text-[13px] font-semibold text-white transition hover:bg-[#19C6F4] disabled:opacity-50"
+              className="rounded-lg bg-[#0B1F3A] px-6 py-2.5 text-[13px] font-semibold text-white transition hover:bg-[#38BDF8] disabled:opacity-50"
             >
               {saving ? "Saving…" : "Add Student"}
             </button>
@@ -231,10 +232,10 @@ export default function StudentsPage() {
         </form>
       </div>
 
-      {/* ── List ───────────────────────────────────────────────────────────── */}
+      {/* List */}
       {loading ? (
         <div className="flex h-40 items-center justify-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#19C6F4] border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#38BDF8] border-t-transparent" />
         </div>
       ) : (
         <>
@@ -246,7 +247,6 @@ export default function StudentsPage() {
                 key={s.id}
                 className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm"
               >
-                {/* Image */}
                 <div className="relative h-52 w-full overflow-hidden bg-gray-100">
                   <Image
                     src={s.image_url}
@@ -255,70 +255,39 @@ export default function StudentsPage() {
                     sizes="280px"
                     className="object-cover"
                   />
-                  {/* Featured badge */}
                   {s.featured && (
-                    <span className="absolute left-2 top-2 rounded-full bg-[#19C6F4] px-2 py-0.5 text-[10px] font-bold text-white">
+                    <span className="absolute left-2 top-2 rounded-full bg-[#38BDF8] px-2 py-0.5 text-[10px] font-bold text-white">
                       Featured
                     </span>
                   )}
                 </div>
 
-                {/* Info */}
                 <div className="p-4">
                   {editing?.id === s.id ? (
-                    /* Inline edit mode */
                     <div className="space-y-2">
-                      <input
-                        value={editing.name}
-                        onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                        className={inputCls}
-                        placeholder="Name"
-                      />
-                      <input
-                        value={editing.grade}
-                        onChange={(e) => setEditing({ ...editing, grade: e.target.value })}
-                        className={inputCls}
-                        placeholder="Grade"
-                      />
-                      <input
-                        value={editing.country}
-                        onChange={(e) => setEditing({ ...editing, country: e.target.value })}
-                        className={inputCls}
-                        placeholder="Country"
-                      />
-                      <input
-                        value={editing.youtube_url}
-                        onChange={(e) => setEditing({ ...editing, youtube_url: e.target.value })}
-                        className={inputCls}
-                        placeholder="YouTube URL"
-                      />
+                      <input value={editing.name}        onChange={(e) => setEditing({ ...editing, name: e.target.value })}        className={INPUT} placeholder="Name" />
+                      <input value={editing.grade}       onChange={(e) => setEditing({ ...editing, grade: e.target.value })}       className={INPUT} placeholder="Grade" />
+                      <input value={editing.country}     onChange={(e) => setEditing({ ...editing, country: e.target.value })}     className={INPUT} placeholder="Country" />
+                      <input value={editing.youtube_url} onChange={(e) => setEditing({ ...editing, youtube_url: e.target.value })} className={INPUT} placeholder="YouTube URL" />
                       <input
                         type="number"
                         value={editing.sort_order}
                         onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })}
-                        className={inputCls}
+                        className={INPUT}
                         placeholder="Sort order"
                       />
                       <div className="flex gap-2 pt-1">
-                        <button
-                          onClick={handleEditSave}
-                          disabled={saving}
-                          className="flex-1 rounded-lg bg-[#0B132B] py-2 text-[12px] font-semibold text-white transition hover:bg-[#19C6F4] disabled:opacity-50"
-                        >
+                        <button onClick={handleEditSave} disabled={saving} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[12px] font-semibold text-white transition hover:bg-[#38BDF8] disabled:opacity-50">
                           {saving ? "Saving…" : "Save"}
                         </button>
-                        <button
-                          onClick={() => setEditing(null)}
-                          className="flex-1 rounded-lg border border-gray-200 py-2 text-[12px] font-semibold text-gray-500 transition hover:bg-gray-50"
-                        >
+                        <button onClick={() => setEditing(null)} className="flex-1 rounded-lg border border-gray-200 py-2 text-[12px] font-semibold text-gray-500 transition hover:bg-gray-50">
                           Cancel
                         </button>
                       </div>
                     </div>
                   ) : (
-                    /* View mode */
                     <>
-                      <p className="truncate text-[13px] font-bold text-[#0B132B]">{s.name}</p>
+                      <p className="truncate text-[13px] font-bold text-[#0B1F3A]">{s.name}</p>
                       <p className="text-[12px] text-gray-400">{s.grade} · {s.country}</p>
                       <p className="mt-1 truncate text-[11px] text-gray-300">{s.youtube_url}</p>
                       <p className="text-[11px] text-gray-300">Order: {s.sort_order}</p>
@@ -326,7 +295,7 @@ export default function StudentsPage() {
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button
                           onClick={() => setEditing(s)}
-                          className="flex-1 rounded-lg border border-gray-200 py-1.5 text-[11px] font-semibold text-gray-600 transition hover:border-[#19C6F4] hover:text-[#19C6F4]"
+                          className="flex-1 rounded-lg border border-gray-200 py-1.5 text-[11px] font-semibold text-gray-600 transition hover:border-[#38BDF8] hover:text-[#38BDF8]"
                         >
                           Edit
                         </button>
@@ -336,8 +305,8 @@ export default function StudentsPage() {
                           className={[
                             "flex-1 rounded-lg border py-1.5 text-[11px] font-semibold transition disabled:opacity-50",
                             s.featured
-                              ? "border-cyan-200 bg-cyan-50 text-[#19C6F4] hover:bg-cyan-100"
-                              : "border-gray-200 text-gray-400 hover:border-cyan-200 hover:text-[#19C6F4]",
+                              ? "border-[#38BDF8]/30 bg-[#38BDF8]/8 text-[#38BDF8] hover:bg-[#38BDF8]/15"
+                              : "border-gray-200 text-gray-400 hover:border-[#38BDF8]/30 hover:text-[#38BDF8]",
                           ].join(" ")}
                         >
                           {toggling === s.id ? "…" : s.featured ? "Unfeature" : "Feature"}
@@ -357,9 +326,11 @@ export default function StudentsPage() {
             ))}
 
             {students.length === 0 && (
-              <div className="col-span-full rounded-xl border border-dashed border-gray-200 py-20 text-center text-gray-400">
-                No students yet — add your first one above
-              </div>
+              <EmptyStateCard
+                title="No students yet"
+                description="Add your first featured student above."
+                size="tall"
+              />
             )}
           </div>
         </>

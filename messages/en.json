@@ -1,0 +1,100 @@
+{
+  "nav": {
+    "home": "Home",
+    "programs": "Programs",
+    "projects": "Projects",
+    "competitions": "Competitions",
+    "branches": "Branches",
+    "bookTrial": "Book Trial",
+    "bookFreeTrial": "Book Free Trial"
+  },
+  "hero": {
+    "eyebrow": "The Future of Education",
+    "heading1": "We Don't Teach Kids To Use Technology",
+    "heading2": "We Teach Them To Build It",
+    "subtext": "AI · Robotics · Game Development · Programming · Future Skills",
+    "bookSession": "Book Free Session",
+    "explorePrograms": "Explore Programs",
+    "statAiProjects": "AI Projects",
+    "statStudents": "Students"
+  },
+  "trust": {
+    "yearsLabel": "Years Experience",
+    "studentsLabel": "Students",
+    "parentsLabel": "Happy Parents",
+    "ratingLabel": "Average Rating"
+  },
+  "why": {
+    "eyebrow": "WHY ROBOCODE",
+    "heading": "More Than Coding Courses",
+    "body": "We help students build real technology skills, confidence, creativity, leadership, and future-ready thinking.",
+    "card1Title": "Build Real Projects",
+    "card1Desc": "Students create games, robots, AI tools, websites, and real applications.",
+    "card2Title": "Learn AI & Future Skills",
+    "card2Desc": "Students explore AI, robotics, automation, and future technologies.",
+    "card3Title": "Develop Problem Solving",
+    "card3Desc": "Students improve critical thinking, teamwork, and presentation skills.",
+    "card4Title": "Competitions & Innovation",
+    "card4Desc": "Students participate in robotics competitions, hackathons, and innovation challenges."
+  },
+  "programs": {
+    "eyebrow": "Programs",
+    "heading1": "Future-Ready",
+    "heading2": "Learning Paths",
+    "body": "Build real-world skills through AI, robotics, programming, game development, and innovation-focused projects."
+  },
+  "learningJourney": {
+    "eyebrow": "Learning Journey",
+    "heading1": "Your Child's",
+    "heading2": "Tech Roadmap",
+    "body": "A structured, age-based progression — from curious beginner to confident builder.",
+    "agesLabel": "ages"
+  },
+  "projects": {
+    "eyebrow": "Student Projects",
+    "heading1": "Students Build",
+    "heading2": "Real Technology",
+    "body": "From AI tools and autonomous robots to immersive VR worlds — every project is designed, built, and shipped by our students."
+  },
+  "competitions": {
+    "eyebrow": "Competitions",
+    "heading1": "Compete. Innovate.",
+    "heading2": "Win.",
+    "body": "Robocode students compete on local, national, and international stages — turning classroom skills into championship results."
+  },
+  "featuredStudents": {
+    "eyebrow": "Tech Leaders",
+    "heading1": "Featured",
+    "heading2": "Students",
+    "body": "Meet the builders, innovators, and creators shaping the future — straight from our classrooms.",
+    "watchHint": "Click any card to watch the video"
+  },
+  "branches": {
+    "eyebrow": "Our Locations",
+    "heading1": "Robocode",
+    "heading2": "Branches",
+    "body": "Find your nearest Robocode hub and start your child's tech journey today.",
+    "callNow": "Call Now",
+    "getDirections": "Get Directions",
+    "comingSoon": "Coming Soon",
+    "bookTrialHere": "Book Trial Here"
+  },
+  "footer": {
+    "tagline": "We don't teach kids to use technology — we teach them to build it. Empowering the next generation of innovators, engineers, and creators.",
+    "programsHeading": "Programs",
+    "companyHeading": "Company",
+    "linkAi": "AI & Machine Learning",
+    "linkRobotics": "Robotics",
+    "linkGameDev": "Game Development",
+    "linkWebDev": "Web & App Dev",
+    "linkAbout": "About Us",
+    "linkBranches": "Our Branches",
+    "linkCompetitions": "Competitions",
+    "linkContact": "Contact Us",
+    "ctaHeading": "Ready to start your child's tech journey?",
+    "ctaSubtext": "Book a free trial session at your nearest Robocode branch.",
+    "ctaButton": "Book Free Trial",
+    "copyright": "© 2026 Robocode School. All rights reserved.",
+    "poweredBy": "Empowering future builders, one line of code at a time."
+  }
+}

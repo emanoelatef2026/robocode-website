@@ -5,21 +5,55 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-
-const NAV_LINKS = [
-  { label: "Home",         href: "/"             },
-  { label: "Programs",     href: "/#programs"    },
-  { label: "Projects",     href: "/#projects"    },
-  { label: "Competitions", href: "/#competitions" },
-  { label: "Branches",     href: "/#branches"    },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
+import type { Locale } from "@/lib/i18n";
 
 const NAVBAR_OFFSET = 72;
 
+// ── Language toggle ───────────────────────────────────────────────────────────
+
+function LangToggle({ compact = false }: { compact?: boolean }) {
+  const { locale, setLocale } = useLanguage();
+
+  const wrapCls = compact
+    ? "flex items-center overflow-hidden rounded-full border border-[#E2E8F0] text-[11px] font-bold"
+    : "flex w-full items-center overflow-hidden rounded-xl border border-[#E2E8F0] text-sm font-bold";
+
+  const btnCls = (active: boolean) =>
+    [
+      "transition-all duration-200",
+      compact ? "px-3 py-1.5" : "flex-1 py-2.5 text-center",
+      active ? "bg-[#0B1F3A] text-white" : "bg-white text-[#64748B] hover:text-[#0B1F3A]",
+    ].join(" ");
+
+  return (
+    <div className={wrapCls}>
+      <button onClick={() => setLocale("en" as Locale)} className={btnCls(locale === "en")}>
+        EN
+      </button>
+      <span className="h-4 w-px shrink-0 bg-[#E2E8F0]" />
+      <button onClick={() => setLocale("ar" as Locale)} className={btnCls(locale === "ar")}>
+        AR
+      </button>
+    </div>
+  );
+}
+
+// ── Navbar ────────────────────────────────────────────────────────────────────
+
 export default function Navbar() {
-  const [scrolled,  setScrolled]  = useState(false);
-  const [menuOpen,  setMenuOpen]  = useState(false);
+  const { t } = useLanguage();
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  const NAV_LINKS = [
+    { key: "nav.home",         href: "/"              },
+    { key: "nav.programs",     href: "/#programs"     },
+    { key: "nav.projects",     href: "/#projects"     },
+    { key: "nav.competitions", href: "/#competitions" },
+    { key: "nav.branches",     href: "/#branches"     },
+  ];
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 16);
@@ -73,30 +107,34 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-6 md:flex">
-          {NAV_LINKS.map(({ label, href }) => (
+          {NAV_LINKS.map(({ key, href }) => (
             <Link
-              key={label}
+              key={key}
               href={href}
               onClick={(e) => handleSectionClick(e, href)}
               className="group relative text-[13px] font-semibold text-[#64748B] transition-colors duration-200 hover:text-[#0B1F3A]"
             >
-              {label}
-              <span className="absolute -bottom-0.5 left-0 h-[2px] w-0 rounded-full bg-[#FF8A1F] transition-all duration-300 group-hover:w-full" />
+              {t(key)}
+              {/* logical start-0 so underline slides from correct side in both LTR/RTL */}
+              <span className="absolute -bottom-0.5 start-0 h-[2px] w-0 rounded-full bg-[#FF8A1F] transition-all duration-300 group-hover:w-full" />
             </Link>
           ))}
         </nav>
 
-        {/* CTA — desktop */}
-        <Link href="/book-session" className="hidden md:inline-flex">
-          <motion.span
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            transition={{ type: "spring", stiffness: 400, damping: 20 }}
-            className="inline-flex items-center rounded-full bg-[#FF8A1F] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_2px_16px_rgba(255,138,31,0.35)] transition-shadow duration-300 hover:shadow-[0_4px_24px_rgba(255,138,31,0.5)]"
-          >
-            Book Trial
-          </motion.span>
-        </Link>
+        {/* Right controls: lang toggle + CTA */}
+        <div className="hidden items-center gap-3 md:flex">
+          <LangToggle compact />
+          <Link href="/book-session">
+            <motion.span
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="inline-flex items-center rounded-full bg-[#38BDF8] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_2px_16px_rgba(56,189,248,0.35)] transition-shadow duration-300 hover:shadow-[0_4px_24px_rgba(56,189,248,0.5)]"
+            >
+              {t("nav.bookTrial")}
+            </motion.span>
+          </Link>
+        </div>
 
         {/* Hamburger — mobile */}
         <button
@@ -135,9 +173,9 @@ export default function Navbar() {
             className="overflow-hidden border-t border-[#E2E8F0] bg-white/98 backdrop-blur-xl md:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-4">
-              {NAV_LINKS.map(({ label, href }) => (
+              {NAV_LINKS.map(({ key, href }) => (
                 <Link
-                  key={label}
+                  key={key}
                   href={href}
                   onClick={(e) => {
                     handleSectionClick(e, href);
@@ -145,16 +183,21 @@ export default function Navbar() {
                   }}
                   className="rounded-xl px-4 py-3.5 text-[14px] font-semibold text-[#334155] transition-colors duration-150 hover:bg-[#FF8A1F]/8 hover:text-[#FF8A1F]"
                 >
-                  {label}
+                  {t(key)}
                 </Link>
               ))}
+
+              {/* Language toggle row */}
+              <div className="mt-2">
+                <LangToggle />
+              </div>
 
               <Link
                 href="/book-session"
                 onClick={() => setMenuOpen(false)}
-                className="mt-3 block w-full rounded-full bg-[#FF8A1F] py-4 text-center text-sm font-bold text-white shadow-[0_2px_16px_rgba(255,138,31,0.3)] transition duration-200 hover:brightness-110"
+                className="mt-3 block w-full rounded-full bg-[#38BDF8] py-4 text-center text-sm font-bold text-white shadow-[0_2px_16px_rgba(56,189,248,0.3)] transition duration-200 hover:brightness-110"
               >
-                Book Free Trial
+                {t("nav.bookFreeTrial")}
               </Link>
             </div>
           </motion.div>
