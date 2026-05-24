@@ -37,7 +37,27 @@
       "PowerShell(Stop-Process -Force)",
       "PowerShell(Test-NetConnection -ComputerName localhost -Port 3000 -InformationLevel Quiet 2>$null)",
       "PowerShell(Set-Location \"C:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\"; Start-Process powershell -ArgumentList \"-NoProfile -Command `\"npm run dev`\"\" -WindowStyle Minimized; Start-Sleep -Seconds 10; Test-NetConnection -ComputerName localhost -Port 3000 -InformationLevel Quiet 2>$null)",
-      "PowerShell($body = '{\"name\":\"Test Student\",\"age\":\"12\",\"school\":\"Test School\",\"phone\":\"01234567890\",\"phone2\":\"\",\"day\":\"Monday\",\"time\":\"Morning\",\"notes\":\"Test booking\"}'; $response = Invoke-WebRequest -Uri \"http://localhost:3000/api/book-session\" -Method POST -ContentType \"application/json\" -Body $body -UseBasicParsing; Write-Output \"Status: $\\($response.StatusCode\\)\"; Write-Output \"Body: $\\($response.Content\\)\")"
+      "PowerShell($body = '{\"name\":\"Test Student\",\"age\":\"12\",\"school\":\"Test School\",\"phone\":\"01234567890\",\"phone2\":\"\",\"day\":\"Monday\",\"time\":\"Morning\",\"notes\":\"Test booking\"}'; $response = Invoke-WebRequest -Uri \"http://localhost:3000/api/book-session\" -Method POST -ContentType \"application/json\" -Body $body -UseBasicParsing; Write-Output \"Status: $\\($response.StatusCode\\)\"; Write-Output \"Body: $\\($response.Content\\)\")",
+      "Bash(git commit -m 'fix: update trust stats — 4+ years, 8000+ students, 16000+ happy parents, 4.9/5 rating *)",
+      "Bash(git commit -m 'fix: center trust stats content in each card *)",
+      "Bash(Start-Sleep -Seconds 4)",
+      "Bash(Get-Content \"C:\\\\Users\\\\Emanoel\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Emanoel-OneDrive-Desktop-robocode-new\\\\bc681e8d-84da-4d7a-be40-767190a50bfd\\\\tasks\\\\b0lym2n4p.output\" -Tail 10)",
+      "Bash(git commit -m ' *)",
+      "Bash(Get-ChildItem app/api/admin -Recurse -Name)",
+      "Bash(Get-ChildItem app/admin -Recurse -Name)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(npx next *)",
+      "Bash(mkdir -p \"c:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\\\\app\\\\api\\\\branches\" \"c:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\\\\app\\\\api\\\\admin\\\\branches\" \"c:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\\\\app\\\\api\\\\admin\\\\branches\\\\[id]\" \"c:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\\\\app\\\\admin\\\\\\(dashboard\\)\\\\branches\" 2>/dev/null; echo \"done\")",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":3000\")",
+      "Bash(curl -s http://localhost:3000/api/branches)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(findstr /i \"ElShrouk\\\\|branch\\\\|location\")",
+      "Bash(python -m json.tool)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Emanoel\\OneDrive\\Desktop\\robocode-new\\app\\api\\admin\\branches"
     ]
   }
 }
