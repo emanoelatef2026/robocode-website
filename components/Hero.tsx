@@ -82,38 +82,20 @@ export default function Hero() {
 
       </div>
 
-      {/* RIGHT — animated sphere */}
+      {/* RIGHT — hero image */}
       <motion.div
         animate={{ y: [0, -12, 0] }}
         transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        className="relative flex shrink-0 items-center justify-center"
+        className="flex shrink-0 items-center justify-center"
       >
-        <div className="relative flex h-60 w-60 items-center justify-center rounded-full bg-linear-to-br from-[#0B1F3A] to-[#163560] shadow-[0_0_60px_rgba(11,31,58,0.3)] md:h-80 md:w-80 lg:h-90 lg:w-90">
-
-          <div className="absolute inset-0 rounded-full ring-1 ring-white/10" />
-
-          <Image
-            src="/logo.png"
-            alt="Robocode"
-            width={220}
-            height={220}
-            className="relative z-10 h-auto w-28 brightness-0 invert md:w-44 lg:w-[200px]"
-          />
-
-          {/* Floating Card 1 */}
-          <div className="absolute -left-3 top-8 overflow-hidden rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 shadow-[0_8px_24px_rgba(11,31,58,0.12)] md:-left-8 md:top-10 md:rounded-2xl md:px-6 md:py-4">
-            <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#FF8A1F] to-[#FFB15A]" />
-            <p className="text-xs font-semibold text-[#64748B] md:text-sm">{t("hero.statAiProjects")}</p>
-            <h3 className="mt-0.5 text-lg font-extrabold text-[#0B1F3A] md:mt-1 md:text-2xl">150+</h3>
-          </div>
-
-          {/* Floating Card 2 */}
-          <div className="absolute -right-3 bottom-8 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 shadow-[0_8px_24px_rgba(11,31,58,0.12)] md:-right-8 md:bottom-10 md:rounded-2xl md:px-6 md:py-4">
-            <p className="text-xs font-semibold text-[#64748B] md:text-sm">{t("hero.statStudents")}</p>
-            <h3 className="mt-0.5 text-lg font-extrabold text-[#0B1F3A] md:mt-1 md:text-2xl">8000+</h3>
-          </div>
-
-        </div>
+        <Image
+          src="/hero-kids.png"
+          alt="Robocode School Students"
+          width={700}
+          height={700}
+          priority
+          className="h-auto w-full max-w-xs sm:max-w-sm md:max-w-md lg:w-135 lg:max-w-none xl:w-155"
+        />
       </motion.div>
 
       {/* CTAs — mobile only, after sphere in flex-col */}

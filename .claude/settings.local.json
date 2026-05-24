@@ -54,10 +54,14 @@
       "Bash(curl -s http://localhost:3000/api/branches)",
       "Bash(curl -s http://localhost:3000/)",
       "Bash(findstr /i \"ElShrouk\\\\|branch\\\\|location\")",
-      "Bash(python -m json.tool)"
+      "Bash(python -m json.tool)",
+      "Bash(dir \"C:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\\\\public\\\\\")",
+      "Bash(cp \"/c/Users/Emanoel/OneDrive/Desktop/Hero tr bg.png\" \"/c/Users/Emanoel/OneDrive/Desktop/robocode-new/public/hero-kids.png\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)"
     ],
     "additionalDirectories": [
-      "c:\\Users\\Emanoel\\OneDrive\\Desktop\\robocode-new\\app\\api\\admin\\branches"
+      "c:\\Users\\Emanoel\\OneDrive\\Desktop\\robocode-new\\app\\api\\admin\\branches",
+      "C:\\Users\\Emanoel\\OneDrive\\Desktop"
     ]
   }
 }
