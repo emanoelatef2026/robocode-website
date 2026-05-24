@@ -17,61 +17,64 @@ interface Stage {
   sort_order:  number;
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// "Ages 6–8" → "6–8" (handles any prefix format)
+const ageShort = (r: string) => r.replace(/^Ages?\s*/i, "");
+
 // ── Static fallback ───────────────────────────────────────────────────────────
 
 const FALLBACK: Stage[] = [
   {
-    id: "explorer",
-    title: "Explorer",
-    age_range: "Ages 6–8",
-    description:
-      "Students begin their tech journey through hands-on logic building, creative problem solving, and visual programming — building confidence and curiosity from day one.",
-    image_url: "",
-    active: true,
-    sort_order: 0,
+    id:          "explorer",
+    title:       "Explorer",
+    age_range:   "Ages 6–8",
+    description: "Students begin their tech journey through hands-on logic building, creative problem solving, and visual programming — building confidence and curiosity from day one.",
+    image_url:   "",
+    active:      true,
+    sort_order:  0,
   },
   {
-    id: "creator",
-    title: "Creator",
-    age_range: "Ages 9–11",
-    description:
-      "Students dive into game development, Roblox, Minecraft modding, and digital creation — turning imagination into interactive experiences through real scripting and design.",
-    image_url: "",
-    active: true,
-    sort_order: 1,
+    id:          "creator",
+    title:       "Creator",
+    age_range:   "Ages 9–11",
+    description: "Students dive into game development, Roblox, Minecraft modding, and digital creation — turning imagination into interactive experiences through real scripting and design.",
+    image_url:   "",
+    active:      true,
+    sort_order:  1,
   },
   {
-    id: "builder",
-    title: "Builder",
-    age_range: "Ages 12–14",
-    description:
-      "Students develop serious engineering skills in Python, web development, and hardware — building real apps, deploying live websites, and programming autonomous robots.",
-    image_url: "",
-    active: true,
-    sort_order: 2,
+    id:          "builder",
+    title:       "Builder",
+    age_range:   "Ages 12–14",
+    description: "Students develop serious engineering skills in Python, web development, and hardware — building real apps, deploying live websites, and programming autonomous robots.",
+    image_url:   "",
+    active:      true,
+    sort_order:  2,
   },
   {
-    id: "ai-engineer",
-    title: "AI Engineer",
-    age_range: "Ages 15–18",
-    description:
-      "Elite students build production-grade AI systems, automation pipelines, and startup prototypes — using the same tools and methodologies as industry professionals.",
-    image_url: "",
-    active: true,
-    sort_order: 3,
+    id:          "ai-engineer",
+    title:       "AI Engineer",
+    age_range:   "Ages 15–18",
+    description: "Elite students build production-grade AI systems, automation pipelines, and startup prototypes — using the same tools and methodologies as industry professionals.",
+    image_url:   "",
+    active:      true,
+    sort_order:  3,
   },
 ];
 
-// ── Image placeholder ─────────────────────────────────────────────────────────
+// ── Placeholder (no image uploaded) ──────────────────────────────────────────
 
 function StagePlaceholder({ title }: { title: string }) {
   return (
-    <div className="relative w-full overflow-hidden rounded-xl" style={{ aspectRatio: "16/9" }}>
-      <div className="absolute inset-0 bg-[#0B1F3A]" />
+    <div className="relative w-full bg-[#0B1F3A]" style={{ aspectRatio: "16/9" }}>
+      {/* Subtle grid */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-size-[48px_48px]" />
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF8A1F]/6 blur-3xl" />
+      {/* Cyan ambient glow */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#38BDF8]/6 blur-3xl" />
+      {/* Ghost text */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <p className="select-none text-5xl font-black text-white/8 md:text-8xl">{title}</p>
+        <p className="select-none text-5xl font-black text-white/[0.07] md:text-8xl">{title}</p>
       </div>
     </div>
   );
@@ -104,8 +107,8 @@ export default function LearningJourneySection() {
 
       <div className="mt-10 md:mt-14">
 
-        {/* ── Tabs: 2-col mobile / 4-col desktop — no overflow ──────────────── */}
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+        {/* ── Tabs: flex single row, equal width, no overflow ────────────────── */}
+        <div className="flex gap-2 sm:gap-3">
           {stages.map((stage, i) => {
             const isActive = activeIdx === i;
             return (
@@ -113,55 +116,63 @@ export default function LearningJourneySection() {
                 key={stage.id}
                 onClick={() => setActiveIdx(i)}
                 className={[
-                  "relative overflow-hidden rounded-xl border px-4 py-4 text-left transition-all duration-200 focus:outline-none",
+                  "relative min-w-0 flex-1 overflow-hidden rounded-xl border py-3 text-center transition-all duration-200 focus:outline-none sm:py-4",
                   isActive
-                    ? "border-[#0B1F3A] bg-[#0B1F3A] shadow-[0_6px_24px_rgba(11,31,58,0.22)]"
-                    : "border-[#E2E8F0] bg-white shadow-[0_1px_4px_rgba(11,31,58,0.05)] hover:border-[#CBD5E1] hover:shadow-[0_2px_8px_rgba(11,31,58,0.08)]",
+                    ? "border-[#0B1F3A] bg-[#0B1F3A] shadow-[0_6px_24px_rgba(11,31,58,0.22),0_0_0_1px_rgba(56,189,248,0.14)]"
+                    : "border-[#E2E8F0] bg-white shadow-[0_1px_3px_rgba(11,31,58,0.04)] hover:-translate-y-px hover:border-[#CBD5E1] hover:shadow-[0_3px_12px_rgba(11,31,58,0.08)]",
                 ].join(" ")}
               >
-                {/* Orange accent bar on top of active tab */}
+                {/* Orange top accent — active indicator */}
                 {isActive && (
                   <span className="absolute inset-x-0 top-0 h-0.75 bg-[#FF8A1F]" />
                 )}
 
-                <p className={`text-[10px] font-bold uppercase tracking-[0.22em] ${isActive ? "text-[#FF8A1F]" : "text-[#94A3B8]"}`}>
-                  {stage.age_range}
+                {/* Age number — primary label */}
+                <p className={`text-sm font-extrabold leading-none sm:text-base ${isActive ? "text-white" : "text-[#0F172A]"}`}>
+                  {ageShort(stage.age_range)}
                 </p>
-                <p className={`mt-1.5 text-[14px] font-bold leading-snug ${isActive ? "text-white" : "text-[#0F172A]"}`}>
-                  {stage.title}
+
+                {/* "ages" — secondary label, cyan when active */}
+                <p className={`mt-1 text-[9px] font-bold uppercase tracking-widest ${isActive ? "text-[#38BDF8]" : "text-[#94A3B8]"}`}>
+                  ages
                 </p>
               </button>
             );
           })}
         </div>
 
-        {/* ── Tab content: text → image ──────────────────────────────────────── */}
+        {/* ── Content: text → image ─────────────────────────────────────────── */}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeIdx}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.22 }}
+            transition={{ duration: 0.2 }}
             className="mt-8"
           >
-            {/* Stage text — centered, above image */}
+            {/* Stage copy — centered, above image */}
             <div className="mx-auto max-w-2xl text-center">
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#FF8A1F]">
+              {/* Age range — cyan accent */}
+              <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#38BDF8]">
                 {active.age_range}
               </p>
+
+              {/* Stage title */}
               <h3 className="mt-2 text-2xl font-extrabold tracking-tight text-[#0F172A] md:text-3xl">
                 {active.title}
               </h3>
+
+              {/* Description */}
               <p className="mt-3 text-[15px] leading-relaxed text-[#64748B]">
                 {active.description}
               </p>
             </div>
 
-            {/* Hero image — centered, constrained, premium frame */}
+            {/* Hero image — centered, max-w-5xl, premium framing */}
             <div className="mx-auto mt-8 max-w-5xl">
               {active.image_url ? (
-                <div className="overflow-hidden rounded-xl shadow-[0_4px_40px_rgba(11,31,58,0.10)]">
+                <div className="overflow-hidden rounded-xl shadow-[0_4px_32px_rgba(11,31,58,0.10),0_0_0_1px_rgba(56,189,248,0.10)]">
                   <Image
                     src={active.image_url}
                     alt={active.title}
@@ -172,7 +183,7 @@ export default function LearningJourneySection() {
                   />
                 </div>
               ) : (
-                <div className="shadow-[0_4px_40px_rgba(11,31,58,0.10)]">
+                <div className="overflow-hidden rounded-xl shadow-[0_4px_32px_rgba(11,31,58,0.10),0_0_0_1px_rgba(56,189,248,0.10)]">
                   <StagePlaceholder title={active.title} />
                 </div>
               )}
