@@ -26,16 +26,20 @@
   },
   "why": {
     "eyebrow": "WHY ROBOCODE",
-    "heading": "More Than Coding Courses",
-    "body": "We help students build real technology skills, confidence, creativity, leadership, and future-ready thinking.",
-    "card1Title": "Build Real Projects",
-    "card1Desc": "Students create games, robots, AI tools, websites, and real applications.",
-    "card2Title": "Learn AI & Future Skills",
-    "card2Desc": "Students explore AI, robotics, automation, and future technologies.",
-    "card3Title": "Develop Problem Solving",
-    "card3Desc": "Students improve critical thinking, teamwork, and presentation skills.",
-    "card4Title": "Competitions & Innovation",
-    "card4Desc": "Students participate in robotics competitions, hackathons, and innovation challenges."
+    "heading": "Built For Future Innovators",
+    "body": "Every program at Robocode is engineered to develop four critical dimensions — personalized growth, real-world application, competitive excellence, and human leadership.",
+    "tab1Title": "Adaptive Learning Pathways",
+    "tab1Tag": "Grows with you",
+    "tab1Desc": "Students are assessed based on their current skill level and guided through personalized technology pathways that evolve continuously over time.",
+    "tab2Title": "Real-World Project Building",
+    "tab2Tag": "Real solutions",
+    "tab2Desc": "Students create practical technology solutions including AI systems, robotics projects, applications, games, and smart infrastructure concepts.",
+    "tab3Title": "Beyond The Classroom",
+    "tab3Tag": "Global stages",
+    "tab3Desc": "Students participate in international competitions designed to strengthen teamwork, leadership, communication, and high-pressure problem solving.",
+    "tab4Title": "Skills Beyond Technology",
+    "tab4Tag": "Lead & create",
+    "tab4Desc": "Public speaking, strategic thinking, collaboration, creativity, and leadership are integrated into every learning experience."
   },
   "programs": {
     "eyebrow": "Programs",
@@ -64,7 +68,7 @@
   },
   "featuredStudents": {
     "eyebrow": "Tech Leaders",
-    "heading1": "Featured",
+    "heading1": "Meet Our",
     "heading2": "Students",
     "body": "Meet the builders, innovators, and creators shaping the future — straight from our classrooms.",
     "watchHint": "Click any card to watch the video"

@@ -67,7 +67,7 @@ export default function CompetitionsSection() {
     <Reveal>
       <section
         id="competitions"
-        className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-32"
+        className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24"
       >
         <SectionTitle
           eyebrow={t("competitions.eyebrow")}

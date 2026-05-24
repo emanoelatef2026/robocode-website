@@ -26,27 +26,6 @@ function extractYouTubeId(url: string): string | null {
   return match?.[1] ?? null;
 }
 
-// ── Play button overlay ───────────────────────────────────────────────────────
-
-function PlayOverlay() {
-  return (
-    <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-      <motion.div
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 shadow-2xl backdrop-blur-sm"
-      >
-        <svg viewBox="0 0 24 24" fill="#0B132B" className="h-7 w-7 translate-x-0.5">
-          <path d="M8 5v14l11-7z" />
-        </svg>
-      </motion.div>
-
-      {/* Pulsing ring */}
-      <span className="absolute h-16 w-16 animate-ping rounded-full bg-white/30" />
-    </div>
-  );
-}
-
 // ── Student card ──────────────────────────────────────────────────────────────
 
 function StudentCard({
@@ -59,42 +38,38 @@ function StudentCard({
   return (
     <motion.button
       onClick={onClick}
-      whileHover={{ y: -6 }}
-      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative w-50 shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-white shadow-lg sm:w-55 md:w-60"
+      whileHover={{ y: -4 }}
+      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+      className="group w-44 shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-white shadow-[0_2px_16px_rgba(11,31,58,0.10)] transition-shadow duration-300 hover:shadow-[0_8px_28px_rgba(11,31,58,0.16)] sm:w-48 md:w-52"
     >
-      {/* Image — portrait aspect ratio */}
-      <div className="relative w-full overflow-hidden bg-gray-100" style={{ aspectRatio: "3/4" }}>
+      {/* Image — clean, no overlay clutter */}
+      <div className="relative w-full overflow-hidden bg-[#E2E8F0]" style={{ aspectRatio: "3/4" }}>
         <Image
           src={student.image_url}
           alt={student.name}
           fill
-          sizes="240px"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="208px"
+          className="object-cover transition-transform duration-500 group-hover:scale-104"
         />
+      </div>
 
-        {/* Bottom gradient */}
-        <div className="absolute inset-0 bg-linear-to-t from-[#0B132B]/85 via-[#0B132B]/20 to-transparent" />
-
-        {/* Play overlay */}
-        <PlayOverlay />
-
-        {/* Country flag + info */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 text-left">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#FF8A1F]">
-            {student.country}
-          </p>
-          <p className="mt-1 font-bold leading-tight text-white" style={{ fontFamily: "var(--font-orbitron), sans-serif" }}>
-            {student.name}
-          </p>
-          <p className="mt-0.5 text-xs text-white/60">{student.grade}</p>
-        </div>
-
-        {/* Top-right play badge */}
-        <div className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-white/20 backdrop-blur-sm transition-all duration-300 group-hover:bg-[#FF8A1F] group-hover:border-[#FF8A1F]">
-          <svg viewBox="0 0 24 24" fill="white" className="h-3.5 w-3.5 translate-x-0.5">
+      {/* Bottom bar */}
+      <div className="flex items-center gap-3 bg-[#0B1F3A] px-3.5 py-3">
+        {/* Play button */}
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#38BDF8]/40 bg-[#38BDF8]/15 transition-all duration-200 group-hover:border-[#38BDF8] group-hover:bg-[#38BDF8]">
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 translate-x-px text-[#38BDF8] transition-colors duration-200 group-hover:text-white">
             <path d="M8 5v14l11-7z" />
           </svg>
+        </div>
+
+        {/* Info */}
+        <div className="min-w-0 flex-1 text-start">
+          <p className="truncate text-[10px] font-semibold uppercase tracking-wider text-[#38BDF8]">
+            Watch Video
+          </p>
+          <p className="truncate text-[12px] font-bold leading-tight text-white">
+            {student.name}
+          </p>
         </div>
       </div>
     </motion.button>
@@ -113,14 +88,11 @@ function VideoModal({
   const videoId = extractYouTubeId(student.youtube_url);
 
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
-  // Prevent body scroll while modal is open
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = ""; };
@@ -135,29 +107,25 @@ function VideoModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/75 backdrop-blur-md" />
 
-      {/* Panel */}
       <motion.div
-        initial={{ scale: 0.88, opacity: 0, y: 24 }}
-        animate={{ scale: 1,    opacity: 1, y: 0  }}
-        exit={{    scale: 0.88, opacity: 0, y: 24  }}
-        transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1,   opacity: 1, y: 0  }}
+        exit={{    scale: 0.9, opacity: 0, y: 20  }}
+        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
         onClick={(e) => e.stopPropagation()}
         className="relative z-10 w-full max-w-xs overflow-hidden rounded-3xl bg-[#0B132B] shadow-2xl sm:max-w-sm"
       >
-        {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute right-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white"
+          className="absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
           </svg>
         </button>
 
-        {/* YouTube embed — 9:16 Shorts ratio */}
         {videoId ? (
           <div className="relative w-full" style={{ aspectRatio: "9/16" }}>
             <iframe
@@ -174,15 +142,11 @@ function VideoModal({
           </div>
         )}
 
-        {/* Student info strip */}
-        <div className="border-t border-white/8 px-5 py-4">
-          <p
-            className="font-bold text-white"
-            style={{ fontFamily: "var(--font-orbitron), sans-serif" }}
-          >
+        <div className="border-t border-white/8 px-5 py-3.5">
+          <p className="font-bold text-white" style={{ fontFamily: "var(--font-orbitron), sans-serif" }}>
             {student.name}
           </p>
-          <p className="mt-0.5 text-sm text-white/50">
+          <p className="mt-0.5 text-[13px] text-white/50">
             {student.grade} &nbsp;·&nbsp; {student.country}
           </p>
         </div>
@@ -202,19 +166,15 @@ function MarqueeTrack({
 }) {
   const [paused, setPaused] = useState(false);
   const touchStartX = useRef(0);
-
-  // Duplicate for seamless loop
-  const items = [...students, ...students];
-
-  // Duration scales with content: ~4 s per card, min 20 s
+  const items   = [...students, ...students];
   const duration = Math.max(20, students.length * 5);
 
   return (
     <div
       className="relative overflow-hidden"
       style={{
-        maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
-        WebkitMaskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)",
+        maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+        WebkitMaskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -225,7 +185,7 @@ function MarqueeTrack({
       <div
         className="flex"
         style={{
-          gap: "20px",
+          gap: "16px",
           animation: `marquee ${duration}s linear infinite`,
           animationPlayState: paused ? "paused" : "running",
           width: "max-content",
@@ -260,11 +220,10 @@ export default function FeaturedStudentsSection() {
   }, []);
 
   return (
-    <section id="featured-students" className="relative z-10 overflow-hidden py-16 md:py-28">
+    <section id="featured-students" className="relative z-10 overflow-hidden py-16 md:py-24">
 
-      {/* Background decoration */}
-      <div className="pointer-events-none absolute left-1/3 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[#FF8A1F]/6 blur-3xl" />
-      <div className="pointer-events-none absolute right-0 bottom-0 h-80 w-80 rounded-full bg-[#0B1F3A]/4 blur-3xl" />
+      <div className="pointer-events-none absolute left-1/3 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[#FF8A1F]/5 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[#0B1F3A]/4 blur-3xl" />
 
       {/* Header */}
       <motion.div
@@ -272,18 +231,19 @@ export default function FeaturedStudentsSection() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="mx-auto mb-10 max-w-7xl px-6 text-center md:mb-14"
+        className="mx-auto mb-10 max-w-7xl px-6 text-center md:mb-12"
       >
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#FF8A1F]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#FF8A1F]">
           {t("featuredStudents.eyebrow")}
         </p>
-        <h2 className="mt-4 text-3xl font-bold text-[#0F172A] md:text-5xl lg:text-6xl">
-          {t("featuredStudents.heading1")} <span className="text-[#FF8A1F]">{t("featuredStudents.heading2")}</span>
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0F172A] md:text-5xl lg:text-[3.5rem]">
+          {t("featuredStudents.heading1")}{" "}
+          <span className="text-[#FF8A1F]">{t("featuredStudents.heading2")}</span>
         </h2>
-        <p className="mx-auto mt-5 max-w-2xl text-base text-[#334155] md:text-lg">
+        <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-[#64748B] md:text-base">
           {t("featuredStudents.body")}
         </p>
-        <div className="mx-auto mt-6 h-0.75 w-14 rounded-full bg-[#FF8A1F]" />
+        <div className="mx-auto mt-5 h-0.75 w-12 rounded-full bg-[#FF8A1F]" />
       </motion.div>
 
       {/* Marquee */}
@@ -301,13 +261,6 @@ export default function FeaturedStudentsSection() {
         </div>
       ) : (
         <MarqueeTrack students={students} onSelect={setActive} />
-      )}
-
-      {/* Hint text */}
-      {!loading && students.length > 0 && (
-        <p className="mt-6 text-center text-xs text-slate-400">
-          {t("featuredStudents.watchHint")}
-        </p>
       )}
 
       {/* Modal */}

@@ -155,13 +155,8 @@ export default function LearningJourneySection() {
           >
             {/* Stage copy — centered, above image */}
             <div className="mx-auto max-w-2xl text-center">
-              {/* Age range — cyan accent */}
-              <p className="text-[10px] font-bold uppercase tracking-[0.26em] text-[#38BDF8]">
-                {active.age_range}
-              </p>
-
               {/* Stage title */}
-              <h3 className="mt-2 text-2xl font-extrabold tracking-tight text-[#0F172A] md:text-3xl">
+              <h3 className="text-2xl font-extrabold tracking-tight text-[#0F172A] md:text-3xl">
                 {active.title}
               </h3>
 

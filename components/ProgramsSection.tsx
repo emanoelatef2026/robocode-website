@@ -322,7 +322,7 @@ export default function ProgramsSection() {
   return (
     <section
       id="programs"
-      className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-32"
+      className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24"
     >
       <SectionTitle
         eyebrow={t("programs.eyebrow")}

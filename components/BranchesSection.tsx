@@ -206,8 +206,8 @@ function DesktopExplorer({
   t: (k: string) => string;
   dir: string;
 }) {
-  const [active, setActive] = useState(0);
-  const branch = branches[active];
+  const [active, setActive] = useState<number | null>(null);
+  const branch = active !== null ? branches[active] : null;
 
   return (
     <div
@@ -261,7 +261,22 @@ function DesktopExplorer({
       {/* Detail panel */}
       <div className="flex-1 p-8">
         <AnimatePresence mode="wait">
-          <BranchPanel key={branch.id} branch={branch} t={t} dir={dir} />
+          {branch ? (
+            <BranchPanel key={branch.id} branch={branch} t={t} dir={dir} />
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 text-center"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-[#CBD5E1]">
+                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
+                <circle cx="12" cy="9" r="2.5" />
+              </svg>
+              <p className="text-sm font-medium text-[#94A3B8]">Select a branch to view details</p>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>
@@ -279,7 +294,7 @@ function MobileAccordion({
   t: (k: string) => string;
   dir: string;
 }) {
-  const [open, setOpen] = useState<string | null>(branches[0]?.id ?? null);
+  const [open, setOpen] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col gap-3 lg:hidden">

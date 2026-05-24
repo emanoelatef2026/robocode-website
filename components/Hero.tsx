@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -13,6 +14,16 @@ const fadeUp = (delay = 0) => ({
 
 export default function Hero() {
   const { t } = useLanguage();
+  const [heroImageUrl, setHeroImageUrl] = useState<string>("/hero-kids.png");
+
+  useEffect(() => {
+    fetch("/api/site-media?key=hero_image")
+      .then((r) => r.json())
+      .then((d: { image_url?: string } | null) => {
+        if (d?.image_url) setHeroImageUrl(d.image_url);
+      })
+      .catch(() => {});
+  }, []);
 
   const CTA_BUTTONS = (
     <>
@@ -89,7 +100,7 @@ export default function Hero() {
         className="flex shrink-0 items-center justify-center"
       >
         <Image
-          src="/hero-kids.png"
+          src={heroImageUrl}
           alt="Robocode School Students"
           width={700}
           height={700}
