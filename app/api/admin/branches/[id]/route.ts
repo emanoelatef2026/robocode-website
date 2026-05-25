@@ -12,18 +12,19 @@ export async function PATCH(
     const { id } = await params;
     const formData = await request.formData();
 
-    const name       = (formData.get("name")     as string)?.trim();
-    const phone      = (formData.get("phone")    as string)?.trim() || null;
-    const location   = (formData.get("location") as string)?.trim() || null;
+    const name       = (formData.get("name")       as string)?.trim();
+    const phone      = (formData.get("phone")      as string)?.trim() || null;
+    const location   = (formData.get("location")   as string)?.trim() || null;
     const sort_order = parseInt((formData.get("sort_order") as string) || "0", 10);
     const active     = formData.get("active") !== "false";
+    const study_mode = (formData.get("study_mode") as string) || "offline";
     const imageFile  = formData.get("image") as File | null;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    const updates: Record<string, unknown> = { name, phone, location, sort_order, active };
+    const updates: Record<string, unknown> = { name, phone, location, sort_order, active, study_mode };
 
     if (imageFile && imageFile.size > 0) {
       const bytes  = await imageFile.arrayBuffer();

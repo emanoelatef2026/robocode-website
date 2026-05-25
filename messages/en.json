@@ -5,15 +5,15 @@
     "projects": "Projects",
     "competitions": "Competitions",
     "branches": "Branches",
-    "bookTrial": "Book Trial",
-    "bookFreeTrial": "Book Free Trial"
+    "bookTrial": "Book Online Trial",
+    "bookFreeTrial": "Book Online Trial"
   },
   "hero": {
     "eyebrow": "The Future of Education",
     "heading1": "We Don't Teach Kids To Use Technology",
     "heading2": "We Teach Them To Build It",
     "subtext": "AI · Robotics · Game Development · Programming · Future Skills",
-    "bookSession": "Book Free Session",
+    "bookSession": "Book Online Trial",
     "explorePrograms": "Explore Programs",
     "statAiProjects": "AI Projects",
     "statStudents": "Students"
@@ -81,7 +81,33 @@
     "callNow": "Call Now",
     "getDirections": "Get Directions",
     "comingSoon": "Coming Soon",
-    "bookTrialHere": "Book Trial Here"
+    "bookTrialHere": "Book Online Trial"
+  },
+  "accreditations": {
+    "label": "Accreditations",
+    "eyebrow": "Trusted & Certified",
+    "heading1": "Globally",
+    "heading2": "Recognized",
+    "body": "Robocode programs are backed by internationally respected certifications and accreditations."
+  },
+  "partners": {
+    "label": "Partners",
+    "eyebrow": "Industry Collaboration",
+    "heading1": "Built With",
+    "heading2": "Industry Leaders",
+    "body": "We collaborate with world-class organizations to deliver the highest quality technology education."
+  },
+  "reviews": {
+    "eyebrow": "What Parents Say",
+    "heading1": "Real Results,",
+    "heading2": "Real Families",
+    "body": "Hear from the parents and students whose lives have been transformed by the Robocode experience."
+  },
+  "faq": {
+    "eyebrow": "FAQ",
+    "heading1": "Common",
+    "heading2": "Questions",
+    "body": "Everything you need to know about our programs, sessions, and learning approach."
   },
   "footer": {
     "tagline": "We don't teach kids to use technology — we teach them to build it. Empowering the next generation of innovators, engineers, and creators.",
@@ -97,7 +123,7 @@
     "linkContact": "Contact Us",
     "ctaHeading": "Ready to start your child's tech journey?",
     "ctaSubtext": "Book a free trial session at your nearest Robocode branch.",
-    "ctaButton": "Book Free Trial",
+    "ctaButton": "Book Online Trial",
     "copyright": "© 2026 Robocode School. All rights reserved.",
     "poweredBy": "Empowering future builders, one line of code at a time."
   }

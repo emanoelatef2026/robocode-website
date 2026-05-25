@@ -7,6 +7,8 @@ import MediaRequirementsBadge from "@/components/admin/MediaRequirementsBadge";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+type StudyMode = "online" | "offline" | "hybrid";
+
 interface Branch {
   id:         string;
   name:       string;
@@ -15,14 +17,23 @@ interface Branch {
   image_url:  string | null;
   active:     boolean;
   sort_order: number;
+  study_mode: StudyMode;
   created_at: string;
 }
 
 const EMPTY: Omit<Branch, "id" | "created_at"> = {
-  name: "", phone: "", location: "", image_url: null, active: true, sort_order: 0,
+  name: "", phone: "", location: "", image_url: null, active: true, sort_order: 0, study_mode: "offline",
 };
 
 const INPUT = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+
+// ── Study mode label ──────────────────────────────────────────────────────────
+
+const STUDY_MODE_LABELS: Record<string, { label: string; color: string }> = {
+  online:  { label: "Online",    color: "bg-[#38BDF8]/10 text-[#0EA5E9]" },
+  offline: { label: "In-Person", color: "bg-[#FF8A1F]/10 text-[#FF8A1F]" },
+  hybrid:  { label: "Hybrid",    color: "bg-purple-100 text-purple-600" },
+};
 
 // ── Field wrapper ─────────────────────────────────────────────────────────────
 
@@ -72,6 +83,7 @@ export default function BranchesPage() {
     setForm({
       name: b.name, phone: b.phone ?? "", location: b.location ?? "",
       image_url: b.image_url, active: b.active, sort_order: b.sort_order,
+      study_mode: b.study_mode ?? "offline",
     });
     setImageFile(null);
     setImgPreview(null);
@@ -98,6 +110,7 @@ export default function BranchesPage() {
     fd.append("location",   form.location ?? "");
     fd.append("sort_order", String(form.sort_order));
     fd.append("active",     String(form.active));
+    fd.append("study_mode", form.study_mode);
     if (imageFile) fd.append("image", imageFile);
 
     const url    = modal?.mode === "edit" ? `/api/admin/branches/${modal.branch!.id}` : "/api/admin/branches";
@@ -124,6 +137,7 @@ export default function BranchesPage() {
     fd.append("location",   b.location ?? "");
     fd.append("sort_order", String(b.sort_order));
     fd.append("active",     String(!b.active));
+    fd.append("study_mode", b.study_mode ?? "offline");
     await fetch(`/api/admin/branches/${b.id}`, { method: "PATCH", body: fd });
     setToggling(null);
     load();
@@ -178,7 +192,17 @@ export default function BranchesPage() {
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className="text-[14px] font-semibold text-[#0B1F3A] leading-snug">{b.name}</h3>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <h3 className="text-[14px] font-semibold text-[#0B1F3A] leading-snug">{b.name}</h3>
+                      {(() => {
+                        const m = STUDY_MODE_LABELS[b.study_mode ?? "offline"];
+                        return (
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${m.color}`}>
+                            {m.label}
+                          </span>
+                        );
+                      })()}
+                    </div>
                     {b.phone && (
                       <p className="mt-0.5 text-[12px] text-gray-400">{b.phone}</p>
                     )}
@@ -319,6 +343,30 @@ export default function BranchesPage() {
                   className="block w-full text-[13px] text-gray-500 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200"
                 />
                 <p className="mt-1 text-[11px] text-gray-400">WebP / PNG / JPG — max 300 KB recommended</p>
+              </Field>
+
+              <Field label="Study Mode">
+                <div className="flex gap-2">
+                  {(["online", "offline", "hybrid"] as const).map((mode) => {
+                    const { label, color } = STUDY_MODE_LABELS[mode];
+                    const isActive = form.study_mode === mode;
+                    return (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setForm({ ...form, study_mode: mode })}
+                        className={[
+                          "flex-1 rounded-lg border py-2 text-[12px] font-semibold transition",
+                          isActive
+                            ? `${color} border-current`
+                            : "border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600",
+                        ].join(" ")}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
               </Field>
 
               {/* Active toggle */}

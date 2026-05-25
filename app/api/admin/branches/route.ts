@@ -25,11 +25,12 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
 
-    const name       = (formData.get("name")     as string)?.trim();
-    const phone      = (formData.get("phone")    as string)?.trim() || null;
-    const location   = (formData.get("location") as string)?.trim() || null;
+    const name       = (formData.get("name")       as string)?.trim();
+    const phone      = (formData.get("phone")      as string)?.trim() || null;
+    const location   = (formData.get("location")   as string)?.trim() || null;
     const sort_order = parseInt((formData.get("sort_order") as string) || "0", 10);
     const active     = formData.get("active") !== "false";
+    const study_mode = (formData.get("study_mode") as string) || "offline";
     const imageFile  = formData.get("image") as File | null;
 
     if (!name) {
@@ -58,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await getSupabaseAdmin()
       .from("branches")
-      .insert({ name, phone, location, image_url, sort_order, active })
+      .insert({ name, phone, location, image_url, sort_order, active, study_mode })
       .select()
       .single();
 

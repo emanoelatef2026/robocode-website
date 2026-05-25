@@ -1,16 +1,20 @@
 "use client";
 
-import Hero               from "./Hero";
-import TrustSection       from "./TrustSection";
-import WhySection         from "./WhySection";
-import ProgramsSection    from "./ProgramsSection";
-import LearningJourneySection from "./LearningJourneySection";
-import ProjectsSection    from "./ProjectsSection";
+import Hero                    from "./Hero";
+import TrustSection            from "./TrustSection";
+import WhySection              from "./WhySection";
+import ProgramsSection         from "./ProgramsSection";
+import LearningJourneySection  from "./LearningJourneySection";
+import ProjectsSection         from "./ProjectsSection";
 import FeaturedStudentsSection from "./FeaturedStudentsSection";
-import CompetitionsSection from "./CompetitionsSection";
-import BranchesSection    from "./BranchesSection";
-import ContactSection     from "./ContactSection";
-import Reveal             from "./Reveal";
+import CompetitionsSection     from "./CompetitionsSection";
+import BranchesSection         from "./BranchesSection";
+import ContactSection          from "./ContactSection";
+import AccreditationsSection   from "./AccreditationsSection";
+import PartnersSection         from "./PartnersSection";
+import ReviewsSection          from "./ReviewsSection";
+import FAQSection              from "./FAQSection";
+import Reveal                  from "./Reveal";
 
 // Each value is a factory so React creates fresh elements on each render.
 // Sections that already carry their own scroll-reveal animations are left
@@ -26,6 +30,10 @@ const SECTION_MAP: Record<string, () => React.ReactNode> = {
   competitions:      () => <CompetitionsSection />,
   branches:          () => <Reveal><BranchesSection /></Reveal>,
   contact:           () => <Reveal><ContactSection /></Reveal>,
+  accreditations:    () => <Reveal><AccreditationsSection /></Reveal>,
+  partners:          () => <Reveal><PartnersSection /></Reveal>,
+  reviews:           () => <Reveal><ReviewsSection /></Reveal>,
+  faq:               () => <Reveal><FAQSection /></Reveal>,
 };
 
 interface Props {

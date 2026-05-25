@@ -220,7 +220,7 @@ export default function FeaturedStudentsSection() {
   }, []);
 
   return (
-    <section id="featured-students" className="relative z-10 overflow-hidden py-16 md:py-24">
+    <section id="featured-students" className="relative z-10 overflow-hidden pb-16 md:pb-24">
 
       <div className="pointer-events-none absolute left-1/3 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[#FF8A1F]/5 blur-3xl" />
       <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[#0B1F3A]/4 blur-3xl" />
@@ -236,14 +236,14 @@ export default function FeaturedStudentsSection() {
         <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#FF8A1F]">
           {t("featuredStudents.eyebrow")}
         </p>
-        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0F172A] md:text-5xl lg:text-[3.5rem]">
+        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0F172A] md:text-5xl lg:text-6xl">
           {t("featuredStudents.heading1")}{" "}
           <span className="text-[#FF8A1F]">{t("featuredStudents.heading2")}</span>
         </h2>
-        <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-[#64748B] md:text-base">
+        <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#334155] md:text-lg">
           {t("featuredStudents.body")}
         </p>
-        <div className="mx-auto mt-5 h-0.75 w-12 rounded-full bg-[#FF8A1F]" />
+        <div className="mx-auto mt-6 h-0.75 w-14 rounded-full bg-[#FF8A1F]" />
       </motion.div>
 
       {/* Marquee */}

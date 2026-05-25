@@ -9,6 +9,8 @@ import SectionEmptyState from "@/components/ui/SectionEmptyState";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+type StudyMode = "online" | "offline" | "hybrid";
+
 interface Branch {
   id:         string;
   name:       string;
@@ -17,6 +19,7 @@ interface Branch {
   image_url:  string | null;
   active:     boolean;
   sort_order: number;
+  study_mode: StudyMode | null;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -25,8 +28,9 @@ function toWhatsApp(phone: string): string {
   return phone.replace(/[\s\-\(\)\+]/g, "");
 }
 
-function isOnlineBranch(b: Branch): boolean {
-  return !b.location && !b.phone;
+function getStudyMode(b: Branch): StudyMode {
+  if (b.study_mode) return b.study_mode;
+  return !b.location && !b.phone ? "online" : "offline";
 }
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -55,6 +59,67 @@ function WhatsAppIcon() {
   );
 }
 
+// ── Study experience ──────────────────────────────────────────────────────────
+
+const STUDY_FEATURES: Record<StudyMode, { icon: string; label: string }[]> = {
+  online: [
+    { icon: "🎥", label: "Live sessions" },
+    { icon: "📹", label: "Recorded replay" },
+    { icon: "🌍", label: "Global mentors" },
+    { icon: "💬", label: "24/7 support" },
+    { icon: "🏅", label: "Digital certificates" },
+    { icon: "⌨️", label: "Coding platform" },
+  ],
+  offline: [
+    { icon: "🏫", label: "Physical labs" },
+    { icon: "👩‍🏫", label: "Face-to-face mentoring" },
+    { icon: "🤖", label: "Hardware kits" },
+    { icon: "🤝", label: "Team projects" },
+    { icon: "🚌", label: "Field trips" },
+    { icon: "🎉", label: "On-site events" },
+  ],
+  hybrid: [
+    { icon: "🔄", label: "Flexible scheduling" },
+    { icon: "🏫", label: "Attend in-person or online" },
+    { icon: "📚", label: "Same curriculum" },
+    { icon: "💻", label: "Lab & digital access" },
+    { icon: "🌐", label: "Community platform" },
+    { icon: "📊", label: "Progress tracking" },
+  ],
+};
+
+const STUDY_MODE_META: Record<StudyMode, { label: string; color: string; bg: string }> = {
+  online:  { label: "Online",    color: "text-[#38BDF8]", bg: "bg-[#38BDF8]/10" },
+  offline: { label: "In-Person", color: "text-[#FF8A1F]", bg: "bg-[#FF8A1F]/10" },
+  hybrid:  { label: "Hybrid",    color: "text-purple-500", bg: "bg-purple-100" },
+};
+
+function StudyExperience({ mode }: { mode: StudyMode }) {
+  const meta     = STUDY_MODE_META[mode];
+  const features = STUDY_FEATURES[mode];
+
+  return (
+    <div className="mt-6 border-t border-[#E2E8F0] pt-5">
+      <div className="mb-3 flex items-center gap-2">
+        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${meta.bg} ${meta.color}`}>
+          {meta.label}
+        </span>
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+          Study Experience
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+        {features.map((f) => (
+          <div key={f.label} className="flex items-center gap-2">
+            <span className="text-base leading-none">{f.icon}</span>
+            <span className="text-[12px] font-medium text-[#475569]">{f.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── Detail panel ──────────────────────────────────────────────────────────────
 
 function BranchPanel({
@@ -66,7 +131,8 @@ function BranchPanel({
   t: (k: string) => string;
   dir: string;
 }) {
-  const online  = isOnlineBranch(branch);
+  const mode    = getStudyMode(branch);
+  const online  = mode === "online";
   const xIn     = dir === "rtl" ? -16 : 16;
   const xOut    = dir === "rtl" ? 16 : -16;
 
@@ -124,11 +190,9 @@ function BranchPanel({
           >
             {branch.name}
           </h3>
-          {online && (
-            <span className="rounded-full bg-[#38BDF8]/10 px-2.5 py-0.5 text-[11px] font-bold text-[#38BDF8]">
-              Online
-            </span>
-          )}
+          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${STUDY_MODE_META[mode].bg} ${STUDY_MODE_META[mode].color}`}>
+            {STUDY_MODE_META[mode].label}
+          </span>
         </div>
 
         {branch.phone && (
@@ -147,6 +211,8 @@ function BranchPanel({
             <span className="text-sm leading-snug">{branch.location}</span>
           </div>
         )}
+
+        <StudyExperience mode={mode} />
       </div>
 
       {/* CTAs */}
@@ -220,7 +286,6 @@ function DesktopExplorer({
       >
         {branches.map((b, i) => {
           const isActive = i === active;
-          const online   = isOnlineBranch(b);
           return (
             <button
               key={b.id}
@@ -247,7 +312,7 @@ function DesktopExplorer({
                   isActive ? "bg-[#38BDF8] text-white" : "bg-[#E2E8F0] text-[#64748B]"
                 }`}
               >
-                {online ? "🌐" : b.name.charAt(0)}
+                {b.name.charAt(0)}
               </span>
 
               <span className={`min-w-0 flex-1 truncate text-[13px] font-semibold leading-snug ${isActive ? "text-[#0B1F3A]" : ""}`}>
@@ -300,7 +365,6 @@ function MobileAccordion({
     <div className="flex flex-col gap-3 lg:hidden">
       {branches.map((b) => {
         const isOpen = open === b.id;
-        const online = isOnlineBranch(b);
 
         return (
           <div
@@ -317,7 +381,7 @@ function MobileAccordion({
                     isOpen ? "bg-[#38BDF8] text-white" : "bg-[#F1F5F9] text-[#64748B]"
                   }`}
                 >
-                  {online ? "🌐" : b.name.charAt(0)}
+                  {b.name.charAt(0)}
                 </span>
                 <span className={`text-[14px] font-semibold ${isOpen ? "text-[#38BDF8]" : "text-[#0B1F3A]"}`}>
                   {b.name}
@@ -374,7 +438,7 @@ export default function BranchesSection() {
   }, []);
 
   return (
-    <section id="branches" className="relative z-10 overflow-hidden py-16 md:py-28">
+    <section id="branches" className="relative z-10 overflow-hidden pb-16 md:pb-24">
 
       {/* Background decoration */}
       <div className="pointer-events-none absolute right-0 top-0 h-96 w-96 rounded-full bg-[#38BDF8]/5 blur-3xl" />
@@ -390,14 +454,14 @@ export default function BranchesSection() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="mb-10 text-center md:mb-14"
         >
-          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-[#FF8A1F]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#FF8A1F]">
             {t("branches.eyebrow")}
           </p>
-          <h2 className="mt-4 text-3xl font-bold text-[#0F172A] md:text-5xl lg:text-6xl">
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0F172A] md:text-5xl lg:text-6xl">
             {t("branches.heading1")}{" "}
             <span className="text-[#38BDF8]">{t("branches.heading2")}</span>
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base text-[#334155] md:text-lg">
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#334155] md:text-lg">
             {t("branches.body")}
           </p>
           <div className="mx-auto mt-6 h-0.75 w-14 rounded-full bg-[#FF8A1F]" />

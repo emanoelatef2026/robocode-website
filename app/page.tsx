@@ -16,6 +16,10 @@ const DEFAULT_SECTIONS = [
   "projects",
   "featured_students",
   "competitions",
+  "reviews",
+  "accreditations",
+  "partners",
+  "faq",
 ];
 
 export default async function Home() {

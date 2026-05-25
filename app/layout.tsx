@@ -23,9 +23,28 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: "Robocode School | Future Tech Academy for Kids",
+  metadataBase: new URL("https://robocodeschool.com"),
+  title: {
+    default: "Robocode School | Future Tech Academy for Kids",
+    template: "%s | Robocode School",
+  },
   description:
-    "Robocode School teaches kids AI, robotics, game development, and programming. Book a free trial session today.",
+    "Robocode School teaches kids AI, robotics, game development, and programming. Book a free online trial session today.",
+  keywords: ["kids coding", "robotics for kids", "AI for children", "STEM education", "game development", "programming school"],
+  openGraph: {
+    type: "website",
+    siteName: "Robocode School",
+    title: "Robocode School | Future Tech Academy for Kids",
+    description: "Robocode School teaches kids AI, robotics, game development, and programming. Book a free online trial session today.",
+    images: [{ url: "/og-default.jpg", width: 1200, height: 630, alt: "Robocode School" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Robocode School | Future Tech Academy for Kids",
+    description: "Robocode School teaches kids AI, robotics, game development, and programming.",
+    images: ["/og-default.jpg"],
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

@@ -106,13 +106,13 @@ export default function WhySection() {
           <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#38BDF8]">
             {t("why.eyebrow")}
           </p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0F172A] md:text-5xl lg:text-[3.5rem]">
+          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0F172A] md:text-5xl lg:text-6xl">
             {t("why.heading")}
           </h2>
-          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-[#64748B] md:text-base">
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#334155] md:text-lg">
             {t("why.body")}
           </p>
-          <div className="mx-auto mt-5 h-0.5 w-12 rounded-full bg-[#38BDF8]" />
+          <div className="mx-auto mt-6 h-0.75 w-14 rounded-full bg-[#38BDF8]" />
         </motion.div>
 
         {/* ── 50 / 50 editorial layout ─────────────────────────────────── */}

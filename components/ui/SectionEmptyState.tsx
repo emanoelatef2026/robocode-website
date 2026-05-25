@@ -52,11 +52,74 @@ function GenericIllustration() {
   );
 }
 
+function ReviewsIllustration() {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className="h-16 w-16">
+      <circle cx="32" cy="32" r="28" fill="#0B1F3A" fillOpacity=".06" />
+      <path d="M18 28h28v14a2 2 0 01-2 2H20a2 2 0 01-2-2V28z" fill="#38BDF8" fillOpacity=".12" />
+      <path d="M18 28v-4a2 2 0 012-2h24a2 2 0 012 2v4H18z" fill="#0B1F3A" fillOpacity=".08" />
+      <path d="M24 36h4M24 40h8" stroke="#38BDF8" strokeOpacity=".6" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M40 34l1.5 3 3.5.5-2.5 2.5.5 3.5L40 42l-3 1.5.5-3.5L35 37.5l3.5-.5L40 34z" fill="#FF8A1F" fillOpacity=".5" />
+    </svg>
+  );
+}
+
+function PartnersIllustration() {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className="h-16 w-16">
+      <circle cx="32" cy="32" r="28" fill="#0B1F3A" fillOpacity=".06" />
+      <rect x="14" y="26" width="15" height="10" rx="3" fill="#38BDF8" fillOpacity=".2" />
+      <rect x="35" y="26" width="15" height="10" rx="3" fill="#0B1F3A" fillOpacity=".1" />
+      <path d="M29 31h6" stroke="#38BDF8" strokeOpacity=".6" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="22" cy="31" r="2" fill="#38BDF8" fillOpacity=".5" />
+      <circle cx="43" cy="31" r="2" fill="#0B1F3A" fillOpacity=".2" />
+    </svg>
+  );
+}
+
+function AccreditationsIllustration() {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className="h-16 w-16">
+      <circle cx="32" cy="32" r="28" fill="#0B1F3A" fillOpacity=".06" />
+      <path d="M32 16l2.9 8.9H44l-7.6 5.5 2.9 8.9L32 34l-7.3 5.3 2.9-8.9L20 24.9h9.1L32 16z" fill="#FF8A1F" fillOpacity=".35" />
+      <circle cx="32" cy="32" r="8" stroke="#38BDF8" strokeOpacity=".4" strokeWidth="1.5" />
+      <path d="M28 32l2.5 2.5L36 29" stroke="#38BDF8" strokeOpacity=".7" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BlogIllustration() {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className="h-16 w-16">
+      <circle cx="32" cy="32" r="28" fill="#0B1F3A" fillOpacity=".06" />
+      <rect x="16" y="18" width="32" height="28" rx="3" fill="#0B1F3A" fillOpacity=".07" />
+      <rect x="16" y="18" width="32" height="9" rx="3" fill="#38BDF8" fillOpacity=".18" />
+      <path d="M20 34h24M20 38h16M20 42h20" stroke="#38BDF8" strokeOpacity=".5" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function FAQIllustration() {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" className="h-16 w-16">
+      <circle cx="32" cy="32" r="28" fill="#0B1F3A" fillOpacity=".06" />
+      <circle cx="32" cy="32" r="12" stroke="#38BDF8" strokeOpacity=".35" strokeWidth="1.5" />
+      <path d="M29 28.5c0-1.7 1.3-3 3-3s3 1.3 3 3c0 1.3-.8 2.4-2 2.8V34" stroke="#38BDF8" strokeOpacity=".7" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="32" cy="37" r="1" fill="#38BDF8" fillOpacity=".7" />
+    </svg>
+  );
+}
+
 const ILLUSTRATIONS = {
-  branches: BranchIllustration,
-  students: StudentsIllustration,
-  projects: ProjectsIllustration,
-  generic:  GenericIllustration,
+  branches:        BranchIllustration,
+  students:        StudentsIllustration,
+  projects:        ProjectsIllustration,
+  reviews:         ReviewsIllustration,
+  partners:        PartnersIllustration,
+  accreditations:  AccreditationsIllustration,
+  blog:            BlogIllustration,
+  faq:             FAQIllustration,
+  generic:         GenericIllustration,
 } as const;
 
 // ── Component ─────────────────────────────────────────────────────────────────

@@ -42,6 +42,10 @@ const SECTION_ICONS: Record<string, React.ReactNode> = {
   competitions:      <span className="text-lg">🥇</span>,
   branches:          <span className="text-lg">📍</span>,
   contact:           <span className="text-lg">✉️</span>,
+  reviews:           <span className="text-lg">💬</span>,
+  accreditations:    <span className="text-lg">🏅</span>,
+  partners:          <span className="text-lg">🤝</span>,
+  faq:               <span className="text-lg">❓</span>,
 };
 
 // ── Drag handle icon ──────────────────────────────────────────────────────────

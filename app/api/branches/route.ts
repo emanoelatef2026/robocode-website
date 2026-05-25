@@ -10,7 +10,7 @@ export async function GET() {
 
     const { data, error } = await getSupabaseAdmin()
       .from("branches")
-      .select("id, name, phone, location, image_url, sort_order, active, created_at")
+      .select("id, name, phone, location, image_url, sort_order, active, study_mode, created_at")
       // neq false to include rows where active is NULL or true
       .neq("active", false)
       .order("sort_order", { ascending: true })
