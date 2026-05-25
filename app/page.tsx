@@ -16,6 +16,7 @@ const DEFAULT_SECTIONS = [
   "projects",
   "featured_students",
   "competitions",
+  "branches",
   "reviews",
   "accreditations",
   "partners",
@@ -33,7 +34,11 @@ export default async function Home() {
       .order("sort_order", { ascending: true });
 
     if (!error && Array.isArray(data) && data.length > 0) {
-      sectionKeys = data.map((s: { key: string }) => s.key);
+      const dbKeys = data.map((s: { key: string }) => s.key);
+      // Any key in DEFAULT_SECTIONS not yet seeded in the DB is appended at the end.
+      // This prevents new sections from disappearing when the DB was seeded before them.
+      const unseededed = DEFAULT_SECTIONS.filter((k) => !dbKeys.includes(k));
+      sectionKeys = [...dbKeys, ...unseededed];
     }
   } catch {
     // Table not seeded yet or network issue — fall back to default order.

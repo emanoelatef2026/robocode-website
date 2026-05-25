@@ -4,28 +4,33 @@ import { getSupabaseAdmin } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+async function fetchBranches(includeStudyMode: boolean) {
+  const cols = includeStudyMode
+    ? "id, name, phone, location, image_url, sort_order, active, study_mode, created_at"
+    : "id, name, phone, location, image_url, sort_order, active, created_at";
+
+  return getSupabaseAdmin()
+    .from("branches")
+    .select(cols)
+    .neq("active", false)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+}
+
 export async function GET() {
   try {
-    console.log("[branches GET] querying branches table...");
+    let { data, error } = await fetchBranches(true);
 
-    const { data, error } = await getSupabaseAdmin()
-      .from("branches")
-      .select("id, name, phone, location, image_url, sort_order, active, study_mode, created_at")
-      // neq false to include rows where active is NULL or true
-      .neq("active", false)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("[branches GET] supabase error:", JSON.stringify(error));
-      throw error;
+    // PostgreSQL 42703 = undefined_column: study_mode migration not yet applied — retry without it.
+    if (error?.code === "42703") {
+      ({ data, error } = await fetchBranches(false) as Awaited<ReturnType<typeof fetchBranches>>);
     }
 
-    console.log("[branches GET] rows returned:", data?.length ?? 0);
+    if (error) throw error;
 
     return NextResponse.json(data ?? []);
   } catch (err) {
-    console.error("[branches GET] fatal:", err);
+    console.error("[branches GET]", err);
     return NextResponse.json({ error: "Failed to fetch branches" }, { status: 500 });
   }
 }

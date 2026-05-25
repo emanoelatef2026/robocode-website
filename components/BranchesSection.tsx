@@ -431,9 +431,12 @@ export default function BranchesSection() {
 
   useEffect(() => {
     fetch("/api/branches")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`branches API ${r.status}`);
+        return r.json();
+      })
       .then((d) => { setBranches(Array.isArray(d) ? d : []); })
-      .catch(console.error)
+      .catch(() => { setBranches([]); })
       .finally(() => setLoading(false));
   }, []);
 
