@@ -6,7 +6,7 @@
 CREATE TABLE IF NOT EXISTS public.groups (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   branch_id         UUID NOT NULL REFERENCES public.branches(id) ON DELETE CASCADE,
-  semester_id       UUID REFERENCES public.semesters(id) ON DELETE SET NULL,
+  semester_id       UUID, -- FK added in 0020_semesters after semesters table exists
   name              TEXT NOT NULL,
   code              TEXT,
   type              TEXT NOT NULL DEFAULT 'class'

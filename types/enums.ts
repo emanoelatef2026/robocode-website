@@ -26,7 +26,25 @@ export type ScheduleDelivery = 'online' | 'offline' | 'hybrid'
 
 export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused' | 'makeup'
 
-export type AssignmentType = 'homework' | 'classwork' | 'project' | 'quiz' | 'exam'
+export type AssignmentType =
+  | 'homework'
+  | 'classwork'
+  | 'project'
+  | 'quiz'
+  | 'exam'
+  | 'presentation'
+  | 'challenge'
+  | 'competition'
+
+export type AssignmentSubmissionType =
+  | 'text'
+  | 'file'
+  | 'image'
+  | 'video_link'
+  | 'drive_link'
+  | 'github_link'
+  | 'url'
+  | 'multiple'
 
 export type AssignmentStatus = 'draft' | 'published' | 'closed'
 

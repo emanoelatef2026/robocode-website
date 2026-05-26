@@ -1,4 +1,13 @@
 const COLORS: Record<string, string> = {
+  published:   "bg-emerald-50 text-emerald-700 border-emerald-200",
+  draft:       "bg-gray-50 text-gray-500 border-gray-200",
+  closed:      "bg-slate-50 text-slate-600 border-slate-200",
+  submitted:   "bg-blue-50 text-blue-700 border-blue-200",
+  graded:      "bg-teal-50 text-teal-700 border-teal-200",
+  returned:    "bg-amber-50 text-amber-700 border-amber-200",
+  under_review: "bg-violet-50 text-violet-700 border-violet-200",
+  resubmission_requested: "bg-orange-50 text-orange-700 border-orange-200",
+  resubmitted: "bg-sky-50 text-sky-700 border-sky-200",
   active:      "bg-emerald-50 text-emerald-700 border-emerald-200",
   inactive:    "bg-gray-50 text-gray-500 border-gray-200",
   graduated:   "bg-blue-50 text-blue-700 border-blue-200",

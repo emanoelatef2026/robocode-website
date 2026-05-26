@@ -1,0 +1,40 @@
+import { requirePermission } from '@/modules/rbac/guards'
+import { listAcademicYears } from '@/modules/academic-years/queries'
+import PageHeader from '@/components/admin/PageHeader'
+import NewSemesterForm from './NewSemesterForm'
+import Link from 'next/link'
+
+export default async function NewSemesterPage() {
+  await requirePermission('manage_system')
+  const years = await listAcademicYears()
+
+  return (
+    <div>
+      <PageHeader
+        title="New Semester"
+        description="Create a semester within an academic year."
+        action={
+          <Link
+            href="/admin/semesters"
+            className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
+          >
+            Back
+          </Link>
+        }
+      />
+      {years.length === 0 ? (
+        <div className="rounded-xl border border-[#E2E8F0] bg-white p-8 text-center">
+          <p className="text-sm text-[#64748B]">You need an academic year before creating a semester.</p>
+          <Link
+            href="/admin/semesters/academic-years"
+            className="mt-3 inline-block text-sm font-medium text-[#FF8A1F] hover:underline"
+          >
+            Create academic year →
+          </Link>
+        </div>
+      ) : (
+        <NewSemesterForm years={years} />
+      )}
+    </div>
+  )
+}
