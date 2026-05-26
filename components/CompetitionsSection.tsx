@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Reveal from "./Reveal";
 import SectionTitle from "./ui/SectionTitle";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -64,11 +63,10 @@ export default function CompetitionsSection() {
   const { t } = useLanguage();
 
   return (
-    <Reveal>
-      <section
-        id="competitions"
-        className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24"
-      >
+    <section
+      id="competitions"
+      className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24"
+    >
         <SectionTitle
           eyebrow={t("competitions.eyebrow")}
           heading={<>{t("competitions.heading1")} <span className="text-[#FF8A1F]">{t("competitions.heading2")}</span></>}
@@ -110,7 +108,6 @@ export default function CompetitionsSection() {
             </motion.div>
           ))}
         </div>
-      </section>
-    </Reveal>
+    </section>
   );
 }

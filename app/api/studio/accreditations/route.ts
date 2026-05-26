@@ -20,11 +20,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const fd        = await request.formData();
-    const logoFile  = fd.get("logo") as File | null;
-    const name      = (fd.get("name") as string)?.trim();
-    const sortOrder = parseInt((fd.get("sort_order") as string) ?? "0", 10);
-    const active    = fd.get("active") !== "false";
+    const fd          = await request.formData();
+    const logoFile    = fd.get("logo") as File | null;
+    const name        = (fd.get("name") as string)?.trim();
+    const sortOrder   = parseInt((fd.get("sort_order") as string) ?? "0", 10);
+    const active      = fd.get("active") !== "false";
+    const website_url = (fd.get("website_url") as string)?.trim() || null;
 
     if (!name)                          return NextResponse.json({ error: "Name required" },  { status: 400 });
     if (!logoFile || logoFile.size === 0) return NextResponse.json({ error: "Logo required" }, { status: 400 });
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await getSupabaseAdmin()
       .from("accreditations")
-      .insert({ name, logo_url: urlData.publicUrl, active, sort_order: isNaN(sortOrder) ? 0 : sortOrder })
+      .insert({ name, logo_url: urlData.publicUrl, active, sort_order: isNaN(sortOrder) ? 0 : sortOrder, website_url })
       .select().single();
     if (error) throw error;
 

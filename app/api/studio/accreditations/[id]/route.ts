@@ -11,7 +11,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body   = await request.json() as Record<string, unknown>;
-    const allowed = ["name", "active", "sort_order"];
+    const allowed = ["name", "active", "sort_order", "website_url"];
     const update: Record<string, unknown> = {};
     for (const k of allowed) { if (k in body) update[k] = body[k]; }
 

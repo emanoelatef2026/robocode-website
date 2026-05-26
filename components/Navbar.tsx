@@ -55,6 +55,19 @@ export default function Navbar() {
     { key: "nav.branches",     href: "/#branches"     },
   ];
 
+  const MOBILE_NAV_LINKS = [
+    { key: "nav.home",             href: "/"                    },
+    { key: "nav.why",              href: "/#why"                },
+    { key: "nav.programs",         href: "/#programs"           },
+    { key: "nav.learningJourney",  href: "/#learning-journey"   },
+    { key: "nav.projects",         href: "/#projects"           },
+    { key: "nav.competitions",     href: "/#competitions"       },
+    { key: "nav.featuredStudents", href: "/#featured-students"  },
+    { key: "nav.accreditations",   href: "/#accreditations"     },
+    { key: "nav.partners",         href: "/#partners"           },
+    { key: "nav.branches",         href: "/#branches"           },
+  ];
+
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 16);
     window.addEventListener("scroll", handler, { passive: true });
@@ -116,7 +129,7 @@ export default function Navbar() {
             >
               {t(key)}
               {/* logical start-0 so underline slides from correct side in both LTR/RTL */}
-              <span className="absolute -bottom-0.5 start-0 h-[2px] w-0 rounded-full bg-[#FF8A1F] transition-all duration-300 group-hover:w-full" />
+              <span className="absolute -bottom-0.5 inset-s-0 h-0.5 w-0 rounded-full bg-[#FF8A1F] transition-all duration-300 group-hover:w-full" />
             </Link>
           ))}
         </nav>
@@ -141,22 +154,22 @@ export default function Navbar() {
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Toggle navigation menu"
           aria-expanded={menuOpen}
-          className="flex flex-col justify-center gap-[5px] p-3 md:hidden"
+          className="flex flex-col justify-center gap-1.25 p-3 md:hidden"
         >
           <motion.span
             animate={menuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
             transition={{ duration: 0.22 }}
-            className="block h-[2px] w-5 origin-center rounded-full bg-[#0B1F3A]"
+            className="block h-0.5 w-5 origin-center rounded-full bg-[#0B1F3A]"
           />
           <motion.span
             animate={menuOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
             transition={{ duration: 0.18 }}
-            className="block h-[2px] w-5 rounded-full bg-[#0B1F3A]"
+            className="block h-0.5 w-5 rounded-full bg-[#0B1F3A]"
           />
           <motion.span
             animate={menuOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
             transition={{ duration: 0.22 }}
-            className="block h-[2px] w-5 origin-center rounded-full bg-[#0B1F3A]"
+            className="block h-0.5 w-5 origin-center rounded-full bg-[#0B1F3A]"
           />
         </button>
       </div>
@@ -173,7 +186,7 @@ export default function Navbar() {
             className="overflow-hidden border-t border-[#E2E8F0] bg-white/98 backdrop-blur-xl md:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-4">
-              {NAV_LINKS.map(({ key, href }) => (
+              {MOBILE_NAV_LINKS.map(({ key, href }) => (
                 <Link
                   key={key}
                   href={href}

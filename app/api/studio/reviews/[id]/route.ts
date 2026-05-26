@@ -11,7 +11,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const body   = await request.json() as Record<string, unknown>;
-    const allowed = ["name", "role", "review", "rating", "branch", "active", "sort_order"];
+    const allowed = ["name", "role", "review", "rating", "branch", "active", "sort_order", "status", "featured"];
     const update: Record<string, unknown> = {};
     for (const k of allowed) { if (k in body) update[k] = body[k]; }
 
@@ -20,7 +20,7 @@ export async function PATCH(
     if (error) throw error;
     return NextResponse.json(data);
   } catch (err) {
-    console.error("[admin/reviews PATCH]", err);
+    console.error("[studio/reviews PATCH]", err);
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });
   }
 }
@@ -31,11 +31,25 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+
+    // Fetch image_url for storage cleanup
+    const { data: row } = await getSupabaseAdmin()
+      .from("reviews")
+      .select("image_url")
+      .eq("id", id)
+      .single();
+
     const { error } = await getSupabaseAdmin().from("reviews").delete().eq("id", id);
     if (error) throw error;
+
+    if (row?.image_url) {
+      const path = new URL(row.image_url).pathname.split("/reviews/")[1];
+      if (path) await getSupabaseAdmin().storage.from("reviews").remove([path]);
+    }
+
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[admin/reviews DELETE]", err);
+    console.error("[studio/reviews DELETE]", err);
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }

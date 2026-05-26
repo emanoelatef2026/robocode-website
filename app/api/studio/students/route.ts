@@ -8,61 +8,54 @@ export async function GET() {
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("featured_students")
-      .select("*")
+      .select("id, name, image_url, achievement_title, achievement_description, project_link, is_active, sort_order, created_at")
       .order("sort_order", { ascending: true });
 
     if (error) throw error;
 
     return NextResponse.json(data ?? []);
   } catch (err) {
-    console.error("[admin/students GET]", err);
+    console.error("[studio/students GET]", err);
     return NextResponse.json({ error: "Failed to fetch students" }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const formData   = await request.formData();
-    const imageFile  = formData.get("image") as File | null;
-    const name       = (formData.get("name")        as string)?.trim();
-    const grade      = (formData.get("grade")       as string)?.trim();
-    const country    = (formData.get("country")     as string)?.trim();
-    const youtubeUrl = (formData.get("youtube_url") as string)?.trim();
-    const featured   = formData.get("featured") === "true";
-    const sortOrder  = parseInt((formData.get("sort_order") as string) ?? "0", 10);
+    const fd              = await request.formData();
+    const imageFile       = fd.get("image") as File | null;
+    const name            = (fd.get("name")                    as string)?.trim();
+    const achievementTitle = (fd.get("achievement_title")      as string)?.trim() || null;
+    const achievementDesc  = (fd.get("achievement_description") as string)?.trim() || null;
+    const projectLink      = (fd.get("project_link")           as string)?.trim() || null;
+    const sortOrder        = parseInt((fd.get("sort_order")    as string) ?? "0", 10);
+    const isActive         = fd.get("is_active") !== "false";
 
-    if (!name)       return NextResponse.json({ error: "Name is required" }, { status: 400 });
-    if (!grade)      return NextResponse.json({ error: "Grade is required" }, { status: 400 });
-    if (!country)    return NextResponse.json({ error: "Country is required" }, { status: 400 });
-    if (!youtubeUrl) return NextResponse.json({ error: "YouTube URL is required" }, { status: 400 });
+    if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
     if (!imageFile || imageFile.size === 0) {
       return NextResponse.json({ error: "Image is required" }, { status: 400 });
     }
 
-    const bytes  = await imageFile.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const buffer = Buffer.from(await imageFile.arrayBuffer());
     const path   = `${Date.now()}-${imageFile.name.replace(/\s+/g, "-")}`;
 
-    const { error: uploadError } = await getSupabaseAdmin().storage
+    const { error: uploadErr } = await getSupabaseAdmin().storage
       .from("students")
       .upload(path, buffer, { contentType: imageFile.type, upsert: false });
+    if (uploadErr) throw uploadErr;
 
-    if (uploadError) throw uploadError;
-
-    const { data: urlData } = getSupabaseAdmin().storage
-      .from("students")
-      .getPublicUrl(path);
+    const { data: urlData } = getSupabaseAdmin().storage.from("students").getPublicUrl(path);
 
     const { data, error } = await getSupabaseAdmin()
       .from("featured_students")
       .insert({
         name,
-        grade,
-        country,
-        image_url:   urlData.publicUrl,
-        youtube_url: youtubeUrl,
-        featured,
-        sort_order:  isNaN(sortOrder) ? 0 : sortOrder,
+        image_url:               urlData.publicUrl,
+        achievement_title:       achievementTitle,
+        achievement_description: achievementDesc,
+        project_link:            projectLink,
+        is_active:               isActive,
+        sort_order:              isNaN(sortOrder) ? 0 : sortOrder,
       })
       .select()
       .single();
@@ -71,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: 201 });
   } catch (err) {
-    console.error("[admin/students POST]", err);
+    console.error("[studio/students POST]", err);
     return NextResponse.json({ error: "Failed to create student" }, { status: 500 });
   }
 }

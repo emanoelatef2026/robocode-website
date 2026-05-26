@@ -2,76 +2,53 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Reveal from "./Reveal";
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-function IconAdaptive() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-      <circle cx="5"  cy="12" r="2" />
-      <circle cx="19" cy="5"  r="2" />
-      <circle cx="19" cy="19" r="2" />
-      <path d="M7 12h4m4-5H9m6 7H9" />
-      <path d="M11 12l6-5M11 12l6 5" />
-    </svg>
-  );
+interface WhyTab {
+  id:        string;
+  tab_name:  string;
+  image_url: string;
 }
 
-function IconProjects() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-      <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
-      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-      <line x1="12" y1="22.08" x2="12" y2="12" />
-    </svg>
-  );
+interface WhySettings {
+  section_title:    string;
+  section_subtitle: string;
 }
 
-function IconBeyond() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-      <path d="M8 21h8m-4-3v3" />
-      <path d="M5.5 8.5c0-3.59 2.91-6.5 6.5-6.5s6.5 2.91 6.5 6.5c0 2.41-1.32 4.5-3.26 5.67L16 18H8l.76-3.83C6.82 13 5.5 10.91 5.5 8.5z" />
-    </svg>
-  );
-}
+// ── Default tabs — shown before CMS is seeded ─────────────────────────────────
 
-function IconSkills() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-      <path d="M12 2a7 7 0 017 7c0 2.66-1.47 4.97-3.64 6.22L15 18H9l-.36-2.78A7 7 0 015 9a7 7 0 017-7z" />
-      <path d="M9 21h6" />
-      <path d="M12 6v3m0 0l2 2m-2-2l-2 2" />
-    </svg>
-  );
-}
-
-// ── Feature data ──────────────────────────────────────────────────────────────
-
-const FEATURES = [
-  { titleKey: "why.tab1Title", tagKey: "why.tab1Tag", icon: <IconAdaptive /> },
-  { titleKey: "why.tab2Title", tagKey: "why.tab2Tag", icon: <IconProjects /> },
-  { titleKey: "why.tab3Title", tagKey: "why.tab3Tag", icon: <IconBeyond />  },
-  { titleKey: "why.tab4Title", tagKey: "why.tab4Tag", icon: <IconSkills />  },
-] as const;
+const DEFAULT_TABS: WhyTab[] = [
+  { id: "default-1", tab_name: "Real Projects",               image_url: "" },
+  { id: "default-2", tab_name: "AI & Future Skills",          image_url: "" },
+  { id: "default-3", tab_name: "Competitions & Achievements", image_url: "" },
+  { id: "default-4", tab_name: "Robotics & Engineering",      image_url: "" },
+];
 
 // ── Image placeholder ─────────────────────────────────────────────────────────
 
 function WhyPlaceholder() {
   return (
-    <div className="relative h-full w-full bg-[#0B1F3A]">
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-size-[48px_48px]" />
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#38BDF8]/8 blur-3xl" />
-      <div className="absolute inset-0 flex items-center justify-center opacity-20">
-        <svg viewBox="0 0 48 48" fill="none" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="h-16 w-16">
-          <rect x="4" y="4" width="40" height="40" rx="6" />
-          <path d="M4 30l10-10 8 8 8-12 14 14" />
-          <circle cx="16" cy="16" r="4" />
+    <div className="flex h-full w-full flex-col items-center justify-center gap-3">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E2E8F0]">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#94A3B8"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-7 w-7"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="3" />
+          <path d="M3 16l5-5 4 4 3-3 6 4" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
         </svg>
       </div>
+      <p className="text-[12px] font-medium text-[#CBD5E1]">No image uploaded</p>
     </div>
   );
 }
@@ -79,17 +56,29 @@ function WhyPlaceholder() {
 // ── Section ───────────────────────────────────────────────────────────────────
 
 export default function WhySection() {
-  const { t, dir }                    = useLanguage();
-  const [whyImageUrl, setWhyImageUrl] = useState<string>("");
+  const { t, dir } = useLanguage();
+
+  const [settings,  setSettings]  = useState<WhySettings | null>(null);
+  const [tabs,      setTabs]      = useState<WhyTab[]>(DEFAULT_TABS);
+  const [activeIdx, setActiveIdx] = useState(0);
 
   useEffect(() => {
-    fetch("/api/site-media?key=why_robocode_image")
+    fetch("/api/why-robocode")
       .then((r) => r.json())
-      .then((d: { image_url?: string } | null) => { if (d?.image_url) setWhyImageUrl(d.image_url); })
+      .then((d: { settings: WhySettings | null; tabs: WhyTab[] }) => {
+        if (d.settings) setSettings(d.settings);
+        if (Array.isArray(d.tabs) && d.tabs.length > 0) {
+          setTabs(d.tabs);
+          setActiveIdx(0);
+        }
+      })
       .catch(() => {});
   }, []);
 
-  const isRtl = dir === "rtl";
+  const isRtl    = dir === "rtl";
+  const activeTab = tabs[activeIdx];
+  const title    = settings?.section_title    || t("why.heading");
+  const subtitle = settings?.section_subtitle || t("why.body");
 
   return (
     <Reveal>
@@ -107,70 +96,138 @@ export default function WhySection() {
             {t("why.eyebrow")}
           </p>
           <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0F172A] md:text-5xl lg:text-6xl">
-            {t("why.heading")}
+            {title}
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#334155] md:text-lg">
-            {t("why.body")}
-          </p>
+          {subtitle && (
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#334155] md:text-lg">
+              {subtitle}
+            </p>
+          )}
           <div className="mx-auto mt-6 h-0.75 w-14 rounded-full bg-[#38BDF8]" />
         </motion.div>
 
-        {/* ── 50 / 50 editorial layout ─────────────────────────────────── */}
+        {/* ── Two-column layout ─────────────────────────────────────────── */}
+        {/*
+          items-start: each column takes its own natural height.
+          The image column owns the section height via aspect-[4/3] —
+          the tabs column never stretches or shrinks the image.
+          On mobile: flex-col → tabs on top, image on bottom.
+        */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className={`flex flex-col gap-5 lg:items-stretch lg:gap-8 ${isRtl ? "lg:flex-row-reverse" : "lg:flex-row"}`}
+          className={`flex flex-col gap-5 lg:items-start lg:gap-8 ${isRtl ? "lg:flex-row-reverse" : "lg:flex-row"}`}
         >
 
-          {/* ── LEFT: 4 static feature frames ─────────────────────────── */}
+          {/* ── Tabs — top on mobile, left on desktop ───────────────────── */}
           <div className="flex flex-col gap-3 lg:w-1/2">
-            {FEATURES.map((feature, i) => (
-              <motion.div
-                key={feature.titleKey}
+            {tabs.map((tab, i) => (
+              <motion.button
+                key={tab.id}
                 initial={{ opacity: 0, x: isRtl ? 20 : -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.5, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className="flex flex-1 items-center gap-5 rounded-2xl border border-[#E2E8F0] bg-white px-6 py-5 shadow-[0_2px_12px_rgba(11,31,58,0.05)]"
+                onClick={() => { if (i !== activeIdx) setActiveIdx(i); }}
+                className={[
+                  "flex w-full items-center gap-5 rounded-2xl border px-6 py-5 text-left",
+                  "shadow-[0_2px_12px_rgba(11,31,58,0.05)] transition-all duration-300",
+                  i === activeIdx
+                    ? "border-[#38BDF8] bg-white ring-2 ring-[#38BDF8]/20"
+                    : "border-[#E2E8F0] bg-white hover:border-[#38BDF8]/50",
+                ].join(" ")}
               >
-                {/* Cyan accent bar */}
-                <div className="h-10 w-0.75 shrink-0 rounded-full bg-[#38BDF8]" />
+                {/* Accent bar */}
+                <div
+                  className={[
+                    "h-10 w-0.75 shrink-0 rounded-full transition-colors duration-300",
+                    i === activeIdx ? "bg-[#38BDF8]" : "bg-[#E2E8F0]",
+                  ].join(" ")}
+                />
 
-                {/* Icon */}
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F1F5F9] text-[#0B1F3A]">
-                  {feature.icon}
+                {/* Number badge */}
+                <div
+                  className={[
+                    "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+                    "text-[14px] font-bold transition-all duration-300",
+                    i === activeIdx
+                      ? "bg-[#38BDF8] text-white"
+                      : "bg-[#F1F5F9] text-[#94A3B8]",
+                  ].join(" ")}
+                >
+                  {i + 1}
                 </div>
 
-                {/* Text */}
-                <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-bold leading-snug text-[#0F172A] md:text-[16px]">
-                    {t(feature.titleKey)}
-                  </p>
-                  <p className="mt-0.5 text-[12px] font-medium text-[#64748B] md:text-[13px]">
-                    {t(feature.tagKey)}
-                  </p>
-                </div>
-              </motion.div>
+                {/* Tab name */}
+                <p
+                  className={[
+                    "flex-1 text-[15px] font-bold leading-snug transition-colors duration-200 md:text-[16px]",
+                    i === activeIdx ? "text-[#0F172A]" : "text-[#64748B]",
+                  ].join(" ")}
+                >
+                  {tab.tab_name}
+                </p>
+
+                {/* Active chevron */}
+                {i === activeIdx && (
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="h-4 w-4 shrink-0 text-[#38BDF8]"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                )}
+              </motion.button>
             ))}
           </div>
 
-          {/* ── RIGHT: static CMS-managed image ───────────────────────── */}
-          <div className="order-first h-64 overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_4px_32px_rgba(11,31,58,0.08)] sm:h-80 lg:order-0 lg:h-auto lg:w-1/2">
-            <div className="relative h-full w-full">
-              {whyImageUrl ? (
-                <Image
-                  src={whyImageUrl}
-                  alt="Why Robocode"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  priority
-                />
-              ) : (
-                <WhyPlaceholder />
-              )}
+          {/* ── Image — bottom on mobile, right on desktop ──────────────── */}
+          {/*
+            aspect-[4/3] gives a fixed intrinsic height proportional to the
+            column width. The image is never constrained by tab count.
+            object-contain keeps the full image visible without any cropping.
+          */}
+          <div className="w-full lg:w-1/2">
+            <div className="relative aspect-4/3 w-full overflow-hidden rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] shadow-[0_4px_32px_rgba(11,31,58,0.08)]">
+              <AnimatePresence mode="wait">
+                {activeTab?.image_url ? (
+                  <motion.div
+                    key={activeTab.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="absolute inset-0"
+                  >
+                    <Image
+                      src={activeTab.image_url}
+                      alt={activeTab.tab_name}
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 1024px) 100vw, 50vw"
+                      priority={activeIdx === 0}
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key={`placeholder-${activeIdx}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute inset-0"
+                  >
+                    <WhyPlaceholder />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 

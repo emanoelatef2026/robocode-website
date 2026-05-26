@@ -100,7 +100,16 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code} %{redirect_url}\" http://localhost:3000/admin/semesters)",
       "Bash(curl -s -o /dev/null -w \"%{http_code} %{redirect_url}\" http://localhost:3000/admin/assignments)",
       "Bash(curl -sv \"http://localhost:3000/admin\")",
-      "Bash(xargs grep -l \"proxy\\\\|Proxy\")"
+      "Bash(xargs grep -l \"proxy\\\\|Proxy\")",
+      "Bash(Get-ChildItem -Path . -Force)",
+      "Bash(xargs grep -l \"homepage_sections\\\\|accreditations\\\\|partners\\\\|featured_students\\\\|learning_journey\\\\|blog_posts\\\\|faq_items\\\\|reviews\\\\|site_media\")",
+      "Bash(Get-ChildItem \"c:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\\\\supabase\\\\migrations\\\\\" | Select-Object Name | Sort-Object)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\\\\supabase\\\\seed\" -Filter \"*.sql\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(dir app\\\\api\\\\admin /s /b)",
+      "Bash(dir app\\\\admin /s /b)",
+      "Bash(findstr \"page.tsx\")",
+      "Bash(node -e \"const e = require\\('./messages/en.json'\\); const keys = Object.keys\\(e\\).filter\\(k => k.startsWith\\('nav'\\)\\); console.log\\(JSON.stringify\\(e.nav ?? e, null, 2\\)\\)\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\Emanoel\\OneDrive\\Desktop\\robocode-new\\app\\api\\admin\\branches",

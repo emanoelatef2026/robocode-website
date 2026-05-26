@@ -56,10 +56,6 @@ const VARIANTS: Record<RailVariant, VariantCfg> = {
   },
 };
 
-// ── Marquee threshold ──────────────────────────────────────────────────────────
-// ≤ this count → static centered row; > this → infinite marquee
-
-const MARQUEE_THRESHOLD = 5;
 
 // ── Logo slot ─────────────────────────────────────────────────────────────────
 // Defined outside LogoRail to maintain stable component identity between renders.
@@ -117,28 +113,20 @@ export default function LogoRail({
   items:   LogoRailItem[];
   variant: RailVariant;
 }) {
-  const cfg           = VARIANTS[variant];
+  const cfg             = VARIANTS[variant];
   const [paused, setPaused] = useState(false);
-  const useMarquee    = items.length > MARQUEE_THRESHOLD;
-  const duration      = Math.max(30, items.length * cfg.speedPer);
 
-  // ── Static centered row ──────────────────────────────────────────────────
+  // ── Infinite marquee — always, regardless of item count ──────────────────
+  // The animation moves -50% which equals exactly one copy of the original
+  // items array. For small counts, we use extra copies so the track is wide
+  // enough to fill the viewport before the loop resets seamlessly.
+  //   items < 3  → 4 copies  (total 4–8 slots — fills any viewport)
+  //   items >= 3 → 2 copies  (standard doubled track)
+  // The -50% keyframe still works: half the total track = one original group.
 
-  if (!useMarquee) {
-    return (
-      <div className={`flex flex-wrap items-center justify-center ${cfg.gapClass}`}>
-        {items.map((item) => (
-          <RailSlot key={item.id} item={item} cfg={cfg} />
-        ))}
-      </div>
-    );
-  }
-
-  // ── Infinite marquee ─────────────────────────────────────────────────────
-  // Track = [...items, ...items]. Animation moves -50% → seamless visual loop.
-  // .marquee-track class auto-swaps to marquee-rtl keyframe in RTL (globals.css).
-
-  const track = [...items, ...items];
+  const copies  = items.length < 3 ? 4 : 2;
+  const track   = Array.from({ length: copies }, () => items).flat();
+  const duration = Math.max(30, items.length * cfg.speedPer);
 
   return (
     <div

@@ -5,8 +5,13 @@
     "projects": "المشاريع",
     "competitions": "المسابقات",
     "branches": "الفروع",
-    "bookTrial": "احجز تجربة أونلاين",
-    "bookFreeTrial": "احجز تجربة أونلاين"
+    "why":             "لماذا روبوكود",
+    "learningJourney": "رحلة التعلم",
+    "accreditations":  "الاعتمادات",
+    "partners":        "الشراكات",
+    "featuredStudents":"طلابنا المميزون",
+    "bookTrial":       "احجز تجربة أونلاين",
+    "bookFreeTrial":   "احجز تجربة أونلاين"
   },
   "hero": {
     "eyebrow": "مستقبل التعليم",

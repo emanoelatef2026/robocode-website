@@ -8,15 +8,14 @@ export async function GET() {
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("featured_students")
-      .select("id, name, grade, country, image_url, youtube_url")
-      .eq("featured", true)
+      .select("id, name, image_url, achievement_title, achievement_description, project_link, sort_order")
+      .neq("is_active", false)
       .order("sort_order", { ascending: true });
 
     if (error) throw error;
 
     return NextResponse.json(data ?? []);
-  } catch (err) {
-    console.error("[students GET]", err);
-    return NextResponse.json({ error: "Failed to fetch students" }, { status: 500 });
+  } catch {
+    return NextResponse.json([]);
   }
 }

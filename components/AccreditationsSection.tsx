@@ -6,9 +6,10 @@ import SectionTitle from "@/components/ui/SectionTitle";
 import LogoRail, { type LogoRailItem } from "@/components/ui/LogoRail";
 
 interface Accreditation {
-  id:       string;
-  name:     string;
-  logo_url: string;
+  id:          string;
+  name:        string;
+  logo_url:    string;
+  website_url?: string | null;
 }
 
 export default function AccreditationsSection() {
@@ -31,6 +32,7 @@ export default function AccreditationsSection() {
     id:       a.id,
     name:     a.name,
     logo_url: a.logo_url,
+    href:     a.website_url ?? null,
   }));
 
   return (

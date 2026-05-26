@@ -2,172 +2,81 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SectionEmptyState from "@/components/ui/SectionEmptyState";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Student {
-  id:          string;
-  name:        string;
-  grade:       string;
-  country:     string;
-  image_url:   string;
-  youtube_url: string;
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function extractYouTubeId(url: string): string | null {
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([^&\n?#]{8,12})/
-  );
-  return match?.[1] ?? null;
+  id:                      string;
+  name:                    string;
+  image_url:               string;
+  achievement_title:       string | null;
+  achievement_description: string | null;
+  project_link:            string | null;
 }
 
 // ── Student card ──────────────────────────────────────────────────────────────
 
-function StudentCard({
-  student,
-  onClick,
-}: {
-  student: Student;
-  onClick: () => void;
-}) {
+function StudentCard({ student }: { student: Student }) {
   return (
-    <motion.button
-      onClick={onClick}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-      className="group w-44 shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-white shadow-[0_2px_16px_rgba(11,31,58,0.10)] transition-shadow duration-300 hover:shadow-[0_8px_28px_rgba(11,31,58,0.16)] sm:w-48 md:w-52"
-    >
-      {/* Image — clean, no overlay clutter */}
+    <div className="group w-52 shrink-0 overflow-hidden rounded-2xl bg-white shadow-[0_2px_16px_rgba(11,31,58,0.10)] transition-shadow duration-300 hover:shadow-[0_8px_28px_rgba(11,31,58,0.16)] sm:w-56">
+
+      {/* Portrait photo — 3:4 */}
       <div className="relative w-full overflow-hidden bg-[#E2E8F0]" style={{ aspectRatio: "3/4" }}>
         <Image
           src={student.image_url}
           alt={student.name}
           fill
-          sizes="208px"
-          className="object-cover transition-transform duration-500 group-hover:scale-104"
+          sizes="224px"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
 
-      {/* Bottom bar */}
-      <div className="flex items-center gap-3 bg-[#0B1F3A] px-3.5 py-3">
-        {/* Play button */}
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#38BDF8]/40 bg-[#38BDF8]/15 transition-all duration-200 group-hover:border-[#38BDF8] group-hover:bg-[#38BDF8]">
-          <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 translate-x-px text-[#38BDF8] transition-colors duration-200 group-hover:text-white">
-            <path d="M8 5v14l11-7z" />
-          </svg>
-        </div>
+      {/* Info panel */}
+      <div className="bg-[#0B1F3A] px-4 py-3.5">
+        <p className="truncate text-[13px] font-extrabold text-white">{student.name}</p>
 
-        {/* Info */}
-        <div className="min-w-0 flex-1 text-start">
-          <p className="truncate text-[10px] font-semibold uppercase tracking-wider text-[#38BDF8]">
-            Watch Video
+        {student.achievement_title && (
+          <p className="mt-0.5 truncate text-[11px] font-semibold text-[#38BDF8]">
+            {student.achievement_title}
           </p>
-          <p className="truncate text-[12px] font-bold leading-tight text-white">
-            {student.name}
-          </p>
-        </div>
-      </div>
-    </motion.button>
-  );
-}
-
-// ── Modal ─────────────────────────────────────────────────────────────────────
-
-function VideoModal({
-  student,
-  onClose,
-}: {
-  student: Student;
-  onClose: () => void;
-}) {
-  const videoId = extractYouTubeId(student.youtube_url);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handleKey);
-    return () => document.removeEventListener("keydown", handleKey);
-  }, [onClose]);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, []);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-black/75 backdrop-blur-md" />
-
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0, y: 20 }}
-        animate={{ scale: 1,   opacity: 1, y: 0  }}
-        exit={{    scale: 0.9, opacity: 0, y: 20  }}
-        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-        onClick={(e) => e.stopPropagation()}
-        className="relative z-10 w-full max-w-xs overflow-hidden rounded-3xl bg-[#0B132B] shadow-2xl sm:max-w-sm"
-      >
-        <button
-          onClick={onClose}
-          className="absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/60 transition hover:bg-white/20 hover:text-white"
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </button>
-
-        {videoId ? (
-          <div className="relative w-full" style={{ aspectRatio: "9/16" }}>
-            <iframe
-              src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
-              title={`${student.name} — Robocode`}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-              className="absolute inset-0 h-full w-full border-0"
-            />
-          </div>
-        ) : (
-          <div className="flex aspect-9/16 items-center justify-center text-sm text-white/40">
-            Invalid video URL
-          </div>
         )}
 
-        <div className="border-t border-white/8 px-5 py-3.5">
-          <p className="font-bold text-white" style={{ fontFamily: "var(--font-orbitron), sans-serif" }}>
-            {student.name}
+        {student.achievement_description && (
+          <p className="mt-1.5 line-clamp-2 text-[11px] leading-relaxed text-white/60">
+            {student.achievement_description}
           </p>
-          <p className="mt-0.5 text-[13px] text-white/50">
-            {student.grade} &nbsp;·&nbsp; {student.country}
-          </p>
-        </div>
-      </motion.div>
-    </motion.div>
+        )}
+
+        {student.project_link && (
+          <a
+            href={student.project_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[#38BDF8]/40 px-3 py-1 text-[10px] font-bold text-[#38BDF8] transition-all duration-200 hover:border-[#38BDF8] hover:bg-[#38BDF8]/10"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+              <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+              <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+            </svg>
+            View Project
+          </a>
+        )}
+      </div>
+    </div>
   );
 }
 
 // ── Marquee track ─────────────────────────────────────────────────────────────
 
-function MarqueeTrack({
-  students,
-  onSelect,
-}: {
-  students: Student[];
-  onSelect: (s: Student) => void;
-}) {
+function MarqueeTrack({ students }: { students: Student[] }) {
   const [paused, setPaused] = useState(false);
-  const touchStartX = useRef(0);
-  const items   = [...students, ...students];
-  const duration = Math.max(20, students.length * 5);
+  const copies   = students.length < 3 ? 4 : 2;
+  const track    = Array.from({ length: copies }, () => students).flat();
+  const duration = Math.max(20, students.length * 6);
 
   return (
     <div
@@ -178,25 +87,20 @@ function MarqueeTrack({
       }}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
-      onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
       onTouchMove={() => setPaused(true)}
       onTouchEnd={() => { setTimeout(() => setPaused(false), 1200); }}
     >
       <div
-        className="flex"
+        className="flex gap-4"
         style={{
-          gap: "16px",
-          animation: `marquee ${duration}s linear infinite`,
+          width:              "max-content",
+          animation:          `marquee ${duration}s linear infinite`,
           animationPlayState: paused ? "paused" : "running",
-          width: "max-content",
+          willChange:         "transform",
         }}
       >
-        {items.map((student, i) => (
-          <StudentCard
-            key={`${student.id}-${i}`}
-            student={student}
-            onClick={() => onSelect(student)}
-          />
+        {track.map((student, i) => (
+          <StudentCard key={`${student.id}-${i}`} student={student} />
         ))}
       </div>
     </div>
@@ -208,7 +112,6 @@ function MarqueeTrack({
 export default function FeaturedStudentsSection() {
   const { t }                   = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
-  const [active,   setActive]   = useState<Student | null>(null);
   const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
@@ -256,19 +159,12 @@ export default function FeaturedStudentsSection() {
           <SectionEmptyState
             variant="students"
             heading="Student spotlights coming soon"
-            subtext="Our featured students and their projects will appear here."
+            subtext="Our featured students and their achievements will appear here."
           />
         </div>
       ) : (
-        <MarqueeTrack students={students} onSelect={setActive} />
+        <MarqueeTrack students={students} />
       )}
-
-      {/* Modal */}
-      <AnimatePresence>
-        {active && (
-          <VideoModal student={active} onClose={() => setActive(null)} />
-        )}
-      </AnimatePresence>
     </section>
   );
 }

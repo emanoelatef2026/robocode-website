@@ -8,8 +8,8 @@ export async function GET() {
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("accreditations")
-      .select("id, name, logo_url")
-      .eq("active", true)
+      .select("id, name, logo_url, website_url")
+      .neq("active", false)
       .order("sort_order", { ascending: true });
     if (error) throw error;
     return NextResponse.json(Array.isArray(data) ? data : []);

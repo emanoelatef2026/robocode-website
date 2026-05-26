@@ -5,8 +5,13 @@
     "projects": "Projects",
     "competitions": "Competitions",
     "branches": "Branches",
-    "bookTrial": "Book Online Trial",
-    "bookFreeTrial": "Book Online Trial"
+    "why":             "Why Robocode",
+    "learningJourney": "Learning Journey",
+    "accreditations":  "Accreditations",
+    "partners":        "Collaborations",
+    "featuredStudents":"Featured Students",
+    "bookTrial":       "Book Online Trial",
+    "bookFreeTrial":   "Book Online Trial"
   },
   "hero": {
     "eyebrow": "The Future of Education",
