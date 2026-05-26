@@ -1,26 +1,126 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+// Proxy (Next.js 16 equivalent of Middleware) — route-level auth guard.
+//
+// Security model:
+//   - CMS (/studio): password cookie — fast, synchronous
+//   - LMS portals: lms_session JWT — decrypted, no DB query (optimistic check)
+//   - All definitive auth happens inside Server Actions / Server Components via RBAC guards
+//
+// This file MUST NOT import from lib/supabase/server.ts (no async cookie access).
+// The proxy runs before rendering; keep it fast.
 
-export function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+import { NextRequest, NextResponse } from 'next/server'
+import { jwtVerify } from 'jose'
+import type { RoleName } from '@/types/enums'
+import { ROLE_PORTAL_MAP } from '@/types/enums'
 
-  // Login page and its API are always public — never require auth
-  if (pathname === "/admin/login" || pathname === "/api/admin/login") {
-    return NextResponse.next();
-  }
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-  // All other /admin/* and /api/admin/* require a valid session cookie
-  const session  = request.cookies.get("admin_session")?.value;
-  const password = process.env.ADMIN_PASSWORD;
+const STUDIO_LOGIN = '/studio/login'
+const LMS_LOGIN    = '/login'
+const LMS_COOKIE   = 'lms_session'
 
-  if (!session || !password || session !== password) {
-    return NextResponse.redirect(new URL("/admin/login", request.url));
-  }
+// ─── Route helpers ────────────────────────────────────────────────────────────
 
-  return NextResponse.next();
+const isStudio = (p: string) =>
+  p.startsWith('/studio') && p !== STUDIO_LOGIN
+
+const isApiStudio = (p: string) => p.startsWith('/api/studio')
+
+// Portal prefix → required role (super_admin may bypass to any portal)
+const LMS_PORTALS: { prefix: string; role: RoleName }[] = [
+  { prefix: '/admin',              role: 'super_admin' },
+  { prefix: '/portal/team-leader', role: 'team_leader' },
+  { prefix: '/portal/instructor',  role: 'instructor'  },
+  { prefix: '/portal/student',     role: 'student'     },
+  { prefix: '/portal/parent',      role: 'parent'      },
+]
+
+function getLmsPortal(pathname: string) {
+  return LMS_PORTALS.find(p => pathname.startsWith(p.prefix)) ?? null
 }
 
-// Runs ONLY on admin paths — public routes (/, /book-session, /api/book-session) are never touched
+// ─── JWT helpers (sync-safe for proxy) ────────────────────────────────────────
+
+function getSecretKey(): Uint8Array {
+  const secret = process.env.LMS_SESSION_SECRET ?? ''
+  return new TextEncoder().encode(secret)
+}
+
+interface LmsTokenPayload {
+  sub: string
+  role: RoleName
+  permissions: string[]
+  branchIds: string[]
+}
+
+async function verifyLmsToken(token: string): Promise<LmsTokenPayload | null> {
+  try {
+    const { payload } = await jwtVerify(token, getSecretKey(), { algorithms: ['HS256'] })
+    return payload as unknown as LmsTokenPayload
+  } catch {
+    return null
+  }
+}
+
+// ─── Main proxy function ──────────────────────────────────────────────────────
+
+export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // ── Studio CMS: synchronous password cookie check ──
+  if (isStudio(pathname) || isApiStudio(pathname)) {
+    const session  = request.cookies.get('admin_session')?.value
+    const password = process.env.ADMIN_PASSWORD
+
+    if (!session || !password || session !== password) {
+      const url = new URL(STUDIO_LOGIN, request.url)
+      url.searchParams.set('next', pathname)
+      return NextResponse.redirect(url)
+    }
+
+    return NextResponse.next()
+  }
+
+  // ── LMS portal routes: JWT optimistic check ──
+  const portal = getLmsPortal(pathname)
+  if (!portal) return NextResponse.next()
+
+  const token = request.cookies.get(LMS_COOKIE)?.value
+
+  if (!token) {
+    const url = new URL(LMS_LOGIN, request.url)
+    url.searchParams.set('next', pathname)
+    return NextResponse.redirect(url)
+  }
+
+  const claims = await verifyLmsToken(token)
+
+  if (!claims) {
+    // Expired or tampered — clear cookie and redirect to login
+    const url = new URL(LMS_LOGIN, request.url)
+    url.searchParams.set('error', 'session_expired')
+    const res = NextResponse.redirect(url)
+    res.cookies.delete(LMS_COOKIE)
+    return res
+  }
+
+  // Super admin can access any portal
+  if (claims.role === 'super_admin') return NextResponse.next()
+
+  // Correct portal
+  if (claims.role === portal.role) return NextResponse.next()
+
+  // Wrong portal — redirect to their correct portal
+  return NextResponse.redirect(new URL(ROLE_PORTAL_MAP[claims.role], request.url))
+}
+
+// ─── Matcher ─────────────────────────────────────────────────────────────────
+
 export const config = {
-  matcher: ["/admin(.*)", "/api/admin(.*)"],
-};
+  matcher: [
+    '/studio(.*)',
+    '/api/studio(.*)',
+    '/admin(.*)',
+    '/portal/(.*)',
+  ],
+}

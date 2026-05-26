@@ -60,7 +60,21 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
       "Bash(dir \"c:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\\\\components\")",
       "Bash(grep -E \"\\\\.\\(tsx|ts|jsx|js\\)$\")",
-      "Bash(awk '{print $NF}')"
+      "Bash(awk '{print $NF}')",
+      "Bash(xargs grep -l \"supabase\\\\|session\\\\|cookie\\\\|proxy\" -i)",
+      "Bash(supabase --version)",
+      "PowerShell(Get-Command supabase -ErrorAction SilentlyContinue)",
+      "PowerShell(scoop list supabase 2>$null)",
+      "PowerShell(winget list --name supabase 2>$null)",
+      "Read(//c/Users/Emanoel/**)",
+      "Read(//c/Users/Emanoel/AppData/Local/**)",
+      "Bash(supabase init *)",
+      "Bash(supabase db *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/api/bootstrap)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s -X POST http://localhost:3000/api/bootstrap -H 'x-bootstrap-secret: change-me-bootstrap-secret-before-production' -H 'Content-Type: application/json' -d '{\"email\":\"emanoel.atef@gmail.com\"}')",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/login)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/admin)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Emanoel\\OneDrive\\Desktop\\robocode-new\\app\\api\\admin\\branches",
