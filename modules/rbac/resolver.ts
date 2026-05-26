@@ -27,7 +27,9 @@ export async function resolveUserPermissions(userId: string): Promise<ResolvedPe
   const permissions = new Set<PermissionName>()
   const branchIds: string[] = []
   const ROLE_PRIORITY: RoleName[] = ['super_admin', 'team_leader', 'instructor', 'student', 'parent']
-  let globalRole: RoleName = 'student'
+  // Start at the lowest-priority role so any assigned role can promote correctly.
+  // Starting at 'student' caused parents (priority index 4) to never be detected.
+  let globalRole: RoleName = 'parent'
 
   for (const ur of userRoles ?? []) {
     if (ur.branch_id) branchIds.push(ur.branch_id)
