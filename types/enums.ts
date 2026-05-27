@@ -84,6 +84,15 @@ export type AchievementType =
   | 'innovation'
   | 'custom'
 
+export type CertificateType =
+  | 'semester_completion'
+  | 'course_completion'
+  | 'competition_award'
+  | 'achievement'
+  | 'custom'
+
+export type CertificateStatus = 'active' | 'revoked'
+
 export type AnalyticsEntityType = 'branch' | 'group' | 'instructor' | 'student' | 'course'
 
 // Role names — must match the roles.name column in DB

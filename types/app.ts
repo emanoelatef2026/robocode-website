@@ -55,7 +55,7 @@ export type ActionResult<T = void> =
 
 // Search result shape (cross-entity)
 export interface SearchResult {
-  entityType: 'student' | 'instructor' | 'parent' | 'group' | 'course' | 'lesson' | 'assignment' | 'announcement' | 'portfolio_project'
+  entityType: 'student' | 'instructor' | 'parent' | 'group' | 'course' | 'lesson' | 'assignment' | 'announcement' | 'portfolio_project' | 'certificate'
   entityId: string
   title: string
   subtitle?: string
