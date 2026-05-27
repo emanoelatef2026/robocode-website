@@ -18,10 +18,23 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerClient()
 
+    // Log which cookies are present (for PKCE debug — no values, just names)
+    const allCookies = request.cookies.getAll().map(c => c.name)
+    const hasCodeVerifier = allCookies.some(n => n.includes('code-verifier'))
+    console.log('[auth/callback] cookies present:', JSON.stringify(allCookies))
+    console.log('[auth/callback] has code-verifier cookie:', hasCodeVerifier)
+    console.log('[auth/callback] code param length:', code.length)
+
     // Exchange the Supabase PKCE code for a session
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error || !data.user) {
-      console.error('[auth/callback] code exchange failed:', error?.message)
+      console.error('[auth/callback] code exchange failed:', JSON.stringify({
+        message: error?.message,
+        status:  (error as any)?.status,
+        code:    (error as any)?.code,
+        name:    error?.name,
+        __isAuthError: (error as any)?.__isAuthError,
+      }))
       return NextResponse.redirect(new URL('/login?error=auth_failed', origin))
     }
 
