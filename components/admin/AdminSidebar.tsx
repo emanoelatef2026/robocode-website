@@ -61,6 +61,11 @@ const Icons = {
       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
     </svg>
   ),
+  portfolio: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+    </svg>
+  ),
   logout: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
@@ -79,6 +84,7 @@ const NAV_ITEMS = [
   { label: "Semesters",   href: "/admin/semesters",   icon: Icons.semesters },
   { label: "Assignments", href: "/admin/assignments", icon: Icons.assignments },
   { label: "Attendance",  href: "/admin/attendance",  icon: Icons.attendance },
+  { label: "Portfolio",   href: "/admin/portfolio",   icon: Icons.portfolio },
 ];
 
 function NavLink({

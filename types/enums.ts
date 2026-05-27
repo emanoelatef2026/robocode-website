@@ -75,6 +75,15 @@ export type MediaBucket =
 
 export type AnalyticsSnapshotType = 'daily' | 'weekly' | 'monthly'
 
+export type AchievementType =
+  | 'project'
+  | 'competition'
+  | 'certificate'
+  | 'leadership'
+  | 'attendance'
+  | 'innovation'
+  | 'custom'
+
 export type AnalyticsEntityType = 'branch' | 'group' | 'instructor' | 'student' | 'course'
 
 // Role names — must match the roles.name column in DB

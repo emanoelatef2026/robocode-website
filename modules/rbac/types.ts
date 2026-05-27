@@ -42,6 +42,8 @@ export type PermissionName =
   | 'read_media'
   // Audit
   | 'read_audit_logs'
+  // Portfolio
+  | 'manage_portfolio'
   // AI (future)
   | 'manage_ai_agents'
   | 'read_ai_reports'
