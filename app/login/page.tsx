@@ -1,9 +1,9 @@
 'use client'
 
-import { Suspense, useActionState, useEffect, useState } from 'react'
+import { Suspense, useEffect, useRef, useState, useTransition } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { sendMagicLink } from '@/modules/auth/actions'
+import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 
 const ERROR_MESSAGES: Record<string, string> = {
   missing_code:    'Invalid or expired link. Please request a new one.',
@@ -14,39 +14,70 @@ const ERROR_MESSAGES: Record<string, string> = {
   session_expired: 'Your session expired. Please sign in again.',
 }
 
-// Extract the "X seconds" Supabase embeds in its rate-limit message so we can
-// enforce the exact cooldown on the client and prevent the user from resetting
-// Supabase's timer with repeated clicks.
 function parseRateLimitSeconds(msg: string): number | null {
   const m = msg.match(/after\s+(\d+)\s+second/i)
   return m ? parseInt(m[1], 10) : null
 }
 
 function LoginForm() {
-  const searchParams = useSearchParams()
-  const errorKey     = searchParams.get('error')
-  const errorMsg     = errorKey ? ERROR_MESSAGES[errorKey] : null
+  const searchParams  = useSearchParams()
+  const errorKey      = searchParams.get('error')
+  const errorMsg      = errorKey ? ERROR_MESSAGES[errorKey] : null
 
-  const [state, action, pending] = useActionState(sendMagicLink, undefined)
-  const [cooldown, setCooldown]  = useState(0)
+  const [sent, setSent]       = useState(false)
+  const [error, setError]     = useState<string | null>(null)
+  const [cooldown, setCooldown] = useState(0)
+  const [pending, startTransition] = useTransition()
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // When Supabase returns a rate-limit message, start a client-side countdown
-  // that prevents the user from submitting again and resetting Supabase's timer.
   useEffect(() => {
-    if (!state?.error) return
-    const secs = parseRateLimitSeconds(state.error)
-    if (!secs) return
+    return () => { if (cooldownRef.current) clearInterval(cooldownRef.current) }
+  }, [])
+
+  function startCooldown(secs: number) {
     setCooldown(secs)
-    const id = setInterval(() => {
+    cooldownRef.current = setInterval(() => {
       setCooldown((c) => {
-        if (c <= 1) { clearInterval(id); return 0 }
+        if (c <= 1) { clearInterval(cooldownRef.current!); cooldownRef.current = null; return 0 }
         return c - 1
       })
     }, 1000)
-    return () => clearInterval(id)
-  }, [state?.error])
+  }
 
-  const sent = state && !state.error
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (cooldown > 0) return
+    const email = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value
+
+    startTransition(async () => {
+      const supabase = createSupabaseBrowserClient()
+      const { error: supaErr } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          // window.location.origin is always the correct production domain
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          shouldCreateUser: false,
+        },
+      })
+
+      if (supaErr) {
+        const msg = supaErr.message ?? ''
+        const secs = parseRateLimitSeconds(msg)
+        if (secs) startCooldown(secs)
+
+        if (
+          msg.toLowerCase().includes('signups not allowed') ||
+          msg.toLowerCase().includes('otp disabled')
+        ) {
+          setError('This email is not registered. Contact your administrator.')
+        } else {
+          setError(msg || 'Could not send magic link. Please try again.')
+        }
+      } else {
+        setSent(true)
+      }
+    })
+  }
 
   if (sent) {
     return (
@@ -81,7 +112,7 @@ function LoginForm() {
         </div>
       )}
 
-      <form action={action} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-gray-400">
             Email address
@@ -95,9 +126,9 @@ function LoginForm() {
           />
         </div>
 
-        {state?.error && (
+        {error && (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-500">
-            {state.error}
+            {error}
             {isLocked && (
               <span className="ml-1 font-mono font-semibold">
                 ({cooldown}s)
