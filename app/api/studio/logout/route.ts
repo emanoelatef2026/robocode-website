@@ -5,6 +5,6 @@ export const runtime = "nodejs";
 
 export async function POST() {
   const response = NextResponse.json({ success: true });
-  response.cookies.delete("admin_session");
+  response.cookies.delete("studio_session");
   return response;
 }

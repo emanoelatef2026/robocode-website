@@ -44,6 +44,8 @@ export type PermissionName =
   | 'read_audit_logs'
   // Portfolio
   | 'manage_portfolio'
+  // Certificates
+  | 'manage_certificates'
   // AI (future)
   | 'manage_ai_agents'
   | 'read_ai_reports'

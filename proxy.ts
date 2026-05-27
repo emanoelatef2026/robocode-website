@@ -1,8 +1,8 @@
 // Proxy (Next.js 16 equivalent of Middleware) — route-level auth guard.
 //
 // Security model:
-//   - CMS (/studio): password cookie — fast, synchronous
-//   - LMS portals: lms_session JWT — decrypted, no DB query (optimistic check)
+//   - CMS (/studio): ADMIN_SECRET session token — constant-time compare, no DB query
+//   - LMS portals: lms_session JWT — decrypted with HS256, no DB query (optimistic check)
 //   - All definitive auth happens inside Server Actions / Server Components via RBAC guards
 //
 // This file MUST NOT import from lib/supabase/server.ts (no async cookie access).
@@ -15,14 +15,15 @@ import { ROLE_PORTAL_MAP } from '@/types/enums'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const STUDIO_LOGIN = '/studio/login'
-const LMS_LOGIN    = '/login'
-const LMS_COOKIE   = 'lms_session'
+const STUDIO_LOGIN  = '/studio/login'
+const LMS_LOGIN     = '/login'
+const LMS_COOKIE    = 'lms_session'
+const STUDIO_COOKIE = 'studio_session'
 
 // ─── Route helpers ────────────────────────────────────────────────────────────
 
 const isStudio = (p: string) =>
-  p.startsWith('/studio') && p !== STUDIO_LOGIN
+  p.startsWith('/studio') && p !== STUDIO_LOGIN && !p.startsWith('/studio/login')
 
 const isApiStudio = (p: string) => p.startsWith('/api/studio')
 
@@ -37,6 +38,22 @@ const LMS_PORTALS: { prefix: string; role: RoleName }[] = [
 
 function getLmsPortal(pathname: string) {
   return LMS_PORTALS.find(p => pathname.startsWith(p.prefix)) ?? null
+}
+
+// ─── Studio session verification ──────────────────────────────────────────────
+// Compares the studio_session cookie value against ADMIN_SECRET (not ADMIN_PASSWORD).
+// The session stores the secret token, not the raw password.
+function verifyStudioSession(token: string | undefined): boolean {
+  if (!token) return false
+  const expected = process.env.ADMIN_SECRET
+  if (!expected) return false
+  // Constant-time comparison to prevent timing side-channels
+  if (token.length !== expected.length) return false
+  let diff = 0
+  for (let i = 0; i < token.length; i++) {
+    diff |= token.charCodeAt(i) ^ expected.charCodeAt(i)
+  }
+  return diff === 0
 }
 
 // ─── JWT helpers (sync-safe for proxy) ────────────────────────────────────────
@@ -67,12 +84,16 @@ async function verifyLmsToken(token: string): Promise<LmsTokenPayload | null> {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // ── Studio CMS: synchronous password cookie check ──
+  // ── Studio CMS: session token check ──
   if (isStudio(pathname) || isApiStudio(pathname)) {
-    const session  = request.cookies.get('admin_session')?.value
-    const password = process.env.ADMIN_PASSWORD
+    const token = request.cookies.get(STUDIO_COOKIE)?.value
+    const valid  = verifyStudioSession(token)
 
-    if (!session || !password || session !== password) {
+    if (!valid) {
+      // API studio routes return 401 JSON instead of redirecting
+      if (isApiStudio(pathname)) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
       const url = new URL(STUDIO_LOGIN, request.url)
       url.searchParams.set('next', pathname)
       return NextResponse.redirect(url)

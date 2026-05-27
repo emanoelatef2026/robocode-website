@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     });
 
     const { error: emailError } = await resend.emails.send({
-      from:    "Robocode School <onboarding@resend.dev>",
+      from:    process.env.RESEND_FROM_EMAIL ?? "Robocode School <onboarding@resend.dev>",
       to:      ["emanoel.atef@gmail.com"],
       subject: `New Trial Session Booking — ${escape(body.name)} · Robocode School`,
       html:    buildEmail(body, submittedAt),

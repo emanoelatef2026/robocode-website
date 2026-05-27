@@ -43,6 +43,10 @@ export const PERMISSIONS = {
   READ_MEDIA:           'read_media',
   // Audit
   READ_AUDIT_LOGS:      'read_audit_logs',
+  // Portfolio
+  MANAGE_PORTFOLIO:     'manage_portfolio',
+  // Certificates
+  MANAGE_CERTIFICATES:  'manage_certificates',
   // AI
   MANAGE_AI_AGENTS:     'manage_ai_agents',
   READ_AI_REPORTS:      'read_ai_reports',
@@ -82,6 +86,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<RoleName, PermissionName[]> = {
     PERMISSIONS.MANAGE_MEDIA,
     PERMISSIONS.READ_MEDIA,
     PERMISSIONS.READ_AUDIT_LOGS,
+    PERMISSIONS.MANAGE_PORTFOLIO,
+    PERMISSIONS.MANAGE_CERTIFICATES,
     PERMISSIONS.READ_AI_REPORTS,
   ],
 
