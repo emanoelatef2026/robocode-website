@@ -42,37 +42,21 @@ export async function sendMagicLink(
   })
 
   if (error) {
-    console.error('[auth] sendMagicLink error:', error.message, '| code:', error.code ?? 'none')
-
-    // Surface specific, actionable errors to the user
     const msg = error.message ?? ''
+    console.error('[auth] sendMagicLink error:', msg, '| status:', (error as any).status ?? 'none')
+
+    // Translate the one Supabase message that isn't user-readable.
+    // All others (rate-limit countdown, redirect errors, etc.) are already
+    // human-readable and must be passed through unchanged so the user sees
+    // the exact wait time instead of a vague generic string.
     if (
-      msg.includes('Email not confirmed') ||
-      msg.toLowerCase().includes('user not found') ||
-      msg.toLowerCase().includes('invalid login')
+      msg.toLowerCase().includes('signups not allowed') ||
+      msg.toLowerCase().includes('otp disabled')
     ) {
-      return { error: 'This email address is not registered. Contact your administrator.' }
-    }
-    if (
-      msg.toLowerCase().includes('rate limit') ||
-      msg.toLowerCase().includes('too many requests') ||
-      msg.toLowerCase().includes('security purposes')
-    ) {
-      return { error: 'Too many requests. Please wait a minute and try again.' }
-    }
-    if (
-      msg.toLowerCase().includes('redirect') ||
-      msg.toLowerCase().includes('not allowed')
-    ) {
-      return { error: 'Login is misconfigured. Please contact support. (redirect)' }
+      return { error: 'This email is not registered. Contact your administrator.' }
     }
 
-    // In non-production, expose the raw message to aid debugging
-    if (process.env.NODE_ENV !== 'production') {
-      return { error: `[dev] Supabase error: ${error.message}` }
-    }
-
-    return { error: 'Could not send magic link. Please try again.' }
+    return { error: msg || 'Could not send magic link. Please try again.' }
   }
 
   return {}

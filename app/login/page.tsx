@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useActionState } from 'react'
+import { Suspense, useActionState, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
 import { sendMagicLink } from '@/modules/auth/actions'
@@ -14,12 +14,38 @@ const ERROR_MESSAGES: Record<string, string> = {
   session_expired: 'Your session expired. Please sign in again.',
 }
 
+// Extract the "X seconds" Supabase embeds in its rate-limit message so we can
+// enforce the exact cooldown on the client and prevent the user from resetting
+// Supabase's timer with repeated clicks.
+function parseRateLimitSeconds(msg: string): number | null {
+  const m = msg.match(/after\s+(\d+)\s+second/i)
+  return m ? parseInt(m[1], 10) : null
+}
+
 function LoginForm() {
   const searchParams = useSearchParams()
   const errorKey     = searchParams.get('error')
   const errorMsg     = errorKey ? ERROR_MESSAGES[errorKey] : null
 
   const [state, action, pending] = useActionState(sendMagicLink, undefined)
+  const [cooldown, setCooldown]  = useState(0)
+
+  // When Supabase returns a rate-limit message, start a client-side countdown
+  // that prevents the user from submitting again and resetting Supabase's timer.
+  useEffect(() => {
+    if (!state?.error) return
+    const secs = parseRateLimitSeconds(state.error)
+    if (!secs) return
+    setCooldown(secs)
+    const id = setInterval(() => {
+      setCooldown((c) => {
+        if (c <= 1) { clearInterval(id); return 0 }
+        return c - 1
+      })
+    }, 1000)
+    return () => clearInterval(id)
+  }, [state?.error])
+
   const sent = state && !state.error
 
   if (sent) {
@@ -39,6 +65,8 @@ function LoginForm() {
       </div>
     )
   }
+
+  const isLocked = cooldown > 0
 
   return (
     <>
@@ -70,15 +98,22 @@ function LoginForm() {
         {state?.error && (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-500">
             {state.error}
+            {isLocked && (
+              <span className="ml-1 font-mono font-semibold">
+                ({cooldown}s)
+              </span>
+            )}
           </p>
         )}
 
         <button
           type="submit"
-          disabled={pending}
-          className="w-full rounded-lg bg-[#0B132B] py-3 text-[14px] font-semibold text-white transition hover:bg-[#19C6F4] disabled:opacity-60"
+          disabled={pending || isLocked}
+          className="w-full rounded-lg bg-[#0B132B] py-3 text-[14px] font-semibold text-white transition hover:bg-[#19C6F4] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {pending ? 'Sending…' : 'Send magic link'}
+          {pending   ? 'Sending…'
+           : isLocked ? `Wait ${cooldown}s…`
+           : 'Send magic link'}
         </button>
       </form>
     </>
