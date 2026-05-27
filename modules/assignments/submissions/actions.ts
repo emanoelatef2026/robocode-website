@@ -3,7 +3,9 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission, requireAuth } from '@/modules/rbac/guards'
+import { resolveProgressFromSubmission, resolveProgressFromAssignment } from '@/modules/progress/resolve'
+import { safeRecalcProgress } from '@/modules/progress/safe-recalc'
 import type { ActionResult } from '@/types/app'
 
 const gradeSchema = z.object({
@@ -73,7 +75,183 @@ export async function gradeSubmission(
     p_new_values:   { score: d.score, status: d.status },
   })
 
+  // Grading updates student_grade_summaries via DB trigger (0019).
+  // Here we push that change forward into student_course_progress.
+  const tuple = await resolveProgressFromSubmission(d.submission_id)
+  await safeRecalcProgress(tuple, 'gradeSubmission')
+
   revalidatePath(`/admin/assignments/${d.assignment_id}`)
   revalidatePath(`/admin/assignments/${d.assignment_id}/submissions/${d.submission_id}`)
   return { success: true, data: undefined }
+}
+
+// ── Student submit action ─────────────────────────────────────────────────────
+
+const submitSchema = z.object({
+  assignment_id: z.string().uuid(),
+  content:       z.string().optional().or(z.literal('')),
+  drive_url:     z.string().url().optional().or(z.literal('')),
+  github_url:    z.string().url().optional().or(z.literal('')),
+  project_url:   z.string().url().optional().or(z.literal('')),
+  video_url:     z.string().url().optional().or(z.literal('')),
+})
+
+export async function submitAssignment(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<{ submission_id: string }>> {
+  const user = await requireAuth()
+  const db   = createServiceClient()
+
+  const raw = {
+    assignment_id: formData.get('assignment_id'),
+    content:       formData.get('content')     || undefined,
+    drive_url:     formData.get('drive_url')   || undefined,
+    github_url:    formData.get('github_url')  || undefined,
+    project_url:   formData.get('project_url') || undefined,
+    video_url:     formData.get('video_url')   || undefined,
+  }
+
+  const parsed = submitSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+  }
+
+  const d = parsed.data
+
+  // Resolve student_id
+  const { data: studentRow } = await db
+    .from('students')
+    .select('id')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!studentRow) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Student record not found.' } }
+  }
+
+  // Verify the assignment is published and reachable
+  const { data: assignment } = await db
+    .from('assignments')
+    .select('id, due_at, allow_late, resubmission_allowed, max_resubmissions, submission_type')
+    .eq('id', d.assignment_id)
+    .eq('status', 'published')
+    .is('deleted_at', null)
+    .single()
+
+  if (!assignment) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Assignment not found or not available.' } }
+  }
+
+  // Validate at least one content field is provided
+  const hasContent =
+    (d.content?.trim()     ?? '').length > 0 ||
+    (d.drive_url   ?? '').length > 0 ||
+    (d.github_url  ?? '').length > 0 ||
+    (d.project_url ?? '').length > 0 ||
+    (d.video_url   ?? '').length > 0
+
+  if (!hasContent) {
+    return { success: false, error: { code: 'VALIDATION', message: 'At least one content field is required.' } }
+  }
+
+  // Check for existing submission
+  const { data: existing } = await db
+    .from('submissions')
+    .select('id, status, resubmission_count')
+    .eq('assignment_id', d.assignment_id)
+    .eq('student_id', studentRow.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (existing) {
+    const canResubmit =
+      (assignment as any).resubmission_allowed &&
+      (existing.status === 'resubmission_requested' || existing.status === 'returned') &&
+      existing.resubmission_count < ((assignment as any).max_resubmissions ?? 0)
+
+    if (!canResubmit) {
+      return {
+        success: false,
+        error: { code: 'DUPLICATE', message: 'You have already submitted this assignment.' },
+      }
+    }
+
+    // Update existing submission as resubmission
+    const { error: updateErr } = await db
+      .from('submissions')
+      .update({
+        content:            d.content     || null,
+        drive_url:          d.drive_url   || null,
+        github_url:         d.github_url  || null,
+        project_url:        d.project_url || null,
+        video_url:          d.video_url   || null,
+        status:             'resubmitted',
+        submitted_at:       new Date().toISOString(),
+        resubmission_count: (existing.resubmission_count ?? 0) + 1,
+        score:              null,
+        graded_by:          null,
+        graded_at:          null,
+        feedback:           null,
+      })
+      .eq('id', existing.id)
+
+    if (updateErr) {
+      return { success: false, error: { code: 'DB_ERROR', message: updateErr.message } }
+    }
+
+    // Resubmission recorded — recalculate (grade summary trigger already fired)
+    const reTuple = await resolveProgressFromAssignment(studentRow.id, d.assignment_id)
+    await safeRecalcProgress(reTuple, 'submitAssignment:resubmit')
+
+    revalidatePath('/portal/student/assignments')
+    revalidatePath(`/portal/student/assignments/${d.assignment_id}`)
+    return { success: true, data: { submission_id: existing.id } }
+  }
+
+  // Determine if late
+  const isLate =
+    (assignment as any).due_at != null &&
+    new Date() > new Date((assignment as any).due_at)
+
+  if (isLate && !(assignment as any).allow_late) {
+    return { success: false, error: { code: 'DEADLINE_PASSED', message: 'The submission deadline has passed.' } }
+  }
+
+  const { data: newSub, error: insertErr } = await db
+    .from('submissions')
+    .insert({
+      assignment_id:      d.assignment_id,
+      student_id:         studentRow.id,
+      content:            d.content     || null,
+      drive_url:          d.drive_url   || null,
+      github_url:         d.github_url  || null,
+      project_url:        d.project_url || null,
+      video_url:          d.video_url   || null,
+      submission_type:    (assignment as any).submission_type,
+      status:             'submitted',
+      submitted_at:       new Date().toISOString(),
+      is_late:            isLate,
+      resubmission_count: 0,
+      file_keys:          [],
+      image_urls:         [],
+      rubric_scores:      {},
+      portfolio_visible:  false,
+    })
+    .select('id')
+    .single()
+
+  if (insertErr || !newSub) {
+    return { success: false, error: { code: 'DB_ERROR', message: insertErr?.message ?? 'Insert failed.' } }
+  }
+
+  // New submission — grade summary trigger fires on the DB side; pull it into
+  // student_course_progress so the portal reflects the change immediately.
+  const newTuple = await resolveProgressFromAssignment(studentRow.id, d.assignment_id)
+  await safeRecalcProgress(newTuple, 'submitAssignment')
+
+  revalidatePath('/portal/student/assignments')
+  revalidatePath(`/portal/student/assignments/${d.assignment_id}`)
+  return { success: true, data: { submission_id: newSub.id } }
 }

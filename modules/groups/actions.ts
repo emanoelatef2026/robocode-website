@@ -5,6 +5,8 @@ import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
 import { createGroupSchema, updateGroupSchema, enrollStudentSchema } from './schemas'
+import { resolveGroupProgressContext } from '@/modules/progress/resolve'
+import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/safe-recalc'
 import type { ActionResult } from '@/types/app'
 
 export async function createGroup(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
@@ -178,6 +180,14 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
     p_new_values:   { student_id },
   })
 
+  const enrollContexts = await resolveGroupProgressContext(group_id)
+  if (enrollContexts.length > 0) {
+    await safeRecalcProgressBatch(
+      buildBatchTuples([student_id], enrollContexts),
+      'enrollStudent'
+    )
+  }
+
   revalidatePath(`/admin/groups/${group_id}`)
   return { success: true, data: undefined }
 }
@@ -203,6 +213,14 @@ export async function unenrollStudent(groupId: string, studentId: string): Promi
     p_entity_id:    groupId,
     p_new_values:   { student_id: studentId },
   })
+
+  const unenrollContexts = await resolveGroupProgressContext(groupId)
+  if (unenrollContexts.length > 0) {
+    await safeRecalcProgressBatch(
+      buildBatchTuples([studentId], unenrollContexts),
+      'unenrollStudent'
+    )
+  }
 
   revalidatePath(`/admin/groups/${groupId}`)
   return { success: true, data: undefined }

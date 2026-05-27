@@ -14,6 +14,8 @@ import {
   UpdatePortfolioSchema,
 } from './schemas'
 import { getOrCreatePortfolio } from './queries'
+import { resolveProgressFromPortfolioProject } from '@/modules/progress/resolve'
+import { safeRecalcProgress } from '@/modules/progress/safe-recalc'
 import type { ActionResult } from '@/types/app'
 
 // ─── Portfolio ─────────────────────────────────────────────────────────────────
@@ -108,6 +110,9 @@ export async function createProject(
     p_new_values:   d,
   })
 
+  const tuple = await resolveProgressFromPortfolioProject(data.id)
+  await safeRecalcProgress(tuple, 'createProject')
+
   revalidatePath(`/admin/portfolio/${d.student_id}`)
   return { success: true, data: { id: data.id } }
 }
@@ -189,6 +194,9 @@ export async function promoteSubmission(
     p_new_values:   { submission_id: d.submission_id, student_id: d.student_id },
   })
 
+  const tuple = await resolveProgressFromPortfolioProject(data.id)
+  await safeRecalcProgress(tuple, 'promoteSubmission')
+
   revalidatePath(`/admin/portfolio/${d.student_id}`)
   return { success: true, data: { id: data.id } }
 }
@@ -227,6 +235,11 @@ export async function updateProject(
     p_new_values:   parsed.data,
   })
 
+  if (parsed.data.final_score !== undefined) {
+    const tuple = await resolveProgressFromPortfolioProject(projectId)
+    await safeRecalcProgress(tuple, 'updateProject')
+  }
+
   if (existing?.student_id) revalidatePath(`/admin/portfolio/${existing.student_id}`)
   return { success: true, data: undefined }
 }
@@ -247,6 +260,9 @@ export async function archiveProject(projectId: string): Promise<ActionResult<vo
     .eq('id', projectId)
 
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  const tuple = await resolveProgressFromPortfolioProject(projectId)
+  await safeRecalcProgress(tuple, 'archiveProject')
 
   if (existing?.student_id) revalidatePath(`/admin/portfolio/${existing.student_id}`)
   return { success: true, data: undefined }

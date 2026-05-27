@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
 import { getOrCreateGroupCourse } from './queries'
+import { resolveGroupProgressContext } from '@/modules/progress/resolve'
+import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/safe-recalc'
 import type { ActionResult } from '@/types/app'
 import type { AttendanceStatus } from '@/types/enums'
 
@@ -92,6 +94,17 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
     p_new_values:   { group_id, session_date, student_count: records.length },
     p_branch_id:    branch_id,
   })
+
+  // Recalculate progress for every student whose attendance was just recorded.
+  // Resolves group context once (same courses/semester for all students in the group),
+  // then fires all recalculations concurrently via Promise.all.
+  const contexts = await resolveGroupProgressContext(group_id)
+  if (contexts.length > 0) {
+    await safeRecalcProgressBatch(
+      buildBatchTuples(safeStudentIds, contexts),
+      'recordAttendanceSession'
+    )
+  }
 
   revalidatePath('/admin/attendance')
   return { success: true, data: { scheduleId: schedule.id } }

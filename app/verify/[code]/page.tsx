@@ -122,6 +122,28 @@ export default async function VerifyCertificatePage({ params }: Props) {
                 )}
               </dl>
 
+              {certificate.snapshot && (
+                <div className="border-t border-[#E2E8F0] pt-4">
+                  <p className="text-xs text-[#94A3B8] uppercase tracking-wide text-center mb-3">
+                    Scores at Time of Issuance
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                    <div className="rounded-lg bg-[#F8FAFC] px-2 py-2">
+                      <p className="text-xs text-[#94A3B8] mb-0.5">Attendance</p>
+                      <p className="font-bold text-[#0B1F3A]">{certificate.snapshot.attendance_score}%</p>
+                    </div>
+                    <div className="rounded-lg bg-[#F8FAFC] px-2 py-2">
+                      <p className="text-xs text-[#94A3B8] mb-0.5">Assignments</p>
+                      <p className="font-bold text-[#0B1F3A]">{certificate.snapshot.assignment_score}%</p>
+                    </div>
+                    <div className="rounded-lg bg-[#F8FAFC] px-2 py-2">
+                      <p className="text-xs text-[#94A3B8] mb-0.5">Overall</p>
+                      <p className="font-bold text-[#0B1F3A]">{certificate.snapshot.overall_score}%</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="border-t border-[#E2E8F0] pt-3 text-center">
                 <p className="text-xs text-[#94A3B8]">Certificate No.</p>
                 <p className="font-mono text-sm font-bold text-[#0B1F3A] tracking-widest mt-0.5">

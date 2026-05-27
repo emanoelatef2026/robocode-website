@@ -109,7 +109,13 @@
       "Bash(dir app\\\\api\\\\admin /s /b)",
       "Bash(dir app\\\\admin /s /b)",
       "Bash(findstr \"page.tsx\")",
-      "Bash(node -e \"const e = require\\('./messages/en.json'\\); const keys = Object.keys\\(e\\).filter\\(k => k.startsWith\\('nav'\\)\\); console.log\\(JSON.stringify\\(e.nav ?? e, null, 2\\)\\)\")"
+      "Bash(node -e \"const e = require\\('./messages/en.json'\\); const keys = Object.keys\\(e\\).filter\\(k => k.startsWith\\('nav'\\)\\); console.log\\(JSON.stringify\\(e.nav ?? e, null, 2\\)\\)\")",
+      "Bash(npx vercel *)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node -e \"const crypto = require\\('crypto'\\); console.log\\(crypto.randomBytes\\(32\\).toString\\('hex'\\)\\);\")",
+      "Bash(powershell -Command ' *)",
+      "PowerShell(cd \"c:\\\\Users\\\\Emanoel\\\\OneDrive\\\\Desktop\\\\robocode-new\"; npx vercel inspect $\\(npx vercel ls --output json 2>$null | ConvertFrom-Json | Select-Object -First 1 -ExpandProperty url\\) 2>&1 | Select-Object -First 20)",
+      "Bash(node -e \"console.log\\('Current UTC:', new Date\\(\\).toISOString\\(\\)\\)\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\Emanoel\\OneDrive\\Desktop\\robocode-new\\app\\api\\admin\\branches",

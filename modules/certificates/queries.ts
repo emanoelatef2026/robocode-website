@@ -4,6 +4,7 @@ import type {
   Certificate,
   CertificateDetail,
   CertificateListItem,
+  CertificateSnapshot,
   CertificateTemplate,
   CertificateTemplateListItem,
   CertificateVerification,
@@ -230,7 +231,12 @@ export async function verifyCertificate(code: string): Promise<CertificateVerifi
       `certificate_code, title, recipient_name, certificate_type, issued_at, valid_until, status,
        certificate_templates!certificates_template_id_fkey(signatory_name),
        semesters!certificates_semester_id_fkey(name),
-       courses!certificates_course_id_fkey(title)`
+       courses!certificates_course_id_fkey(title),
+       certificate_snapshots!certificate_snapshots_certificate_id_fkey(
+         attendance_score, assignment_score, portfolio_score, overall_score,
+         courses_evaluated, threshold_attendance, threshold_assignment, threshold_overall,
+         is_eligible
+       )`
     )
     .eq('certificate_code', code)
     .single()
@@ -249,7 +255,20 @@ export async function verifyCertificate(code: string): Promise<CertificateVerifi
     semester_name:    row.semesters?.name ?? null,
     course_title:     row.courses?.title ?? null,
     issuer_name:      row.certificate_templates?.signatory_name ?? null,
+    snapshot:         row.certificate_snapshots ?? null,
   }
+}
+
+export async function getCertificateSnapshot(certificateId: string): Promise<CertificateSnapshot | null> {
+  const db = createServiceClient()
+  const { data, error } = await db
+    .from('certificate_snapshots')
+    .select('*')
+    .eq('certificate_id', certificateId)
+    .maybeSingle()
+
+  if (error || !data) return null
+  return data as CertificateSnapshot
 }
 
 // ─── Student own certificates ─────────────────────────────────────────────────

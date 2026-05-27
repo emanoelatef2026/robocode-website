@@ -80,6 +80,24 @@ export interface CertificateTemplateListItem {
   created_at:       string
 }
 
+// Immutable audit snapshot of eligibility scores at time of issuance
+export interface CertificateSnapshot {
+  id:                   string
+  certificate_id:       string
+  attendance_score:     number
+  assignment_score:     number
+  portfolio_score:      number
+  overall_score:        number
+  courses_evaluated:    number
+  threshold_attendance: number
+  threshold_assignment: number
+  threshold_overall:    number
+  is_eligible:          boolean
+  eligibility_detail:   Record<string, unknown> | null
+  calculated_at:        string
+  issued_at:            string
+}
+
 // Public verification response (no sensitive data)
 export interface CertificateVerification {
   certificate_code: string
@@ -92,4 +110,9 @@ export interface CertificateVerification {
   semester_name:    string | null
   course_title:     string | null
   issuer_name:      string | null  // signatory_name from template
+  snapshot:         Pick<CertificateSnapshot,
+    | 'attendance_score' | 'assignment_score' | 'portfolio_score' | 'overall_score'
+    | 'courses_evaluated' | 'threshold_attendance' | 'threshold_assignment'
+    | 'threshold_overall' | 'is_eligible'
+  > | null
 }

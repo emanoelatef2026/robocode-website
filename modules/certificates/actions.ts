@@ -10,6 +10,7 @@ import {
   RevokeCertificateSchema,
 } from './schemas'
 import { generateCertificateCode } from './queries'
+import { checkCertificateEligibility } from '@/modules/progress/eligibility'
 import type { ActionResult } from '@/types/app'
 
 // ─── Templates ────────────────────────────────────────────────────────────────
@@ -83,7 +84,6 @@ export async function issueCertificate(
 ): Promise<ActionResult<{ id: string; certificate_code: string }>> {
   const user = await requirePermission('manage_certificates')
 
-  // Resolve the student's name for recipient_name
   const studentId = formData.get('student_id') as string
 
   const raw = {
@@ -118,6 +118,11 @@ export async function issueCertificate(
   const profile = s?.users?.profiles
   const recipientName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || s?.users?.email || '—'
 
+  // Run eligibility check before issuance when the certificate is semester-scoped
+  const eligibility = d.semester_id
+    ? await checkCertificateEligibility(d.student_id, d.semester_id)
+    : null
+
   // Generate unique code (retry up to 5 times on collision)
   let code = ''
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -131,6 +136,7 @@ export async function issueCertificate(
   }
   if (!code) return { success: false, error: { code: 'INTERNAL', message: 'Could not generate unique certificate code' } }
 
+  // Insert certificate
   const { data, error } = await db
     .from('certificates')
     .insert({
@@ -154,6 +160,33 @@ export async function issueCertificate(
   if (error || !data) return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to issue certificate' } }
 
   const row = data as any
+
+  // Insert eligibility snapshot — if this fails, compensate by deleting the certificate
+  if (eligibility) {
+    const now = new Date().toISOString()
+    const { error: snapError } = await db
+      .from('certificate_snapshots')
+      .insert({
+        certificate_id:       row.id,
+        attendance_score:     eligibility.attendance_score,
+        assignment_score:     eligibility.assignment_score,
+        portfolio_score:      eligibility.portfolio_score,
+        overall_score:        eligibility.overall_percentage,
+        courses_evaluated:    eligibility.courses_evaluated,
+        threshold_attendance: eligibility.thresholds.min_attendance,
+        threshold_assignment: eligibility.thresholds.min_assignment,
+        threshold_overall:    eligibility.thresholds.min_overall,
+        is_eligible:          eligibility.is_eligible,
+        eligibility_detail:   { failed_thresholds: eligibility.failed_thresholds },
+        calculated_at:        now,
+        issued_at:            now,
+      })
+
+    if (snapError) {
+      await db.from('certificates').delete().eq('id', row.id)
+      return { success: false, error: { code: 'DB_ERROR', message: 'Failed to record eligibility snapshot; certificate was not issued.' } }
+    }
+  }
 
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,
