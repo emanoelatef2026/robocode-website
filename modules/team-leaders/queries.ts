@@ -42,7 +42,7 @@ export async function listTeamLeaders({
          metadata,
          profiles!profiles_user_id_fkey(first_name, last_name)
        ),
-       branches!user_roles_branch_id_fkey(name)`,
+       branches!fk_user_roles_branch(name)`,
       { count: 'exact' }
     )
     .not('branch_id', 'is', null)
@@ -152,7 +152,7 @@ export async function getTeamLeader(userId: string): Promise<TeamLeader | null> 
          id, email, metadata,
          profiles!profiles_user_id_fkey(first_name, last_name)
        ),
-       branches!user_roles_branch_id_fkey(name)`
+       branches!fk_user_roles_branch(name)`
     )
     .eq('user_id', userId)
     .eq('role_id', roleRow.id)
