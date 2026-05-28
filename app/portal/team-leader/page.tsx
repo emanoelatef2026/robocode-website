@@ -26,10 +26,29 @@ export default async function TLDashboardPage() {
     )
   }
 
-  const [stats, upcoming] = await Promise.all([
-    getDashboardStats(branchId),
-    getUpcomingSchedules(branchId, 5),
-  ])
+  console.log('[TLDashboard] branchId:', branchId, '| branchIds:', JSON.stringify(user.branchIds))
+
+  let stats = { activeStudents: 0, activeInstructors: 0, activeGroups: 0, upcomingSessions: 0 }
+  let upcoming: Awaited<ReturnType<typeof getUpcomingSchedules>> = []
+  let dashboardError: string | null = null
+
+  try {
+    stats = await getDashboardStats(branchId)
+    console.log('[TLDashboard] getDashboardStats ok', JSON.stringify(stats))
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[TLDashboard] getDashboardStats failed:', msg)
+    dashboardError = `getDashboardStats: ${msg}`
+  }
+
+  try {
+    upcoming = await getUpcomingSchedules(branchId, 5)
+    console.log('[TLDashboard] getUpcomingSchedules ok, count:', upcoming.length)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error('[TLDashboard] getUpcomingSchedules failed:', msg)
+    dashboardError = dashboardError ? `${dashboardError} | getUpcomingSchedules: ${msg}` : `getUpcomingSchedules: ${msg}`
+  }
 
   return (
     <div className="space-y-6">
@@ -37,6 +56,12 @@ export default async function TLDashboardPage() {
         <h1 className="text-xl font-bold text-[#0B1F3A]">Dashboard</h1>
         <p className="mt-0.5 text-sm text-[#64748B]">Overview of your branch</p>
       </div>
+
+      {dashboardError && (
+        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 font-mono break-all">
+          <strong>Dashboard error:</strong> {dashboardError}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard label="Active Students"    value={stats.activeStudents}    href="/portal/team-leader/students" />
