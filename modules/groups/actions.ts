@@ -9,6 +9,12 @@ import { resolveGroupProgressContext } from '@/modules/progress/resolve'
 import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/safe-recalc'
 import type { ActionResult } from '@/types/app'
 
+function validReturnTo(raw: FormDataEntryValue | null): string | null {
+  if (typeof raw !== 'string') return null
+  if (raw.startsWith('/admin/') || raw.startsWith('/portal/team-leader/')) return raw
+  return null
+}
+
 export async function createGroup(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
   const raw = {
     branch_id: formData.get('branch_id'),
@@ -56,8 +62,10 @@ export async function createGroup(_prev: unknown, formData: FormData): Promise<A
     p_branch_id:    branch_id,
   })
 
+  const returnTo = validReturnTo(formData.get('_return_to'))
   revalidatePath('/admin/groups')
-  redirect('/admin/groups')
+  revalidatePath('/portal/team-leader/groups')
+  redirect(returnTo ?? '/admin/groups')
 }
 
 export async function updateGroup(_prev: unknown, formData: FormData): Promise<ActionResult<void>> {
@@ -98,9 +106,12 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
     p_new_values:   updates,
   })
 
+  const returnTo = validReturnTo(formData.get('_return_to'))
   revalidatePath('/admin/groups')
   revalidatePath(`/admin/groups/${id}`)
-  redirect('/admin/groups')
+  revalidatePath('/portal/team-leader/groups')
+  revalidatePath(`/portal/team-leader/groups/${id}`)
+  redirect(returnTo ?? '/admin/groups')
 }
 
 export async function deleteGroup(id: string): Promise<ActionResult<void>> {
@@ -223,5 +234,77 @@ export async function unenrollStudent(groupId: string, studentId: string): Promi
   }
 
   revalidatePath(`/admin/groups/${groupId}`)
+  revalidatePath(`/portal/team-leader/groups/${groupId}`)
+  return { success: true, data: undefined }
+}
+
+export async function assignGroupCourse(
+  groupId: string,
+  courseId: string,
+  instructorId: string | null
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  // Deactivate any existing active group_course for this group
+  await db.from('group_courses')
+    .update({ status: 'cancelled' })
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+
+  const { data, error } = await db.from('group_courses')
+    .insert({
+      group_id:      groupId,
+      course_id:     courseId,
+      instructor_id: instructorId || null,
+      status:        'active',
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'assign_course',
+    p_entity_type:  'group',
+    p_entity_id:    groupId,
+    p_new_values:   { course_id: courseId, instructor_id: instructorId },
+  })
+
+  revalidatePath(`/admin/groups/${groupId}`)
+  revalidatePath(`/portal/team-leader/groups/${groupId}`)
+  return { success: true, data: { id: data.id } }
+}
+
+export async function assignGroupInstructor(
+  groupId: string,
+  instructorId: string
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  // Update the active group_course's instructor
+  const { error } = await db.from('group_courses')
+    .update({ instructor_id: instructorId })
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+
+  if (error) {
+    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'assign_instructor',
+    p_entity_type:  'group',
+    p_entity_id:    groupId,
+    p_new_values:   { instructor_id: instructorId },
+  })
+
+  revalidatePath(`/admin/groups/${groupId}`)
+  revalidatePath(`/portal/team-leader/groups/${groupId}`)
   return { success: true, data: undefined }
 }

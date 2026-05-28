@@ -7,6 +7,12 @@ import { requirePermission } from '@/modules/rbac/guards'
 import { createStudentSchema, updateStudentSchema } from './schemas'
 import type { ActionResult } from '@/types/app'
 
+function validReturnTo(raw: FormDataEntryValue | null): string | null {
+  if (typeof raw !== 'string') return null
+  if (raw.startsWith('/admin/') || raw.startsWith('/portal/team-leader/')) return raw
+  return null
+}
+
 export async function createStudent(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
   const raw = {
     email:           formData.get('email'),
@@ -105,8 +111,10 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
     p_branch_id:    branch_id,
   })
 
+  const returnTo = validReturnTo(formData.get('_return_to'))
   revalidatePath('/admin/students')
-  redirect('/admin/students')
+  revalidatePath('/portal/team-leader/students')
+  redirect(returnTo ?? '/admin/students')
 }
 
 export async function updateStudent(_prev: unknown, formData: FormData): Promise<ActionResult<void>> {
@@ -148,9 +156,12 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
     p_new_values:   updates,
   })
 
+  const returnTo = validReturnTo(formData.get('_return_to'))
   revalidatePath('/admin/students')
   revalidatePath(`/admin/students/${id}`)
-  redirect('/admin/students')
+  revalidatePath('/portal/team-leader/students')
+  revalidatePath(`/portal/team-leader/students/${id}`)
+  redirect(returnTo ?? '/admin/students')
 }
 
 export async function deleteStudent(id: string): Promise<ActionResult<void>> {

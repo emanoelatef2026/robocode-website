@@ -72,6 +72,8 @@ export async function listAssignments({
       lesson_title:    lessonRow?.title ?? null,
       module_title:    moduleRow?.title ?? lessonMod?.title ?? null,
       course_title:    fromLesson ?? fromModule,
+      schedule_id:     row.schedule_id ?? null,
+      schedule_topic:  null,
       submission_count: row.submissions?.[0]?.count ?? 0,
       created_at:      row.created_at,
     }

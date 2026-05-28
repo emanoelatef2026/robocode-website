@@ -72,6 +72,11 @@ const Icons = {
       <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
     </svg>
   ),
+  teamLeaders: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+    </svg>
+  ),
   analytics: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
@@ -89,7 +94,8 @@ const NAV_ITEMS = [
   { label: "Branches",    href: "/admin/branches",    icon: Icons.branches },
   { label: "Students",    href: "/admin/students",    icon: Icons.students },
   { label: "Parents",     href: "/admin/parents",     icon: Icons.parents },
-  { label: "Instructors", href: "/admin/instructors", icon: Icons.instructors },
+  { label: "Instructors",   href: "/admin/instructors",   icon: Icons.instructors },
+  { label: "Team Leaders",  href: "/admin/team-leaders",  icon: Icons.teamLeaders },
   { label: "Groups",      href: "/admin/groups",      icon: Icons.groups },
   { label: "Courses",     href: "/admin/courses",     icon: Icons.courses },
   { label: "Semesters",   href: "/admin/semesters",   icon: Icons.semesters },

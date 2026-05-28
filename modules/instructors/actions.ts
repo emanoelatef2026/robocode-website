@@ -7,6 +7,12 @@ import { requirePermission } from '@/modules/rbac/guards'
 import { createInstructorSchema, updateInstructorSchema } from './schemas'
 import type { ActionResult } from '@/types/app'
 
+function validReturnTo(raw: FormDataEntryValue | null): string | null {
+  if (typeof raw !== 'string') return null
+  if (raw.startsWith('/admin/') || raw.startsWith('/portal/team-leader/')) return raw
+  return null
+}
+
 export async function createInstructor(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
   const raw = {
     email:           formData.get('email'),
@@ -103,8 +109,10 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
     p_branch_id:    branch_id,
   })
 
+  const returnTo = validReturnTo(formData.get('_return_to'))
   revalidatePath('/admin/instructors')
-  redirect('/admin/instructors')
+  revalidatePath('/portal/team-leader/instructors')
+  redirect(returnTo ?? '/admin/instructors')
 }
 
 export async function updateInstructor(_prev: unknown, formData: FormData): Promise<ActionResult<void>> {
@@ -146,9 +154,12 @@ export async function updateInstructor(_prev: unknown, formData: FormData): Prom
     p_new_values:   updates,
   })
 
+  const returnTo = validReturnTo(formData.get('_return_to'))
   revalidatePath('/admin/instructors')
   revalidatePath(`/admin/instructors/${id}`)
-  redirect('/admin/instructors')
+  revalidatePath('/portal/team-leader/instructors')
+  revalidatePath(`/portal/team-leader/instructors/${id}`)
+  redirect(returnTo ?? '/admin/instructors')
 }
 
 export async function deleteInstructor(id: string): Promise<ActionResult<void>> {
