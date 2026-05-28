@@ -7,8 +7,13 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
   const code = searchParams.get('code')
   const type = searchParams.get('type')
+  const errorCode = searchParams.get('error_code')
 
+  // Supabase redirects here with error params when the link is expired or invalid
   if (!code) {
+    if (errorCode === 'otp_expired' || errorCode === 'access_denied') {
+      return NextResponse.redirect(new URL('/forgot-password?error=link_expired', origin))
+    }
     return NextResponse.redirect(new URL('/login?error=missing_code', origin))
   }
 

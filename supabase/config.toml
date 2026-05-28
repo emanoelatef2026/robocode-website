@@ -58,7 +58,7 @@ double_confirm_changes = true
 enable_confirmations = false
 max_frequency = "1s"
 otp_length = 6
-otp_expiry = 1
+otp_expiry = 3600
 
 [auth.sms]
 enable_signup = false

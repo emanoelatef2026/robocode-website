@@ -3,11 +3,15 @@
 import { useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 
 export default function ForgotPasswordPage() {
+  const searchParams = useSearchParams()
+  const linkExpired  = searchParams.get('error') === 'link_expired'
+
   const [sent, setSent]     = useState(false)
-  const [error, setError]   = useState<string | null>(null)
+  const [error, setError]   = useState<string | null>(linkExpired ? 'Your reset link has expired. Request a new one below.' : null)
   const [pending, start]    = useTransition()
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
