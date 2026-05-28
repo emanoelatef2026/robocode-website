@@ -25,7 +25,8 @@ export async function listAssignments({
   let query = db
     .from('assignments')
     .select(
-      `id, title, type, submission_type, status, due_at, max_score, lesson_id, module_id, created_at,
+      `id, title, type, submission_type, status, due_at, max_score,
+       lesson_id, module_id, schedule_id, created_at,
        lessons!assignments_lesson_id_fkey(
          title,
          course_modules!lessons_module_id_fkey(
@@ -37,6 +38,7 @@ export async function listAssignments({
          title,
          courses!course_modules_course_id_fkey(title)
        ),
+       schedules!assignments_schedule_id_fkey(topic),
        submissions!submissions_assignment_id_fkey(count)`,
       { count: 'exact' }
     )
@@ -69,11 +71,11 @@ export async function listAssignments({
       max_score:       row.max_score,
       lesson_id:       row.lesson_id ?? null,
       module_id:       row.module_id ?? null,
+      schedule_id:     row.schedule_id ?? null,
       lesson_title:    lessonRow?.title ?? null,
       module_title:    moduleRow?.title ?? lessonMod?.title ?? null,
       course_title:    fromLesson ?? fromModule,
-      schedule_id:     row.schedule_id ?? null,
-      schedule_topic:  null,
+      schedule_topic:  row.schedules?.topic ?? null,
       submission_count: row.submissions?.[0]?.count ?? 0,
       created_at:      row.created_at,
     }
@@ -105,6 +107,7 @@ export async function getAssignment(id: string): Promise<Assignment | null> {
          title,
          courses!course_modules_course_id_fkey(title)
        ),
+       schedules!assignments_schedule_id_fkey(topic),
        submissions!submissions_assignment_id_fkey(count)`
     )
     .eq('id', id)
@@ -123,6 +126,7 @@ export async function getAssignment(id: string): Promise<Assignment | null> {
     lesson_title:    lessonRow?.title ?? null,
     module_title:    moduleRow?.title ?? lessonMod?.title ?? null,
     course_title:    moduleRow?.courses?.title ?? lessonMod?.courses?.title ?? null,
+    schedule_topic:  row.schedules?.topic ?? null,
     rubric:          row.rubric ?? [],
     submission_count: row.submissions?.[0]?.count ?? 0,
   } as Assignment
