@@ -10,6 +10,7 @@ import type { ActionResult } from '@/types/app'
 export async function createInstructor(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
   const raw = {
     email:           formData.get('email'),
+    password:        formData.get('password'),
     first_name:      formData.get('first_name'),
     last_name:       formData.get('last_name'),
     branch_id:       formData.get('branch_id'),
@@ -28,7 +29,7 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
   const user = await requirePermission('manage_instructors', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
 
-  const { email, first_name, last_name, branch_id, employee_id, hire_date, specializations } = parsed.data
+  const { email, password, first_name, last_name, branch_id, employee_id, hire_date, specializations } = parsed.data
   const specsArray = specializations
     ? specializations.split(',').map((s) => s.trim()).filter(Boolean)
     : []
@@ -42,6 +43,7 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
   } else {
     const { data: created, error: createError } = await db.auth.admin.createUser({
       email,
+      password,
       email_confirm: true,
     })
     if (createError || !created?.user) {

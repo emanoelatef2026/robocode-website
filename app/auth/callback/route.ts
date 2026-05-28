@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
-import { resolveUserPermissions } from '@/modules/rbac/resolver'
-import { setSessionCookie } from '@/lib/lms-session'
-import { ROLE_PORTAL_MAP } from '@/types/enums'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
   const code = searchParams.get('code')
-  const next  = searchParams.get('next') ?? '/'
+  const type = searchParams.get('type')
 
   if (!code) {
     return NextResponse.redirect(new URL('/login?error=missing_code', origin))
@@ -18,31 +15,21 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerClient()
 
-    // Exchange the Supabase PKCE code for a session
+    // Exchange the PKCE code for a Supabase session (sets auth cookies on response)
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (error || !data.user) {
       console.error('[auth/callback] code exchange failed:', error?.message)
       return NextResponse.redirect(new URL('/login?error=auth_failed', origin))
     }
 
-    // Resolve permissions from the DB
-    const resolved = await resolveUserPermissions(data.user.id)
+    if (type === 'recovery') {
+      // Password recovery flow — do NOT set lms_session, just redirect to reset page.
+      // The Supabase auth cookies from exchangeCodeForSession give the reset page its session.
+      return NextResponse.redirect(new URL('/reset-password', origin))
+    }
 
-    // Write the encrypted lms_session cookie
-    await setSessionCookie({
-      id:          data.user.id,
-      email:       data.user.email ?? '',
-      globalRole:  resolved.globalRole,
-      branchIds:   resolved.branchIds,
-      permissions: Array.from(resolved.permissions),
-    })
-
-    // Redirect to the requested page or the user's home portal
-    const destination = next !== '/'
-      ? next
-      : ROLE_PORTAL_MAP[resolved.globalRole]
-
-    return NextResponse.redirect(new URL(destination, origin))
+    // Any other code exchange (e.g. stale magic-link click) — redirect to login
+    return NextResponse.redirect(new URL('/login', origin))
   } catch (err) {
     console.error('[auth/callback] unexpected error:', err)
     return NextResponse.redirect(new URL('/login?error=server_error', origin))

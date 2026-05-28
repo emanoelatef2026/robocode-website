@@ -1,118 +1,53 @@
 'use client'
 
-import { Suspense, useEffect, useRef, useState, useTransition } from 'react'
+import { Suspense, useActionState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Image from 'next/image'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import Link from 'next/link'
+import { signIn } from '@/modules/auth/actions'
+import type { SignInState } from '@/modules/auth/actions'
 
-const ERROR_MESSAGES: Record<string, string> = {
-  missing_code:    'Invalid or expired link. Please request a new one.',
-  auth_failed:     'Authentication failed. Please try again.',
-  server_error:    'Server error. Please try again shortly.',
-  no_role:         'Your account has no role assigned. Contact your administrator.',
-  forbidden:       'You do not have permission to access that page.',
+const ROUTE_ERROR_MESSAGES: Record<string, string> = {
   session_expired: 'Your session expired. Please sign in again.',
-}
-
-function parseRateLimitSeconds(msg: string): number | null {
-  const m = msg.match(/after\s+(\d+)\s+second/i)
-  return m ? parseInt(m[1], 10) : null
+  forbidden:       'You do not have permission to access that page.',
+  password_reset:  'Password updated successfully. Sign in with your new password.',
 }
 
 function LoginForm() {
-  const searchParams  = useSearchParams()
-  const errorKey      = searchParams.get('error')
-  const errorMsg      = errorKey ? ERROR_MESSAGES[errorKey] : null
+  const searchParams = useSearchParams()
+  const routeError   = searchParams.get('error')
+  const message      = searchParams.get('message')
+  const routeMsg     = routeError ? ROUTE_ERROR_MESSAGES[routeError] : null
+  const successMsg   = message   ? ROUTE_ERROR_MESSAGES[message]    : null
 
-  const [sent, setSent]       = useState(false)
-  const [error, setError]     = useState<string | null>(null)
-  const [cooldown, setCooldown] = useState(0)
-  const [pending, startTransition] = useTransition()
-  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    return () => { if (cooldownRef.current) clearInterval(cooldownRef.current) }
-  }, [])
-
-  function startCooldown(secs: number) {
-    setCooldown(secs)
-    cooldownRef.current = setInterval(() => {
-      setCooldown((c) => {
-        if (c <= 1) { clearInterval(cooldownRef.current!); cooldownRef.current = null; return 0 }
-        return c - 1
-      })
-    }, 1000)
-  }
-
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    if (cooldown > 0) return
-    const email = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value
-
-    startTransition(async () => {
-      const supabase = createSupabaseBrowserClient()
-      const { error: supaErr } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          // window.location.origin is always the correct production domain
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          shouldCreateUser: false,
-        },
-      })
-
-      if (supaErr) {
-        const msg = supaErr.message ?? ''
-        const secs = parseRateLimitSeconds(msg)
-        if (secs) startCooldown(secs)
-
-        if (
-          msg.toLowerCase().includes('signups not allowed') ||
-          msg.toLowerCase().includes('otp disabled')
-        ) {
-          setError('This email is not registered. Contact your administrator.')
-        } else {
-          setError(msg || 'Could not send magic link. Please try again.')
-        }
-      } else {
-        setSent(true)
-      }
-    })
-  }
-
-  if (sent) {
-    return (
-      <div className="text-center">
-        <div className="mb-4 flex justify-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#19C6F4]/10">
-            <svg className="h-7 w-7 text-[#19C6F4]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </div>
-        </div>
-        <h1 className="mb-2 text-lg font-bold text-[#0B132B]">Check your email</h1>
-        <p className="text-[13px] text-gray-400">
-          We sent a magic link to your inbox. Click it to sign in.
-        </p>
-      </div>
-    )
-  }
-
-  const isLocked = cooldown > 0
+  const [state, action, pending] = useActionState<SignInState | null, FormData>(signIn, null)
 
   return (
     <>
       <h1 className="mb-1 text-center text-lg font-bold text-[#0B132B]">Sign in to Robocode</h1>
       <p className="mb-7 text-center text-[13px] text-gray-400">
-        Enter your email and we&apos;ll send you a magic link
+        Enter your email and password to continue
       </p>
 
-      {errorMsg && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-[13px] text-red-600">
-          {errorMsg}
+      {successMsg && (
+        <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-[13px] text-green-700">
+          {successMsg}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {routeMsg && !successMsg && (
+        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-[13px] text-red-600">
+          {routeMsg}
+        </div>
+      )}
+
+      {state?.error && (
+        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-[13px] text-red-600">
+          {state.error}
+        </div>
+      )}
+
+      <form action={action} className="space-y-4">
         <div>
           <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-gray-400">
             Email address
@@ -121,30 +56,40 @@ function LoginForm() {
             type="email"
             name="email"
             required
+            autoComplete="email"
             placeholder="you@example.com"
             className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
           />
         </div>
 
-        {error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-500">
-            {error}
-            {isLocked && (
-              <span className="ml-1 font-mono font-semibold">
-                ({cooldown}s)
-              </span>
-            )}
-          </p>
-        )}
+        <div>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="text-[12px] font-semibold uppercase tracking-wide text-gray-400">
+              Password
+            </label>
+            <Link
+              href="/forgot-password"
+              className="text-[12px] text-[#19C6F4] hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
+          <input
+            type="password"
+            name="password"
+            required
+            autoComplete="current-password"
+            placeholder="••••••••"
+            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+          />
+        </div>
 
         <button
           type="submit"
-          disabled={pending || isLocked}
+          disabled={pending}
           className="w-full rounded-lg bg-[#0B132B] py-3 text-[14px] font-semibold text-white transition hover:bg-[#19C6F4] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {pending   ? 'Sending…'
-           : isLocked ? `Wait ${cooldown}s…`
-           : 'Send magic link'}
+          {pending ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
     </>

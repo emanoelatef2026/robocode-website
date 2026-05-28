@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Parse and validate email ──
-    let body: { email?: string }
+    let body: { email?: string; password?: string }
     try {
       body = await request.json()
     } catch {
@@ -81,6 +81,11 @@ export async function POST(request: NextRequest) {
     const email = body.email?.trim().toLowerCase()
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: 'Invalid or missing email address' }, { status: 400 })
+    }
+
+    const password = body.password?.trim()
+    if (!password || password.length < 6) {
+      return NextResponse.json({ error: 'password is required (minimum 6 characters)' }, { status: 400 })
     }
     console.log('[bootstrap] target email:', email)
 
@@ -105,6 +110,7 @@ export async function POST(request: NextRequest) {
       console.log('[bootstrap] Creating auth user…')
       const { data: created, error: createError } = await db.auth.admin.createUser({
         email,
+        password,
         email_confirm: true,
       })
       if (createError || !created?.user) {
@@ -162,9 +168,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Super admin bootstrapped for ${email}. Now send a magic link to sign in.`,
+      message: `Super admin bootstrapped for ${email}. Sign in at /login with the email and password provided.`,
       userId:  authUser.id,
-      next:    `POST /api/lms/auth/magic-link  { "email": "${email}" }  — or use the /login page`,
     })
 
   } catch (err) {

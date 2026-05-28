@@ -13,6 +13,7 @@ export async function createParent(_prev: unknown, formData: FormData): Promise<
 
   const raw = {
     email:        formData.get('email'),
+    password:     formData.get('password'),
     first_name:   formData.get('first_name'),
     last_name:    formData.get('last_name'),
     student_id:   formData.get('student_id') || undefined,
@@ -24,7 +25,7 @@ export async function createParent(_prev: unknown, formData: FormData): Promise<
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { email, first_name, last_name, student_id, relationship } = parsed.data
+  const { email, password, first_name, last_name, student_id, relationship } = parsed.data
 
   let authUserId: string
   const { data: listData } = await db.auth.admin.listUsers({ perPage: 1000 })
@@ -35,6 +36,7 @@ export async function createParent(_prev: unknown, formData: FormData): Promise<
   } else {
     const { data: created, error: createError } = await db.auth.admin.createUser({
       email,
+      password,
       email_confirm: true,
     })
     if (createError || !created?.user) {

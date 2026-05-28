@@ -10,6 +10,7 @@ import type { ActionResult } from '@/types/app'
 export async function createStudent(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
   const raw = {
     email:           formData.get('email'),
+    password:        formData.get('password'),
     first_name:      formData.get('first_name'),
     last_name:       formData.get('last_name'),
     branch_id:       formData.get('branch_id'),
@@ -28,7 +29,7 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
   const user = await requirePermission('manage_students', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
 
-  const { email, first_name, last_name, branch_id, student_code, enrollment_date, notes } = parsed.data
+  const { email, password, first_name, last_name, branch_id, student_code, enrollment_date, notes } = parsed.data
 
   // 1. Create or find auth user
   let authUserId: string
@@ -40,6 +41,7 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
   } else {
     const { data: created, error: createError } = await db.auth.admin.createUser({
       email,
+      password,
       email_confirm: true,
     })
     if (createError || !created?.user) {
