@@ -8,14 +8,20 @@ import { signInStudio } from '@/modules/auth/actions'
 import type { SignInStudioState } from '@/modules/auth/actions'
 
 const ROUTE_ERROR_MESSAGES: Record<string, string> = {
-  session_expired: 'Your session has expired. Please sign in again.',
-  forbidden:       'You do not have permission to access that page.',
+  session_expired:  'Your session has expired. Please sign in again.',
+  forbidden:        'You do not have permission to access that page.',
+}
+
+const ROUTE_SUCCESS_MESSAGES: Record<string, string> = {
+  password_reset: 'Password updated successfully. Sign in with your new password.',
 }
 
 function StudioLoginForm() {
   const searchParams = useSearchParams()
   const routeError   = searchParams.get('error')
+  const routeMsg     = searchParams.get('message')
   const routeMessage = routeError ? ROUTE_ERROR_MESSAGES[routeError] : null
+  const successMessage = routeMsg ? ROUTE_SUCCESS_MESSAGES[routeMsg] : null
 
   const [state, action, pending] = useActionState<SignInStudioState | null, FormData>(
     signInStudio,
@@ -31,7 +37,13 @@ function StudioLoginForm() {
         Sign in with your Robocode account
       </p>
 
-      {errorMessage && (
+      {successMessage && (
+        <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-[13px] text-green-700">
+          {successMessage}
+        </div>
+      )}
+
+      {errorMessage && !successMessage && (
         <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-[13px] text-red-600">
           {errorMessage}
         </div>
@@ -68,7 +80,7 @@ function StudioLoginForm() {
 
         <div className="flex justify-end">
           <Link
-            href="/forgot-password"
+            href="/studio/forgot-password"
             className="text-[12px] text-[#19C6F4] hover:underline"
           >
             Forgot password?

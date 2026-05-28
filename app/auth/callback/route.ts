@@ -5,14 +5,16 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
-  const code = searchParams.get('code')
-  const type = searchParams.get('type')
+  const code      = searchParams.get('code')
+  const type      = searchParams.get('type')
+  const source    = searchParams.get('source')
   const errorCode = searchParams.get('error_code')
 
   // Supabase redirects here with error params when the link is expired or invalid
   if (!code) {
     if (errorCode === 'otp_expired' || errorCode === 'access_denied') {
-      return NextResponse.redirect(new URL('/forgot-password?error=link_expired', origin))
+      const forgotPath = source === 'studio' ? '/studio/forgot-password' : '/forgot-password'
+      return NextResponse.redirect(new URL(`${forgotPath}?error=link_expired`, origin))
     }
     return NextResponse.redirect(new URL('/login?error=missing_code', origin))
   }
@@ -30,7 +32,8 @@ export async function GET(request: NextRequest) {
     if (type === 'recovery') {
       // Password recovery flow — do NOT set lms_session, just redirect to reset page.
       // The Supabase auth cookies from exchangeCodeForSession give the reset page its session.
-      return NextResponse.redirect(new URL('/reset-password', origin))
+      const resetPath = source === 'studio' ? '/studio/reset-password' : '/reset-password'
+      return NextResponse.redirect(new URL(resetPath, origin))
     }
 
     // Any other code exchange (e.g. stale magic-link click) — redirect to login
