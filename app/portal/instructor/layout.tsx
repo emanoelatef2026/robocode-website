@@ -1,6 +1,7 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
+import InstructorShell from '@/components/portal/instructor/InstructorShell'
 
 export default async function InstructorLayout({ children }: { children: React.ReactNode }) {
   await requirePortalRole('instructor')
-  return <>{children}</>
+  return <InstructorShell>{children}</InstructorShell>
 }

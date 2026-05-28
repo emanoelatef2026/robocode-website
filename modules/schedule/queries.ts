@@ -47,10 +47,7 @@ export async function listSchedules({
   }
 
   const { data, error } = await query
-  if (error) {
-    console.error('[listSchedules] PostgREST error:', JSON.stringify(error))
-    throw new Error(error.message)
-  }
+  if (error) throw new Error(error.message)
 
   return (data ?? []).map((row: any) => {
     const gc   = row.group_courses

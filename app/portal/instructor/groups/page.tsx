@@ -1,0 +1,66 @@
+import { requirePortalRole } from '@/modules/rbac/guards'
+import { getInstructorByUserId, listInstructorGroups } from '@/modules/instructor-portal/queries'
+import Link from 'next/link'
+
+export default async function InstructorGroupsPage() {
+  const user       = await requirePortalRole('instructor')
+  const instructor = await getInstructorByUserId(user.id)
+
+  if (!instructor) {
+    return (
+      <div className="flex h-64 items-center justify-center text-[#64748B]">
+        No instructor record found. Contact your team leader.
+      </div>
+    )
+  }
+
+  const groups = await listInstructorGroups(instructor.id)
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold text-[#0B1F3A]">My Groups</h1>
+        <p className="mt-0.5 text-sm text-[#64748B]">Groups assigned to you</p>
+      </div>
+
+      {groups.length === 0 ? (
+        <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] text-sm text-[#64748B]">
+          No groups assigned yet.
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {groups.map((g) => (
+            <Link
+              key={g.group_id}
+              href={`/portal/instructor/groups/${g.group_id}`}
+              className="rounded-xl border border-[#E2E8F0] bg-white p-5 transition hover:border-[#CBD5E1] hover:shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-[#0B1F3A]">{g.group_name}</p>
+                  {g.group_code && (
+                    <p className="mt-0.5 text-xs text-[#94A3B8]">{g.group_code}</p>
+                  )}
+                </div>
+              </div>
+              <p className="mt-2 truncate text-sm text-[#64748B]">{g.course_title}</p>
+              <div className="mt-4 flex items-center gap-4 text-xs text-[#94A3B8]">
+                <span>{g.student_count} student{g.student_count !== 1 ? 's' : ''}</span>
+                {g.next_session_at ? (
+                  <span>
+                    Next:{' '}
+                    {new Date(g.next_session_at).toLocaleDateString('en-GB', {
+                      day: 'numeric', month: 'short',
+                    })}
+                  </span>
+                ) : (
+                  <span>No upcoming session</span>
+                )}
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
