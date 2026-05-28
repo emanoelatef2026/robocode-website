@@ -13,6 +13,7 @@ export interface Assignment {
   id: string
   lesson_id: string | null
   module_id: string | null
+  schedule_id: string | null   // optional: session in which this was assigned
   title: string
   description: string | null
   instructions: string | null
@@ -35,6 +36,7 @@ export interface Assignment {
   lesson_title: string | null
   module_title: string | null
   course_title: string | null
+  schedule_topic: string | null  // joined from schedules.topic
   submission_count: number
 }
 
@@ -48,9 +50,11 @@ export interface AssignmentListItem {
   max_score: number
   lesson_id: string | null
   module_id: string | null
+  schedule_id: string | null    // session this was assigned in (nullable)
   lesson_title: string | null
   module_title: string | null
   course_title: string | null
+  schedule_topic: string | null // joined from schedules.topic
   submission_count: number
   created_at: string
 }
