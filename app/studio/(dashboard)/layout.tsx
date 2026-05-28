@@ -3,6 +3,8 @@ import { getSessionCookie } from '@/lib/lms-session'
 import { ROLE_PORTAL_MAP } from '@/types/enums'
 import StudioShell from "@/components/studio/StudioShell"
 
+export const dynamic = 'force-dynamic'
+
 const STUDIO_ROLES = new Set(['super_admin', 'team_leader'])
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
