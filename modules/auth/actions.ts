@@ -9,7 +9,8 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { requireAuth } from '@/modules/rbac/guards'
 import { ROLE_PORTAL_MAP } from '@/types/enums'
 
-const STUDIO_ROLES = new Set(['super_admin', 'team_leader'])
+const STUDIO_ROLES          = new Set(['super_admin', 'team_leader'])
+const WORKSPACE_PICKER_ROLES = new Set(['super_admin', 'team_leader'])
 
 // ── Sign in ───────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,10 @@ export async function signIn(
     return { error: 'Failed to load your account. Contact your administrator.' }
   }
 
+  // Multi-workspace roles choose their destination; single-workspace roles go straight in
+  if (WORKSPACE_PICKER_ROLES.has(resolvedRole)) {
+    redirect('/select-workspace')
+  }
   redirect(ROLE_PORTAL_MAP[resolvedRole as keyof typeof ROLE_PORTAL_MAP] ?? '/')
 }
 
@@ -114,7 +119,7 @@ export async function signInStudio(
     return { error: 'Failed to load your account. Contact your administrator.' }
   }
 
-  redirect('/studio')
+  redirect('/select-workspace')
 }
 
 // ── Sign out ──────────────────────────────────────────────────────────────────

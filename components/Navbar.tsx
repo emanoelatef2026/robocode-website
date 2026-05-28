@@ -134,9 +134,19 @@ export default function Navbar() {
           ))}
         </nav>
 
-        {/* Right controls: lang toggle + CTA */}
+        {/* Right controls: lang toggle + Login + CTA */}
         <div className="hidden items-center gap-3 md:flex">
           <LangToggle compact />
+          <Link href="/login">
+            <motion.span
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="inline-flex items-center rounded-full border border-[#0B1F3A]/25 px-5 py-2.5 text-[13px] font-bold text-[#0B1F3A] transition-all duration-200 hover:border-[#0B1F3A] hover:bg-[#0B1F3A] hover:text-white"
+            >
+              {t("nav.login")}
+            </motion.span>
+          </Link>
           <Link href="/book-session">
             <motion.span
               whileHover={{ scale: 1.03 }}
@@ -206,9 +216,17 @@ export default function Navbar() {
               </div>
 
               <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className="mt-3 block w-full rounded-full border border-[#0B1F3A]/25 py-4 text-center text-sm font-bold text-[#0B1F3A] transition duration-200 hover:border-[#0B1F3A] hover:bg-[#0B1F3A] hover:text-white"
+              >
+                {t("nav.login")}
+              </Link>
+
+              <Link
                 href="/book-session"
                 onClick={() => setMenuOpen(false)}
-                className="mt-3 block w-full rounded-full bg-[#38BDF8] py-4 text-center text-sm font-bold text-white shadow-[0_2px_16px_rgba(56,189,248,0.3)] transition duration-200 hover:brightness-110"
+                className="mt-2 block w-full rounded-full bg-[#38BDF8] py-4 text-center text-sm font-bold text-white shadow-[0_2px_16px_rgba(56,189,248,0.3)] transition duration-200 hover:brightness-110"
               >
                 {t("nav.bookFreeTrial")}
               </Link>
