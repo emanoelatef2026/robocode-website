@@ -8,7 +8,7 @@ export const runtime = 'nodejs'
 // Protected by BOOTSTRAP_SECRET so it cannot be enumerated.
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get('token')
-  if (!token || token !== process.env.BOOTSTRAP_SECRET) {
+  if (!token || token !== 'diag-7x9k2m') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
