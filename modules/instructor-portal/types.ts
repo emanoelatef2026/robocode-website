@@ -117,10 +117,11 @@ export interface GroupForInstructor {
   branch_id:       string
   semester_id:     string | null
   students: Array<{
-    student_id:  string
-    first_name:  string | null
-    last_name:   string | null
-    email:       string
+    student_id:      string
+    first_name:      string | null
+    last_name:       string | null
+    email:           string
+    enrollment_type: 'primary' | 'secondary'
   }>
   sessions: InstructorSession[]
 }

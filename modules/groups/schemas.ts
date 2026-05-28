@@ -4,7 +4,6 @@ export const createGroupSchema = z.object({
   branch_id: z.string().uuid('Select a branch'),
   name:      z.string().min(2, 'Name must be at least 2 characters').max(100),
   type:      z.enum(['class', 'workshop', 'bootcamp', 'trial', 'makeup']),
-  code:      z.string().max(50).optional().or(z.literal('')),
   capacity:  z.coerce.number().int().min(1).max(500).optional(),
 })
 
@@ -14,8 +13,9 @@ export const updateGroupSchema = createGroupSchema.extend({
 }).omit({ branch_id: true })
 
 export const enrollStudentSchema = z.object({
-  group_id:   z.string().uuid(),
-  student_id: z.string().uuid('Select a student'),
+  group_id:        z.string().uuid(),
+  student_id:      z.string().uuid('Select a student'),
+  enrollment_type: z.enum(['primary', 'secondary']).default('primary'),
 })
 
 export type CreateGroupSchema  = z.infer<typeof createGroupSchema>

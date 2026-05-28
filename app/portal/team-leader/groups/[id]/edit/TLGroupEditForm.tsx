@@ -69,11 +69,10 @@ export default function TLGroupEditForm({ group }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Code</label>
-            <input
-              name="code"
-              defaultValue={group.code ?? ''}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-            />
+            <div className="flex h-10.5 items-center rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3">
+              <span className="font-mono text-sm text-[#64748B]">{group.code ?? '—'}</span>
+            </div>
+            <p className="mt-1 text-[11px] text-[#94A3B8]">Auto-generated · cannot be changed</p>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Capacity</label>

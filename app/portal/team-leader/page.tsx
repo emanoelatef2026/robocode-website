@@ -17,8 +17,7 @@ function StatCard({ label, value, href }: { label: string; value: number; href: 
 export default async function TLDashboardPage() {
   const user = await requirePortalRole('team_leader')
 
-  const branchId = user.branchIds[0]
-  if (!branchId) {
+  if (!user.branchIds.length) {
     return (
       <div className="flex h-64 items-center justify-center text-[#64748B]">
         No branch assigned to your account. Contact a super admin.
@@ -27,8 +26,8 @@ export default async function TLDashboardPage() {
   }
 
   const [stats, upcoming] = await Promise.all([
-    getDashboardStats(branchId),
-    getUpcomingSchedules(branchId, 5),
+    getDashboardStats(user.branchIds),
+    getUpcomingSchedules(user.branchIds, 5),
   ])
 
   return (

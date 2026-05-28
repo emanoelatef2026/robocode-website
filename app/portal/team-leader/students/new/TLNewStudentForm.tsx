@@ -77,24 +77,14 @@ export default function TLNewStudentForm({ branchId }: Props) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Student code</label>
-            <input
-              name="student_code"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-              placeholder="e.g. STU-2026-001"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Enrollment date</label>
-            <input
-              name="enrollment_date"
-              type="date"
-              defaultValue={new Date().toISOString().split('T')[0]}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-            />
-          </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Enrollment date</label>
+          <input
+            name="enrollment_date"
+            type="date"
+            defaultValue={new Date().toISOString().split('T')[0]}
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+          />
         </div>
 
         <div>

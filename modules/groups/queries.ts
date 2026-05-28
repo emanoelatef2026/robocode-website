@@ -13,7 +13,7 @@ export async function listGroups({
   page?: number
   perPage?: number
   search?: string
-  branchId?: string
+  branchId?: string | string[]
   status?: string
 } = {}): Promise<PaginatedResult<GroupListItem>> {
   const db   = createServiceClient()
@@ -31,7 +31,13 @@ export async function listGroups({
     .order('created_at', { ascending: false })
     .range(from, to)
 
-  if (branchId) query = query.eq('branch_id', branchId)
+  if (branchId) {
+    if (Array.isArray(branchId)) {
+      query = query.in('branch_id', branchId)
+    } else {
+      query = query.eq('branch_id', branchId)
+    }
+  }
   if (status)   query = query.eq('status', status)
   if (search)   query = query.ilike('name', `%${search}%`)
 
@@ -80,7 +86,7 @@ export async function listGroupEnrollments(groupId: string): Promise<GroupEnroll
   const { data, error } = await db
     .from('group_students')
     .select(
-      `id, group_id, student_id, status, joined_at, left_at, notes,
+      `id, group_id, student_id, enrollment_type, status, joined_at, left_at, notes,
        students!group_students_student_id_fkey(
          user_id,
          users!students_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name))
@@ -92,15 +98,16 @@ export async function listGroupEnrollments(groupId: string): Promise<GroupEnroll
   if (error) return []
 
   return (data ?? []).map((row: any) => ({
-    id:            row.id,
-    group_id:      row.group_id,
-    student_id:    row.student_id,
-    status:        row.status,
-    joined_at:     row.joined_at,
-    left_at:       row.left_at,
-    notes:         row.notes,
-    student_email: row.students?.users?.email ?? '',
-    first_name:    row.students?.users?.profiles?.first_name ?? null,
-    last_name:     row.students?.users?.profiles?.last_name ?? null,
+    id:              row.id,
+    group_id:        row.group_id,
+    student_id:      row.student_id,
+    enrollment_type: row.enrollment_type as 'primary' | 'secondary',
+    status:          row.status,
+    joined_at:       row.joined_at,
+    left_at:         row.left_at,
+    notes:           row.notes,
+    student_email:   row.students?.users?.email ?? '',
+    first_name:      row.students?.users?.profiles?.first_name ?? null,
+    last_name:       row.students?.users?.profiles?.last_name ?? null,
   })) as GroupEnrollment[]
 }

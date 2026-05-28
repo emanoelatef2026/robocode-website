@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createGroupSchema, updateGroupSchema, enrollStudentSchema } from './schemas'
 import { resolveGroupProgressContext } from '@/modules/progress/resolve'
 import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/safe-recalc'
@@ -20,7 +20,6 @@ export async function createGroup(_prev: unknown, formData: FormData): Promise<A
     branch_id: formData.get('branch_id'),
     name:      formData.get('name'),
     type:      formData.get('type'),
-    code:      formData.get('code') || undefined,
     capacity:  formData.get('capacity') || undefined,
   }
 
@@ -34,7 +33,7 @@ export async function createGroup(_prev: unknown, formData: FormData): Promise<A
   const user = await requirePermission('manage_groups', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
 
-  const { branch_id, name, type, code, capacity } = parsed.data
+  const { branch_id, name, type, capacity } = parsed.data
 
   const { data: group, error } = await db
     .from('groups')
@@ -42,7 +41,6 @@ export async function createGroup(_prev: unknown, formData: FormData): Promise<A
       branch_id,
       name,
       type,
-      code:     code || null,
       capacity: capacity ?? null,
       status:   'forming',
     })
@@ -76,7 +74,6 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
     id:       formData.get('id'),
     name:     formData.get('name'),
     type:     formData.get('type'),
-    code:     formData.get('code') || undefined,
     capacity: formData.get('capacity') || undefined,
     status:   formData.get('status') || undefined,
   }
@@ -86,10 +83,16 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { id, name, type, code, capacity, status } = parsed.data
+  const { id, name, type, capacity, status } = parsed.data
+
+  // P6: branch ownership check
+  const { data: existing } = await db.from('groups').select('branch_id').eq('id', id).single()
+  if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, existing.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
 
   const updates: Record<string, unknown> = { name, type }
-  if (code !== undefined)     updates.code     = code || null
   if (capacity !== undefined) updates.capacity = capacity ?? null
   if (status)                 updates.status   = status
 
@@ -118,6 +121,13 @@ export async function deleteGroup(id: string): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
 
+  // P6: branch ownership check
+  const { data: existing } = await db.from('groups').select('branch_id').eq('id', id).single()
+  if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, existing.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
   const { error } = await db
     .from('groups')
     .update({ deleted_at: new Date().toISOString(), status: 'cancelled' })
@@ -143,8 +153,9 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
   const db   = createServiceClient()
 
   const raw = {
-    group_id:   formData.get('group_id'),
-    student_id: formData.get('student_id'),
+    group_id:        formData.get('group_id'),
+    student_id:      formData.get('student_id'),
+    enrollment_type: formData.get('enrollment_type') || 'primary',
   }
 
   const parsed = enrollStudentSchema.safeParse(raw)
@@ -152,26 +163,54 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { group_id, student_id } = parsed.data
+  const { group_id, student_id, enrollment_type } = parsed.data
 
-  // HIGH-04: verify student and group belong to the same branch
+  // Fetch group (branch, capacity, semester) and student (branch) in parallel
   const [{ data: group }, { data: student }] = await Promise.all([
-    db.from('groups').select('branch_id').eq('id', group_id).is('deleted_at', null).single(),
-    db.from('students').select('branch_id').eq('id', student_id).is('deleted_at', null).single(),
+    db.from('groups')
+      .select('branch_id, capacity, semester_id')
+      .eq('id', group_id)
+      .is('deleted_at', null)
+      .single(),
+    db.from('students')
+      .select('branch_id')
+      .eq('id', student_id)
+      .is('deleted_at', null)
+      .single(),
   ])
 
   if (!group || !student) {
     return { success: false, error: { code: 'NOT_FOUND', message: 'Group or student not found.' } }
   }
 
+  // P6: branch ownership check
+  if (!isBranchAccessible(user, group.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  // Same-branch guard
   if (group.branch_id !== student.branch_id) {
     return { success: false, error: { code: 'VALIDATION', message: 'Student and group must belong to the same branch.' } }
   }
 
-  // Use INSERT so duplicates surface as an explicit error rather than silently overwriting joined_at
+  // P2: capacity enforcement
+  if (group.capacity !== null) {
+    const { count } = await db
+      .from('group_students')
+      .select('id', { count: 'exact', head: true })
+      .eq('group_id', group_id)
+      .eq('status', 'active')
+
+    if ((count ?? 0) >= group.capacity) {
+      return { success: false, error: { code: 'CONFLICT', message: `Group is full (capacity: ${group.capacity}).` } }
+    }
+  }
+
+  // P4: insert with enrollment_type
   const { error } = await db.from('group_students').insert({
     group_id,
     student_id,
+    enrollment_type,
     status:    'active',
     joined_at: new Date().toISOString(),
   })
@@ -183,12 +222,23 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
     return { success: false, error: { code: 'DB_ERROR', message: error.message } }
   }
 
+  // P1: create semester_enrollment if group has an active semester
+  if (group.semester_id) {
+    await db.from('semester_enrollments').insert({
+      semester_id: group.semester_id,
+      student_id,
+      branch_id:   student.branch_id,
+      status:      'enrolled',
+    })
+    // 23505 = already enrolled in this semester — that is fine, do nothing
+  }
+
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,
     p_action:       'enroll_student',
     p_entity_type:  'group',
     p_entity_id:    group_id,
-    p_new_values:   { student_id },
+    p_new_values:   { student_id, enrollment_type },
   })
 
   const enrollContexts = await resolveGroupProgressContext(group_id)
@@ -245,6 +295,13 @@ export async function assignGroupCourse(
 ): Promise<ActionResult<{ id: string }>> {
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
+
+  // P6: branch ownership check
+  const { data: grp } = await db.from('groups').select('branch_id').eq('id', groupId).single()
+  if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, grp.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
 
   // Deactivate any existing active group_course for this group
   await db.from('group_courses')

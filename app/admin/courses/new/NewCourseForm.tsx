@@ -47,23 +47,13 @@ export default function NewCourseForm({ branches }: Props) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Code</label>
-            <input
-              name="code"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-              placeholder="e.g. PY-101"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Category</label>
-            <input
-              name="category"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-              placeholder="e.g. Programming"
-            />
-          </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Category</label>
+          <input
+            name="category"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            placeholder="e.g. Programming"
+          />
         </div>
 
         <div className="grid grid-cols-3 gap-4">

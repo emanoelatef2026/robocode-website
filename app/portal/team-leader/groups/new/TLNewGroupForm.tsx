@@ -38,29 +38,19 @@ export default function TLNewGroupForm({ branchId }: Props) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              name="type"
-              defaultValue="class"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-            >
-              {['class', 'workshop', 'bootcamp', 'trial', 'makeup'].map((t) => (
-                <option key={t} value={t} className="capitalize">{t}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Code</label>
-            <input
-              name="code"
-              placeholder="e.g. SB-A-2026"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-            />
-          </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+            Type <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="type"
+            defaultValue="class"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+          >
+            {['class', 'workshop', 'bootcamp', 'trial', 'makeup'].map((t) => (
+              <option key={t} value={t} className="capitalize">{t}</option>
+            ))}
+          </select>
         </div>
 
         <div>

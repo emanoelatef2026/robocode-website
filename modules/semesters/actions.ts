@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
 import { createSemesterSchema, updateSemesterSchema, enrollStudentSemesterSchema } from './schemas'
+import { checkCertificateEligibility } from '@/modules/progress/eligibility'
 import type { ActionResult } from '@/types/app'
 
 const DEFAULT_ORG = 'a0000000-0000-0000-0000-000000000001'
@@ -279,6 +280,77 @@ export async function dropStudentFromSemester(
 
   revalidatePath(`/admin/semesters/${semesterId}`)
   return { success: true, data: undefined }
+}
+
+export async function closeSemester(
+  semesterId: string
+): Promise<ActionResult<{ eligible: number; ineligible: number }>> {
+  const user = await requirePermission('manage_system')
+  const db   = createServiceClient()
+
+  const { data: sem } = await db
+    .from('semesters')
+    .select('id, status')
+    .eq('id', semesterId)
+    .single()
+
+  if (!sem) return { success: false, error: { code: 'NOT_FOUND', message: 'Semester not found.' } }
+  if (sem.status === 'completed') {
+    return { success: false, error: { code: 'VALIDATION', message: 'Semester is already completed.' } }
+  }
+
+  // Mark semester completed first so reads reflect the new state
+  await db.from('semesters').update({ status: 'completed' }).eq('id', semesterId)
+
+  // Get all enrolled students
+  const { data: enrollments } = await db
+    .from('semester_enrollments')
+    .select('student_id')
+    .eq('semester_id', semesterId)
+    .eq('status', 'enrolled')
+
+  const studentIds = (enrollments ?? []).map((e: any) => e.student_id as string)
+
+  let eligible   = 0
+  let ineligible = 0
+
+  // Evaluate eligibility and update student_course_progress per student
+  for (const studentId of studentIds) {
+    const result        = await checkCertificateEligibility(studentId, semesterId)
+    const progressStatus = result.is_eligible ? 'completed' : 'failed'
+
+    await db
+      .from('student_course_progress')
+      .update({ status: progressStatus })
+      .eq('student_id', studentId)
+      .eq('semester_id', semesterId)
+      .eq('status', 'active')
+
+    if (result.is_eligible) {
+      eligible++
+    } else {
+      ineligible++
+    }
+  }
+
+  // Transition all enrolled semester_enrollments to completed
+  await db
+    .from('semester_enrollments')
+    .update({ status: 'completed', completed_at: new Date().toISOString() })
+    .eq('semester_id', semesterId)
+    .eq('status', 'enrolled')
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'close_semester',
+    p_entity_type:  'semester',
+    p_entity_id:    semesterId,
+    p_new_values:   { eligible, ineligible },
+  })
+
+  revalidatePath('/admin/semesters')
+  revalidatePath(`/admin/semesters/${semesterId}`)
+  return { success: true, data: { eligible, ineligible } }
 }
 
 export async function addCourseToSemester(

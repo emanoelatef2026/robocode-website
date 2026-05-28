@@ -12,7 +12,7 @@ export async function listInstructors({
   page?: number
   perPage?: number
   search?: string
-  branchId?: string
+  branchId?: string | string[]
 } = {}): Promise<PaginatedResult<InstructorListItem>> {
   const db   = createServiceClient()
   const from = (page - 1) * perPage
@@ -28,11 +28,32 @@ export async function listInstructors({
     )
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
-    .range(from, to)
 
-  if (branchId) query = query.eq('branch_id', branchId)
+  if (branchId) {
+    if (Array.isArray(branchId)) {
+      query = query.in('branch_id', branchId)
+    } else {
+      query = query.eq('branch_id', branchId)
+    }
+  }
 
-  const { data, count, error } = await query
+  // Resolve search at DB level: find user_ids matching name/email, then filter instructors
+  if (search) {
+    const q = `%${search}%`
+    const [{ data: profileHits }, { data: userHits }] = await Promise.all([
+      db.from('profiles').select('user_id').or(`first_name.ilike.${q},last_name.ilike.${q}`),
+      db.from('users').select('id').ilike('email', q),
+    ])
+    const matchingIds = [
+      ...(profileHits?.map((p: any) => p.user_id) ?? []),
+      ...(userHits?.map((u: any) => u.id) ?? []),
+    ]
+    const uniqueIds = [...new Set(matchingIds)]
+    if (uniqueIds.length === 0) return { data: [], total: 0, page, perPage, totalPages: 0 }
+    query = query.in('user_id', uniqueIds)
+  }
+
+  const { data, count, error } = await query.range(from, to)
   if (error) throw new Error(error.message)
 
   const items: InstructorListItem[] = (data ?? []).map((row: any) => ({
@@ -49,16 +70,8 @@ export async function listInstructors({
     branch_name:     row.branches?.name ?? '',
   }))
 
-  const filtered = search
-    ? items.filter((i) => {
-        const q = search.toLowerCase()
-        const full = `${i.first_name ?? ''} ${i.last_name ?? ''} ${i.user_email}`.toLowerCase()
-        return full.includes(q)
-      })
-    : items
-
   return {
-    data:       filtered,
+    data:       items,
     total:      count ?? 0,
     page,
     perPage,

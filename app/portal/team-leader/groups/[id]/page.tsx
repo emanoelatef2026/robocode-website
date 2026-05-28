@@ -125,7 +125,16 @@ export default async function TLGroupDetailPage({ params }: Props) {
                   return (
                     <div key={s.id} className="flex items-center justify-between px-5 py-3">
                       <div>
-                        <p className="text-sm font-medium text-[#0B1F3A]">{name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium text-[#0B1F3A]">{name}</p>
+                          <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                            s.enrollment_type === 'secondary'
+                              ? 'bg-purple-50 text-purple-700'
+                              : 'bg-blue-50 text-blue-700'
+                          }`}>
+                            {s.enrollment_type}
+                          </span>
+                        </div>
                         <p className="text-xs text-[#64748B]">{s.email}</p>
                       </div>
                       <div className="flex items-center gap-3">

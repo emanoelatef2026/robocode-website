@@ -17,7 +17,6 @@ export async function createCourse(
   const raw = {
     title:           formData.get('title'),
     description:     formData.get('description') || undefined,
-    code:            formData.get('code') || undefined,
     category:        formData.get('category') || undefined,
     level:           formData.get('level') || undefined,
     estimated_hours: formData.get('estimated_hours') || undefined,
@@ -38,7 +37,6 @@ export async function createCourse(
     .insert({
       title:           d.title,
       description:     d.description || null,
-      code:            d.code || null,
       category:        d.category || null,
       level:           (d.level || null) as string | null,
       estimated_hours: d.estimated_hours ?? null,
@@ -77,7 +75,6 @@ export async function updateCourse(
     id:              formData.get('id'),
     title:           formData.get('title'),
     description:     formData.get('description') || undefined,
-    code:            formData.get('code') || undefined,
     category:        formData.get('category') || undefined,
     level:           formData.get('level') || undefined,
     estimated_hours: formData.get('estimated_hours') || undefined,
@@ -98,7 +95,6 @@ export async function updateCourse(
     .update({
       title:           d.title,
       description:     d.description || null,
-      code:            d.code || null,
       category:        d.category || null,
       level:           (d.level || null) as string | null,
       estimated_hours: d.estimated_hours ?? null,

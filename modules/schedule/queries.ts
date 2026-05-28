@@ -9,7 +9,7 @@ export async function listSchedules({
   limit = 50,
 }: {
   groupCourseId?: string
-  branchId?: string
+  branchId?: string | string[]
   upcoming?: boolean
   limit?: number
 } = {}): Promise<ScheduleListItem[]> {
@@ -39,7 +39,13 @@ export async function listSchedules({
     .limit(limit)
 
   if (groupCourseId) query = query.eq('group_course_id', groupCourseId)
-  if (branchId)      query = query.eq('branch_id', branchId)
+  if (branchId) {
+    if (Array.isArray(branchId)) {
+      query = query.in('branch_id', branchId)
+    } else {
+      query = query.eq('branch_id', branchId)
+    }
+  }
 
   if (upcoming) {
     query = query.gte('scheduled_at', new Date().toISOString())
@@ -114,7 +120,7 @@ export async function getSchedule(id: string): Promise<ScheduleDetail | null> {
   } as ScheduleDetail
 }
 
-export async function getUpcomingSchedules(branchId: string, limit = 5): Promise<ScheduleListItem[]> {
+export async function getUpcomingSchedules(branchId: string | string[], limit = 5): Promise<ScheduleListItem[]> {
   return listSchedules({ branchId, upcoming: true, limit })
 }
 
@@ -125,35 +131,29 @@ export interface DashboardStats {
   upcomingSessions:  number
 }
 
-export async function getDashboardStats(branchId: string): Promise<DashboardStats> {
+export async function getDashboardStats(branchId: string | string[]): Promise<DashboardStats> {
   const db = createServiceClient()
 
   const now = new Date().toISOString()
 
+  const applyBranch = <T extends object>(q: T): T =>
+    Array.isArray(branchId)
+      ? (q as any).in('branch_id', branchId)
+      : (q as any).eq('branch_id', branchId)
+
   const [students, instructors, groups, sessions] = await Promise.all([
-    db.from('students')
-      .select('id', { count: 'exact', head: true })
-      .eq('branch_id', branchId)
-      .eq('status', 'active')
-      .is('deleted_at', null),
-
-    db.from('instructors')
-      .select('id', { count: 'exact', head: true })
-      .eq('branch_id', branchId)
-      .eq('status', 'active')
-      .is('deleted_at', null),
-
-    db.from('groups')
-      .select('id', { count: 'exact', head: true })
-      .eq('branch_id', branchId)
-      .eq('status', 'active')
-      .is('deleted_at', null),
-
-    db.from('schedules')
-      .select('id', { count: 'exact', head: true })
-      .eq('branch_id', branchId)
-      .gte('scheduled_at', now)
-      .neq('status', 'cancelled'),
+    applyBranch(
+      db.from('students').select('id', { count: 'exact', head: true }).eq('status', 'active').is('deleted_at', null)
+    ),
+    applyBranch(
+      db.from('instructors').select('id', { count: 'exact', head: true }).eq('status', 'active').is('deleted_at', null)
+    ),
+    applyBranch(
+      db.from('groups').select('id', { count: 'exact', head: true }).eq('status', 'active').is('deleted_at', null)
+    ),
+    applyBranch(
+      db.from('schedules').select('id', { count: 'exact', head: true }).gte('scheduled_at', now).neq('status', 'cancelled')
+    ),
   ])
 
   return {
@@ -183,11 +183,12 @@ export interface GroupDetail {
   instructor_email: string | null
   // students
   students: Array<{
-    id:         string
-    first_name: string | null
-    last_name:  string | null
-    email:      string
-    status:     string
+    id:              string
+    first_name:      string | null
+    last_name:       string | null
+    email:           string
+    status:          string
+    enrollment_type: 'primary' | 'secondary'
   }>
 }
 
@@ -219,7 +220,7 @@ export async function getGroupDetail(id: string): Promise<GroupDetail | null> {
 
     db.from('group_students')
       .select(
-        `student_id, status,
+        `student_id, status, enrollment_type,
          students!group_students_student_id_fkey(
            id,
            users!students_user_id_fkey(
@@ -263,11 +264,12 @@ export async function getGroupDetail(id: string): Promise<GroupDetail | null> {
       const s    = e.students
       const prof = s?.users?.profiles
       return {
-        id:         s?.id ?? e.student_id,
-        first_name: prof?.first_name ?? null,
-        last_name:  prof?.last_name  ?? null,
-        email:      s?.users?.email ?? '',
-        status:     e.status,
+        id:              s?.id ?? e.student_id,
+        first_name:      prof?.first_name ?? null,
+        last_name:       prof?.last_name  ?? null,
+        email:           s?.users?.email ?? '',
+        status:          e.status,
+        enrollment_type: e.enrollment_type as 'primary' | 'secondary',
       }
     }),
   }

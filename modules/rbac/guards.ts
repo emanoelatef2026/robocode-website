@@ -79,6 +79,14 @@ export async function requirePortalRole(expectedRole: RoleName): Promise<AppUser
   return user
 }
 
+// Synchronous branch access check — use inside server actions after fetching the entity.
+// Returns true for super_admin unconditionally; false when entityBranchId is null.
+export function isBranchAccessible(user: AppUser, entityBranchId: string | null): boolean {
+  if (user.globalRole === 'super_admin') return true
+  if (!entityBranchId) return false
+  return user.branchIds.includes(entityBranchId)
+}
+
 // Ownership check — use for resource-level enforcement.
 // Returns true if the user owns the resource OR is super_admin or team_leader in the branch.
 export async function canAccessResource(

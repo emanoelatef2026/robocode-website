@@ -13,14 +13,13 @@ interface Props {
 
 export default async function TLGroupsPage({ searchParams }: Props) {
   const user = await requirePortalRole('team_leader')
-  const branchId = user.branchIds[0]
 
   const params = await searchParams
   const page   = Number(params.page ?? 1)
   const search = params.q ?? ''
   const status = params.status
 
-  const result = await listGroups({ page, perPage: 20, search, branchId, status })
+  const result = await listGroups({ page, perPage: 20, search, branchId: user.branchIds, status })
 
   return (
     <div>

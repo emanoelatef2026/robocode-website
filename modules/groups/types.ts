@@ -35,6 +35,7 @@ export interface GroupEnrollment {
   id: string
   group_id: string
   student_id: string
+  enrollment_type: 'primary' | 'secondary'
   status: GroupStudentStatus
   joined_at: string
   left_at: string | null
@@ -64,4 +65,5 @@ export interface UpdateGroupInput {
 export interface EnrollStudentInput {
   group_id: string
   student_id: string
+  enrollment_type?: 'primary' | 'secondary'
 }

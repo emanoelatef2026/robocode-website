@@ -226,7 +226,7 @@ export async function getGroupForInstructor(
   const [studentRes, sessRes] = await Promise.all([
     db.from('group_students')
       .select(
-        `student_id,
+        `student_id, enrollment_type,
          students!group_students_student_id_fkey(
            users!students_user_id_fkey(
              email,
@@ -261,10 +261,11 @@ export async function getGroupForInstructor(
     const u = r.students?.users
     const p = u?.profiles
     return {
-      student_id:  r.student_id,
-      first_name:  p?.first_name ?? null,
-      last_name:   p?.last_name  ?? null,
-      email:       u?.email      ?? '',
+      student_id:      r.student_id,
+      first_name:      p?.first_name ?? null,
+      last_name:       p?.last_name  ?? null,
+      email:           u?.email      ?? '',
+      enrollment_type: r.enrollment_type as 'primary' | 'secondary',
     }
   })
 

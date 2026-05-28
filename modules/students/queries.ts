@@ -13,7 +13,7 @@ export async function listStudents({
   page?: number
   perPage?: number
   search?: string
-  branchId?: string
+  branchId?: string | string[]
   status?: string
 } = {}): Promise<PaginatedResult<StudentListItem>> {
   const db   = createServiceClient()
@@ -30,12 +30,33 @@ export async function listStudents({
     )
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
-    .range(from, to)
 
-  if (branchId) query = query.eq('branch_id', branchId)
+  if (branchId) {
+    if (Array.isArray(branchId)) {
+      query = query.in('branch_id', branchId)
+    } else {
+      query = query.eq('branch_id', branchId)
+    }
+  }
   if (status)   query = query.eq('status', status)
 
-  const { data, count, error } = await query
+  // Resolve search at DB level: find user_ids matching name/email, then filter students
+  if (search) {
+    const q = `%${search}%`
+    const [{ data: profileHits }, { data: userHits }] = await Promise.all([
+      db.from('profiles').select('user_id').or(`first_name.ilike.${q},last_name.ilike.${q}`),
+      db.from('users').select('id').ilike('email', q),
+    ])
+    const matchingIds = [
+      ...(profileHits?.map((p: any) => p.user_id) ?? []),
+      ...(userHits?.map((u: any) => u.id) ?? []),
+    ]
+    const uniqueIds = [...new Set(matchingIds)]
+    if (uniqueIds.length === 0) return { data: [], total: 0, page, perPage, totalPages: 0 }
+    query = query.in('user_id', uniqueIds)
+  }
+
+  const { data, count, error } = await query.range(from, to)
   if (error) throw new Error(error.message)
 
   const items: StudentListItem[] = (data ?? []).map((row: any) => ({
@@ -51,16 +72,8 @@ export async function listStudents({
     branch_name:     row.branches?.name ?? '',
   }))
 
-  const filtered = search
-    ? items.filter((s) => {
-        const q = search.toLowerCase()
-        const full = `${s.first_name ?? ''} ${s.last_name ?? ''} ${s.user_email}`.toLowerCase()
-        return full.includes(q)
-      })
-    : items
-
   return {
-    data:       filtered,
+    data:       items,
     total:      count ?? 0,
     page,
     perPage,

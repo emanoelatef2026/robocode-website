@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createStudentSchema, updateStudentSchema } from './schemas'
 import type { ActionResult } from '@/types/app'
 
@@ -20,7 +20,6 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
     first_name:      formData.get('first_name'),
     last_name:       formData.get('last_name'),
     branch_id:       formData.get('branch_id'),
-    student_code:    formData.get('student_code') || undefined,
     enrollment_date: formData.get('enrollment_date') || undefined,
     notes:           formData.get('notes') || undefined,
   }
@@ -35,15 +34,18 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
   const user = await requirePermission('manage_students', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
 
-  const { email, password, first_name, last_name, branch_id, student_code, enrollment_date, notes } = parsed.data
+  const { email, password, first_name, last_name, branch_id, enrollment_date, notes } = parsed.data
 
-  // 1. Create or find auth user
+  // 1. Create or find auth user — look up public.users (synced from auth by trigger)
   let authUserId: string
-  const { data: listData } = await db.auth.admin.listUsers({ perPage: 1000 })
-  const existing = listData?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())
+  const { data: existingUser } = await db
+    .from('users')
+    .select('id')
+    .eq('email', email.toLowerCase())
+    .maybeSingle()
 
-  if (existing) {
-    authUserId = existing.id
+  if (existingUser) {
+    authUserId = existingUser.id
   } else {
     const { data: created, error: createError } = await db.auth.admin.createUser({
       email,
@@ -78,7 +80,6 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
     .insert({
       user_id:         authUserId,
       branch_id,
-      student_code:    student_code || null,
       enrollment_date: enrollment_date || new Date().toISOString().split('T')[0],
       status:          'active',
       notes:           notes || null,
@@ -122,10 +123,9 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
   const db   = createServiceClient()
 
   const raw = {
-    id:           formData.get('id'),
-    status:       formData.get('status') || undefined,
-    notes:        formData.get('notes') || undefined,
-    student_code: formData.get('student_code') || undefined,
+    id:     formData.get('id'),
+    status: formData.get('status') || undefined,
+    notes:  formData.get('notes') || undefined,
   }
 
   const parsed = updateStudentSchema.safeParse(raw)
@@ -133,14 +133,20 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { id, status, notes, student_code } = parsed.data
+  const { id, status, notes } = parsed.data
 
-  const { data: old } = await db.from('students').select('status, notes').eq('id', id).single()
+  const { data: old } = await db.from('students').select('branch_id, status, notes').eq('id', id).single()
+
+  if (!old) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+
+  // P6: branch ownership check
+  if (!isBranchAccessible(user, old.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
 
   const updates: Record<string, unknown> = {}
-  if (status)                   updates.status       = status
-  if (notes !== undefined)      updates.notes        = notes || null
-  if (student_code !== undefined) updates.student_code = student_code || null
+  if (status)              updates.status = status
+  if (notes !== undefined) updates.notes  = notes || null
 
   const { error } = await db.from('students').update(updates).eq('id', id)
   if (error) {
@@ -174,6 +180,13 @@ export async function deleteStudent(id: string): Promise<ActionResult<void>> {
     .select('user_id, branch_id')
     .eq('id', id)
     .single()
+
+  if (!student) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+
+  // P6: branch ownership check
+  if (!isBranchAccessible(user, student.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
 
   const { error } = await db
     .from('students')
