@@ -9,6 +9,8 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { requireAuth } from '@/modules/rbac/guards'
 import { ROLE_PORTAL_MAP } from '@/types/enums'
 
+const STUDIO_ROLES = new Set(['super_admin', 'team_leader'])
+
 // ── Sign in ───────────────────────────────────────────────────────────────────
 
 export interface SignInState {
@@ -59,6 +61,60 @@ export async function signIn(
   }
 
   redirect(ROLE_PORTAL_MAP[resolvedRole as keyof typeof ROLE_PORTAL_MAP] ?? '/')
+}
+
+// ── Studio sign in ────────────────────────────────────────────────────────────
+
+export interface SignInStudioState {
+  error?: string
+}
+
+export async function signInStudio(
+  _prev: SignInStudioState | null,
+  formData: FormData
+): Promise<SignInStudioState> {
+  const email    = ((formData.get('email') as string) ?? '').trim().toLowerCase()
+  const password = (formData.get('password') as string) ?? ''
+
+  if (!email || !password) {
+    return { error: 'Email and password are required.' }
+  }
+
+  const supabase = await createServerClient()
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+  if (error || !data.user) {
+    const msg = error?.message ?? ''
+    if (
+      msg.toLowerCase().includes('invalid login credentials') ||
+      msg.toLowerCase().includes('invalid email or password')
+    ) {
+      return { error: 'Invalid email or password.' }
+    }
+    if (msg.toLowerCase().includes('email not confirmed')) {
+      return { error: 'Email not confirmed. Contact your administrator.' }
+    }
+    return { error: 'Sign in failed. Please try again.' }
+  }
+
+  try {
+    const resolved = await resolveUserPermissions(data.user.id)
+    if (!STUDIO_ROLES.has(resolved.globalRole)) {
+      await supabase.auth.signOut()
+      return { error: 'Your account does not have access to Studio.' }
+    }
+    await setSessionCookie({
+      id:          data.user.id,
+      email:       data.user.email ?? '',
+      globalRole:  resolved.globalRole,
+      branchIds:   resolved.branchIds,
+      permissions: Array.from(resolved.permissions),
+    })
+  } catch {
+    return { error: 'Failed to load your account. Contact your administrator.' }
+  }
+
+  redirect('/studio')
 }
 
 // ── Sign out ──────────────────────────────────────────────────────────────────

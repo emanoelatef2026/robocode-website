@@ -1,18 +1,20 @@
 import { redirect } from 'next/navigation'
-import { cookies } from 'next/headers'
-import StudioShell from "@/components/studio/StudioShell";
+import { getSessionCookie } from '@/lib/lms-session'
+import { ROLE_PORTAL_MAP } from '@/types/enums'
+import StudioShell from "@/components/studio/StudioShell"
 
-async function verifyStudioSession(): Promise<boolean> {
-  const cookieStore = await cookies()
-  const token = cookieStore.get('studio_session')?.value
-  if (!token) return false
-  const expected = process.env.ADMIN_SECRET
-  if (!expected) return false
-  return token === expected
-}
+const STUDIO_ROLES = new Set(['super_admin', 'team_leader'])
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const authenticated = await verifyStudioSession()
-  if (!authenticated) redirect('/studio/login')
-  return <StudioShell>{children}</StudioShell>;
+  const session = await getSessionCookie()
+
+  if (!session) {
+    redirect('/studio/login')
+  }
+
+  if (!STUDIO_ROLES.has(session.role)) {
+    redirect(`${ROLE_PORTAL_MAP[session.role]}?error=forbidden`)
+  }
+
+  return <StudioShell>{children}</StudioShell>
 }

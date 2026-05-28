@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useTransition } from "react";
 
 // ── Nav config ────────────────────────────────────────────────────────────────
 
@@ -181,6 +182,7 @@ function NavLink({
 function NavContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
   const router   = useRouter();
+  const [, startTransition] = useTransition();
 
   const [customizeOpen, setCustomizeOpen] = useState(() =>
     CUSTOMIZE_ITEMS.some((item) =>
@@ -193,10 +195,12 @@ function NavContent({ onClose }: { onClose?: () => void }) {
 
   const anyCustomizeActive = CUSTOMIZE_ITEMS.some((item) => isActive(item.href));
 
-  const handleLogout = async () => {
-    await fetch("/api/studio/logout", { method: "POST" });
-    router.push("/studio/login");
-    router.refresh();
+  const handleLogout = () => {
+    startTransition(async () => {
+      await fetch("/api/lms/auth/signout", { method: "POST" });
+      router.push("/studio/login");
+      router.refresh();
+    });
   };
 
   return (
