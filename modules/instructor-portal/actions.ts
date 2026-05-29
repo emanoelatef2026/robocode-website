@@ -263,12 +263,12 @@ export async function saveAttendance(
     return { success: false, error: { code: 'DB_ERROR', message: upsertErr.message } }
   }
 
-  // Mark session completed if it was just attended
+  // Mark session completed if it was scheduled or ongoing
   await db
     .from('schedules')
     .update({ status: 'completed' })
     .eq('id', sessionId)
-    .eq('status', 'scheduled')
+    .in('status', ['scheduled', 'ongoing'])
 
   // Recalculate progress
   const contexts = await resolveGroupProgressContext(groupId)
@@ -290,6 +290,222 @@ export async function saveAttendance(
 
   revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
   return { success: true, data: undefined }
+}
+
+// ── Recording management ──────────────────────────────────────────────────────
+
+const PROVIDERS = ['google_drive', 'youtube', 'vimeo', 'zoom', 'other'] as const
+type Provider = typeof PROVIDERS[number]
+
+function detectProvider(url: string): Provider {
+  if (url.includes('drive.google.com') || url.includes('docs.google.com')) return 'google_drive'
+  if (url.includes('youtube.com') || url.includes('youtu.be'))             return 'youtube'
+  if (url.includes('vimeo.com'))                                            return 'vimeo'
+  if (url.includes('zoom.us'))                                              return 'zoom'
+  return 'other'
+}
+
+const addRecordingSchema = z.object({
+  session_id:  z.string().uuid(),
+  group_id:    z.string().uuid(),
+  external_url: z.string().url('Enter a valid URL'),
+  title:       z.string().optional().or(z.literal('')),
+})
+
+export async function addSessionRecording(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<{ id: string }>> {
+  const user       = await requirePermission('manage_attendance')
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+  }
+
+  const raw = {
+    session_id:   formData.get('session_id'),
+    group_id:     formData.get('group_id'),
+    external_url: formData.get('external_url'),
+    title:        formData.get('title') || undefined,
+  }
+
+  const parsed = addRecordingSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+  }
+
+  const d  = parsed.data
+  const db = createServiceClient()
+
+  const { data: sessRow } = await db
+    .from('schedules')
+    .select(`id, branch_id, group_courses!schedules_group_course_id_fkey(instructor_id)`)
+    .eq('id', d.session_id)
+    .single()
+
+  if (!sessRow) return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  const gc = (sessRow as any).group_courses
+  if (gc?.instructor_id !== instructor.id) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
+  }
+
+  const { data: rec, error } = await db
+    .from('session_recordings')
+    .insert({
+      schedule_id:          d.session_id,
+      branch_id:            (sessRow as any).branch_id,
+      external_url:         d.external_url,
+      title:                d.title || null,
+      provider:             detectProvider(d.external_url),
+      recorded_by:          user.id,
+      visible_to_students:  true,
+      visible_to_parents:   false,
+    })
+    .select('id')
+    .single()
+
+  if (error || !rec) return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to add recording.' } }
+
+  revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
+  return { success: true, data: { id: (rec as any).id } }
+}
+
+export async function removeSessionRecording(
+  recordingId: string,
+  sessionId:   string,
+  groupId:     string
+): Promise<ActionResult<void>> {
+  const user       = await requirePermission('manage_attendance')
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+
+  const db = createServiceClient()
+  const { error } = await db.from('session_recordings').delete().eq('id', recordingId).eq('recorded_by', user.id)
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
+  return { success: true, data: undefined }
+}
+
+// ── Session resources ─────────────────────────────────────────────────────────
+
+const resourcesSchema = z.object({
+  session_id:      z.string().uuid(),
+  group_id:        z.string().uuid(),
+  resources_json:  z.string(),  // JSON array of {title, url}
+})
+
+export async function updateSessionResources(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<void>> {
+  const user       = await requirePermission('manage_attendance')
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+
+  const raw = {
+    session_id:     formData.get('session_id'),
+    group_id:       formData.get('group_id'),
+    resources_json: formData.get('resources_json'),
+  }
+
+  const parsed = resourcesSchema.safeParse(raw)
+  if (!parsed.success) return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+
+  const d  = parsed.data
+  const db = createServiceClient()
+
+  const { data: sessRow } = await db
+    .from('schedules')
+    .select('id, group_courses!schedules_group_course_id_fkey(instructor_id)')
+    .eq('id', d.session_id).single()
+
+  if (!sessRow) return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  if ((sessRow as any).group_courses?.instructor_id !== instructor.id) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
+  }
+
+  let resources: unknown[]
+  try { resources = JSON.parse(d.resources_json) } catch { return { success: false, error: { code: 'VALIDATION', message: 'Invalid resources format.' } } }
+
+  const { error } = await db.from('schedules').update({ resources_links: resources }).eq('id', d.session_id)
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
+  return { success: true, data: undefined }
+}
+
+// ── Quick homework from session ───────────────────────────────────────────────
+
+const homeworkSchema = z.object({
+  session_id: z.string().uuid(),
+  group_id:   z.string().uuid(),
+  module_id:  z.string().uuid(),
+  title:      z.string().min(1, 'Title is required').max(200),
+  description:z.string().max(2000).optional().or(z.literal('')),
+  due_at:     z.string().optional().or(z.literal('')),
+})
+
+export async function createSessionHomework(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<{ assignmentId: string }>> {
+  const user       = await requirePermission('manage_courses')
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+
+  const raw = {
+    session_id:  formData.get('session_id'),
+    group_id:    formData.get('group_id'),
+    module_id:   formData.get('module_id'),
+    title:       formData.get('title'),
+    description: formData.get('description') || undefined,
+    due_at:      formData.get('due_at') || undefined,
+  }
+
+  const parsed = homeworkSchema.safeParse(raw)
+  if (!parsed.success) return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+
+  const d  = parsed.data
+  const db = createServiceClient()
+
+  const { data: sessRow } = await db
+    .from('schedules')
+    .select('id, group_courses!schedules_group_course_id_fkey(instructor_id)')
+    .eq('id', d.session_id).single()
+
+  if (!sessRow) return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  if ((sessRow as any).group_courses?.instructor_id !== instructor.id) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
+  }
+
+  const { data: assignment, error } = await db
+    .from('assignments')
+    .insert({
+      module_id:            d.module_id,
+      schedule_id:          d.session_id,
+      title:                d.title,
+      description:          d.description || null,
+      type:                 'homework',
+      submission_type:      'text',
+      max_score:            100,
+      due_at:               d.due_at ? new Date(d.due_at).toISOString() : null,
+      status:               'published',
+      allow_late:           true,
+      resubmission_allowed: true,
+      max_resubmissions:    1,
+      portfolio_eligible:   false,
+      rubric:               [],
+      created_by:           user.id,
+    })
+    .select('id')
+    .single()
+
+  if (error || !assignment) return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to create homework.' } }
+
+  revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
+  revalidatePath('/portal/instructor/homework')
+  return { success: true, data: { assignmentId: (assignment as any).id } }
 }
 
 // ── Student Notes ─────────────────────────────────────────────────────────────

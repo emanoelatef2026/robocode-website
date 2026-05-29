@@ -10,6 +10,10 @@ import type {
   StudentNote,
   InstructorDashboardStats,
   GroupForInstructor,
+  SessionProgressItem,
+  SessionRecording,
+  ResourceLink,
+  CourseModuleItem,
 } from './types'
 
 // ── Resolve instructor record from auth user id ───────────────────────────────
@@ -284,13 +288,17 @@ export async function getGroupForInstructor(
     attendance_count: attMap[s.id] ?? null,
   }))
 
+  const completedSessions = sessions.filter((s) => s.status === 'completed').length
+
   return {
-    group_id:        groupId,
-    group_course_id: gc.id,
-    group_name:      gc.groups?.name   ?? '',
-    course_title:    gc.courses?.title ?? '',
-    branch_id:       branchId,
-    semester_id:     gc.groups?.semester_id ?? null,
+    group_id:           groupId,
+    group_course_id:    gc.id,
+    group_name:         gc.groups?.name   ?? '',
+    course_title:       gc.courses?.title ?? '',
+    branch_id:          branchId,
+    semester_id:        gc.groups?.semester_id ?? null,
+    completed_sessions: completedSessions,
+    total_sessions:     sessions.length,
     students,
     sessions,
   }
@@ -308,9 +316,9 @@ export async function getSessionDetail(
     .from('schedules')
     .select(
       `id, group_course_id, branch_id, scheduled_at, duration_minutes,
-       type, delivery, meeting_url, room, status, topic, notes,
+       type, delivery, meeting_url, room, status, topic, notes, resources_links,
        group_courses!schedules_group_course_id_fkey(
-         group_id, instructor_id,
+         group_id, instructor_id, course_id,
          groups!group_courses_group_id_fkey(name),
          courses!group_courses_course_id_fkey(title)
        )`
@@ -325,9 +333,11 @@ export async function getSessionDetail(
 
   // Verify this session belongs to this instructor
   if (gc?.instructor_id !== instructorId) return null
-  const groupId = gc?.group_id as string
+  const groupId  = gc?.group_id  as string
+  const courseId = gc?.course_id as string | undefined
+  const gcId     = s.group_course_id as string
 
-  const [studentRes, attRes] = await Promise.all([
+  const [studentRes, attRes, recordingsRes, modulesRes, progressRes] = await Promise.all([
     db.from('group_students')
       .select(
         `student_id,
@@ -342,6 +352,17 @@ export async function getSessionDetail(
     db.from('attendance_records')
       .select('id, student_id, status, late_minutes, notes')
       .eq('schedule_id', sessionId),
+    db.from('session_recordings')
+      .select('id, title, provider, external_url, visible_to_students, visible_to_parents, created_at')
+      .eq('schedule_id', sessionId)
+      .order('created_at', { ascending: true }),
+    courseId
+      ? db.from('course_modules').select('id, title').eq('course_id', courseId).is('deleted_at', null).order('sort_order', { ascending: true }).limit(20)
+      : Promise.resolve({ data: [], error: null }),
+    db.from('schedules')
+      .select('id, scheduled_at, status, topic')
+      .eq('group_course_id', gcId)
+      .order('scheduled_at', { ascending: true }),
   ])
 
   const attMap = new Map<string, any>()
@@ -362,6 +383,35 @@ export async function getSessionDetail(
     }
   })
 
+  const recordings: SessionRecording[] = (recordingsRes.data ?? []).map((r: any) => ({
+    id:                  r.id,
+    title:               r.title    ?? null,
+    provider:            r.provider,
+    external_url:        r.external_url,
+    visible_to_students: r.visible_to_students,
+    visible_to_parents:  r.visible_to_parents,
+    created_at:          r.created_at,
+  }))
+
+  const courseModules: CourseModuleItem[] = (modulesRes.data ?? []).map((m: any) => ({
+    id:    m.id,
+    title: m.title,
+  }))
+
+  const allSessions = (progressRes.data ?? []) as any[]
+  const progress: SessionProgressItem[] = allSessions.map((ps, idx) => ({
+    id:           ps.id,
+    scheduled_at: ps.scheduled_at,
+    status:       ps.status,
+    topic:        ps.topic ?? null,
+    session_num:  idx + 1,
+  }))
+  const currentIdx = allSessions.findIndex((ps) => ps.id === sessionId)
+  const currentNum = currentIdx >= 0 ? currentIdx + 1 : progress.length
+
+  const resourcesRaw = (s as any).resources_links
+  const resources_links: ResourceLink[] = Array.isArray(resourcesRaw) ? resourcesRaw : []
+
   return {
     id:               s.id,
     group_course_id:  s.group_course_id,
@@ -378,8 +428,14 @@ export async function getSessionDetail(
     notes:            s.notes       ?? null,
     group_name:       gc?.groups?.name   ?? '',
     course_title:     gc?.courses?.title ?? '',
+    course_id:        courseId           ?? '',
     attendance,
     student_count:    (studentRes.data ?? []).length,
+    recordings,
+    resources_links,
+    course_modules:   courseModules,
+    progress,
+    current_session_num: currentNum,
   }
 }
 

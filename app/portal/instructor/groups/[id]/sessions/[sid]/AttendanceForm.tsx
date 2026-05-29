@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useRef } from 'react'
 import { saveAttendance } from '@/modules/instructor-portal/actions'
 import type { SessionAttendanceRow } from '@/modules/instructor-portal/types'
 
@@ -22,9 +22,20 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function AttendanceForm({ sessionId, groupId, rows }: Props) {
   const [state, action, pending] = useActionState(saveAttendance, null)
+  const formRef = useRef<HTMLFormElement>(null)
+
+  const markAll = (status: string) => {
+    if (!formRef.current) return
+    rows.forEach((r) => {
+      const radio = formRef.current!.querySelector<HTMLInputElement>(
+        `input[name="status_${r.student_id}"][value="${status}"]`
+      )
+      if (radio) radio.checked = true
+    })
+  }
 
   return (
-    <form action={action} className="space-y-4">
+    <form ref={formRef} action={action} className="space-y-4">
       <input type="hidden" name="session_id" value={sessionId} />
       <input type="hidden" name="group_id"   value={groupId} />
 
@@ -44,10 +55,19 @@ export default function AttendanceForm({ sessionId, groupId, rows }: Props) {
       )}
 
       <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
-        <div className="border-b border-[#E2E8F0] px-5 py-3">
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
             {rows.length} Student{rows.length !== 1 ? 's' : ''}
           </p>
+          {rows.length > 0 && (
+            <button
+              type="button"
+              onClick={() => markAll('present')}
+              className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-xs font-medium text-[#64748B] transition hover:border-green-300 hover:text-green-700"
+            >
+              Mark All Present
+            </button>
+          )}
         </div>
 
         {rows.length === 0 ? (
@@ -86,7 +106,7 @@ export default function AttendanceForm({ sessionId, groupId, rows }: Props) {
                   type="text"
                   name={`notes_${r.student_id}`}
                   defaultValue={r.notes ?? ''}
-                  placeholder="Notes (optional)"
+                  placeholder="Attendance note (optional)"
                   className="mt-2 w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none"
                 />
               </div>

@@ -16,11 +16,14 @@ export default async function GroupDetailPage({ params }: Props) {
   const user       = await requirePortalRole('instructor')
   const { id }     = await params
   const instructor = await getInstructorByUserId(user.id)
-
   if (!instructor) notFound()
 
   const group = await getGroupForInstructor(id, instructor.id)
   if (!group) notFound()
+
+  const totalPct = group.total_sessions > 0
+    ? Math.round((group.completed_sessions / group.total_sessions) * 100)
+    : null
 
   return (
     <div className="space-y-6">
@@ -37,9 +40,29 @@ export default async function GroupDetailPage({ params }: Props) {
           href={`/portal/instructor/groups/${id}/sessions/new`}
           className="shrink-0 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e07818] transition"
         >
-          + New Session
+          + Start Session
         </Link>
       </div>
+
+      {/* Session progress summary */}
+      {group.total_sessions > 0 && (
+        <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-[#0B1F3A]">Curriculum Progress</p>
+            <p className="text-sm text-[#64748B]">
+              {group.completed_sessions} / {group.total_sessions} sessions completed
+            </p>
+          </div>
+          {totalPct !== null && (
+            <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
+              <div
+                className="h-full rounded-full bg-[#FF8A1F] transition-all"
+                style={{ width: `${totalPct}%` }}
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Sessions */}
@@ -50,17 +73,20 @@ export default async function GroupDetailPage({ params }: Props) {
             <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] text-sm text-[#64748B]">
               No sessions yet.{' '}
               <Link href={`/portal/instructor/groups/${id}/sessions/new`} className="ml-1 text-[#FF8A1F] hover:underline">
-                Create one
+                Start one
               </Link>
             </div>
           ) : (
             <div className="rounded-xl border border-[#E2E8F0] bg-white divide-y divide-[#F1F5F9]">
-              {group.sessions.map((s) => (
+              {group.sessions.map((s, idx) => (
                 <Link
                   key={s.id}
                   href={`/portal/instructor/groups/${id}/sessions/${s.id}`}
                   className="flex items-center gap-4 px-5 py-3 hover:bg-[#F8FAFC] transition"
                 >
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-xs font-semibold text-[#64748B]">
+                    {group.sessions.length - idx}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-[#0B1F3A]">
                       {s.topic ?? new Date(s.scheduled_at).toLocaleDateString('en-GB', {
@@ -111,7 +137,7 @@ export default async function GroupDetailPage({ params }: Props) {
                     <p className="truncate text-sm text-[#0B1F3A]">
                       {[s.first_name, s.last_name].filter(Boolean).join(' ') || s.email}
                     </p>
-                    <p className="truncate text-xs text-[#94A3B8]">{s.email}</p>
+                    <p className="truncate text-xs text-[#94A3B8] capitalize">{s.enrollment_type}</p>
                   </div>
                 </Link>
               ))}

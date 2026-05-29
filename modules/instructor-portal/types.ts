@@ -35,12 +35,40 @@ export interface InstructorSession {
 }
 
 export interface SessionAttendanceRow {
-  record_id:   string | null
-  student_id:  string
+  record_id:    string | null
+  student_id:   string
   student_name: string
-  status:      string | null
+  status:       string | null
   late_minutes: number | null
-  notes:       string | null
+  notes:        string | null
+}
+
+export interface SessionRecording {
+  id:                  string
+  title:               string | null
+  provider:            string
+  external_url:        string
+  visible_to_students: boolean
+  visible_to_parents:  boolean
+  created_at:          string
+}
+
+export interface ResourceLink {
+  title: string
+  url:   string
+}
+
+export interface SessionProgressItem {
+  id:          string
+  scheduled_at: string
+  status:      string
+  topic:       string | null
+  session_num: number
+}
+
+export interface CourseModuleItem {
+  id:    string
+  title: string
 }
 
 export interface SessionDetail {
@@ -59,8 +87,14 @@ export interface SessionDetail {
   notes:            string | null
   group_name:       string
   course_title:     string
+  course_id:        string
   attendance:       SessionAttendanceRow[]
   student_count:    number
+  recordings:       SessionRecording[]
+  resources_links:  ResourceLink[]
+  course_modules:   CourseModuleItem[]
+  progress:         SessionProgressItem[]
+  current_session_num: number
 }
 
 export interface PendingSubmissionItem {
@@ -116,6 +150,8 @@ export interface GroupForInstructor {
   course_title:    string
   branch_id:       string
   semester_id:     string | null
+  completed_sessions: number
+  total_sessions:     number
   students: Array<{
     student_id:      string
     first_name:      string | null
