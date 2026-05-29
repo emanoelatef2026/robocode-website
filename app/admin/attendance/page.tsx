@@ -12,12 +12,15 @@ interface Props {
 }
 
 export default async function AttendancePage({ searchParams }: Props) {
-  await requirePermission('manage_attendance')
+  const user   = await requirePermission('manage_attendance')
   const params = await searchParams
   const page   = Number(params.page ?? 1)
 
+  // Scope to the TL's own branches; super_admin sees everything.
+  const branchFilter = user.globalRole === 'super_admin' ? undefined : user.branchIds
+
   const [result, groupsResult] = await Promise.all([
-    listAttendanceRecords({ page, perPage: 30 }),
+    listAttendanceRecords({ page, perPage: 30, branchId: branchFilter }),
     listGroups({ perPage: 100 }),
   ])
 

@@ -1,5 +1,5 @@
 import { getGroup } from '@/modules/groups/queries'
-import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { notFound } from 'next/navigation'
 import PageHeader from '@/components/admin/PageHeader'
 import TLGroupEditForm from './TLGroupEditForm'
@@ -9,6 +9,7 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function TLGroupEditPage({ params }: Props) {
   await requirePortalRole('team_leader')
+  await requirePermission('manage_groups')
   const { id } = await params
   const group = await getGroup(id)
   if (!group) notFound()

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createSemesterSchema, updateSemesterSchema, enrollStudentSemesterSchema } from './schemas'
 import { checkCertificateEligibility } from '@/modules/progress/eligibility'
 import type { ActionResult } from '@/types/app'
@@ -14,7 +14,7 @@ export async function createSemester(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<{ id: string }>> {
-  const user = await requirePermission('manage_system')
+  const user = await requirePermission('manage_semesters')
   const db   = createServiceClient()
 
   const parsed = createSemesterSchema.safeParse({
@@ -83,7 +83,7 @@ export async function updateSemester(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<void>> {
-  const user = await requirePermission('manage_system')
+  const user = await requirePermission('manage_semesters')
   const db   = createServiceClient()
 
   const parsed = updateSemesterSchema.safeParse({
@@ -144,7 +144,7 @@ export async function updateSemester(
 }
 
 export async function deleteSemester(id: string): Promise<ActionResult<void>> {
-  const user = await requirePermission('manage_system')
+  const user = await requirePermission('manage_semesters')
   const db   = createServiceClient()
 
   const { error } = await db.from('semesters').delete().eq('id', id)
@@ -210,6 +210,9 @@ export async function enrollStudentInSemester(
 
   if (!student) {
     return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+  }
+  if (!isBranchAccessible(user, student.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this student\'s branch.' } }
   }
 
   // Check capacity
@@ -285,7 +288,7 @@ export async function dropStudentFromSemester(
 export async function closeSemester(
   semesterId: string
 ): Promise<ActionResult<{ eligible: number; ineligible: number }>> {
-  const user = await requirePermission('manage_system')
+  const user = await requirePermission('manage_semesters')
   const db   = createServiceClient()
 
   const { data: sem } = await db

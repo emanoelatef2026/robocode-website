@@ -34,11 +34,18 @@ const Icons = {
   ),
 }
 
+const analyticsIcon = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+  </svg>
+)
+
 const NAV_ITEMS = [
   { label: "Dashboard",   href: "/portal/team-leader",             icon: Icons.dashboard,   exact: true },
   { label: "Students",    href: "/portal/team-leader/students",    icon: Icons.students },
   { label: "Instructors", href: "/portal/team-leader/instructors", icon: Icons.instructors },
   { label: "Groups",      href: "/portal/team-leader/groups",      icon: Icons.groups },
+  { label: "Analytics",   href: "/dashboard/analytics",            icon: analyticsIcon },
 ]
 
 function NavLink({

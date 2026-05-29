@@ -1,5 +1,5 @@
 import { listGroups } from '@/modules/groups/queries'
-import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import PageHeader from '@/components/admin/PageHeader'
 import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
@@ -18,6 +18,7 @@ const DAYS: Record<string, string> = {
 
 export default async function TLGroupsPage({ searchParams }: Props) {
   const user = await requirePortalRole('team_leader')
+  await requirePermission('manage_groups')
 
   const params = await searchParams
   const page   = Number(params.page ?? 1)

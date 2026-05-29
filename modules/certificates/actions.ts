@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import {
   CreateTemplateSchema,
   UpdateTemplateSchema,
@@ -106,6 +106,14 @@ export async function issueCertificate(
 
   const d  = parsed.data
   const db = createServiceClient()
+
+  // Verify branch ownership before issuance
+  const { data: studentBranch } = await db
+    .from('students').select('branch_id').eq('id', d.student_id).single()
+  if (!studentBranch) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+  if (!isBranchAccessible(user, (studentBranch as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this student\'s branch.' } }
+  }
 
   // Fetch student name for recipient_name
   const { data: studentRow } = await db
@@ -214,6 +222,17 @@ export async function revokeCertificate(
   }
 
   const db = createServiceClient()
+
+  // Verify branch ownership: resolve certificate → student → branch
+  const { data: certRow } = await db
+    .from('certificates').select('student_id').eq('id', certificateId).single()
+  if (!certRow) return { success: false, error: { code: 'NOT_FOUND', message: 'Certificate not found.' } }
+  const { data: certStudentRow } = await db
+    .from('students').select('branch_id').eq('id', (certRow as any).student_id).single()
+  if (certStudentRow && !isBranchAccessible(user, (certStudentRow as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this certificate.' } }
+  }
+
   const { error } = await db
     .from('certificates')
     .update({

@@ -1,10 +1,11 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import PageHeader from '@/components/admin/PageHeader'
 import TLNewInstructorForm from './TLNewInstructorForm'
 import Link from 'next/link'
 
 export default async function TLNewInstructorPage() {
   const user = await requirePortalRole('team_leader')
+  await requirePermission('manage_instructors')
   const branchId = user.branchIds[0]
 
   if (!branchId) {

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { getOrCreateGroupCourse } from './queries'
 import { resolveGroupProgressContext } from '@/modules/progress/resolve'
 import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/safe-recalc'
@@ -21,6 +21,11 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
 
   if (!group_id || !branch_id || !session_date) {
     return { success: false, error: { code: 'VALIDATION', message: 'Group, branch, and session date are required.' } }
+  }
+
+  // CRITICAL: verify the caller owns the branch being written to before any DB write
+  if (!isBranchAccessible(user, branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
 
   const studentIds = formData.getAll('student_ids[]') as string[]

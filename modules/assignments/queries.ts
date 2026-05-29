@@ -10,6 +10,7 @@ export async function listAssignments({
   type,
   status,
   moduleId,
+  branchIds,
 }: {
   page?: number
   perPage?: number
@@ -17,10 +18,28 @@ export async function listAssignments({
   type?: string
   status?: string
   moduleId?: string
+  branchIds?: string[]
 } = {}): Promise<PaginatedResult<AssignmentListItem>> {
   const db   = createServiceClient()
   const from = (page - 1) * perPage
   const to   = from + perPage - 1
+
+  // Pre-resolve allowed module IDs when branch filtering is requested
+  let allowedModuleIds: string[] | null = null
+  if (branchIds && branchIds.length > 0 && !moduleId) {
+    // Include courses for the allowed branches plus all global (null branch_id) courses
+    const { data: courseRows } = await db
+      .from('courses')
+      .select('id')
+      .or(`branch_id.in.(${branchIds.join(',')}),branch_id.is.null`)
+      .is('deleted_at', null)
+    const courseIds = (courseRows ?? []).map((r: any) => r.id as string)
+    if (courseIds.length === 0) return { data: [], total: 0, page, perPage, totalPages: 0 }
+    const { data: modRows } = await db
+      .from('course_modules').select('id').in('course_id', courseIds).is('deleted_at', null)
+    allowedModuleIds = (modRows ?? []).map((r: any) => r.id as string)
+    if (allowedModuleIds.length === 0) return { data: [], total: 0, page, perPage, totalPages: 0 }
+  }
 
   let query = db
     .from('assignments')
@@ -46,10 +65,11 @@ export async function listAssignments({
     .order('created_at', { ascending: false })
     .range(from, to)
 
-  if (type)     query = query.eq('type', type)
-  if (status)   query = query.eq('status', status)
-  if (moduleId) query = query.eq('module_id', moduleId)
-  if (search)   query = query.ilike('title', `%${search}%`)
+  if (type)             query = query.eq('type', type)
+  if (status)           query = query.eq('status', status)
+  if (moduleId)         query = query.eq('module_id', moduleId)
+  if (search)           query = query.ilike('title', `%${search}%`)
+  if (allowedModuleIds) query = query.in('module_id', allowedModuleIds)
 
   const { data, count, error } = await query
   if (error) throw new Error(error.message)

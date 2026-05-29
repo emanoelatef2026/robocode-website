@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { getCurrentUser, isBranchAccessible } from '@/modules/rbac/guards'
 import type { StudentListItem, Student } from './types'
 import type { PaginatedResult } from '@/types/app'
 
@@ -150,7 +151,8 @@ export async function listStudents({
 }
 
 export async function getStudent(id: string): Promise<Student | null> {
-  const db = createServiceClient()
+  const user = await getCurrentUser()
+  const db   = createServiceClient()
   const { data, error } = await db
     .from('students')
     .select(
@@ -166,6 +168,7 @@ export async function getStudent(id: string): Promise<Student | null> {
     .single()
 
   if (error || !data) return null
+  if (!user || !isBranchAccessible(user, (data as any).branch_id)) return null
 
   const row = data as any
   const ec  = (row.emergency_contact ?? {}) as Record<string, string>

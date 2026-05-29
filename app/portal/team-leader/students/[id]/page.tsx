@@ -1,5 +1,5 @@
 import { getStudent } from '@/modules/students/queries'
-import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { notFound } from 'next/navigation'
 import StatusBadge from '@/components/admin/StatusBadge'
 import PageHeader from '@/components/admin/PageHeader'
@@ -9,6 +9,7 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function TLStudentDetailPage({ params }: Props) {
   await requirePortalRole('team_leader')
+  await requirePermission('manage_students')
   const { id } = await params
   const student = await getStudent(id)
   if (!student) notFound()

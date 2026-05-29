@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createInstructorSchema, updateInstructorSchema } from './schemas'
 import { saveUserPermissions } from '@/modules/user-permissions/mutations'
 import type { ActionResult } from '@/types/app'
@@ -146,8 +146,12 @@ export async function updateInstructor(_prev: unknown, formData: FormData): Prom
     ? specializations.split(',').map((s) => s.trim()).filter(Boolean)
     : undefined
 
-  // Fetch instructor user_id for phone update and permission save
-  const { data: instrRow } = await db.from('instructors').select('user_id').eq('id', id).single()
+  // Fetch instructor to verify branch ownership before any mutation
+  const { data: instrRow } = await db.from('instructors').select('user_id, branch_id').eq('id', id).single()
+  if (!instrRow) return { success: false, error: { code: 'NOT_FOUND', message: 'Instructor not found.' } }
+  if (!isBranchAccessible(user, instrRow.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
 
   // Update phone on users table if provided
   if (phone !== undefined && instrRow) {
@@ -193,12 +197,17 @@ export async function deleteInstructor(id: string): Promise<ActionResult<void>> 
   const user = await requirePermission('manage_instructors')
   const db   = createServiceClient()
 
-  // Fetch before deleting so we can revoke the role assignment
+  // Fetch before deleting: verify branch ownership AND collect data for role revocation
   const { data: instructor } = await db
     .from('instructors')
     .select('user_id, branch_id')
     .eq('id', id)
     .single()
+
+  if (!instructor) return { success: false, error: { code: 'NOT_FOUND', message: 'Instructor not found.' } }
+  if (!isBranchAccessible(user, instructor.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
 
   const { error } = await db
     .from('instructors')

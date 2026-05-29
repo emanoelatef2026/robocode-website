@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { getGroupDetail } from '@/modules/schedule/queries'
 import { notFound, redirect } from 'next/navigation'
 import PageHeader from '@/components/admin/PageHeader'
@@ -9,6 +9,7 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function TLNewSessionPage({ params }: Props) {
   const user = await requirePortalRole('team_leader')
+  await requirePermission('manage_groups')
   const { id } = await params
 
   const group = await getGroupDetail(id)

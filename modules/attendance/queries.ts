@@ -11,7 +11,7 @@ export async function listAttendanceRecords({
 }: {
   page?: number
   perPage?: number
-  branchId?: string
+  branchId?: string | string[]
   groupId?: string
 } = {}): Promise<PaginatedResult<AttendanceListItem>> {
   const db   = createServiceClient()
@@ -38,7 +38,16 @@ export async function listAttendanceRecords({
     .range(from, to)
 
   if (branchId) {
-    query = query.eq('schedules.branch_id', branchId)
+    if (Array.isArray(branchId)) {
+      // Pre-query schedule IDs for the allowed branches, then filter
+      const { data: schedRows } = await db
+        .from('schedules').select('id').in('branch_id', branchId)
+      const schedIds = (schedRows ?? []).map((r: any) => r.id as string)
+      if (schedIds.length === 0) return { data: [], total: 0, page, perPage, totalPages: 0 }
+      query = query.in('schedule_id', schedIds)
+    } else {
+      query = query.eq('schedules.branch_id', branchId)
+    }
   }
 
   const { data, count, error } = await query

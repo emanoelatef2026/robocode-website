@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default async function SemesterDetailPage({ params }: Props) {
-  await requirePermission('manage_system')
+  await requirePermission('manage_semesters')
   const { id } = await params
 
   const [dashboard, enrollments, semCourses, groups, years, allStudents, allCourses] =

@@ -4,7 +4,7 @@ import AcademicYearsClient from './AcademicYearsClient'
 import Link from 'next/link'
 
 export default async function AcademicYearsPage() {
-  await requirePermission('manage_system')
+  await requirePermission('manage_semesters')
   const years = await listAcademicYears()
 
   return (

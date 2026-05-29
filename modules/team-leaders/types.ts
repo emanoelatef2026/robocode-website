@@ -1,10 +1,12 @@
-// Team leaders are users with a user_roles entry (role = 'team_leader', branch_id NOT NULL).
+// Team leaders are users with user_roles entries (role = 'team_leader', branch_id NOT NULL).
+// One user_roles row per assigned branch — so a multi-branch TL has multiple rows.
 // No dedicated team_leaders table — everything lives in users + profiles + user_roles.
 // Status is tracked via users.metadata->>'tl_status'.
 
 export type TeamLeaderStatus = 'active' | 'inactive'
 
 // ─── List item ───────────────────────────────────────────────────────────────
+// listTeamLeaders returns one row per user_roles entry (one per branch assignment).
 
 export interface TeamLeaderListItem {
   user_role_id:    string
@@ -42,11 +44,15 @@ export interface TeamLeaderGroup {
 export interface TeamLeader {
   user_role_id:        string
   user_id:             string
+  // Multi-branch: all assigned branches
+  branch_ids:          string[]
+  branch_names:        string[]
+  // Convenience: first branch (kept for backward compatibility)
   branch_id:           string | null
+  branch_name:         string | null
   email:               string
   first_name:          string | null
   last_name:           string | null
-  branch_name:         string | null
   status:              TeamLeaderStatus
   assigned_at:         string | null
   instructors:         TeamLeaderInstructor[]
@@ -66,7 +72,7 @@ export interface CreateTeamLeaderInput {
   password:            string
   first_name:          string
   last_name:           string
-  branch_id:           string
+  branch_ids:          string[]
   status?:             TeamLeaderStatus
   phone?:              string
   payment_link?:       string
@@ -78,7 +84,7 @@ export interface UpdateTeamLeaderInput {
   user_id:              string
   first_name?:          string
   last_name?:           string
-  branch_id?:           string
+  branch_ids?:          string[]
   status?:              TeamLeaderStatus
   new_password?:        string
   phone?:               string

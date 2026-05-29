@@ -32,7 +32,11 @@ export default async function TeamLeaderEditPage({ params }: Props) {
         </Link>
         <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Edit Team Leader</h1>
       </div>
-      <TeamLeaderEditForm tl={tl} branches={branchesResult.data} currentPermissions={currentPermissions} />
+      <TeamLeaderEditForm
+        tl={tl}
+        branches={branchesResult.data}
+        currentPermissions={currentPermissions}
+      />
     </div>
   )
 }

@@ -49,7 +49,8 @@ export async function getPortfolioByStudentId(studentId: string): Promise<Studen
 // ─── Student list with portfolio stats ────────────────────────────────────────
 
 export async function listStudentPortfolioSummaries(
-  search = ''
+  search = '',
+  branchIds?: string[]
 ): Promise<PortfolioStudentSummary[]> {
   const db = createServiceClient()
 
@@ -69,6 +70,10 @@ export async function listStudentPortfolioSummaries(
     .is('deleted_at', null)
     .eq('status', 'active')
     .order('id')
+
+  if (branchIds && branchIds.length > 0) {
+    query = query.in('branch_id', branchIds)
+  }
 
   const { data, error } = await query
   if (error) throw new Error(error.message)

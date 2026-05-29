@@ -1,10 +1,11 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import PageHeader from '@/components/admin/PageHeader'
 import TLNewGroupForm from './TLNewGroupForm'
 import Link from 'next/link'
 
 export default async function TLNewGroupPage() {
   const user = await requirePortalRole('team_leader')
+  await requirePermission('manage_groups')
   const branchId = user.branchIds[0]
 
   if (!branchId) {

@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { getGroupDetail } from '@/modules/schedule/queries'
 import { listStudents } from '@/modules/students/queries'
 import { listCourses } from '@/modules/courses/queries'
@@ -15,6 +15,7 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function TLGroupDetailPage({ params }: Props) {
   const user = await requirePortalRole('team_leader')
+  await requirePermission('manage_groups')
   const branchId = user.branchIds[0]
   const { id } = await params
 

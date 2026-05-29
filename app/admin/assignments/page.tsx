@@ -35,14 +35,15 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export default async function AssignmentsPage({ searchParams }: Props) {
-  await requirePermission('manage_courses')
+  const user    = await requirePermission('manage_courses')
   const params  = await searchParams
   const page    = Number(params.page ?? 1)
   const search  = params.q ?? ''
   const type    = params.type
   const status  = params.status
 
-  const result = await listAssignments({ page, perPage: 20, search, type, status })
+  const branchIds = user.globalRole === 'super_admin' ? undefined : user.branchIds
+  const result = await listAssignments({ page, perPage: 20, search, type, status, branchIds })
 
   return (
     <div>

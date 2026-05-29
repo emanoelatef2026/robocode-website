@@ -10,11 +10,12 @@ interface Props {
 }
 
 export default async function PortfolioListPage({ searchParams }: Props) {
-  await requirePermission('manage_portfolio')
+  const user   = await requirePermission('manage_portfolio')
   const params = await searchParams
   const search = params.q ?? ''
 
-  const summaries = await listStudentPortfolioSummaries(search)
+  const branchIds = user.globalRole === 'super_admin' ? undefined : user.branchIds
+  const summaries = await listStudentPortfolioSummaries(search, branchIds)
 
   return (
     <div>

@@ -21,14 +21,15 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 export default async function CertificatesPage({ searchParams }: Props) {
-  await requirePermission('manage_certificates')
+  const user   = await requirePermission('manage_certificates')
   const params = await searchParams
   const page   = Number(params.page ?? 1)
   const search = params.q ?? ''
   const type   = params.type
   const status = params.status
 
-  const result = await listCertificates({ page, perPage: 20, search, type, status })
+  const branchIds = user.globalRole === 'super_admin' ? undefined : user.branchIds
+  const result = await listCertificates({ page, perPage: 20, search, type, status, branchIds })
 
   return (
     <div>

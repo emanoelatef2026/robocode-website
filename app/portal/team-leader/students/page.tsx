@@ -1,5 +1,5 @@
 import { listStudents } from '@/modules/students/queries'
-import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import PageHeader from '@/components/admin/PageHeader'
 import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
@@ -13,6 +13,7 @@ interface Props {
 
 export default async function TLStudentsPage({ searchParams }: Props) {
   const user = await requirePortalRole('team_leader')
+  await requirePermission('manage_students')
 
   const params = await searchParams
   const page   = Number(params.page ?? 1)

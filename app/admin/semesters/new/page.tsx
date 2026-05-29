@@ -5,7 +5,7 @@ import NewSemesterForm from './NewSemesterForm'
 import Link from 'next/link'
 
 export default async function NewSemesterPage() {
-  await requirePermission('manage_system')
+  await requirePermission('manage_semesters')
   const years = await listAcademicYears()
 
   return (

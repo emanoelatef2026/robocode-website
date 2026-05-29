@@ -1,5 +1,5 @@
 import { getInstructor } from '@/modules/instructors/queries'
-import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { notFound } from 'next/navigation'
 import PageHeader from '@/components/admin/PageHeader'
 import TLInstructorEditForm from './TLInstructorEditForm'
@@ -9,6 +9,7 @@ interface Props { params: Promise<{ id: string }> }
 
 export default async function TLInstructorEditPage({ params }: Props) {
   await requirePortalRole('team_leader')
+  await requirePermission('manage_instructors')
   const { id } = await params
   const instructor = await getInstructor(id)
   if (!instructor) notFound()

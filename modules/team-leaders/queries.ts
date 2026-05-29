@@ -11,6 +11,8 @@ function metaStatus(metadata: Record<string, unknown> | null): TeamLeaderStatus 
 }
 
 // ── List ─────────────────────────────────────────────────────────────────────
+// Returns one row per user_roles entry (one per branch assignment).
+// A multi-branch TL appears once per branch.
 
 export async function listTeamLeaders({
   page = 1,
@@ -29,7 +31,6 @@ export async function listTeamLeaders({
   const from = (page - 1) * perPage
   const to   = from + perPage - 1
 
-  // Query user_roles for all team-leader assignments
   let q = db
     .from('user_roles')
     .select(
@@ -51,7 +52,6 @@ export async function listTeamLeaders({
     .order('created_at', { ascending: false })
     .range(from, to)
 
-  // Filter to team_leader role via a sub-select on the roles table
   const { data: roleRow } = await db
     .from('roles')
     .select('id')
@@ -114,10 +114,8 @@ export async function listTeamLeaders({
     }
   })
 
-  // Apply status filter client-side (metadata-based status not filterable in DB directly)
   if (status) items = items.filter((i) => i.status === status)
 
-  // Apply search client-side
   if (search) {
     const q = search.toLowerCase()
     items = items.filter((i) =>
@@ -135,11 +133,11 @@ export async function listTeamLeaders({
 }
 
 // ── Single profile ────────────────────────────────────────────────────────────
+// Returns all branch assignments for the TL and aggregates data across them.
 
 export async function getTeamLeader(userId: string): Promise<TeamLeader | null> {
   const db = createServiceClient()
 
-  // Fetch user + profile + role assignment + branch
   const { data: roleRow } = await db
     .from('roles')
     .select('id')
@@ -148,7 +146,8 @@ export async function getTeamLeader(userId: string): Promise<TeamLeader | null> 
 
   if (!roleRow) return null
 
-  const { data: ur } = await db
+  // Fetch ALL branch assignments for this TL (multi-branch support)
+  const { data: urRows } = await db
     .from('user_roles')
     .select(
       `id, branch_id, created_at, tl_code,
@@ -161,9 +160,9 @@ export async function getTeamLeader(userId: string): Promise<TeamLeader | null> 
     .eq('user_id', userId)
     .eq('role_id', roleRow.id)
     .not('branch_id', 'is', null)
-    .maybeSingle()
+    .order('created_at', { ascending: true })
 
-  // May have no current role entry (inactive TL — fetch user directly)
+  // Fetch user directly for inactive TLs who have no user_roles rows
   const { data: userRow } = await db
     .from('users')
     .select(`id, email, phone, metadata, profiles!profiles_user_id_fkey(first_name, last_name)`)
@@ -172,37 +171,39 @@ export async function getTeamLeader(userId: string): Promise<TeamLeader | null> 
 
   if (!userRow) return null
 
-  const u    = ur ? (ur as any).users : userRow as any
-  const prof = u?.profiles
-  const meta = u?.metadata ?? {}
-  const branchId   = (ur as any)?.branch_id ?? meta.tl_branch_id ?? null
-  const branchName = (ur as any)?.branches?.name ?? null
+  const firstUr  = (urRows ?? [])[0]
+  const u        = firstUr ? (firstUr as any).users : userRow as any
+  const prof     = u?.profiles
+  const meta     = (u?.metadata ?? {}) as Record<string, unknown>
 
-  const tlStatus: TeamLeaderStatus = ur ? metaStatus(meta) : 'inactive'
+  const branchIds   = (urRows ?? []).map((r: any) => r.branch_id as string).filter(Boolean)
+  const branchNames = (urRows ?? []).map((r: any) => (r.branches?.name ?? '') as string)
 
-  // Fetch branch-level data in parallel
-  const [instructorsRes, groupsRes, studentsRes] = branchId
+  const tlStatus: TeamLeaderStatus = (urRows ?? []).length > 0 ? metaStatus(meta) : 'inactive'
+
+  // Aggregate data across all branches
+  const [instructorsRes, groupsRes, studentsRes] = branchIds.length > 0
     ? await Promise.all([
         db.from('instructors')
           .select(
             `id, status,
              users!instructors_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name))`
           )
-          .eq('branch_id', branchId)
+          .in('branch_id', branchIds)
           .eq('status', 'active')
           .is('deleted_at', null)
           .limit(50),
 
         db.from('groups')
           .select('id, name, type, status')
-          .eq('branch_id', branchId)
+          .in('branch_id', branchIds)
           .eq('status', 'active')
           .is('deleted_at', null)
           .limit(50),
 
         db.from('students')
           .select('id', { count: 'exact', head: true })
-          .eq('branch_id', branchId)
+          .in('branch_id', branchIds)
           .eq('status', 'active')
           .is('deleted_at', null),
       ])
@@ -219,7 +220,6 @@ export async function getTeamLeader(userId: string): Promise<TeamLeader | null> 
     }
   })
 
-  // For groups, count students
   const groupIds = (groupsRes.data ?? []).map((g: any) => g.id)
   const studentCountByGroup: Record<string, number> = {}
   if (groupIds.length > 0) {
@@ -242,19 +242,21 @@ export async function getTeamLeader(userId: string): Promise<TeamLeader | null> 
   }))
 
   return {
-    user_role_id:        (ur as any)?.id ?? userId,
+    user_role_id:        (firstUr as any)?.id ?? userId,
     user_id:             userId,
-    branch_id:           branchId,
+    branch_ids:          branchIds,
+    branch_names:        branchNames,
+    branch_id:           branchIds[0] ?? null,
+    branch_name:         branchNames[0] ?? null,
     email:               u?.email ?? (userRow as any).email ?? '',
     first_name:          prof?.first_name ?? null,
     last_name:           prof?.last_name  ?? null,
-    branch_name:         branchName,
     status:              tlStatus,
-    assigned_at:         (ur as any)?.created_at ?? null,
+    assigned_at:         (firstUr as any)?.created_at ?? null,
     instructors,
     groups,
     student_count:       (studentsRes as any).count ?? 0,
-    tl_code:             (ur as any)?.tl_code ?? null,
+    tl_code:             (firstUr as any)?.tl_code ?? null,
     phone:               u?.phone ?? null,
     payment_link:        (meta.payment_link as string) ?? null,
     wallet_number:       (meta.wallet_number as string) ?? null,

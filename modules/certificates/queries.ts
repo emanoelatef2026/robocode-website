@@ -115,6 +115,7 @@ export async function listCertificates({
   studentId,
   type,
   status,
+  branchIds,
 }: {
   page?: number
   perPage?: number
@@ -122,10 +123,20 @@ export async function listCertificates({
   studentId?: string
   type?: string
   status?: string
+  branchIds?: string[]
 } = {}): Promise<PaginatedResult<CertificateListItem>> {
   const db   = createServiceClient()
   const from = (page - 1) * perPage
   const to   = from + perPage - 1
+
+  // Pre-resolve student scope when branch filtering is requested
+  let allowedStudentIds: string[] | null = null
+  if (branchIds && branchIds.length > 0 && !studentId) {
+    const { data: sRows } = await db
+      .from('students').select('id').in('branch_id', branchIds).is('deleted_at', null)
+    allowedStudentIds = (sRows ?? []).map((r: any) => r.id as string)
+    if (allowedStudentIds.length === 0) return { data: [], total: 0, page, perPage, totalPages: 0 }
+  }
 
   let query = db
     .from('certificates')
@@ -144,10 +155,11 @@ export async function listCertificates({
     .order('issued_at', { ascending: false })
     .range(from, to)
 
-  if (studentId) query = query.eq('student_id', studentId)
-  if (type)      query = query.eq('certificate_type', type)
-  if (status)    query = query.eq('status', status)
-  if (search)    query = query.or(`title.ilike.%${search}%,recipient_name.ilike.%${search}%,certificate_code.ilike.%${search}%`)
+  if (studentId)            query = query.eq('student_id', studentId)
+  if (type)                 query = query.eq('certificate_type', type)
+  if (status)               query = query.eq('status', status)
+  if (search)               query = query.or(`title.ilike.%${search}%,recipient_name.ilike.%${search}%,certificate_code.ilike.%${search}%`)
+  if (allowedStudentIds)    query = query.in('student_id', allowedStudentIds)
 
   const { data, count, error } = await query
   if (error) throw new Error(error.message)

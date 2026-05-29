@@ -62,9 +62,11 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
             <dt className="text-[#64748B]">Email</dt>
             <dd className="mt-0.5 font-medium text-[#0B1F3A]">{tl.email}</dd>
           </div>
-          <div>
-            <dt className="text-[#64748B]">Branch</dt>
-            <dd className="mt-0.5 font-medium text-[#0B1F3A]">{tl.branch_name ?? '—'}</dd>
+          <div className="col-span-2">
+            <dt className="text-[#64748B]">Branches</dt>
+            <dd className="mt-0.5 font-medium text-[#0B1F3A]">
+              {tl.branch_names.length > 0 ? tl.branch_names.join(', ') : '—'}
+            </dd>
           </div>
           <div>
             <dt className="text-[#64748B]">Status</dt>

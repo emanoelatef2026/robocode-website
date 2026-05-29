@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
+import type { AppUser } from '@/types/app'
 import {
   CreateProjectSchema,
   UpdateProjectSchema,
@@ -18,6 +19,29 @@ import { resolveProgressFromPortfolioProject } from '@/modules/progress/resolve'
 import { safeRecalcProgress } from '@/modules/progress/safe-recalc'
 import type { ActionResult } from '@/types/app'
 
+// ─── Branch guard helper ───────────────────────────────────────────────────────
+// Resolves the student's branch from the DB and checks access.
+// Returns a FORBIDDEN result if denied, or null if access is granted.
+
+type Denied = { success: false; error: { code: string; message: string } }
+
+async function assertStudentBranchAccess(
+  user: AppUser,
+  studentId: string
+): Promise<Denied | null> {
+  const db = createServiceClient()
+  const { data } = await db
+    .from('students')
+    .select('branch_id')
+    .eq('id', studentId)
+    .single()
+  if (!data) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+  if (!isBranchAccessible(user, (data as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this student\'s branch.' } }
+  }
+  return null
+}
+
 // ─── Portfolio ─────────────────────────────────────────────────────────────────
 
 export async function updatePortfolio(
@@ -31,6 +55,14 @@ export async function updatePortfolio(
   }
 
   const db = createServiceClient()
+
+  // Resolve student branch via portfolio record before any write
+  const { data: portfolioRow } = await db
+    .from('student_portfolios').select('student_id').eq('id', portfolioId).single()
+  if (!portfolioRow) return { success: false, error: { code: 'NOT_FOUND', message: 'Portfolio not found.' } }
+  const deniedPortfolio = await assertStudentBranchAccess(user, (portfolioRow as any).student_id)
+  if (deniedPortfolio) return deniedPortfolio
+
   const { error } = await db
     .from('student_portfolios')
     .update({ ...parsed.data, updated_at: new Date().toISOString() })
@@ -76,6 +108,9 @@ export async function createProject(
   }
 
   const d = parsed.data
+  const deniedCreate = await assertStudentBranchAccess(user, d.student_id)
+  if (deniedCreate) return deniedCreate
+
   const { data, error } = await db
     .from('portfolio_projects')
     .insert({
@@ -139,6 +174,9 @@ export async function promoteSubmission(
   }
 
   const d = parsed.data
+
+  const deniedPromote = await assertStudentBranchAccess(user, d.student_id)
+  if (deniedPromote) return deniedPromote
 
   // Fetch the submission for context
   const { data: sub } = await db
@@ -219,6 +257,9 @@ export async function updateProject(
     .select('student_id')
     .eq('id', projectId)
     .single()
+  if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Project not found.' } }
+  const deniedUpdate = await assertStudentBranchAccess(user, (existing as any).student_id)
+  if (deniedUpdate) return deniedUpdate
 
   const { error } = await db
     .from('portfolio_projects')
@@ -253,6 +294,9 @@ export async function archiveProject(projectId: string): Promise<ActionResult<vo
     .select('student_id')
     .eq('id', projectId)
     .single()
+  if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Project not found.' } }
+  const deniedArchive = await assertStudentBranchAccess(user, (existing as any).student_id)
+  if (deniedArchive) return deniedArchive
 
   const { error } = await db
     .from('portfolio_projects')
@@ -272,7 +316,9 @@ export async function reorderProjects(
   studentId: string,
   items: { id: string; sort_order: number }[]
 ): Promise<ActionResult<void>> {
-  await requirePermission('manage_portfolio')
+  const user = await requirePermission('manage_portfolio')
+  const deniedReorder = await assertStudentBranchAccess(user, studentId)
+  if (deniedReorder) return deniedReorder
 
   const parsed = ReorderProjectsSchema.safeParse({ items })
   if (!parsed.success) {
@@ -315,6 +361,9 @@ export async function createAchievement(
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
+  const deniedAchieve = await assertStudentBranchAccess(user, parsed.data.student_id)
+  if (deniedAchieve) return deniedAchieve
+
   const db = createServiceClient()
   const { data, error } = await db
     .from('student_achievements')
@@ -333,7 +382,9 @@ export async function updateAchievement(
   studentId: string,
   input: unknown
 ): Promise<ActionResult<void>> {
-  await requirePermission('manage_portfolio')
+  const user = await requirePermission('manage_portfolio')
+  const deniedAchieveUpd = await assertStudentBranchAccess(user, studentId)
+  if (deniedAchieveUpd) return deniedAchieveUpd
 
   const parsed = UpdateAchievementSchema.safeParse(input)
   if (!parsed.success) {
@@ -356,7 +407,9 @@ export async function deleteAchievement(
   achievementId: string,
   studentId: string
 ): Promise<ActionResult<void>> {
-  await requirePermission('manage_portfolio')
+  const user = await requirePermission('manage_portfolio')
+  const deniedAchieveDel = await assertStudentBranchAccess(user, studentId)
+  if (deniedAchieveDel) return deniedAchieveDel
   const db = createServiceClient()
 
   const { error } = await db
@@ -392,6 +445,9 @@ export async function createBadge(
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
+  const deniedBadge = await assertStudentBranchAccess(user, parsed.data.student_id)
+  if (deniedBadge) return deniedBadge
+
   const db = createServiceClient()
   const { data, error } = await db
     .from('student_badges')
@@ -409,7 +465,9 @@ export async function deleteBadge(
   badgeId: string,
   studentId: string
 ): Promise<ActionResult<void>> {
-  await requirePermission('manage_portfolio')
+  const user = await requirePermission('manage_portfolio')
+  const deniedBadgeDel = await assertStudentBranchAccess(user, studentId)
+  if (deniedBadgeDel) return deniedBadgeDel
   const db = createServiceClient()
 
   const { error } = await db

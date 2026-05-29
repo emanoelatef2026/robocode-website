@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { getCurrentUser, isBranchAccessible } from '@/modules/rbac/guards'
 import type { Group, GroupListItem, GroupEnrollment } from './types'
 import type { PaginatedResult } from '@/types/app'
 
@@ -127,7 +128,8 @@ export async function listGroups({
 }
 
 export async function getGroup(id: string): Promise<Group | null> {
-  const db = createServiceClient()
+  const user = await getCurrentUser()
+  const db   = createServiceClient()
   const { data, error } = await db
     .from('groups')
     .select(`*, branches!groups_branch_id_fkey(name)`)
@@ -135,6 +137,7 @@ export async function getGroup(id: string): Promise<Group | null> {
     .single()
 
   if (error || !data) return null
+  if (!user || !isBranchAccessible(user, (data as any).branch_id)) return null
 
   return {
     ...(data as any),

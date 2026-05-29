@@ -89,21 +89,27 @@ const Icons = {
   ),
 };
 
-const NAV_ITEMS = [
-  { label: "Dashboard",   href: "/admin",             icon: Icons.dashboard },
-  { label: "Branches",    href: "/admin/branches",    icon: Icons.branches },
-  { label: "Students",    href: "/admin/students",    icon: Icons.students },
-  { label: "Parents",     href: "/admin/parents",     icon: Icons.parents },
-  { label: "Instructors",   href: "/admin/instructors",   icon: Icons.instructors },
-  { label: "Team Leaders",  href: "/admin/team-leaders",  icon: Icons.teamLeaders },
-  { label: "Groups",      href: "/admin/groups",      icon: Icons.groups },
-  { label: "Courses",     href: "/admin/courses",     icon: Icons.courses },
-  { label: "Semesters",   href: "/admin/semesters",   icon: Icons.semesters },
-  { label: "Assignments", href: "/admin/assignments", icon: Icons.assignments },
-  { label: "Attendance",  href: "/admin/attendance",  icon: Icons.attendance },
-  { label: "Portfolio",     href: "/admin/portfolio",     icon: Icons.portfolio },
-  { label: "Certificates", href: "/admin/certificates", icon: Icons.certificates },
-  { label: "Analytics",    href: "/dashboard/analytics", icon: Icons.analytics },
+const NAV_ITEMS: {
+  label: string
+  href: string
+  icon: React.ReactNode
+  permission?: string
+  superAdminOnly?: boolean
+}[] = [
+  { label: "Dashboard",    href: "/admin",                icon: Icons.dashboard },
+  { label: "Branches",     href: "/admin/branches",       icon: Icons.branches,     superAdminOnly: true },
+  { label: "Students",     href: "/admin/students",       icon: Icons.students,     permission: "manage_students" },
+  { label: "Parents",      href: "/admin/parents",        icon: Icons.parents,      permission: "manage_students" },
+  { label: "Instructors",  href: "/admin/instructors",    icon: Icons.instructors,  permission: "manage_instructors" },
+  { label: "Team Leaders", href: "/admin/team-leaders",   icon: Icons.teamLeaders,  superAdminOnly: true },
+  { label: "Groups",       href: "/admin/groups",         icon: Icons.groups,       permission: "manage_groups" },
+  { label: "Courses",      href: "/admin/courses",        icon: Icons.courses,      permission: "manage_courses" },
+  { label: "Semesters",    href: "/admin/semesters",      icon: Icons.semesters,    permission: "manage_semesters" },
+  { label: "Assignments",  href: "/admin/assignments",    icon: Icons.assignments,  permission: "manage_courses" },
+  { label: "Attendance",   href: "/admin/attendance",     icon: Icons.attendance,   permission: "manage_attendance" },
+  { label: "Portfolio",    href: "/admin/portfolio",      icon: Icons.portfolio,    permission: "manage_portfolio" },
+  { label: "Certificates", href: "/admin/certificates",   icon: Icons.certificates, permission: "manage_certificates" },
+  { label: "Analytics",    href: "/dashboard/analytics",  icon: Icons.analytics },
 ];
 
 function NavLink({
@@ -129,9 +135,17 @@ function NavLink({
   );
 }
 
-function NavContent({ onClose }: { onClose?: () => void }) {
+function NavContent({ onClose, role, permissions }: { onClose?: () => void; role: string; permissions: string[] }) {
   const pathname = usePathname();
   const router   = useRouter();
+
+  const isSuperAdmin = role === 'super_admin';
+
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    if (item.superAdminOnly) return isSuperAdmin;
+    if (item.permission)     return permissions.includes(item.permission);
+    return true;
+  });
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -141,6 +155,8 @@ function NavContent({ onClose }: { onClose?: () => void }) {
     router.push("/login");
     router.refresh();
   };
+
+  const roleLabel = isSuperAdmin ? 'Super Admin' : role === 'team_leader' ? 'Team Leader' : role;
 
   return (
     <div className="flex h-full flex-col">
@@ -157,12 +173,12 @@ function NavContent({ onClose }: { onClose?: () => void }) {
 
       <div className="px-5 pt-5 pb-2">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/25">
-          Super Admin
+          {roleLabel}
         </p>
       </div>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3">
-        {NAV_ITEMS.map(({ label, href, icon }) => (
+        {visibleItems.map(({ label, href, icon }) => (
           <NavLink
             key={href}
             href={href}
@@ -199,13 +215,15 @@ function NavContent({ onClose }: { onClose?: () => void }) {
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  role: string;
+  permissions: string[];
 }
 
-export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
+export default function AdminSidebar({ isOpen, onClose, role, permissions }: SidebarProps) {
   return (
     <>
       <aside className="hidden w-56 shrink-0 bg-[#0B1F3A] md:flex md:flex-col">
-        <NavContent />
+        <NavContent role={role} permissions={permissions} />
       </aside>
 
       <AnimatePresence>
@@ -218,7 +236,7 @@ export default function AdminSidebar({ isOpen, onClose }: SidebarProps) {
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-y-0 left-0 z-30 w-56 bg-[#0B1F3A] md:hidden"
           >
-            <NavContent onClose={onClose} />
+            <NavContent onClose={onClose} role={role} permissions={permissions} />
           </motion.aside>
         )}
       </AnimatePresence>

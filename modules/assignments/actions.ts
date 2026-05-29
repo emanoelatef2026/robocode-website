@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createAssignmentSchema, updateAssignmentSchema } from './schemas'
 import type { ActionResult } from '@/types/app'
 import type { RubricCriteria } from './types'
@@ -37,6 +37,18 @@ export async function createAssignment(
   }
 
   const d = parsed.data
+
+  // Resolve branch from module → course, then enforce ownership
+  const { data: modRow } = await db
+    .from('course_modules').select('course_id').eq('id', d.module_id).single()
+  if (modRow) {
+    const { data: courseRow } = await db
+      .from('courses').select('branch_id').eq('id', (modRow as any).course_id).single()
+    const branchId = (courseRow as any)?.branch_id
+    if (branchId && !isBranchAccessible(user, branchId)) {
+      return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this course.' } }
+    }
+  }
 
   const { data: assignment, error } = await db
     .from('assignments')
@@ -108,6 +120,22 @@ export async function updateAssignment(
 
   const d = parsed.data
 
+  // Resolve branch from assignment → module → course
+  const { data: asnRow } = await db
+    .from('assignments').select('module_id').eq('id', d.id).single()
+  if (asnRow?.module_id) {
+    const { data: asnModRow } = await db
+      .from('course_modules').select('course_id').eq('id', (asnRow as any).module_id).single()
+    if (asnModRow) {
+      const { data: asnCourseRow } = await db
+        .from('courses').select('branch_id').eq('id', (asnModRow as any).course_id).single()
+      const branchId = (asnCourseRow as any)?.branch_id
+      if (branchId && !isBranchAccessible(user, branchId)) {
+        return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this assignment.' } }
+      }
+    }
+  }
+
   let rubric: RubricCriteria[] = []
   if (d.rubric) {
     try { rubric = JSON.parse(d.rubric) } catch { /* keep empty */ }
@@ -152,6 +180,22 @@ export async function updateAssignment(
 export async function deleteAssignment(id: string): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_courses')
   const db   = createServiceClient()
+
+  // Resolve branch from assignment → module → course
+  const { data: delAsnRow } = await db
+    .from('assignments').select('module_id').eq('id', id).single()
+  if (delAsnRow?.module_id) {
+    const { data: delModRow } = await db
+      .from('course_modules').select('course_id').eq('id', (delAsnRow as any).module_id).single()
+    if (delModRow) {
+      const { data: delCourseRow } = await db
+        .from('courses').select('branch_id').eq('id', (delModRow as any).course_id).single()
+      const branchId = (delCourseRow as any)?.branch_id
+      if (branchId && !isBranchAccessible(user, branchId)) {
+        return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this assignment.' } }
+      }
+    }
+  }
 
   const { error } = await db
     .from('assignments')

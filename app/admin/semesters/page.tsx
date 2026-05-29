@@ -28,7 +28,7 @@ function SemesterStatusBadge({ status }: { status: string }) {
 }
 
 export default async function SemestersPage({ searchParams }: Props) {
-  await requirePermission('manage_system')
+  await requirePermission('manage_semesters')
   const params         = await searchParams
   const page           = Number(params.page ?? 1)
   const search         = params.q ?? ''

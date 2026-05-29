@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createCourseSchema, updateCourseSchema } from './schemas'
 import type { ActionResult } from '@/types/app'
 
@@ -31,6 +31,11 @@ export async function createCourse(
   }
 
   const d = parsed.data
+
+  // Branch ownership: if a branch_id is submitted it must be in the caller's allowed branches
+  if (d.branch_id && !isBranchAccessible(user, d.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
 
   const { data: course, error } = await db
     .from('courses')
@@ -90,6 +95,17 @@ export async function updateCourse(
 
   const d = parsed.data
 
+  // Verify the caller owns the course's current branch before mutating
+  const { data: existing } = await db.from('courses').select('branch_id').eq('id', d.id).single()
+  if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Course not found.' } }
+  if (existing.branch_id && !isBranchAccessible(user, existing.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this course.' } }
+  }
+  // If the branch is being changed, the new branch must also be accessible
+  if (d.branch_id && !isBranchAccessible(user, d.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to the target branch.' } }
+  }
+
   const { error } = await db
     .from('courses')
     .update({
@@ -124,6 +140,12 @@ export async function updateCourse(
 export async function deleteCourse(id: string): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_courses')
   const db   = createServiceClient()
+
+  const { data: existing } = await db.from('courses').select('branch_id').eq('id', id).single()
+  if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Course not found.' } }
+  if (existing.branch_id && !isBranchAccessible(user, existing.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this course.' } }
+  }
 
   const { error } = await db
     .from('courses')

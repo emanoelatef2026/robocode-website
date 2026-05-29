@@ -4,12 +4,18 @@ import { useState } from "react";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopbar from "./AdminTopbar";
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+interface Props {
+  children: React.ReactNode
+  role: string
+  permissions: string[]
+}
+
+export default function AdminShell({ children, role, permissions }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
-      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} role={role} permissions={permissions} />
 
       {sidebarOpen && (
         <div

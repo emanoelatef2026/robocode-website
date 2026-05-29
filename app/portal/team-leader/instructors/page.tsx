@@ -1,5 +1,5 @@
 import { listInstructors } from '@/modules/instructors/queries'
-import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import PageHeader from '@/components/admin/PageHeader'
 import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
@@ -13,6 +13,7 @@ interface Props {
 
 export default async function TLInstructorsPage({ searchParams }: Props) {
   const user = await requirePortalRole('team_leader')
+  await requirePermission('manage_instructors')
 
   const params = await searchParams
   const page   = Number(params.page ?? 1)

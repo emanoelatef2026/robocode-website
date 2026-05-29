@@ -19,7 +19,7 @@ interface Props {
 const STATUSES = ['active', 'inactive', 'graduated', 'paused', 'banned']
 
 export default async function StudentsPage({ searchParams }: Props) {
-  await requirePermission('manage_students')
+  const user     = await requirePermission('manage_students')
   const params   = await searchParams
   const page     = Number(params.page ?? 1)
   const search   = params.q ?? ''
@@ -28,8 +28,14 @@ export default async function StudentsPage({ searchParams }: Props) {
   const groupId  = params.group
   const grade    = params.grade
 
+  // Scope branch filter: super_admin can filter freely; TLs are restricted to their own branches.
+  const isSuperAdmin = user.globalRole === 'super_admin'
+  const effectiveBranchFilter: string | string[] | undefined = isSuperAdmin
+    ? branchId
+    : (branchId && user.branchIds.includes(branchId)) ? branchId : user.branchIds
+
   const [result, branchesResult, groupsResult] = await Promise.all([
-    listStudents({ page, perPage: 20, search, branchId, status, groupId, grade }),
+    listStudents({ page, perPage: 20, search, branchId: effectiveBranchFilter, status, groupId, grade }),
     listBranches({ perPage: 100 }),
     listGroups({ perPage: 200 }),
   ])
