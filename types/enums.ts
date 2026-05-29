@@ -107,7 +107,7 @@ export type RoleName =
 export const ROLE_PORTAL_MAP: Record<RoleName, string> = {
   super_admin:  '/admin',
   team_leader:  '/admin',
-  instructor:   '/portal/instructor',
+  instructor:   '/admin',
   student:      '/portal/student',
   parent:       '/portal/parent',
 }
