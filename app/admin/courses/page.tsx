@@ -82,8 +82,8 @@ export default async function CoursesPage({ searchParams }: Props) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Title</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Title</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Level</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Scope</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
@@ -94,8 +94,12 @@ export default async function CoursesPage({ searchParams }: Props) {
                 <tbody>
                   {result.data.map((course) => (
                     <tr key={course.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                      <td className="px-4 py-3">
+                        {course.code
+                          ? <Link href={`/admin/courses/${course.id}`} className="font-mono text-xs font-semibold text-[#0B1F3A] hover:text-[#FF8A1F]">{course.code}</Link>
+                          : <span className="text-xs text-[#94A3B8]">—</span>}
+                      </td>
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">{course.title}</td>
-                      <td className="px-4 py-3 text-[#64748B]">{course.code ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{course.level ? LEVEL_LABELS[course.level] : '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{SCOPE_LABELS[course.scope] ?? course.scope}</td>
                       <td className="px-4 py-3 text-[#64748B]">{course.branch_name ?? '—'}</td>
@@ -103,12 +107,7 @@ export default async function CoursesPage({ searchParams }: Props) {
                         <StatusBadge status={course.is_published ? 'published' : 'draft'} />
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/admin/courses/${course.id}`}
-                          className="text-xs font-medium text-[#FF8A1F] hover:underline"
-                        >
-                          Edit
-                        </Link>
+                        <Link href={`/admin/courses/${course.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">Edit</Link>
                       </td>
                     </tr>
                   ))}

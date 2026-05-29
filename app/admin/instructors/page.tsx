@@ -51,13 +51,11 @@ export default async function InstructorsPage({ searchParams }: Props) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Phone</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Employee ID</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Specializations</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-[#64748B]">Groups</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -65,22 +63,20 @@ export default async function InstructorsPage({ searchParams }: Props) {
                 <tbody>
                   {result.data.map((i) => (
                     <tr key={i.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                      <td className="px-4 py-3">
+                        {i.instructor_code
+                          ? <Link href={`/admin/instructors/${i.id}`} className="font-mono text-xs font-semibold text-[#0B1F3A] hover:text-[#FF8A1F]">{i.instructor_code}</Link>
+                          : <span className="text-xs text-[#94A3B8]">—</span>}
+                      </td>
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">
-                        {i.first_name && i.last_name ? `${i.first_name} ${i.last_name}` : '—'}
+                        {i.first_name && i.last_name ? `${i.first_name} ${i.last_name}` : i.user_email}
                       </td>
-                      <td className="px-4 py-3 text-[#64748B]">{i.user_email}</td>
                       <td className="px-4 py-3 text-[#64748B]">{i.branch_name}</td>
-                      <td className="px-4 py-3 text-[#64748B] font-mono text-xs">{i.instructor_code ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{i.phone ?? '—'}</td>
-                      <td className="px-4 py-3 text-[#64748B]">{i.employee_id ?? '—'}</td>
-                      <td className="px-4 py-3 text-[#64748B] max-w-[200px] truncate">
-                        {i.specializations.length > 0 ? i.specializations.join(', ') : '—'}
-                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{i.group_count}</td>
                       <td className="px-4 py-3"><StatusBadge status={i.status} /></td>
                       <td className="px-4 py-3 text-right">
-                        <Link href={`/admin/instructors/${i.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
-                          Edit
-                        </Link>
+                        <Link href={`/admin/instructors/${i.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">Edit</Link>
                       </td>
                     </tr>
                   ))}

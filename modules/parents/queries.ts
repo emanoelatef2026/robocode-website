@@ -20,7 +20,8 @@ export async function listParents({
     .from('parents')
     .select(
       `id, user_id, created_at,
-       users!parents_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name))`,
+       users!parents_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name)),
+       parent_students(count)`,
       { count: 'exact' }
     )
     .order('created_at', { ascending: false })
@@ -35,7 +36,8 @@ export async function listParents({
     user_email:     row.users?.email ?? '',
     first_name:     row.users?.profiles?.first_name ?? null,
     last_name:      row.users?.profiles?.last_name ?? null,
-    children_count: 0,
+    children_count: row.parent_students?.[0]?.count ?? 0,
+    phone:          row.users?.phone ?? null,
   }))
 
   const filtered = search

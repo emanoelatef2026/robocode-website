@@ -37,6 +37,7 @@ export interface InstructorListItem {
   last_name: string | null
   branch_name: string
   phone: string | null
+  group_count: number
 }
 
 export interface CreateInstructorInput {

@@ -16,7 +16,7 @@ interface Props {
   }>
 }
 
-const GROUP_TYPES = ['class', 'workshop', 'bootcamp', 'trial', 'makeup']
+const GROUP_TYPES    = ['class', 'workshop', 'bootcamp', 'trial', 'makeup']
 const GROUP_STATUSES = ['forming', 'active', 'completed', 'cancelled']
 const DAYS: Record<string, string> = {
   monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu',
@@ -39,18 +39,6 @@ export default async function GroupsPage({ searchParams }: Props) {
     listInstructors({ perPage: 200 }),
   ])
 
-  const buildUrl = (overrides: Record<string, string | undefined>) => {
-    const p: Record<string, string> = { page: '1' }
-    if (search)       p.q          = search
-    if (branchId)     p.branch     = branchId
-    if (status)       p.status     = status
-    if (type)         p.type       = type
-    if (instructorId) p.instructor = instructorId
-    Object.assign(p, overrides)
-    Object.keys(p).forEach(k => p[k] === undefined && delete p[k])
-    return '/admin/groups?' + new URLSearchParams(p as Record<string, string>).toString()
-  }
-
   return (
     <div>
       <PageHeader
@@ -70,36 +58,15 @@ export default async function GroupsPage({ searchParams }: Props) {
       />
 
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
-        {/* Filters */}
         <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search groups…" />
-
-          <AdminFilterSelect
-            param="branch"
-            placeholder="All branches"
-            options={branchesResult.data.map(b => ({ value: b.id, label: b.name }))}
-          />
-
-          <AdminFilterSelect
-            param="type"
-            placeholder="All types"
-            options={GROUP_TYPES.map(t => ({ value: t, label: t }))}
-          />
-
-          <AdminFilterSelect
-            param="status"
-            placeholder="All statuses"
-            options={GROUP_STATUSES.map(s => ({ value: s, label: s }))}
-          />
-
-          <AdminFilterSelect
-            param="instructor"
-            placeholder="All instructors"
-            options={instructorsResult.data.map(i => ({
-              value: i.id,
-              label: i.first_name && i.last_name ? `${i.first_name} ${i.last_name}` : i.user_email,
-            }))}
-          />
+          <AdminFilterSelect param="branch"     placeholder="All branches"     options={branchesResult.data.map(b => ({ value: b.id, label: b.name }))} />
+          <AdminFilterSelect param="type"       placeholder="All types"        options={GROUP_TYPES.map(t    => ({ value: t,    label: t }))} />
+          <AdminFilterSelect param="status"     placeholder="All statuses"     options={GROUP_STATUSES.map(s => ({ value: s,    label: s }))} />
+          <AdminFilterSelect param="instructor" placeholder="All instructors"  options={instructorsResult.data.map(i => ({
+            value: i.id,
+            label: i.first_name && i.last_name ? `${i.first_name} ${i.last_name}` : i.user_email,
+          }))} />
         </div>
 
         {result.data.length === 0 ? (
@@ -110,14 +77,13 @@ export default async function GroupsPage({ searchParams }: Props) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Day / Time</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Start</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Instructor</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Cap.</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Day</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Time</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-[#64748B]">Students</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -125,24 +91,20 @@ export default async function GroupsPage({ searchParams }: Props) {
                 <tbody>
                   {result.data.map((group) => (
                     <tr key={group.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                      <td className="px-4 py-3">
+                        {group.code
+                          ? <Link href={`/admin/groups/${group.id}`} className="font-mono text-xs font-semibold text-[#0B1F3A] hover:text-[#FF8A1F]">{group.code}</Link>
+                          : <span className="text-xs text-[#94A3B8]">—</span>}
+                      </td>
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">{group.name}</td>
-                      <td className="px-4 py-3 text-[#64748B] font-mono text-xs">{group.code ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{group.branch_name}</td>
-                      <td className="px-4 py-3"><StatusBadge status={group.type} /></td>
-                      <td className="px-4 py-3 text-[#64748B]">
-                        {group.day_of_week ? DAYS[group.day_of_week] : '—'}
-                        {group.time ? ` ${group.time}` : ''}
-                      </td>
-                      <td className="px-4 py-3 text-[#64748B]">
-                        {group.start_date ? new Date(group.start_date).toLocaleDateString('en-GB') : '—'}
-                      </td>
                       <td className="px-4 py-3 text-[#64748B]">{group.instructor_name ?? '—'}</td>
-                      <td className="px-4 py-3 text-[#64748B]">{group.capacity ?? '∞'}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{group.day_of_week ? DAYS[group.day_of_week] : '—'}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{group.time ?? '—'}</td>
+                      <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{group.student_count}</td>
                       <td className="px-4 py-3"><StatusBadge status={group.status} /></td>
                       <td className="px-4 py-3 text-right">
-                        <Link href={`/admin/groups/${group.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
-                          Manage
-                        </Link>
+                        <Link href={`/admin/groups/${group.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">Manage</Link>
                       </td>
                     </tr>
                   ))}

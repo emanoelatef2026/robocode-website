@@ -102,6 +102,21 @@ export async function listGroups({
     }
   })
 
+  // Batch-fetch active student counts
+  const groupIds = items.map((g) => g.id)
+  if (groupIds.length > 0) {
+    const { data: gsRows } = await db
+      .from('group_students')
+      .select('group_id')
+      .in('group_id', groupIds)
+      .eq('status', 'active')
+    const countMap: Record<string, number> = {}
+    for (const r of gsRows ?? []) {
+      countMap[(r as any).group_id] = (countMap[(r as any).group_id] ?? 0) + 1
+    }
+    items.forEach((item) => { item.student_count = countMap[item.id] ?? 0 })
+  }
+
   return {
     data:       items,
     total:      count ?? 0,

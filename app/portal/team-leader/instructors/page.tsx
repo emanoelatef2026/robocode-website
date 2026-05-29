@@ -54,9 +54,10 @@ export default async function TLInstructorsPage({ searchParams }: Props) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Employee ID</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Phone</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-[#64748B]">Groups</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -64,21 +65,21 @@ export default async function TLInstructorsPage({ searchParams }: Props) {
                 <tbody>
                   {result.data.map((instructor) => (
                     <tr key={instructor.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                      <td className="px-4 py-3">
+                        {instructor.instructor_code
+                          ? <Link href={`/portal/team-leader/instructors/${instructor.id}`} className="font-mono text-xs font-semibold text-[#0B1F3A] hover:text-[#FF8A1F]">{instructor.instructor_code}</Link>
+                          : <span className="text-xs text-[#94A3B8]">—</span>}
+                      </td>
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">
                         {instructor.first_name && instructor.last_name
                           ? `${instructor.first_name} ${instructor.last_name}`
-                          : '—'}
+                          : instructor.user_email}
                       </td>
-                      <td className="px-4 py-3 text-[#64748B]">{instructor.user_email}</td>
-                      <td className="px-4 py-3 text-[#64748B]">{instructor.employee_id ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{instructor.phone ?? '—'}</td>
+                      <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{instructor.group_count}</td>
                       <td className="px-4 py-3"><StatusBadge status={instructor.status} /></td>
                       <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/portal/team-leader/instructors/${instructor.id}`}
-                          className="text-xs font-medium text-[#FF8A1F] hover:underline"
-                        >
-                          View
-                        </Link>
+                        <Link href={`/portal/team-leader/instructors/${instructor.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">View</Link>
                       </td>
                     </tr>
                   ))}

@@ -69,7 +69,22 @@ export async function listInstructors({
     last_name:       row.users?.profiles?.last_name ?? null,
     branch_name:     row.branches?.name ?? '',
     phone:           row.users?.phone ?? null,
+    group_count:     0,
   }))
+
+  // Batch-fetch group counts from group_instructors
+  const instructorIds = items.map((i) => i.id)
+  if (instructorIds.length > 0) {
+    const { data: giRows } = await db
+      .from('group_instructors')
+      .select('instructor_id')
+      .in('instructor_id', instructorIds)
+    const countMap: Record<string, number> = {}
+    for (const r of giRows ?? []) {
+      countMap[(r as any).instructor_id] = (countMap[(r as any).instructor_id] ?? 0) + 1
+    }
+    items.forEach((item) => { item.group_count = countMap[item.id] ?? 0 })
+  }
 
   return {
     data:       items,

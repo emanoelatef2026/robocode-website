@@ -51,6 +51,8 @@ export default async function ParentsPage({ searchParams }: Props) {
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Email</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Phone</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Students</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Added</th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -64,16 +66,13 @@ export default async function ParentsPage({ searchParams }: Props) {
                           : '—'}
                       </td>
                       <td className="px-4 py-3 text-[#64748B]">{parent.user_email}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{parent.phone ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{parent.children_count}</td>
                       <td className="px-4 py-3 text-[#64748B]">
                         {new Date(parent.created_at).toLocaleDateString('en-GB')}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/admin/parents/${parent.id}`}
-                          className="text-xs font-medium text-[#FF8A1F] hover:underline"
-                        >
-                          View
-                        </Link>
+                        <Link href={`/admin/parents/${parent.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">View</Link>
                       </td>
                     </tr>
                   ))}

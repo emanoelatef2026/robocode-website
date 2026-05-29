@@ -39,6 +39,9 @@ export interface StudentListItem {
   last_name: string | null
   branch_name: string
   group_name: string | null
+  phone: string | null
+  parent_phone_1: string | null
+  parent_phone_2: string | null
 }
 
 export interface CreateStudentInput {

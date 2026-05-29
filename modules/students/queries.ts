@@ -41,8 +41,8 @@ export async function listStudents({
   let query = db
     .from('students')
     .select(
-      `id, user_id, branch_id, student_code, enrollment_date, status, school_grade,
-       users!students_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name)),
+      `id, user_id, branch_id, student_code, enrollment_date, status, school_grade, emergency_contact,
+       users!students_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name)),
        branches!students_branch_id_fkey(name),
        group_students!group_students_student_id_fkey(
          status,
@@ -120,6 +120,7 @@ export async function listStudents({
     const activeGs = gsMemberships.find((gs: any) => gs.status === 'active')
     const groupName = activeGs?.groups?.name ?? null
 
+    const ec = (row.emergency_contact ?? {}) as Record<string, string>
     return {
       id:              row.id,
       user_id:         row.user_id,
@@ -133,6 +134,9 @@ export async function listStudents({
       last_name:       row.users?.profiles?.last_name ?? null,
       branch_name:     row.branches?.name ?? '',
       group_name:      groupName,
+      phone:           row.users?.phone ?? null,
+      parent_phone_1:  ec.phone1 ?? null,
+      parent_phone_2:  ec.phone2 ?? null,
     }
   })
 

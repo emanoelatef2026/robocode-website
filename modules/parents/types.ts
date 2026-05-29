@@ -20,6 +20,7 @@ export interface ParentListItem {
   first_name: string | null
   last_name: string | null
   children_count: number
+  phone: string | null
 }
 
 export interface ParentChild {

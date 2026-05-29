@@ -2,7 +2,6 @@ import { listSemesters } from '@/modules/semesters/queries'
 import { listAcademicYears } from '@/modules/academic-years/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import PageHeader from '@/components/admin/PageHeader'
-import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
 import Pagination from '@/components/admin/Pagination'
 import SearchInput from '@/components/admin/SearchInput'
@@ -100,6 +99,7 @@ export default async function SemestersPage({ searchParams }: Props) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Semester</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Academic Year</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Dates</th>
@@ -112,9 +112,11 @@ export default async function SemestersPage({ searchParams }: Props) {
                   {result.data.map((sem) => (
                     <tr key={sem.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
                       <td className="px-4 py-3">
-                        <p className="font-medium text-[#0B1F3A]">{sem.name}</p>
-                        <p className="text-xs text-[#94A3B8]">{sem.slug}</p>
+                        <Link href={`/admin/semesters/${sem.id}`} className="font-mono text-xs font-semibold text-[#0B1F3A] hover:text-[#FF8A1F]">
+                          {sem.slug}
+                        </Link>
                       </td>
+                      <td className="px-4 py-3 font-medium text-[#0B1F3A]">{sem.name}</td>
                       <td className="px-4 py-3 text-[#64748B]">{sem.academic_year_name}</td>
                       <td className="px-4 py-3 text-[#64748B]">
                         {new Date(sem.start_date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
@@ -122,19 +124,13 @@ export default async function SemestersPage({ searchParams }: Props) {
                         {new Date(sem.end_date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </td>
                       <td className="px-4 py-3 text-[#64748B]">
-                        {sem.enrolled_count}
-                        {sem.max_capacity ? ` / ${sem.max_capacity}` : ''}
+                        {sem.enrolled_count}{sem.max_capacity ? ` / ${sem.max_capacity}` : ''}
                       </td>
                       <td className="px-4 py-3">
                         <SemesterStatusBadge status={sem.status} />
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/admin/semesters/${sem.id}`}
-                          className="text-xs font-medium text-[#FF8A1F] hover:underline"
-                        >
-                          View
-                        </Link>
+                        <Link href={`/admin/semesters/${sem.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">View</Link>
                       </td>
                     </tr>
                   ))}

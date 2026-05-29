@@ -67,25 +67,9 @@ export default async function StudentsPage({ searchParams }: Props) {
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
         <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search students…" />
-
-          <AdminFilterSelect
-            param="branch"
-            placeholder="All branches"
-            options={branchesResult.data.map(b => ({ value: b.id, label: b.name }))}
-          />
-
-          <AdminFilterSelect
-            param="group"
-            placeholder="All groups"
-            options={groupsResult.data.map(g => ({ value: g.id, label: g.name }))}
-          />
-
-          <AdminFilterSelect
-            param="status"
-            placeholder="All statuses"
-            options={STATUSES.map(s => ({ value: s, label: s }))}
-          />
-
+          <AdminFilterSelect param="branch"  placeholder="All branches" options={branchesResult.data.map(b => ({ value: b.id,     label: b.name }))} />
+          <AdminFilterSelect param="group"   placeholder="All groups"   options={groupsResult.data.map(g  => ({ value: g.id,     label: g.name }))} />
+          <AdminFilterSelect param="status"  placeholder="All statuses" options={STATUSES.map(s            => ({ value: s,        label: s }))} />
           {grade && (
             <Link href={buildUrl({ grade: undefined })} className="text-xs text-[#FF8A1F] hover:underline">
               Grade: {grade} ×
@@ -104,13 +88,13 @@ export default async function StudentsPage({ searchParams }: Props) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Email</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Phone</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Parent 1</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Parent 2</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Group</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Grade</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Enrolled</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -118,28 +102,28 @@ export default async function StudentsPage({ searchParams }: Props) {
                 <tbody>
                   {result.data.map((student) => (
                     <tr key={student.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                      <td className="px-4 py-3">
+                        {student.student_code
+                          ? <Link href={`/admin/students/${student.id}`} className="font-mono text-xs font-semibold text-[#0B1F3A] hover:text-[#FF8A1F]">{student.student_code}</Link>
+                          : <span className="text-xs text-[#94A3B8]">—</span>}
+                      </td>
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">
                         {student.first_name && student.last_name
                           ? `${student.first_name} ${student.last_name}`
-                          : '—'}
+                          : student.user_email}
                       </td>
-                      <td className="px-4 py-3 text-[#64748B]">{student.user_email}</td>
-                      <td className="px-4 py-3 text-[#64748B]">{student.branch_name}</td>
-                      <td className="px-4 py-3 text-[#64748B] font-mono text-xs">{student.student_code ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{student.phone ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{student.parent_phone_1 ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{student.parent_phone_2 ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{student.group_name ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">
                         {student.school_grade
                           ? <Link href={buildUrl({ grade: student.school_grade })} className="text-xs text-[#FF8A1F] hover:underline">{student.school_grade}</Link>
                           : '—'}
                       </td>
-                      <td className="px-4 py-3 text-[#64748B]">
-                        {new Date(student.enrollment_date).toLocaleDateString('en-GB')}
-                      </td>
                       <td className="px-4 py-3"><StatusBadge status={student.status} /></td>
                       <td className="px-4 py-3 text-right">
-                        <Link href={`/admin/students/${student.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
-                          Edit
-                        </Link>
+                        <Link href={`/admin/students/${student.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">Edit</Link>
                       </td>
                     </tr>
                   ))}
