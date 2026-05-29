@@ -1,0 +1,157 @@
+import { requirePortalRole } from '@/modules/rbac/guards'
+import {
+  getParentChildren,
+  getChildAttendance,
+} from '@/modules/parents/parent-portal-queries'
+import Link from 'next/link'
+
+interface Props {
+  searchParams: Promise<{ child?: string }>
+}
+
+const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
+  present: { label: 'Present', cls: 'bg-green-100  text-green-700'  },
+  absent:  { label: 'Absent',  cls: 'bg-red-100    text-red-700'    },
+  late:    { label: 'Late',    cls: 'bg-yellow-100 text-yellow-700' },
+  excused: { label: 'Excused', cls: 'bg-blue-100   text-blue-700'   },
+  makeup:  { label: 'Makeup',  cls: 'bg-purple-100 text-purple-700' },
+}
+
+function SummaryCard({ label, count, color }: { label: string; count: number; color: string }) {
+  return (
+    <div className={`rounded-xl border bg-white p-4 ${color}`}>
+      <p className="text-2xl font-bold text-[#0B1F3A]">{count}</p>
+      <p className="text-[11px] font-medium text-[#64748B]">{label}</p>
+    </div>
+  )
+}
+
+export default async function ParentAttendancePage({ searchParams }: Props) {
+  const { child } = await searchParams
+  const user      = await requirePortalRole('parent')
+
+  const children = await getParentChildren(user.id)
+
+  if (!children.length) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <p className="text-sm text-[#94A3B8]">No children linked to this account.</p>
+      </div>
+    )
+  }
+
+  const studentId = child ?? children[0].student_id
+  const selected  = children.find(c => c.student_id === studentId) ?? children[0]
+
+  const attendance = await getChildAttendance(user.id, selected.student_id)
+
+  if (!attendance) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <p className="text-sm text-[#94A3B8]">Unable to load attendance data.</p>
+      </div>
+    )
+  }
+
+  const { summary, records } = attendance
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6">
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-[#0B1F3A]">Attendance</h1>
+          <p className="mt-0.5 text-sm text-[#64748B]">{selected.student_name}</p>
+        </div>
+        <Link
+          href={`/portal/parent?child=${selected.student_id}`}
+          className="text-[13px] text-[#FF8A1F] hover:underline"
+        >
+          ← Dashboard
+        </Link>
+      </div>
+
+      {/* Summary cards */}
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+        <SummaryCard label="Present" count={summary.present} color="border-green-100"  />
+        <SummaryCard label="Absent"  count={summary.absent}  color="border-red-100"    />
+        <SummaryCard label="Late"    count={summary.late}    color="border-yellow-100" />
+        <SummaryCard label="Excused" count={summary.excused} color="border-blue-100"   />
+        <SummaryCard label="Makeup"  count={summary.makeup}  color="border-purple-100" />
+        <SummaryCard label="Total"   count={summary.total}   color="border-[#E2E8F0]"  />
+      </div>
+
+      {/* Attendance % bar */}
+      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <div className="mb-2 flex justify-between text-sm">
+          <span className="font-medium text-[#0B1F3A]">Overall Attendance</span>
+          <span className="font-bold text-[#0B1F3A]">{summary.attendance_pct}%</span>
+        </div>
+        <div className="h-3 overflow-hidden rounded-full bg-[#F1F5F9]">
+          <div
+            className={`h-full rounded-full ${
+              summary.attendance_pct >= 75 ? 'bg-green-500' :
+              summary.attendance_pct >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+            }`}
+            style={{ width: `${summary.attendance_pct}%` }}
+          />
+        </div>
+        <p className="mt-2 text-xs text-[#94A3B8]">
+          Present/Late/Makeup counted as attended
+        </p>
+      </div>
+
+      {/* Records table */}
+      {records.length === 0 ? (
+        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+          <p className="text-sm text-[#64748B]">No attendance records yet.</p>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+          <div className="border-b border-[#F1F5F9] px-5 py-3.5">
+            <p className="text-[13px] font-semibold text-[#0B1F3A]">
+              All Records ({records.length})
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead>
+                <tr className="border-b border-[#F1F5F9] text-left">
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Date</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Status</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Course</th>
+                  <th className="hidden px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] sm:table-cell">Semester</th>
+                  <th className="hidden px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] md:table-cell">Note</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F8FAFC]">
+                {records.map(r => {
+                  const cfg = STATUS_CONFIG[r.status] ?? { label: r.status, cls: 'bg-gray-100 text-gray-600' }
+                  const dateStr = (r.class_date ?? r.recorded_at)
+                    ? new Date(r.class_date ?? r.recorded_at).toLocaleDateString('en-GB', {
+                        day: 'numeric', month: 'short', year: 'numeric',
+                      })
+                    : '—'
+                  return (
+                    <tr key={r.id} className="hover:bg-[#F8FAFC]">
+                      <td className="px-5 py-3 text-[#0B1F3A]">{dateStr}</td>
+                      <td className="px-5 py-3">
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>
+                          {cfg.label}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-[#64748B]">{r.course_title ?? '—'}</td>
+                      <td className="hidden px-5 py-3 text-[#64748B] sm:table-cell">{r.semester_name ?? '—'}</td>
+                      <td className="hidden px-5 py-3 text-[#94A3B8] md:table-cell">{r.note ?? '—'}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
