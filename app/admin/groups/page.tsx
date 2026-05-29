@@ -7,6 +7,7 @@ import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
 import Pagination from '@/components/admin/Pagination'
 import SearchInput from '@/components/admin/SearchInput'
+import AdminFilterSelect from '@/components/admin/AdminFilterSelect'
 import Link from 'next/link'
 
 interface Props {
@@ -73,51 +74,32 @@ export default async function GroupsPage({ searchParams }: Props) {
         <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search groups…" />
 
-          <select
-            value={branchId ?? ''}
-            onChange={e => { window.location.href = buildUrl({ branch: e.target.value || undefined }) }}
-            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
-          >
-            <option value="">All branches</option>
-            {branchesResult.data.map(b => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
+          <AdminFilterSelect
+            param="branch"
+            placeholder="All branches"
+            options={branchesResult.data.map(b => ({ value: b.id, label: b.name }))}
+          />
 
-          <select
-            value={type ?? ''}
-            onChange={e => { window.location.href = buildUrl({ type: e.target.value || undefined }) }}
-            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
-          >
-            <option value="">All types</option>
-            {GROUP_TYPES.map(t => (
-              <option key={t} value={t} className="capitalize">{t}</option>
-            ))}
-          </select>
+          <AdminFilterSelect
+            param="type"
+            placeholder="All types"
+            options={GROUP_TYPES.map(t => ({ value: t, label: t }))}
+          />
 
-          <select
-            value={status ?? ''}
-            onChange={e => { window.location.href = buildUrl({ status: e.target.value || undefined }) }}
-            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
-          >
-            <option value="">All statuses</option>
-            {GROUP_STATUSES.map(s => (
-              <option key={s} value={s} className="capitalize">{s}</option>
-            ))}
-          </select>
+          <AdminFilterSelect
+            param="status"
+            placeholder="All statuses"
+            options={GROUP_STATUSES.map(s => ({ value: s, label: s }))}
+          />
 
-          <select
-            value={instructorId ?? ''}
-            onChange={e => { window.location.href = buildUrl({ instructor: e.target.value || undefined }) }}
-            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
-          >
-            <option value="">All instructors</option>
-            {instructorsResult.data.map(i => (
-              <option key={i.id} value={i.id}>
-                {i.first_name && i.last_name ? `${i.first_name} ${i.last_name}` : i.user_email}
-              </option>
-            ))}
-          </select>
+          <AdminFilterSelect
+            param="instructor"
+            placeholder="All instructors"
+            options={instructorsResult.data.map(i => ({
+              value: i.id,
+              label: i.first_name && i.last_name ? `${i.first_name} ${i.last_name}` : i.user_email,
+            }))}
+          />
         </div>
 
         {result.data.length === 0 ? (

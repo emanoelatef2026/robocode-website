@@ -7,6 +7,7 @@ import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
 import Pagination from '@/components/admin/Pagination'
 import SearchInput from '@/components/admin/SearchInput'
+import AdminFilterSelect from '@/components/admin/AdminFilterSelect'
 import Link from 'next/link'
 
 interface Props {
@@ -67,32 +68,23 @@ export default async function StudentsPage({ searchParams }: Props) {
         <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search students…" />
 
-          <select
-            value={branchId ?? ''}
-            onChange={e => { window.location.href = buildUrl({ branch: e.target.value || undefined }) }}
-            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
-          >
-            <option value="">All branches</option>
-            {branchesResult.data.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
+          <AdminFilterSelect
+            param="branch"
+            placeholder="All branches"
+            options={branchesResult.data.map(b => ({ value: b.id, label: b.name }))}
+          />
 
-          <select
-            value={groupId ?? ''}
-            onChange={e => { window.location.href = buildUrl({ group: e.target.value || undefined }) }}
-            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
-          >
-            <option value="">All groups</option>
-            {groupsResult.data.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-          </select>
+          <AdminFilterSelect
+            param="group"
+            placeholder="All groups"
+            options={groupsResult.data.map(g => ({ value: g.id, label: g.name }))}
+          />
 
-          <select
-            value={status ?? ''}
-            onChange={e => { window.location.href = buildUrl({ status: e.target.value || undefined }) }}
-            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
-          >
-            <option value="">All statuses</option>
-            {STATUSES.map(s => <option key={s} value={s} className="capitalize">{s}</option>)}
-          </select>
+          <AdminFilterSelect
+            param="status"
+            placeholder="All statuses"
+            options={STATUSES.map(s => ({ value: s, label: s }))}
+          />
 
           {grade && (
             <Link href={buildUrl({ grade: undefined })} className="text-xs text-[#FF8A1F] hover:underline">
@@ -136,14 +128,9 @@ export default async function StudentsPage({ searchParams }: Props) {
                       <td className="px-4 py-3 text-[#64748B] font-mono text-xs">{student.student_code ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{student.group_name ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">
-                        {student.school_grade ? (
-                          <button
-                            onClick={() => { window.location.href = buildUrl({ grade: student.school_grade! }) }}
-                            className="text-xs text-[#FF8A1F] hover:underline"
-                          >
-                            {student.school_grade}
-                          </button>
-                        ) : '—'}
+                        {student.school_grade
+                          ? <Link href={buildUrl({ grade: student.school_grade })} className="text-xs text-[#FF8A1F] hover:underline">{student.school_grade}</Link>
+                          : '—'}
                       </td>
                       <td className="px-4 py-3 text-[#64748B]">
                         {new Date(student.enrollment_date).toLocaleDateString('en-GB')}
