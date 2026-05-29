@@ -21,8 +21,8 @@ export async function listInstructors({
   let query = db
     .from('instructors')
     .select(
-      `id, user_id, branch_id, employee_id, hire_date, status, specializations,
-       users!instructors_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name)),
+      `id, user_id, branch_id, employee_id, hire_date, instructor_code, status, specializations,
+       users!instructors_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name)),
        branches!instructors_branch_id_fkey(name)`,
       { count: 'exact' }
     )
@@ -37,7 +37,6 @@ export async function listInstructors({
     }
   }
 
-  // Resolve search at DB level: find user_ids matching name/email, then filter instructors
   if (search) {
     const q = `%${search}%`
     const [{ data: profileHits }, { data: userHits }] = await Promise.all([
@@ -62,12 +61,14 @@ export async function listInstructors({
     branch_id:       row.branch_id,
     employee_id:     row.employee_id,
     hire_date:       row.hire_date,
+    instructor_code: row.instructor_code ?? null,
     status:          row.status,
     specializations: row.specializations ?? [],
     user_email:      row.users?.email ?? '',
     first_name:      row.users?.profiles?.first_name ?? null,
     last_name:       row.users?.profiles?.last_name ?? null,
     branch_name:     row.branches?.name ?? '',
+    phone:           row.users?.phone ?? null,
   }))
 
   return {
@@ -84,7 +85,7 @@ export async function getInstructor(id: string): Promise<Instructor | null> {
   const { data, error } = await db
     .from('instructors')
     .select(
-      `*, users!instructors_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name)),
+      `*, users!instructors_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name)),
        branches!instructors_branch_id_fkey(name)`
     )
     .eq('id', id)
@@ -98,5 +99,59 @@ export async function getInstructor(id: string): Promise<Instructor | null> {
     first_name:  (data as any).users?.profiles?.first_name ?? null,
     last_name:   (data as any).users?.profiles?.last_name ?? null,
     branch_name: (data as any).branches?.name ?? '',
+    phone:       (data as any).users?.phone ?? null,
   } as Instructor
+}
+
+export interface InstructorGroup {
+  id:   string
+  name: string
+  type: string
+  status: string
+  student_count: number
+}
+
+export async function getInstructorGroups(instructorId: string): Promise<InstructorGroup[]> {
+  const db = createServiceClient()
+
+  const { data: giRows } = await db
+    .from('group_instructors')
+    .select('group_id, groups!group_instructors_group_id_fkey(id, name, type, status)')
+    .eq('instructor_id', instructorId)
+
+  const groupIds = (giRows ?? []).map((r: any) => r.group_id as string)
+
+  // Also get from group_courses
+  const { data: gcRows } = await db
+    .from('group_courses')
+    .select('group_id, groups!group_courses_group_id_fkey(id, name, type, status)')
+    .eq('instructor_id', instructorId)
+    .eq('status', 'active')
+
+  const allGroupMap = new Map<string, { id: string; name: string; type: string; status: string }>()
+
+  for (const r of [...(giRows ?? []), ...(gcRows ?? [])] as any[]) {
+    const g = r.groups
+    if (g && !allGroupMap.has(g.id)) {
+      allGroupMap.set(g.id, { id: g.id, name: g.name, type: g.type, status: g.status })
+    }
+  }
+
+  const groups = [...allGroupMap.values()]
+  if (!groups.length) return []
+
+  // Fetch student counts
+  const { data: gsCounts } = await db
+    .from('group_students')
+    .select('group_id')
+    .in('group_id', groups.map(g => g.id))
+    .eq('status', 'active')
+
+  const countByGroup: Record<string, number> = {}
+  for (const gs of gsCounts ?? []) {
+    const gid = (gs as any).group_id
+    countByGroup[gid] = (countByGroup[gid] ?? 0) + 1
+  }
+
+  return groups.map(g => ({ ...g, student_count: countByGroup[g.id] ?? 0 }))
 }

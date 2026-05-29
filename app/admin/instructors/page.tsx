@@ -54,6 +54,8 @@ export default async function InstructorsPage({ searchParams }: Props) {
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Email</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Phone</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Employee ID</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Specializations</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
@@ -68,6 +70,8 @@ export default async function InstructorsPage({ searchParams }: Props) {
                       </td>
                       <td className="px-4 py-3 text-[#64748B]">{i.user_email}</td>
                       <td className="px-4 py-3 text-[#64748B]">{i.branch_name}</td>
+                      <td className="px-4 py-3 text-[#64748B] font-mono text-xs">{i.instructor_code ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{i.phone ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{i.employee_id ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B] max-w-[200px] truncate">
                         {i.specializations.length > 0 ? i.specializations.join(', ') : '—'}

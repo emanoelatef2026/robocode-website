@@ -1,4 +1,6 @@
 import { listGroups } from '@/modules/groups/queries'
+import { listBranches } from '@/modules/branches/queries'
+import { listInstructors } from '@/modules/instructors/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import PageHeader from '@/components/admin/PageHeader'
 import StatusBadge from '@/components/admin/StatusBadge'
@@ -8,18 +10,45 @@ import SearchInput from '@/components/admin/SearchInput'
 import Link from 'next/link'
 
 interface Props {
-  searchParams: Promise<{ page?: string; q?: string; branch?: string; status?: string }>
+  searchParams: Promise<{
+    page?: string; q?: string; branch?: string; status?: string; type?: string; instructor?: string
+  }>
+}
+
+const GROUP_TYPES = ['class', 'workshop', 'bootcamp', 'trial', 'makeup']
+const GROUP_STATUSES = ['forming', 'active', 'completed', 'cancelled']
+const DAYS: Record<string, string> = {
+  monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu',
+  friday: 'Fri', saturday: 'Sat', sunday: 'Sun',
 }
 
 export default async function GroupsPage({ searchParams }: Props) {
   await requirePermission('manage_groups')
-  const params   = await searchParams
-  const page     = Number(params.page ?? 1)
-  const search   = params.q ?? ''
-  const branchId = params.branch
-  const status   = params.status
+  const params       = await searchParams
+  const page         = Number(params.page ?? 1)
+  const search       = params.q ?? ''
+  const branchId     = params.branch
+  const status       = params.status
+  const type         = params.type
+  const instructorId = params.instructor
 
-  const result = await listGroups({ page, perPage: 20, search, branchId, status })
+  const [result, branchesResult, instructorsResult] = await Promise.all([
+    listGroups({ page, perPage: 20, search, branchId, status, type, instructorId }),
+    listBranches({ perPage: 100 }),
+    listInstructors({ perPage: 200 }),
+  ])
+
+  const buildUrl = (overrides: Record<string, string | undefined>) => {
+    const p: Record<string, string> = { page: '1' }
+    if (search)       p.q          = search
+    if (branchId)     p.branch     = branchId
+    if (status)       p.status     = status
+    if (type)         p.type       = type
+    if (instructorId) p.instructor = instructorId
+    Object.assign(p, overrides)
+    Object.keys(p).forEach(k => p[k] === undefined && delete p[k])
+    return '/admin/groups?' + new URLSearchParams(p as Record<string, string>).toString()
+  }
 
   return (
     <div>
@@ -40,8 +69,55 @@ export default async function GroupsPage({ searchParams }: Props) {
       />
 
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
-        <div className="flex items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search groups…" />
+
+          <select
+            value={branchId ?? ''}
+            onChange={e => { window.location.href = buildUrl({ branch: e.target.value || undefined }) }}
+            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+          >
+            <option value="">All branches</option>
+            {branchesResult.data.map(b => (
+              <option key={b.id} value={b.id}>{b.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={type ?? ''}
+            onChange={e => { window.location.href = buildUrl({ type: e.target.value || undefined }) }}
+            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+          >
+            <option value="">All types</option>
+            {GROUP_TYPES.map(t => (
+              <option key={t} value={t} className="capitalize">{t}</option>
+            ))}
+          </select>
+
+          <select
+            value={status ?? ''}
+            onChange={e => { window.location.href = buildUrl({ status: e.target.value || undefined }) }}
+            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+          >
+            <option value="">All statuses</option>
+            {GROUP_STATUSES.map(s => (
+              <option key={s} value={s} className="capitalize">{s}</option>
+            ))}
+          </select>
+
+          <select
+            value={instructorId ?? ''}
+            onChange={e => { window.location.href = buildUrl({ instructor: e.target.value || undefined }) }}
+            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+          >
+            <option value="">All instructors</option>
+            {instructorsResult.data.map(i => (
+              <option key={i.id} value={i.id}>
+                {i.first_name && i.last_name ? `${i.first_name} ${i.last_name}` : i.user_email}
+              </option>
+            ))}
+          </select>
         </div>
 
         {result.data.length === 0 ? (
@@ -56,7 +132,10 @@ export default async function GroupsPage({ searchParams }: Props) {
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Capacity</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Day / Time</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Start</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Instructor</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Cap.</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -65,16 +144,21 @@ export default async function GroupsPage({ searchParams }: Props) {
                   {result.data.map((group) => (
                     <tr key={group.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">{group.name}</td>
-                      <td className="px-4 py-3 text-[#64748B]">{group.code ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#64748B] font-mono text-xs">{group.code ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{group.branch_name}</td>
                       <td className="px-4 py-3"><StatusBadge status={group.type} /></td>
+                      <td className="px-4 py-3 text-[#64748B]">
+                        {group.day_of_week ? DAYS[group.day_of_week] : '—'}
+                        {group.time ? ` ${group.time}` : ''}
+                      </td>
+                      <td className="px-4 py-3 text-[#64748B]">
+                        {group.start_date ? new Date(group.start_date).toLocaleDateString('en-GB') : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-[#64748B]">{group.instructor_name ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{group.capacity ?? '∞'}</td>
                       <td className="px-4 py-3"><StatusBadge status={group.status} /></td>
                       <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/admin/groups/${group.id}`}
-                          className="text-xs font-medium text-[#FF8A1F] hover:underline"
-                        >
+                        <Link href={`/admin/groups/${group.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
                           Manage
                         </Link>
                       </td>

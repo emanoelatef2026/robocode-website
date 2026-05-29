@@ -9,22 +9,52 @@ export async function listGroups({
   search = '',
   branchId,
   status,
+  type,
+  instructorId,
 }: {
   page?: number
   perPage?: number
   search?: string
   branchId?: string | string[]
   status?: string
+  type?: string
+  instructorId?: string
 } = {}): Promise<PaginatedResult<GroupListItem>> {
   const db   = createServiceClient()
   const from = (page - 1) * perPage
   const to   = from + perPage - 1
 
+  // If instructor filter: pre-query group IDs from group_instructors + group_courses
+  let restrictToGroupIds: string[] | null = null
+  if (instructorId) {
+    const [{ data: giRows }, { data: gcRows }] = await Promise.all([
+      db.from('group_instructors').select('group_id').eq('instructor_id', instructorId),
+      db.from('group_courses').select('group_id').eq('instructor_id', instructorId).eq('status', 'active'),
+    ])
+    const ids = [
+      ...(giRows ?? []).map((r: any) => r.group_id as string),
+      ...(gcRows ?? []).map((r: any) => r.group_id as string),
+    ]
+    restrictToGroupIds = [...new Set(ids)]
+    if (restrictToGroupIds.length === 0) {
+      return { data: [], total: 0, page, perPage, totalPages: 0 }
+    }
+  }
+
   let query = db
     .from('groups')
     .select(
       `id, branch_id, name, code, type, capacity, status,
-       branches!groups_branch_id_fkey(name)`,
+       start_date, day_of_week, time,
+       branches!groups_branch_id_fkey(name),
+       group_instructors!group_instructors_group_id_fkey(
+         role,
+         instructors!group_instructors_instructor_id_fkey(
+           users!instructors_user_id_fkey(
+             profiles!profiles_user_id_fkey(first_name, last_name)
+           )
+         )
+       )`,
       { count: 'exact' }
     )
     .is('deleted_at', null)
@@ -38,23 +68,39 @@ export async function listGroups({
       query = query.eq('branch_id', branchId)
     }
   }
-  if (status)   query = query.eq('status', status)
-  if (search)   query = query.ilike('name', `%${search}%`)
+  if (status)             query = query.eq('status', status)
+  if (type)               query = query.eq('type', type)
+  if (search)             query = query.ilike('name', `%${search}%`)
+  if (restrictToGroupIds) query = query.in('id', restrictToGroupIds)
 
   const { data, count, error } = await query
   if (error) throw new Error(error.message)
 
-  const items: GroupListItem[] = (data ?? []).map((row: any) => ({
-    id:            row.id,
-    branch_id:     row.branch_id,
-    name:          row.name,
-    code:          row.code,
-    type:          row.type,
-    capacity:      row.capacity,
-    status:        row.status,
-    branch_name:   row.branches?.name ?? '',
-    student_count: 0,
-  }))
+  const items: GroupListItem[] = (data ?? []).map((row: any) => {
+    // Find the lead instructor from group_instructors
+    const gis = Array.isArray(row.group_instructors) ? row.group_instructors : []
+    const lead = gis.find((gi: any) => gi.role === 'lead') ?? gis[0] ?? null
+    const prof = lead?.instructors?.users?.profiles
+    const instructorName = prof
+      ? [prof.first_name, prof.last_name].filter(Boolean).join(' ') || null
+      : null
+
+    return {
+      id:              row.id,
+      branch_id:       row.branch_id,
+      name:            row.name,
+      code:            row.code,
+      type:            row.type,
+      capacity:        row.capacity,
+      status:          row.status,
+      start_date:      row.start_date ?? null,
+      day_of_week:     row.day_of_week ?? null,
+      time:            row.time ?? null,
+      branch_name:     row.branches?.name ?? '',
+      student_count:   0,
+      instructor_name: instructorName,
+    }
+  })
 
   return {
     data:       items,

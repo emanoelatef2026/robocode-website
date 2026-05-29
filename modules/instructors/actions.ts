@@ -23,6 +23,7 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
     employee_id:     formData.get('employee_id') || undefined,
     hire_date:       formData.get('hire_date') || undefined,
     specializations: formData.get('specializations') || undefined,
+    phone:           formData.get('phone') || undefined,
   }
 
   // Validate before the permission check so we can pass branch_id for isolation
@@ -35,7 +36,7 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
   const user = await requirePermission('manage_instructors', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
 
-  const { email, password, first_name, last_name, branch_id, employee_id, hire_date, specializations } = parsed.data
+  const { email, password, first_name, last_name, branch_id, employee_id, hire_date, specializations, phone } = parsed.data
   const specsArray = specializations
     ? specializations.split(',').map((s) => s.trim()).filter(Boolean)
     : []
@@ -58,7 +59,7 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
     authUserId = created.user.id
   }
 
-  await db.from('users').upsert({ id: authUserId, email }, { onConflict: 'id' })
+  await db.from('users').upsert({ id: authUserId, email, phone: phone || null }, { onConflict: 'id' })
 
   const { data: existingProfile } = await db
     .from('profiles')
@@ -120,10 +121,14 @@ export async function updateInstructor(_prev: unknown, formData: FormData): Prom
   const db   = createServiceClient()
 
   const raw = {
-    id:              formData.get('id'),
-    status:          formData.get('status') || undefined,
-    employee_id:     formData.get('employee_id') || undefined,
-    specializations: formData.get('specializations') || undefined,
+    id:                  formData.get('id'),
+    status:              formData.get('status')              || undefined,
+    employee_id:         formData.get('employee_id')         || undefined,
+    specializations:     formData.get('specializations')     || undefined,
+    phone:               formData.get('phone')               || undefined,
+    payment_link:        formData.get('payment_link')        || undefined,
+    wallet_number:       formData.get('wallet_number')       || undefined,
+    bank_account_number: formData.get('bank_account_number') || undefined,
   }
 
   const parsed = updateInstructorSchema.safeParse(raw)
@@ -131,15 +136,26 @@ export async function updateInstructor(_prev: unknown, formData: FormData): Prom
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { id, status, employee_id, specializations } = parsed.data
+  const { id, status, employee_id, specializations, phone, payment_link, wallet_number, bank_account_number } = parsed.data
   const specsArray = specializations
     ? specializations.split(',').map((s) => s.trim()).filter(Boolean)
     : undefined
 
+  // Fetch instructor user_id for phone update
+  const { data: instrRow } = await db.from('instructors').select('user_id').eq('id', id).single()
+
+  // Update phone on users table if provided
+  if (phone !== undefined && instrRow) {
+    await db.from('users').update({ phone: phone || null }).eq('id', instrRow.user_id)
+  }
+
   const updates: Record<string, unknown> = {}
-  if (status)                     updates.status          = status
-  if (employee_id !== undefined)  updates.employee_id     = employee_id || null
-  if (specsArray)                 updates.specializations = specsArray
+  if (status)                          updates.status              = status
+  if (employee_id !== undefined)       updates.employee_id         = employee_id         || null
+  if (specsArray)                      updates.specializations     = specsArray
+  if (payment_link !== undefined)      updates.payment_link        = payment_link        || null
+  if (wallet_number !== undefined)     updates.wallet_number       = wallet_number       || null
+  if (bank_account_number !== undefined) updates.bank_account_number = bank_account_number || null
 
   const { error } = await db.from('instructors').update(updates).eq('id', id)
   if (error) {

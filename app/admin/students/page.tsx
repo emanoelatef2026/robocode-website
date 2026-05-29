@@ -1,6 +1,7 @@
 import { listStudents } from '@/modules/students/queries'
-import { requirePermission } from '@/modules/rbac/guards'
 import { listBranches } from '@/modules/branches/queries'
+import { listGroups } from '@/modules/groups/queries'
+import { requirePermission } from '@/modules/rbac/guards'
 import PageHeader from '@/components/admin/PageHeader'
 import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
@@ -9,8 +10,12 @@ import SearchInput from '@/components/admin/SearchInput'
 import Link from 'next/link'
 
 interface Props {
-  searchParams: Promise<{ page?: string; q?: string; branch?: string; status?: string }>
+  searchParams: Promise<{
+    page?: string; q?: string; branch?: string; status?: string; group?: string; grade?: string
+  }>
 }
+
+const STATUSES = ['active', 'inactive', 'graduated', 'paused', 'banned']
 
 export default async function StudentsPage({ searchParams }: Props) {
   await requirePermission('manage_students')
@@ -19,11 +24,26 @@ export default async function StudentsPage({ searchParams }: Props) {
   const search   = params.q ?? ''
   const branchId = params.branch
   const status   = params.status
+  const groupId  = params.group
+  const grade    = params.grade
 
-  const [result, branchesResult] = await Promise.all([
-    listStudents({ page, perPage: 20, search, branchId, status }),
+  const [result, branchesResult, groupsResult] = await Promise.all([
+    listStudents({ page, perPage: 20, search, branchId, status, groupId, grade }),
     listBranches({ perPage: 100 }),
+    listGroups({ perPage: 200 }),
   ])
+
+  const buildUrl = (overrides: Record<string, string | undefined>) => {
+    const p: Record<string, string> = { page: '1' }
+    if (search)   p.q      = search
+    if (branchId) p.branch = branchId
+    if (status)   p.status = status
+    if (groupId)  p.group  = groupId
+    if (grade)    p.grade  = grade
+    Object.assign(p, overrides)
+    Object.keys(p).forEach(k => (p as any)[k] === undefined && delete (p as any)[k])
+    return '/admin/students?' + new URLSearchParams(p).toString()
+  }
 
   return (
     <div>
@@ -44,8 +64,41 @@ export default async function StudentsPage({ searchParams }: Props) {
       />
 
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
-        <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search students…" />
+
+          <select
+            value={branchId ?? ''}
+            onChange={e => { window.location.href = buildUrl({ branch: e.target.value || undefined }) }}
+            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+          >
+            <option value="">All branches</option>
+            {branchesResult.data.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
+
+          <select
+            value={groupId ?? ''}
+            onChange={e => { window.location.href = buildUrl({ group: e.target.value || undefined }) }}
+            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+          >
+            <option value="">All groups</option>
+            {groupsResult.data.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+
+          <select
+            value={status ?? ''}
+            onChange={e => { window.location.href = buildUrl({ status: e.target.value || undefined }) }}
+            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+          >
+            <option value="">All statuses</option>
+            {STATUSES.map(s => <option key={s} value={s} className="capitalize">{s}</option>)}
+          </select>
+
+          {grade && (
+            <Link href={buildUrl({ grade: undefined })} className="text-xs text-[#FF8A1F] hover:underline">
+              Grade: {grade} ×
+            </Link>
+          )}
         </div>
 
         {result.data.length === 0 ? (
@@ -63,6 +116,8 @@ export default async function StudentsPage({ searchParams }: Props) {
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Email</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Group</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Grade</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Enrolled</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
                     <th className="px-4 py-3" />
@@ -78,16 +133,24 @@ export default async function StudentsPage({ searchParams }: Props) {
                       </td>
                       <td className="px-4 py-3 text-[#64748B]">{student.user_email}</td>
                       <td className="px-4 py-3 text-[#64748B]">{student.branch_name}</td>
-                      <td className="px-4 py-3 text-[#64748B]">{student.student_code ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#64748B] font-mono text-xs">{student.student_code ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{student.group_name ?? '—'}</td>
+                      <td className="px-4 py-3 text-[#64748B]">
+                        {student.school_grade ? (
+                          <button
+                            onClick={() => { window.location.href = buildUrl({ grade: student.school_grade! }) }}
+                            className="text-xs text-[#FF8A1F] hover:underline"
+                          >
+                            {student.school_grade}
+                          </button>
+                        ) : '—'}
+                      </td>
                       <td className="px-4 py-3 text-[#64748B]">
                         {new Date(student.enrollment_date).toLocaleDateString('en-GB')}
                       </td>
                       <td className="px-4 py-3"><StatusBadge status={student.status} /></td>
                       <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/admin/students/${student.id}`}
-                          className="text-xs font-medium text-[#FF8A1F] hover:underline"
-                        >
+                        <Link href={`/admin/students/${student.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
                           Edit
                         </Link>
                       </td>

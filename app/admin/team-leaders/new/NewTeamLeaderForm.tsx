@@ -102,6 +102,36 @@ export default function NewTeamLeaderForm({ branches }: Props) {
           </div>
         </div>
 
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Phone</label>
+          <input
+            name="phone"
+            type="tel"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            placeholder="+20 …"
+          />
+        </div>
+
+        <div className="border-t border-[#E2E8F0] pt-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">Payment Info (optional)</p>
+          <div className="space-y-3">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Payment link</label>
+              <input name="payment_link" className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Wallet number</label>
+                <input name="wallet_number" className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Bank account</label>
+                <input name="bank_account_number" className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="flex items-center justify-end gap-3 pt-2">
           <Link
             href="/admin/team-leaders"

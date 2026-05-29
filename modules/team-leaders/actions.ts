@@ -14,12 +14,16 @@ export async function createTeamLeader(
   formData: FormData
 ): Promise<ActionResult<{ id: string }>> {
   const raw = {
-    email:      formData.get('email'),
-    password:   formData.get('password'),
-    first_name: formData.get('first_name'),
-    last_name:  formData.get('last_name'),
-    branch_id:  formData.get('branch_id'),
-    status:     formData.get('status') || 'active',
+    email:               formData.get('email'),
+    password:            formData.get('password'),
+    first_name:          formData.get('first_name'),
+    last_name:           formData.get('last_name'),
+    branch_id:           formData.get('branch_id'),
+    status:              formData.get('status') || 'active',
+    phone:               formData.get('phone')               || undefined,
+    payment_link:        formData.get('payment_link')        || undefined,
+    wallet_number:       formData.get('wallet_number')       || undefined,
+    bank_account_number: formData.get('bank_account_number') || undefined,
   }
 
   const parsed = createTeamLeaderSchema.safeParse(raw)
@@ -30,7 +34,7 @@ export async function createTeamLeader(
   await requirePermission('manage_system')
   const db = createServiceClient()
 
-  const { email, password, first_name, last_name, branch_id, status } = parsed.data
+  const { email, password, first_name, last_name, branch_id, status, phone, payment_link, wallet_number, bank_account_number } = parsed.data
 
   // 1. Create or find auth user
   let authUserId: string
@@ -51,8 +55,8 @@ export async function createTeamLeader(
     authUserId = created.user.id
   }
 
-  // 2. Ensure public.users row
-  await db.from('users').upsert({ id: authUserId, email }, { onConflict: 'id' })
+  // 2. Ensure public.users row (with phone)
+  await db.from('users').upsert({ id: authUserId, email, phone: phone || null }, { onConflict: 'id' })
 
   // 3. Upsert profile
   const { data: existingProfile } = await db
@@ -89,9 +93,15 @@ export async function createTeamLeader(
     }
   }
 
-  // 6. Store status + branch in metadata for lifecycle management
+  // 6. Store status + branch + financial info in metadata
   await db.from('users').update({
-    metadata: { tl_status: status, tl_branch_id: branch_id },
+    metadata: {
+      tl_status:           status,
+      tl_branch_id:        branch_id,
+      payment_link:        payment_link        || null,
+      wallet_number:       wallet_number       || null,
+      bank_account_number: bank_account_number || null,
+    },
   }).eq('id', authUserId)
 
   const { data: actor } = await db.from('users').select('id').eq('id', authUserId).single()
@@ -120,12 +130,16 @@ export async function updateTeamLeader(
   const db   = createServiceClient()
 
   const raw = {
-    user_id:      formData.get('user_id'),
-    first_name:   formData.get('first_name') || undefined,
-    last_name:    formData.get('last_name')  || undefined,
-    branch_id:    formData.get('branch_id')  || undefined,
-    status:       formData.get('status')     || undefined,
-    new_password: formData.get('new_password') || undefined,
+    user_id:             formData.get('user_id'),
+    first_name:          formData.get('first_name')          || undefined,
+    last_name:           formData.get('last_name')           || undefined,
+    branch_id:           formData.get('branch_id')           || undefined,
+    status:              formData.get('status')              || undefined,
+    new_password:        formData.get('new_password')        || undefined,
+    phone:               formData.get('phone')               || undefined,
+    payment_link:        formData.get('payment_link')        || undefined,
+    wallet_number:       formData.get('wallet_number')       || undefined,
+    bank_account_number: formData.get('bank_account_number') || undefined,
   }
 
   const parsed = updateTeamLeaderSchema.safeParse(raw)
@@ -133,7 +147,7 @@ export async function updateTeamLeader(
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { user_id, first_name, last_name, branch_id, status, new_password } = parsed.data
+  const { user_id, first_name, last_name, branch_id, status, new_password, phone, payment_link, wallet_number, bank_account_number } = parsed.data
 
   // 1. Update profile
   if (first_name || last_name) {
@@ -141,6 +155,11 @@ export async function updateTeamLeader(
     if (first_name) updates.first_name = first_name
     if (last_name)  updates.last_name  = last_name
     await db.from('profiles').update(updates).eq('user_id', user_id)
+  }
+
+  // 1b. Update phone on users table
+  if (phone !== undefined) {
+    await db.from('users').update({ phone: phone || null }).eq('id', user_id)
   }
 
   // 2. Reset password
@@ -199,12 +218,15 @@ export async function updateTeamLeader(
     }
   }
 
-  // 6. Update metadata
-  const updatedMeta = {
+  // 6. Update metadata (status + financial info)
+  const updatedMeta: Record<string, unknown> = {
     ...currentMeta,
     tl_status:    targetStatus,
     tl_branch_id: targetBranchId ?? currentBranchId,
   }
+  if (payment_link        !== undefined) updatedMeta.payment_link        = payment_link        || null
+  if (wallet_number       !== undefined) updatedMeta.wallet_number       = wallet_number       || null
+  if (bank_account_number !== undefined) updatedMeta.bank_account_number = bank_account_number || null
   await db.from('users').update({ metadata: updatedMeta }).eq('id', user_id)
 
   await db.rpc('write_audit_log', {

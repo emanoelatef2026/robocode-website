@@ -108,6 +108,16 @@ export default function NewInstructorForm({ branches }: Props) {
         </div>
 
         <div>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Phone</label>
+          <input
+            name="phone"
+            type="tel"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            placeholder="+20 …"
+          />
+        </div>
+
+        <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
             Specializations <span className="text-xs text-[#94A3B8]">(comma-separated)</span>
           </label>

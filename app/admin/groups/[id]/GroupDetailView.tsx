@@ -110,6 +110,53 @@ export default function GroupDetailView({ group, enrollments, students }: Props)
             </div>
           </div>
 
+          {/* Schedule fields */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-[#64748B]">Start date</label>
+              <input
+                name="start_date"
+                type="date"
+                defaultValue={group.start_date ?? ''}
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-[#64748B]">Day of week</label>
+              <select
+                name="day_of_week"
+                defaultValue={group.day_of_week ?? ''}
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              >
+                <option value="">—</option>
+                {['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map((d) => (
+                  <option key={d} value={d} className="capitalize">{d}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-[#64748B]">
+                Time <span className="font-normal text-[#94A3B8]">(HH:MM)</span>
+              </label>
+              <input
+                name="time"
+                type="time"
+                defaultValue={group.time ?? ''}
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#64748B]">Notes</label>
+            <textarea
+              name="notes"
+              rows={2}
+              defaultValue={group.notes ?? ''}
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            />
+          </div>
+
           <div className="flex justify-end">
             <SubmitButton label="Save Changes" />
           </div>

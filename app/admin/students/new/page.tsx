@@ -1,11 +1,15 @@
 import { requirePermission } from '@/modules/rbac/guards'
 import { listBranches } from '@/modules/branches/queries'
+import { listGroups } from '@/modules/groups/queries'
 import NewStudentForm from './NewStudentForm'
 import Link from 'next/link'
 
 export default async function NewStudentPage() {
   await requirePermission('manage_students')
-  const branchesResult = await listBranches({ perPage: 100 })
+  const [branchesResult, groupsResult] = await Promise.all([
+    listBranches({ perPage: 100 }),
+    listGroups({ perPage: 200, status: 'active' }),
+  ])
 
   return (
     <div className="mx-auto max-w-xl">
@@ -15,7 +19,7 @@ export default async function NewStudentPage() {
         </Link>
         <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Add Student</h1>
       </div>
-      <NewStudentForm branches={branchesResult.data} />
+      <NewStudentForm branches={branchesResult.data} groups={groupsResult.data} />
     </div>
   )
 }

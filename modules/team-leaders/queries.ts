@@ -37,8 +37,10 @@ export async function listTeamLeaders({
        user_id,
        branch_id,
        created_at,
+       tl_code,
        users!user_roles_user_id_fkey(
          email,
+         phone,
          metadata,
          profiles!profiles_user_id_fkey(first_name, last_name)
        ),
@@ -107,6 +109,8 @@ export async function listTeamLeaders({
       status:          s,
       active_groups:   groupsByBranch[row.branch_id]  ?? 0,
       active_students: studentsByBranch[row.branch_id] ?? 0,
+      tl_code:         row.tl_code ?? null,
+      phone:           u?.phone ?? null,
     }
   })
 
@@ -147,9 +151,9 @@ export async function getTeamLeader(userId: string): Promise<TeamLeader | null> 
   const { data: ur } = await db
     .from('user_roles')
     .select(
-      `id, branch_id, created_at,
+      `id, branch_id, created_at, tl_code,
        users!user_roles_user_id_fkey(
-         id, email, metadata,
+         id, email, phone, metadata,
          profiles!profiles_user_id_fkey(first_name, last_name)
        ),
        branches!fk_user_roles_branch(name)`
@@ -162,7 +166,7 @@ export async function getTeamLeader(userId: string): Promise<TeamLeader | null> 
   // May have no current role entry (inactive TL — fetch user directly)
   const { data: userRow } = await db
     .from('users')
-    .select(`id, email, metadata, profiles!profiles_user_id_fkey(first_name, last_name)`)
+    .select(`id, email, phone, metadata, profiles!profiles_user_id_fkey(first_name, last_name)`)
     .eq('id', userId)
     .single()
 
@@ -238,17 +242,22 @@ export async function getTeamLeader(userId: string): Promise<TeamLeader | null> 
   }))
 
   return {
-    user_role_id:  (ur as any)?.id ?? userId,
-    user_id:       userId,
-    branch_id:     branchId,
-    email:         u?.email ?? (userRow as any).email ?? '',
-    first_name:    prof?.first_name ?? null,
-    last_name:     prof?.last_name  ?? null,
-    branch_name:   branchName,
-    status:        tlStatus,
-    assigned_at:   (ur as any)?.created_at ?? null,
+    user_role_id:        (ur as any)?.id ?? userId,
+    user_id:             userId,
+    branch_id:           branchId,
+    email:               u?.email ?? (userRow as any).email ?? '',
+    first_name:          prof?.first_name ?? null,
+    last_name:           prof?.last_name  ?? null,
+    branch_name:         branchName,
+    status:              tlStatus,
+    assigned_at:         (ur as any)?.created_at ?? null,
     instructors,
     groups,
-    student_count: (studentsRes as any).count ?? 0,
+    student_count:       (studentsRes as any).count ?? 0,
+    tl_code:             (ur as any)?.tl_code ?? null,
+    phone:               u?.phone ?? null,
+    payment_link:        (meta.payment_link as string) ?? null,
+    wallet_number:       (meta.wallet_number as string) ?? null,
+    bank_account_number: (meta.bank_account_number as string) ?? null,
   }
 }

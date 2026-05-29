@@ -71,6 +71,14 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
             <dd className="mt-0.5"><StatusBadge status={tl.status} /></dd>
           </div>
           <div>
+            <dt className="text-[#64748B]">TL Code</dt>
+            <dd className="mt-0.5 font-mono font-semibold text-[#0B1F3A]">{tl.tl_code ?? '—'}</dd>
+          </div>
+          <div>
+            <dt className="text-[#64748B]">Phone</dt>
+            <dd className="mt-0.5 font-medium text-[#0B1F3A]">{tl.phone ?? '—'}</dd>
+          </div>
+          <div>
             <dt className="text-[#64748B]">Assigned at</dt>
             <dd className="mt-0.5 font-medium text-[#0B1F3A]">
               {tl.assigned_at ? new Date(tl.assigned_at).toLocaleDateString() : '—'}
@@ -78,6 +86,33 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
           </div>
         </dl>
       </div>
+
+      {/* Payment info */}
+      {(tl.payment_link || tl.wallet_number || tl.bank_account_number) && (
+        <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+          <h2 className="mb-4 text-sm font-semibold text-[#0B1F3A]">Payment Info</h2>
+          <dl className="grid grid-cols-2 gap-4 text-sm">
+            {tl.payment_link && (
+              <div className="col-span-2">
+                <dt className="text-[#64748B]">Payment link</dt>
+                <dd className="mt-0.5 break-all font-medium text-[#0B1F3A]">{tl.payment_link}</dd>
+              </div>
+            )}
+            {tl.wallet_number && (
+              <div>
+                <dt className="text-[#64748B]">Wallet number</dt>
+                <dd className="mt-0.5 font-medium text-[#0B1F3A]">{tl.wallet_number}</dd>
+              </div>
+            )}
+            {tl.bank_account_number && (
+              <div>
+                <dt className="text-[#64748B]">Bank account</dt>
+                <dd className="mt-0.5 font-medium text-[#0B1F3A]">{tl.bank_account_number}</dd>
+              </div>
+            )}
+          </dl>
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4">

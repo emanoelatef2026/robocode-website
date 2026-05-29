@@ -6,8 +6,12 @@ export interface Instructor {
   branch_id: string
   employee_id: string | null
   hire_date: string | null
+  instructor_code: string | null
   status: InstructorStatus
   specializations: string[]
+  payment_link: string | null
+  wallet_number: string | null
+  bank_account_number: string | null
   deleted_at: string | null
   created_at: string
   updated_at: string
@@ -16,6 +20,7 @@ export interface Instructor {
   first_name?: string
   last_name?: string
   branch_name?: string
+  phone?: string | null
 }
 
 export interface InstructorListItem {
@@ -24,12 +29,14 @@ export interface InstructorListItem {
   branch_id: string
   employee_id: string | null
   hire_date: string | null
+  instructor_code: string | null
   status: InstructorStatus
   specializations: string[]
   user_email: string
   first_name: string | null
   last_name: string | null
   branch_name: string
+  phone: string | null
 }
 
 export interface CreateInstructorInput {
@@ -47,4 +54,8 @@ export interface UpdateInstructorInput {
   status?: InstructorStatus
   employee_id?: string
   specializations?: string[]
+  phone?: string
+  payment_link?: string
+  wallet_number?: string
+  bank_account_number?: string
 }

@@ -55,8 +55,10 @@ export default async function TeamLeadersPage({ searchParams }: Props) {
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Email</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Phone</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-[#64748B]">Groups</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-[#64748B]">Students</th>
@@ -71,8 +73,10 @@ export default async function TeamLeadersPage({ searchParams }: Props) {
                           ? `${tl.first_name} ${tl.last_name}`
                           : '—'}
                       </td>
+                      <td className="px-4 py-3 text-[#64748B] font-mono text-xs">{tl.tl_code ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{tl.email}</td>
                       <td className="px-4 py-3 text-[#64748B]">{tl.branch_name}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{tl.phone ?? '—'}</td>
                       <td className="px-4 py-3"><StatusBadge status={tl.status} /></td>
                       <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{tl.active_groups}</td>
                       <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{tl.active_students}</td>

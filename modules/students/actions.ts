@@ -22,6 +22,13 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
     branch_id:       formData.get('branch_id'),
     enrollment_date: formData.get('enrollment_date') || undefined,
     notes:           formData.get('notes') || undefined,
+    school_grade:    formData.get('school_grade') || undefined,
+    address:         formData.get('address') || undefined,
+    phone:           formData.get('phone') || undefined,
+    date_of_birth:   formData.get('date_of_birth') || undefined,
+    parent_phone_1:  formData.get('parent_phone_1') || undefined,
+    parent_phone_2:  formData.get('parent_phone_2') || undefined,
+    group_id:        formData.get('group_id') || undefined,
   }
 
   // Validate before the permission check so we can pass branch_id for isolation
@@ -34,9 +41,12 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
   const user = await requirePermission('manage_students', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
 
-  const { email, password, first_name, last_name, branch_id, enrollment_date, notes } = parsed.data
+  const {
+    email, password, first_name, last_name, branch_id, enrollment_date, notes,
+    school_grade, address, phone, date_of_birth, parent_phone_1, parent_phone_2, group_id,
+  } = parsed.data
 
-  // 1. Create or find auth user — look up public.users (synced from auth by trigger)
+  // 1. Create or find auth user
   let authUserId: string
   const { data: existingUser } = await db
     .from('users')
@@ -58,10 +68,18 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
     authUserId = created.user.id
   }
 
-  // 2. Ensure public.users row
-  await db.from('users').upsert({ id: authUserId, email }, { onConflict: 'id' })
+  // 2. Ensure public.users row (with phone)
+  await db.from('users').upsert(
+    { id: authUserId, email, phone: phone || null },
+    { onConflict: 'id' }
+  )
 
-  // 3. Upsert profile
+  // 3. Upsert profile (with date_of_birth)
+  const profileData: Record<string, unknown> = {
+    user_id: authUserId, first_name, last_name,
+  }
+  if (date_of_birth) profileData.date_of_birth = date_of_birth
+
   const { data: existingProfile } = await db
     .from('profiles')
     .select('id')
@@ -69,20 +87,27 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
     .maybeSingle()
 
   if (!existingProfile) {
-    await db.from('profiles').insert({ user_id: authUserId, first_name, last_name })
+    await db.from('profiles').insert(profileData)
   } else {
-    await db.from('profiles').update({ first_name, last_name }).eq('user_id', authUserId)
+    await db.from('profiles').update(profileData).eq('user_id', authUserId)
   }
 
   // 4. Create student record
+  const emergencyContact: Record<string, string> = {}
+  if (parent_phone_1) emergencyContact.phone1 = parent_phone_1
+  if (parent_phone_2) emergencyContact.phone2 = parent_phone_2
+
   const { data: student, error: studentError } = await db
     .from('students')
     .insert({
-      user_id:         authUserId,
+      user_id:           authUserId,
       branch_id,
-      enrollment_date: enrollment_date || new Date().toISOString().split('T')[0],
-      status:          'active',
-      notes:           notes || null,
+      enrollment_date:   enrollment_date || new Date().toISOString().split('T')[0],
+      status:            'active',
+      notes:             notes       || null,
+      school_grade:      school_grade || null,
+      address:           address      || null,
+      emergency_contact: emergencyContact,
     })
     .select('id')
     .single()
@@ -100,6 +125,20 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
     await db.from('user_roles').upsert(
       { user_id: authUserId, role_id: studentRole.id, branch_id },
       { onConflict: 'user_id,role_id,branch_id', ignoreDuplicates: true }
+    )
+  }
+
+  // 6. Optional: enroll in a group
+  if (group_id) {
+    await db.from('group_students').upsert(
+      {
+        group_id,
+        student_id: student.id,
+        enrollment_type: 'primary',
+        status: 'active',
+        joined_at: new Date().toISOString(),
+      },
+      { onConflict: 'group_id,student_id', ignoreDuplicates: true }
     )
   }
 
@@ -123,9 +162,15 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
   const db   = createServiceClient()
 
   const raw = {
-    id:     formData.get('id'),
-    status: formData.get('status') || undefined,
-    notes:  formData.get('notes') || undefined,
+    id:             formData.get('id'),
+    status:         formData.get('status')        || undefined,
+    notes:          formData.get('notes')          || undefined,
+    school_grade:   formData.get('school_grade')   || undefined,
+    address:        formData.get('address')        || undefined,
+    phone:          formData.get('phone')          || undefined,
+    date_of_birth:  formData.get('date_of_birth')  || undefined,
+    parent_phone_1: formData.get('parent_phone_1') || undefined,
+    parent_phone_2: formData.get('parent_phone_2') || undefined,
   }
 
   const parsed = updateStudentSchema.safeParse(raw)
@@ -133,20 +178,48 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { id, status, notes } = parsed.data
+  const { id, status, notes, school_grade, address, phone, date_of_birth, parent_phone_1, parent_phone_2 } = parsed.data
 
-  const { data: old } = await db.from('students').select('branch_id, status, notes').eq('id', id).single()
+  const { data: old } = await db
+    .from('students')
+    .select('branch_id, status, notes, user_id, emergency_contact')
+    .eq('id', id)
+    .single()
 
   if (!old) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
 
-  // P6: branch ownership check
   if (!isBranchAccessible(user, old.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
 
+  // Update users.phone if provided
+  if (phone !== undefined) {
+    await db.from('users').update({ phone: phone || null }).eq('id', old.user_id)
+  }
+
+  // Update profiles.date_of_birth if provided
+  if (date_of_birth !== undefined) {
+    await db.from('profiles').update({ date_of_birth: date_of_birth || null }).eq('user_id', old.user_id)
+  }
+
+  // Build emergency_contact with parent phones
+  const currentEc = (old.emergency_contact as Record<string, string>) ?? {}
+  const newEc: Record<string, string> = { ...currentEc }
+  if (parent_phone_1 !== undefined) {
+    if (parent_phone_1) newEc.phone1 = parent_phone_1; else delete newEc.phone1
+  }
+  if (parent_phone_2 !== undefined) {
+    if (parent_phone_2) newEc.phone2 = parent_phone_2; else delete newEc.phone2
+  }
+
   const updates: Record<string, unknown> = {}
-  if (status)              updates.status = status
-  if (notes !== undefined) updates.notes  = notes || null
+  if (status)                updates.status            = status
+  if (notes !== undefined)   updates.notes             = notes            || null
+  if (school_grade !== undefined) updates.school_grade = school_grade     || null
+  if (address !== undefined) updates.address           = address          || null
+  if (parent_phone_1 !== undefined || parent_phone_2 !== undefined) {
+    updates.emergency_contact = newEc
+  }
 
   const { error } = await db.from('students').update(updates).eq('id', id)
   if (error) {

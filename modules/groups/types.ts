@@ -10,6 +10,10 @@ export interface Group {
   capacity: number | null
   waitlist_capacity: number
   status: GroupStatus
+  start_date: string | null
+  day_of_week: string | null
+  time: string | null
+  notes: string | null
   metadata: Record<string, unknown>
   deleted_at: string | null
   created_at: string
@@ -17,6 +21,7 @@ export interface Group {
   // Joined
   branch_name?: string
   student_count?: number
+  instructor_name?: string | null
 }
 
 export interface GroupListItem {
@@ -27,8 +32,12 @@ export interface GroupListItem {
   type: GroupType
   capacity: number | null
   status: GroupStatus
+  start_date: string | null
+  day_of_week: string | null
+  time: string | null
   branch_name: string
   student_count: number
+  instructor_name: string | null
 }
 
 export interface GroupEnrollment {
@@ -51,6 +60,11 @@ export interface CreateGroupInput {
   type: GroupType
   capacity?: number
   code?: string
+  start_date?: string
+  day_of_week?: string
+  time?: string
+  notes?: string
+  instructor_id?: string
 }
 
 export interface UpdateGroupInput {
@@ -60,6 +74,10 @@ export interface UpdateGroupInput {
   status?: GroupStatus
   capacity?: number
   code?: string
+  start_date?: string
+  day_of_week?: string
+  time?: string
+  notes?: string
 }
 
 export interface EnrollStudentInput {

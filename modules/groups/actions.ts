@@ -17,23 +17,26 @@ function validReturnTo(raw: FormDataEntryValue | null): string | null {
 
 export async function createGroup(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
   const raw = {
-    branch_id: formData.get('branch_id'),
-    name:      formData.get('name'),
-    type:      formData.get('type'),
-    capacity:  formData.get('capacity') || undefined,
+    branch_id:     formData.get('branch_id'),
+    name:          formData.get('name'),
+    type:          formData.get('type'),
+    capacity:      formData.get('capacity') || undefined,
+    start_date:    formData.get('start_date') || undefined,
+    day_of_week:   formData.get('day_of_week') || undefined,
+    time:          formData.get('time') || undefined,
+    notes:         formData.get('notes') || undefined,
+    instructor_id: formData.get('instructor_id') || undefined,
   }
 
-  // Validate before permission check so branch_id is available for isolation
   const parsed = createGroupSchema.safeParse(raw)
   if (!parsed.success) {
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  // CRITICAL-03: enforce branch isolation
   const user = await requirePermission('manage_groups', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
 
-  const { branch_id, name, type, capacity } = parsed.data
+  const { branch_id, name, type, capacity, start_date, day_of_week, time, notes, instructor_id } = parsed.data
 
   const { data: group, error } = await db
     .from('groups')
@@ -41,14 +44,26 @@ export async function createGroup(_prev: unknown, formData: FormData): Promise<A
       branch_id,
       name,
       type,
-      capacity: capacity ?? null,
-      status:   'forming',
+      capacity:    capacity ?? null,
+      status:      'forming',
+      start_date:  start_date  || null,
+      day_of_week: day_of_week || null,
+      time:        time        || null,
+      notes:       notes       || null,
     })
     .select('id')
     .single()
 
   if (error) {
     return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  }
+
+  // Optional: assign lead instructor via group_instructors
+  if (instructor_id) {
+    await db.from('group_instructors').upsert(
+      { group_id: group.id, instructor_id, role: 'lead' },
+      { onConflict: 'group_id,instructor_id', ignoreDuplicates: true }
+    )
   }
 
   await db.rpc('write_audit_log', {
@@ -71,11 +86,15 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
   const db   = createServiceClient()
 
   const raw = {
-    id:       formData.get('id'),
-    name:     formData.get('name'),
-    type:     formData.get('type'),
-    capacity: formData.get('capacity') || undefined,
-    status:   formData.get('status') || undefined,
+    id:          formData.get('id'),
+    name:        formData.get('name'),
+    type:        formData.get('type'),
+    capacity:    formData.get('capacity') || undefined,
+    status:      formData.get('status') || undefined,
+    start_date:  formData.get('start_date') || undefined,
+    day_of_week: formData.get('day_of_week') || undefined,
+    time:        formData.get('time') || undefined,
+    notes:       formData.get('notes') || undefined,
   }
 
   const parsed = updateGroupSchema.safeParse(raw)
@@ -83,7 +102,7 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { id, name, type, capacity, status } = parsed.data
+  const { id, name, type, capacity, status, start_date, day_of_week, time, notes } = parsed.data
 
   // P6: branch ownership check
   const { data: existing } = await db.from('groups').select('branch_id').eq('id', id).single()
@@ -93,8 +112,12 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
   }
 
   const updates: Record<string, unknown> = { name, type }
-  if (capacity !== undefined) updates.capacity = capacity ?? null
-  if (status)                 updates.status   = status
+  if (capacity !== undefined) updates.capacity    = capacity ?? null
+  if (status)                 updates.status      = status
+  if (start_date  !== undefined) updates.start_date  = start_date  || null
+  if (day_of_week !== undefined) updates.day_of_week = day_of_week || null
+  if (time        !== undefined) updates.time        = time        || null
+  if (notes       !== undefined) updates.notes       = notes       || null
 
   const { error } = await db.from('groups').update(updates).eq('id', id)
   if (error) {

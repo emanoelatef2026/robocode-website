@@ -8,12 +8,25 @@ export const createStudentSchema = z.object({
   branch_id:       z.string().uuid('Select a branch'),
   enrollment_date: z.string().optional().or(z.literal('')),
   notes:           z.string().max(1000).optional().or(z.literal('')),
+  school_grade:    z.string().max(50).optional().or(z.literal('')),
+  address:         z.string().max(500).optional().or(z.literal('')),
+  phone:           z.string().max(30).optional().or(z.literal('')),
+  date_of_birth:   z.string().optional().or(z.literal('')),
+  parent_phone_1:  z.string().max(30).optional().or(z.literal('')),
+  parent_phone_2:  z.string().max(30).optional().or(z.literal('')),
+  group_id:        z.string().uuid().optional().or(z.literal('')),
 })
 
 export const updateStudentSchema = z.object({
-  id:     z.string().uuid(),
-  status: z.enum(['active', 'inactive', 'graduated', 'paused', 'banned']).optional(),
-  notes:  z.string().max(1000).optional().or(z.literal('')),
+  id:              z.string().uuid(),
+  status:          z.enum(['active', 'inactive', 'graduated', 'paused', 'banned']).optional(),
+  notes:           z.string().max(1000).optional().or(z.literal('')),
+  school_grade:    z.string().max(50).optional().or(z.literal('')),
+  address:         z.string().max(500).optional().or(z.literal('')),
+  phone:           z.string().max(30).optional().or(z.literal('')),
+  date_of_birth:   z.string().optional().or(z.literal('')),
+  parent_phone_1:  z.string().max(30).optional().or(z.literal('')),
+  parent_phone_2:  z.string().max(30).optional().or(z.literal('')),
 })
 
 export type CreateStudentSchema = z.infer<typeof createStudentSchema>
