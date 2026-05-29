@@ -122,10 +122,13 @@ export async function getInstructor(id: string): Promise<Instructor | null> {
 }
 
 export interface InstructorGroup {
-  id:   string
-  name: string
-  type: string
-  status: string
+  id:            string
+  name:          string
+  code:          string | null
+  type:          string
+  status:        string
+  branch_id:     string
+  branch_name:   string
   student_count: number
 }
 
@@ -134,31 +137,37 @@ export async function getInstructorGroups(instructorId: string): Promise<Instruc
 
   const { data: giRows } = await db
     .from('group_instructors')
-    .select('group_id, groups!group_instructors_group_id_fkey(id, name, type, status)')
+    .select('group_id, groups!group_instructors_group_id_fkey(id, name, code, type, status, branch_id, branches!groups_branch_id_fkey(name))')
     .eq('instructor_id', instructorId)
-
-  const groupIds = (giRows ?? []).map((r: any) => r.group_id as string)
 
   // Also get from group_courses
   const { data: gcRows } = await db
     .from('group_courses')
-    .select('group_id, groups!group_courses_group_id_fkey(id, name, type, status)')
+    .select('group_id, groups!group_courses_group_id_fkey(id, name, code, type, status, branch_id, branches!groups_branch_id_fkey(name))')
     .eq('instructor_id', instructorId)
     .eq('status', 'active')
 
-  const allGroupMap = new Map<string, { id: string; name: string; type: string; status: string }>()
+  const allGroupMap = new Map<string, { id: string; name: string; code: string | null; type: string; status: string; branch_id: string; branch_name: string }>()
 
   for (const r of [...(giRows ?? []), ...(gcRows ?? [])] as any[]) {
     const g = r.groups
     if (g && !allGroupMap.has(g.id)) {
-      allGroupMap.set(g.id, { id: g.id, name: g.name, type: g.type, status: g.status })
+      allGroupMap.set(g.id, {
+        id:          g.id,
+        name:        g.name,
+        code:        g.code ?? null,
+        type:        g.type,
+        status:      g.status,
+        branch_id:   g.branch_id,
+        branch_name: g.branches?.name ?? '',
+      })
     }
   }
 
   const groups = [...allGroupMap.values()]
   if (!groups.length) return []
 
-  // Fetch student counts
+  // Fetch active student counts
   const { data: gsCounts } = await db
     .from('group_students')
     .select('group_id')

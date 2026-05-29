@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
+import { getSupabasePublic } from '@/lib/supabase/server'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createInstructorSchema, updateInstructorSchema } from './schemas'
 import { saveUserPermissions } from '@/modules/user-permissions/mutations'
@@ -106,12 +107,21 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
   const grantedPermissions = formData.getAll('permission') as string[]
   await saveUserPermissions(authUserId, user.id, grantedPermissions)
 
+  // Optional: assign instructor to selected groups (same branch)
+  const groupIds = formData.getAll('group_ids') as string[]
+  for (const groupId of groupIds.filter(Boolean)) {
+    await db.from('group_instructors').upsert(
+      { group_id: groupId, instructor_id: instructor.id, role: 'lead' },
+      { onConflict: 'group_id,instructor_id', ignoreDuplicates: true }
+    )
+  }
+
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,
     p_action:       'create',
     p_entity_type:  'instructor',
     p_entity_id:    instructor.id,
-    p_new_values:   { email, first_name, last_name, branch_id },
+    p_new_values:   { email, first_name, last_name, branch_id, groups: groupIds.length },
     p_branch_id:    branch_id,
   })
 
@@ -238,5 +248,146 @@ export async function deleteInstructor(id: string): Promise<ActionResult<void>> 
   })
 
   revalidatePath('/admin/instructors')
+  return { success: true, data: undefined }
+}
+
+// ── Group assignment ──────────────────────────────────────────────────────────
+
+export async function assignGroupToInstructor(
+  instructorId: string,
+  groupId: string
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_instructors')
+  const db   = createServiceClient()
+
+  // Resolve both entities and verify branch access
+  const [{ data: instr }, { data: grp }] = await Promise.all([
+    db.from('instructors').select('branch_id').eq('id', instructorId).single(),
+    db.from('groups').select('branch_id').eq('id', groupId).is('deleted_at', null).single(),
+  ])
+  if (!instr || !grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Instructor or group not found.' } }
+  if (!isBranchAccessible(user, instr.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+  if (instr.branch_id !== grp.branch_id) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Instructor and group must be in the same branch.' } }
+  }
+
+  const { error } = await db.from('group_instructors').upsert(
+    { group_id: groupId, instructor_id: instructorId, role: 'lead' },
+    { onConflict: 'group_id,instructor_id', ignoreDuplicates: true }
+  )
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'assign_group',
+    p_entity_type:  'instructor',
+    p_entity_id:    instructorId,
+    p_new_values:   { group_id: groupId },
+  })
+
+  revalidatePath(`/admin/instructors/${instructorId}`)
+  revalidatePath(`/admin/groups/${groupId}`)
+  return { success: true, data: undefined }
+}
+
+export async function removeGroupFromInstructor(
+  instructorId: string,
+  groupId: string
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_instructors')
+  const db   = createServiceClient()
+
+  const { data: instr } = await db.from('instructors').select('branch_id').eq('id', instructorId).single()
+  if (!instr) return { success: false, error: { code: 'NOT_FOUND', message: 'Instructor not found.' } }
+  if (!isBranchAccessible(user, instr.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  const { error } = await db.from('group_instructors')
+    .delete()
+    .eq('instructor_id', instructorId)
+    .eq('group_id', groupId)
+
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'remove_group',
+    p_entity_type:  'instructor',
+    p_entity_id:    instructorId,
+    p_new_values:   { group_id: groupId },
+  })
+
+  revalidatePath(`/admin/instructors/${instructorId}`)
+  revalidatePath(`/admin/groups/${groupId}`)
+  return { success: true, data: undefined }
+}
+
+// ── Password management ───────────────────────────────────────────────────────
+
+export async function setInstructorPassword(
+  instructorId: string,
+  newPassword: string
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_instructors')
+  const db   = createServiceClient()
+
+  if (!newPassword || newPassword.length < 6) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Password must be at least 6 characters.' } }
+  }
+
+  const { data: instr } = await db.from('instructors').select('branch_id, user_id').eq('id', instructorId).single()
+  if (!instr) return { success: false, error: { code: 'NOT_FOUND', message: 'Instructor not found.' } }
+  if (!isBranchAccessible(user, instr.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  const { error } = await db.auth.admin.updateUserById(instr.user_id, { password: newPassword })
+  if (error) return { success: false, error: { code: 'AUTH_ERROR', message: error.message } }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'set_password',
+    p_entity_type:  'instructor',
+    p_entity_id:    instructorId,
+    p_new_values:   { method: 'direct' },
+  })
+
+  return { success: true, data: undefined }
+}
+
+export async function sendInstructorPasswordReset(instructorId: string): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_instructors')
+  const db   = createServiceClient()
+
+  const { data: instr } = await db
+    .from('instructors')
+    .select('branch_id, users!instructors_user_id_fkey(email)')
+    .eq('id', instructorId)
+    .single()
+  if (!instr) return { success: false, error: { code: 'NOT_FOUND', message: 'Instructor not found.' } }
+  if (!isBranchAccessible(user, (instr as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  const email = (instr as any).users?.email
+  if (!email) return { success: false, error: { code: 'NOT_FOUND', message: 'Instructor email not found.' } }
+
+  const anon = getSupabasePublic()
+  const { error } = await anon.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/reset-password`,
+  })
+  if (error) return { success: false, error: { code: 'AUTH_ERROR', message: error.message } }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'send_password_reset',
+    p_entity_type:  'instructor',
+    p_entity_id:    instructorId,
+    p_new_values:   { method: 'email', email },
+  })
+
   return { success: true, data: undefined }
 }

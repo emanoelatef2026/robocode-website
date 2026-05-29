@@ -152,8 +152,8 @@ export async function listGroupEnrollments(groupId: string): Promise<GroupEnroll
     .select(
       `id, group_id, student_id, enrollment_type, status, joined_at, left_at, notes,
        students!group_students_student_id_fkey(
-         user_id,
-         users!students_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name))
+         student_code, emergency_contact,
+         users!students_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name))
        )`
     )
     .eq('group_id', groupId)
@@ -161,17 +161,25 @@ export async function listGroupEnrollments(groupId: string): Promise<GroupEnroll
 
   if (error) return []
 
-  return (data ?? []).map((row: any) => ({
-    id:              row.id,
-    group_id:        row.group_id,
-    student_id:      row.student_id,
-    enrollment_type: row.enrollment_type as 'primary' | 'secondary',
-    status:          row.status,
-    joined_at:       row.joined_at,
-    left_at:         row.left_at,
-    notes:           row.notes,
-    student_email:   row.students?.users?.email ?? '',
-    first_name:      row.students?.users?.profiles?.first_name ?? null,
-    last_name:       row.students?.users?.profiles?.last_name ?? null,
-  })) as GroupEnrollment[]
+  return (data ?? []).map((row: any) => {
+    const s  = row.students
+    const ec = (s?.emergency_contact ?? {}) as Record<string, string>
+    return {
+      id:              row.id,
+      group_id:        row.group_id,
+      student_id:      row.student_id,
+      enrollment_type: row.enrollment_type as 'primary' | 'secondary',
+      status:          row.status,
+      joined_at:       row.joined_at,
+      left_at:         row.left_at,
+      notes:           row.notes,
+      student_email:   s?.users?.email ?? '',
+      student_code:    s?.student_code ?? null,
+      first_name:      s?.users?.profiles?.first_name ?? null,
+      last_name:       s?.users?.profiles?.last_name ?? null,
+      phone:           s?.users?.phone ?? null,
+      parent_phone_1:  ec.phone1 ?? null,
+      parent_phone_2:  ec.phone2 ?? null,
+    }
+  }) as GroupEnrollment[]
 }

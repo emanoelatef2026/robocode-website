@@ -19,6 +19,12 @@ export const createStudentSchema = z.object({
 
 export const updateStudentSchema = z.object({
   id:              z.string().uuid(),
+  // Profile
+  first_name:      z.string().min(1).max(100).optional().or(z.literal('')),
+  last_name:       z.string().min(1).max(100).optional().or(z.literal('')),
+  // Auth
+  email:           z.string().email('Invalid email address').optional().or(z.literal('')),
+  // Student
   status:          z.enum(['active', 'inactive', 'graduated', 'paused', 'banned']).optional(),
   notes:           z.string().max(1000).optional().or(z.literal('')),
   school_grade:    z.string().max(50).optional().or(z.literal('')),

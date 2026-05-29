@@ -276,6 +276,121 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
   return { success: true, data: undefined }
 }
 
+export async function changeEnrollmentType(
+  groupId: string,
+  studentId: string,
+  enrollmentType: 'primary' | 'secondary'
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const { data: grp } = await db.from('groups').select('branch_id').eq('id', groupId).single()
+  if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, grp.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  const { error } = await db
+    .from('group_students')
+    .update({ enrollment_type: enrollmentType })
+    .eq('group_id', groupId)
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'change_enrollment_type',
+    p_entity_type:  'group',
+    p_entity_id:    groupId,
+    p_new_values:   { student_id: studentId, enrollment_type: enrollmentType },
+  })
+
+  revalidatePath(`/admin/groups/${groupId}`)
+  revalidatePath(`/portal/team-leader/groups/${groupId}`)
+  return { success: true, data: undefined }
+}
+
+export async function bulkEnrollStudents(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<{ enrolled: number; skipped: number }>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const groupId        = formData.get('group_id') as string
+  const enrollmentType = (formData.get('enrollment_type') ?? 'primary') as 'primary' | 'secondary'
+  const studentIds     = formData.getAll('student_ids') as string[]
+
+  if (!groupId || studentIds.length === 0) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Select at least one student.' } }
+  }
+
+  const { data: grp } = await db
+    .from('groups').select('branch_id, capacity').eq('id', groupId).is('deleted_at', null).single()
+  if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, grp.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  if (grp.capacity !== null) {
+    const { count: current } = await db
+      .from('group_students').select('id', { count: 'exact', head: true })
+      .eq('group_id', groupId).eq('status', 'active')
+    const available = grp.capacity - (current ?? 0)
+    if (studentIds.length > available) {
+      return {
+        success: false,
+        error: { code: 'CONFLICT', message: `Only ${available} slot(s) remaining (capacity: ${grp.capacity}).` },
+      }
+    }
+  }
+
+  let enrolled = 0
+  let skipped  = 0
+  const enrolledIds: string[] = []
+  const now = new Date().toISOString()
+
+  for (const studentId of studentIds) {
+    const { error } = await db.from('group_students').insert({
+      group_id: groupId,
+      student_id: studentId,
+      enrollment_type: enrollmentType,
+      status:    'active',
+      joined_at: now,
+    })
+    if (error) {
+      skipped++
+    } else {
+      enrolled++
+      enrolledIds.push(studentId)
+    }
+  }
+
+  if (enrolled > 0) {
+    await db.rpc('write_audit_log', {
+      p_performed_by: user.id,
+      p_action:       'bulk_enroll',
+      p_entity_type:  'group',
+      p_entity_id:    groupId,
+      p_new_values:   { enrolled, skipped, enrollment_type: enrollmentType },
+    })
+
+    const contexts = await resolveGroupProgressContext(groupId)
+    if (contexts.length > 0) {
+      await safeRecalcProgressBatch(
+        buildBatchTuples(enrolledIds, contexts),
+        'bulkEnrollStudents'
+      )
+    }
+  }
+
+  revalidatePath(`/admin/groups/${groupId}`)
+  revalidatePath(`/portal/team-leader/groups/${groupId}`)
+  return { success: true, data: { enrolled, skipped } }
+}
+
 export async function unenrollStudent(groupId: string, studentId: string): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()

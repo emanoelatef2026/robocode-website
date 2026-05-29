@@ -50,8 +50,12 @@ export interface GroupEnrollment {
   left_at: string | null
   notes: string | null
   student_email: string
+  student_code: string | null
   first_name: string | null
   last_name: string | null
+  phone: string | null
+  parent_phone_1: string | null
+  parent_phone_2: string | null
 }
 
 export interface CreateGroupInput {

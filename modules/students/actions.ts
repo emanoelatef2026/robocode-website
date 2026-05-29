@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
+import { getSupabasePublic } from '@/lib/supabase/server'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createStudentSchema, updateStudentSchema } from './schemas'
 import type { ActionResult } from '@/types/app'
@@ -163,7 +164,10 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
 
   const raw = {
     id:             formData.get('id'),
-    status:         formData.get('status')        || undefined,
+    first_name:     formData.get('first_name')     || undefined,
+    last_name:      formData.get('last_name')      || undefined,
+    email:          formData.get('email')          || undefined,
+    status:         formData.get('status')         || undefined,
     notes:          formData.get('notes')          || undefined,
     school_grade:   formData.get('school_grade')   || undefined,
     address:        formData.get('address')        || undefined,
@@ -178,7 +182,7 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { id, status, notes, school_grade, address, phone, date_of_birth, parent_phone_1, parent_phone_2 } = parsed.data
+  const { id, first_name, last_name, email, status, notes, school_grade, address, phone, date_of_birth, parent_phone_1, parent_phone_2 } = parsed.data
 
   const { data: old } = await db
     .from('students')
@@ -187,22 +191,38 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
     .single()
 
   if (!old) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
-
   if (!isBranchAccessible(user, old.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
 
-  // Update users.phone if provided
+  // ── Name update ──
+  if (first_name || last_name) {
+    const profileUpdate: Record<string, string> = {}
+    if (first_name) profileUpdate.first_name = first_name
+    if (last_name)  profileUpdate.last_name  = last_name
+    await db.from('profiles').update(profileUpdate).eq('user_id', old.user_id)
+  }
+
+  // ── Email update ──
+  if (email && email.trim()) {
+    const normalised = email.trim().toLowerCase()
+    const { data: taken } = await db.from('users').select('id').eq('email', normalised).neq('id', old.user_id).maybeSingle()
+    if (taken) return { success: false, error: { code: 'DUPLICATE', message: 'Email is already used by another account.' } }
+
+    const { error: authErr } = await db.auth.admin.updateUserById(old.user_id, { email: normalised })
+    if (authErr) return { success: false, error: { code: 'AUTH_ERROR', message: authErr.message } }
+    await db.from('users').update({ email: normalised }).eq('id', old.user_id)
+  }
+
+  // ── Phone + profile ──
   if (phone !== undefined) {
     await db.from('users').update({ phone: phone || null }).eq('id', old.user_id)
   }
-
-  // Update profiles.date_of_birth if provided
   if (date_of_birth !== undefined) {
     await db.from('profiles').update({ date_of_birth: date_of_birth || null }).eq('user_id', old.user_id)
   }
 
-  // Build emergency_contact with parent phones
+  // ── Emergency contact ──
   const currentEc = (old.emergency_contact as Record<string, string>) ?? {}
   const newEc: Record<string, string> = { ...currentEc }
   if (parent_phone_1 !== undefined) {
@@ -213,17 +233,17 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
   }
 
   const updates: Record<string, unknown> = {}
-  if (status)                updates.status            = status
-  if (notes !== undefined)   updates.notes             = notes            || null
-  if (school_grade !== undefined) updates.school_grade = school_grade     || null
-  if (address !== undefined) updates.address           = address          || null
+  if (status)                   updates.status            = status
+  if (notes !== undefined)      updates.notes             = notes        || null
+  if (school_grade !== undefined) updates.school_grade    = school_grade || null
+  if (address !== undefined)    updates.address           = address      || null
   if (parent_phone_1 !== undefined || parent_phone_2 !== undefined) {
     updates.emergency_contact = newEc
   }
 
-  const { error } = await db.from('students').update(updates).eq('id', id)
-  if (error) {
-    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  if (Object.keys(updates).length > 0) {
+    const { error } = await db.from('students').update(updates).eq('id', id)
+    if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
   }
 
   await db.rpc('write_audit_log', {
@@ -232,7 +252,7 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
     p_entity_type:  'student',
     p_entity_id:    id,
     p_old_values:   old ?? null,
-    p_new_values:   updates,
+    p_new_values:   { ...updates, first_name, last_name, email },
   })
 
   const returnTo = validReturnTo(formData.get('_return_to'))
@@ -290,5 +310,139 @@ export async function deleteStudent(id: string): Promise<ActionResult<void>> {
   })
 
   revalidatePath('/admin/students')
+  return { success: true, data: undefined }
+}
+
+// ── Password management ───────────────────────────────────────────────────────
+
+export async function setStudentPassword(
+  studentId: string,
+  newPassword: string
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_students')
+  const db   = createServiceClient()
+
+  if (!newPassword || newPassword.length < 6) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Password must be at least 6 characters.' } }
+  }
+
+  const { data: student } = await db.from('students').select('branch_id, user_id').eq('id', studentId).single()
+  if (!student) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+  if (!isBranchAccessible(user, student.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  const { error } = await db.auth.admin.updateUserById(student.user_id, { password: newPassword })
+  if (error) return { success: false, error: { code: 'AUTH_ERROR', message: error.message } }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'set_password',
+    p_entity_type:  'student',
+    p_entity_id:    studentId,
+    p_new_values:   { method: 'direct' },
+  })
+
+  return { success: true, data: undefined }
+}
+
+export async function sendStudentPasswordReset(studentId: string): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_students')
+  const db   = createServiceClient()
+
+  const { data: student } = await db
+    .from('students')
+    .select('branch_id, users!students_user_id_fkey(email)')
+    .eq('id', studentId)
+    .single()
+  if (!student) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+  if (!isBranchAccessible(user, (student as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  const email = (student as any).users?.email
+  if (!email) return { success: false, error: { code: 'NOT_FOUND', message: 'Student email not found.' } }
+
+  const anon = getSupabasePublic()
+  const { error } = await anon.auth.resetPasswordForEmail(email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/reset-password`,
+  })
+  if (error) return { success: false, error: { code: 'AUTH_ERROR', message: error.message } }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'send_password_reset',
+    p_entity_type:  'student',
+    p_entity_id:    studentId,
+    p_new_values:   { method: 'email', email },
+  })
+
+  return { success: true, data: undefined }
+}
+
+// ── Branch transfer ───────────────────────────────────────────────────────────
+// All academic history (attendance, assignments, certificates, portfolio) is
+// preserved because it is linked by student_id. Only the branch_id field and
+// user_roles are updated. Active group memberships are dropped (groups are
+// branch-specific); historical records remain.
+
+export async function transferStudentBranch(
+  studentId: string,
+  newBranchId: string
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_students')
+  const db   = createServiceClient()
+
+  const { data: student } = await db.from('students').select('branch_id, user_id').eq('id', studentId).single()
+  if (!student) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+  if (!isBranchAccessible(user, student.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+  if (!isBranchAccessible(user, newBranchId)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to the target branch.' } }
+  }
+  if (student.branch_id === newBranchId) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Student is already in this branch.' } }
+  }
+
+  const oldBranchId = student.branch_id
+
+  // 1. Update student record
+  const { error: stuErr } = await db.from('students').update({ branch_id: newBranchId }).eq('id', studentId)
+  if (stuErr) return { success: false, error: { code: 'DB_ERROR', message: stuErr.message } }
+
+  // 2. Swap student role to new branch
+  const { data: studentRole } = await db.from('roles').select('id').eq('name', 'student').single()
+  if (studentRole) {
+    await db.from('user_roles')
+      .delete()
+      .eq('user_id', student.user_id)
+      .eq('role_id', studentRole.id)
+      .eq('branch_id', oldBranchId)
+    await db.from('user_roles').upsert(
+      { user_id: student.user_id, role_id: studentRole.id, branch_id: newBranchId },
+      { onConflict: 'user_id,role_id,branch_id', ignoreDuplicates: true }
+    )
+  }
+
+  // 3. Drop active group memberships (groups belong to the old branch)
+  await db.from('group_students')
+    .update({ status: 'dropped', left_at: new Date().toISOString() })
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'branch_transfer',
+    p_entity_type:  'student',
+    p_entity_id:    studentId,
+    p_old_values:   { branch_id: oldBranchId },
+    p_new_values:   { branch_id: newBranchId },
+    p_branch_id:    newBranchId,
+  })
+
+  revalidatePath('/admin/students')
+  revalidatePath(`/admin/students/${studentId}`)
+  revalidatePath('/portal/team-leader/students')
   return { success: true, data: undefined }
 }
