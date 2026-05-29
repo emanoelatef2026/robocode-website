@@ -31,10 +31,10 @@ const ADMIN_WORKSPACES: Workspace[] = [
 
 const TL_WORKSPACES: Workspace[] = [
   {
-    title:       'Team Leader Portal',
-    description: 'Manage your branch, students, groups, schedules, and instructors.',
-    href:        '/portal/team-leader',
-    iconKey:     'team-leader',
+    title:       'LMS Administration',
+    description: 'Manage your branch, students, groups, attendance, and instructors.',
+    href:        '/admin',
+    iconKey:     'admin',
   },
   {
     title:       'Studio CMS',

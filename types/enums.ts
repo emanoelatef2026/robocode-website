@@ -106,7 +106,7 @@ export type RoleName =
 // The portal URL prefix each role maps to
 export const ROLE_PORTAL_MAP: Record<RoleName, string> = {
   super_admin:  '/admin',
-  team_leader:  '/portal/team-leader',
+  team_leader:  '/admin',
   instructor:   '/portal/instructor',
   student:      '/portal/student',
   parent:       '/portal/parent',

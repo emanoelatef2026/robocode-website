@@ -28,13 +28,13 @@ const isStudio = (p: string) =>
 
 const isApiStudio = (p: string) => p.startsWith('/api/studio')
 
-// Portal prefix → required role (super_admin may bypass to any portal)
-const LMS_PORTALS: { prefix: string; role: RoleName }[] = [
-  { prefix: '/admin',              role: 'super_admin' },
-  { prefix: '/portal/team-leader', role: 'team_leader' },
-  { prefix: '/portal/instructor',  role: 'instructor'  },
-  { prefix: '/portal/student',     role: 'student'     },
-  { prefix: '/portal/parent',      role: 'parent'      },
+// Portal prefix → allowed roles (super_admin still bypasses everything below)
+const LMS_PORTALS: { prefix: string; roles: Set<RoleName> }[] = [
+  { prefix: '/admin',              roles: new Set<RoleName>(['super_admin', 'team_leader']) },
+  { prefix: '/portal/team-leader', roles: new Set<RoleName>(['team_leader']) },
+  { prefix: '/portal/instructor',  roles: new Set<RoleName>(['instructor']) },
+  { prefix: '/portal/student',     roles: new Set<RoleName>(['student']) },
+  { prefix: '/portal/parent',      roles: new Set<RoleName>(['parent']) },
 ]
 
 function getLmsPortal(pathname: string) {
@@ -125,13 +125,10 @@ export async function proxy(request: NextRequest) {
     return res
   }
 
-  // Super admin can access any portal
-  if (claims.role === 'super_admin') return NextResponse.next()
+  // Check if the user's role is allowed on this portal prefix
+  if (portal.roles.has(claims.role)) return NextResponse.next()
 
-  // Correct portal
-  if (claims.role === portal.role) return NextResponse.next()
-
-  // Wrong portal — redirect to their correct portal
+  // Wrong portal — redirect to their home portal
   return NextResponse.redirect(new URL(ROLE_PORTAL_MAP[claims.role], request.url))
 }
 

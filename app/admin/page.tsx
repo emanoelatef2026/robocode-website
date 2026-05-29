@@ -1,14 +1,30 @@
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requireAuth } from '@/modules/rbac/guards'
 import Link from 'next/link'
 
-async function getStats() {
+async function getStats(branchIds: string[] | null) {
   const db = createServiceClient()
+  const scoped = branchIds && branchIds.length > 0
+
+  function qBranches() {
+    const q = db.from('branches').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('is_active', true)
+    return scoped ? q.in('id', branchIds!) : q
+  }
+  function qStudents() {
+    const q = db.from('students').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'active')
+    return scoped ? q.in('branch_id', branchIds!) : q
+  }
+  function qInstructors() {
+    const q = db.from('instructors').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'active')
+    return scoped ? q.in('branch_id', branchIds!) : q
+  }
+  function qGroups() {
+    const q = db.from('groups').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'active')
+    return scoped ? q.in('branch_id', branchIds!) : q
+  }
+
   const [branches, students, instructors, groups] = await Promise.all([
-    db.from('branches').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('is_active', true),
-    db.from('students').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'active'),
-    db.from('instructors').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'active'),
-    db.from('groups').select('id', { count: 'exact', head: true }).is('deleted_at', null).eq('status', 'active'),
+    qBranches(), qStudents(), qInstructors(), qGroups(),
   ])
   return {
     branches:    branches.count ?? 0,
@@ -25,17 +41,20 @@ const STAT_CARDS = [
   { key: 'groups',      label: 'Active Groups',      href: '/admin/groups',      color: 'bg-violet-500' },
 ] as const
 
-const QUICK_LINKS = [
-  { label: 'Add Branch',      href: '/admin/branches/new' },
-  { label: 'Add Student',     href: '/admin/students/new' },
-  { label: 'Add Instructor',  href: '/admin/instructors/new' },
-  { label: 'Create Group',    href: '/admin/groups/new' },
-  { label: 'Mark Attendance', href: '/admin/attendance' },
+const ALL_QUICK_LINKS = [
+  { label: 'Add Branch',      href: '/admin/branches/new',    superAdminOnly: true },
+  { label: 'Add Student',     href: '/admin/students/new',    superAdminOnly: false },
+  { label: 'Add Instructor',  href: '/admin/instructors/new', superAdminOnly: false },
+  { label: 'Create Group',    href: '/admin/groups/new',      superAdminOnly: false },
+  { label: 'Mark Attendance', href: '/admin/attendance',      superAdminOnly: false },
 ]
 
 export default async function AdminDashboard() {
-  await requirePermission('manage_system')
-  const stats = await getStats()
+  const user        = await requireAuth()
+  const isSuperAdmin = user.globalRole === 'super_admin'
+  const branchFilter = isSuperAdmin ? null : user.branchIds
+  const stats        = await getStats(branchFilter)
+  const quickLinks   = ALL_QUICK_LINKS.filter(l => !l.superAdminOnly || isSuperAdmin)
 
   return (
     <div>
@@ -65,7 +84,7 @@ export default async function AdminDashboard() {
       <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
         <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">Quick Actions</h2>
         <div className="flex flex-wrap gap-2">
-          {QUICK_LINKS.map(({ label, href }) => (
+          {quickLinks.map(({ label, href }) => (
             <Link
               key={href}
               href={href}
