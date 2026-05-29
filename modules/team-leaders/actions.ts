@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
 import { createTeamLeaderSchema, updateTeamLeaderSchema } from './schemas'
+import { saveUserPermissions } from '@/modules/user-permissions/mutations'
 import type { ActionResult } from '@/types/app'
 
 // ── Create ────────────────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ export async function createTeamLeader(
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  await requirePermission('manage_system')
+  const actor = await requirePermission('manage_system')
   const db = createServiceClient()
 
   const { email, password, first_name, last_name, branch_id, status, phone, payment_link, wallet_number, bank_account_number } = parsed.data
@@ -104,11 +105,12 @@ export async function createTeamLeader(
     },
   }).eq('id', authUserId)
 
-  const { data: actor } = await db.from('users').select('id').eq('id', authUserId).single()
-  const performedBy = (await requirePermission('manage_system')).id
+  // 7. Save per-user permissions (overrides the role defaults for configurable permissions)
+  const grantedPermissions = formData.getAll('permission') as string[]
+  await saveUserPermissions(authUserId, actor.id, grantedPermissions)
 
   await db.rpc('write_audit_log', {
-    p_performed_by: performedBy,
+    p_performed_by: actor.id,
     p_action:       'create',
     p_entity_type:  'team_leader',
     p_entity_id:    authUserId,
@@ -228,6 +230,10 @@ export async function updateTeamLeader(
   if (wallet_number       !== undefined) updatedMeta.wallet_number       = wallet_number       || null
   if (bank_account_number !== undefined) updatedMeta.bank_account_number = bank_account_number || null
   await db.from('users').update({ metadata: updatedMeta }).eq('id', user_id)
+
+  // Save per-user permissions (overrides the role defaults for configurable permissions)
+  const grantedPermissions = formData.getAll('permission') as string[]
+  await saveUserPermissions(user_id, user.id, grantedPermissions)
 
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,

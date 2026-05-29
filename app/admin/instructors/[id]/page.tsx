@@ -1,4 +1,5 @@
 import { getInstructor, getInstructorGroups } from '@/modules/instructors/queries'
+import { getUserConfigurablePermissions } from '@/modules/user-permissions/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import { notFound } from 'next/navigation'
 import InstructorEditForm from './InstructorEditForm'
@@ -10,9 +11,11 @@ interface Props { params: Promise<{ id: string }> }
 export default async function InstructorEditPage({ params }: Props) {
   await requirePermission('manage_instructors')
   const { id } = await params
-  const [instructor, groups] = await Promise.all([
+
+  const [instructor, groups, currentPermissions] = await Promise.all([
     getInstructor(id),
     getInstructorGroups(id),
+    getUserConfigurablePermissions(id, 'instructor'),
   ])
   if (!instructor) notFound()
 
@@ -30,7 +33,7 @@ export default async function InstructorEditPage({ params }: Props) {
         <p className="text-sm text-[#64748B]">{instructor.user_email} · {instructor.branch_name}</p>
       </div>
 
-      <InstructorEditForm instructor={instructor} />
+      <InstructorEditForm instructor={instructor} currentPermissions={currentPermissions} />
 
       {/* Groups */}
       {groups.length > 0 && (

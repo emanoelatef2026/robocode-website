@@ -3,15 +3,19 @@
 import { useActionState } from 'react'
 import { updateInstructor, deleteInstructor } from '@/modules/instructors/actions'
 import SubmitButton from '@/components/admin/SubmitButton'
+import PermissionsChecklist from '@/components/admin/PermissionsChecklist'
 import Link from 'next/link'
 import type { Instructor } from '@/modules/instructors/types'
 import type { ActionResult } from '@/types/app'
 
 const STATUSES = ['active', 'inactive', 'on_leave'] as const
 
-interface Props { instructor: Instructor }
+interface Props {
+  instructor:         Instructor
+  currentPermissions: string[]
+}
 
-export default function InstructorEditForm({ instructor }: Props) {
+export default function InstructorEditForm({ instructor, currentPermissions }: Props) {
   const [state, action] = useActionState<ActionResult<void> | null, FormData>(
     updateInstructor,
     null
@@ -27,7 +31,6 @@ export default function InstructorEditForm({ instructor }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Read-only badges */}
       {instructor.instructor_code && (
         <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-5 py-3">
           <p className="text-xs text-[#94A3B8]">Instructor Code</p>
@@ -91,6 +94,9 @@ export default function InstructorEditForm({ instructor }: Props) {
               </div>
             </div>
           </div>
+
+          {/* Permissions — pre-checked with instructor's current effective permissions */}
+          <PermissionsChecklist defaultPermissions={currentPermissions} />
 
           <div className="flex items-center justify-between pt-2">
             <button type="button" onClick={handleDelete} className="text-sm font-medium text-red-500 hover:text-red-700">

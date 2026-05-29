@@ -1,4 +1,5 @@
 import { getTeamLeader } from '@/modules/team-leaders/queries'
+import { getUserConfigurablePermissions } from '@/modules/user-permissions/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import { listBranches } from '@/modules/branches/queries'
 import { notFound } from 'next/navigation'
@@ -11,9 +12,10 @@ export default async function TeamLeaderEditPage({ params }: Props) {
   await requirePermission('manage_system')
   const { id } = await params
 
-  const [tl, branchesResult] = await Promise.all([
+  const [tl, branchesResult, currentPermissions] = await Promise.all([
     getTeamLeader(id),
     listBranches({ perPage: 100 }),
+    getUserConfigurablePermissions(id, 'team_leader'),
   ])
 
   if (!tl) notFound()
@@ -30,7 +32,7 @@ export default async function TeamLeaderEditPage({ params }: Props) {
         </Link>
         <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Edit Team Leader</h1>
       </div>
-      <TeamLeaderEditForm tl={tl} branches={branchesResult.data} />
+      <TeamLeaderEditForm tl={tl} branches={branchesResult.data} currentPermissions={currentPermissions} />
     </div>
   )
 }

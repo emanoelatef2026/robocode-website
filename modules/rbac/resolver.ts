@@ -1,6 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
-import { ROLE_DEFAULT_PERMISSIONS } from './permissions'
+import { ROLE_DEFAULT_PERMISSIONS, CONFIGURABLE_PERMISSIONS } from './permissions'
 import type { PermissionName, ResolvedPermissions } from './types'
 import type { RoleName } from '@/types/enums'
 
@@ -27,8 +27,6 @@ export async function resolveUserPermissions(userId: string): Promise<ResolvedPe
   const permissions = new Set<PermissionName>()
   const branchIds: string[] = []
   const ROLE_PRIORITY: RoleName[] = ['super_admin', 'team_leader', 'instructor', 'student', 'parent']
-  // Start at the lowest-priority role so any assigned role can promote correctly.
-  // Starting at 'student' caused parents (priority index 4) to never be detected.
   let globalRole: RoleName = 'parent'
 
   for (const ur of userRoles ?? []) {
@@ -49,10 +47,37 @@ export async function resolveUserPermissions(userId: string): Promise<ResolvedPe
     }
   }
 
-  // Fallback: if no roles in DB, apply defaults from ROLE_DEFAULT_PERMISSIONS
+  // Fallback: if no DB permissions found, apply TypeScript defaults
   if (permissions.size === 0) {
     for (const p of ROLE_DEFAULT_PERMISSIONS[globalRole]) {
       permissions.add(p)
+    }
+  }
+
+  // ── Per-user permission overrides (team_leader / instructor only) ─────────
+  // If the user has rows in user_permissions, those rows REPLACE the role's
+  // configurable permissions. Non-configurable role permissions are unaffected.
+  // super_admin always retains all permissions; no overrides applied.
+  if (globalRole !== 'super_admin') {
+    const { data: userPerms } = await db
+      .from('user_permissions')
+      .select('permissions!user_permissions_permission_id_fkey(name)')
+      .eq('user_id', userId)
+
+    if (userPerms && userPerms.length > 0) {
+      const userPermNames = new Set(
+        (userPerms as any[])
+          .map((up) => (up.permissions as { name: string } | null)?.name as PermissionName)
+          .filter(Boolean)
+      )
+      // Remove all configurable permissions from the role-derived set
+      for (const p of CONFIGURABLE_PERMISSIONS) {
+        permissions.delete(p)
+      }
+      // Add back only what the user was explicitly granted
+      for (const p of userPermNames) {
+        permissions.add(p)
+      }
     }
   }
 

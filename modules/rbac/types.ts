@@ -1,6 +1,14 @@
 import type { RoleName } from '@/types/enums'
 
-// Every permission name in the system — add here when adding to DB seed
+// Every permission name in the system.
+// Steps when adding a new permission:
+//   1. Add the string literal to this union.
+//   2. Add the constant to PERMISSIONS in permissions.ts.
+//   3. Add to ROLE_DEFAULT_PERMISSIONS for relevant roles.
+//   4. Write a DB migration: INSERT into permissions + role_permissions.
+//      Always include super_admin in that INSERT so the role stays unrestricted.
+//   5. If the permission should be per-user configurable, add it to
+//      CONFIGURABLE_PERMISSIONS and follow the backfill protocol documented there.
 export type PermissionName =
   // System
   | 'manage_system'
@@ -27,9 +35,14 @@ export type PermissionName =
   | 'read_grades'
   | 'manage_quizzes'
   | 'manage_curriculum'
-  // Financials
+  | 'manage_semesters'
+  // Financials (granular — not yet seeded or configurable; add to DB when features ship)
   | 'manage_financials'
   | 'read_financials'
+  | 'view_financial_reports'
+  | 'manage_payroll'
+  | 'view_branch_revenue'
+  | 'manage_payments'
   // Analytics
   | 'read_analytics'
   | 'export_analytics'

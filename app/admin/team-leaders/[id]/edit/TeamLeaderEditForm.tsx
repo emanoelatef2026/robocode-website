@@ -3,17 +3,19 @@
 import { useActionState } from 'react'
 import { updateTeamLeader } from '@/modules/team-leaders/actions'
 import SubmitButton from '@/components/admin/SubmitButton'
+import PermissionsChecklist from '@/components/admin/PermissionsChecklist'
 import Link from 'next/link'
 import type { TeamLeader } from '@/modules/team-leaders/types'
 import type { BranchListItem } from '@/modules/branches/types'
 import type { ActionResult } from '@/types/app'
 
 interface Props {
-  tl:       TeamLeader
-  branches: BranchListItem[]
+  tl:                 TeamLeader
+  branches:           BranchListItem[]
+  currentPermissions: string[]
 }
 
-export default function TeamLeaderEditForm({ tl, branches }: Props) {
+export default function TeamLeaderEditForm({ tl, branches, currentPermissions }: Props) {
   const [state, action] = useActionState<ActionResult<void> | null, FormData>(
     updateTeamLeader,
     null
@@ -129,6 +131,9 @@ export default function TeamLeaderEditForm({ tl, branches }: Props) {
             </div>
           </div>
         </div>
+
+        {/* Permissions — pre-checked with the TL's current effective permissions */}
+        <PermissionsChecklist defaultPermissions={currentPermissions} />
 
         <div className="flex items-center justify-end gap-3 pt-2">
           <Link

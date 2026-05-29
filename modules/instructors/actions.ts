@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
 import { createInstructorSchema, updateInstructorSchema } from './schemas'
+import { saveUserPermissions } from '@/modules/user-permissions/mutations'
 import type { ActionResult } from '@/types/app'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
@@ -101,6 +102,10 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
     )
   }
 
+  // Save per-user permissions
+  const grantedPermissions = formData.getAll('permission') as string[]
+  await saveUserPermissions(authUserId, user.id, grantedPermissions)
+
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,
     p_action:       'create',
@@ -141,7 +146,7 @@ export async function updateInstructor(_prev: unknown, formData: FormData): Prom
     ? specializations.split(',').map((s) => s.trim()).filter(Boolean)
     : undefined
 
-  // Fetch instructor user_id for phone update
+  // Fetch instructor user_id for phone update and permission save
   const { data: instrRow } = await db.from('instructors').select('user_id').eq('id', id).single()
 
   // Update phone on users table if provided
@@ -160,6 +165,12 @@ export async function updateInstructor(_prev: unknown, formData: FormData): Prom
   const { error } = await db.from('instructors').update(updates).eq('id', id)
   if (error) {
     return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  }
+
+  // Save per-user permissions
+  if (instrRow) {
+    const grantedPermissions = formData.getAll('permission') as string[]
+    await saveUserPermissions(instrRow.user_id, user.id, grantedPermissions)
   }
 
   await db.rpc('write_audit_log', {

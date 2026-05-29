@@ -3,9 +3,11 @@
 import { useActionState } from 'react'
 import { createInstructor } from '@/modules/instructors/actions'
 import SubmitButton from '@/components/admin/SubmitButton'
+import PermissionsChecklist from '@/components/admin/PermissionsChecklist'
 import Link from 'next/link'
 import type { BranchListItem } from '@/modules/branches/types'
 import type { ActionResult } from '@/types/app'
+import { DEFAULT_CONFIGURABLE_PERMISSIONS } from '@/modules/rbac/permissions'
 
 interface Props { branches: BranchListItem[] }
 
@@ -127,6 +129,9 @@ export default function NewInstructorForm({ branches }: Props) {
             placeholder="e.g. Robotics, Python, Electronics"
           />
         </div>
+
+        {/* Permissions — pre-checked with instructor defaults */}
+        <PermissionsChecklist defaultPermissions={DEFAULT_CONFIGURABLE_PERMISSIONS.instructor} />
 
         <div className="flex items-center justify-end gap-3 pt-2">
           <Link
