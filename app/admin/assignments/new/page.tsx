@@ -6,7 +6,7 @@ import NewAssignmentForm from './NewAssignmentForm'
 import Link from 'next/link'
 
 export default async function NewAssignmentPage() {
-  await requirePermission('manage_courses')
+  await requirePermission('manage_assignments')
 
   const [modules, coursesResult] = await Promise.all([
     listModulesForSelect(),

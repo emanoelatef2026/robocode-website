@@ -114,6 +114,12 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
       { group_id: groupId, instructor_id: instructor.id, role: 'lead' },
       { onConflict: 'group_id,instructor_id', ignoreDuplicates: true }
     )
+    // Sync group_courses so the instructor portal picks up this group
+    const { data: gcRow } = await db
+      .from('group_courses').select('id').eq('group_id', groupId).eq('status', 'active').maybeSingle()
+    if (gcRow) {
+      await db.from('group_courses').update({ instructor_id: instructor.id }).eq('id', (gcRow as any).id)
+    }
   }
 
   await db.rpc('write_audit_log', {
@@ -279,6 +285,13 @@ export async function assignGroupToInstructor(
   )
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
 
+  // Sync group_courses so the instructor portal picks up this group
+  const { data: gcRow } = await db
+    .from('group_courses').select('id').eq('group_id', groupId).eq('status', 'active').maybeSingle()
+  if (gcRow) {
+    await db.from('group_courses').update({ instructor_id: instructorId }).eq('id', (gcRow as any).id)
+  }
+
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,
     p_action:       'assign_group',
@@ -289,6 +302,7 @@ export async function assignGroupToInstructor(
 
   revalidatePath(`/admin/instructors/${instructorId}`)
   revalidatePath(`/admin/groups/${groupId}`)
+  revalidatePath('/portal/instructor')
   return { success: true, data: undefined }
 }
 
@@ -312,6 +326,13 @@ export async function removeGroupFromInstructor(
 
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
 
+  // Clear group_courses.instructor_id so the instructor portal no longer sees this group
+  const { data: gcRow } = await db
+    .from('group_courses').select('id').eq('group_id', groupId).eq('instructor_id', instructorId).maybeSingle()
+  if (gcRow) {
+    await db.from('group_courses').update({ instructor_id: null }).eq('id', (gcRow as any).id)
+  }
+
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,
     p_action:       'remove_group',
@@ -322,6 +343,7 @@ export async function removeGroupFromInstructor(
 
   revalidatePath(`/admin/instructors/${instructorId}`)
   revalidatePath(`/admin/groups/${groupId}`)
+  revalidatePath('/portal/instructor')
   return { success: true, data: undefined }
 }
 

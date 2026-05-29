@@ -35,7 +35,7 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export default async function AssignmentsPage({ searchParams }: Props) {
-  const user    = await requirePermission('manage_courses')
+  const user    = await requirePermission('manage_assignments')
   const params  = await searchParams
   const page    = Number(params.page ?? 1)
   const search  = params.q ?? ''

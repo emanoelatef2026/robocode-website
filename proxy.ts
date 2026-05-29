@@ -30,7 +30,7 @@ const isApiStudio = (p: string) => p.startsWith('/api/studio')
 
 // Portal prefix → allowed roles (super_admin still bypasses everything below)
 const LMS_PORTALS: { prefix: string; roles: Set<RoleName> }[] = [
-  { prefix: '/admin',              roles: new Set<RoleName>(['super_admin', 'team_leader']) },
+  { prefix: '/admin',              roles: new Set<RoleName>(['super_admin', 'team_leader', 'instructor']) },
   { prefix: '/portal/team-leader', roles: new Set<RoleName>(['team_leader']) },
   { prefix: '/portal/instructor',  roles: new Set<RoleName>(['instructor']) },
   { prefix: '/portal/student',     roles: new Set<RoleName>(['student']) },

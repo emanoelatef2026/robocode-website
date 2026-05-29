@@ -12,7 +12,7 @@ export async function createAssignment(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<{ id: string }>> {
-  const user = await requirePermission('manage_courses')
+  const user = await requirePermission('manage_assignments')
   const db   = createServiceClient()
 
   const raw = {
@@ -93,7 +93,7 @@ export async function updateAssignment(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<void>> {
-  const user = await requirePermission('manage_courses')
+  const user = await requirePermission('manage_assignments')
   const db   = createServiceClient()
 
   const raw = {
@@ -178,7 +178,7 @@ export async function updateAssignment(
 }
 
 export async function deleteAssignment(id: string): Promise<ActionResult<void>> {
-  const user = await requirePermission('manage_courses')
+  const user = await requirePermission('manage_assignments')
   const db   = createServiceClient()
 
   // Resolve branch from assignment → module → course

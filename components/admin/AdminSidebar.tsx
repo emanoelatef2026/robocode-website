@@ -99,13 +99,13 @@ const NAV_ITEMS: {
   { label: "Dashboard",    href: "/admin",                icon: Icons.dashboard },
   { label: "Branches",     href: "/admin/branches",       icon: Icons.branches,     superAdminOnly: true },
   { label: "Students",     href: "/admin/students",       icon: Icons.students,     permission: "manage_students" },
-  { label: "Parents",      href: "/admin/parents",        icon: Icons.parents,      permission: "manage_students" },
+  { label: "Parents",      href: "/admin/parents",        icon: Icons.parents,      permission: "manage_parents" },
   { label: "Instructors",  href: "/admin/instructors",    icon: Icons.instructors,  permission: "manage_instructors" },
   { label: "Team Leaders", href: "/admin/team-leaders",   icon: Icons.teamLeaders,  superAdminOnly: true },
   { label: "Groups",       href: "/admin/groups",         icon: Icons.groups,       permission: "manage_groups" },
   { label: "Courses",      href: "/admin/courses",        icon: Icons.courses,      permission: "manage_courses" },
   { label: "Semesters",    href: "/admin/semesters",      icon: Icons.semesters,    permission: "manage_semesters" },
-  { label: "Assignments",  href: "/admin/assignments",    icon: Icons.assignments,  permission: "manage_courses" },
+  { label: "Assignments",  href: "/admin/assignments",    icon: Icons.assignments,  permission: "manage_assignments" },
   { label: "Attendance",   href: "/admin/attendance",     icon: Icons.attendance,   permission: "manage_attendance" },
   { label: "Portfolio",    href: "/admin/portfolio",      icon: Icons.portfolio,    permission: "manage_portfolio" },
   { label: "Certificates", href: "/admin/certificates",   icon: Icons.certificates, permission: "manage_certificates" },
@@ -156,7 +156,14 @@ function NavContent({ onClose, role, permissions }: { onClose?: () => void; role
     router.refresh();
   };
 
-  const roleLabel = isSuperAdmin ? 'Super Admin' : role === 'team_leader' ? 'Team Leader' : role;
+  const ROLE_LABELS: Record<string, string> = {
+    super_admin:  'Super Admin',
+    team_leader:  'Team Leader',
+    instructor:   'Instructor',
+    student:      'Student',
+    parent:       'Parent',
+  }
+  const roleLabel = ROLE_LABELS[role] ?? role;
 
   return (
     <div className="flex h-full flex-col">

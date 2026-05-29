@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default async function AssignmentDetailPage({ params }: Props) {
-  await requirePermission('manage_courses')
+  await requirePermission('manage_assignments')
   const { id } = await params
 
   const [assignment, submissions] = await Promise.all([
