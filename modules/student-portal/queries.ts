@@ -39,7 +39,7 @@ export async function getStudentEnrollment(userId: string): Promise<StudentEnrol
 
   const groupId = (gsRow as any)?.group_id ?? null
   if (!groupId) {
-    return { student_id: studentId, group_id: null, group_name: null, course_title: null, semester_name: null, instructor_name: null }
+    return { student_id: studentId, group_id: null, group_name: null, course_title: null, instructor_name: null }
   }
 
   // Group name
@@ -49,14 +49,13 @@ export async function getStudentEnrollment(userId: string): Promise<StudentEnrol
     .eq('id', groupId)
     .maybeSingle()
 
-  // Active group_course — course + semester + instructor (FK hints confirmed in instructor-portal queries)
+  // Active group_course — course + instructor only (semester removed from new model).
+  // Semester join is intentionally absent: the FK semesters!group_courses_semester_id_fkey
+  // is unreliable and was silently poisoning the entire gcRow, causing course and
+  // instructor to both show "—" on the student dashboard.
   const { data: gcRow } = await db
     .from('group_courses')
-    .select(`
-      instructor_id,
-      courses!group_courses_course_id_fkey(title),
-      semesters!group_courses_semester_id_fkey(name)
-    `)
+    .select('instructor_id, courses!group_courses_course_id_fkey(title)')
     .eq('group_id', groupId)
     .eq('status', 'active')
     .limit(1)
@@ -65,7 +64,7 @@ export async function getStudentEnrollment(userId: string): Promise<StudentEnrol
   const gc           = gcRow as any
   const instructorId = gc?.instructor_id ?? null
 
-  // Instructor name (separate query to avoid unverified nested FK)
+  // Instructor name (separate query to avoid nested-FK failures)
   let instructorName: string | null = null
   if (instructorId) {
     const { data: instrRow } = await db
@@ -80,9 +79,8 @@ export async function getStudentEnrollment(userId: string): Promise<StudentEnrol
   return {
     student_id:      studentId,
     group_id:        groupId,
-    group_name:      (groupRow as any)?.name      ?? null,
-    course_title:    gc?.courses?.title            ?? null,
-    semester_name:   gc?.semesters?.name           ?? null,
+    group_name:      (groupRow as any)?.name   ?? null,
+    course_title:    gc?.courses?.title         ?? null,
     instructor_name: instructorName,
   }
 }

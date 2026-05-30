@@ -58,7 +58,7 @@ export default async function ParentSemestersPage({ searchParams }: Props) {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-[#0B1F3A]">Semester History</h1>
+          <h1 className="text-xl font-bold text-[#0B1F3A]">Progress History</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">
             {selected.student_name} · {history.length} record{history.length !== 1 ? 's' : ''}
           </p>
@@ -84,7 +84,7 @@ export default async function ParentSemestersPage({ searchParams }: Props) {
                   <div>
                     <p className="font-semibold text-[#0B1F3A]">{course.course_title}</p>
                     <p className="text-[12px] text-[#94A3B8]">
-                      {[course.semester_name, course.group_name].filter(Boolean).join(' · ')}
+                      {course.group_name || '—'}
                     </p>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5">

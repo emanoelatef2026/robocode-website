@@ -121,7 +121,6 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
                   <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Date</th>
                   <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Status</th>
                   <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Course</th>
-                  <th className="hidden px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] sm:table-cell">Semester</th>
                   <th className="hidden px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] md:table-cell">Note</th>
                 </tr>
               </thead>
@@ -142,7 +141,6 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
                         </span>
                       </td>
                       <td className="px-5 py-3 text-[#64748B]">{r.course_title ?? '—'}</td>
-                      <td className="hidden px-5 py-3 text-[#64748B] sm:table-cell">{r.semester_name ?? '—'}</td>
                       <td className="hidden px-5 py-3 text-[#94A3B8] md:table-cell">{r.note ?? '—'}</td>
                     </tr>
                   )

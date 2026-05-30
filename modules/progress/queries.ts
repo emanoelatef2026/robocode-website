@@ -20,7 +20,6 @@ export async function getStudentProgressByUserId(
     .select(`
       *,
       courses!student_course_progress_course_id_fkey(title),
-      semesters!student_course_progress_semester_id_fkey(name),
       groups!student_course_progress_group_id_fkey(name)
     `)
     .eq('student_id', studentRow.id)
@@ -30,9 +29,9 @@ export async function getStudentProgressByUserId(
 
   return data.map((row: any) => ({
     ...row,
-    course_title:  row.courses?.title  ?? '',
-    semester_name: row.semesters?.name ?? '',
-    group_name:    row.groups?.name    ?? '',
+    course_title:  row.courses?.title ?? '',
+    semester_name: '',
+    group_name:    row.groups?.name   ?? '',
   })) as StudentCourseProgress[]
 }
 

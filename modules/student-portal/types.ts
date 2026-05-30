@@ -3,7 +3,6 @@ export interface StudentEnrollment {
   group_id:        string | null
   group_name:      string | null
   course_title:    string | null
-  semester_name:   string | null
   instructor_name: string | null
 }
 

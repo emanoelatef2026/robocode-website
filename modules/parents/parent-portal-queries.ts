@@ -16,7 +16,6 @@ export interface ChildEnrollment {
   group_id:        string | null
   group_name:      string | null
   course_title:    string | null
-  semester_name:   string | null
   instructor_name: string | null
 }
 
@@ -38,13 +37,12 @@ export interface AttendanceSummary {
 }
 
 export interface AttendanceRecord {
-  id:            string
-  status:        string
-  note:          string | null
-  recorded_at:   string
-  class_date:    string | null
-  course_title:  string | null
-  semester_name: string | null
+  id:           string
+  status:       string
+  note:         string | null
+  recorded_at:  string
+  class_date:   string | null
+  course_title: string | null
 }
 
 export interface ChildAttendanceData {
@@ -150,17 +148,16 @@ export async function getChildEnrollment(
 
   const groupId = (gsRow as any)?.group_id ?? null
   if (!groupId) {
-    return { student_id: studentId, group_id: null, group_name: null, course_title: null, semester_name: null, instructor_name: null }
+    return { student_id: studentId, group_id: null, group_name: null, course_title: null, instructor_name: null }
   }
 
   const [{ data: groupRow }, { data: gcRow }] = await Promise.all([
     db.from('groups').select('name').eq('id', groupId).maybeSingle(),
+    // Semester join removed — the FK semesters!group_courses_semester_id_fkey is
+    // unreliable and was silently returning null for the entire gcRow (same bug as
+    // student-portal/queries.ts getStudentEnrollment).
     db.from('group_courses')
-      .select(`
-        instructor_id,
-        courses!group_courses_course_id_fkey(title),
-        semesters!group_courses_semester_id_fkey(name)
-      `)
+      .select('instructor_id, courses!group_courses_course_id_fkey(title)')
       .eq('group_id', groupId)
       .eq('status', 'active')
       .limit(1)
@@ -186,7 +183,6 @@ export async function getChildEnrollment(
     group_id:        groupId,
     group_name:      (groupRow as any)?.name ?? null,
     course_title:    gc?.courses?.title       ?? null,
-    semester_name:   gc?.semesters?.name      ?? null,
     instructor_name: instructorName,
   }
 }
@@ -244,8 +240,7 @@ export async function getChildAttendance(
       schedules!attendance_records_schedule_id_fkey(
         scheduled_at,
         group_courses!schedules_group_course_id_fkey(
-          courses!group_courses_course_id_fkey(title),
-          semesters!group_courses_semester_id_fkey(name)
+          courses!group_courses_course_id_fkey(title)
         )
       )
     `)
@@ -270,13 +265,12 @@ export async function getChildAttendance(
   const records: AttendanceRecord[] = rows.map(row => {
     const gc = row.schedules?.group_courses
     return {
-      id:            row.id,
-      status:        row.status,
-      note:          row.notes ?? null,
-      recorded_at:   row.recorded_at,
-      class_date:    row.schedules?.scheduled_at ?? null,
-      course_title:  gc?.courses?.title  ?? null,
-      semester_name: gc?.semesters?.name ?? null,
+      id:           row.id,
+      status:       row.status,
+      note:         row.notes ?? null,
+      recorded_at:  row.recorded_at,
+      class_date:   row.schedules?.scheduled_at ?? null,
+      course_title: gc?.courses?.title ?? null,
     }
   })
 
@@ -405,7 +399,6 @@ export async function getChildSemesterHistory(
     .select(`
       *,
       courses!student_course_progress_course_id_fkey(title),
-      semesters!student_course_progress_semester_id_fkey(name),
       groups!student_course_progress_group_id_fkey(name)
     `)
     .eq('student_id', studentId)
@@ -415,8 +408,8 @@ export async function getChildSemesterHistory(
 
   return (data as any[]).map(row => ({
     ...row,
-    course_title:  row.courses?.title  ?? '',
-    semester_name: row.semesters?.name ?? '',
-    group_name:    row.groups?.name    ?? '',
+    course_title:  row.courses?.title ?? '',
+    semester_name: '',
+    group_name:    row.groups?.name   ?? '',
   })) as StudentCourseProgress[]
 }

@@ -98,7 +98,7 @@ export default async function StudentDashboardPage() {
         <h1 className="text-xl font-bold text-[#0B1F3A]">My Dashboard</h1>
         {hasEnrollment && (
           <p className="mt-0.5 text-sm text-[#64748B]">
-            {[enrollment!.course_title, enrollment!.semester_name].filter(Boolean).join(' · ')}
+            {enrollment!.course_title ?? enrollment!.group_name}
           </p>
         )}
       </div>
@@ -112,11 +112,10 @@ export default async function StudentDashboardPage() {
         </div>
       ) : (
         <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-3 gap-4">
             {[
               { label: 'Group',      value: enrollment.group_name },
               { label: 'Course',     value: enrollment.course_title },
-              { label: 'Semester',   value: enrollment.semester_name },
               { label: 'Instructor', value: enrollment.instructor_name },
             ].map(({ label, value }) => (
               <div key={label}>
@@ -146,7 +145,7 @@ export default async function StudentDashboardPage() {
           { label: 'Assignments',  href: '/portal/student/assignments',  color: 'text-blue-600',   bg: 'bg-blue-50',   border: 'border-blue-100' },
           { label: 'Portfolio',    href: '/portal/student/portfolio',    color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100' },
           { label: 'Certificates', href: '/portal/student/certificates', color: 'text-[#FF8A1F]',  bg: 'bg-[#FFF7ED]', border: 'border-orange-100' },
-          { label: 'History',      href: '/portal/student/semesters',    color: 'text-teal-600',   bg: 'bg-teal-50',   border: 'border-teal-100' },
+          { label: 'History',      href: '/portal/student/history',      color: 'text-teal-600',   bg: 'bg-teal-50',   border: 'border-teal-100' },
         ].map(({ label, href, color, bg, border }) => (
           <Link
             key={href}

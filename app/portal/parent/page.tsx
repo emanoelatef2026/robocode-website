@@ -129,11 +129,10 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
         {!enrollment || (!enrollment.group_name && !enrollment.course_title) ? (
           <p className="text-sm text-[#94A3B8]">Not enrolled in any active group.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-3 gap-4">
             {[
               { label: 'Group',      value: enrollment.group_name      },
               { label: 'Course',     value: enrollment.course_title    },
-              { label: 'Semester',   value: enrollment.semester_name   },
               { label: 'Instructor', value: enrollment.instructor_name },
             ].map(({ label, value }) => (
               <div key={label}>
