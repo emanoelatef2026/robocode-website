@@ -2,11 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createGroupSchema, updateGroupSchema, enrollStudentSchema } from './schemas'
 import { resolveGroupProgressContext } from '@/modules/progress/resolve'
 import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/safe-recalc'
+import { syncGroupStatus } from './lifecycle'
 import type { ActionResult } from '@/types/app'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
@@ -501,5 +503,239 @@ export async function assignGroupInstructor(
 
   revalidatePath(`/admin/groups/${groupId}`)
   revalidatePath(`/portal/team-leader/groups/${groupId}`)
+  return { success: true, data: undefined }
+}
+
+// ── Sprint 21: unified academic configuration save ────────────────────────────
+// Handles course, semester, and instructor in one atomic-ish operation.
+// On completion auto-syncs groups.status (forming ↔ active) based on readiness.
+
+export async function saveGroupAcademicConfig(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const groupId      = formData.get('group_id')      as string | null
+  const courseId     = formData.get('course_id')     as string | null
+  const semesterId   = formData.get('semester_id')   as string | null
+  const instructorId = formData.get('instructor_id') as string | null
+
+  if (!groupId) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Group ID missing.' } }
+  }
+
+  const { data: grp } = await db.from('groups').select('branch_id, status').eq('id', groupId).single()
+  if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, grp.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  // 1. Course assignment — upsert on (group_id, course_id), cancel any other active rows
+  if (courseId) {
+    // Cancel other active courses for this group
+    await db.from('group_courses')
+      .update({ status: 'cancelled' })
+      .eq('group_id', groupId)
+      .eq('status', 'active')
+      .neq('course_id', courseId)
+
+    // Upsert the chosen course (handles re-assignment of previously cancelled course)
+    const { error: gcErr } = await db.from('group_courses')
+      .upsert(
+        {
+          group_id:      groupId,
+          course_id:     courseId,
+          instructor_id: instructorId || null,
+          status:        'active',
+        },
+        { onConflict: 'group_id,course_id' }
+      )
+    if (gcErr) {
+      return { success: false, error: { code: 'DB_ERROR', message: gcErr.message } }
+    }
+
+    // If instructor given, also sync group_courses.instructor_id for existing active row
+    if (instructorId) {
+      await db.from('group_courses')
+        .update({ instructor_id: instructorId })
+        .eq('group_id', groupId)
+        .eq('status', 'active')
+    }
+  } else {
+    // No course — cancel any active group_courses
+    await db.from('group_courses')
+      .update({ status: 'cancelled' })
+      .eq('group_id', groupId)
+      .eq('status', 'active')
+  }
+
+  // 2. Semester assignment — update groups.semester_id directly
+  const { error: semErr } = await db
+    .from('groups')
+    .update({ semester_id: semesterId || null })
+    .eq('id', groupId)
+  if (semErr) {
+    return { success: false, error: { code: 'DB_ERROR', message: semErr.message } }
+  }
+
+  // 3. Instructor — upsert group_instructors (lead role)
+  if (instructorId) {
+    await db.from('group_instructors').upsert(
+      { group_id: groupId, instructor_id: instructorId, role: 'lead' },
+      { onConflict: 'group_id,instructor_id', ignoreDuplicates: false }
+    )
+  }
+
+  // 4. Auto-sync group status (forming ↔ active)
+  await syncGroupStatus(groupId, db)
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'save_academic_config',
+    p_entity_type:  'group',
+    p_entity_id:    groupId,
+    p_new_values:   { course_id: courseId, semester_id: semesterId, instructor_id: instructorId },
+  })
+
+  revalidatePath(`/admin/groups/${groupId}`)
+  revalidatePath('/admin/groups')
+  revalidatePath(`/portal/team-leader/groups/${groupId}`)
+  revalidatePath('/portal/team-leader/groups')
+  return { success: true, data: undefined }
+}
+
+// ── Sprint 21.6 BONUS: admin schedule management ──────────────────────────────
+
+const scheduleItemSchema = z.object({
+  group_id:         z.string().uuid(),
+  scheduled_at:     z.string().min(1, 'Date & time is required'),
+  duration_minutes: z.coerce.number().int().min(15).max(480),
+  type:             z.enum(['regular', 'makeup', 'exam', 'event']).default('regular'),
+  delivery:         z.enum(['online', 'offline', 'hybrid']).optional().or(z.literal('')),
+  meeting_url:      z.string().optional().or(z.literal('')),
+  room:             z.string().optional().or(z.literal('')),
+  topic:            z.string().optional().or(z.literal('')),
+})
+
+export async function createGroupSchedule(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const raw = {
+    group_id:         formData.get('group_id'),
+    scheduled_at:     formData.get('scheduled_at'),
+    duration_minutes: formData.get('duration_minutes') ?? 90,
+    type:             formData.get('type') || 'regular',
+    delivery:         formData.get('delivery') || undefined,
+    meeting_url:      formData.get('meeting_url') || undefined,
+    room:             formData.get('room') || undefined,
+    topic:            formData.get('topic') || undefined,
+  }
+
+  const parsed = scheduleItemSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+  }
+
+  const d = parsed.data
+
+  // Branch ownership check
+  const { data: grp } = await db.from('groups').select('branch_id').eq('id', d.group_id).single()
+  if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, grp.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  // Must have an active course assignment
+  const { data: gcRow } = await db
+    .from('group_courses')
+    .select('id')
+    .eq('group_id', d.group_id)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (!gcRow) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Assign a course to this group before scheduling sessions.' } }
+  }
+
+  const { data: schedule, error } = await db
+    .from('schedules')
+    .insert({
+      group_course_id:  (gcRow as any).id,
+      branch_id:        grp.branch_id,
+      scheduled_at:     new Date(d.scheduled_at).toISOString(),
+      duration_minutes: d.duration_minutes,
+      type:             d.type,
+      delivery:         d.delivery    || null,
+      meeting_url:      d.meeting_url || null,
+      room:             d.room        || null,
+      topic:            d.topic       || null,
+      status:           'scheduled',
+      created_by:       user.id,
+    })
+    .select('id')
+    .single()
+
+  if (error || !schedule) {
+    return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to create schedule.' } }
+  }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'schedule.create',
+    p_entity_type:  'schedule',
+    p_entity_id:    (schedule as any).id,
+    p_new_values:   { group_id: d.group_id, scheduled_at: d.scheduled_at },
+    p_branch_id:    grp.branch_id,
+  })
+
+  revalidatePath(`/admin/groups/${d.group_id}`)
+  return { success: true, data: { id: (schedule as any).id } }
+}
+
+export async function deleteGroupSchedule(
+  scheduleId: string,
+  groupId:    string
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  // Fetch schedule and verify branch access
+  const { data: sched } = await db
+    .from('schedules')
+    .select('id, status, branch_id')
+    .eq('id', scheduleId)
+    .single()
+
+  if (!sched) return { success: false, error: { code: 'NOT_FOUND', message: 'Schedule not found.' } }
+  if (!isBranchAccessible(user, (sched as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+  if ((sched as any).status === 'completed') {
+    return { success: false, error: { code: 'VALIDATION', message: 'Cannot delete a completed session.' } }
+  }
+
+  const { error } = await db
+    .from('schedules')
+    .update({ status: 'cancelled' })
+    .eq('id', scheduleId)
+    .in('status', ['scheduled', 'ongoing'])
+
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'schedule.cancel',
+    p_entity_type:  'schedule',
+    p_entity_id:    scheduleId,
+    p_branch_id:    (sched as any).branch_id,
+  })
+
+  revalidatePath(`/admin/groups/${groupId}`)
   return { success: true, data: undefined }
 }

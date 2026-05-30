@@ -2,6 +2,16 @@ import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId, listInstructorGroups } from '@/modules/instructor-portal/queries'
 import Link from 'next/link'
 
+function getMissingRequirements(g: {
+  course_title: string
+  semester_id:  string | null
+}): string[] {
+  const missing: string[] = []
+  if (!g.course_title) missing.push('No course')
+  if (!g.semester_id)  missing.push('No semester')
+  return missing
+}
+
 export default async function InstructorGroupsPage() {
   const user       = await requirePortalRole('instructor')
   const instructor = await getInstructorByUserId(user.id)
@@ -30,50 +40,75 @@ export default async function InstructorGroupsPage() {
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {groups.map((g) => (
-            <Link
-              key={g.group_id}
-              href={`/portal/instructor/groups/${g.group_id}`}
-              className="rounded-xl border border-[#E2E8F0] bg-white p-5 transition hover:border-[#CBD5E1] hover:shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-[#0B1F3A]">{g.group_name}</p>
-                  {g.group_code && (
-                    <p className="mt-0.5 text-xs text-[#94A3B8]">{g.group_code}</p>
+          {groups.map((g) => {
+            const missing  = getMissingRequirements(g)
+            const isActive = missing.length === 0
+
+            return (
+              <Link
+                key={g.group_id}
+                href={`/portal/instructor/groups/${g.group_id}`}
+                className="rounded-xl border border-[#E2E8F0] bg-white p-5 transition hover:border-[#CBD5E1] hover:shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-[#0B1F3A]">{g.group_name}</p>
+                    {g.group_code && (
+                      <p className="mt-0.5 text-xs text-[#94A3B8]">{g.group_code}</p>
+                    )}
+                  </div>
+                  {isActive ? (
+                    <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                      Forming
+                    </span>
                   )}
                 </div>
-                {!g.course_title ? (
-                  <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
-                    Forming
-                  </span>
-                ) : (
-                  <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                    Active
-                  </span>
+
+                <p className="mt-1.5 truncate text-sm text-[#64748B]">
+                  {g.course_title || <span className="italic text-[#94A3B8]">No course assigned</span>}
+                </p>
+                {g.branch_name && (
+                  <p className="mt-0.5 truncate text-xs text-[#94A3B8]">{g.branch_name}</p>
                 )}
-              </div>
-              <p className="mt-1.5 truncate text-sm text-[#64748B]">
-                {g.course_title || <span className="italic text-[#94A3B8]">No course assigned</span>}
-              </p>
-              {g.branch_name && (
-                <p className="mt-0.5 truncate text-xs text-[#94A3B8]">{g.branch_name}</p>
-              )}
-              <div className="mt-3 flex items-center gap-4 text-xs text-[#94A3B8]">
-                <span>{g.student_count} student{g.student_count !== 1 ? 's' : ''}</span>
-                {g.next_session_at ? (
-                  <span>
-                    Next:{' '}
-                    {new Date(g.next_session_at).toLocaleDateString('en-GB', {
-                      day: 'numeric', month: 'short',
-                    })}
-                  </span>
-                ) : (
-                  <span>No upcoming session</span>
+
+                {/* Missing requirements */}
+                {!isActive && missing.length > 0 && (
+                  <div className="mt-2.5 flex flex-wrap gap-1">
+                    {missing.map((m) => (
+                      <span
+                        key={m}
+                        className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700 border border-amber-200"
+                      >
+                        {m}
+                      </span>
+                    ))}
+                  </div>
                 )}
-              </div>
-            </Link>
-          ))}
+
+                <div className="mt-3 flex items-center gap-4 text-xs text-[#94A3B8]">
+                  <span>{g.student_count} student{g.student_count !== 1 ? 's' : ''}</span>
+                  {isActive ? (
+                    g.next_session_at ? (
+                      <span>
+                        Next:{' '}
+                        {new Date(g.next_session_at).toLocaleDateString('en-GB', {
+                          day: 'numeric', month: 'short',
+                        })}
+                      </span>
+                    ) : (
+                      <span>No upcoming session</span>
+                    )
+                  ) : (
+                    <span className="text-amber-600">Sessions blocked</span>
+                  )}
+                </div>
+              </Link>
+            )
+          })}
         </div>
       )}
     </div>

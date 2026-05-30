@@ -598,7 +598,7 @@ export async function getSessionDetail(
       .eq('schedule_id', sessionId)
       .order('created_at', { ascending: true }),
     courseId
-      ? db.from('course_modules').select('id, title').eq('course_id', courseId).is('deleted_at', null).order('sort_order', { ascending: true }).limit(20)
+      ? db.from('course_modules').select('id, title').eq('course_id', courseId).is('deleted_at', null).order('order_index', { ascending: true }).limit(20)
       : Promise.resolve({ data: [], error: null }),
     db.from('schedules')
       .select('id, scheduled_at, status, topic')

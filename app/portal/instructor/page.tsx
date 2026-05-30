@@ -4,6 +4,7 @@ import {
   getInstructorDashboardStats,
   getUpcomingSessionsForInstructor,
   listPendingSubmissions,
+  listInstructorGroups,
 } from '@/modules/instructor-portal/queries'
 import Link from 'next/link'
 
@@ -30,7 +31,6 @@ function WarningBanner({ message }: { message: string }) {
 export default async function InstructorDashboardPage() {
   const user = await requirePortalRole('instructor')
 
-  // Resolve instructor record
   const instructor = await getInstructorByUserId(user.id)
   if (!instructor) {
     return (
@@ -40,7 +40,6 @@ export default async function InstructorDashboardPage() {
     )
   }
 
-  // Graceful degradation: individual try-catch per section
   let stats = { groupCount: 0, studentCount: 0, upcomingSessions: 0, pendingReviews: 0 }
   let statsError: string | null = null
   try {
@@ -63,6 +62,20 @@ export default async function InstructorDashboardPage() {
     pendingCount = pending.length
   } catch { /* non-critical */ }
 
+  // Collect forming groups to surface blockers
+  let formingGroups: { group_id: string; group_name: string; missing: string[] }[] = []
+  try {
+    const groups = await listInstructorGroups(instructor.id)
+    formingGroups = groups
+      .filter((g) => !g.course_title || !g.semester_id)
+      .map((g) => {
+        const missing: string[] = []
+        if (!g.course_title) missing.push('Course not assigned')
+        if (!g.semester_id)  missing.push('Semester not assigned')
+        return { group_id: g.group_id, group_name: g.group_name, missing }
+      })
+  } catch { /* non-critical */ }
+
   const name = [instructor.first_name, instructor.last_name].filter(Boolean).join(' ') || instructor.email
 
   return (
@@ -81,9 +94,36 @@ export default async function InstructorDashboardPage() {
         <StatCard label="Pending Reviews"    value={pendingCount}           href="/portal/instructor/homework" />
       </div>
 
+      {/* Forming groups — surface blockers */}
+      {formingGroups.length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50">
+          <div className="border-b border-amber-100 px-5 py-3">
+            <h2 className="text-sm font-semibold text-amber-800">
+              {formingGroups.length} group{formingGroups.length !== 1 ? 's' : ''} cannot start sessions yet
+            </h2>
+            <p className="mt-0.5 text-xs text-amber-700">Contact your administrator to complete the setup.</p>
+          </div>
+          <div className="divide-y divide-amber-100">
+            {formingGroups.map((g) => (
+              <Link
+                key={g.group_id}
+                href={`/portal/instructor/groups/${g.group_id}`}
+                className="flex items-start justify-between gap-4 px-5 py-3 hover:bg-amber-100/40 transition"
+              >
+                <div>
+                  <p className="text-sm font-medium text-amber-900">{g.group_name}</p>
+                  <p className="mt-0.5 text-xs text-amber-700">{g.missing.join(' · ')}</p>
+                </div>
+                <span className="shrink-0 text-xs text-amber-600 hover:underline">View →</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {upcomingError && <WarningBanner message={`Upcoming sessions unavailable: ${upcomingError}`} />}
 
-      {upcoming.length > 0 && (
+      {upcoming.length > 0 ? (
         <div className="rounded-xl border border-[#E2E8F0] bg-white">
           <div className="border-b border-[#E2E8F0] px-5 py-3">
             <h2 className="text-sm font-semibold text-[#0B1F3A]">Upcoming Sessions</h2>
@@ -115,6 +155,21 @@ export default async function InstructorDashboardPage() {
             ))}
           </div>
         </div>
+      ) : (
+        stats.groupCount > 0 && formingGroups.length < stats.groupCount && (
+          <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-6 text-center">
+            <p className="text-sm font-medium text-[#0B1F3A]">No upcoming sessions</p>
+            <p className="mt-1 text-xs text-[#94A3B8]">
+              Sessions appear here once you create them from your active groups.
+            </p>
+            <Link
+              href="/portal/instructor/groups"
+              className="mt-3 inline-block text-xs font-medium text-[#FF8A1F] hover:underline"
+            >
+              View my groups →
+            </Link>
+          </div>
+        )
       )}
     </div>
   )

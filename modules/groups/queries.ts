@@ -1,7 +1,7 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getCurrentUser, isBranchAccessible } from '@/modules/rbac/guards'
-import type { Group, GroupListItem, GroupEnrollment } from './types'
+import type { Group, GroupListItem, GroupEnrollment, GroupAcademicConfig, GroupScheduleItem } from './types'
 import type { PaginatedResult } from '@/types/app'
 
 export async function listGroups({
@@ -182,4 +182,102 @@ export async function listGroupEnrollments(groupId: string): Promise<GroupEnroll
       parent_phone_2:  ec.phone2 ?? null,
     }
   }) as GroupEnrollment[]
+}
+
+export async function getGroupAcademicConfig(groupId: string): Promise<GroupAcademicConfig> {
+  const db = createServiceClient()
+
+  const [groupRes, gcRes, giRes] = await Promise.all([
+    db.from('groups')
+      .select('semester_id, semesters!groups_semester_id_fkey(name)')
+      .eq('id', groupId)
+      .maybeSingle(),
+    db.from('group_courses')
+      .select(
+        `id, course_id, instructor_id,
+         courses!group_courses_course_id_fkey(title),
+         instructors!group_courses_instructor_id_fkey(
+           users!instructors_user_id_fkey(
+             profiles!profiles_user_id_fkey(first_name, last_name)
+           )
+         )`
+      )
+      .eq('group_id', groupId)
+      .eq('status', 'active')
+      .maybeSingle(),
+    db.from('group_instructors')
+      .select(
+        `instructor_id,
+         instructors!group_instructors_instructor_id_fkey(
+           users!instructors_user_id_fkey(
+             profiles!profiles_user_id_fkey(first_name, last_name)
+           )
+         )`
+      )
+      .eq('group_id', groupId)
+      .limit(1)
+      .maybeSingle(),
+  ])
+
+  const group = groupRes.data as any
+  const gc    = gcRes.data  as any
+  const gi    = giRes.data  as any
+
+  const semRow    = group?.semesters
+  const semName   = semRow?.name ?? null
+
+  // Instructor: prefer group_courses.instructor_id, fall back to group_instructors
+  const instRow   = gc?.instructors ?? gi?.instructors
+  const instProf  = instRow?.users?.profiles
+  const instName  = instProf
+    ? [instProf.first_name, instProf.last_name].filter(Boolean).join(' ') || null
+    : null
+
+  return {
+    group_id:        groupId,
+    group_course_id: gc?.id             ?? null,
+    course_id:       gc?.course_id      ?? null,
+    course_title:    gc?.courses?.title ?? null,
+    semester_id:     group?.semester_id ?? null,
+    semester_name:   semName,
+    instructor_id:   gc?.instructor_id  ?? gi?.instructor_id ?? null,
+    instructor_name: instName,
+  }
+}
+
+export async function getGroupSchedules(groupId: string): Promise<GroupScheduleItem[]> {
+  const db = createServiceClient()
+
+  // Resolve active group_course_id for this group
+  const { data: gcRow } = await db
+    .from('group_courses')
+    .select('id')
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (!gcRow) return []
+
+  const { data, error } = await db
+    .from('schedules')
+    .select('id, group_course_id, scheduled_at, duration_minutes, type, delivery, status, topic, meeting_url, room')
+    .eq('group_course_id', (gcRow as any).id)
+    .neq('status', 'cancelled')
+    .order('scheduled_at', { ascending: false })
+    .limit(50)
+
+  if (error) return []
+
+  return (data ?? []).map((row: any) => ({
+    id:               row.id,
+    group_course_id:  row.group_course_id,
+    scheduled_at:     row.scheduled_at,
+    duration_minutes: row.duration_minutes,
+    type:             row.type,
+    delivery:         row.delivery    ?? null,
+    status:           row.status,
+    topic:            row.topic       ?? null,
+    meeting_url:      row.meeting_url ?? null,
+    room:             row.room        ?? null,
+  })) as GroupScheduleItem[]
 }

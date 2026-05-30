@@ -69,8 +69,6 @@ export async function createSession(
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
   }
 
-  const now = new Date().toISOString()
-
   const { data: schedule, error: schedErr } = await db
     .from('schedules')
     .insert({
@@ -83,8 +81,7 @@ export async function createSession(
       meeting_url:      d.meeting_url || null,
       room:             d.room        || null,
       topic:            d.topic       || null,
-      status:           'ongoing',
-      started_at:       now,
+      status:           'scheduled',
       created_by:       user.id,
     })
     .select('id')
@@ -96,10 +93,10 @@ export async function createSession(
 
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,
-    p_action:       'session.start',
+    p_action:       'session.schedule',
     p_entity_type:  'schedule',
     p_entity_id:    schedule.id,
-    p_new_values:   { group_course_id: d.group_course_id, scheduled_at: d.scheduled_at, started_at: now },
+    p_new_values:   { group_course_id: d.group_course_id, scheduled_at: d.scheduled_at },
     p_branch_id:    d.branch_id,
   })
 

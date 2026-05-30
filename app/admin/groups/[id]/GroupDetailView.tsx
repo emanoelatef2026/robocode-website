@@ -9,7 +9,10 @@ import type { ActionResult } from '@/types/app'
 
 interface Props { group: Group }
 
-const GROUP_STATUSES = ['forming', 'active', 'completed', 'cancelled'] as const
+// 'active' is intentionally excluded — status is auto-managed by syncGroupStatus()
+// based on whether course+semester+instructor are all assigned.
+// Admins use the Academic Configuration card to activate a group.
+const GROUP_STATUSES = ['forming', 'completed', 'cancelled'] as const
 
 export default function GroupDetailView({ group }: Props) {
   const [editState, editAction] = useActionState<ActionResult<void> | null, FormData>(updateGroup, null)

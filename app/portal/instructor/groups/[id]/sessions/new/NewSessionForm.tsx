@@ -126,7 +126,7 @@ export default function NewSessionForm({ groupId, groupCourseId, branchId }: Pro
         disabled={pending}
         className="w-full rounded-lg bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e07818] disabled:opacity-60 transition"
       >
-        {pending ? 'Starting…' : 'Start Session'}
+        {pending ? 'Scheduling…' : 'Schedule Session'}
       </button>
     </form>
   )

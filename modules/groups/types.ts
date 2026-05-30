@@ -89,3 +89,27 @@ export interface EnrollStudentInput {
   student_id: string
   enrollment_type?: 'primary' | 'secondary'
 }
+
+export interface GroupScheduleItem {
+  id:               string
+  group_course_id:  string
+  scheduled_at:     string
+  duration_minutes: number
+  type:             string
+  delivery:         string | null
+  status:           string
+  topic:            string | null
+  meeting_url:      string | null
+  room:             string | null
+}
+
+export interface GroupAcademicConfig {
+  group_id:         string
+  group_course_id:  string | null
+  course_id:        string | null
+  course_title:     string | null
+  semester_id:      string | null
+  semester_name:    string | null
+  instructor_id:    string | null
+  instructor_name:  string | null
+}

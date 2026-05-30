@@ -49,8 +49,11 @@ export default async function NewSessionPage({ params }: Props) {
         <Link href={`/portal/instructor/groups/${id}`} className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← {group.group_name}
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Start Session</h1>
+        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Schedule Session</h1>
         <p className="mt-0.5 text-sm text-[#64748B]">{group.course_title}</p>
+        <p className="mt-1 text-xs text-[#94A3B8]">
+          Session will be created as <span className="font-medium text-[#64748B]">Scheduled</span>. Click &ldquo;Start Session&rdquo; on the session page when ready to begin.
+        </p>
       </div>
 
       <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
