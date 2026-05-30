@@ -44,7 +44,14 @@ export default async function GroupDetailPage({ params }: Props) {
           <Link href="/portal/instructor/groups" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
             ← My Groups
           </Link>
-          <h1 className="mt-1 text-xl font-bold text-[#0B1F3A]">{group.group_name}</h1>
+          <div className="mt-1 flex items-center gap-2">
+            <h1 className="text-xl font-bold text-[#0B1F3A]">{group.group_name}</h1>
+            {hasCourse ? (
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Active</span>
+            ) : (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">Forming</span>
+            )}
+          </div>
           {group.course_title && (
             <p className="mt-0.5 text-sm text-[#64748B]">{group.course_title}</p>
           )}

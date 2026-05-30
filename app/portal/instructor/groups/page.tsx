@@ -42,8 +42,19 @@ export default async function InstructorGroupsPage() {
                     <p className="mt-0.5 text-xs text-[#94A3B8]">{g.group_code}</p>
                   )}
                 </div>
+                {!g.course_title ? (
+                  <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                    Forming
+                  </span>
+                ) : (
+                  <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                    Active
+                  </span>
+                )}
               </div>
-              <p className="mt-2 truncate text-sm text-[#64748B]">{g.course_title}</p>
+              <p className="mt-2 truncate text-sm text-[#64748B]">
+                {g.course_title || <span className="italic text-[#94A3B8]">No course assigned</span>}
+              </p>
               <div className="mt-4 flex items-center gap-4 text-xs text-[#94A3B8]">
                 <span>{g.student_count} student{g.student_count !== 1 ? 's' : ''}</span>
                 {g.next_session_at ? (

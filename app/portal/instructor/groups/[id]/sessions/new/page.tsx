@@ -16,6 +16,33 @@ export default async function NewSessionPage({ params }: Props) {
   const group = await getGroupForInstructor(id, instructor.id)
   if (!group) notFound()
 
+  // Sessions require an active course — block forming groups
+  if (!group.group_course_id) {
+    return (
+      <div className="mx-auto max-w-lg">
+        <div className="mb-6">
+          <Link href={`/portal/instructor/groups/${id}`} className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
+            ← {group.group_name}
+          </Link>
+          <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">New Session</h1>
+        </div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center">
+          <p className="text-sm font-medium text-amber-800">No course assigned to this group</p>
+          <p className="mt-1 text-sm text-amber-700">
+            Sessions can only be started after a course is assigned to the group.
+            Contact your Team Leader or Administrator.
+          </p>
+          <Link
+            href={`/portal/instructor/groups/${id}`}
+            className="mt-4 inline-block rounded-lg border border-amber-300 px-4 py-2 text-sm font-medium text-amber-800 transition hover:bg-amber-100"
+          >
+            ← Back to Group
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-lg">
       <div className="mb-6">

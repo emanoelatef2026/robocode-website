@@ -975,7 +975,8 @@ export async function getStudentProfileForInstructor(
 ): Promise<StudentProfileForInstructor | null> {
   const db = createServiceClient()
 
-  // Verify instructor has this group
+  // Verify instructor has this group — try group_courses first, fall back to group_instructors
+  // (forming groups have no group_courses row but the instructor is still a valid owner)
   const { data: gcRow } = await db
     .from('group_courses')
     .select('id')
@@ -984,7 +985,15 @@ export async function getStudentProfileForInstructor(
     .eq('status', 'active')
     .maybeSingle()
 
-  if (!gcRow) return null
+  if (!gcRow) {
+    const { data: giRow } = await db
+      .from('group_instructors')
+      .select('group_id')
+      .eq('group_id', groupId)
+      .eq('instructor_id', instructorId)
+      .maybeSingle()
+    if (!giRow) return null
+  }
 
   // Verify student is in the group
   const { data: gsRow } = await db
@@ -997,6 +1006,9 @@ export async function getStudentProfileForInstructor(
 
   if (!gsRow) return null
 
+  // For forming groups (no group_courses row), there are no schedules yet — attendance is empty
+  const gcId = (gcRow as any)?.id ?? null
+
   const [studentRes, groupRes, schedRes, noteRes] = await Promise.all([
     db.from('students')
       .select(
@@ -1007,7 +1019,9 @@ export async function getStudentProfileForInstructor(
       .is('deleted_at', null)
       .single(),
     db.from('groups').select('name').eq('id', groupId).single(),
-    db.from('schedules').select('id').eq('group_course_id', (gcRow as any).id),
+    gcId
+      ? db.from('schedules').select('id').eq('group_course_id', gcId)
+      : Promise.resolve({ data: [], error: null }),
     db.from('student_notes')
       .select(
         `id, content, is_private, schedule_id, created_at, updated_at,
