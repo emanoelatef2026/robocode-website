@@ -402,11 +402,14 @@ export async function getGroupForInstructor(
 ): Promise<GroupForInstructor | null> {
   const db = createServiceClient()
 
-  const { data: gcRow, error: gcErr } = await db
+  const { data: gcRow } = await db
     .from('group_courses')
     .select(
       `id, course_id,
-       groups!group_courses_group_id_fkey(name, branch_id, semester_id),
+       groups!group_courses_group_id_fkey(
+         name, branch_id, semester_id, day_of_week, time,
+         branches!groups_branch_id_fkey(name)
+       ),
        courses!group_courses_course_id_fkey(title)`
     )
     .eq('group_id', groupId)
@@ -414,7 +417,72 @@ export async function getGroupForInstructor(
     .eq('status', 'active')
     .maybeSingle()
 
-  if (gcErr || !gcRow) return null
+  // ── Fallback: group assigned via group_instructors but no group_courses row ──
+  if (!gcRow) {
+    const { data: giRow } = await db
+      .from('group_instructors')
+      .select('group_id')
+      .eq('group_id', groupId)
+      .eq('instructor_id', instructorId)
+      .maybeSingle()
+
+    if (!giRow) return null
+
+    const { data: gRow } = await db
+      .from('groups')
+      .select(`id, name, branch_id, semester_id, day_of_week, time,
+               branches!groups_branch_id_fkey(name)`)
+      .eq('id', groupId)
+      .is('deleted_at', null)
+      .maybeSingle()
+
+    if (!gRow) return null
+    const g = gRow as any
+
+    const { data: studentRes } = await db
+      .from('group_students')
+      .select(
+        `student_id, enrollment_type,
+         students!group_students_student_id_fkey(
+           users!students_user_id_fkey(
+             email,
+             profiles!profiles_user_id_fkey(first_name, last_name)
+           )
+         )`
+      )
+      .eq('group_id', groupId)
+      .eq('status', 'active')
+
+    const students = (studentRes ?? []).map((r: any) => {
+      const u = r.students?.users
+      const p = u?.profiles
+      return {
+        student_id:      r.student_id,
+        first_name:      p?.first_name ?? null,
+        last_name:       p?.last_name  ?? null,
+        email:           u?.email      ?? '',
+        enrollment_type: r.enrollment_type as 'primary' | 'secondary',
+      }
+    })
+
+    return {
+      group_id:           groupId,
+      group_course_id:    '',
+      group_name:         g.name              ?? '',
+      course_title:       '',
+      branch_id:          g.branch_id         ?? '',
+      branch_name:        g.branches?.name    ?? '',
+      semester_id:        g.semester_id       ?? null,
+      day_of_week:        g.day_of_week       ?? null,
+      time:               g.time              ?? null,
+      completed_sessions: 0,
+      total_sessions:     0,
+      students,
+      sessions:           [],
+    }
+  }
+
+  // ── Primary path: full data via group_courses ─────────────────────────────
   const gc       = gcRow as any
   const branchId = gc.groups?.branch_id ?? ''
 
@@ -438,7 +506,6 @@ export async function getGroupForInstructor(
       .limit(50),
   ])
 
-  // Attendance counts per session
   const sessIds = (sessRes.data ?? []).map((s: any) => s.id as string)
   const attMap: Record<string, number> = {}
   if (sessIds.length > 0) {
@@ -467,8 +534,8 @@ export async function getGroupForInstructor(
   const sessions: InstructorSession[] = (sessRes.data ?? []).map((s: any) => ({
     id:               s.id,
     group_course_id:  s.group_course_id,
-    group_name:       gc.groups?.name    ?? '',
-    course_title:     gc.courses?.title  ?? '',
+    group_name:       gc.groups?.name   ?? '',
+    course_title:     gc.courses?.title ?? '',
     scheduled_at:     s.scheduled_at,
     duration_minutes: s.duration_minutes,
     type:             s.type,
@@ -484,10 +551,13 @@ export async function getGroupForInstructor(
   return {
     group_id:           groupId,
     group_course_id:    gc.id,
-    group_name:         gc.groups?.name   ?? '',
-    course_title:       gc.courses?.title ?? '',
+    group_name:         gc.groups?.name          ?? '',
+    course_title:       gc.courses?.title        ?? '',
     branch_id:          branchId,
-    semester_id:        gc.groups?.semester_id ?? null,
+    branch_name:        gc.groups?.branches?.name ?? '',
+    semester_id:        gc.groups?.semester_id    ?? null,
+    day_of_week:        gc.groups?.day_of_week    ?? null,
+    time:               gc.groups?.time           ?? null,
     completed_sessions: completedSessions,
     total_sessions:     sessions.length,
     students,

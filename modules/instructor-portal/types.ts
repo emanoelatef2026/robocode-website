@@ -170,7 +170,10 @@ export interface GroupForInstructor {
   group_name:      string
   course_title:    string
   branch_id:       string
+  branch_name:     string
   semester_id:     string | null
+  day_of_week:     string | null
+  time:            string | null
   completed_sessions: number
   total_sessions:     number
   students: Array<{
