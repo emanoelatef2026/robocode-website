@@ -262,13 +262,14 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
     const { data: gcRows } = await db
       .from('group_courses')
       .select(
-        `id, group_id, course_id,
+        `id, group_id, course_id, course_module_id,
          groups!group_courses_group_id_fkey(
            name, code, semester_id,
            branches!groups_branch_id_fkey(name),
            semesters!groups_semester_id_fkey(name, academic_year)
          ),
-         courses!group_courses_course_id_fkey(title)`
+         courses!group_courses_course_id_fkey(title),
+         course_modules!group_courses_course_module_id_fkey(title)`
       )
       .in('id', gcIds)
       .eq('status', 'active')
@@ -309,19 +310,20 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
           ? [sem.name ?? '', sem.academic_year ?? ''].filter(Boolean).join(' ').trim() || null
           : null
         results.push({
-          group_id:           row.group_id,
-          group_name:         row.groups?.name            ?? '',
-          group_code:         row.groups?.code            ?? null,
-          group_course_id:    row.id,
-          course_id:          row.course_id,
-          course_title:       row.courses?.title          ?? '',
-          branch_name:        row.groups?.branches?.name  ?? '',
-          student_count:      studentMap[row.group_id]    ?? 0,
-          next_session_at:    nextMap[row.id]             ?? null,
-          semester_id:        row.groups?.semester_id     ?? null,
-          semester_name:      semName,
-          completed_sessions: completedMap[row.id]        ?? 0,
-          total_sessions:     totalMap[row.id]             ?? 0,
+          group_id:            row.group_id,
+          group_name:          row.groups?.name                    ?? '',
+          group_code:          row.groups?.code                    ?? null,
+          group_course_id:     row.id,
+          course_id:           row.course_id,
+          course_title:        row.courses?.title                  ?? '',
+          course_module_title: row.course_modules?.title           ?? null,
+          branch_name:         row.groups?.branches?.name          ?? '',
+          student_count:       studentMap[row.group_id]            ?? 0,
+          next_session_at:     nextMap[row.id]                     ?? null,
+          semester_id:         row.groups?.semester_id             ?? null,
+          semester_name:       semName,
+          completed_sessions:  completedMap[row.id]                ?? 0,
+          total_sessions:      totalMap[row.id]                    ?? 0,
         })
       }
     }
@@ -354,19 +356,20 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
 
     for (const g of groupRows ?? []) {
       results.push({
-        group_id:           (g as any).id,
-        group_name:         (g as any).name               ?? '',
-        group_code:         (g as any).code               ?? null,
-        group_course_id:    '',
-        course_id:          '',
-        course_title:       '',
-        branch_name:        (g as any).branches?.name     ?? '',
-        student_count:      studentMap[(g as any).id]     ?? 0,
-        next_session_at:    null,
-        semester_id:        (g as any).semester_id        ?? null,
-        semester_name:      null,
-        completed_sessions: 0,
-        total_sessions:     0,
+        group_id:            (g as any).id,
+        group_name:          (g as any).name               ?? '',
+        group_code:          (g as any).code               ?? null,
+        group_course_id:     '',
+        course_id:           '',
+        course_title:        '',
+        course_module_title: null,
+        branch_name:         (g as any).branches?.name     ?? '',
+        student_count:       studentMap[(g as any).id]     ?? 0,
+        next_session_at:     null,
+        semester_id:         (g as any).semester_id        ?? null,
+        semester_name:       null,
+        completed_sessions:  0,
+        total_sessions:      0,
       })
     }
   }
@@ -385,12 +388,13 @@ export async function getGroupForInstructor(
   const { data: gcRow } = await db
     .from('group_courses')
     .select(
-      `id, course_id,
+      `id, course_id, course_module_id,
        groups!group_courses_group_id_fkey(
          name, branch_id, semester_id, day_of_week, time,
          branches!groups_branch_id_fkey(name)
        ),
-       courses!group_courses_course_id_fkey(title)`
+       courses!group_courses_course_id_fkey(title),
+       course_modules!group_courses_course_module_id_fkey(title)`
     )
     .eq('group_id', groupId)
     .eq('instructor_id', instructorId)
@@ -446,19 +450,20 @@ export async function getGroupForInstructor(
     })
 
     return {
-      group_id:           groupId,
-      group_course_id:    '',
-      group_name:         g.name              ?? '',
-      course_title:       '',
-      branch_id:          g.branch_id         ?? '',
-      branch_name:        g.branches?.name    ?? '',
-      semester_id:        g.semester_id       ?? null,
-      day_of_week:        g.day_of_week       ?? null,
-      time:               g.time              ?? null,
-      completed_sessions: 0,
-      total_sessions:     0,
+      group_id:            groupId,
+      group_course_id:     '',
+      group_name:          g.name              ?? '',
+      course_title:        '',
+      course_module_title: null,
+      branch_id:           g.branch_id         ?? '',
+      branch_name:         g.branches?.name    ?? '',
+      semester_id:         g.semester_id       ?? null,
+      day_of_week:         g.day_of_week       ?? null,
+      time:                g.time              ?? null,
+      completed_sessions:  0,
+      total_sessions:      0,
       students,
-      sessions:           [],
+      sessions:            [],
     }
   }
 
@@ -529,17 +534,18 @@ export async function getGroupForInstructor(
   const completedSessions = sessions.filter((s) => s.status === 'completed').length
 
   return {
-    group_id:           groupId,
-    group_course_id:    gc.id,
-    group_name:         gc.groups?.name          ?? '',
-    course_title:       gc.courses?.title        ?? '',
-    branch_id:          branchId,
-    branch_name:        gc.groups?.branches?.name ?? '',
-    semester_id:        gc.groups?.semester_id    ?? null,
-    day_of_week:        gc.groups?.day_of_week    ?? null,
-    time:               gc.groups?.time           ?? null,
-    completed_sessions: completedSessions,
-    total_sessions:     sessions.length,
+    group_id:            groupId,
+    group_course_id:     gc.id,
+    group_name:          gc.groups?.name               ?? '',
+    course_title:        gc.courses?.title             ?? '',
+    course_module_title: gc.course_modules?.title      ?? null,
+    branch_id:           branchId,
+    branch_name:         gc.groups?.branches?.name     ?? '',
+    semester_id:         gc.groups?.semester_id        ?? null,
+    day_of_week:         gc.groups?.day_of_week        ?? null,
+    time:                gc.groups?.time               ?? null,
+    completed_sessions:  completedSessions,
+    total_sessions:      sessions.length,
     students,
     sessions,
   }

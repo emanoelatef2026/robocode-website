@@ -8,19 +8,20 @@ export interface InstructorRecord {
 }
 
 export interface InstructorGroup {
-  group_id:           string
-  group_name:         string
-  group_code:         string | null
-  group_course_id:    string
-  course_id:          string
-  course_title:       string
-  branch_name:        string
-  student_count:      number
-  next_session_at:    string | null
-  semester_id:        string | null
-  semester_name:      string | null
-  completed_sessions: number
-  total_sessions:     number
+  group_id:            string
+  group_name:          string
+  group_code:          string | null
+  group_course_id:     string
+  course_id:           string
+  course_title:        string
+  course_module_title: string | null   // current course semester (course_modules.title)
+  branch_name:         string
+  student_count:       number
+  next_session_at:     string | null
+  semester_id:         string | null
+  semester_name:       string | null
+  completed_sessions:  number
+  total_sessions:      number
 }
 
 export interface InstructorSession {
@@ -168,17 +169,18 @@ export interface InstructorDashboardStats {
 }
 
 export interface GroupForInstructor {
-  group_id:        string
-  group_course_id: string
-  group_name:      string
-  course_title:    string
-  branch_id:       string
-  branch_name:     string
-  semester_id:     string | null
-  day_of_week:     string | null
-  time:            string | null
-  completed_sessions: number
-  total_sessions:     number
+  group_id:            string
+  group_course_id:     string
+  group_name:          string
+  course_title:        string
+  course_module_title: string | null   // current course semester
+  branch_id:           string
+  branch_name:         string
+  semester_id:         string | null
+  day_of_week:         string | null
+  time:                string | null
+  completed_sessions:  number
+  total_sessions:      number
   students: Array<{
     student_id:      string
     first_name:      string | null

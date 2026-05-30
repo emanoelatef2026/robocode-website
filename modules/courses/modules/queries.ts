@@ -36,6 +36,28 @@ export async function getModule(id: string): Promise<CourseModule | null> {
   return data as CourseModule
 }
 
+// Returns a flat list of {id, course_id, title} for multiple courses at once.
+// Used by AcademicConfigCard to build the courseId → semesters map client-side.
+export async function listModulesByCourseIds(
+  courseIds: string[]
+): Promise<{ id: string; course_id: string; title: string; order_index: number }[]> {
+  if (courseIds.length === 0) return []
+  const db = createServiceClient()
+  const { data } = await db
+    .from('course_modules')
+    .select('id, course_id, title, order_index')
+    .in('course_id', courseIds)
+    .is('deleted_at', null)
+    .order('order_index', { ascending: true })
+
+  return (data ?? []).map((row: any) => ({
+    id:          row.id,
+    course_id:   row.course_id,
+    title:       row.title,
+    order_index: row.order_index,
+  }))
+}
+
 export async function getNextModuleOrder(courseId: string): Promise<number> {
   const db = createServiceClient()
   const { data } = await db

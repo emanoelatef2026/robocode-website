@@ -517,10 +517,11 @@ export async function saveGroupAcademicConfig(
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
 
-  const groupId      = formData.get('group_id')      as string | null
-  const courseId     = formData.get('course_id')     as string | null
-  const semesterId   = formData.get('semester_id')   as string | null
-  const instructorId = formData.get('instructor_id') as string | null
+  const groupId        = formData.get('group_id')        as string | null
+  const courseId       = formData.get('course_id')       as string | null
+  const courseModuleId = formData.get('course_module_id') as string | null
+  const semesterId     = formData.get('semester_id')     as string | null
+  const instructorId   = formData.get('instructor_id')   as string | null
 
   if (!groupId) {
     return { success: false, error: { code: 'VALIDATION', message: 'Group ID missing.' } }
@@ -545,10 +546,11 @@ export async function saveGroupAcademicConfig(
     const { error: gcErr } = await db.from('group_courses')
       .upsert(
         {
-          group_id:      groupId,
-          course_id:     courseId,
-          instructor_id: instructorId || null,
-          status:        'active',
+          group_id:         groupId,
+          course_id:        courseId,
+          instructor_id:    instructorId    || null,
+          course_module_id: courseModuleId  || null,
+          status:           'active',
         },
         { onConflict: 'group_id,course_id' }
       )
@@ -556,13 +558,14 @@ export async function saveGroupAcademicConfig(
       return { success: false, error: { code: 'DB_ERROR', message: gcErr.message } }
     }
 
-    // If instructor given, also sync group_courses.instructor_id for existing active row
-    if (instructorId) {
-      await db.from('group_courses')
-        .update({ instructor_id: instructorId })
-        .eq('group_id', groupId)
-        .eq('status', 'active')
-    }
+    // Sync instructor + course_module_id on the existing active row
+    await db.from('group_courses')
+      .update({
+        instructor_id:    instructorId   || null,
+        course_module_id: courseModuleId || null,
+      })
+      .eq('group_id', groupId)
+      .eq('status', 'active')
   } else {
     // No course — cancel any active group_courses
     await db.from('group_courses')
@@ -596,7 +599,7 @@ export async function saveGroupAcademicConfig(
     p_action:       'save_academic_config',
     p_entity_type:  'group',
     p_entity_id:    groupId,
-    p_new_values:   { course_id: courseId, semester_id: semesterId, instructor_id: instructorId },
+    p_new_values:   { course_id: courseId, course_module_id: courseModuleId, semester_id: semesterId, instructor_id: instructorId },
   })
 
   revalidatePath(`/admin/groups/${groupId}`)
@@ -696,6 +699,82 @@ export async function createGroupSchedule(
 
   revalidatePath(`/admin/groups/${d.group_id}`)
   return { success: true, data: { id: (schedule as any).id } }
+}
+
+// ── Sprint 21.8: Semester promotion ──────────────────────────────────────────
+// Advances the group from course_module N to course_module N+1 (next order_index).
+// Students, instructor, and group history are all preserved — only course_module_id changes.
+
+export async function promoteGroupSemester(
+  groupId: string
+): Promise<ActionResult<{ newSemesterTitle: string; newSemesterOrder: number }>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const { data: grp } = await db.from('groups').select('branch_id').eq('id', groupId).single()
+  if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, grp.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  const { data: gcRow } = await db
+    .from('group_courses')
+    .select('id, course_id, course_module_id')
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (!gcRow) {
+    return { success: false, error: { code: 'VALIDATION', message: 'No active course assigned to this group.' } }
+  }
+  if (!(gcRow as any).course_module_id) {
+    return { success: false, error: { code: 'VALIDATION', message: 'No current semester assigned. Set one in Academic Configuration first.' } }
+  }
+
+  const { data: currentMod } = await db
+    .from('course_modules')
+    .select('order_index')
+    .eq('id', (gcRow as any).course_module_id)
+    .maybeSingle()
+
+  if (!currentMod) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Current semester record not found.' } }
+  }
+
+  const { data: nextMod } = await db
+    .from('course_modules')
+    .select('id, title, order_index')
+    .eq('course_id', (gcRow as any).course_id)
+    .eq('order_index', ((currentMod as any).order_index ?? 0) + 1)
+    .is('deleted_at', null)
+    .maybeSingle()
+
+  if (!nextMod) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'This is the last semester — no next semester to promote to.' } }
+  }
+
+  const { error } = await db
+    .from('group_courses')
+    .update({ course_module_id: (nextMod as any).id })
+    .eq('id', (gcRow as any).id)
+
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  // Re-evaluate group status after promotion
+  await syncGroupStatus(groupId, db)
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'semester.promote',
+    p_entity_type:  'group',
+    p_entity_id:    groupId,
+    p_new_values:   { new_semester_id: (nextMod as any).id, new_semester_title: (nextMod as any).title },
+    p_branch_id:    grp.branch_id,
+  })
+
+  revalidatePath(`/admin/groups/${groupId}`)
+  revalidatePath('/admin/groups')
+  return { success: true, data: { newSemesterTitle: (nextMod as any).title, newSemesterOrder: (nextMod as any).order_index } }
 }
 
 export async function deleteGroupSchedule(

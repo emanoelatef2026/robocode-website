@@ -1,5 +1,6 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
-import { getStudentProgressByUserId } from '@/modules/progress/queries'
+import { getStudentProgressByUserId, getStudentSessionCounts } from '@/modules/progress/queries'
+import { createServiceClient } from '@/lib/supabase/service'
 
 function ScorePill({ value, label }: { value: number; label: string }) {
   const color = value >= 75 ? 'text-green-700 bg-green-100' : value >= 50 ? 'text-yellow-700 bg-yellow-100' : 'text-red-700 bg-red-100'
@@ -21,7 +22,16 @@ const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
 
 export default async function StudentSemestersPage() {
   const user    = await requirePortalRole('student')
-  const history = await getStudentProgressByUserId(user.id)
+
+  // Resolve student record for session counts
+  const db = createServiceClient()
+  const { data: studentRow } = await db.from('students').select('id').eq('user_id', user.id).maybeSingle()
+  const studentId = (studentRow as any)?.id as string | undefined
+
+  const [history, sessionCounts] = await Promise.all([
+    getStudentProgressByUserId(user.id),
+    studentId ? getStudentSessionCounts(studentId) : Promise.resolve({} as Record<string, { completed: number; total: number }>),
+  ])
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -51,6 +61,24 @@ export default async function StudentSemestersPage() {
                     {status.label}
                   </span>
                 </div>
+
+                {/* Session progress */}
+                {(() => {
+                  const sc = sessionCounts[row.group_id]
+                  if (!sc || sc.total === 0) return null
+                  const pct = Math.round((sc.completed / sc.total) * 100)
+                  return (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-xs text-[#64748B]">
+                        <span className="font-medium">Session {sc.completed} / {sc.total}</span>
+                        <span>{pct}%</span>
+                      </div>
+                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#F1F5F9]">
+                        <div className="h-full rounded-full bg-[#FF8A1F]" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  )
+                })()}
 
                 {/* Score breakdown */}
                 <div className="mt-4 grid grid-cols-4 gap-3">

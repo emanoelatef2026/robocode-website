@@ -139,7 +139,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
                     </div>
 
                     <p className="mt-0.5 text-[12px] text-[#64748B]">
-                      {[a.course_title, a.module_title].filter(Boolean).join(' · ')}
+                      {[a.course_title, a.module_title ? `Semester: ${a.module_title}` : null].filter(Boolean).join(' · ')}
                     </p>
 
                     <div className="mt-2 flex flex-wrap gap-4 text-[12px] text-[#94A3B8]">

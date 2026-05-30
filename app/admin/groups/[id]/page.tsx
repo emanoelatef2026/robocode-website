@@ -8,6 +8,7 @@ import { listStudents } from '@/modules/students/queries'
 import { listCourses } from '@/modules/courses/queries'
 import { listSemesters } from '@/modules/semesters/queries'
 import { listInstructors } from '@/modules/instructors/queries'
+import { listModulesByCourseIds } from '@/modules/courses/modules/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import { notFound } from 'next/navigation'
 import GroupDetailView from './GroupDetailView'
@@ -43,6 +44,17 @@ export default async function GroupDetailPage({ params }: Props) {
     getGroupSchedules(id),
   ])
 
+  // Fetch course semesters (course_modules) for all available courses
+  const courseIds    = coursesResult.data.map((c) => c.id)
+  const modulesList  = await listModulesByCourseIds(courseIds)
+
+  // Group into a Record<course_id, {id, title}[]> for the cascade selector
+  const modulesByCourse: Record<string, { id: string; title: string }[]> = {}
+  for (const m of modulesList) {
+    if (!modulesByCourse[m.course_id]) modulesByCourse[m.course_id] = []
+    modulesByCourse[m.course_id].push({ id: m.id, title: m.title })
+  }
+
   const activeIds         = new Set(enrollments.filter((e) => e.status === 'active').map((e) => e.student_id))
   const availableStudents = studentsResult.data.filter((s) => !activeIds.has(s.id))
 
@@ -52,7 +64,7 @@ export default async function GroupDetailPage({ params }: Props) {
     code:  c.code,
   }))
 
-  const semesterOptions = semestersResult.data.map((s) => ({
+  const academicPeriodOptions = semestersResult.data.map((s) => ({
     id:     s.id,
     name:   s.name,
     status: s.status,
@@ -74,13 +86,14 @@ export default async function GroupDetailPage({ params }: Props) {
         <p className="text-sm text-[#64748B]">{group.branch_name} · {group.type}</p>
       </div>
 
-      {/* Academic Configuration — top priority section */}
+      {/* Academic Configuration */}
       <div className="mb-6">
         <AcademicConfigCard
           groupId={id}
           config={academicConfig}
           courses={courseOptions}
-          semesters={semesterOptions}
+          modulesByCourse={modulesByCourse}
+          academicPeriods={academicPeriodOptions}
           instructors={instructorOptions}
         />
       </div>
@@ -95,10 +108,7 @@ export default async function GroupDetailPage({ params }: Props) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        {/* Left — Group settings */}
         <GroupDetailView group={group} />
-
-        {/* Right — Student management grid */}
         <GroupStudentsTable
           group={group}
           enrollments={enrollments}

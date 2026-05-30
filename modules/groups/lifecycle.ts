@@ -2,11 +2,12 @@ import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 
 export interface GroupReadiness {
-  hasCourse:     boolean
-  hasSemester:   boolean
-  hasInstructor: boolean
-  isActive:      boolean
-  missing:       string[]
+  hasCourse:         boolean
+  hasCourseSemester: boolean  // course_module_id set on group_courses
+  hasSemester:       boolean  // academic period (groups.semester_id)
+  hasInstructor:     boolean
+  isActive:          boolean
+  missing:           string[]
 }
 
 export async function computeGroupReadiness(groupId: string): Promise<GroupReadiness> {
@@ -15,7 +16,7 @@ export async function computeGroupReadiness(groupId: string): Promise<GroupReadi
   const [{ data: group }, { data: gcRow }, { data: giRow }] = await Promise.all([
     db.from('groups').select('semester_id').eq('id', groupId).maybeSingle(),
     db.from('group_courses')
-      .select('id, instructor_id')
+      .select('id, instructor_id, course_module_id')
       .eq('group_id', groupId)
       .eq('status', 'active')
       .maybeSingle(),
@@ -26,17 +27,19 @@ export async function computeGroupReadiness(groupId: string): Promise<GroupReadi
       .maybeSingle(),
   ])
 
-  const hasCourse     = !!gcRow
-  const hasSemester   = !!(group as any)?.semester_id
-  const hasInstructor = !!((gcRow as any)?.instructor_id || (giRow as any)?.instructor_id)
-  const isActive      = hasCourse && hasSemester && hasInstructor
+  const hasCourse         = !!gcRow
+  const hasCourseSemester = !!(gcRow as any)?.course_module_id
+  const hasSemester       = !!(group as any)?.semester_id
+  const hasInstructor     = !!((gcRow as any)?.instructor_id || (giRow as any)?.instructor_id)
+  const isActive          = hasCourse && hasCourseSemester && hasSemester && hasInstructor
 
   const missing: string[] = []
-  if (!hasCourse)     missing.push('Course not assigned')
-  if (!hasSemester)   missing.push('Semester not assigned')
-  if (!hasInstructor) missing.push('No instructor assigned')
+  if (!hasCourse)         missing.push('Course not assigned')
+  if (!hasCourseSemester) missing.push('Course semester not assigned')
+  if (!hasSemester)       missing.push('Academic period not assigned')
+  if (!hasInstructor)     missing.push('No instructor assigned')
 
-  return { hasCourse, hasSemester, hasInstructor, isActive, missing }
+  return { hasCourse, hasCourseSemester, hasSemester, hasInstructor, isActive, missing }
 }
 
 // Call after any academic config change to keep groups.status in sync.

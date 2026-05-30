@@ -63,13 +63,13 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-[#64748B]">Module *</label>
+            <label className="mb-1 block text-xs font-medium text-[#64748B]">Course Semester *</label>
             <select
               name="module_id"
               required
               className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
             >
-              <option value="">Select module…</option>
+              <option value="">Select semester…</option>
               {filteredModules.map((m) => (
                 <option key={m.id} value={m.id}>
                   {selectedCourse ? m.title : `${m.course_title} › ${m.title}`}

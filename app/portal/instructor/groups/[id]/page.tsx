@@ -27,13 +27,15 @@ export default async function GroupDetailPage({ params }: Props) {
   const group = await getGroupForInstructor(id, instructor.id)
   if (!group) notFound()
 
-  const hasCourse      = group.group_course_id !== ''
-  const hasSemester    = !!group.semester_id
-  const isActive       = hasCourse && hasSemester
+  const hasCourse         = group.group_course_id !== ''
+  const hasCourseSemester = !!group.course_module_title
+  const hasAcademicPeriod = !!group.semester_id
+  const isActive          = hasCourse && hasCourseSemester && hasAcademicPeriod
 
   const missing: string[] = []
-  if (!hasCourse)   missing.push('Course not assigned')
-  if (!hasSemester) missing.push('Semester not assigned')
+  if (!hasCourse)         missing.push('Course not assigned')
+  if (!hasCourseSemester) missing.push('Course semester not assigned')
+  if (!hasAcademicPeriod) missing.push('Academic period not assigned')
 
   const totalPct = group.total_sessions > 0
     ? Math.round((group.completed_sessions / group.total_sessions) * 100)
@@ -116,7 +118,14 @@ export default async function GroupDetailPage({ params }: Props) {
             }
           </div>
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">Semester</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">Course Semester</p>
+            {group.course_module_title
+              ? <p className="mt-0.5 font-medium text-[#0B1F3A]">{group.course_module_title}</p>
+              : <p className="mt-0.5 text-sm italic text-[#94A3B8]">Not assigned</p>
+            }
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">Academic Period</p>
             {group.semester_id
               ? <p className="mt-0.5 font-medium text-[#0B1F3A]">Assigned</p>
               : <p className="mt-0.5 text-sm italic text-[#94A3B8]">Not assigned</p>
@@ -129,9 +138,16 @@ export default async function GroupDetailPage({ params }: Props) {
       {isActive && group.total_sessions > 0 && (
         <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-4">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-[#0B1F3A]">Curriculum Progress</p>
+            <div>
+              <p className="text-sm font-semibold text-[#0B1F3A]">
+                Session Progress
+                {group.course_module_title && (
+                  <span className="ml-2 text-xs font-normal text-[#64748B]">· {group.course_module_title}</span>
+                )}
+              </p>
+            </div>
             <p className="text-sm text-[#64748B]">
-              {group.completed_sessions} / {group.total_sessions} sessions completed
+              Session {group.completed_sessions} / {group.total_sessions}
             </p>
           </div>
           {totalPct !== null && (

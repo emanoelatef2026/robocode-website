@@ -104,12 +104,15 @@ export interface GroupScheduleItem {
 }
 
 export interface GroupAcademicConfig {
-  group_id:         string
-  group_course_id:  string | null
-  course_id:        string | null
-  course_title:     string | null
-  semester_id:      string | null
-  semester_name:    string | null
-  instructor_id:    string | null
-  instructor_name:  string | null
+  group_id:              string
+  group_course_id:       string | null
+  course_id:             string | null
+  course_title:          string | null
+  // course_module_id = the specific semester (course_modules row) this group is studying
+  course_module_id:      string | null
+  course_module_title:   string | null
+  semester_id:           string | null
+  semester_name:         string | null
+  instructor_id:         string | null
+  instructor_name:       string | null
 }

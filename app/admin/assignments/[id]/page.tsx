@@ -25,7 +25,7 @@ export default async function AssignmentDetailPage({ params }: Props) {
     <div className="max-w-3xl">
       <PageHeader
         title={assignment.title}
-        description={`${assignment.course_title ?? '—'} › ${assignment.module_title ?? assignment.lesson_title ?? '—'}`}
+        description={`${assignment.course_title ?? '—'} › ${assignment.module_title ? `Semester: ${assignment.module_title}` : (assignment.lesson_title ?? '—')}`}
         action={
           <Link
             href="/admin/assignments"

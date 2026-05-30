@@ -97,7 +97,7 @@ export default async function AssignmentsPage({ searchParams }: Props) {
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Title</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Type</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Course / Module</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Course / Semester</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Due</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Submissions</th>

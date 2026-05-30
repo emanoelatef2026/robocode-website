@@ -3,12 +3,14 @@ import { getInstructorByUserId, listInstructorGroups } from '@/modules/instructo
 import Link from 'next/link'
 
 function getMissingRequirements(g: {
-  course_title: string
-  semester_id:  string | null
+  course_title:       string
+  course_module_title: string | null
+  semester_id:        string | null
 }): string[] {
   const missing: string[] = []
-  if (!g.course_title) missing.push('No course')
-  if (!g.semester_id)  missing.push('No semester')
+  if (!g.course_title)        missing.push('No course')
+  if (!g.course_module_title) missing.push('No course semester')
+  if (!g.semester_id)         missing.push('No academic period')
   return missing
 }
 
@@ -41,7 +43,7 @@ export default async function InstructorGroupsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {groups.map((g) => {
-            const missing  = getMissingRequirements(g)
+            const missing  = getMissingRequirements({ course_title: g.course_title, course_module_title: g.course_module_title ?? null, semester_id: g.semester_id })
             const isActive = missing.length === 0
 
             return (
@@ -89,7 +91,30 @@ export default async function InstructorGroupsPage() {
                   </div>
                 )}
 
-                <div className="mt-3 flex items-center gap-4 text-xs text-[#94A3B8]">
+                {/* Current semester */}
+                {g.course_module_title && (
+                  <p className="mt-1 text-xs text-[#64748B]">
+                    <span className="font-medium">{g.course_module_title}</span>
+                  </p>
+                )}
+
+                {/* Session progress */}
+                {isActive && g.total_sessions > 0 && (
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between text-xs text-[#94A3B8]">
+                      <span>Session {g.completed_sessions} / {g.total_sessions}</span>
+                      <span>{Math.round((g.completed_sessions / g.total_sessions) * 100)}%</span>
+                    </div>
+                    <div className="mt-1 h-1 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
+                      <div
+                        className="h-full rounded-full bg-[#FF8A1F]"
+                        style={{ width: `${(g.completed_sessions / g.total_sessions) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-2 flex items-center gap-4 text-xs text-[#94A3B8]">
                   <span>{g.student_count} student{g.student_count !== 1 ? 's' : ''}</span>
                   {isActive ? (
                     g.next_session_at ? (

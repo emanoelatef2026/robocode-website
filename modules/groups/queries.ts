@@ -194,8 +194,9 @@ export async function getGroupAcademicConfig(groupId: string): Promise<GroupAcad
       .maybeSingle(),
     db.from('group_courses')
       .select(
-        `id, course_id, instructor_id,
+        `id, course_id, instructor_id, course_module_id,
          courses!group_courses_course_id_fkey(title),
+         course_modules!group_courses_course_module_id_fkey(title),
          instructors!group_courses_instructor_id_fkey(
            users!instructors_user_id_fkey(
              profiles!profiles_user_id_fkey(first_name, last_name)
@@ -234,14 +235,16 @@ export async function getGroupAcademicConfig(groupId: string): Promise<GroupAcad
     : null
 
   return {
-    group_id:        groupId,
-    group_course_id: gc?.id             ?? null,
-    course_id:       gc?.course_id      ?? null,
-    course_title:    gc?.courses?.title ?? null,
-    semester_id:     group?.semester_id ?? null,
-    semester_name:   semName,
-    instructor_id:   gc?.instructor_id  ?? gi?.instructor_id ?? null,
-    instructor_name: instName,
+    group_id:             groupId,
+    group_course_id:      gc?.id                          ?? null,
+    course_id:            gc?.course_id                   ?? null,
+    course_title:         gc?.courses?.title              ?? null,
+    course_module_id:     gc?.course_module_id            ?? null,
+    course_module_title:  gc?.course_modules?.title       ?? null,
+    semester_id:          group?.semester_id              ?? null,
+    semester_name:        semName,
+    instructor_id:        gc?.instructor_id  ?? gi?.instructor_id ?? null,
+    instructor_name:      instName,
   }
 }
 

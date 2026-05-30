@@ -41,9 +41,9 @@ export default function ModuleDetailView({ courseId, mod, lessons }: Props) {
 
   return (
     <div className="space-y-5">
-      {/* Module edit */}
+      {/* Semester edit */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-        <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">Module Settings</h2>
+        <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">Semester Settings</h2>
 
         {editState && !editState.success && (
           <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">

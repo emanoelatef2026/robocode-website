@@ -25,7 +25,7 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
         <div className="mb-1 flex items-center gap-2 text-xs text-[#94A3B8]">
           {detail.course_title && <span>{detail.course_title}</span>}
           {detail.course_title && detail.module_title && <span>·</span>}
-          {detail.module_title && <span>{detail.module_title}</span>}
+          {detail.module_title && <span>Semester: {detail.module_title}</span>}
         </div>
         <h1 className="text-2xl font-bold text-[#0B132B]">{detail.title}</h1>
 

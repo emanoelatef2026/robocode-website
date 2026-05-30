@@ -22,13 +22,13 @@ export default function CourseDetailView({ course, modules, branches }: Props) {
   const [addModState, addModAction] = useActionState<ActionResult<{ id: string }> | null, FormData>(createModule, null)
 
   const handleDelete = async () => {
-    if (!confirm('Delete this course? All modules and lessons will be soft-deleted.')) return
+    if (!confirm('Delete this course? All semesters and lessons will be soft-deleted.')) return
     await deleteCourse(course.id)
     window.location.href = '/admin/courses'
   }
 
   const handleDeleteModule = async (moduleId: string) => {
-    if (!confirm('Delete this module?')) return
+    if (!confirm('Delete this semester?')) return
     const result = await deleteModule(moduleId)
     if (result.success) window.location.reload()
     else alert(result.error.message)
@@ -165,10 +165,10 @@ export default function CourseDetailView({ course, modules, branches }: Props) {
         </form>
       </div>
 
-      {/* Modules */}
+      {/* Semesters */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
         <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">
-          Modules ({modules.length})
+          Semesters ({modules.length})
         </h2>
 
         {addModState && !addModState.success && (
@@ -182,14 +182,14 @@ export default function CourseDetailView({ course, modules, branches }: Props) {
           <input
             name="title"
             required
-            placeholder="New module title…"
+            placeholder="New semester name…"
             className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
           />
-          <SubmitButton label="Add Module" pendingLabel="…" />
+          <SubmitButton label="Add Semester" pendingLabel="…" />
         </form>
 
         {modules.length === 0 ? (
-          <p className="text-sm text-[#94A3B8]">No modules yet. Add the first one above.</p>
+          <p className="text-sm text-[#94A3B8]">No semesters yet. Add the first one above.</p>
         ) : (
           <ul className="space-y-2">
             {modules.map((mod) => (

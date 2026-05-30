@@ -36,6 +36,54 @@ export async function getStudentProgressByUserId(
   })) as StudentCourseProgress[]
 }
 
+// Session counts per group for the student dashboard.
+// Returns a map from group_id → { completed, total }.
+export async function getStudentSessionCounts(
+  studentId: string
+): Promise<Record<string, { completed: number; total: number }>> {
+  const db = createServiceClient()
+
+  const { data: gsRows } = await db
+    .from('group_students')
+    .select('group_id')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+
+  if (!gsRows?.length) return {}
+
+  const groupIds = (gsRows as any[]).map((r) => r.group_id as string)
+
+  const { data: gcRows } = await db
+    .from('group_courses')
+    .select('id, group_id')
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+
+  if (!gcRows?.length) return {}
+
+  const gcIds       = (gcRows as any[]).map((r) => r.id as string)
+  const groupByGc: Record<string, string> = {}
+  for (const gc of gcRows as any[]) groupByGc[gc.id] = gc.group_id
+
+  const { data: schedRows } = await db
+    .from('schedules')
+    .select('group_course_id, status')
+    .in('group_course_id', gcIds)
+    .neq('status', 'cancelled')
+
+  const result: Record<string, { completed: number; total: number }> = {}
+  for (const gid of groupIds) result[gid] = { completed: 0, total: 0 }
+
+  for (const s of schedRows ?? []) {
+    const gid = groupByGc[(s as any).group_course_id]
+    if (!gid) continue
+    result[gid].total++
+    if ((s as any).status === 'completed') result[gid].completed++
+  }
+
+  return result
+}
+
 export async function getProgressForParent(
   userId: string
 ): Promise<ProgressSummary[]> {

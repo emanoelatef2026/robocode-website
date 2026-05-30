@@ -27,7 +27,7 @@ export default async function ModuleDetailPage({ params }: Props) {
     <div>
       <PageHeader
         title={mod.title}
-        description={`Module ${mod.order_index} · ${course.title}`}
+        description={`Semester ${mod.order_index} · ${course.title}`}
         action={
           <Link
             href={`/admin/courses/${id}`}
