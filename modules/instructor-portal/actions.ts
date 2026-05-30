@@ -30,7 +30,7 @@ async function hasGroupCourseAccess(
 
   const { data: giRow } = await db
     .from('group_instructors')
-    .select('id')
+    .select('group_id')
     .eq('group_id', (gcRow as any).group_id)
     .eq('instructor_id', instructorId)
     .maybeSingle()
@@ -59,7 +59,7 @@ async function getSessionAccessContext(
 
   const { data: giRow } = await db
     .from('group_instructors')
-    .select('id')
+    .select('group_id')
     .eq('group_id', groupId ?? '')
     .eq('instructor_id', instructorId)
     .maybeSingle()

@@ -314,7 +314,7 @@ export async function getGroupForInstructor(
     if (!isAllowed) {
       const { data: giRow } = await db
         .from('group_instructors')
-        .select('id')
+        .select('group_id')
         .eq('group_id', groupId)
         .eq('instructor_id', instructorId)
         .maybeSingle()
@@ -484,66 +484,79 @@ export async function getSessionDetail(
 ): Promise<SessionDetail | null> {
   const db = createServiceClient()
 
-  const { data: sessRow, error: sessErr } = await db
+  // Step 1: Fetch the schedule row using flat columns only.
+  // Avoiding nested PostgREST joins here eliminates schema-cache errors that
+  // silently cause .single() to return PGRST116 → notFound().
+  const { data: sessRow } = await db
     .from('schedules')
     .select(
-      `id, group_course_id, branch_id, scheduled_at, started_at, ended_at,
-       duration_minutes, type, delivery, meeting_url, room, status, topic, notes, resources_links,
-       group_courses!schedules_group_course_id_fkey(
-         group_id, instructor_id, course_id,
-         groups!group_courses_group_id_fkey(name),
-         courses!group_courses_course_id_fkey(title)
-       )`
+      'id, group_course_id, branch_id, scheduled_at, started_at, ended_at, duration_minutes, type, delivery, meeting_url, room, status, topic, notes, resources_links'
     )
     .eq('id', sessionId)
-    .single()
+    .maybeSingle()
 
-  if (sessErr || !sessRow) return null
+  if (!sessRow) return null
+  const s    = sessRow as any
+  const gcId = s.group_course_id as string
 
-  const s  = sessRow as any
-  const gc = s.group_courses
-  const groupId  = gc?.group_id  as string
-  const courseId = gc?.course_id as string | undefined
-  const gcId     = s.group_course_id as string
+  // Step 2: Fetch the group_courses row (needed for RBAC + metadata).
+  const { data: gcRow } = await db
+    .from('group_courses')
+    .select('id, group_id, instructor_id, course_id')
+    .eq('id', gcId)
+    .maybeSingle()
 
-  // Verify instructor access (lead OR group_instructors member)
-  if (gc?.instructor_id !== instructorId) {
+  if (!gcRow) return null
+  const gc       = gcRow as any
+  const groupId  = gc.group_id  as string
+  const courseId = gc.course_id as string | undefined
+
+  // Step 3: RBAC — lead instructor (group_courses.instructor_id) OR additional
+  // instructor in group_instructors. group_instructors has no 'id' column;
+  // use group_id as the existence check column.
+  if (gc.instructor_id !== instructorId) {
     const { data: giRow } = await db
       .from('group_instructors')
-      .select('id')
-      .eq('group_id', groupId ?? '')
+      .select('group_id')
+      .eq('group_id', groupId)
       .eq('instructor_id', instructorId)
       .maybeSingle()
     if (!giRow) return null
   }
 
-  const [studentRes, attRes, recordingsRes, modulesRes, progressRes] = await Promise.all([
-    db.from('group_students')
-      .select(
-        `student_id,
-         students!group_students_student_id_fkey(
-           users!students_user_id_fkey(
-             profiles!profiles_user_id_fkey(first_name, last_name)
-           )
-         )`
-      )
-      .eq('group_id', groupId)
-      .eq('status', 'active'),
-    db.from('attendance_records')
-      .select('id, student_id, status, late_minutes, notes')
-      .eq('schedule_id', sessionId),
-    db.from('session_recordings')
-      .select('id, title, provider, external_url, visible_to_students, visible_to_parents, created_at')
-      .eq('schedule_id', sessionId)
-      .order('created_at', { ascending: true }),
-    courseId
-      ? db.from('course_modules').select('id, title').eq('course_id', courseId).is('deleted_at', null).order('order_index', { ascending: true }).limit(20)
-      : Promise.resolve({ data: [], error: null }),
-    db.from('schedules')
-      .select('id, scheduled_at, status, topic')
-      .eq('group_course_id', gcId)
-      .order('scheduled_at', { ascending: true }),
-  ])
+  // Step 4: Parallel fetch — all data needed to render the session page.
+  const [studentRes, attRes, recordingsRes, modulesRes, progressRes, groupRes, courseRes] =
+    await Promise.all([
+      db.from('group_students')
+        .select(
+          `student_id,
+           students!group_students_student_id_fkey(
+             users!students_user_id_fkey(
+               profiles!profiles_user_id_fkey(first_name, last_name)
+             )
+           )`
+        )
+        .eq('group_id', groupId)
+        .eq('status', 'active'),
+      db.from('attendance_records')
+        .select('id, student_id, status, late_minutes, notes')
+        .eq('schedule_id', sessionId),
+      db.from('session_recordings')
+        .select('id, title, provider, external_url, visible_to_students, visible_to_parents, created_at')
+        .eq('schedule_id', sessionId)
+        .order('created_at', { ascending: true }),
+      courseId
+        ? db.from('course_modules').select('id, title').eq('course_id', courseId).is('deleted_at', null).order('order_index', { ascending: true }).limit(20)
+        : Promise.resolve({ data: [] as any[], error: null }),
+      db.from('schedules')
+        .select('id, scheduled_at, status, topic')
+        .eq('group_course_id', gcId)
+        .order('scheduled_at', { ascending: true }),
+      db.from('groups').select('name').eq('id', groupId).maybeSingle(),
+      courseId
+        ? db.from('courses').select('title').eq('id', courseId).maybeSingle()
+        : Promise.resolve({ data: null as any }),
+    ])
 
   const attMap = new Map<string, any>()
   for (const a of attRes.data ?? []) {
@@ -589,8 +602,11 @@ export async function getSessionDetail(
   const currentIdx = allSessions.findIndex((ps) => ps.id === sessionId)
   const currentNum = currentIdx >= 0 ? currentIdx + 1 : progress.length
 
-  const resourcesRaw = (s as any).resources_links
+  const resourcesRaw  = s.resources_links
   const resources_links: ResourceLink[] = Array.isArray(resourcesRaw) ? resourcesRaw : []
+
+  const groupName   = (groupRes.data  as any)?.name  ?? ''
+  const courseTitle = (courseRes.data as any)?.title ?? ''
 
   return {
     id:               s.id,
@@ -598,8 +614,8 @@ export async function getSessionDetail(
     group_id:         groupId,
     branch_id:        s.branch_id,
     scheduled_at:     s.scheduled_at,
-    started_at:       (s as any).started_at  ?? null,
-    ended_at:         (s as any).ended_at    ?? null,
+    started_at:       s.started_at  ?? null,
+    ended_at:         s.ended_at    ?? null,
     duration_minutes: s.duration_minutes,
     type:             s.type,
     delivery:         s.delivery    ?? null,
@@ -608,9 +624,9 @@ export async function getSessionDetail(
     status:           s.status,
     topic:            s.topic       ?? null,
     notes:            s.notes       ?? null,
-    group_name:       gc?.groups?.name   ?? '',
-    course_title:     gc?.courses?.title ?? '',
-    course_id:        courseId           ?? '',
+    group_name:       groupName,
+    course_title:     courseTitle,
+    course_id:        courseId ?? '',
     attendance,
     student_count:    (studentRes.data ?? []).length,
     recordings,
