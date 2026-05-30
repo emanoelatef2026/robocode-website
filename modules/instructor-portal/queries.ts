@@ -659,52 +659,93 @@ export async function listPendingSubmissions(
 
   if (!gcRows || gcRows.length === 0) return []
 
-  const courseIds  = (gcRows as any[]).map((gc) => gc.courses?.id  as string).filter(Boolean)
-  const groupNameByCourse = new Map<string, string>(
-    (gcRows as any[]).map((gc) => [gc.courses?.id as string, gc.groups?.name as string ?? ''])
+  const groupNameByGcId = new Map<string, string>(
+    (gcRows as any[]).map((gc) => [gc.id as string, gc.groups?.name as string ?? ''])
   )
 
-  if (!courseIds.length) return []
+  // ── Path A: module/lesson-linked assignments (legacy curriculum) ──────────
+  const assignmentIds = new Set<string>()
+  const assignMap     = new Map<string, { title: string; groupName: string | null }>()
 
-  const { data: moduleRows } = await db
-    .from('course_modules')
-    .select('id, course_id')
-    .in('course_id', courseIds)
-    .is('deleted_at', null)
+  const courseIds = (gcRows as any[]).map((gc) => gc.courses?.id as string).filter(Boolean)
+  if (courseIds.length > 0) {
+    const { data: moduleRows } = await db
+      .from('course_modules')
+      .select('id, course_id')
+      .in('course_id', courseIds)
+      .is('deleted_at', null)
 
-  const moduleIds      = (moduleRows ?? []).map((m: any) => m.id as string)
-  const courseByModule = new Map<string, string>(
-    (moduleRows ?? []).map((m: any) => [m.id as string, m.course_id as string])
-  )
-
-  if (!moduleIds.length) return []
-
-  const { data: lessonRows } = await db
-    .from('lessons')
-    .select('id, module_id')
-    .in('module_id', moduleIds)
-    .is('deleted_at', null)
-
-  const lessonIds = (lessonRows ?? []).map((l: any) => l.id as string)
-
-  const orParts = [`module_id.in.(${moduleIds.join(',')})`]
-  if (lessonIds.length > 0) orParts.push(`lesson_id.in.(${lessonIds.join(',')})`)
-
-  const { data: assignRows } = await db
-    .from('assignments')
-    .select(
-      `id, title, due_at,
-       course_modules!assignments_module_id_fkey(course_id, title)`
+    const moduleIds = (moduleRows ?? []).map((m: any) => m.id as string)
+    const courseByModule = new Map<string, string>(
+      (moduleRows ?? []).map((m: any) => [m.id as string, m.course_id as string])
     )
-    .eq('status', 'published')
-    .is('deleted_at', null)
-    .or(orParts.join(','))
+    const groupNameByCourse = new Map<string, string>(
+      (gcRows as any[]).map((gc) => [gc.courses?.id as string, gc.groups?.name as string ?? ''])
+    )
 
-  if (!assignRows || assignRows.length === 0) return []
+    if (moduleIds.length > 0) {
+      const { data: lessonRows } = await db
+        .from('lessons')
+        .select('id, module_id')
+        .in('module_id', moduleIds)
+        .is('deleted_at', null)
 
-  const assignIds = (assignRows as any[]).map((a) => a.id as string)
-  const assignMap = new Map<string, any>((assignRows as any[]).map((a) => [a.id, a]))
+      const lessonIds = (lessonRows ?? []).map((l: any) => l.id as string)
+      const orParts   = [`module_id.in.(${moduleIds.join(',')})`]
+      if (lessonIds.length > 0) orParts.push(`lesson_id.in.(${lessonIds.join(',')})`)
 
+      const { data: modAssignRows } = await db
+        .from('assignments')
+        .select('id, title, due_at, module_id')
+        .eq('status', 'published')
+        .is('deleted_at', null)
+        .or(orParts.join(','))
+
+      for (const a of modAssignRows ?? []) {
+        const courseId  = (a as any).module_id ? courseByModule.get((a as any).module_id) : null
+        const groupName = courseId ? (groupNameByCourse.get(courseId) ?? null) : null
+        assignmentIds.add((a as any).id)
+        assignMap.set((a as any).id, { title: (a as any).title, groupName })
+      }
+    }
+  }
+
+  // ── Path B: session-only assignments (Migration 0043 — no module/lesson) ──
+  // Finds homework created directly in the session workflow for groups without
+  // course modules. Assignments have schedule_id set; module_id and lesson_id are NULL.
+  const { data: sessRows } = await db
+    .from('schedules')
+    .select('id, group_course_id')
+    .in('group_course_id', gcIds)
+
+  const scheduleIds = (sessRows ?? []).map((s: any) => s.id as string)
+  const scheduleToGcId = new Map<string, string>(
+    (sessRows ?? []).map((s: any) => [s.id as string, s.group_course_id as string])
+  )
+
+  if (scheduleIds.length > 0) {
+    const { data: directRows } = await db
+      .from('assignments')
+      .select('id, title, due_at, schedule_id')
+      .in('schedule_id', scheduleIds)
+      .is('module_id', null)
+      .is('lesson_id', null)
+      .eq('status', 'published')
+      .is('deleted_at', null)
+
+    for (const a of directRows ?? []) {
+      const gcId      = scheduleToGcId.get((a as any).schedule_id) ?? ''
+      const groupName = groupNameByGcId.get(gcId) ?? null
+      assignmentIds.add((a as any).id)
+      if (!assignMap.has((a as any).id)) {
+        assignMap.set((a as any).id, { title: (a as any).title, groupName })
+      }
+    }
+  }
+
+  if (assignmentIds.size === 0) return []
+
+  // ── Fetch pending submissions for all found assignments ───────────────────
   const { data: subRows } = await db
     .from('submissions')
     .select(
@@ -715,20 +756,19 @@ export async function listPendingSubmissions(
          )
        )`
     )
-    .in('assignment_id', assignIds)
+    .in('assignment_id', [...assignmentIds])
     .in('status', ['submitted', 'resubmitted'])
     .order('submitted_at', { ascending: true })
 
   return (subRows ?? []).slice(0, limit).map((row: any) => {
-    const p        = row.students?.users?.profiles
-    const asgn     = assignMap.get(row.assignment_id)
-    const courseId = asgn?.course_modules?.course_id
+    const p    = row.students?.users?.profiles
+    const info = assignMap.get(row.assignment_id)
     return {
       submission_id:      row.id,
       assignment_id:      row.assignment_id,
-      assignment_title:   asgn?.title ?? '',
-      course_title:       asgn?.course_modules?.title ?? null,
-      group_name:         courseId ? (groupNameByCourse.get(courseId) ?? null) : null,
+      assignment_title:   info?.title      ?? '',
+      course_title:       null,
+      group_name:         info?.groupName  ?? null,
       student_id:         row.student_id,
       student_name:       [p?.first_name, p?.last_name].filter(Boolean).join(' ') || 'Unknown',
       submitted_at:       row.submitted_at,

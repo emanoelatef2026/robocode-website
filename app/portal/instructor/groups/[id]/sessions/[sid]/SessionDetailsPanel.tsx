@@ -211,44 +211,46 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
       </div>
 
       {/* ── Quick Homework ─────────────────────────────────────────────── */}
-      {session.course_modules.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-          <h3 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Create Homework</h3>
+      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <h3 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Create Homework</h3>
 
-          {hwState && !hwState.success && (
-            <div className="mb-3 text-xs text-red-600">{hwState.error.message}</div>
+        {hwState && !hwState.success && (
+          <div className="mb-3 text-xs text-red-600">{hwState.error.message}</div>
+        )}
+        {hwState?.success && (
+          <div className="mb-3 text-xs text-green-600">Homework created and published.</div>
+        )}
+
+        <form action={hwAction} className="space-y-3">
+          <input type="hidden" name="session_id" value={session.id} />
+          <input type="hidden" name="group_id"   value={groupId} />
+          {/* module_id is optional — omit when group has no course modules.
+              Migration 0043 allows session-only assignments (schedule_id only). */}
+          {defaultModule && (
+            <input type="hidden" name="module_id" value={defaultModule.id} />
           )}
-          {hwState?.success && (
-            <div className="mb-3 text-xs text-green-600">Homework created and published.</div>
-          )}
 
-          <form action={hwAction} className="space-y-3">
-            <input type="hidden" name="session_id" value={session.id} />
-            <input type="hidden" name="group_id"   value={groupId} />
-            <input type="hidden" name="module_id"  value={defaultModule?.id ?? ''} />
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#64748B]">Title</label>
+            <input name="title" required placeholder="e.g. Practice loops exercise" className={cls} />
+          </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-medium text-[#64748B]">Title</label>
-              <input name="title" required placeholder="e.g. Practice loops exercise" className={cls} />
-            </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#64748B]">Description (optional)</label>
+            <textarea name="description" rows={2} placeholder="Instructions…" className={cls} />
+          </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-medium text-[#64748B]">Description (optional)</label>
-              <textarea name="description" rows={2} placeholder="Instructions…" className={cls} />
-            </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#64748B]">Due date (optional)</label>
+            <input name="due_at" type="date" className={cls} />
+          </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-medium text-[#64748B]">Due date (optional)</label>
-              <input name="due_at" type="date" className={cls} />
-            </div>
-
-            <button type="submit"
-              className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e07818] transition">
-              Create &amp; Publish Homework
-            </button>
-          </form>
-        </div>
-      )}
+          <button type="submit"
+            className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e07818] transition">
+            Create &amp; Publish Homework
+          </button>
+        </form>
+      </div>
 
       {/* ── End Session ────────────────────────────────────────────────── */}
       {session.status !== 'completed' && session.status !== 'cancelled' && (

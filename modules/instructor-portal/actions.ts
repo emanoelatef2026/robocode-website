@@ -623,10 +623,13 @@ export async function updateSessionResources(
 
 // ── Quick homework from session ───────────────────────────────────────────────
 
+// module_id is optional: new groups without course modules create session-only
+// assignments (lesson_id=null, module_id=null, schedule_id=sessionId).
+// Migration 0043 relaxes the assignment_has_parent constraint to allow this.
 const homeworkSchema = z.object({
   session_id:  z.string().uuid(),
   group_id:    z.string().uuid(),
-  module_id:   z.string().uuid(),
+  module_id:   z.string().uuid().optional().or(z.literal('')),
   title:       z.string().min(1, 'Title is required').max(200),
   description: z.string().max(2000).optional().or(z.literal('')),
   due_at:      z.string().optional().or(z.literal('')),
@@ -643,7 +646,7 @@ export async function createSessionHomework(
   const raw = {
     session_id:  formData.get('session_id'),
     group_id:    formData.get('group_id'),
-    module_id:   formData.get('module_id'),
+    module_id:   formData.get('module_id') || undefined,
     title:       formData.get('title'),
     description: formData.get('description') || undefined,
     due_at:      formData.get('due_at') || undefined,
@@ -661,7 +664,7 @@ export async function createSessionHomework(
   const { data: assignment, error } = await db
     .from('assignments')
     .insert({
-      module_id:            d.module_id,
+      module_id:            d.module_id || null,   // null for session-only homework
       schedule_id:          d.session_id,
       title:                d.title,
       description:          d.description || null,
