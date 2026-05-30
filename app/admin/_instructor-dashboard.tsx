@@ -354,12 +354,19 @@ export default async function InstructorDashboard({
 
   // Fetch all sections in parallel
   const [todayActions, upcoming, groups, pending, attention] = await Promise.all([
-    getTodayActions(instructor.id).catch(() => []),
-    getUpcomingSessionsForInstructor(instructor.id, 5).catch(() => []),
-    listInstructorGroups(instructor.id).catch(() => []),
-    listPendingSubmissions(instructor.id, 10).catch(() => []),
-    getStudentsRequiringAttention(instructor.id, 5).catch(() => []),
+    getTodayActions(instructor.id).catch((e: unknown) => { console.error('[TRACE] getTodayActions threw', e); return [] }),
+    getUpcomingSessionsForInstructor(instructor.id, 5).catch((e: unknown) => { console.error('[TRACE] getUpcomingSessions threw', e); return [] }),
+    listInstructorGroups(instructor.id).catch((e: unknown) => { console.error('[TRACE] listInstructorGroups threw', e); return [] }),
+    listPendingSubmissions(instructor.id, 10).catch((e: unknown) => { console.error('[TRACE] listPendingSubmissions threw', e); return [] }),
+    getStudentsRequiringAttention(instructor.id, 5).catch((e: unknown) => { console.error('[TRACE] getStudentsRequiring threw', e); return [] }),
   ])
+
+  console.log('[TRACE] InstructorDashboard loader', {
+    instructor_id:    instructor.id,
+    user_id:          userId,
+    groups_length:    groups.length,
+    first_group:      groups[0] ?? null,
+  })
 
   return (
     <div className="space-y-5">

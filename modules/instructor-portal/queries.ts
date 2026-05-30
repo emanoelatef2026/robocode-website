@@ -53,11 +53,21 @@ async function resolveGcContext(
     gcMap.set((r as any).id, (r as any).group_id)
   }
   const groupIdSet = new Set([...gcMap.values(), ...giGroupIds])
-
-  return {
+  const result = {
     gcIds:    [...gcMap.keys()],
     groupIds: [...groupIdSet],
   }
+
+  console.log('[TRACE] resolveGcContext', {
+    instructor_id:   instructorId,
+    gi_group_ids:    giGroupIds,
+    gc_direct_count: (gcDirect ?? []).length,
+    gc_by_group_count: gcByGroup.length,
+    gcIds:           result.gcIds,
+    groupIds:        result.groupIds,
+  })
+
+  return result
 }
 
 // ── Resolve instructor record from auth user id ───────────────────────────────
@@ -77,6 +87,8 @@ export async function getInstructorByUserId(userId: string): Promise<InstructorR
     .eq('status', 'active')
     .is('deleted_at', null)
     .maybeSingle()
+
+  console.log('[TRACE] getInstructorByUserId', { user_id: userId, error: error?.message ?? null, instructor_id: (data as any)?.id ?? null })
 
   if (error || !data) return null
   const row = data as any
@@ -326,18 +338,27 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
   }
 
   // ── Path B: groups in group_instructors with no active group_courses row ──
-  // A group can be assigned to an instructor before any course is set up.
-  // Surfaced with partial data (no course, no sessions — accurate for that state).
+  // A group can be assigned before any course is set up.
+  // Semesters join is deliberately excluded here to avoid silent FK-hint failures;
+  // semester_name will be null for these groups.
   const coveredIds   = new Set(results.map((r) => r.group_id))
   const uncoveredIds = groupIds.filter((id) => !coveredIds.has(id))
 
+  console.log('[TRACE] listInstructorGroups pathA_count=%d uncoveredIds=%o', results.length, uncoveredIds)
+
   if (uncoveredIds.length > 0) {
-    const { data: groupRows } = await db
+    const { data: groupRows, error: grpErr } = await db
       .from('groups')
-      .select(`id, name, code, semester_id,
-               semesters!groups_semester_id_fkey(name, academic_year)`)
+      .select('id, name, code, semester_id')
       .in('id', uncoveredIds)
       .is('deleted_at', null)
+
+    console.log('[TRACE] listInstructorGroups pathB groups query', {
+      uncoveredIds,
+      groupRows_count: groupRows?.length ?? 0,
+      groupRows_error: grpErr?.message ?? null,
+      groupRows_raw:   groupRows,
+    })
 
     const { data: gsRows } = await db
       .from('group_students')
@@ -352,27 +373,24 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
     }
 
     for (const g of groupRows ?? []) {
-      const sem     = (g as any).semesters
-      const semName = sem
-        ? [sem.name ?? '', sem.academic_year ?? ''].filter(Boolean).join(' ').trim() || null
-        : null
       results.push({
-        group_id:           g.id,
+        group_id:           (g as any).id,
         group_name:         (g as any).name ?? '',
         group_code:         (g as any).code ?? null,
         group_course_id:    '',
         course_id:          '',
         course_title:       '',
-        student_count:      studentMap[g.id] ?? 0,
+        student_count:      studentMap[(g as any).id] ?? 0,
         next_session_at:    null,
         semester_id:        (g as any).semester_id ?? null,
-        semester_name:      semName,
+        semester_name:      null,
         completed_sessions: 0,
         total_sessions:     0,
       })
     }
   }
 
+  console.log('[TRACE] listInstructorGroups final result count=%d', results.length)
   return results
 }
 
