@@ -40,7 +40,7 @@ export default async function ParentProgressPage() {
 
   if (!summaries.length) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
+      <div className="flex min-h-100 items-center justify-center">
         <div className="text-center">
           <p className="text-lg font-semibold text-[#0B132B]">No progress data yet</p>
           <p className="mt-1 text-sm text-[#64748B]">
@@ -84,10 +84,7 @@ export default async function ParentProgressPage() {
                   <div className="mb-4 flex items-start justify-between gap-4">
                     <div>
                       <p className="font-semibold text-[#0B132B]">{course.course_title}</p>
-                      <p className="text-xs text-[#94A3B8]">
-                        {course.semester_name && <span>{course.semester_name} · </span>}
-                        {course.group_name}
-                      </p>
+                      <p className="text-xs text-[#94A3B8]">{course.group_name}</p>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1">
                       {statusBadge(course.status)}

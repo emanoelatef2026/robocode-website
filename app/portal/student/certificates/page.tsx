@@ -22,7 +22,7 @@ export default async function StudentCertificatesPage() {
 
       {certificates.length === 0 ? (
         <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
-          <p className="text-sm text-[#64748B]">No certificates yet. Complete courses and semesters to earn certificates.</p>
+          <p className="text-sm text-[#64748B]">No certificates yet. Complete your sessions to become eligible.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -43,7 +43,6 @@ export default async function StudentCertificatesPage() {
                 <p className="mt-0.5 text-sm text-[#64748B]">
                   {TYPE_LABELS[c.certificate_type] ?? c.certificate_type}
                   {c.course_title && ` · ${c.course_title}`}
-                  {c.semester_name && ` · ${c.semester_name}`}
                 </p>
                 <p className="mt-1 text-xs text-[#94A3B8]">
                   Issued {new Date(c.issued_at).toLocaleDateString('en-GB')} · <span className="font-mono">{c.certificate_code}</span>
