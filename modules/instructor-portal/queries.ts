@@ -484,47 +484,114 @@ export async function getSessionDetail(
 ): Promise<SessionDetail | null> {
   const db = createServiceClient()
 
-  // Step 1: Fetch the schedule row using flat columns only.
-  // Avoiding nested PostgREST joins here eliminates schema-cache errors that
-  // silently cause .single() to return PGRST116 → notFound().
-  const { data: sessRow } = await db
+  // ── Step 1a: BASE query — only columns present since migration 0007. ────────
+  // IMPORTANT: topic (0028), notes (0028), resources_links (0035),
+  // started_at (0038), ended_at (0038) are intentionally EXCLUDED here.
+  // If those migrations haven't been applied to the live DB, selecting them
+  // causes a Postgres "column does not exist" error which Supabase JS returns
+  // as { data: null, error } — silently producing a 404 when we only check data.
+  const { data: sessRow, error: sessBaseErr } = await db
     .from('schedules')
-    .select(
-      'id, group_course_id, branch_id, scheduled_at, started_at, ended_at, duration_minutes, type, delivery, meeting_url, room, status, topic, notes, resources_links'
-    )
+    .select('id, group_course_id, branch_id, scheduled_at, duration_minutes, type, delivery, meeting_url, room, status')
     .eq('id', sessionId)
     .maybeSingle()
 
-  if (!sessRow) return null
+  if (sessBaseErr) {
+    console.error('[getSessionDetail] schedules base query error', {
+      sessionId, instructorId, error: sessBaseErr.message, code: sessBaseErr.code,
+    })
+    return null
+  }
+  if (!sessRow) {
+    console.error('[getSessionDetail] session not found in schedules', { sessionId, instructorId })
+    return null
+  }
+
   const s    = sessRow as any
   const gcId = s.group_course_id as string
 
-  // Step 2: Fetch the group_courses row (needed for RBAC + metadata).
-  const { data: gcRow } = await db
+  // ── Step 1b: ENRICHMENT query — optional columns added in later migrations. ─
+  // This query is SAFE TO FAIL. If any column doesn't exist, we fall back to
+  // nulls/empty values and the page still loads — never a 404 for missing columns.
+  let topic:           string | null   = null
+  let notes:           string | null   = null
+  let started_at:      string | null   = null
+  let ended_at:        string | null   = null
+  let resources_links: ResourceLink[]  = []
+
+  const { data: enrichRow, error: enrichErr } = await db
+    .from('schedules')
+    .select('topic, notes, started_at, ended_at, resources_links')
+    .eq('id', sessionId)
+    .maybeSingle()
+
+  if (enrichErr) {
+    console.error('[getSessionDetail] enrichment columns missing (pending migration?)', {
+      sessionId, error: enrichErr.message, code: enrichErr.code,
+    })
+    // Non-fatal — continue with empty defaults
+  } else if (enrichRow) {
+    const e     = enrichRow as any
+    topic       = e.topic          ?? null
+    notes       = e.notes          ?? null
+    started_at  = e.started_at     ?? null
+    ended_at    = e.ended_at       ?? null
+    const raw   = e.resources_links
+    resources_links = Array.isArray(raw) ? raw : []
+  }
+
+  // ── Step 2: group_courses row (RBAC + metadata). ───────────────────────────
+  const { data: gcRow, error: gcErr } = await db
     .from('group_courses')
     .select('id, group_id, instructor_id, course_id')
     .eq('id', gcId)
     .maybeSingle()
 
-  if (!gcRow) return null
+  if (gcErr) {
+    console.error('[getSessionDetail] group_courses query error', {
+      sessionId, gcId, instructorId, error: gcErr.message,
+    })
+    return null
+  }
+  if (!gcRow) {
+    console.error('[getSessionDetail] group_courses row not found', { sessionId, gcId, instructorId })
+    return null
+  }
+
   const gc       = gcRow as any
   const groupId  = gc.group_id  as string
   const courseId = gc.course_id as string | undefined
 
-  // Step 3: RBAC — lead instructor (group_courses.instructor_id) OR additional
-  // instructor in group_instructors. group_instructors has no 'id' column;
-  // use group_id as the existence check column.
+  // ── Step 3: RBAC ────────────────────────────────────────────────────────────
+  // Lead: group_courses.instructor_id === instructorId
+  // Additional: row in group_instructors (table has no 'id' column — use group_id)
   if (gc.instructor_id !== instructorId) {
-    const { data: giRow } = await db
+    const { data: giRow, error: giErr } = await db
       .from('group_instructors')
       .select('group_id')
       .eq('group_id', groupId)
       .eq('instructor_id', instructorId)
       .maybeSingle()
-    if (!giRow) return null
+
+    if (giErr) {
+      console.error('[getSessionDetail] group_instructors query error', {
+        sessionId, groupId, instructorId, error: giErr.message,
+      })
+    }
+    if (!giRow) {
+      console.error('[getSessionDetail] RBAC DENIED — instructor not assigned', {
+        sessionId, groupId, instructorId,
+        gcInstructorId:       gc.instructor_id,
+        groupInstructorFound: false,
+      })
+      return null
+    }
   }
 
-  // Step 4: Parallel fetch — all data needed to render the session page.
+  // ── Step 4: Parallel data fetch ─────────────────────────────────────────────
+  // Progress query only selects guaranteed columns (id, scheduled_at, status).
+  // topic is fetched via enrichment in step 1b for the current session only;
+  // sibling session topics are omitted to avoid breaking older DBs.
   const [studentRes, attRes, recordingsRes, modulesRes, progressRes, groupRes, courseRes] =
     await Promise.all([
       db.from('group_students')
@@ -548,8 +615,9 @@ export async function getSessionDetail(
       courseId
         ? db.from('course_modules').select('id, title').eq('course_id', courseId).is('deleted_at', null).order('order_index', { ascending: true }).limit(20)
         : Promise.resolve({ data: [] as any[], error: null }),
+      // Only select guaranteed columns — topic may not exist (migration 0028)
       db.from('schedules')
-        .select('id, scheduled_at, status, topic')
+        .select('id, scheduled_at, status')
         .eq('group_course_id', gcId)
         .order('scheduled_at', { ascending: true }),
       db.from('groups').select('name').eq('id', groupId).maybeSingle(),
@@ -596,14 +664,11 @@ export async function getSessionDetail(
     id:           ps.id,
     scheduled_at: ps.scheduled_at,
     status:       ps.status,
-    topic:        ps.topic ?? null,
+    topic:        null,   // sibling topics omitted — avoids failing on missing column
     session_num:  idx + 1,
   }))
   const currentIdx = allSessions.findIndex((ps) => ps.id === sessionId)
   const currentNum = currentIdx >= 0 ? currentIdx + 1 : progress.length
-
-  const resourcesRaw  = s.resources_links
-  const resources_links: ResourceLink[] = Array.isArray(resourcesRaw) ? resourcesRaw : []
 
   const groupName   = (groupRes.data  as any)?.name  ?? ''
   const courseTitle = (courseRes.data as any)?.title ?? ''
@@ -614,16 +679,16 @@ export async function getSessionDetail(
     group_id:         groupId,
     branch_id:        s.branch_id,
     scheduled_at:     s.scheduled_at,
-    started_at:       s.started_at  ?? null,
-    ended_at:         s.ended_at    ?? null,
+    started_at,
+    ended_at,
     duration_minutes: s.duration_minutes,
     type:             s.type,
     delivery:         s.delivery    ?? null,
     meeting_url:      s.meeting_url ?? null,
     room:             s.room        ?? null,
     status:           s.status,
-    topic:            s.topic       ?? null,
-    notes:            s.notes       ?? null,
+    topic,
+    notes,
     group_name:       groupName,
     course_title:     courseTitle,
     course_id:        courseId ?? '',
