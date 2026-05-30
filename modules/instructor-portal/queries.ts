@@ -14,7 +14,51 @@ import type {
   SessionRecording,
   ResourceLink,
   CourseModuleItem,
+  TodayAction,
+  StudentAttentionItem,
 } from './types'
+
+// ── Shared helper: resolve all group_courses the instructor is linked to ───────
+// Checks BOTH group_courses.instructor_id (direct) and group_instructors (membership).
+// Returns deduplicated gcIds and groupIds so all downstream queries are consistent.
+
+interface GcContext {
+  gcIds:    string[]
+  groupIds: string[]
+}
+
+async function resolveGcContext(
+  instructorId: string,
+  db: ReturnType<typeof createServiceClient>
+): Promise<GcContext> {
+  const [{ data: giRows }, { data: gcDirect }] = await Promise.all([
+    db.from('group_instructors').select('group_id').eq('instructor_id', instructorId),
+    db.from('group_courses').select('id, group_id').eq('instructor_id', instructorId).eq('status', 'active'),
+  ])
+
+  const giGroupIds = (giRows ?? []).map((r: any) => r.group_id as string)
+
+  let gcByGroup: { id: string; group_id: string }[] = []
+  if (giGroupIds.length > 0) {
+    const { data } = await db
+      .from('group_courses')
+      .select('id, group_id')
+      .in('group_id', giGroupIds)
+      .eq('status', 'active')
+    gcByGroup = (data ?? []) as any[]
+  }
+
+  const gcMap = new Map<string, string>()
+  for (const r of [...(gcDirect ?? []), ...gcByGroup]) {
+    gcMap.set((r as any).id, (r as any).group_id)
+  }
+  const groupIdSet = new Set([...gcMap.values(), ...giGroupIds])
+
+  return {
+    gcIds:    [...gcMap.keys()],
+    groupIds: [...groupIdSet],
+  }
+}
 
 // ── Resolve instructor record from auth user id ───────────────────────────────
 
@@ -164,10 +208,14 @@ export async function getUpcomingSessionsForInstructor(
   if (gcRows.length === 0) return []
 
   const gcIds = gcRows.map((r) => r.id as string)
-  const gcMap = new Map<string, { group_name: string; course_title: string }>(
+  const gcMap = new Map<string, { group_id: string; group_name: string; course_title: string }>(
     gcRows.map((r) => [
       r.id,
-      { group_name: (r as any).groups?.name ?? '', course_title: (r as any).courses?.title ?? '' },
+      {
+        group_id:     (r as any).group_id        ?? '',
+        group_name:   (r as any).groups?.name    ?? '',
+        course_title: (r as any).courses?.title  ?? '',
+      },
     ])
   )
 
@@ -183,7 +231,8 @@ export async function getUpcomingSessionsForInstructor(
   return (sessRows ?? []).map((s: any) => ({
     id:               s.id,
     group_course_id:  s.group_course_id,
-    group_name:       gcMap.get(s.group_course_id)?.group_name  ?? '',
+    group_id:         gcMap.get(s.group_course_id)?.group_id     ?? '',
+    group_name:       gcMap.get(s.group_course_id)?.group_name   ?? '',
     course_title:     gcMap.get(s.group_course_id)?.course_title ?? '',
     scheduled_at:     s.scheduled_at,
     duration_minutes: s.duration_minutes,
@@ -200,64 +249,74 @@ export async function getUpcomingSessionsForInstructor(
 
 export async function listInstructorGroups(instructorId: string): Promise<InstructorGroup[]> {
   const db = createServiceClient()
+  const { gcIds } = await resolveGcContext(instructorId, db)
+  if (gcIds.length === 0) return []
 
   const { data: gcRows, error } = await db
     .from('group_courses')
     .select(
       `id, group_id, course_id,
-       groups!group_courses_group_id_fkey(name, code, semester_id),
+       groups!group_courses_group_id_fkey(
+         name, code, semester_id,
+         semesters!groups_semester_id_fkey(name, academic_year)
+       ),
        courses!group_courses_course_id_fkey(title)`
     )
-    .eq('instructor_id', instructorId)
+    .in('id', gcIds)
     .eq('status', 'active')
 
   if (error || !gcRows || gcRows.length === 0) return []
 
-  const groupIds = (gcRows as any[]).map((r) => r.group_id as string)
-  const gcIds    = (gcRows as any[]).map((r) => r.id        as string)
+  const groupIds  = (gcRows as any[]).map((r) => r.group_id as string)
+  const gcFullIds = (gcRows as any[]).map((r) => r.id        as string)
+  const now       = new Date().toISOString()
 
-  // Student counts per group
+  const [gsRes, schedRes] = await Promise.all([
+    db.from('group_students').select('group_id').in('group_id', groupIds).eq('status', 'active'),
+    db.from('schedules')
+      .select('group_course_id, status, scheduled_at')
+      .in('group_course_id', gcFullIds)
+      .order('scheduled_at', { ascending: true }),
+  ])
+
   const studentMap: Record<string, number> = {}
-  if (groupIds.length > 0) {
-    const { data: gsRows } = await db
-      .from('group_students')
-      .select('group_id')
-      .in('group_id', groupIds)
-      .eq('status', 'active')
-    for (const gs of gsRows ?? []) {
-      const gid = (gs as any).group_id as string
-      studentMap[gid] = (studentMap[gid] ?? 0) + 1
+  for (const gs of gsRes.data ?? []) {
+    const gid = (gs as any).group_id as string
+    studentMap[gid] = (studentMap[gid] ?? 0) + 1
+  }
+
+  const completedMap: Record<string, number> = {}
+  const totalMap:     Record<string, number> = {}
+  const nextMap:      Record<string, string> = {}
+  for (const s of schedRes.data ?? []) {
+    const gcId = (s as any).group_course_id as string
+    if ((s as any).status !== 'cancelled') totalMap[gcId] = (totalMap[gcId] ?? 0) + 1
+    if ((s as any).status === 'completed')  completedMap[gcId] = (completedMap[gcId] ?? 0) + 1
+    if (!nextMap[gcId] && (s as any).scheduled_at >= now && (s as any).status !== 'cancelled') {
+      nextMap[gcId] = (s as any).scheduled_at as string
     }
   }
 
-  // Next session per group_course
-  const nextMap: Record<string, string> = {}
-  if (gcIds.length > 0) {
-    const now = new Date().toISOString()
-    const { data: schedRows } = await db
-      .from('schedules')
-      .select('group_course_id, scheduled_at')
-      .in('group_course_id', gcIds)
-      .gte('scheduled_at', now)
-      .neq('status', 'cancelled')
-      .order('scheduled_at', { ascending: true })
-    for (const s of schedRows ?? []) {
-      const gcId = (s as any).group_course_id as string
-      if (!nextMap[gcId]) nextMap[gcId] = (s as any).scheduled_at as string
+  return (gcRows as any[]).map((row) => {
+    const sem     = (row as any).groups?.semesters
+    const semName = sem
+      ? [`${sem.name ?? ''}`, sem.academic_year ? `${sem.academic_year}` : ''].filter(Boolean).join(' ').trim()
+      : null
+    return {
+      group_id:           row.group_id,
+      group_name:         row.groups?.name      ?? '',
+      group_code:         row.groups?.code      ?? null,
+      group_course_id:    row.id,
+      course_id:          row.course_id,
+      course_title:       row.courses?.title    ?? '',
+      student_count:      studentMap[row.group_id] ?? 0,
+      next_session_at:    nextMap[row.id]          ?? null,
+      semester_id:        row.groups?.semester_id  ?? null,
+      semester_name:      semName                  ?? null,
+      completed_sessions: completedMap[row.id]     ?? 0,
+      total_sessions:     totalMap[row.id]          ?? 0,
     }
-  }
-
-  return (gcRows as any[]).map((row) => ({
-    group_id:        row.group_id,
-    group_name:      row.groups?.name     ?? '',
-    group_code:      row.groups?.code     ?? null,
-    group_course_id: row.id,
-    course_id:       row.course_id,
-    course_title:    row.courses?.title   ?? '',
-    student_count:   studentMap[row.group_id] ?? 0,
-    next_session_at: nextMap[row.id] ?? null,
-    semester_id:     row.groups?.semester_id  ?? null,
-  }))
+  })
 }
 
 // ── Group Detail ──────────────────────────────────────────────────────────────
@@ -498,8 +557,13 @@ export async function getSessionDetail(
 
 // ── Homework Review ───────────────────────────────────────────────────────────
 
-export async function listPendingSubmissions(instructorId: string): Promise<PendingSubmissionItem[]> {
+export async function listPendingSubmissions(
+  instructorId: string,
+  limit = 10
+): Promise<PendingSubmissionItem[]> {
   const db = createServiceClient()
+  const { gcIds } = await resolveGcContext(instructorId, db)
+  if (gcIds.length === 0) return []
 
   const { data: gcRows } = await db
     .from('group_courses')
@@ -508,7 +572,7 @@ export async function listPendingSubmissions(instructorId: string): Promise<Pend
        groups!group_courses_group_id_fkey(name),
        courses!group_courses_course_id_fkey(id, title)`
     )
-    .eq('instructor_id', instructorId)
+    .in('id', gcIds)
     .eq('status', 'active')
 
   if (!gcRows || gcRows.length === 0) return []
@@ -573,9 +637,9 @@ export async function listPendingSubmissions(instructorId: string): Promise<Pend
     .in('status', ['submitted', 'resubmitted'])
     .order('submitted_at', { ascending: true })
 
-  return (subRows ?? []).map((row: any) => {
-    const p       = row.students?.users?.profiles
-    const asgn    = assignMap.get(row.assignment_id)
+  return (subRows ?? []).slice(0, limit).map((row: any) => {
+    const p        = row.students?.users?.profiles
+    const asgn     = assignMap.get(row.assignment_id)
     const courseId = asgn?.course_modules?.course_id
     return {
       submission_id:      row.id,
@@ -589,6 +653,169 @@ export async function listPendingSubmissions(instructorId: string): Promise<Pend
       status:             row.status,
       is_late:            row.is_late,
       resubmission_count: row.resubmission_count,
+    }
+  })
+}
+
+// ── Today's Actions ───────────────────────────────────────────────────────────
+
+export async function getTodayActions(instructorId: string): Promise<TodayAction[]> {
+  const db = createServiceClient()
+  const { gcIds } = await resolveGcContext(instructorId, db)
+  if (gcIds.length === 0) return []
+
+  // Build group_id and group_name lookup for URL construction
+  const { data: gcMeta } = await db
+    .from('group_courses')
+    .select('id, group_id, groups!group_courses_group_id_fkey(name)')
+    .in('id', gcIds)
+  const gcGroupMap = new Map<string, { groupId: string; groupName: string }>(
+    (gcMeta ?? []).map((r: any) => [r.id as string, { groupId: r.group_id as string, groupName: r.groups?.name ?? '' }])
+  )
+
+  // Today's date range (UTC)
+  const now   = new Date()
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0))
+  const end   = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999))
+
+  const { data: todaySess } = await db
+    .from('schedules')
+    .select('id, group_course_id, status, topic, notes')
+    .in('group_course_id', gcIds)
+    .gte('scheduled_at', start.toISOString())
+    .lte('scheduled_at', end.toISOString())
+    .neq('status', 'cancelled')
+
+  // Batch fetch attendance counts for completed sessions
+  const completedIds = (todaySess ?? [])
+    .filter((s: any) => s.status === 'completed')
+    .map((s: any) => s.id as string)
+  const attCounts: Record<string, number> = {}
+  if (completedIds.length > 0) {
+    const { data: attRows } = await db
+      .from('attendance_records')
+      .select('schedule_id')
+      .in('schedule_id', completedIds)
+    for (const a of attRows ?? []) {
+      const sid = (a as any).schedule_id as string
+      attCounts[sid] = (attCounts[sid] ?? 0) + 1
+    }
+  }
+
+  const actions: TodayAction[] = []
+  for (const sess of todaySess ?? []) {
+    const gc   = gcGroupMap.get((sess as any).group_course_id)
+    if (!gc) continue
+    const href = `/portal/instructor/groups/${gc.groupId}/sessions/${(sess as any).id}`
+
+    if ((sess as any).status === 'scheduled') {
+      actions.push({ type: 'start_session', label: "Start today's session", detail: gc.groupName, href })
+    } else if ((sess as any).status === 'in_progress') {
+      actions.push({ type: 'complete_attendance', label: 'Complete attendance', detail: gc.groupName, href })
+    } else if ((sess as any).status === 'completed') {
+      if (!attCounts[(sess as any).id]) {
+        actions.push({ type: 'complete_attendance', label: 'Complete attendance', detail: gc.groupName, href })
+      }
+      if (!(sess as any).topic && !(sess as any).notes) {
+        actions.push({ type: 'add_notes', label: 'Add session notes', detail: gc.groupName, href })
+      }
+    }
+  }
+
+  // Pending homework reviews — add one consolidated action if any exist
+  const pending = await listPendingSubmissions(instructorId, 1)
+  if (pending.length > 0) {
+    // Get full count without limit for the label
+    const allPending = await listPendingSubmissions(instructorId, 999)
+    const n = allPending.length
+    actions.push({
+      type:   'review_homework',
+      label:  `Review ${n} homework submission${n > 1 ? 's' : ''}`,
+      detail: '',
+      href:   '/portal/instructor/homework',
+    })
+  }
+
+  return actions
+}
+
+// ── Students Requiring Attention ──────────────────────────────────────────────
+
+export async function getStudentsRequiringAttention(
+  instructorId: string,
+  limit = 5
+): Promise<StudentAttentionItem[]> {
+  const db = createServiceClient()
+  const { gcIds } = await resolveGcContext(instructorId, db)
+  if (gcIds.length === 0) return []
+
+  // Build group name lookup
+  const { data: gcMeta } = await db
+    .from('group_courses')
+    .select('id, group_id, groups!group_courses_group_id_fkey(name)')
+    .in('id', gcIds)
+  const gcToGroup  = new Map<string, string>((gcMeta ?? []).map((r: any) => [r.id as string, r.group_id as string]))
+  const groupNames = new Map<string, string>((gcMeta ?? []).map((r: any) => [r.group_id as string, (r as any).groups?.name ?? '']))
+
+  // All session ids for this instructor's groups
+  const { data: schedRows } = await db
+    .from('schedules')
+    .select('id, group_course_id')
+    .in('group_course_id', gcIds)
+    .eq('status', 'completed')
+  const schedIds     = (schedRows ?? []).map((s: any) => s.id as string)
+  const schedToGroup = new Map<string, string>(
+    (schedRows ?? []).map((s: any) => [s.id as string, gcToGroup.get((s as any).group_course_id) ?? ''])
+  )
+  if (schedIds.length === 0) return []
+
+  // Absence records
+  const { data: absRows } = await db
+    .from('attendance_records')
+    .select('student_id, schedule_id')
+    .in('schedule_id', schedIds)
+    .eq('status', 'absent')
+
+  // Aggregate absences per student-group pair
+  const absMap = new Map<string, { count: number; groupId: string }>()
+  for (const a of absRows ?? []) {
+    const sid = (a as any).student_id as string
+    const gid = schedToGroup.get((a as any).schedule_id) ?? ''
+    const key = `${sid}:${gid}`
+    const cur = absMap.get(key) ?? { count: 0, groupId: gid }
+    absMap.set(key, { count: cur.count + 1, groupId: gid })
+  }
+
+  const flagged = [...absMap.entries()]
+    .filter(([, v]) => v.count >= 2)
+    .sort(([, a], [, b]) => b.count - a.count)
+    .slice(0, limit)
+
+  if (flagged.length === 0) return []
+
+  const studentIds = flagged.map(([key]) => key.split(':')[0])
+  const { data: studRows } = await db
+    .from('students')
+    .select(`id, users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
+    .in('id', studentIds)
+    .is('deleted_at', null)
+  const nameMap = new Map<string, string>(
+    (studRows ?? []).map((s: any) => {
+      const p = s.users?.profiles
+      return [s.id as string, [p?.first_name, p?.last_name].filter(Boolean).join(' ') || 'Unknown']
+    })
+  )
+
+  return flagged.map(([key, { count, groupId }]) => {
+    const studentId = key.split(':')[0]
+    return {
+      student_id:    studentId,
+      student_name:  nameMap.get(studentId)      ?? 'Unknown',
+      group_id:      groupId,
+      group_name:    groupNames.get(groupId)     ?? '',
+      absence_count: count,
+      reason:        `${count} absence${count > 1 ? 's' : ''}`,
+      href:          groupId ? `/portal/instructor/groups/${groupId}/students/${studentId}` : '#',
     }
   })
 }

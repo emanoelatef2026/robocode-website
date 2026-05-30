@@ -8,20 +8,24 @@ export interface InstructorRecord {
 }
 
 export interface InstructorGroup {
-  group_id:        string
-  group_name:      string
-  group_code:      string | null
-  group_course_id: string
-  course_id:       string
-  course_title:    string
-  student_count:   number
-  next_session_at: string | null
-  semester_id:     string | null
+  group_id:           string
+  group_name:         string
+  group_code:         string | null
+  group_course_id:    string
+  course_id:          string
+  course_title:       string
+  student_count:      number
+  next_session_at:    string | null
+  semester_id:        string | null
+  semester_name:      string | null
+  completed_sessions: number
+  total_sessions:     number
 }
 
 export interface InstructorSession {
   id:               string
   group_course_id:  string
+  group_id?:        string
   group_name:       string
   course_title:     string
   scheduled_at:     string
@@ -32,6 +36,23 @@ export interface InstructorSession {
   topic:            string | null
   notes:            string | null
   attendance_count: number | null
+}
+
+export interface TodayAction {
+  type:   'start_session' | 'complete_attendance' | 'add_notes' | 'review_homework'
+  label:  string
+  detail: string
+  href:   string
+}
+
+export interface StudentAttentionItem {
+  student_id:    string
+  student_name:  string
+  group_id:      string
+  group_name:    string
+  absence_count: number
+  reason:        string
+  href:          string
 }
 
 export interface SessionAttendanceRow {
