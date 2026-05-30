@@ -24,8 +24,9 @@ export default async function InstructorGroupsPage() {
       </div>
 
       {groups.length === 0 ? (
-        <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] text-sm text-[#64748B]">
-          No groups assigned yet.
+        <div className="rounded-xl border border-dashed border-[#E2E8F0] px-6 py-12 text-center">
+          <p className="text-sm font-medium text-[#0B1F3A]">No groups assigned yet.</p>
+          <p className="mt-1 text-sm text-[#94A3B8]">Contact your Team Leader to receive group assignments.</p>
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -52,10 +53,13 @@ export default async function InstructorGroupsPage() {
                   </span>
                 )}
               </div>
-              <p className="mt-2 truncate text-sm text-[#64748B]">
+              <p className="mt-1.5 truncate text-sm text-[#64748B]">
                 {g.course_title || <span className="italic text-[#94A3B8]">No course assigned</span>}
               </p>
-              <div className="mt-4 flex items-center gap-4 text-xs text-[#94A3B8]">
+              {g.branch_name && (
+                <p className="mt-0.5 truncate text-xs text-[#94A3B8]">{g.branch_name}</p>
+              )}
+              <div className="mt-3 flex items-center gap-4 text-xs text-[#94A3B8]">
                 <span>{g.student_count} student{g.student_count !== 1 ? 's' : ''}</span>
                 {g.next_session_at ? (
                   <span>
