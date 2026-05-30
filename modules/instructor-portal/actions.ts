@@ -555,7 +555,16 @@ export async function createStudentNote(
     .maybeSingle()
 
   if (!gcRow) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
+    // Forming groups have no group_courses row — verify via group_instructors
+    const { data: giRow } = await db
+      .from('group_instructors')
+      .select('group_id')
+      .eq('group_id', d.group_id)
+      .eq('instructor_id', instructor.id)
+      .maybeSingle()
+    if (!giRow) {
+      return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
+    }
   }
 
   const { data: note, error: noteErr } = await db
