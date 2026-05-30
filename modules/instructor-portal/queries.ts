@@ -249,74 +249,131 @@ export async function getUpcomingSessionsForInstructor(
 
 export async function listInstructorGroups(instructorId: string): Promise<InstructorGroup[]> {
   const db = createServiceClient()
-  const { gcIds } = await resolveGcContext(instructorId, db)
-  if (gcIds.length === 0) return []
+  const { gcIds, groupIds } = await resolveGcContext(instructorId, db)
 
-  const { data: gcRows, error } = await db
-    .from('group_courses')
-    .select(
-      `id, group_id, course_id,
-       groups!group_courses_group_id_fkey(
-         name, code, semester_id,
-         semesters!groups_semester_id_fkey(name, academic_year)
-       ),
-       courses!group_courses_course_id_fkey(title)`
-    )
-    .in('id', gcIds)
-    .eq('status', 'active')
+  // No groups at all — stop immediately.
+  if (groupIds.length === 0) return []
 
-  if (error || !gcRows || gcRows.length === 0) return []
+  const now     = new Date().toISOString()
+  const results: InstructorGroup[] = []
 
-  const groupIds  = (gcRows as any[]).map((r) => r.group_id as string)
-  const gcFullIds = (gcRows as any[]).map((r) => r.id        as string)
-  const now       = new Date().toISOString()
+  // ── Path A: groups that have an active group_courses row ─────────────────
+  if (gcIds.length > 0) {
+    const { data: gcRows } = await db
+      .from('group_courses')
+      .select(
+        `id, group_id, course_id,
+         groups!group_courses_group_id_fkey(
+           name, code, semester_id,
+           semesters!groups_semester_id_fkey(name, academic_year)
+         ),
+         courses!group_courses_course_id_fkey(title)`
+      )
+      .in('id', gcIds)
+      .eq('status', 'active')
 
-  const [gsRes, schedRes] = await Promise.all([
-    db.from('group_students').select('group_id').in('group_id', groupIds).eq('status', 'active'),
-    db.from('schedules')
-      .select('group_course_id, status, scheduled_at')
-      .in('group_course_id', gcFullIds)
-      .order('scheduled_at', { ascending: true }),
-  ])
+    if (gcRows && gcRows.length > 0) {
+      const gcGroupIds = (gcRows as any[]).map((r) => r.group_id as string)
+      const gcFullIds  = (gcRows as any[]).map((r) => r.id        as string)
 
-  const studentMap: Record<string, number> = {}
-  for (const gs of gsRes.data ?? []) {
-    const gid = (gs as any).group_id as string
-    studentMap[gid] = (studentMap[gid] ?? 0) + 1
-  }
+      const [gsRes, schedRes] = await Promise.all([
+        db.from('group_students').select('group_id').in('group_id', gcGroupIds).eq('status', 'active'),
+        db.from('schedules')
+          .select('group_course_id, status, scheduled_at')
+          .in('group_course_id', gcFullIds)
+          .order('scheduled_at', { ascending: true }),
+      ])
 
-  const completedMap: Record<string, number> = {}
-  const totalMap:     Record<string, number> = {}
-  const nextMap:      Record<string, string> = {}
-  for (const s of schedRes.data ?? []) {
-    const gcId = (s as any).group_course_id as string
-    if ((s as any).status !== 'cancelled') totalMap[gcId] = (totalMap[gcId] ?? 0) + 1
-    if ((s as any).status === 'completed')  completedMap[gcId] = (completedMap[gcId] ?? 0) + 1
-    if (!nextMap[gcId] && (s as any).scheduled_at >= now && (s as any).status !== 'cancelled') {
-      nextMap[gcId] = (s as any).scheduled_at as string
+      const studentMap:   Record<string, number> = {}
+      const completedMap: Record<string, number> = {}
+      const totalMap:     Record<string, number> = {}
+      const nextMap:      Record<string, string> = {}
+
+      for (const gs of gsRes.data ?? []) {
+        const gid = (gs as any).group_id as string
+        studentMap[gid] = (studentMap[gid] ?? 0) + 1
+      }
+      for (const s of schedRes.data ?? []) {
+        const gcId = (s as any).group_course_id as string
+        if ((s as any).status !== 'cancelled') totalMap[gcId] = (totalMap[gcId] ?? 0) + 1
+        if ((s as any).status === 'completed')  completedMap[gcId] = (completedMap[gcId] ?? 0) + 1
+        if (!nextMap[gcId] && (s as any).scheduled_at >= now && (s as any).status !== 'cancelled') {
+          nextMap[gcId] = (s as any).scheduled_at as string
+        }
+      }
+
+      for (const row of gcRows as any[]) {
+        const sem     = row.groups?.semesters
+        const semName = sem
+          ? [sem.name ?? '', sem.academic_year ?? ''].filter(Boolean).join(' ').trim() || null
+          : null
+        results.push({
+          group_id:           row.group_id,
+          group_name:         row.groups?.name   ?? '',
+          group_code:         row.groups?.code   ?? null,
+          group_course_id:    row.id,
+          course_id:          row.course_id,
+          course_title:       row.courses?.title ?? '',
+          student_count:      studentMap[row.group_id] ?? 0,
+          next_session_at:    nextMap[row.id]          ?? null,
+          semester_id:        row.groups?.semester_id  ?? null,
+          semester_name:      semName,
+          completed_sessions: completedMap[row.id]     ?? 0,
+          total_sessions:     totalMap[row.id]          ?? 0,
+        })
+      }
     }
   }
 
-  return (gcRows as any[]).map((row) => {
-    const sem     = (row as any).groups?.semesters
-    const semName = sem
-      ? [`${sem.name ?? ''}`, sem.academic_year ? `${sem.academic_year}` : ''].filter(Boolean).join(' ').trim()
-      : null
-    return {
-      group_id:           row.group_id,
-      group_name:         row.groups?.name      ?? '',
-      group_code:         row.groups?.code      ?? null,
-      group_course_id:    row.id,
-      course_id:          row.course_id,
-      course_title:       row.courses?.title    ?? '',
-      student_count:      studentMap[row.group_id] ?? 0,
-      next_session_at:    nextMap[row.id]          ?? null,
-      semester_id:        row.groups?.semester_id  ?? null,
-      semester_name:      semName                  ?? null,
-      completed_sessions: completedMap[row.id]     ?? 0,
-      total_sessions:     totalMap[row.id]          ?? 0,
+  // ── Path B: groups in group_instructors with no active group_courses row ──
+  // A group can be assigned to an instructor before any course is set up.
+  // Surfaced with partial data (no course, no sessions — accurate for that state).
+  const coveredIds   = new Set(results.map((r) => r.group_id))
+  const uncoveredIds = groupIds.filter((id) => !coveredIds.has(id))
+
+  if (uncoveredIds.length > 0) {
+    const { data: groupRows } = await db
+      .from('groups')
+      .select(`id, name, code, semester_id,
+               semesters!groups_semester_id_fkey(name, academic_year)`)
+      .in('id', uncoveredIds)
+      .is('deleted_at', null)
+
+    const { data: gsRows } = await db
+      .from('group_students')
+      .select('group_id')
+      .in('group_id', uncoveredIds)
+      .eq('status', 'active')
+
+    const studentMap: Record<string, number> = {}
+    for (const gs of gsRows ?? []) {
+      const gid = (gs as any).group_id as string
+      studentMap[gid] = (studentMap[gid] ?? 0) + 1
     }
-  })
+
+    for (const g of groupRows ?? []) {
+      const sem     = (g as any).semesters
+      const semName = sem
+        ? [sem.name ?? '', sem.academic_year ?? ''].filter(Boolean).join(' ').trim() || null
+        : null
+      results.push({
+        group_id:           g.id,
+        group_name:         (g as any).name ?? '',
+        group_code:         (g as any).code ?? null,
+        group_course_id:    '',
+        course_id:          '',
+        course_title:       '',
+        student_count:      studentMap[g.id] ?? 0,
+        next_session_at:    null,
+        semester_id:        (g as any).semester_id ?? null,
+        semester_name:      semName,
+        completed_sessions: 0,
+        total_sessions:     0,
+      })
+    }
+  }
+
+  return results
 }
 
 // ── Group Detail ──────────────────────────────────────────────────────────────

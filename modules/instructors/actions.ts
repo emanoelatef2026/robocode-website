@@ -114,11 +114,12 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
       { group_id: groupId, instructor_id: instructor.id, role: 'lead' },
       { onConflict: 'group_id,instructor_id', ignoreDuplicates: true }
     )
-    // Sync group_courses so the instructor portal picks up this group
-    const { data: gcRow } = await db
-      .from('group_courses').select('id').eq('group_id', groupId).eq('status', 'active').maybeSingle()
-    if (gcRow) {
-      await db.from('group_courses').update({ instructor_id: instructor.id }).eq('id', (gcRow as any).id)
+    // Sync group_courses.instructor_id — search without status filter
+    const { data: gcRowsCreate } = await db
+      .from('group_courses').select('id, status').eq('group_id', groupId).order('status', { ascending: true })
+    const gcRowCreate = (gcRowsCreate ?? []).find((r: any) => r.status === 'active') ?? (gcRowsCreate ?? [])[0] ?? null
+    if (gcRowCreate) {
+      await db.from('group_courses').update({ instructor_id: instructor.id }).eq('id', (gcRowCreate as any).id)
     }
   }
 
@@ -285,9 +286,13 @@ export async function assignGroupToInstructor(
   )
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
 
-  // Sync group_courses so the instructor portal picks up this group
-  const { data: gcRow } = await db
-    .from('group_courses').select('id').eq('group_id', groupId).eq('status', 'active').maybeSingle()
+  // Sync group_courses.instructor_id so the portal picks up this group.
+  // Search without a status filter — the group may have an inactive/completed row
+  // that is still the authoritative course record for this group.
+  const { data: gcRows } = await db
+    .from('group_courses').select('id, status').eq('group_id', groupId).order('status', { ascending: true })
+  // Prefer the active row; fall back to any row
+  const gcRow = (gcRows ?? []).find((r: any) => r.status === 'active') ?? (gcRows ?? [])[0] ?? null
   if (gcRow) {
     await db.from('group_courses').update({ instructor_id: instructorId }).eq('id', (gcRow as any).id)
   }
