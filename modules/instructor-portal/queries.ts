@@ -53,15 +53,42 @@ export async function getInstructorDashboardStats(
 ): Promise<InstructorDashboardStats> {
   const db = createServiceClient()
 
-  const { data: gcRows } = await db
+  // Source A: groups via group_instructors (may exist even if group_courses.instructor_id not synced)
+  const { data: giRows } = await db
+    .from('group_instructors')
+    .select('group_id')
+    .eq('instructor_id', instructorId)
+  const giGroupIds = (giRows ?? []).map((r: any) => r.group_id as string)
+
+  // Source B: group_courses directly assigned
+  const { data: gcDirect } = await db
     .from('group_courses')
     .select('id, group_id')
     .eq('instructor_id', instructorId)
     .eq('status', 'active')
 
-  const gcIds    = (gcRows ?? []).map((r: any) => r.id        as string)
-  const groupIds = (gcRows ?? []).map((r: any) => r.group_id  as string)
-  const now      = new Date().toISOString()
+  // Source C: group_courses for groups found via group_instructors (covers un-synced assignments)
+  let gcByGroup: { id: string; group_id: string }[] = []
+  if (giGroupIds.length > 0) {
+    const { data } = await db
+      .from('group_courses')
+      .select('id, group_id')
+      .in('group_id', giGroupIds)
+      .eq('status', 'active')
+    gcByGroup = (data ?? []) as any[]
+  }
+
+  // Merge and deduplicate group_course rows
+  const gcMap = new Map<string, string>() // gcId → groupId
+  for (const r of [...(gcDirect ?? []), ...gcByGroup]) {
+    gcMap.set((r as any).id, (r as any).group_id)
+  }
+  const gcIds = [...gcMap.keys()]
+
+  // Deduplicate group IDs across all sources
+  const groupIdSet = new Set<string>([...gcMap.values(), ...giGroupIds])
+  const groupIds   = [...groupIdSet]
+  const now        = new Date().toISOString()
 
   const [studentRes, upcomingRes] = await Promise.all([
     groupIds.length > 0
@@ -80,10 +107,10 @@ export async function getInstructorDashboardStats(
   ])
 
   return {
-    groupCount:       gcIds.length,
+    groupCount:       groupIds.length,
     studentCount:     (studentRes  as any).count ?? 0,
     upcomingSessions: (upcomingRes as any).count ?? 0,
-    pendingReviews:   0,  // set separately by listPendingSubmissions().length
+    pendingReviews:   0,
   }
 }
 
@@ -94,23 +121,53 @@ export async function getUpcomingSessionsForInstructor(
   const db  = createServiceClient()
   const now = new Date().toISOString()
 
-  const { data: gcRows } = await db
+  // Source A: group_courses directly assigned
+  const { data: gcDirect } = await db
     .from('group_courses')
     .select(
       `id,
+       group_id,
        groups!group_courses_group_id_fkey(name),
        courses!group_courses_course_id_fkey(title)`
     )
     .eq('instructor_id', instructorId)
     .eq('status', 'active')
 
-  if (!gcRows || gcRows.length === 0) return []
+  // Source B: group_courses via group_instructors membership
+  const { data: giRows } = await db
+    .from('group_instructors')
+    .select('group_id')
+    .eq('instructor_id', instructorId)
+  const giGroupIds = (giRows ?? []).map((r: any) => r.group_id as string)
 
-  const gcIds = (gcRows as any[]).map((r) => r.id as string)
+  let gcByGroup: any[] = []
+  if (giGroupIds.length > 0) {
+    const { data } = await db
+      .from('group_courses')
+      .select(
+        `id,
+         group_id,
+         groups!group_courses_group_id_fkey(name),
+         courses!group_courses_course_id_fkey(title)`
+      )
+      .in('group_id', giGroupIds)
+      .eq('status', 'active')
+    gcByGroup = data ?? []
+  }
+
+  // Deduplicate by group_course id
+  const gcSeen = new Map<string, any>()
+  for (const r of [...(gcDirect ?? []), ...gcByGroup]) {
+    if (!gcSeen.has(r.id)) gcSeen.set(r.id, r)
+  }
+  const gcRows = [...gcSeen.values()]
+  if (gcRows.length === 0) return []
+
+  const gcIds = gcRows.map((r) => r.id as string)
   const gcMap = new Map<string, { group_name: string; course_title: string }>(
-    (gcRows as any[]).map((r) => [
+    gcRows.map((r) => [
       r.id,
-      { group_name: r.groups?.name ?? '', course_title: r.courses?.title ?? '' },
+      { group_name: (r as any).groups?.name ?? '', course_title: (r as any).courses?.title ?? '' },
     ])
   )
 
