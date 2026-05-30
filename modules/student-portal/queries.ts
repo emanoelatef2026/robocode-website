@@ -132,44 +132,74 @@ export async function getStudentDashboardData(
     ? Math.round(((attPresent + attLate) / attTotal) * 100)
     : 0
 
-  // Assignments for this student — query via schedule_id (session homework) OR direct
-  // Use a broad query: find all submissions for this student, then filter by group's sessions
+  // ── Assignment counts — mirrors listStudentAssignments two-path logic ─────────
+  // Both legacy module-linked AND session-direct assignments are counted so the
+  // dashboard widget matches the full assignments page.
   let assignTotal = 0, assignSubmitted = 0, assignGraded = 0
   let assignAvg: number | null = null
   let upcomingHomework: import('./types').UpcomingHomework[] = []
 
-  if (scheduleIds.length > 0 || gcId) {
-    // Assignments linked to this group's sessions
-    const { data: assignRows } = await db
-      .from('assignments')
-      .select('id, title, type, due_at')
-      .in('schedule_id', scheduleIds.length > 0 ? scheduleIds : ['__none__'])
-      .eq('status', 'published')
-      .is('deleted_at', null)
+  const dashAssignIds = new Set<string>()
 
-    const assignIds = (assignRows ?? []).map((a: any) => a.id as string)
-    assignTotal = assignIds.length
+  // Path A: module-linked (for legacy groups with course_modules)
+  // gc is already declared above from gcRes.data
+  const dashCourseId = (gcRes.data as any)?.course_id as string | undefined
+  if (dashCourseId) {
+    const { data: modRows } = await db
+      .from('course_modules').select('id').eq('course_id', dashCourseId).is('deleted_at', null)
+    const modIds = (modRows ?? []).map((m: any) => m.id as string)
+    if (modIds.length > 0) {
+      const { data: lesRows } = await db
+        .from('lessons').select('id').in('module_id', modIds).is('deleted_at', null)
+      const lesIds = (lesRows ?? []).map((l: any) => l.id as string)
+      const orParts = [`module_id.in.(${modIds.join(',')})`]
+      if (lesIds.length > 0) orParts.push(`lesson_id.in.(${lesIds.join(',')})`)
+      const { data: rows } = await db
+        .from('assignments').select('id').eq('status', 'published').is('deleted_at', null)
+        .or(orParts.join(','))
+      for (const a of rows ?? []) dashAssignIds.add((a as any).id as string)
+    }
+  }
 
-    if (assignIds.length > 0) {
-      const { data: subRows } = await db
-        .from('submissions')
-        .select('assignment_id, status, score')
-        .eq('student_id', studentId)
-        .in('assignment_id', assignIds)
+  // Path B: session-direct (for new groups without modules)
+  if (scheduleIds.length > 0) {
+    const { data: rows } = await db
+      .from('assignments').select('id, title, type, due_at')
+      .in('schedule_id', scheduleIds)
+      .is('module_id', null).is('lesson_id', null)
+      .eq('status', 'published').is('deleted_at', null)
+    for (const a of rows ?? []) dashAssignIds.add((a as any).id as string)
+  }
 
-      const submittedSet = new Set((subRows ?? []).map((s: any) => s.assignment_id as string))
-      assignSubmitted = submittedSet.size
+  if (dashAssignIds.size > 0) {
+    const allIds = [...dashAssignIds]
+    assignTotal  = allIds.length
 
-      const gradedRows = (subRows ?? []).filter((s: any) => s.status === 'graded')
-      assignGraded = gradedRows.length
-      if (gradedRows.length > 0) {
-        const total = gradedRows.reduce((sum: number, s: any) => sum + (s.score ?? 0), 0)
-        assignAvg   = Math.round((total / gradedRows.length) * 10) / 10
-      }
+    const { data: subRows } = await db
+      .from('submissions')
+      .select('assignment_id, status, score')
+      .eq('student_id', studentId)
+      .in('assignment_id', allIds)
 
-      // Upcoming: assigned but not submitted, due in future
+    const submittedSet = new Set((subRows ?? []).map((s: any) => s.assignment_id as string))
+    assignSubmitted = submittedSet.size
+
+    const gradedRows = (subRows ?? []).filter((s: any) => s.status === 'graded')
+    assignGraded = gradedRows.length
+    if (gradedRows.length > 0) {
+      const total = gradedRows.reduce((sum: number, s: any) => sum + (s.score ?? 0), 0)
+      assignAvg   = Math.round((total / gradedRows.length) * 10) / 10
+    }
+
+    // Upcoming: session-direct only for "upcoming" widget (those have due dates from sessions)
+    if (scheduleIds.length > 0) {
       const now = new Date()
-      upcomingHomework = (assignRows ?? [])
+      const { data: upcomingRows } = await db
+        .from('assignments').select('id, title, type, due_at')
+        .in('schedule_id', scheduleIds)
+        .is('module_id', null).is('lesson_id', null)
+        .eq('status', 'published').is('deleted_at', null)
+      upcomingHomework = (upcomingRows ?? [])
         .filter((a: any) => !submittedSet.has(a.id) && (!a.due_at || new Date(a.due_at) >= now))
         .map((a: any) => ({ id: a.id, title: a.title, due_at: a.due_at ?? null, type: a.type }))
         .slice(0, 5)
