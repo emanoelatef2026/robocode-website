@@ -19,8 +19,6 @@ import type {
 } from './types'
 
 // ── Shared helper: resolve all group_courses the instructor is linked to ───────
-// Checks BOTH group_courses.instructor_id (direct) and group_instructors (membership).
-// Returns deduplicated gcIds and groupIds so all downstream queries are consistent.
 
 interface GcContext {
   gcIds:    string[]
@@ -60,6 +58,45 @@ async function resolveGcContext(
   }
 }
 
+// ── Helper: calculate next occurrence from day_of_week + time ─────────────────
+
+function calcNextOccurrence(dayOfWeek: string | null, time: string | null): string | null {
+  if (!dayOfWeek) return null
+  const dayMap: Record<string, number> = {
+    sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
+    thursday: 4, friday: 5, saturday: 6,
+  }
+  const targetDay = dayMap[dayOfWeek.toLowerCase()]
+  if (targetDay === undefined) return null
+
+  const now      = new Date()
+  const todayDay = now.getDay()
+  let daysUntil  = (targetDay - todayDay + 7) % 7
+
+  if (daysUntil === 0 && time) {
+    const [h, m] = time.split(':').map(Number)
+    const sessionToday = new Date(now)
+    sessionToday.setHours(h, m, 0, 0)
+    if (now < sessionToday) {
+      return sessionToday.toISOString()
+    }
+    daysUntil = 7
+  } else if (daysUntil === 0) {
+    daysUntil = 7
+  }
+
+  const next = new Date(now)
+  next.setDate(now.getDate() + daysUntil)
+  if (time) {
+    const [h, m] = time.split(':').map(Number)
+    next.setHours(h, m, 0, 0)
+  } else {
+    next.setHours(9, 0, 0, 0)
+  }
+
+  return next.toISOString()
+}
+
 // ── Resolve instructor record from auth user id ───────────────────────────────
 
 export async function getInstructorByUserId(userId: string): Promise<InstructorRecord | null> {
@@ -90,51 +127,15 @@ export async function getInstructorByUserId(userId: string): Promise<InstructorR
   }
 }
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
+// ── Dashboard Stats ───────────────────────────────────────────────────────────
 
 export async function getInstructorDashboardStats(
   instructorId: string
 ): Promise<InstructorDashboardStats> {
   const db = createServiceClient()
+  const { gcIds, groupIds } = await resolveGcContext(instructorId, db)
 
-  // Source A: groups via group_instructors (may exist even if group_courses.instructor_id not synced)
-  const { data: giRows } = await db
-    .from('group_instructors')
-    .select('group_id')
-    .eq('instructor_id', instructorId)
-  const giGroupIds = (giRows ?? []).map((r: any) => r.group_id as string)
-
-  // Source B: group_courses directly assigned
-  const { data: gcDirect } = await db
-    .from('group_courses')
-    .select('id, group_id')
-    .eq('instructor_id', instructorId)
-    .eq('status', 'active')
-
-  // Source C: group_courses for groups found via group_instructors (covers un-synced assignments)
-  let gcByGroup: { id: string; group_id: string }[] = []
-  if (giGroupIds.length > 0) {
-    const { data } = await db
-      .from('group_courses')
-      .select('id, group_id')
-      .in('group_id', giGroupIds)
-      .eq('status', 'active')
-    gcByGroup = (data ?? []) as any[]
-  }
-
-  // Merge and deduplicate group_course rows
-  const gcMap = new Map<string, string>() // gcId → groupId
-  for (const r of [...(gcDirect ?? []), ...gcByGroup]) {
-    gcMap.set((r as any).id, (r as any).group_id)
-  }
-  const gcIds = [...gcMap.keys()]
-
-  // Deduplicate group IDs across all sources
-  const groupIdSet = new Set<string>([...gcMap.values(), ...giGroupIds])
-  const groupIds   = [...groupIdSet]
-  const now        = new Date().toISOString()
-
-  const [studentRes, upcomingRes] = await Promise.all([
+  const [studentRes, completedRes] = await Promise.all([
     groupIds.length > 0
       ? db.from('group_students')
           .select('id', { count: 'exact', head: true })
@@ -145,104 +146,16 @@ export async function getInstructorDashboardStats(
       ? db.from('schedules')
           .select('id', { count: 'exact', head: true })
           .in('group_course_id', gcIds)
-          .gte('scheduled_at', now)
-          .neq('status', 'cancelled')
+          .eq('status', 'completed')
       : Promise.resolve({ count: 0, error: null }),
   ])
 
   return {
-    groupCount:       groupIds.length,
-    studentCount:     (studentRes  as any).count ?? 0,
-    upcomingSessions: (upcomingRes as any).count ?? 0,
-    pendingReviews:   0,
+    groupCount:        groupIds.length,
+    studentCount:      (studentRes as any).count  ?? 0,
+    completedSessions: (completedRes as any).count ?? 0,
+    pendingReviews:    0,
   }
-}
-
-export async function getUpcomingSessionsForInstructor(
-  instructorId: string,
-  limit = 5
-): Promise<InstructorSession[]> {
-  const db  = createServiceClient()
-  const now = new Date().toISOString()
-
-  // Source A: group_courses directly assigned
-  const { data: gcDirect } = await db
-    .from('group_courses')
-    .select(
-      `id,
-       group_id,
-       groups!group_courses_group_id_fkey(name),
-       courses!group_courses_course_id_fkey(title)`
-    )
-    .eq('instructor_id', instructorId)
-    .eq('status', 'active')
-
-  // Source B: group_courses via group_instructors membership
-  const { data: giRows } = await db
-    .from('group_instructors')
-    .select('group_id')
-    .eq('instructor_id', instructorId)
-  const giGroupIds = (giRows ?? []).map((r: any) => r.group_id as string)
-
-  let gcByGroup: any[] = []
-  if (giGroupIds.length > 0) {
-    const { data } = await db
-      .from('group_courses')
-      .select(
-        `id,
-         group_id,
-         groups!group_courses_group_id_fkey(name),
-         courses!group_courses_course_id_fkey(title)`
-      )
-      .in('group_id', giGroupIds)
-      .eq('status', 'active')
-    gcByGroup = data ?? []
-  }
-
-  // Deduplicate by group_course id
-  const gcSeen = new Map<string, any>()
-  for (const r of [...(gcDirect ?? []), ...gcByGroup]) {
-    if (!gcSeen.has(r.id)) gcSeen.set(r.id, r)
-  }
-  const gcRows = [...gcSeen.values()]
-  if (gcRows.length === 0) return []
-
-  const gcIds = gcRows.map((r) => r.id as string)
-  const gcMap = new Map<string, { group_id: string; group_name: string; course_title: string }>(
-    gcRows.map((r) => [
-      r.id,
-      {
-        group_id:     (r as any).group_id        ?? '',
-        group_name:   (r as any).groups?.name    ?? '',
-        course_title: (r as any).courses?.title  ?? '',
-      },
-    ])
-  )
-
-  const { data: sessRows } = await db
-    .from('schedules')
-    .select('id, group_course_id, scheduled_at, duration_minutes, type, delivery, status, topic')
-    .in('group_course_id', gcIds)
-    .gte('scheduled_at', now)
-    .neq('status', 'cancelled')
-    .order('scheduled_at', { ascending: true })
-    .limit(limit)
-
-  return (sessRows ?? []).map((s: any) => ({
-    id:               s.id,
-    group_course_id:  s.group_course_id,
-    group_id:         gcMap.get(s.group_course_id)?.group_id     ?? '',
-    group_name:       gcMap.get(s.group_course_id)?.group_name   ?? '',
-    course_title:     gcMap.get(s.group_course_id)?.course_title ?? '',
-    scheduled_at:     s.scheduled_at,
-    duration_minutes: s.duration_minutes,
-    type:             s.type,
-    delivery:         s.delivery   ?? null,
-    status:           s.status,
-    topic:            s.topic      ?? null,
-    notes:            null,
-    attendance_count: null,
-  }))
 }
 
 // ── My Groups ─────────────────────────────────────────────────────────────────
@@ -251,25 +164,21 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
   const db = createServiceClient()
   const { gcIds, groupIds } = await resolveGcContext(instructorId, db)
 
-  // No groups at all — stop immediately.
   if (groupIds.length === 0) return []
 
-  const now     = new Date().toISOString()
   const results: InstructorGroup[] = []
 
-  // ── Path A: groups that have an active group_courses row ─────────────────
+  // ── Path A: groups with an active group_courses row ──────────────────────
   if (gcIds.length > 0) {
     const { data: gcRows } = await db
       .from('group_courses')
       .select(
-        `id, group_id, course_id, course_module_id,
+        `id, group_id, course_id, total_sessions,
          groups!group_courses_group_id_fkey(
-           name, code, semester_id,
-           branches!groups_branch_id_fkey(name),
-           semesters!groups_semester_id_fkey(name, academic_year)
+           name, code, day_of_week, time,
+           branches!groups_branch_id_fkey(name)
          ),
-         courses!group_courses_course_id_fkey(title),
-         course_modules!group_courses_course_module_id_fkey(title)`
+         courses!group_courses_course_id_fkey(title)`
       )
       .in('id', gcIds)
       .eq('status', 'active')
@@ -278,67 +187,52 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
       const gcGroupIds = (gcRows as any[]).map((r) => r.group_id as string)
       const gcFullIds  = (gcRows as any[]).map((r) => r.id        as string)
 
-      const [gsRes, schedRes] = await Promise.all([
+      const [gsRes, completedRes] = await Promise.all([
         db.from('group_students').select('group_id').in('group_id', gcGroupIds).eq('status', 'active'),
         db.from('schedules')
-          .select('group_course_id, status, scheduled_at')
+          .select('group_course_id')
           .in('group_course_id', gcFullIds)
-          .order('scheduled_at', { ascending: true }),
+          .eq('status', 'completed'),
       ])
 
       const studentMap:   Record<string, number> = {}
       const completedMap: Record<string, number> = {}
-      const totalMap:     Record<string, number> = {}
-      const nextMap:      Record<string, string> = {}
 
       for (const gs of gsRes.data ?? []) {
         const gid = (gs as any).group_id as string
         studentMap[gid] = (studentMap[gid] ?? 0) + 1
       }
-      for (const s of schedRes.data ?? []) {
+      for (const s of completedRes.data ?? []) {
         const gcId = (s as any).group_course_id as string
-        if ((s as any).status !== 'cancelled') totalMap[gcId] = (totalMap[gcId] ?? 0) + 1
-        if ((s as any).status === 'completed')  completedMap[gcId] = (completedMap[gcId] ?? 0) + 1
-        if (!nextMap[gcId] && (s as any).scheduled_at >= now && (s as any).status !== 'cancelled') {
-          nextMap[gcId] = (s as any).scheduled_at as string
-        }
+        completedMap[gcId] = (completedMap[gcId] ?? 0) + 1
       }
 
       for (const row of gcRows as any[]) {
-        const sem     = row.groups?.semesters
-        const semName = sem
-          ? [sem.name ?? '', sem.academic_year ?? ''].filter(Boolean).join(' ').trim() || null
-          : null
         results.push({
-          group_id:            row.group_id,
-          group_name:          row.groups?.name                    ?? '',
-          group_code:          row.groups?.code                    ?? null,
-          group_course_id:     row.id,
-          course_id:           row.course_id,
-          course_title:        row.courses?.title                  ?? '',
-          course_module_title: row.course_modules?.title           ?? null,
-          branch_name:         row.groups?.branches?.name          ?? '',
-          student_count:       studentMap[row.group_id]            ?? 0,
-          next_session_at:     nextMap[row.id]                     ?? null,
-          semester_id:         row.groups?.semester_id             ?? null,
-          semester_name:       semName,
-          completed_sessions:  completedMap[row.id]                ?? 0,
-          total_sessions:      totalMap[row.id]                    ?? 0,
+          group_id:           row.group_id,
+          group_name:         row.groups?.name              ?? '',
+          group_code:         row.groups?.code              ?? null,
+          group_course_id:    row.id,
+          course_id:          row.course_id,
+          course_title:       row.courses?.title            ?? '',
+          branch_name:        row.groups?.branches?.name    ?? '',
+          student_count:      studentMap[row.group_id]      ?? 0,
+          next_session_at:    calcNextOccurrence(row.groups?.day_of_week, row.groups?.time),
+          completed_sessions: completedMap[row.id]          ?? 0,
+          total_sessions:     row.total_sessions            ?? 24,
         })
       }
     }
   }
 
-  // ── Path B: groups in group_instructors with no active group_courses row ──
-  // A group can be assigned before any course is set up.
-  // Semesters join excluded to avoid silent FK-hint failures; semester_name is null.
+  // ── Path B: groups assigned via group_instructors with no active group_courses row
   const coveredIds   = new Set(results.map((r) => r.group_id))
   const uncoveredIds = groupIds.filter((id) => !coveredIds.has(id))
 
   if (uncoveredIds.length > 0) {
     const { data: groupRows } = await db
       .from('groups')
-      .select('id, name, code, semester_id, branches!groups_branch_id_fkey(name)')
+      .select('id, name, code, day_of_week, time, branches!groups_branch_id_fkey(name)')
       .in('id', uncoveredIds)
       .is('deleted_at', null)
 
@@ -356,20 +250,17 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
 
     for (const g of groupRows ?? []) {
       results.push({
-        group_id:            (g as any).id,
-        group_name:          (g as any).name               ?? '',
-        group_code:          (g as any).code               ?? null,
-        group_course_id:     '',
-        course_id:           '',
-        course_title:        '',
-        course_module_title: null,
-        branch_name:         (g as any).branches?.name     ?? '',
-        student_count:       studentMap[(g as any).id]     ?? 0,
-        next_session_at:     null,
-        semester_id:         (g as any).semester_id        ?? null,
-        semester_name:       null,
-        completed_sessions:  0,
-        total_sessions:      0,
+        group_id:           (g as any).id,
+        group_name:         (g as any).name               ?? '',
+        group_code:         (g as any).code               ?? null,
+        group_course_id:    '',
+        course_id:          '',
+        course_title:       '',
+        branch_name:        (g as any).branches?.name     ?? '',
+        student_count:      studentMap[(g as any).id]     ?? 0,
+        next_session_at:    calcNextOccurrence((g as any).day_of_week, (g as any).time),
+        completed_sessions: 0,
+        total_sessions:     0,
       })
     }
   }
@@ -380,64 +271,81 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
 // ── Group Detail ──────────────────────────────────────────────────────────────
 
 export async function getGroupForInstructor(
-  groupId: string,
+  groupId:      string,
   instructorId: string
 ): Promise<GroupForInstructor | null> {
   const db = createServiceClient()
 
+  // Get the active group_course for this group (no instructor filter — check access separately)
   const { data: gcRow } = await db
     .from('group_courses')
     .select(
-      `id, course_id, course_module_id,
+      `id, course_id, total_sessions,
        groups!group_courses_group_id_fkey(
-         name, branch_id, semester_id, day_of_week, time,
+         name, branch_id, day_of_week, time,
          branches!groups_branch_id_fkey(name)
        ),
-       courses!group_courses_course_id_fkey(title),
-       course_modules!group_courses_course_module_id_fkey(title)`
+       courses!group_courses_course_id_fkey(title)`
     )
     .eq('group_id', groupId)
-    .eq('instructor_id', instructorId)
     .eq('status', 'active')
     .maybeSingle()
 
-  // ── Fallback: group assigned via group_instructors but no group_courses row ──
-  if (!gcRow) {
-    const { data: giRow } = await db
-      .from('group_instructors')
-      .select('group_id')
-      .eq('group_id', groupId)
-      .eq('instructor_id', instructorId)
-      .maybeSingle()
+  if (gcRow) {
+    const gc = gcRow as any
 
-    if (!giRow) return null
+    // Verify instructor access: lead on group_courses OR member in group_instructors
+    const isLead = gc.instructor_id === instructorId
+    let isAllowed = isLead
 
-    const { data: gRow } = await db
-      .from('groups')
-      .select(`id, name, branch_id, semester_id, day_of_week, time,
-               branches!groups_branch_id_fkey(name)`)
-      .eq('id', groupId)
-      .is('deleted_at', null)
-      .maybeSingle()
+    if (!isAllowed) {
+      const { data: giRow } = await db
+        .from('group_instructors')
+        .select('id')
+        .eq('group_id', groupId)
+        .eq('instructor_id', instructorId)
+        .maybeSingle()
+      isAllowed = !!giRow
+    }
 
-    if (!gRow) return null
-    const g = gRow as any
+    if (!isAllowed) return null
 
-    const { data: studentRes } = await db
-      .from('group_students')
-      .select(
-        `student_id, enrollment_type,
-         students!group_students_student_id_fkey(
-           users!students_user_id_fkey(
-             email,
-             profiles!profiles_user_id_fkey(first_name, last_name)
-           )
-         )`
-      )
-      .eq('group_id', groupId)
-      .eq('status', 'active')
+    const branchId = gc.groups?.branch_id ?? ''
 
-    const students = (studentRes ?? []).map((r: any) => {
+    const [studentRes, sessRes] = await Promise.all([
+      db.from('group_students')
+        .select(
+          `student_id, enrollment_type,
+           students!group_students_student_id_fkey(
+             users!students_user_id_fkey(
+               email,
+               profiles!profiles_user_id_fkey(first_name, last_name)
+             )
+           )`
+        )
+        .eq('group_id', groupId)
+        .eq('status', 'active'),
+      db.from('schedules')
+        .select('id, group_course_id, scheduled_at, duration_minutes, type, delivery, status, topic, notes')
+        .eq('group_course_id', gc.id)
+        .order('scheduled_at', { ascending: false })
+        .limit(50),
+    ])
+
+    const sessIds = (sessRes.data ?? []).map((s: any) => s.id as string)
+    const attMap: Record<string, number> = {}
+    if (sessIds.length > 0) {
+      const { data: attRows } = await db
+        .from('attendance_records')
+        .select('schedule_id')
+        .in('schedule_id', sessIds)
+      for (const a of attRows ?? []) {
+        const sid = (a as any).schedule_id as string
+        attMap[sid] = (attMap[sid] ?? 0) + 1
+      }
+    }
+
+    const students = (studentRes.data ?? []).map((r: any) => {
       const u = r.students?.users
       const p = u?.profiles
       return {
@@ -449,62 +357,74 @@ export async function getGroupForInstructor(
       }
     })
 
+    const sessions: InstructorSession[] = (sessRes.data ?? []).map((s: any) => ({
+      id:               s.id,
+      group_course_id:  s.group_course_id,
+      group_name:       gc.groups?.name   ?? '',
+      course_title:     gc.courses?.title ?? '',
+      scheduled_at:     s.scheduled_at,
+      duration_minutes: s.duration_minutes,
+      type:             s.type,
+      delivery:         s.delivery  ?? null,
+      status:           s.status,
+      topic:            s.topic     ?? null,
+      notes:            s.notes     ?? null,
+      attendance_count: attMap[s.id] ?? null,
+    }))
+
+    const completedSessions = sessions.filter((s) => s.status === 'completed').length
+
     return {
-      group_id:            groupId,
-      group_course_id:     '',
-      group_name:          g.name              ?? '',
-      course_title:        '',
-      course_module_title: null,
-      branch_id:           g.branch_id         ?? '',
-      branch_name:         g.branches?.name    ?? '',
-      semester_id:         g.semester_id       ?? null,
-      day_of_week:         g.day_of_week       ?? null,
-      time:                g.time              ?? null,
-      completed_sessions:  0,
-      total_sessions:      0,
+      group_id:           groupId,
+      group_course_id:    gc.id,
+      group_name:         gc.groups?.name            ?? '',
+      course_title:       gc.courses?.title          ?? '',
+      branch_id:          branchId,
+      branch_name:        gc.groups?.branches?.name  ?? '',
+      day_of_week:        gc.groups?.day_of_week     ?? null,
+      time:               gc.groups?.time            ?? null,
+      completed_sessions: completedSessions,
+      total_sessions:     gc.total_sessions          ?? 24,
       students,
-      sessions:            [],
+      sessions,
     }
   }
 
-  // ── Primary path: full data via group_courses ─────────────────────────────
-  const gc       = gcRow as any
-  const branchId = gc.groups?.branch_id ?? ''
+  // ── Fallback: forming group with no group_courses row ─────────────────────
+  const { data: giRow } = await db
+    .from('group_instructors')
+    .select('group_id')
+    .eq('group_id', groupId)
+    .eq('instructor_id', instructorId)
+    .maybeSingle()
 
-  const [studentRes, sessRes] = await Promise.all([
-    db.from('group_students')
-      .select(
-        `student_id, enrollment_type,
-         students!group_students_student_id_fkey(
-           users!students_user_id_fkey(
-             email,
-             profiles!profiles_user_id_fkey(first_name, last_name)
-           )
-         )`
-      )
-      .eq('group_id', groupId)
-      .eq('status', 'active'),
-    db.from('schedules')
-      .select('id, group_course_id, scheduled_at, duration_minutes, type, delivery, status, topic, notes')
-      .eq('group_course_id', gc.id)
-      .order('scheduled_at', { ascending: false })
-      .limit(50),
-  ])
+  if (!giRow) return null
 
-  const sessIds = (sessRes.data ?? []).map((s: any) => s.id as string)
-  const attMap: Record<string, number> = {}
-  if (sessIds.length > 0) {
-    const { data: attRows } = await db
-      .from('attendance_records')
-      .select('schedule_id')
-      .in('schedule_id', sessIds)
-    for (const a of attRows ?? []) {
-      const sid = (a as any).schedule_id as string
-      attMap[sid] = (attMap[sid] ?? 0) + 1
-    }
-  }
+  const { data: gRow } = await db
+    .from('groups')
+    .select(`id, name, branch_id, day_of_week, time, branches!groups_branch_id_fkey(name)`)
+    .eq('id', groupId)
+    .is('deleted_at', null)
+    .maybeSingle()
 
-  const students = (studentRes.data ?? []).map((r: any) => {
+  if (!gRow) return null
+  const g = gRow as any
+
+  const { data: studentRes } = await db
+    .from('group_students')
+    .select(
+      `student_id, enrollment_type,
+       students!group_students_student_id_fkey(
+         users!students_user_id_fkey(
+           email,
+           profiles!profiles_user_id_fkey(first_name, last_name)
+         )
+       )`
+    )
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+
+  const students = (studentRes ?? []).map((r: any) => {
     const u = r.students?.users
     const p = u?.profiles
     return {
@@ -516,38 +436,19 @@ export async function getGroupForInstructor(
     }
   })
 
-  const sessions: InstructorSession[] = (sessRes.data ?? []).map((s: any) => ({
-    id:               s.id,
-    group_course_id:  s.group_course_id,
-    group_name:       gc.groups?.name   ?? '',
-    course_title:     gc.courses?.title ?? '',
-    scheduled_at:     s.scheduled_at,
-    duration_minutes: s.duration_minutes,
-    type:             s.type,
-    delivery:         s.delivery  ?? null,
-    status:           s.status,
-    topic:            s.topic     ?? null,
-    notes:            s.notes     ?? null,
-    attendance_count: attMap[s.id] ?? null,
-  }))
-
-  const completedSessions = sessions.filter((s) => s.status === 'completed').length
-
   return {
-    group_id:            groupId,
-    group_course_id:     gc.id,
-    group_name:          gc.groups?.name               ?? '',
-    course_title:        gc.courses?.title             ?? '',
-    course_module_title: gc.course_modules?.title      ?? null,
-    branch_id:           branchId,
-    branch_name:         gc.groups?.branches?.name     ?? '',
-    semester_id:         gc.groups?.semester_id        ?? null,
-    day_of_week:         gc.groups?.day_of_week        ?? null,
-    time:                gc.groups?.time               ?? null,
-    completed_sessions:  completedSessions,
-    total_sessions:      sessions.length,
+    group_id:           groupId,
+    group_course_id:    '',
+    group_name:         g.name              ?? '',
+    course_title:       '',
+    branch_id:          g.branch_id         ?? '',
+    branch_name:        g.branches?.name    ?? '',
+    day_of_week:        g.day_of_week       ?? null,
+    time:               g.time              ?? null,
+    completed_sessions: 0,
+    total_sessions:     0,
     students,
-    sessions,
+    sessions:           [],
   }
 }
 
@@ -577,12 +478,20 @@ export async function getSessionDetail(
 
   const s  = sessRow as any
   const gc = s.group_courses
-
-  // Verify this session belongs to this instructor
-  if (gc?.instructor_id !== instructorId) return null
   const groupId  = gc?.group_id  as string
   const courseId = gc?.course_id as string | undefined
   const gcId     = s.group_course_id as string
+
+  // Verify instructor access (lead OR group_instructors member)
+  if (gc?.instructor_id !== instructorId) {
+    const { data: giRow } = await db
+      .from('group_instructors')
+      .select('id')
+      .eq('group_id', groupId ?? '')
+      .eq('instructor_id', instructorId)
+      .maybeSingle()
+    if (!giRow) return null
+  }
 
   const [studentRes, attRes, recordingsRes, modulesRes, progressRes] = await Promise.all([
     db.from('group_students')
@@ -723,7 +632,7 @@ export async function listPendingSubmissions(
     .in('course_id', courseIds)
     .is('deleted_at', null)
 
-  const moduleIds     = (moduleRows ?? []).map((m: any) => m.id as string)
+  const moduleIds      = (moduleRows ?? []).map((m: any) => m.id as string)
   const courseByModule = new Map<string, string>(
     (moduleRows ?? []).map((m: any) => [m.id as string, m.course_id as string])
   )
@@ -797,7 +706,6 @@ export async function getTodayActions(instructorId: string): Promise<TodayAction
   const { gcIds } = await resolveGcContext(instructorId, db)
   if (gcIds.length === 0) return []
 
-  // Build group_id and group_name lookup for URL construction
   const { data: gcMeta } = await db
     .from('group_courses')
     .select('id, group_id, groups!group_courses_group_id_fkey(name)')
@@ -806,7 +714,6 @@ export async function getTodayActions(instructorId: string): Promise<TodayAction
     (gcMeta ?? []).map((r: any) => [r.id as string, { groupId: r.group_id as string, groupName: r.groups?.name ?? '' }])
   )
 
-  // Today's date range (UTC)
   const now   = new Date()
   const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0))
   const end   = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999))
@@ -819,7 +726,6 @@ export async function getTodayActions(instructorId: string): Promise<TodayAction
     .lte('scheduled_at', end.toISOString())
     .neq('status', 'cancelled')
 
-  // Batch fetch attendance counts for completed sessions
   const completedIds = (todaySess ?? [])
     .filter((s: any) => s.status === 'completed')
     .map((s: any) => s.id as string)
@@ -855,10 +761,8 @@ export async function getTodayActions(instructorId: string): Promise<TodayAction
     }
   }
 
-  // Pending homework reviews — add one consolidated action if any exist
   const pending = await listPendingSubmissions(instructorId, 1)
   if (pending.length > 0) {
-    // Get full count without limit for the label
     const allPending = await listPendingSubmissions(instructorId, 999)
     const n = allPending.length
     actions.push({
@@ -882,7 +786,6 @@ export async function getStudentsRequiringAttention(
   const { gcIds } = await resolveGcContext(instructorId, db)
   if (gcIds.length === 0) return []
 
-  // Build group name lookup
   const { data: gcMeta } = await db
     .from('group_courses')
     .select('id, group_id, groups!group_courses_group_id_fkey(name)')
@@ -890,7 +793,6 @@ export async function getStudentsRequiringAttention(
   const gcToGroup  = new Map<string, string>((gcMeta ?? []).map((r: any) => [r.id as string, r.group_id as string]))
   const groupNames = new Map<string, string>((gcMeta ?? []).map((r: any) => [r.group_id as string, (r as any).groups?.name ?? '']))
 
-  // All session ids for this instructor's groups
   const { data: schedRows } = await db
     .from('schedules')
     .select('id, group_course_id')
@@ -902,14 +804,12 @@ export async function getStudentsRequiringAttention(
   )
   if (schedIds.length === 0) return []
 
-  // Absence records
   const { data: absRows } = await db
     .from('attendance_records')
     .select('student_id, schedule_id')
     .in('schedule_id', schedIds)
     .eq('status', 'absent')
 
-  // Aggregate absences per student-group pair
   const absMap = new Map<string, { count: number; groupId: string }>()
   for (const a of absRows ?? []) {
     const sid = (a as any).student_id as string
@@ -959,12 +859,11 @@ export async function getStudentProfileForInstructor(
   studentId:    string,
   groupId:      string,
   instructorId: string,
-  userId:       string     // auth user id — used for notes authorship
+  userId:       string
 ): Promise<StudentProfileForInstructor | null> {
   const db = createServiceClient()
 
-  // Verify instructor has this group — try group_courses first, fall back to group_instructors
-  // (forming groups have no group_courses row but the instructor is still a valid owner)
+  // Verify instructor has access (group_courses direct OR group_instructors)
   const { data: gcRow } = await db
     .from('group_courses')
     .select('id')
@@ -983,7 +882,6 @@ export async function getStudentProfileForInstructor(
     if (!giRow) return null
   }
 
-  // Verify student is in the group
   const { data: gsRow } = await db
     .from('group_students')
     .select('id')
@@ -994,7 +892,6 @@ export async function getStudentProfileForInstructor(
 
   if (!gsRow) return null
 
-  // For forming groups (no group_courses row), there are no schedules yet — attendance is empty
   const gcId = (gcRow as any)?.id ?? null
 
   const [studentRes, groupRes, schedRes, noteRes] = await Promise.all([
@@ -1026,7 +923,6 @@ export async function getStudentProfileForInstructor(
   const u    = sRow.users
   const p    = u?.profiles
 
-  // Attendance summary
   const schedIds = (schedRes.data ?? []).map((s: any) => s.id as string)
   let total = 0, present = 0, absent = 0, late = 0
   if (schedIds.length > 0) {
@@ -1069,4 +965,55 @@ export async function getStudentProfileForInstructor(
     attendance_late:    late,
     notes,
   }
+}
+
+// ── Legacy: upcoming sessions (kept for dashboard backward compat) ─────────────
+
+export async function getUpcomingSessionsForInstructor(
+  instructorId: string,
+  limit = 5
+): Promise<InstructorSession[]> {
+  const db  = createServiceClient()
+  const now = new Date().toISOString()
+  const { gcIds } = await resolveGcContext(instructorId, db)
+  if (gcIds.length === 0) return []
+
+  const { data: gcMeta } = await db
+    .from('group_courses')
+    .select('id, group_id, groups!group_courses_group_id_fkey(name), courses!group_courses_course_id_fkey(title)')
+    .in('id', gcIds)
+    .eq('status', 'active')
+
+  const gcMap = new Map<string, { group_id: string; group_name: string; course_title: string }>(
+    (gcMeta ?? []).map((r: any) => [r.id, {
+      group_id:     r.group_id,
+      group_name:   r.groups?.name   ?? '',
+      course_title: r.courses?.title ?? '',
+    }])
+  )
+
+  const { data: sessRows } = await db
+    .from('schedules')
+    .select('id, group_course_id, scheduled_at, duration_minutes, type, delivery, status, topic')
+    .in('group_course_id', gcIds)
+    .gte('scheduled_at', now)
+    .neq('status', 'cancelled')
+    .order('scheduled_at', { ascending: true })
+    .limit(limit)
+
+  return (sessRows ?? []).map((s: any) => ({
+    id:               s.id,
+    group_course_id:  s.group_course_id,
+    group_id:         gcMap.get(s.group_course_id)?.group_id     ?? '',
+    group_name:       gcMap.get(s.group_course_id)?.group_name   ?? '',
+    course_title:     gcMap.get(s.group_course_id)?.course_title ?? '',
+    scheduled_at:     s.scheduled_at,
+    duration_minutes: s.duration_minutes,
+    type:             s.type,
+    delivery:         s.delivery   ?? null,
+    status:           s.status,
+    topic:            s.topic      ?? null,
+    notes:            null,
+    attendance_count: null,
+  }))
 }

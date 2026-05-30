@@ -5,8 +5,14 @@ import {
   listPendingSubmissions,
   getTodayActions,
   getStudentsRequiringAttention,
+  getInstructorDashboardStats,
 } from '@/modules/instructor-portal/queries'
 import Link from 'next/link'
+
+const DAY_MAP: Record<string, number> = {
+  sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
+  thursday: 4, friday: 5, saturday: 6,
+}
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">{children}</h2>
@@ -26,21 +32,39 @@ export default async function InstructorDashboardPage() {
 
   const name = [instructor.first_name, instructor.last_name].filter(Boolean).join(' ') || instructor.email
 
-  // Load all operational data in parallel; graceful degradation per section
   let groups:    Awaited<ReturnType<typeof listInstructorGroups>>     = []
   let todayActs: Awaited<ReturnType<typeof getTodayActions>>          = []
   let pending:   Awaited<ReturnType<typeof listPendingSubmissions>>   = []
   let attention: Awaited<ReturnType<typeof getStudentsRequiringAttention>> = []
+  let stats:     Awaited<ReturnType<typeof getInstructorDashboardStats>>   = {
+    groupCount: 0, studentCount: 0, completedSessions: 0, pendingReviews: 0,
+  }
 
   await Promise.allSettled([
-    listInstructorGroups(instructor.id).then((r)     => { groups    = r }),
-    getTodayActions(instructor.id).then((r)           => { todayActs = r }),
+    listInstructorGroups(instructor.id).then((r)      => { groups    = r }),
+    getTodayActions(instructor.id).then((r)            => { todayActs = r }),
     listPendingSubmissions(instructor.id, 999).then((r) => { pending  = r }),
     getStudentsRequiringAttention(instructor.id).then((r) => { attention = r }),
+    getInstructorDashboardStats(instructor.id).then((r) => { stats   = r }),
   ])
 
-  const activeGroups  = groups.filter((g) => g.course_title && g.course_module_title && g.semester_id)
-  const formingGroups = groups.filter((g) => !g.course_title || !g.course_module_title || !g.semester_id)
+  const activeGroups = groups.filter((g) => !!g.course_title)
+
+  // Today's groups: groups whose day_of_week matches today
+  const todayDayNum = new Date().getDay()
+  const todayGroups = activeGroups.filter((g) => {
+    if (!g.next_session_at) return false
+    const next = new Date(g.next_session_at)
+    // Check if the next occurrence is today
+    const now = new Date()
+    return (
+      next.getFullYear() === now.getFullYear() &&
+      next.getMonth()    === now.getMonth()    &&
+      next.getDate()     === now.getDate()
+    )
+  })
+
+  const totalCompleted = groups.reduce((sum, g) => sum + g.completed_sessions, 0)
 
   return (
     <div className="space-y-6">
@@ -50,6 +74,21 @@ export default async function InstructorDashboardPage() {
         <p className="mt-0.5 text-sm text-[#64748B]">
           {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
+      </div>
+
+      {/* Stats bar */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: 'My Groups',          value: stats.groupCount },
+          { label: 'My Students',        value: stats.studentCount },
+          { label: 'Pending Homework',   value: pending.length },
+          { label: 'Sessions Completed', value: totalCompleted },
+        ].map(({ label, value }) => (
+          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-4 text-center">
+            <p className="text-2xl font-bold text-[#0B1F3A]">{value}</p>
+            <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
+          </div>
+        ))}
       </div>
 
       {/* Today's Actions */}
@@ -64,7 +103,7 @@ export default async function InstructorDashboardPage() {
                 className="flex items-center gap-4 rounded-xl border border-[#E2E8F0] bg-white px-5 py-3.5 transition hover:border-[#FF8A1F] hover:shadow-sm"
               >
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${
-                  act.type === 'start_session'      ? 'bg-emerald-100 text-emerald-700' :
+                  act.type === 'start_session'       ? 'bg-emerald-100 text-emerald-700' :
                   act.type === 'complete_attendance' ? 'bg-amber-100 text-amber-700' :
                   act.type === 'review_homework'     ? 'bg-blue-100 text-blue-700' :
                   'bg-[#F1F5F9] text-[#64748B]'
@@ -82,10 +121,40 @@ export default async function InstructorDashboardPage() {
         </section>
       )}
 
-      {/* Active Groups — operational view */}
+      {/* Today's Groups */}
+      {todayGroups.length > 0 && (
+        <section>
+          <SectionHeading>Today's Groups</SectionHeading>
+          <div className="rounded-xl border border-[#E2E8F0] bg-white divide-y divide-[#F1F5F9]">
+            {todayGroups.map((g) => (
+              <Link
+                key={g.group_id}
+                href={`/portal/instructor/groups/${g.group_id}`}
+                className="flex items-center gap-4 px-5 py-3.5 hover:bg-[#F8FAFC] transition"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-[#0B1F3A]">{g.group_name}</p>
+                  <p className="text-xs text-[#64748B]">{g.course_title}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-[#64748B]">{g.student_count} students</p>
+                  {g.next_session_at && (
+                    <p className="text-xs text-[#FF8A1F]">
+                      {new Date(g.next_session_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  )}
+                </div>
+                <span className="shrink-0 text-xs text-[#94A3B8]">→</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* My Active Groups */}
       {activeGroups.length > 0 && (
         <section>
-          <SectionHeading>My Groups</SectionHeading>
+          <SectionHeading>My Active Groups</SectionHeading>
           <div className="grid gap-4 sm:grid-cols-2">
             {activeGroups.map((g) => {
               const sessionPct = g.total_sessions > 0
@@ -105,13 +174,8 @@ export default async function InstructorDashboardPage() {
                     </span>
                   </div>
 
-                  {/* Course + Semester */}
                   <p className="mt-1 text-xs text-[#64748B]">{g.course_title}</p>
-                  {g.course_module_title && (
-                    <p className="mt-0.5 text-xs font-medium text-[#FF8A1F]">{g.course_module_title}</p>
-                  )}
 
-                  {/* Session progress */}
                   {g.total_sessions > 0 ? (
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-xs text-[#64748B]">
@@ -134,13 +198,7 @@ export default async function InstructorDashboardPage() {
                     {g.next_session_at ? (
                       <span>Next: {new Date(g.next_session_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                     ) : (
-                      <Link
-                        href={`/portal/instructor/groups/${g.group_id}/sessions/new`}
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-[#FF8A1F] hover:underline"
-                      >
-                        Schedule session →
-                      </Link>
+                      <span>Schedule day not set</span>
                     )}
                   </div>
                 </Link>
@@ -210,31 +268,6 @@ export default async function InstructorDashboardPage() {
                 <span className="shrink-0 text-xs text-[#94A3B8]">→</span>
               </Link>
             ))}
-          </div>
-        </section>
-      )}
-
-      {/* Forming groups — setup still needed */}
-      {formingGroups.length > 0 && (
-        <section>
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <p className="text-sm font-semibold text-amber-800">
-              {formingGroups.length} group{formingGroups.length !== 1 ? 's' : ''} need setup
-            </p>
-            <ul className="mt-2 space-y-1">
-              {formingGroups.map((g) => {
-                const missing: string[] = []
-                if (!g.course_title)        missing.push('no course')
-                if (!g.course_module_title) missing.push('no semester')
-                if (!g.semester_id)         missing.push('no academic period')
-                return (
-                  <li key={g.group_id} className="text-xs text-amber-700">
-                    <span className="font-medium">{g.group_name}</span>
-                    {' '}— {missing.join(', ')}
-                  </li>
-                )
-              })}
-            </ul>
           </div>
         </section>
       )}

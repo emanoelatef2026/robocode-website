@@ -10,6 +10,63 @@ import { resolveGroupProgressContext } from '@/modules/progress/resolve'
 import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/safe-recalc'
 import type { ActionResult } from '@/types/app'
 
+// ── Auth helpers ──────────────────────────────────────────────────────────────
+
+// Returns true if instructor is directly assigned to the group_course OR is in group_instructors for the group.
+async function hasGroupCourseAccess(
+  groupCourseId: string,
+  instructorId:  string,
+  db:            ReturnType<typeof createServiceClient>
+): Promise<boolean> {
+  const { data: gcRow } = await db
+    .from('group_courses')
+    .select('group_id, instructor_id')
+    .eq('id', groupCourseId)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (!gcRow) return false
+  if ((gcRow as any).instructor_id === instructorId) return true
+
+  const { data: giRow } = await db
+    .from('group_instructors')
+    .select('id')
+    .eq('group_id', (gcRow as any).group_id)
+    .eq('instructor_id', instructorId)
+    .maybeSingle()
+
+  return !!giRow
+}
+
+// Returns group context if instructor has session access, null otherwise.
+async function getSessionAccessContext(
+  sessionId:    string,
+  instructorId: string,
+  db:           ReturnType<typeof createServiceClient>
+): Promise<{ groupId: string; branchId: string } | null> {
+  const { data: sessRow } = await db
+    .from('schedules')
+    .select('id, branch_id, group_courses!schedules_group_course_id_fkey(group_id, instructor_id)')
+    .eq('id', sessionId)
+    .maybeSingle()
+
+  if (!sessRow) return null
+  const gc      = (sessRow as any).group_courses
+  const groupId = gc?.group_id  as string
+  const branchId= (sessRow as any).branch_id as string
+
+  if (gc?.instructor_id === instructorId) return { groupId, branchId }
+
+  const { data: giRow } = await db
+    .from('group_instructors')
+    .select('id')
+    .eq('group_id', groupId ?? '')
+    .eq('instructor_id', instructorId)
+    .maybeSingle()
+
+  return giRow ? { groupId, branchId } : null
+}
+
 // ── Session CRUD ──────────────────────────────────────────────────────────────
 
 const sessionSchema = z.object({
@@ -56,16 +113,8 @@ export async function createSession(
   const d  = parsed.data
   const db = createServiceClient()
 
-  // Verify instructor owns this group_course
-  const { data: gcRow } = await db
-    .from('group_courses')
-    .select('id')
-    .eq('id', d.group_course_id)
-    .eq('instructor_id', instructor.id)
-    .eq('status', 'active')
-    .maybeSingle()
-
-  if (!gcRow) {
+  const allowed = await hasGroupCourseAccess(d.group_course_id, instructor.id, db)
+  if (!allowed) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
   }
 
@@ -104,6 +153,61 @@ export async function createSession(
   redirect(`/portal/instructor/groups/${d.group_id}/sessions/${schedule.id}`)
 }
 
+// ── Start Session directly from group page ────────────────────────────────────
+// Creates a session immediately with status='ongoing', started_at=now.
+
+export async function startGroupSession(
+  groupCourseId: string,
+  groupId:       string,
+  branchId:      string
+): Promise<ActionResult<{ sessionId: string }>> {
+  const user       = await requirePermission('manage_attendance')
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+  }
+
+  const db = createServiceClient()
+
+  const allowed = await hasGroupCourseAccess(groupCourseId, instructor.id, db)
+  if (!allowed) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
+  }
+
+  const now = new Date().toISOString()
+
+  const { data: schedule, error } = await db
+    .from('schedules')
+    .insert({
+      group_course_id:  groupCourseId,
+      branch_id:        branchId,
+      scheduled_at:     now,
+      started_at:       now,
+      duration_minutes: 90,
+      type:             'regular',
+      status:           'ongoing',
+      created_by:       user.id,
+    })
+    .select('id')
+    .single()
+
+  if (error || !schedule) {
+    return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to start session.' } }
+  }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'session.start_direct',
+    p_entity_type:  'schedule',
+    p_entity_id:    (schedule as any).id,
+    p_new_values:   { group_course_id: groupCourseId, started_at: now },
+    p_branch_id:    branchId,
+  })
+
+  revalidatePath(`/portal/instructor/groups/${groupId}`)
+  return { success: true, data: { sessionId: (schedule as any).id } }
+}
+
 const updateSessionSchema = z.object({
   session_id:       z.string().uuid(),
   group_id:         z.string().uuid(),
@@ -129,10 +233,10 @@ export async function updateSession(
     session_id:       formData.get('session_id'),
     group_id:         formData.get('group_id'),
     status:           formData.get('status'),
-    topic:            formData.get('topic')   || undefined,
-    notes:            formData.get('notes')   || undefined,
-    meeting_url:      formData.get('meeting_url') || undefined,
-    room:             formData.get('room')     || undefined,
+    topic:            formData.get('topic')        || undefined,
+    notes:            formData.get('notes')        || undefined,
+    meeting_url:      formData.get('meeting_url')  || undefined,
+    room:             formData.get('room')         || undefined,
     duration_minutes: formData.get('duration_minutes') || undefined,
   }
 
@@ -144,22 +248,8 @@ export async function updateSession(
   const d  = parsed.data
   const db = createServiceClient()
 
-  // Verify instructor owns this session's group_course
-  const { data: sessRow } = await db
-    .from('schedules')
-    .select(
-      `id, branch_id,
-       group_courses!schedules_group_course_id_fkey(instructor_id)`
-    )
-    .eq('id', d.session_id)
-    .single()
-
-  if (!sessRow) {
-    return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
-  }
-
-  const gc = (sessRow as any).group_courses
-  if (gc?.instructor_id !== instructor.id) {
+  const ctx = await getSessionAccessContext(d.session_id, instructor.id, db)
+  if (!ctx) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
   }
 
@@ -196,17 +286,19 @@ export async function startSession(
 
   const { data: sessRow } = await db
     .from('schedules')
-    .select('id, status, group_courses!schedules_group_course_id_fkey(instructor_id)')
+    .select('id, status')
     .eq('id', sessionId)
     .single()
 
   if (!sessRow) {
     return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
   }
-  const gc = (sessRow as any).group_courses
-  if (gc?.instructor_id !== instructor.id) {
+
+  const ctx = await getSessionAccessContext(sessionId, instructor.id, db)
+  if (!ctx) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
   }
+
   if ((sessRow as any).status === 'ongoing') {
     return { success: false, error: { code: 'VALIDATION', message: 'Session is already in progress.' } }
   }
@@ -243,20 +335,19 @@ export async function endSession(
 
   const { data: sessRow } = await db
     .from('schedules')
-    .select(
-      `id, status, topic, notes, branch_id,
-       group_courses!schedules_group_course_id_fkey(instructor_id, group_id)`
-    )
+    .select('id, status, topic, notes, branch_id, group_courses!schedules_group_course_id_fkey(group_id)')
     .eq('id', sessionId)
     .single()
 
   if (!sessRow) {
     return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
   }
-  const gc = (sessRow as any).group_courses
-  if (gc?.instructor_id !== instructor.id) {
+
+  const ctx = await getSessionAccessContext(sessionId, instructor.id, db)
+  if (!ctx) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
   }
+
   if ((sessRow as any).status === 'completed') {
     return { success: false, error: { code: 'VALIDATION', message: 'Session is already completed.' } }
   }
@@ -264,9 +355,8 @@ export async function endSession(
     return { success: false, error: { code: 'VALIDATION', message: 'Session is cancelled.' } }
   }
 
-  // Validate unless force=true
   if (!force) {
-    const gcGroupId = gc?.group_id as string
+    const gcGroupId = ctx.groupId
     const [studRes, attRes] = await Promise.all([
       db.from('group_students').select('student_id', { count: 'exact', head: true })
         .eq('group_id', gcGroupId).eq('status', 'active'),
@@ -308,7 +398,7 @@ export async function endSession(
     p_entity_type:  'schedule',
     p_entity_id:    sessionId,
     p_new_values:   { ended_at: new Date().toISOString(), force },
-    p_branch_id:    (sessRow as any).branch_id,
+    p_branch_id:    ctx.branchId,
   })
 
   revalidatePath(`/portal/instructor/groups/${groupId}`)
@@ -336,28 +426,12 @@ export async function saveAttendance(
     return { success: false, error: { code: 'VALIDATION', message: 'Session, group, and students are required.' } }
   }
 
-  const db = createServiceClient()
-
-  // Verify instructor owns this session
-  const { data: sessRow } = await db
-    .from('schedules')
-    .select(
-      `id, branch_id,
-       group_courses!schedules_group_course_id_fkey(instructor_id)`
-    )
-    .eq('id', sessionId)
-    .single()
-
-  if (!sessRow) {
-    return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
-  }
-
-  const gc = (sessRow as any).group_courses
-  if (gc?.instructor_id !== instructor.id) {
+  const db  = createServiceClient()
+  const ctx = await getSessionAccessContext(sessionId, instructor.id, db)
+  if (!ctx) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
   }
 
-  // Validate students belong to the group
   const { data: validMembers } = await db
     .from('group_students')
     .select('student_id')
@@ -372,7 +446,6 @@ export async function saveAttendance(
     return { success: false, error: { code: 'VALIDATION', message: 'No valid group members in submission.' } }
   }
 
-  // Build upsert records
   type AttRecord = {
     schedule_id:   string
     student_id:    string
@@ -400,7 +473,6 @@ export async function saveAttendance(
     return { success: false, error: { code: 'DB_ERROR', message: upsertErr.message } }
   }
 
-  // Recalculate progress (session completion is handled by endSession, not here)
   const contexts = await resolveGroupProgressContext(groupId)
   if (contexts.length > 0) {
     await safeRecalcProgressBatch(
@@ -415,7 +487,7 @@ export async function saveAttendance(
     p_entity_type:  'schedule',
     p_entity_id:    sessionId,
     p_new_values:   { student_count: records.length },
-    p_branch_id:    (sessRow as any).branch_id,
+    p_branch_id:    ctx.branchId,
   })
 
   revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
@@ -436,10 +508,10 @@ function detectProvider(url: string): Provider {
 }
 
 const addRecordingSchema = z.object({
-  session_id:  z.string().uuid(),
-  group_id:    z.string().uuid(),
+  session_id:   z.string().uuid(),
+  group_id:     z.string().uuid(),
   external_url: z.string().url('Enter a valid URL'),
-  title:       z.string().optional().or(z.literal('')),
+  title:        z.string().optional().or(z.literal('')),
 })
 
 export async function addSessionRecording(
@@ -467,23 +539,14 @@ export async function addSessionRecording(
   const d  = parsed.data
   const db = createServiceClient()
 
-  const { data: sessRow } = await db
-    .from('schedules')
-    .select(`id, branch_id, group_courses!schedules_group_course_id_fkey(instructor_id)`)
-    .eq('id', d.session_id)
-    .single()
-
-  if (!sessRow) return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
-  const gc = (sessRow as any).group_courses
-  if (gc?.instructor_id !== instructor.id) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
-  }
+  const ctx = await getSessionAccessContext(d.session_id, instructor.id, db)
+  if (!ctx) return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
 
   const { data: rec, error } = await db
     .from('session_recordings')
     .insert({
       schedule_id:          d.session_id,
-      branch_id:            (sessRow as any).branch_id,
+      branch_id:            ctx.branchId,
       external_url:         d.external_url,
       title:                d.title || null,
       provider:             detectProvider(d.external_url),
@@ -522,7 +585,7 @@ export async function removeSessionRecording(
 const resourcesSchema = z.object({
   session_id:      z.string().uuid(),
   group_id:        z.string().uuid(),
-  resources_json:  z.string(),  // JSON array of {title, url}
+  resources_json:  z.string(),
 })
 
 export async function updateSessionResources(
@@ -545,15 +608,8 @@ export async function updateSessionResources(
   const d  = parsed.data
   const db = createServiceClient()
 
-  const { data: sessRow } = await db
-    .from('schedules')
-    .select('id, group_courses!schedules_group_course_id_fkey(instructor_id)')
-    .eq('id', d.session_id).single()
-
-  if (!sessRow) return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
-  if ((sessRow as any).group_courses?.instructor_id !== instructor.id) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
-  }
+  const ctx = await getSessionAccessContext(d.session_id, instructor.id, db)
+  if (!ctx) return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
 
   let resources: unknown[]
   try { resources = JSON.parse(d.resources_json) } catch { return { success: false, error: { code: 'VALIDATION', message: 'Invalid resources format.' } } }
@@ -568,12 +624,12 @@ export async function updateSessionResources(
 // ── Quick homework from session ───────────────────────────────────────────────
 
 const homeworkSchema = z.object({
-  session_id: z.string().uuid(),
-  group_id:   z.string().uuid(),
-  module_id:  z.string().uuid(),
-  title:      z.string().min(1, 'Title is required').max(200),
-  description:z.string().max(2000).optional().or(z.literal('')),
-  due_at:     z.string().optional().or(z.literal('')),
+  session_id:  z.string().uuid(),
+  group_id:    z.string().uuid(),
+  module_id:   z.string().uuid(),
+  title:       z.string().min(1, 'Title is required').max(200),
+  description: z.string().max(2000).optional().or(z.literal('')),
+  due_at:      z.string().optional().or(z.literal('')),
 })
 
 export async function createSessionHomework(
@@ -599,15 +655,8 @@ export async function createSessionHomework(
   const d  = parsed.data
   const db = createServiceClient()
 
-  const { data: sessRow } = await db
-    .from('schedules')
-    .select('id, group_courses!schedules_group_course_id_fkey(instructor_id)')
-    .eq('id', d.session_id).single()
-
-  if (!sessRow) return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
-  if ((sessRow as any).group_courses?.instructor_id !== instructor.id) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
-  }
+  const ctx = await getSessionAccessContext(d.session_id, instructor.id, db)
+  if (!ctx) return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
 
   const { data: assignment, error } = await db
     .from('assignments')
@@ -670,12 +719,12 @@ export async function createStudentNote(
 
   const d = parsed.data
 
-  // Verify user is an instructor with access to this student's group
   const instructor = await getInstructorByUserId(user.id)
   if (!instructor) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
   }
 
+  // Verify access (group_courses OR group_instructors)
   const { data: gcRow } = await db
     .from('group_courses')
     .select('id')
@@ -685,7 +734,6 @@ export async function createStudentNote(
     .maybeSingle()
 
   if (!gcRow) {
-    // Forming groups have no group_courses row — verify via group_instructors
     const { data: giRow } = await db
       .from('group_instructors')
       .select('group_id')
@@ -718,11 +766,11 @@ export async function createStudentNote(
 }
 
 const updateNoteSchema = z.object({
-  note_id:     z.string().uuid(),
-  student_id:  z.string().uuid(),
-  group_id:    z.string().uuid(),
-  content:     z.string().min(1, 'Note content is required'),
-  is_private:  z.string().optional().transform((v) => v !== 'false'),
+  note_id:    z.string().uuid(),
+  student_id: z.string().uuid(),
+  group_id:   z.string().uuid(),
+  content:    z.string().min(1, 'Note content is required'),
+  is_private: z.string().optional().transform((v) => v !== 'false'),
 })
 
 export async function updateStudentNote(
@@ -747,7 +795,6 @@ export async function updateStudentNote(
 
   const d = parsed.data
 
-  // Only author can update — enforced by filtering on author_id
   const { error: updateErr } = await db
     .from('student_notes')
     .update({ content: d.content, is_private: d.is_private })
@@ -766,7 +813,7 @@ export async function deleteStudentNote(formData: FormData): Promise<ActionResul
   const user = await requireAuth()
   const db   = createServiceClient()
 
-  const noteId   = formData.get('note_id')   as string
+  const noteId    = formData.get('note_id')    as string
   const studentId = formData.get('student_id') as string
   const groupId   = formData.get('group_id')   as string
 

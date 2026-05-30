@@ -60,7 +60,6 @@ export async function createGroup(_prev: unknown, formData: FormData): Promise<A
     return { success: false, error: { code: 'DB_ERROR', message: error.message } }
   }
 
-  // Optional: assign lead instructor via group_instructors
   if (instructor_id) {
     await db.from('group_instructors').upsert(
       { group_id: group.id, instructor_id, role: 'lead' },
@@ -106,7 +105,6 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
 
   const { id, name, type, capacity, status, start_date, day_of_week, time, notes } = parsed.data
 
-  // P6: branch ownership check
   const { data: existing } = await db.from('groups').select('branch_id').eq('id', id).single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
   if (!isBranchAccessible(user, existing.branch_id)) {
@@ -114,8 +112,8 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
   }
 
   const updates: Record<string, unknown> = { name, type }
-  if (capacity !== undefined) updates.capacity    = capacity ?? null
-  if (status)                 updates.status      = status
+  if (capacity !== undefined)    updates.capacity    = capacity ?? null
+  if (status)                    updates.status      = status
   if (start_date  !== undefined) updates.start_date  = start_date  || null
   if (day_of_week !== undefined) updates.day_of_week = day_of_week || null
   if (time        !== undefined) updates.time        = time        || null
@@ -146,7 +144,6 @@ export async function deleteGroup(id: string): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
 
-  // P6: branch ownership check
   const { data: existing } = await db.from('groups').select('branch_id').eq('id', id).single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
   if (!isBranchAccessible(user, existing.branch_id)) {
@@ -190,10 +187,9 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
 
   const { group_id, student_id, enrollment_type } = parsed.data
 
-  // Fetch group (branch, capacity, semester) and student (branch) in parallel
   const [{ data: group }, { data: student }] = await Promise.all([
     db.from('groups')
-      .select('branch_id, capacity, semester_id')
+      .select('branch_id, capacity')
       .eq('id', group_id)
       .is('deleted_at', null)
       .single(),
@@ -208,17 +204,14 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
     return { success: false, error: { code: 'NOT_FOUND', message: 'Group or student not found.' } }
   }
 
-  // P6: branch ownership check
   if (!isBranchAccessible(user, group.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
 
-  // Same-branch guard
   if (group.branch_id !== student.branch_id) {
     return { success: false, error: { code: 'VALIDATION', message: 'Student and group must belong to the same branch.' } }
   }
 
-  // P2: capacity enforcement
   if (group.capacity !== null) {
     const { count } = await db
       .from('group_students')
@@ -231,7 +224,6 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
     }
   }
 
-  // P4: insert with enrollment_type
   const { error } = await db.from('group_students').insert({
     group_id,
     student_id,
@@ -245,17 +237,6 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
       return { success: false, error: { code: 'DUPLICATE', message: 'Student is already enrolled in this group.' } }
     }
     return { success: false, error: { code: 'DB_ERROR', message: error.message } }
-  }
-
-  // P1: create semester_enrollment if group has an active semester
-  if (group.semester_id) {
-    await db.from('semester_enrollments').insert({
-      semester_id: group.semester_id,
-      student_id,
-      branch_id:   student.branch_id,
-      status:      'enrolled',
-    })
-    // 23505 = already enrolled in this semester — that is fine, do nothing
   }
 
   await db.rpc('write_audit_log', {
@@ -428,87 +409,9 @@ export async function unenrollStudent(groupId: string, studentId: string): Promi
   return { success: true, data: undefined }
 }
 
-export async function assignGroupCourse(
-  groupId: string,
-  courseId: string,
-  instructorId: string | null
-): Promise<ActionResult<{ id: string }>> {
-  const user = await requirePermission('manage_groups')
-  const db   = createServiceClient()
-
-  // P6: branch ownership check
-  const { data: grp } = await db.from('groups').select('branch_id').eq('id', groupId).single()
-  if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
-  if (!isBranchAccessible(user, grp.branch_id)) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
-  }
-
-  // Deactivate any existing active group_course for this group
-  await db.from('group_courses')
-    .update({ status: 'cancelled' })
-    .eq('group_id', groupId)
-    .eq('status', 'active')
-
-  const { data, error } = await db.from('group_courses')
-    .insert({
-      group_id:      groupId,
-      course_id:     courseId,
-      instructor_id: instructorId || null,
-      status:        'active',
-    })
-    .select('id')
-    .single()
-
-  if (error) {
-    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
-  }
-
-  await db.rpc('write_audit_log', {
-    p_performed_by: user.id,
-    p_action:       'assign_course',
-    p_entity_type:  'group',
-    p_entity_id:    groupId,
-    p_new_values:   { course_id: courseId, instructor_id: instructorId },
-  })
-
-  revalidatePath(`/admin/groups/${groupId}`)
-  revalidatePath(`/portal/team-leader/groups/${groupId}`)
-  return { success: true, data: { id: data.id } }
-}
-
-export async function assignGroupInstructor(
-  groupId: string,
-  instructorId: string
-): Promise<ActionResult<void>> {
-  const user = await requirePermission('manage_groups')
-  const db   = createServiceClient()
-
-  // Update the active group_course's instructor
-  const { error } = await db.from('group_courses')
-    .update({ instructor_id: instructorId })
-    .eq('group_id', groupId)
-    .eq('status', 'active')
-
-  if (error) {
-    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
-  }
-
-  await db.rpc('write_audit_log', {
-    p_performed_by: user.id,
-    p_action:       'assign_instructor',
-    p_entity_type:  'group',
-    p_entity_id:    groupId,
-    p_new_values:   { instructor_id: instructorId },
-  })
-
-  revalidatePath(`/admin/groups/${groupId}`)
-  revalidatePath(`/portal/team-leader/groups/${groupId}`)
-  return { success: true, data: undefined }
-}
-
-// ── Sprint 21: unified academic configuration save ────────────────────────────
-// Handles course, semester, and instructor in one atomic-ish operation.
-// On completion auto-syncs groups.status (forming ↔ active) based on readiness.
+// ── Sprint 22: simplified group configuration save ────────────────────────────
+// Handles course, total_sessions, and lead instructor in one atomic operation.
+// Course semester and academic period are no longer required for activation.
 
 export async function saveGroupAcademicConfig(
   _prev: unknown,
@@ -517,11 +420,10 @@ export async function saveGroupAcademicConfig(
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
 
-  const groupId        = formData.get('group_id')        as string | null
-  const courseId       = formData.get('course_id')       as string | null
-  const courseModuleId = formData.get('course_module_id') as string | null
-  const semesterId     = formData.get('semester_id')     as string | null
-  const instructorId   = formData.get('instructor_id')   as string | null
+  const groupId      = formData.get('group_id')      as string | null
+  const courseId     = formData.get('course_id')     as string | null
+  const instructorId = formData.get('instructor_id') as string | null
+  const totalSessions = parseInt(formData.get('total_sessions') as string || '24', 10) || 24
 
   if (!groupId) {
     return { success: false, error: { code: 'VALIDATION', message: 'Group ID missing.' } }
@@ -533,24 +435,22 @@ export async function saveGroupAcademicConfig(
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
 
-  // 1. Course assignment — upsert on (group_id, course_id), cancel any other active rows
+  // 1. Course assignment — upsert on (group_id, course_id)
   if (courseId) {
-    // Cancel other active courses for this group
     await db.from('group_courses')
       .update({ status: 'cancelled' })
       .eq('group_id', groupId)
       .eq('status', 'active')
       .neq('course_id', courseId)
 
-    // Upsert the chosen course (handles re-assignment of previously cancelled course)
     const { error: gcErr } = await db.from('group_courses')
       .upsert(
         {
-          group_id:         groupId,
-          course_id:        courseId,
-          instructor_id:    instructorId    || null,
-          course_module_id: courseModuleId  || null,
-          status:           'active',
+          group_id:       groupId,
+          course_id:      courseId,
+          instructor_id:  instructorId || null,
+          total_sessions: totalSessions,
+          status:         'active',
         },
         { onConflict: 'group_id,course_id' }
       )
@@ -558,32 +458,22 @@ export async function saveGroupAcademicConfig(
       return { success: false, error: { code: 'DB_ERROR', message: gcErr.message } }
     }
 
-    // Sync instructor + course_module_id on the existing active row
+    // Sync instructor_id and total_sessions on the active row (covers the upsert update path)
     await db.from('group_courses')
       .update({
-        instructor_id:    instructorId   || null,
-        course_module_id: courseModuleId || null,
+        instructor_id:  instructorId || null,
+        total_sessions: totalSessions,
       })
       .eq('group_id', groupId)
       .eq('status', 'active')
   } else {
-    // No course — cancel any active group_courses
     await db.from('group_courses')
       .update({ status: 'cancelled' })
       .eq('group_id', groupId)
       .eq('status', 'active')
   }
 
-  // 2. Semester assignment — update groups.semester_id directly
-  const { error: semErr } = await db
-    .from('groups')
-    .update({ semester_id: semesterId || null })
-    .eq('id', groupId)
-  if (semErr) {
-    return { success: false, error: { code: 'DB_ERROR', message: semErr.message } }
-  }
-
-  // 3. Instructor — upsert group_instructors (lead role)
+  // 2. Lead instructor — upsert group_instructors with role='lead'
   if (instructorId) {
     await db.from('group_instructors').upsert(
       { group_id: groupId, instructor_id: instructorId, role: 'lead' },
@@ -591,15 +481,15 @@ export async function saveGroupAcademicConfig(
     )
   }
 
-  // 4. Auto-sync group status (forming ↔ active)
+  // 3. Auto-sync group status (forming ↔ active)
   await syncGroupStatus(groupId, db)
 
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,
-    p_action:       'save_academic_config',
+    p_action:       'save_group_config',
     p_entity_type:  'group',
     p_entity_id:    groupId,
-    p_new_values:   { course_id: courseId, course_module_id: courseModuleId, semester_id: semesterId, instructor_id: instructorId },
+    p_new_values:   { course_id: courseId, instructor_id: instructorId, total_sessions: totalSessions },
   })
 
   revalidatePath(`/admin/groups/${groupId}`)
@@ -609,7 +499,66 @@ export async function saveGroupAcademicConfig(
   return { success: true, data: undefined }
 }
 
-// ── Sprint 21.6 BONUS: admin schedule management ──────────────────────────────
+// ── Additional instructor management ──────────────────────────────────────────
+
+export async function addGroupInstructor(
+  groupId:      string,
+  instructorId: string,
+  role:         'lead' | 'additional' = 'additional'
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const { data: grp } = await db.from('groups').select('branch_id').eq('id', groupId).single()
+  if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, grp.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  const { error } = await db.from('group_instructors').upsert(
+    { group_id: groupId, instructor_id: instructorId, role },
+    { onConflict: 'group_id,instructor_id' }
+  )
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  await syncGroupStatus(groupId, db)
+  revalidatePath(`/admin/groups/${groupId}`)
+  return { success: true, data: undefined }
+}
+
+export async function removeGroupInstructor(
+  groupId:      string,
+  instructorId: string
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const { data: grp } = await db.from('groups').select('branch_id').eq('id', groupId).single()
+  if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, grp.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  const { error } = await db.from('group_instructors')
+    .delete()
+    .eq('group_id', groupId)
+    .eq('instructor_id', instructorId)
+
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  // Also clear instructor_id on group_courses if this was the lead
+  await db.from('group_courses')
+    .update({ instructor_id: null })
+    .eq('group_id', groupId)
+    .eq('instructor_id', instructorId)
+    .eq('status', 'active')
+
+  await syncGroupStatus(groupId, db)
+  revalidatePath(`/admin/groups/${groupId}`)
+  return { success: true, data: undefined }
+}
+
+// ── Legacy schedule management (kept for backward compat) ─────────────────────
 
 const scheduleItemSchema = z.object({
   group_id:         z.string().uuid(),
@@ -647,14 +596,12 @@ export async function createGroupSchedule(
 
   const d = parsed.data
 
-  // Branch ownership check
   const { data: grp } = await db.from('groups').select('branch_id').eq('id', d.group_id).single()
   if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
   if (!isBranchAccessible(user, grp.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
 
-  // Must have an active course assignment
   const { data: gcRow } = await db
     .from('group_courses')
     .select('id')
@@ -688,93 +635,8 @@ export async function createGroupSchedule(
     return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to create schedule.' } }
   }
 
-  await db.rpc('write_audit_log', {
-    p_performed_by: user.id,
-    p_action:       'schedule.create',
-    p_entity_type:  'schedule',
-    p_entity_id:    (schedule as any).id,
-    p_new_values:   { group_id: d.group_id, scheduled_at: d.scheduled_at },
-    p_branch_id:    grp.branch_id,
-  })
-
   revalidatePath(`/admin/groups/${d.group_id}`)
   return { success: true, data: { id: (schedule as any).id } }
-}
-
-// ── Sprint 21.8: Semester promotion ──────────────────────────────────────────
-// Advances the group from course_module N to course_module N+1 (next order_index).
-// Students, instructor, and group history are all preserved — only course_module_id changes.
-
-export async function promoteGroupSemester(
-  groupId: string
-): Promise<ActionResult<{ newSemesterTitle: string; newSemesterOrder: number }>> {
-  const user = await requirePermission('manage_groups')
-  const db   = createServiceClient()
-
-  const { data: grp } = await db.from('groups').select('branch_id').eq('id', groupId).single()
-  if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
-  if (!isBranchAccessible(user, grp.branch_id)) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
-  }
-
-  const { data: gcRow } = await db
-    .from('group_courses')
-    .select('id, course_id, course_module_id')
-    .eq('group_id', groupId)
-    .eq('status', 'active')
-    .maybeSingle()
-
-  if (!gcRow) {
-    return { success: false, error: { code: 'VALIDATION', message: 'No active course assigned to this group.' } }
-  }
-  if (!(gcRow as any).course_module_id) {
-    return { success: false, error: { code: 'VALIDATION', message: 'No current semester assigned. Set one in Academic Configuration first.' } }
-  }
-
-  const { data: currentMod } = await db
-    .from('course_modules')
-    .select('order_index')
-    .eq('id', (gcRow as any).course_module_id)
-    .maybeSingle()
-
-  if (!currentMod) {
-    return { success: false, error: { code: 'NOT_FOUND', message: 'Current semester record not found.' } }
-  }
-
-  const { data: nextMod } = await db
-    .from('course_modules')
-    .select('id, title, order_index')
-    .eq('course_id', (gcRow as any).course_id)
-    .eq('order_index', ((currentMod as any).order_index ?? 0) + 1)
-    .is('deleted_at', null)
-    .maybeSingle()
-
-  if (!nextMod) {
-    return { success: false, error: { code: 'NOT_FOUND', message: 'This is the last semester — no next semester to promote to.' } }
-  }
-
-  const { error } = await db
-    .from('group_courses')
-    .update({ course_module_id: (nextMod as any).id })
-    .eq('id', (gcRow as any).id)
-
-  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
-
-  // Re-evaluate group status after promotion
-  await syncGroupStatus(groupId, db)
-
-  await db.rpc('write_audit_log', {
-    p_performed_by: user.id,
-    p_action:       'semester.promote',
-    p_entity_type:  'group',
-    p_entity_id:    groupId,
-    p_new_values:   { new_semester_id: (nextMod as any).id, new_semester_title: (nextMod as any).title },
-    p_branch_id:    grp.branch_id,
-  })
-
-  revalidatePath(`/admin/groups/${groupId}`)
-  revalidatePath('/admin/groups')
-  return { success: true, data: { newSemesterTitle: (nextMod as any).title, newSemesterOrder: (nextMod as any).order_index } }
 }
 
 export async function deleteGroupSchedule(
@@ -784,7 +646,6 @@ export async function deleteGroupSchedule(
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
 
-  // Fetch schedule and verify branch access
   const { data: sched } = await db
     .from('schedules')
     .select('id, status, branch_id')
@@ -807,14 +668,44 @@ export async function deleteGroupSchedule(
 
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
 
-  await db.rpc('write_audit_log', {
-    p_performed_by: user.id,
-    p_action:       'schedule.cancel',
-    p_entity_type:  'schedule',
-    p_entity_id:    scheduleId,
-    p_branch_id:    (sched as any).branch_id,
-  })
-
   revalidatePath(`/admin/groups/${groupId}`)
   return { success: true, data: undefined }
+}
+
+export async function assignGroupCourse(
+  groupId: string,
+  courseId: string,
+  instructorId: string | null
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const { data: grp } = await db.from('groups').select('branch_id').eq('id', groupId).single()
+  if (!grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, grp.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
+  await db.from('group_courses')
+    .update({ status: 'cancelled' })
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+
+  const { data, error } = await db.from('group_courses')
+    .insert({
+      group_id:      groupId,
+      course_id:     courseId,
+      instructor_id: instructorId || null,
+      status:        'active',
+    })
+    .select('id')
+    .single()
+
+  if (error) {
+    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  }
+
+  revalidatePath(`/admin/groups/${groupId}`)
+  revalidatePath(`/portal/team-leader/groups/${groupId}`)
+  return { success: true, data: { id: data.id } }
 }

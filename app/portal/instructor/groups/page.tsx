@@ -2,18 +2,6 @@ import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId, listInstructorGroups } from '@/modules/instructor-portal/queries'
 import Link from 'next/link'
 
-function getMissingRequirements(g: {
-  course_title:       string
-  course_module_title: string | null
-  semester_id:        string | null
-}): string[] {
-  const missing: string[] = []
-  if (!g.course_title)        missing.push('No course')
-  if (!g.course_module_title) missing.push('No course semester')
-  if (!g.semester_id)         missing.push('No academic period')
-  return missing
-}
-
 export default async function InstructorGroupsPage() {
   const user       = await requirePortalRole('instructor')
   const instructor = await getInstructorByUserId(user.id)
@@ -43,8 +31,7 @@ export default async function InstructorGroupsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {groups.map((g) => {
-            const missing  = getMissingRequirements({ course_title: g.course_title, course_module_title: g.course_module_title ?? null, semester_id: g.semester_id })
-            const isActive = missing.length === 0
+            const isActive = !!g.course_title
 
             return (
               <Link
@@ -77,25 +64,12 @@ export default async function InstructorGroupsPage() {
                   <p className="mt-0.5 truncate text-xs text-[#94A3B8]">{g.branch_name}</p>
                 )}
 
-                {/* Missing requirements */}
-                {!isActive && missing.length > 0 && (
-                  <div className="mt-2.5 flex flex-wrap gap-1">
-                    {missing.map((m) => (
-                      <span
-                        key={m}
-                        className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700 border border-amber-200"
-                      >
-                        {m}
-                      </span>
-                    ))}
+                {!isActive && (
+                  <div className="mt-2.5">
+                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700 border border-amber-200">
+                      No course assigned
+                    </span>
                   </div>
-                )}
-
-                {/* Current semester */}
-                {g.course_module_title && (
-                  <p className="mt-1 text-xs text-[#64748B]">
-                    <span className="font-medium">{g.course_module_title}</span>
-                  </p>
                 )}
 
                 {/* Session progress */}
@@ -116,19 +90,13 @@ export default async function InstructorGroupsPage() {
 
                 <div className="mt-2 flex items-center gap-4 text-xs text-[#94A3B8]">
                   <span>{g.student_count} student{g.student_count !== 1 ? 's' : ''}</span>
-                  {isActive ? (
-                    g.next_session_at ? (
-                      <span>
-                        Next:{' '}
-                        {new Date(g.next_session_at).toLocaleDateString('en-GB', {
-                          day: 'numeric', month: 'short',
-                        })}
-                      </span>
-                    ) : (
-                      <span>No upcoming session</span>
-                    )
-                  ) : (
-                    <span className="text-amber-600">Sessions blocked</span>
+                  {isActive && g.next_session_at && (
+                    <span>
+                      Next:{' '}
+                      {new Date(g.next_session_at).toLocaleDateString('en-GB', {
+                        day: 'numeric', month: 'short',
+                      })}
+                    </span>
                   )}
                 </div>
               </Link>

@@ -209,7 +209,6 @@ function MyGroupsSection({
             <th className="px-5 py-2.5 text-left text-xs font-medium text-[#64748B]">Group</th>
             <th className="px-5 py-2.5 text-left text-xs font-medium text-[#64748B] hidden md:table-cell">Branch</th>
             <th className="px-5 py-2.5 text-right text-xs font-medium text-[#64748B]">Students</th>
-            <th className="px-5 py-2.5 text-left text-xs font-medium text-[#64748B] hidden lg:table-cell">Semester</th>
             <th className="px-5 py-2.5 text-left text-xs font-medium text-[#64748B]">Status</th>
             <th className="px-5 py-2.5" />
           </tr>
@@ -228,9 +227,6 @@ function MyGroupsSection({
                   {g.branch_name || <span className="text-[#CBD5E1]">—</span>}
                 </td>
                 <td className="px-5 py-3 text-right font-medium text-[#0B1F3A]">{g.student_count}</td>
-                <td className="px-5 py-3 text-[#64748B] hidden lg:table-cell">
-                  {g.semester_name ?? <span className="text-[#CBD5E1]">—</span>}
-                </td>
                 <td className="px-5 py-3">
                   {isActive ? (
                     <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Active</span>

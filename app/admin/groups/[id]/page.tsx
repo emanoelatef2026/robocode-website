@@ -2,25 +2,21 @@ import {
   getGroup,
   listGroupEnrollments,
   getGroupAcademicConfig,
-  getGroupSchedules,
 } from '@/modules/groups/queries'
 import { listStudents } from '@/modules/students/queries'
 import { listCourses } from '@/modules/courses/queries'
-import { listSemesters } from '@/modules/semesters/queries'
 import { listInstructors } from '@/modules/instructors/queries'
-import { listModulesByCourseIds } from '@/modules/courses/modules/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import { notFound } from 'next/navigation'
 import GroupDetailView from './GroupDetailView'
 import GroupStudentsTable from './GroupStudentsTable'
 import AcademicConfigCard from './AcademicConfigCard'
-import GroupSchedulesCard from './GroupSchedulesCard'
 import Link from 'next/link'
 
 interface Props { params: Promise<{ id: string }> }
 
 export default async function GroupDetailPage({ params }: Props) {
-  const user   = await requirePermission('manage_groups')
+  await requirePermission('manage_groups')
   const { id } = await params
 
   const group = await getGroup(id)
@@ -31,29 +27,14 @@ export default async function GroupDetailPage({ params }: Props) {
     studentsResult,
     academicConfig,
     coursesResult,
-    semestersResult,
     instructorsResult,
-    schedules,
   ] = await Promise.all([
     listGroupEnrollments(id),
     listStudents({ perPage: 400, branchId: group.branch_id }),
     getGroupAcademicConfig(id),
     listCourses({ perPage: 200, branchId: group.branch_id }),
-    listSemesters({ perPage: 50 }),
     listInstructors({ perPage: 200, branchId: group.branch_id }),
-    getGroupSchedules(id),
   ])
-
-  // Fetch course semesters (course_modules) for all available courses
-  const courseIds    = coursesResult.data.map((c) => c.id)
-  const modulesList  = await listModulesByCourseIds(courseIds)
-
-  // Group into a Record<course_id, {id, title}[]> for the cascade selector
-  const modulesByCourse: Record<string, { id: string; title: string }[]> = {}
-  for (const m of modulesList) {
-    if (!modulesByCourse[m.course_id]) modulesByCourse[m.course_id] = []
-    modulesByCourse[m.course_id].push({ id: m.id, title: m.title })
-  }
 
   const activeIds         = new Set(enrollments.filter((e) => e.status === 'active').map((e) => e.student_id))
   const availableStudents = studentsResult.data.filter((s) => !activeIds.has(s.id))
@@ -62,12 +43,6 @@ export default async function GroupDetailPage({ params }: Props) {
     id:    c.id,
     title: c.title,
     code:  c.code,
-  }))
-
-  const academicPeriodOptions = semestersResult.data.map((s) => ({
-    id:     s.id,
-    name:   s.name,
-    status: s.status,
   }))
 
   const instructorOptions = instructorsResult.data.map((i) => ({
@@ -86,24 +61,12 @@ export default async function GroupDetailPage({ params }: Props) {
         <p className="text-sm text-[#64748B]">{group.branch_name} · {group.type}</p>
       </div>
 
-      {/* Academic Configuration */}
       <div className="mb-6">
         <AcademicConfigCard
           groupId={id}
           config={academicConfig}
           courses={courseOptions}
-          modulesByCourse={modulesByCourse}
-          academicPeriods={academicPeriodOptions}
           instructors={instructorOptions}
-        />
-      </div>
-
-      {/* Schedule management */}
-      <div className="mb-6">
-        <GroupSchedulesCard
-          groupId={id}
-          hasCourse={!!academicConfig.course_id}
-          schedules={schedules}
         />
       </div>
 

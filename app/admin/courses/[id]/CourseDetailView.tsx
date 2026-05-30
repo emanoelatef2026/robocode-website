@@ -2,36 +2,23 @@
 
 import { useActionState } from 'react'
 import { updateCourse, deleteCourse } from '@/modules/courses/actions'
-import { createModule, deleteModule } from '@/modules/courses/modules/actions'
 import SubmitButton from '@/components/admin/SubmitButton'
-import StatusBadge from '@/components/admin/StatusBadge'
-import Link from 'next/link'
 import type { Course } from '@/modules/courses/types'
-import type { CourseModuleListItem } from '@/modules/courses/modules/types'
 import type { BranchListItem } from '@/modules/branches/types'
 import type { ActionResult } from '@/types/app'
 
 interface Props {
   course: Course
-  modules: CourseModuleListItem[]
   branches: BranchListItem[]
 }
 
-export default function CourseDetailView({ course, modules, branches }: Props) {
-  const [editState, editAction]     = useActionState<ActionResult<void> | null, FormData>(updateCourse, null)
-  const [addModState, addModAction] = useActionState<ActionResult<{ id: string }> | null, FormData>(createModule, null)
+export default function CourseDetailView({ course, branches }: Props) {
+  const [editState, editAction] = useActionState<ActionResult<void> | null, FormData>(updateCourse, null)
 
   const handleDelete = async () => {
-    if (!confirm('Delete this course? All semesters and lessons will be soft-deleted.')) return
+    if (!confirm('Delete this course? This action cannot be undone.')) return
     await deleteCourse(course.id)
     window.location.href = '/admin/courses'
-  }
-
-  const handleDeleteModule = async (moduleId: string) => {
-    if (!confirm('Delete this semester?')) return
-    const result = await deleteModule(moduleId)
-    if (result.success) window.location.reload()
-    else alert(result.error.message)
   }
 
   return (
@@ -163,71 +150,6 @@ export default function CourseDetailView({ course, modules, branches }: Props) {
             <SubmitButton label="Save Changes" />
           </div>
         </form>
-      </div>
-
-      {/* Semesters */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-        <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">
-          Semesters ({modules.length})
-        </h2>
-
-        {addModState && !addModState.success && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
-            {addModState.error.message}
-          </div>
-        )}
-
-        <form action={addModAction} className="mb-4 flex gap-2">
-          <input type="hidden" name="course_id" value={course.id} />
-          <input
-            name="title"
-            required
-            placeholder="New semester name…"
-            className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-          />
-          <SubmitButton label="Add Semester" pendingLabel="…" />
-        </form>
-
-        {modules.length === 0 ? (
-          <p className="text-sm text-[#94A3B8]">No semesters yet. Add the first one above.</p>
-        ) : (
-          <ul className="space-y-2">
-            {modules.map((mod) => (
-              <li
-                key={mod.id}
-                className="flex items-center justify-between rounded-lg border border-[#E2E8F0] px-3 py-2.5"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded bg-[#F8FAFC] text-xs font-medium text-[#64748B]">
-                    {mod.order_index}
-                  </span>
-                  <div>
-                    <p className="text-sm font-medium text-[#0B1F3A]">{mod.title}</p>
-                    {mod.description && (
-                      <p className="text-xs text-[#64748B]">{mod.description}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <StatusBadge status={mod.is_published ? 'published' : 'draft'} />
-                  <Link
-                    href={`/admin/courses/${course.id}/modules/${mod.id}`}
-                    className="text-xs font-medium text-[#FF8A1F] hover:underline"
-                  >
-                    Manage
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteModule(mod.id)}
-                    className="text-xs text-red-400 hover:text-red-600"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
 
       {/* Danger zone */}

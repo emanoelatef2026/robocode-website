@@ -78,8 +78,7 @@ export async function listGroups({
   if (error) throw new Error(error.message)
 
   const items: GroupListItem[] = (data ?? []).map((row: any) => {
-    // Find the lead instructor from group_instructors
-    const gis = Array.isArray(row.group_instructors) ? row.group_instructors : []
+    const gis  = Array.isArray(row.group_instructors) ? row.group_instructors : []
     const lead = gis.find((gi: any) => gi.role === 'lead') ?? gis[0] ?? null
     const prof = lead?.instructors?.users?.profiles
     const instructorName = prof
@@ -94,16 +93,15 @@ export async function listGroups({
       type:            row.type,
       capacity:        row.capacity,
       status:          row.status,
-      start_date:      row.start_date ?? null,
+      start_date:      row.start_date  ?? null,
       day_of_week:     row.day_of_week ?? null,
-      time:            row.time ?? null,
+      time:            row.time        ?? null,
       branch_name:     row.branches?.name ?? '',
       student_count:   0,
       instructor_name: instructorName,
     }
   })
 
-  // Batch-fetch active student counts
   const groupIds = items.map((g) => g.id)
   if (groupIds.length > 0) {
     const { data: gsRows } = await db
@@ -176,7 +174,7 @@ export async function listGroupEnrollments(groupId: string): Promise<GroupEnroll
       student_email:   s?.users?.email ?? '',
       student_code:    s?.student_code ?? null,
       first_name:      s?.users?.profiles?.first_name ?? null,
-      last_name:       s?.users?.profiles?.last_name ?? null,
+      last_name:       s?.users?.profiles?.last_name  ?? null,
       phone:           s?.users?.phone ?? null,
       parent_phone_1:  ec.phone1 ?? null,
       parent_phone_2:  ec.phone2 ?? null,
@@ -187,16 +185,11 @@ export async function listGroupEnrollments(groupId: string): Promise<GroupEnroll
 export async function getGroupAcademicConfig(groupId: string): Promise<GroupAcademicConfig> {
   const db = createServiceClient()
 
-  const [groupRes, gcRes, giRes] = await Promise.all([
-    db.from('groups')
-      .select('semester_id, semesters!groups_semester_id_fkey(name)')
-      .eq('id', groupId)
-      .maybeSingle(),
+  const [gcRes, leadGiRes, additionalGiRes] = await Promise.all([
     db.from('group_courses')
       .select(
-        `id, course_id, instructor_id, course_module_id,
+        `id, course_id, instructor_id, total_sessions,
          courses!group_courses_course_id_fkey(title),
-         course_modules!group_courses_course_module_id_fkey(title),
          instructors!group_courses_instructor_id_fkey(
            users!instructors_user_id_fkey(
              profiles!profiles_user_id_fkey(first_name, last_name)
@@ -216,42 +209,55 @@ export async function getGroupAcademicConfig(groupId: string): Promise<GroupAcad
          )`
       )
       .eq('group_id', groupId)
-      .limit(1)
+      .eq('role', 'lead')
       .maybeSingle(),
+    db.from('group_instructors')
+      .select(
+        `instructor_id,
+         instructors!group_instructors_instructor_id_fkey(
+           users!instructors_user_id_fkey(
+             profiles!profiles_user_id_fkey(first_name, last_name)
+           )
+         )`
+      )
+      .eq('group_id', groupId)
+      .eq('role', 'additional'),
   ])
 
-  const group = groupRes.data as any
-  const gc    = gcRes.data  as any
-  const gi    = giRes.data  as any
+  const gc             = gcRes.data  as any
+  const leadGi         = leadGiRes.data  as any
+  const additionalGis  = (additionalGiRes.data ?? []) as any[]
 
-  const semRow    = group?.semesters
-  const semName   = semRow?.name ?? null
-
-  // Instructor: prefer group_courses.instructor_id, fall back to group_instructors
-  const instRow   = gc?.instructors ?? gi?.instructors
-  const instProf  = instRow?.users?.profiles
-  const instName  = instProf
+  // Lead instructor: prefer group_courses.instructor_id, fall back to group_instructors lead row
+  const instRow  = gc?.instructors ?? leadGi?.instructors
+  const instProf = instRow?.users?.profiles
+  const instName = instProf
     ? [instProf.first_name, instProf.last_name].filter(Boolean).join(' ') || null
     : null
 
+  const additionalInstructors = additionalGis.map((gi: any) => {
+    const p = gi?.instructors?.users?.profiles
+    return {
+      id:   gi.instructor_id as string,
+      name: p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown',
+    }
+  })
+
   return {
-    group_id:             groupId,
-    group_course_id:      gc?.id                          ?? null,
-    course_id:            gc?.course_id                   ?? null,
-    course_title:         gc?.courses?.title              ?? null,
-    course_module_id:     gc?.course_module_id            ?? null,
-    course_module_title:  gc?.course_modules?.title       ?? null,
-    semester_id:          group?.semester_id              ?? null,
-    semester_name:        semName,
-    instructor_id:        gc?.instructor_id  ?? gi?.instructor_id ?? null,
-    instructor_name:      instName,
+    group_id:               groupId,
+    group_course_id:        gc?.id                  ?? null,
+    course_id:              gc?.course_id            ?? null,
+    course_title:           gc?.courses?.title       ?? null,
+    total_sessions:         gc?.total_sessions       ?? 24,
+    instructor_id:          gc?.instructor_id ?? leadGi?.instructor_id ?? null,
+    instructor_name:        instName,
+    additional_instructors: additionalInstructors,
   }
 }
 
 export async function getGroupSchedules(groupId: string): Promise<GroupScheduleItem[]> {
   const db = createServiceClient()
 
-  // Resolve active group_course_id for this group
   const { data: gcRow } = await db
     .from('group_courses')
     .select('id')

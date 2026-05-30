@@ -2,6 +2,7 @@ import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId, getGroupForInstructor } from '@/modules/instructor-portal/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import StartGroupSessionButton from './StartGroupSessionButton'
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -27,15 +28,8 @@ export default async function GroupDetailPage({ params }: Props) {
   const group = await getGroupForInstructor(id, instructor.id)
   if (!group) notFound()
 
-  const hasCourse         = group.group_course_id !== ''
-  const hasCourseSemester = !!group.course_module_title
-  const hasAcademicPeriod = !!group.semester_id
-  const isActive          = hasCourse && hasCourseSemester && hasAcademicPeriod
-
-  const missing: string[] = []
-  if (!hasCourse)         missing.push('Course not assigned')
-  if (!hasCourseSemester) missing.push('Course semester not assigned')
-  if (!hasAcademicPeriod) missing.push('Academic period not assigned')
+  const hasCourse = !!group.group_course_id
+  const isActive  = hasCourse
 
   const totalPct = group.total_sessions > 0
     ? Math.round((group.completed_sessions / group.total_sessions) * 100)
@@ -67,31 +61,21 @@ export default async function GroupDetailPage({ params }: Props) {
           )}
         </div>
         {isActive && (
-          <Link
-            href={`/portal/instructor/groups/${id}/sessions/new`}
-            className="shrink-0 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e07818] transition"
-          >
-            + Schedule Session
-          </Link>
+          <StartGroupSessionButton
+            groupId={id}
+            groupCourseId={group.group_course_id}
+            branchId={group.branch_id}
+          />
         )}
       </div>
 
-      {/* Forming — missing requirements banner */}
-      {!isActive && missing.length > 0 && (
+      {/* Forming — no course assigned banner */}
+      {!isActive && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-          <p className="text-sm font-semibold text-amber-800">
-            This group cannot start sessions yet
-          </p>
+          <p className="text-sm font-semibold text-amber-800">No course assigned yet</p>
           <p className="mt-0.5 text-xs text-amber-700">
-            Contact your administrator to complete the following:
+            Sessions can be started once a course is assigned. Contact your administrator.
           </p>
-          <ul className="mt-2 space-y-1">
-            {missing.map((m) => (
-              <li key={m} className="flex items-center gap-1.5 text-xs text-amber-800">
-                <span className="text-amber-500">✗</span> {m}
-              </li>
-            ))}
-          </ul>
         </div>
       )}
 
@@ -110,27 +94,18 @@ export default async function GroupDetailPage({ params }: Props) {
               <p className="mt-0.5 font-medium text-[#0B1F3A]">{scheduleLabel}</p>
             </div>
           )}
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">Course</p>
-            {group.course_title
-              ? <p className="mt-0.5 font-medium text-[#0B1F3A]">{group.course_title}</p>
-              : <p className="mt-0.5 text-sm italic text-[#94A3B8]">Not assigned</p>
-            }
-          </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">Course Semester</p>
-            {group.course_module_title
-              ? <p className="mt-0.5 font-medium text-[#0B1F3A]">{group.course_module_title}</p>
-              : <p className="mt-0.5 text-sm italic text-[#94A3B8]">Not assigned</p>
-            }
-          </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">Academic Period</p>
-            {group.semester_id
-              ? <p className="mt-0.5 font-medium text-[#0B1F3A]">Assigned</p>
-              : <p className="mt-0.5 text-sm italic text-[#94A3B8]">Not assigned</p>
-            }
-          </div>
+          {group.course_title && (
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">Course</p>
+              <p className="mt-0.5 font-medium text-[#0B1F3A]">{group.course_title}</p>
+            </div>
+          )}
+          {group.total_sessions > 0 && (
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">Total Sessions</p>
+              <p className="mt-0.5 font-medium text-[#0B1F3A]">{group.total_sessions}</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -138,14 +113,7 @@ export default async function GroupDetailPage({ params }: Props) {
       {isActive && group.total_sessions > 0 && (
         <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-[#0B1F3A]">
-                Session Progress
-                {group.course_module_title && (
-                  <span className="ml-2 text-xs font-normal text-[#64748B]">· {group.course_module_title}</span>
-                )}
-              </p>
-            </div>
+            <p className="text-sm font-semibold text-[#0B1F3A]">Progress</p>
             <p className="text-sm text-[#64748B]">
               Session {group.completed_sessions} / {group.total_sessions}
             </p>
@@ -165,31 +133,21 @@ export default async function GroupDetailPage({ params }: Props) {
 
         {/* Sessions */}
         <div className="lg:col-span-2 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[#0B1F3A]">Session History</h2>
-            {isActive && (
-              <Link
-                href={`/portal/instructor/groups/${id}/sessions/new`}
-                className="text-xs font-medium text-[#FF8A1F] hover:underline"
-              >
-                + Schedule session
-              </Link>
-            )}
-          </div>
+          <h2 className="text-sm font-semibold text-[#0B1F3A]">Sessions</h2>
 
           {!isActive ? (
             <div className="rounded-xl border border-dashed border-amber-200 bg-amber-50 px-4 py-6 text-center">
               <p className="text-sm font-medium text-amber-800">Sessions unavailable</p>
-              <p className="mt-1 text-xs text-amber-700">
-                {missing.join(' · ')} — ask your administrator.
-              </p>
+              <p className="mt-1 text-xs text-amber-700">Assign a course to this group first.</p>
             </div>
           ) : group.sessions.length === 0 ? (
-            <div className="flex h-32 items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] text-sm text-[#64748B]">
-              No sessions yet.{' '}
-              <Link href={`/portal/instructor/groups/${id}/sessions/new`} className="ml-1 text-[#FF8A1F] hover:underline">
-                Schedule one
-              </Link>
+            <div className="flex h-32 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-[#E2E8F0] text-sm text-[#64748B]">
+              <span>No sessions yet.</span>
+              <StartGroupSessionButton
+                groupId={id}
+                groupCourseId={group.group_course_id}
+                branchId={group.branch_id}
+              />
             </div>
           ) : (
             <div className="rounded-xl border border-[#E2E8F0] bg-white divide-y divide-[#F1F5F9]">
