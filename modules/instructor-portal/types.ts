@@ -99,6 +99,8 @@ export interface SessionDetail {
   group_id:         string
   branch_id:        string
   scheduled_at:     string
+  started_at:       string | null
+  ended_at:         string | null
   duration_minutes: number
   type:             string
   delivery:         string | null

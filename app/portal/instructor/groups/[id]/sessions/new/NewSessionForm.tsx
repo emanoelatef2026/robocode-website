@@ -21,10 +21,11 @@ export default function NewSessionForm({ groupId, groupCourseId, branchId }: Pro
     }
   }, [state, router, groupId])
 
-  // Default scheduled_at: today at 10:00
-  const defaultDate = new Date()
-  defaultDate.setHours(10, 0, 0, 0)
-  const defaultVal = defaultDate.toISOString().slice(0, 16)
+  // Default scheduled_at: now (session starts immediately)
+  const now = new Date()
+  const defaultVal = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16)
 
   return (
     <form action={action} className="space-y-5">
@@ -125,7 +126,7 @@ export default function NewSessionForm({ groupId, groupCourseId, branchId }: Pro
         disabled={pending}
         className="w-full rounded-lg bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e07818] disabled:opacity-60 transition"
       >
-        {pending ? 'Creating…' : 'Create Session'}
+        {pending ? 'Starting…' : 'Start Session'}
       </button>
     </form>
   )

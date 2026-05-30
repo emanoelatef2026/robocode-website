@@ -49,7 +49,7 @@ export default async function NewSessionPage({ params }: Props) {
         <Link href={`/portal/instructor/groups/${id}`} className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← {group.group_name}
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">New Session</h1>
+        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Start Session</h1>
         <p className="mt-0.5 text-sm text-[#64748B]">{group.course_title}</p>
       </div>
 

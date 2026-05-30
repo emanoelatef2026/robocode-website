@@ -7,6 +7,7 @@ import {
   removeSessionRecording,
   updateSessionResources,
   createSessionHomework,
+  endSession,
 } from '@/modules/instructor-portal/actions'
 import type {
   SessionDetail,
@@ -79,7 +80,19 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
   const defaultModule = session.course_modules[0]
 
   // ── End Session ────────────────────────────────────────────────────────────
-  const [endState, endAction] = useActionState<ActionResult<void> | null, FormData>(updateSession, null)
+  const [endError, setEndError] = useState<string | null>(null)
+  const [isPendingEnd, startEndTransition] = useTransition()
+
+  const handleEnd = (force = false) => {
+    setEndError(null)
+    startEndTransition(async () => {
+      const res = await endSession(session.id, groupId, force)
+      if (!res.success) {
+        setEndError(res.error.message)
+      }
+      // On success revalidatePath in action triggers page refresh
+    })
+  }
 
   const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
 
@@ -251,28 +264,50 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
       {/* ── End Session ────────────────────────────────────────────────── */}
       {session.status !== 'completed' && session.status !== 'cancelled' && (
         <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-          <h3 className="mb-2 text-sm font-semibold text-[#0B1F3A]">End Session</h3>
+          <h3 className="mb-3 text-sm font-semibold text-[#0B1F3A]">End Session</h3>
 
-          {!allMarked && (
+          {/* Validation checklist */}
+          <div className="mb-4 space-y-1.5">
+            <div className={`flex items-center gap-2 text-xs ${allMarked ? 'text-emerald-600' : 'text-[#64748B]'}`}>
+              <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${allMarked ? 'bg-emerald-100' : 'bg-[#F1F5F9]'}`}>
+                {allMarked ? '✓' : '○'}
+              </span>
+              Attendance — {markedCount}/{session.student_count} marked
+            </div>
+            <div className={`flex items-center gap-2 text-xs ${(session.topic || session.notes) ? 'text-emerald-600' : 'text-[#64748B]'}`}>
+              <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${(session.topic || session.notes) ? 'bg-emerald-100' : 'bg-[#F1F5F9]'}`}>
+                {(session.topic || session.notes) ? '✓' : '○'}
+              </span>
+              Session notes — {(session.topic || session.notes) ? 'added' : 'required'}
+            </div>
+          </div>
+
+          {endError && (
             <div className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">
-              ⚠ {session.student_count - markedCount} student{session.student_count - markedCount !== 1 ? 's' : ''} without attendance. You can still end the session.
+              {endError}
             </div>
           )}
 
-          {endState && !endState.success && (
-            <div className="mb-3 text-xs text-red-600">{endState.error.message}</div>
-          )}
+          <button
+            type="button"
+            onClick={() => handleEnd(false)}
+            disabled={isPendingEnd}
+            className="w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition"
+          >
+            {isPendingEnd ? 'Ending…' : 'End Session'}
+          </button>
 
-          <form action={endAction}>
-            <input type="hidden" name="session_id" value={session.id} />
-            <input type="hidden" name="group_id"   value={groupId} />
-            <input type="hidden" name="status"     value="completed" />
-
-            <button type="submit"
-              className="w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition">
-              End Session
+          {/* Force-end option shown only after a validation failure */}
+          {endError && (
+            <button
+              type="button"
+              onClick={() => handleEnd(true)}
+              disabled={isPendingEnd}
+              className="mt-2 w-full rounded-lg border border-[#E2E8F0] py-2 text-xs font-medium text-[#64748B] hover:border-amber-300 hover:text-amber-700 disabled:opacity-60 transition"
+            >
+              End anyway (skip validation)
             </button>
-          </form>
+          )}
         </div>
       )}
       {session.status === 'completed' && (

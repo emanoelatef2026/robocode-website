@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import AttendanceForm from './AttendanceForm'
 import SessionDetailsPanel from './SessionDetailsPanel'
+import StartSessionButton from './StartSessionButton'
 
 interface Props { params: Promise<{ id: string; sid: string }> }
 
@@ -89,6 +90,21 @@ export default async function SessionDetailPage({ params }: Props) {
         </div>
       )}
 
+      {/* ── Start Session banner (only when scheduled) ───────────────────── */}
+      {session.status === 'scheduled' && (
+        <div className="rounded-xl border-2 border-emerald-200 bg-emerald-50 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="font-semibold text-emerald-800">Ready to start this session?</p>
+              <p className="mt-0.5 text-sm text-emerald-700">
+                Click Start Session to begin. Attendance tracking becomes active.
+              </p>
+            </div>
+            <StartSessionButton sessionId={session.id} groupId={id} />
+          </div>
+        </div>
+      )}
+
       {/* ── Session meta ─────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
@@ -96,6 +112,8 @@ export default async function SessionDetailPage({ params }: Props) {
           { label: 'Time',     value: new Date(session.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) },
           { label: 'Duration', value: `${session.duration_minutes} min` },
           { label: 'Delivery', value: session.delivery ?? '—' },
+          ...(session.started_at ? [{ label: 'Started', value: new Date(session.started_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) }] : []),
+          ...(session.ended_at   ? [{ label: 'Ended',   value: new Date(session.ended_at).toLocaleTimeString('en-GB',   { hour: '2-digit', minute: '2-digit' }) }] : []),
         ].map(({ label, value }) => (
           <div key={label} className="rounded-lg border border-[#E2E8F0] bg-white px-4 py-3">
             <p className="text-xs text-[#94A3B8]">{label}</p>

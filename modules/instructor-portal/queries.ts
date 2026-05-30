@@ -556,8 +556,8 @@ export async function getSessionDetail(
   const { data: sessRow, error: sessErr } = await db
     .from('schedules')
     .select(
-      `id, group_course_id, branch_id, scheduled_at, duration_minutes,
-       type, delivery, meeting_url, room, status, topic, notes, resources_links,
+      `id, group_course_id, branch_id, scheduled_at, started_at, ended_at,
+       duration_minutes, type, delivery, meeting_url, room, status, topic, notes, resources_links,
        group_courses!schedules_group_course_id_fkey(
          group_id, instructor_id, course_id,
          groups!group_courses_group_id_fkey(name),
@@ -659,6 +659,8 @@ export async function getSessionDetail(
     group_id:         groupId,
     branch_id:        s.branch_id,
     scheduled_at:     s.scheduled_at,
+    started_at:       (s as any).started_at  ?? null,
+    ended_at:         (s as any).ended_at    ?? null,
     duration_minutes: s.duration_minutes,
     type:             s.type,
     delivery:         s.delivery    ?? null,
@@ -835,8 +837,8 @@ export async function getTodayActions(instructorId: string): Promise<TodayAction
 
     if ((sess as any).status === 'scheduled') {
       actions.push({ type: 'start_session', label: "Start today's session", detail: gc.groupName, href })
-    } else if ((sess as any).status === 'in_progress') {
-      actions.push({ type: 'complete_attendance', label: 'Complete attendance', detail: gc.groupName, href })
+    } else if ((sess as any).status === 'ongoing') {
+      actions.push({ type: 'complete_attendance', label: 'Session in progress — complete attendance', detail: gc.groupName, href })
     } else if ((sess as any).status === 'completed') {
       if (!attCounts[(sess as any).id]) {
         actions.push({ type: 'complete_attendance', label: 'Complete attendance', detail: gc.groupName, href })

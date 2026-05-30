@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, requireAuth } from '@/modules/rbac/guards'
@@ -68,6 +69,8 @@ export async function createSession(
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
   }
 
+  const now = new Date().toISOString()
+
   const { data: schedule, error: schedErr } = await db
     .from('schedules')
     .insert({
@@ -80,7 +83,8 @@ export async function createSession(
       meeting_url:      d.meeting_url || null,
       room:             d.room        || null,
       topic:            d.topic       || null,
-      status:           'scheduled',
+      status:           'ongoing',
+      started_at:       now,
       created_by:       user.id,
     })
     .select('id')
@@ -92,15 +96,15 @@ export async function createSession(
 
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,
-    p_action:       'session.create',
+    p_action:       'session.start',
     p_entity_type:  'schedule',
     p_entity_id:    schedule.id,
-    p_new_values:   { group_course_id: d.group_course_id, scheduled_at: d.scheduled_at },
+    p_new_values:   { group_course_id: d.group_course_id, scheduled_at: d.scheduled_at, started_at: now },
     p_branch_id:    d.branch_id,
   })
 
   revalidatePath(`/portal/instructor/groups/${d.group_id}`)
-  return { success: true, data: { sessionId: schedule.id } }
+  redirect(`/portal/instructor/groups/${d.group_id}/sessions/${schedule.id}`)
 }
 
 const updateSessionSchema = z.object({
@@ -176,6 +180,142 @@ export async function updateSession(
 
   revalidatePath(`/portal/instructor/groups/${d.group_id}`)
   revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
+  return { success: true, data: undefined }
+}
+
+// ── Session lifecycle: start / end ───────────────────────────────────────────
+
+export async function startSession(
+  sessionId: string,
+  groupId:   string
+): Promise<ActionResult<void>> {
+  const user       = await requirePermission('manage_attendance')
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+  }
+
+  const db = createServiceClient()
+
+  const { data: sessRow } = await db
+    .from('schedules')
+    .select('id, status, group_courses!schedules_group_course_id_fkey(instructor_id)')
+    .eq('id', sessionId)
+    .single()
+
+  if (!sessRow) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  }
+  const gc = (sessRow as any).group_courses
+  if (gc?.instructor_id !== instructor.id) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
+  }
+  if ((sessRow as any).status === 'ongoing') {
+    return { success: false, error: { code: 'VALIDATION', message: 'Session is already in progress.' } }
+  }
+  if ((sessRow as any).status === 'completed') {
+    return { success: false, error: { code: 'VALIDATION', message: 'Session is already completed.' } }
+  }
+
+  const { error } = await db
+    .from('schedules')
+    .update({ status: 'ongoing', started_at: new Date().toISOString() })
+    .eq('id', sessionId)
+
+  if (error) {
+    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  }
+
+  revalidatePath(`/portal/instructor/groups/${groupId}`)
+  revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
+  return { success: true, data: undefined }
+}
+
+export async function endSession(
+  sessionId: string,
+  groupId:   string,
+  force     = false
+): Promise<ActionResult<void>> {
+  const user       = await requirePermission('manage_attendance')
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+  }
+
+  const db = createServiceClient()
+
+  const { data: sessRow } = await db
+    .from('schedules')
+    .select(
+      `id, status, topic, notes, branch_id,
+       group_courses!schedules_group_course_id_fkey(instructor_id, group_id)`
+    )
+    .eq('id', sessionId)
+    .single()
+
+  if (!sessRow) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  }
+  const gc = (sessRow as any).group_courses
+  if (gc?.instructor_id !== instructor.id) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
+  }
+  if ((sessRow as any).status === 'completed') {
+    return { success: false, error: { code: 'VALIDATION', message: 'Session is already completed.' } }
+  }
+  if ((sessRow as any).status === 'cancelled') {
+    return { success: false, error: { code: 'VALIDATION', message: 'Session is cancelled.' } }
+  }
+
+  // Validate unless force=true
+  if (!force) {
+    const gcGroupId = gc?.group_id as string
+    const [studRes, attRes] = await Promise.all([
+      db.from('group_students').select('student_id', { count: 'exact', head: true })
+        .eq('group_id', gcGroupId).eq('status', 'active'),
+      db.from('attendance_records').select('student_id', { count: 'exact', head: true })
+        .eq('schedule_id', sessionId).not('status', 'is', null),
+    ])
+
+    const totalStudents  = studRes.count ?? 0
+    const markedStudents = attRes.count  ?? 0
+    const attendanceMissing = totalStudents - markedStudents
+    const notesRequired = !(sessRow as any).topic && !(sessRow as any).notes
+
+    if (attendanceMissing > 0 || notesRequired) {
+      return {
+        success: false,
+        error: {
+          code:    'VALIDATION',
+          message: [
+            attendanceMissing > 0 ? `${attendanceMissing} student${attendanceMissing > 1 ? 's' : ''} without attendance.` : '',
+            notesRequired ? 'Session notes or topic required.' : '',
+          ].filter(Boolean).join(' '),
+        },
+      }
+    }
+  }
+
+  const { error } = await db
+    .from('schedules')
+    .update({ status: 'completed', ended_at: new Date().toISOString() })
+    .eq('id', sessionId)
+
+  if (error) {
+    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'session.end',
+    p_entity_type:  'schedule',
+    p_entity_id:    sessionId,
+    p_new_values:   { ended_at: new Date().toISOString(), force },
+    p_branch_id:    (sessRow as any).branch_id,
+  })
+
+  revalidatePath(`/portal/instructor/groups/${groupId}`)
+  revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
   return { success: true, data: undefined }
 }
 
@@ -263,14 +403,7 @@ export async function saveAttendance(
     return { success: false, error: { code: 'DB_ERROR', message: upsertErr.message } }
   }
 
-  // Mark session completed if it was scheduled or ongoing
-  await db
-    .from('schedules')
-    .update({ status: 'completed' })
-    .eq('id', sessionId)
-    .in('status', ['scheduled', 'ongoing'])
-
-  // Recalculate progress
+  // Recalculate progress (session completion is handled by endSession, not here)
   const contexts = await resolveGroupProgressContext(groupId)
   if (contexts.length > 0) {
     await safeRecalcProgressBatch(
