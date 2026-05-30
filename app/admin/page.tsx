@@ -1,9 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { requireAuth } from '@/modules/rbac/guards'
-import InstructorDashboard from './_instructor-dashboard'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
-
-// ── Admin / Team-Leader dashboard ─────────────────────────────────────────────
 
 async function getStats(branchIds: string[] | null) {
   const db     = createServiceClient()
@@ -52,13 +50,12 @@ const ALL_QUICK_LINKS: { label: string; href: string; superAdminOnly?: boolean; 
   { label: 'Mark Attendance', href: '/admin/attendance',      permission: 'manage_attendance' },
 ]
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
 export default async function AdminDashboard() {
   const user = await requireAuth()
 
+  // Instructors belong in the instructor portal — never in admin shell
   if (user.globalRole === 'instructor') {
-    return <InstructorDashboard userId={user.id} permissions={user.permissions} />
+    redirect('/portal/instructor')
   }
 
   const isSuperAdmin = user.globalRole === 'super_admin'

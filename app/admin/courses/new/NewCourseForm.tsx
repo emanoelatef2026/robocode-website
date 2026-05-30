@@ -4,14 +4,9 @@ import { useActionState } from 'react'
 import { createCourse } from '@/modules/courses/actions'
 import SubmitButton from '@/components/admin/SubmitButton'
 import Link from 'next/link'
-import type { BranchListItem } from '@/modules/branches/types'
 import type { ActionResult } from '@/types/app'
 
-interface Props {
-  branches: BranchListItem[]
-}
-
-export default function NewCourseForm({ branches }: Props) {
+export default function NewCourseForm() {
   const [state, action] = useActionState<ActionResult<{ id: string }> | null, FormData>(
     createCourse,
     null
@@ -34,7 +29,7 @@ export default function NewCourseForm({ branches }: Props) {
             name="title"
             required
             className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-            placeholder="e.g. Introduction to Python"
+            placeholder="e.g. Pictoblox 1"
           />
         </div>
 
@@ -52,11 +47,11 @@ export default function NewCourseForm({ branches }: Props) {
           <input
             name="category"
             className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-            placeholder="e.g. Programming"
+            placeholder="e.g. Programming, Robotics, AI"
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Level</label>
             <select
@@ -70,18 +65,6 @@ export default function NewCourseForm({ branches }: Props) {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Scope</label>
-            <select
-              name="scope"
-              defaultValue="branch"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-            >
-              <option value="branch">Branch</option>
-              <option value="template">Template</option>
-              <option value="global">Global</option>
-            </select>
-          </div>
-          <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Est. hours</label>
             <input
               name="estimated_hours"
@@ -92,18 +75,7 @@ export default function NewCourseForm({ branches }: Props) {
           </div>
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Branch</label>
-          <select
-            name="branch_id"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
-          >
-            <option value="">No branch (template / global)</option>
-            {branches.map((b) => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
-        </div>
+        <input type="hidden" name="scope" value="global" />
 
         <div className="flex items-center gap-2">
           <input

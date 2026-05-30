@@ -214,7 +214,6 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
       {session.course_modules.length > 0 && (
         <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
           <h3 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Create Homework</h3>
-          {/* module_id field is the course semester (course_modules row) */}
 
           {hwState && !hwState.success && (
             <div className="mb-3 text-xs text-red-600">{hwState.error.message}</div>
@@ -242,17 +241,6 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Due date (optional)</label>
               <input name="due_at" type="date" className={cls} />
             </div>
-
-            {session.course_modules.length > 1 && (
-              <div>
-                <label className="mb-1 block text-xs font-medium text-[#64748B]">Course Semester</label>
-                <select name="module_id" defaultValue={defaultModule?.id} className={cls}>
-                  {session.course_modules.map((m) => (
-                    <option key={m.id} value={m.id}>{m.title}</option>
-                  ))}
-                </select>
-              </div>
-            )}
 
             <button type="submit"
               className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e07818] transition">

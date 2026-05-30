@@ -185,10 +185,11 @@ export async function listGroupEnrollments(groupId: string): Promise<GroupEnroll
 export async function getGroupAcademicConfig(groupId: string): Promise<GroupAcademicConfig> {
   const db = createServiceClient()
 
+  // total_sessions is fetched separately so the main query doesn't crash if the column is missing
   const [gcRes, leadGiRes, additionalGiRes] = await Promise.all([
     db.from('group_courses')
       .select(
-        `id, course_id, instructor_id, total_sessions,
+        `id, course_id, instructor_id,
          courses!group_courses_course_id_fkey(title),
          instructors!group_courses_instructor_id_fkey(
            users!instructors_user_id_fkey(
@@ -228,6 +229,19 @@ export async function getGroupAcademicConfig(groupId: string): Promise<GroupAcad
   const leadGi         = leadGiRes.data  as any
   const additionalGis  = (additionalGiRes.data ?? []) as any[]
 
+  // Safe fetch of total_sessions (column may not exist if migration is pending)
+  let totalSessions = 24
+  if (gc?.id) {
+    const { data: tsData, error: tsErr } = await db
+      .from('group_courses')
+      .select('total_sessions')
+      .eq('id', gc.id)
+      .maybeSingle()
+    if (!tsErr && tsData) {
+      totalSessions = (tsData as any).total_sessions ?? 24
+    }
+  }
+
   // Lead instructor: prefer group_courses.instructor_id, fall back to group_instructors lead row
   const instRow  = gc?.instructors ?? leadGi?.instructors
   const instProf = instRow?.users?.profiles
@@ -248,7 +262,7 @@ export async function getGroupAcademicConfig(groupId: string): Promise<GroupAcad
     group_course_id:        gc?.id                  ?? null,
     course_id:              gc?.course_id            ?? null,
     course_title:           gc?.courses?.title       ?? null,
-    total_sessions:         gc?.total_sessions       ?? 24,
+    total_sessions:         totalSessions,
     instructor_id:          gc?.instructor_id ?? leadGi?.instructor_id ?? null,
     instructor_name:        instName,
     additional_instructors: additionalInstructors,

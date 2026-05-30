@@ -32,7 +32,7 @@ export default async function GroupDetailPage({ params }: Props) {
     listGroupEnrollments(id),
     listStudents({ perPage: 400, branchId: group.branch_id }),
     getGroupAcademicConfig(id),
-    listCourses({ perPage: 200, branchId: group.branch_id }),
+    listCourses({ perPage: 200 }),
     listInstructors({ perPage: 200, branchId: group.branch_id }),
   ])
 

@@ -443,6 +443,7 @@ export async function saveGroupAcademicConfig(
       .eq('status', 'active')
       .neq('course_id', courseId)
 
+    // Try upsert with total_sessions; if column missing, fall back without it
     const { error: gcErr } = await db.from('group_courses')
       .upsert(
         {
@@ -455,17 +456,34 @@ export async function saveGroupAcademicConfig(
         { onConflict: 'group_id,course_id' }
       )
     if (gcErr) {
-      return { success: false, error: { code: 'DB_ERROR', message: gcErr.message } }
+      // Retry without total_sessions (column may not exist yet — migration pending)
+      const { error: gcErr2 } = await db.from('group_courses')
+        .upsert(
+          {
+            group_id:      groupId,
+            course_id:     courseId,
+            instructor_id: instructorId || null,
+            status:        'active',
+          },
+          { onConflict: 'group_id,course_id' }
+        )
+      if (gcErr2) {
+        return { success: false, error: { code: 'DB_ERROR', message: gcErr2.message } }
+      }
     }
 
-    // Sync instructor_id and total_sessions on the active row (covers the upsert update path)
-    await db.from('group_courses')
-      .update({
-        instructor_id:  instructorId || null,
-        total_sessions: totalSessions,
-      })
+    // Sync instructor_id (and total_sessions if column exists)
+    const { error: updateErr } = await db.from('group_courses')
+      .update({ instructor_id: instructorId || null, total_sessions: totalSessions })
       .eq('group_id', groupId)
       .eq('status', 'active')
+    if (updateErr) {
+      // Retry without total_sessions
+      await db.from('group_courses')
+        .update({ instructor_id: instructorId || null })
+        .eq('group_id', groupId)
+        .eq('status', 'active')
+    }
   } else {
     await db.from('group_courses')
       .update({ status: 'cancelled' })

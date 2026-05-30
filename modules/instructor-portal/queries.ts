@@ -173,7 +173,7 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
     const { data: gcRows } = await db
       .from('group_courses')
       .select(
-        `id, group_id, course_id, total_sessions,
+        `id, group_id, course_id,
          groups!group_courses_group_id_fkey(
            name, code, day_of_week, time,
            branches!groups_branch_id_fkey(name)
@@ -194,6 +194,18 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
           .in('group_course_id', gcFullIds)
           .eq('status', 'completed'),
       ])
+
+      // Safe fetch of total_sessions — column may not exist yet (migration pending)
+      const totalSessionsMap: Record<string, number> = {}
+      const { data: tsRows, error: tsErr } = await db
+        .from('group_courses')
+        .select('id, total_sessions')
+        .in('id', gcFullIds)
+      if (!tsErr && tsRows) {
+        for (const r of tsRows) {
+          totalSessionsMap[(r as any).id] = (r as any).total_sessions ?? 24
+        }
+      }
 
       const studentMap:   Record<string, number> = {}
       const completedMap: Record<string, number> = {}
@@ -219,7 +231,7 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
           student_count:      studentMap[row.group_id]      ?? 0,
           next_session_at:    calcNextOccurrence(row.groups?.day_of_week, row.groups?.time),
           completed_sessions: completedMap[row.id]          ?? 0,
-          total_sessions:     row.total_sessions            ?? 24,
+          total_sessions:     totalSessionsMap[row.id]      ?? 24,
         })
       }
     }
@@ -276,11 +288,12 @@ export async function getGroupForInstructor(
 ): Promise<GroupForInstructor | null> {
   const db = createServiceClient()
 
-  // Get the active group_course for this group (no instructor filter — check access separately)
+  // Get the active group_course for this group (no instructor filter — check access separately).
+  // total_sessions is fetched in a separate safe query (column may be missing if migration is pending).
   const { data: gcRow } = await db
     .from('group_courses')
     .select(
-      `id, course_id, total_sessions,
+      `id, course_id, instructor_id,
        groups!group_courses_group_id_fkey(
          name, branch_id, day_of_week, time,
          branches!groups_branch_id_fkey(name)
@@ -311,6 +324,17 @@ export async function getGroupForInstructor(
     if (!isAllowed) return null
 
     const branchId = gc.groups?.branch_id ?? ''
+
+    // Safe fetch of total_sessions (separate query to handle missing column gracefully)
+    let totalSessions = 24
+    const { data: tsData, error: tsErr } = await db
+      .from('group_courses')
+      .select('total_sessions')
+      .eq('id', gc.id)
+      .maybeSingle()
+    if (!tsErr && tsData) {
+      totalSessions = (tsData as any).total_sessions ?? 24
+    }
 
     const [studentRes, sessRes] = await Promise.all([
       db.from('group_students')
@@ -384,7 +408,7 @@ export async function getGroupForInstructor(
       day_of_week:        gc.groups?.day_of_week     ?? null,
       time:               gc.groups?.time            ?? null,
       completed_sessions: completedSessions,
-      total_sessions:     gc.total_sessions          ?? 24,
+      total_sessions:     totalSessions,
       students,
       sessions,
     }

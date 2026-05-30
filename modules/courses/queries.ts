@@ -1,19 +1,20 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
-import { getCurrentUser, isBranchAccessible } from '@/modules/rbac/guards'
+import { getCurrentUser } from '@/modules/rbac/guards'
 import type { Course, CourseListItem } from './types'
 import type { PaginatedResult } from '@/types/app'
 
+// Courses are global academy assets — not filtered by branch.
 export async function listCourses({
   page = 1,
   perPage = 20,
   search = '',
-  branchId,
   scope,
 }: {
   page?: number
   perPage?: number
   search?: string
+  /** @deprecated branchId filtering removed — courses are global */
   branchId?: string
   scope?: string
 } = {}): Promise<PaginatedResult<CourseListItem>> {
@@ -24,16 +25,14 @@ export async function listCourses({
   let query = db
     .from('courses')
     .select(
-      `id, title, code, category, level, scope, is_published, branch_id, estimated_hours, created_at,
-       branches!courses_branch_id_fkey(name)`,
+      `id, title, code, category, level, scope, is_published, branch_id, estimated_hours, created_at`,
       { count: 'exact' }
     )
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .range(from, to)
 
-  if (branchId) query = query.eq('branch_id', branchId)
-  if (scope)    query = query.eq('scope', scope)
+  if (scope) query = query.eq('scope', scope)
 
   const { data, count, error } = await query
   if (error) throw new Error(error.message)
@@ -47,7 +46,7 @@ export async function listCourses({
     scope:           row.scope,
     is_published:    row.is_published,
     branch_id:       row.branch_id ?? null,
-    branch_name:     row.branches?.name ?? null,
+    branch_name:     null,
     estimated_hours: row.estimated_hours ?? null,
     created_at:      row.created_at,
   }))
@@ -69,18 +68,20 @@ export async function listCourses({
 
 export async function getCourse(id: string): Promise<Course | null> {
   const user = await getCurrentUser()
-  const db   = createServiceClient()
+  if (!user) return null
+
+  const db = createServiceClient()
   const { data, error } = await db
     .from('courses')
-    .select(`*, branches!courses_branch_id_fkey(name)`)
+    .select(`*`)
     .eq('id', id)
     .is('deleted_at', null)
     .single()
 
   if (error || !data) return null
-  if (!user || !isBranchAccessible(user, (data as any).branch_id)) return null
+
   return {
     ...(data as any),
-    branch_name: (data as any).branches?.name ?? null,
+    branch_name: null,
   } as Course
 }

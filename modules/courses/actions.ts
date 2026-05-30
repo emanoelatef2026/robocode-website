@@ -3,9 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
+import { requirePermission } from '@/modules/rbac/guards'
 import { createCourseSchema, updateCourseSchema } from './schemas'
 import type { ActionResult } from '@/types/app'
+
+// Courses are global academy assets — branch ownership checks removed.
 
 export async function createCourse(
   _prev: unknown,
@@ -20,8 +22,7 @@ export async function createCourse(
     category:        formData.get('category') || undefined,
     level:           formData.get('level') || undefined,
     estimated_hours: formData.get('estimated_hours') || undefined,
-    scope:           formData.get('scope') || 'branch',
-    branch_id:       formData.get('branch_id') || undefined,
+    scope:           formData.get('scope') || 'global',
     is_published:    formData.get('is_published'),
   }
 
@@ -32,11 +33,6 @@ export async function createCourse(
 
   const d = parsed.data
 
-  // Branch ownership: if a branch_id is submitted it must be in the caller's allowed branches
-  if (d.branch_id && !isBranchAccessible(user, d.branch_id)) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
-  }
-
   const { data: course, error } = await db
     .from('courses')
     .insert({
@@ -46,7 +42,6 @@ export async function createCourse(
       level:           (d.level || null) as string | null,
       estimated_hours: d.estimated_hours ?? null,
       scope:           d.scope,
-      branch_id:       d.branch_id || null,
       is_published:    d.is_published,
       created_by:      user.id,
     })
@@ -83,8 +78,7 @@ export async function updateCourse(
     category:        formData.get('category') || undefined,
     level:           formData.get('level') || undefined,
     estimated_hours: formData.get('estimated_hours') || undefined,
-    scope:           formData.get('scope') || 'branch',
-    branch_id:       formData.get('branch_id') || undefined,
+    scope:           formData.get('scope') || 'global',
     is_published:    formData.get('is_published'),
   }
 
@@ -95,16 +89,8 @@ export async function updateCourse(
 
   const d = parsed.data
 
-  // Verify the caller owns the course's current branch before mutating
-  const { data: existing } = await db.from('courses').select('branch_id').eq('id', d.id).single()
+  const { data: existing } = await db.from('courses').select('id').eq('id', d.id).is('deleted_at', null).single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Course not found.' } }
-  if (existing.branch_id && !isBranchAccessible(user, existing.branch_id)) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this course.' } }
-  }
-  // If the branch is being changed, the new branch must also be accessible
-  if (d.branch_id && !isBranchAccessible(user, d.branch_id)) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to the target branch.' } }
-  }
 
   const { error } = await db
     .from('courses')
@@ -115,7 +101,6 @@ export async function updateCourse(
       level:           (d.level || null) as string | null,
       estimated_hours: d.estimated_hours ?? null,
       scope:           d.scope,
-      branch_id:       d.branch_id || null,
       is_published:    d.is_published,
     })
     .eq('id', d.id)
@@ -141,11 +126,8 @@ export async function deleteCourse(id: string): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_courses')
   const db   = createServiceClient()
 
-  const { data: existing } = await db.from('courses').select('branch_id').eq('id', id).single()
+  const { data: existing } = await db.from('courses').select('id').eq('id', id).single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Course not found.' } }
-  if (existing.branch_id && !isBranchAccessible(user, existing.branch_id)) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this course.' } }
-  }
 
   const { error } = await db
     .from('courses')

@@ -1,18 +1,16 @@
 import { requirePermission } from '@/modules/rbac/guards'
-import { listBranches } from '@/modules/branches/queries'
 import PageHeader from '@/components/admin/PageHeader'
 import NewCourseForm from './NewCourseForm'
 import Link from 'next/link'
 
 export default async function NewCoursePage() {
   await requirePermission('manage_courses')
-  const branchesResult = await listBranches({ perPage: 100 })
 
   return (
     <div>
       <PageHeader
         title="New Course"
-        description="Create a course and add modules to it."
+        description="Courses are global academy assets available to all branches."
         action={
           <Link
             href="/admin/courses"
@@ -22,7 +20,7 @@ export default async function NewCoursePage() {
           </Link>
         }
       />
-      <NewCourseForm branches={branchesResult.data} />
+      <NewCourseForm />
     </div>
   )
 }

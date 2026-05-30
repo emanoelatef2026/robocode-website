@@ -24,7 +24,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
 
   const [allStudents, courses, instructors, upcomingSessions, pastSessions] = await Promise.all([
     listStudents({ branchId: group.branch_id, perPage: 200 }),
-    listCourses({ branchId: group.branch_id, perPage: 100 }),
+    listCourses({ perPage: 100 }),
     listInstructors({ branchId: group.branch_id, perPage: 100 }),
     group.group_course_id
       ? listSchedules({ groupCourseId: group.group_course_id, upcoming: true, limit: 5 })

@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getCourse } from '@/modules/courses/queries'
 import { requirePermission } from '@/modules/rbac/guards'
-import { listBranches } from '@/modules/branches/queries'
 import PageHeader from '@/components/admin/PageHeader'
 import CourseDetailView from './CourseDetailView'
 import Link from 'next/link'
@@ -14,11 +13,7 @@ export default async function CourseDetailPage({ params }: Props) {
   await requirePermission('manage_courses')
   const { id } = await params
 
-  const [course, branchesResult] = await Promise.all([
-    getCourse(id),
-    listBranches({ perPage: 100 }),
-  ])
-
+  const course = await getCourse(id)
   if (!course) notFound()
 
   return (
@@ -35,7 +30,7 @@ export default async function CourseDetailPage({ params }: Props) {
           </Link>
         }
       />
-      <CourseDetailView course={course} branches={branchesResult.data} />
+      <CourseDetailView course={course} />
     </div>
   )
 }

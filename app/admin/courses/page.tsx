@@ -1,16 +1,14 @@
 import { listCourses } from '@/modules/courses/queries'
 import { requirePermission } from '@/modules/rbac/guards'
-import { listBranches } from '@/modules/branches/queries'
 import PageHeader from '@/components/admin/PageHeader'
 import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
 import Pagination from '@/components/admin/Pagination'
 import SearchInput from '@/components/admin/SearchInput'
-import FilterSelect from '@/components/admin/FilterSelect'
 import Link from 'next/link'
 
 interface Props {
-  searchParams: Promise<{ page?: string; q?: string; branch?: string; scope?: string }>
+  searchParams: Promise<{ page?: string; q?: string }>
 }
 
 const LEVEL_LABELS: Record<string, string> = {
@@ -19,24 +17,13 @@ const LEVEL_LABELS: Record<string, string> = {
   advanced:     'Advanced',
 }
 
-const SCOPE_LABELS: Record<string, string> = {
-  branch:   'Branch',
-  template: 'Template',
-  global:   'Global',
-}
-
 export default async function CoursesPage({ searchParams }: Props) {
   await requirePermission('manage_courses')
-  const params   = await searchParams
-  const page     = Number(params.page ?? 1)
-  const search   = params.q ?? ''
-  const branchId = params.branch
-  const scope    = params.scope
+  const params = await searchParams
+  const page   = Number(params.page ?? 1)
+  const search = params.q ?? ''
 
-  const [result, branchesResult] = await Promise.all([
-    listCourses({ page, perPage: 20, search, branchId, scope }),
-    listBranches({ perPage: 100 }),
-  ])
+  const result = await listCourses({ page, perPage: 20, search })
 
   return (
     <div>
@@ -59,16 +46,6 @@ export default async function CoursesPage({ searchParams }: Props) {
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
         <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search courses…" />
-          <FilterSelect
-            name="scope"
-            value={scope ?? ''}
-            placeholder="All scopes"
-            options={[
-              { value: 'branch',   label: 'Branch' },
-              { value: 'template', label: 'Template' },
-              { value: 'global',   label: 'Global' },
-            ]}
-          />
         </div>
 
         {result.data.length === 0 ? (
@@ -84,9 +61,8 @@ export default async function CoursesPage({ searchParams }: Props) {
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Title</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Category</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Level</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Scope</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
                     <th className="px-4 py-3" />
                   </tr>
@@ -96,13 +72,12 @@ export default async function CoursesPage({ searchParams }: Props) {
                     <tr key={course.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
                       <td className="px-4 py-3">
                         {course.code
-                          ? <Link href={`/admin/courses/${course.id}`} className="font-mono text-xs font-semibold text-[#0B1F3A] hover:text-[#FF8A1F]">{course.code}</Link>
+                          ? <span className="font-mono text-xs font-semibold text-[#0B1F3A]">{course.code}</span>
                           : <span className="text-xs text-[#94A3B8]">—</span>}
                       </td>
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">{course.title}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{course.category ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{course.level ? LEVEL_LABELS[course.level] : '—'}</td>
-                      <td className="px-4 py-3 text-[#64748B]">{SCOPE_LABELS[course.scope] ?? course.scope}</td>
-                      <td className="px-4 py-3 text-[#64748B]">{course.branch_name ?? '—'}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={course.is_published ? 'published' : 'draft'} />
                       </td>
