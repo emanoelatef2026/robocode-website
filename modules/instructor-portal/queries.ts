@@ -16,6 +16,11 @@ import type {
   CourseModuleItem,
   TodayAction,
   StudentAttentionItem,
+  SessionHistoryItem,
+  SessionHistoryFilters,
+  AttendanceAnalyticsRow,
+  StudentSearchResult,
+  InboxSubmissionItem,
 } from './types'
 
 // ── Shared helper: resolve all group_courses the instructor is linked to ───────
@@ -965,7 +970,7 @@ export async function getStudentsRequiringAttention(
   }
 
   const flagged = [...absMap.entries()]
-    .filter(([, v]) => v.count >= 2)
+    .filter(([, v]) => v.count >= 3)
     .sort(([, a], [, b]) => b.count - a.count)
     .slice(0, limit)
 
@@ -1052,13 +1057,13 @@ export async function getStudentProfileForInstructor(
     gcId
       ? db.from('schedules').select('id').eq('group_course_id', gcId)
       : Promise.resolve({ data: [], error: null }),
+    // Fetch all non-private notes + current user's private notes for this student
     db.from('student_notes')
       .select(
-        `id, content, is_private, schedule_id, created_at, updated_at,
+        `id, content, is_private, author_id, schedule_id, created_at, updated_at,
          schedules!student_notes_schedule_id_fkey(topic)`
       )
       .eq('student_id', studentId)
-      .eq('author_id', userId)
       .order('created_at', { ascending: false }),
   ])
 
@@ -1086,15 +1091,35 @@ export async function getStudentProfileForInstructor(
     }
   }
 
-  const notes: StudentNote[] = (noteRes.data ?? []).map((n: any) => ({
-    id:             n.id,
-    content:        n.content,
-    is_private:     n.is_private,
-    schedule_id:    n.schedule_id   ?? null,
-    schedule_topic: (n.schedules as any)?.topic ?? null,
-    created_at:     n.created_at,
-    updated_at:     n.updated_at,
-  }))
+  // Build author name map from note author_ids
+  const authorIds = [...new Set((noteRes.data ?? []).map((n: any) => n.author_id as string))]
+  const authorNameMap = new Map<string, string>()
+  if (authorIds.length > 0) {
+    const { data: authorRows } = await db
+      .from('users')
+      .select('id, profiles!profiles_user_id_fkey(first_name, last_name)')
+      .in('id', authorIds)
+    for (const a of authorRows ?? []) {
+      const p = (a as any).profiles
+      const name = [p?.first_name, p?.last_name].filter(Boolean).join(' ') || (a as any).id
+      authorNameMap.set((a as any).id, name)
+    }
+  }
+
+  // Include notes visible to current user: own notes (public or private) + others' public notes
+  const notes: StudentNote[] = (noteRes.data ?? [])
+    .filter((n: any) => !n.is_private || n.author_id === userId)
+    .map((n: any) => ({
+      id:             n.id,
+      content:        n.content,
+      is_private:     n.is_private,
+      schedule_id:    n.schedule_id   ?? null,
+      schedule_topic: (n.schedules as any)?.topic ?? null,
+      created_at:     n.created_at,
+      updated_at:     n.updated_at,
+      author_name:    authorNameMap.get(n.author_id as string) ?? 'Instructor',
+      is_own:         n.author_id === userId,
+    }))
 
   return {
     student_id:         studentId,
@@ -1161,4 +1186,462 @@ export async function getUpcomingSessionsForInstructor(
     notes:            null,
     attendance_count: null,
   }))
+}
+
+// ── Session History ───────────────────────────────────────────────────────────
+
+export async function listSessionHistory(
+  instructorId: string,
+  filters?: SessionHistoryFilters
+): Promise<SessionHistoryItem[]> {
+  const db = createServiceClient()
+  const { gcIds } = await resolveGcContext(instructorId, db)
+  if (gcIds.length === 0) return []
+
+  // Fetch group/course metadata for all gcIds
+  const { data: gcMeta } = await db
+    .from('group_courses')
+    .select(
+      `id, group_id,
+       groups!group_courses_group_id_fkey(name),
+       courses!group_courses_course_id_fkey(title)`
+    )
+    .in('id', gcIds)
+
+  const gcInfo = new Map<string, { groupId: string; groupName: string; courseTitle: string }>(
+    (gcMeta ?? []).map((r: any) => [r.id as string, {
+      groupId:     r.group_id          as string,
+      groupName:   r.groups?.name      as string ?? '',
+      courseTitle: r.courses?.title    as string ?? '',
+    }])
+  )
+
+  // Filter to specific group if requested
+  const filteredGcIds = filters?.groupId
+    ? gcIds.filter((id) => gcInfo.get(id)?.groupId === filters.groupId)
+    : gcIds
+
+  if (filteredGcIds.length === 0) return []
+
+  // Fetch all sessions — only guaranteed columns + topic (safe fallback)
+  let query = db
+    .from('schedules')
+    .select('id, group_course_id, scheduled_at, status')
+    .in('group_course_id', filteredGcIds)
+    .order('scheduled_at', { ascending: true })
+
+  if (filters?.from)   query = query.gte('scheduled_at', filters.from)
+  if (filters?.to)     query = query.lte('scheduled_at', filters.to)
+  if (filters?.status) query = query.eq('status', filters.status)
+
+  const { data: baseSessions } = await query
+
+  if (!baseSessions || baseSessions.length === 0) return []
+
+  // Enrich with topic via separate safe query
+  const sessionIds = baseSessions.map((s: any) => s.id as string)
+  const topicMap = new Map<string, string | null>()
+  const { data: enrichRows } = await db
+    .from('schedules')
+    .select('id, topic')
+    .in('id', sessionIds)
+  for (const r of enrichRows ?? []) {
+    topicMap.set((r as any).id, (r as any).topic ?? null)
+  }
+
+  // Topic filter (post-enrichment since column may not exist in older DBs)
+  let filteredSessions = baseSessions as any[]
+  if (filters?.topic) {
+    const q = filters.topic.toLowerCase()
+    filteredSessions = filteredSessions.filter((s) => {
+      const t = topicMap.get(s.id) ?? ''
+      return t.toLowerCase().includes(q)
+    })
+  }
+
+  // Assign session numbers per group_course_id (chronological rank within each gc)
+  const sessionsByGc = new Map<string, string[]>()
+  for (const s of baseSessions as any[]) {
+    const list = sessionsByGc.get(s.group_course_id) ?? []
+    list.push(s.id)
+    sessionsByGc.set(s.group_course_id, list)
+  }
+  const sessionNumMap = new Map<string, number>()
+  const sessionTotalMap = new Map<string, number>()
+  for (const [gcId, ids] of sessionsByGc.entries()) {
+    const total = ids.length
+    ids.forEach((id, idx) => {
+      sessionNumMap.set(id, idx + 1)
+      sessionTotalMap.set(id, total)
+    })
+  }
+
+  // Count attendance per session
+  const attCounts = new Map<string, { present: number; absent: number; late: number }>()
+  if (sessionIds.length > 0) {
+    const { data: attRows } = await db
+      .from('attendance_records')
+      .select('schedule_id, status')
+      .in('schedule_id', sessionIds)
+    for (const a of attRows ?? []) {
+      const sid = (a as any).schedule_id as string
+      const cur = attCounts.get(sid) ?? { present: 0, absent: 0, late: 0 }
+      if ((a as any).status === 'present') cur.present++
+      else if ((a as any).status === 'absent') cur.absent++
+      else if ((a as any).status === 'late') cur.late++
+      attCounts.set(sid, cur)
+    }
+  }
+
+  // Count students per group
+  const groupStudentCount = new Map<string, number>()
+  const uniqueGroupIds = [...new Set((gcMeta ?? []).map((r: any) => r.group_id as string))]
+  if (uniqueGroupIds.length > 0) {
+    const { data: gsRows } = await db
+      .from('group_students')
+      .select('group_id')
+      .in('group_id', uniqueGroupIds)
+      .eq('status', 'active')
+    for (const g of gsRows ?? []) {
+      const gid = (g as any).group_id as string
+      groupStudentCount.set(gid, (groupStudentCount.get(gid) ?? 0) + 1)
+    }
+  }
+
+  // Build result sorted newest first
+  return filteredSessions
+    .map((s: any): SessionHistoryItem => {
+      const info  = gcInfo.get(s.group_course_id)
+      const att   = attCounts.get(s.id) ?? { present: 0, absent: 0, late: 0 }
+      const total = info ? (groupStudentCount.get(info.groupId) ?? 0) : 0
+      return {
+        session_id:      s.id,
+        session_num:     sessionNumMap.get(s.id) ?? 0,
+        total_in_group:  sessionTotalMap.get(s.id) ?? 0,
+        scheduled_at:    s.scheduled_at,
+        group_id:        info?.groupId    ?? '',
+        group_name:      info?.groupName  ?? '',
+        group_course_id: s.group_course_id,
+        course_title:    info?.courseTitle ?? '',
+        topic:           topicMap.get(s.id) ?? null,
+        status:          s.status,
+        present_count:   att.present,
+        absent_count:    att.absent,
+        late_count:      att.late,
+        total_students:  total,
+      }
+    })
+    .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
+}
+
+// ── Student Search ────────────────────────────────────────────────────────────
+
+export async function searchStudentsForInstructor(
+  instructorId: string,
+  query:        string
+): Promise<StudentSearchResult[]> {
+  if (!query.trim()) return []
+  const db = createServiceClient()
+  const { groupIds } = await resolveGcContext(instructorId, db)
+  if (groupIds.length === 0) return []
+
+  const { data: gsRows } = await db
+    .from('group_students')
+    .select(
+      `student_id, group_id,
+       groups!group_students_group_id_fkey(name),
+       students!group_students_student_id_fkey(
+         users!students_user_id_fkey(
+           email,
+           profiles!profiles_user_id_fkey(first_name, last_name)
+         )
+       )`
+    )
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+
+  const q = query.trim().toLowerCase()
+
+  return (gsRows ?? [])
+    .map((r: any) => {
+      const u  = r.students?.users
+      const p  = u?.profiles
+      return {
+        student_id:  r.student_id   as string,
+        first_name:  p?.first_name  as string | null ?? null,
+        last_name:   p?.last_name   as string | null ?? null,
+        email:       u?.email       as string ?? '',
+        group_id:    r.group_id     as string,
+        group_name:  r.groups?.name as string ?? '',
+      }
+    })
+    .filter((s) => {
+      const fullName = [s.first_name, s.last_name].filter(Boolean).join(' ').toLowerCase()
+      const email    = s.email.toLowerCase()
+      return fullName.includes(q) || email.includes(q)
+    })
+    .slice(0, 30)
+}
+
+// ── Group Attendance Analytics ────────────────────────────────────────────────
+
+export async function getGroupAttendanceAnalytics(
+  groupId:      string,
+  instructorId: string
+): Promise<AttendanceAnalyticsRow[]> {
+  const db = createServiceClient()
+
+  // Verify access
+  const { data: gcRow } = await db
+    .from('group_courses')
+    .select('id, instructor_id')
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  if (gcRow) {
+    const isLead = (gcRow as any).instructor_id === instructorId
+    if (!isLead) {
+      const { data: giRow } = await db
+        .from('group_instructors')
+        .select('group_id')
+        .eq('group_id', groupId)
+        .eq('instructor_id', instructorId)
+        .maybeSingle()
+      if (!giRow) return []
+    }
+  } else {
+    const { data: giRow } = await db
+      .from('group_instructors')
+      .select('group_id')
+      .eq('group_id', groupId)
+      .eq('instructor_id', instructorId)
+      .maybeSingle()
+    if (!giRow) return []
+  }
+
+  // Get all students in group
+  const { data: studentRows } = await db
+    .from('group_students')
+    .select(
+      `student_id,
+       students!group_students_student_id_fkey(
+         users!students_user_id_fkey(
+           profiles!profiles_user_id_fkey(first_name, last_name)
+         )
+       )`
+    )
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+
+  if (!studentRows || studentRows.length === 0) return []
+
+  const gcId = gcRow ? (gcRow as any).id as string : null
+
+  // Get completed session ids for this group
+  let schedIds: string[] = []
+  if (gcId) {
+    const { data: schedRows } = await db
+      .from('schedules')
+      .select('id')
+      .eq('group_course_id', gcId)
+      .eq('status', 'completed')
+    schedIds = (schedRows ?? []).map((s: any) => s.id as string)
+  }
+
+  // Get attendance records
+  const attMap = new Map<string, { present: number; absent: number; late: number; total: number }>()
+  if (schedIds.length > 0) {
+    const studentIds = studentRows.map((r: any) => r.student_id as string)
+    const { data: attRows } = await db
+      .from('attendance_records')
+      .select('student_id, status')
+      .in('schedule_id', schedIds)
+      .in('student_id', studentIds)
+
+    for (const a of attRows ?? []) {
+      const sid = (a as any).student_id as string
+      const cur = attMap.get(sid) ?? { present: 0, absent: 0, late: 0, total: 0 }
+      cur.total++
+      if ((a as any).status === 'present')      cur.present++
+      else if ((a as any).status === 'absent')  cur.absent++
+      else if ((a as any).status === 'late')    cur.late++
+      attMap.set(sid, cur)
+    }
+  }
+
+  return studentRows.map((r: any) => {
+    const p    = r.students?.users?.profiles
+    const name = [p?.first_name, p?.last_name].filter(Boolean).join(' ') || 'Unknown'
+    const att  = attMap.get(r.student_id as string) ?? { present: 0, absent: 0, late: 0, total: 0 }
+    const pct  = att.total > 0 ? Math.round((att.present / att.total) * 100) : 0
+    return {
+      student_id:   r.student_id as string,
+      student_name: name,
+      total:        att.total,
+      present:      att.present,
+      absent:       att.absent,
+      late:         att.late,
+      pct,
+      attention:    att.absent >= 3,
+    }
+  }).sort((a, b) => a.pct - b.pct)
+}
+
+// ── Homework Inbox (all statuses, with filters) ───────────────────────────────
+
+export async function listInboxSubmissions(
+  instructorId: string,
+  filter: 'pending' | 'reviewed' | 'all' = 'pending',
+  groupId?: string,
+  limit = 100
+): Promise<InboxSubmissionItem[]> {
+  const db = createServiceClient()
+  const { gcIds } = await resolveGcContext(instructorId, db)
+  if (gcIds.length === 0) return []
+
+  // Optionally filter to a single group
+  let activeGcIds = gcIds
+  if (groupId) {
+    const { data: gcRows } = await db
+      .from('group_courses')
+      .select('id')
+      .in('id', gcIds)
+      .eq('group_id', groupId)
+    activeGcIds = (gcRows ?? []).map((r: any) => r.id as string)
+    if (activeGcIds.length === 0) return []
+  }
+
+  const { data: gcMeta } = await db
+    .from('group_courses')
+    .select(`id, group_id, groups!group_courses_group_id_fkey(name), courses!group_courses_course_id_fkey(id, title)`)
+    .in('id', activeGcIds)
+    .eq('status', 'active')
+
+  if (!gcMeta || gcMeta.length === 0) return []
+
+  const groupNameByGcId = new Map<string, string>(
+    (gcMeta as any[]).map((gc) => [gc.id as string, gc.groups?.name as string ?? ''])
+  )
+  const assignmentIds = new Set<string>()
+  const assignMap     = new Map<string, { title: string; groupName: string | null }>()
+
+  // Path A: module/lesson assignments
+  const courseIds = (gcMeta as any[]).map((gc) => gc.courses?.id as string).filter(Boolean)
+  if (courseIds.length > 0) {
+    const { data: moduleRows } = await db
+      .from('course_modules')
+      .select('id, course_id')
+      .in('course_id', courseIds)
+      .is('deleted_at', null)
+
+    const moduleIds = (moduleRows ?? []).map((m: any) => m.id as string)
+    const courseByModule = new Map<string, string>(
+      (moduleRows ?? []).map((m: any) => [m.id as string, m.course_id as string])
+    )
+    const groupNameByCourse = new Map<string, string>(
+      (gcMeta as any[]).map((gc) => [gc.courses?.id as string, gc.groups?.name as string ?? ''])
+    )
+
+    if (moduleIds.length > 0) {
+      const { data: lessonRows } = await db
+        .from('lessons')
+        .select('id, module_id')
+        .in('module_id', moduleIds)
+        .is('deleted_at', null)
+
+      const lessonIds = (lessonRows ?? []).map((l: any) => l.id as string)
+      const orParts   = [`module_id.in.(${moduleIds.join(',')})`]
+      if (lessonIds.length > 0) orParts.push(`lesson_id.in.(${lessonIds.join(',')})`)
+
+      const { data: modAssignRows } = await db
+        .from('assignments')
+        .select('id, title, module_id')
+        .eq('status', 'published')
+        .is('deleted_at', null)
+        .or(orParts.join(','))
+
+      for (const a of modAssignRows ?? []) {
+        const courseId  = (a as any).module_id ? courseByModule.get((a as any).module_id) : null
+        const groupName = courseId ? (groupNameByCourse.get(courseId) ?? null) : null
+        assignmentIds.add((a as any).id)
+        assignMap.set((a as any).id, { title: (a as any).title, groupName })
+      }
+    }
+  }
+
+  // Path B: session-only assignments
+  const { data: sessRows } = await db
+    .from('schedules')
+    .select('id, group_course_id')
+    .in('group_course_id', activeGcIds)
+
+  const scheduleIds = (sessRows ?? []).map((s: any) => s.id as string)
+  const scheduleToGcId = new Map<string, string>(
+    (sessRows ?? []).map((s: any) => [s.id as string, s.group_course_id as string])
+  )
+
+  if (scheduleIds.length > 0) {
+    const { data: directRows } = await db
+      .from('assignments')
+      .select('id, title, schedule_id')
+      .in('schedule_id', scheduleIds)
+      .is('module_id', null)
+      .is('lesson_id', null)
+      .eq('status', 'published')
+      .is('deleted_at', null)
+
+    for (const a of directRows ?? []) {
+      const gcId      = scheduleToGcId.get((a as any).schedule_id) ?? ''
+      const groupName = groupNameByGcId.get(gcId) ?? null
+      assignmentIds.add((a as any).id)
+      if (!assignMap.has((a as any).id)) {
+        assignMap.set((a as any).id, { title: (a as any).title, groupName })
+      }
+    }
+  }
+
+  if (assignmentIds.size === 0) return []
+
+  // Determine which statuses to include
+  const pendingStatuses  = ['submitted', 'resubmitted']
+  const reviewedStatuses = ['graded', 'returned']
+  const statuses = filter === 'pending'
+    ? pendingStatuses
+    : filter === 'reviewed'
+      ? reviewedStatuses
+      : [...pendingStatuses, ...reviewedStatuses]
+
+  const { data: subRows } = await db
+    .from('submissions')
+    .select(
+      `id, assignment_id, student_id, submitted_at, status, is_late, resubmission_count, score,
+       students!submissions_student_id_fkey(
+         users!students_user_id_fkey(
+           profiles!profiles_user_id_fkey(first_name, last_name)
+         )
+       )`
+    )
+    .in('assignment_id', [...assignmentIds])
+    .in('status', statuses)
+    .order('submitted_at', { ascending: filter !== 'reviewed' })
+    .limit(limit)
+
+  return (subRows ?? []).map((row: any) => {
+    const p    = row.students?.users?.profiles
+    const info = assignMap.get(row.assignment_id)
+    return {
+      submission_id:      row.id,
+      assignment_id:      row.assignment_id,
+      assignment_title:   info?.title      ?? '',
+      group_name:         info?.groupName  ?? null,
+      student_id:         row.student_id,
+      student_name:       [p?.first_name, p?.last_name].filter(Boolean).join(' ') || 'Unknown',
+      submitted_at:       row.submitted_at,
+      status:             row.status,
+      is_late:            row.is_late,
+      resubmission_count: row.resubmission_count,
+      score:              row.score ?? null,
+    }
+  })
 }

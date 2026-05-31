@@ -36,6 +36,7 @@ export default async function StudentProfilePage({ params }: Props) {
         </Link>
         <h1 className="mt-2 text-xl font-bold text-[#0B1F3A]">{name}</h1>
         <p className="mt-0.5 text-sm text-[#94A3B8]">{profile.email}</p>
+        <p className="mt-0.5 text-xs text-[#94A3B8]">Group: {profile.group_name}</p>
       </div>
 
       {/* Attendance summary */}
@@ -72,14 +73,19 @@ export default async function StudentProfilePage({ params }: Props) {
                 </div>
               </div>
             )}
+            {profile.attendance_absent >= 3 && (
+              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+                ⚠ This student has {profile.attendance_absent} absences and requires attention.
+              </div>
+            )}
           </>
         )}
       </div>
 
-      {/* Instructor Notes — NEVER visible to students or parents */}
+      {/* Notes Timeline — NEVER visible to students or parents */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-[#0B1F3A]">My Notes</p>
+          <p className="text-sm font-semibold text-[#0B1F3A]">Notes Timeline</p>
           <span className="rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[10px] font-medium text-[#FF8A1F]">
             Instructor only
           </span>
@@ -88,21 +94,28 @@ export default async function StudentProfilePage({ params }: Props) {
         {/* Add note form */}
         <NoteForm studentId={studentId} groupId={id} />
 
-        {/* Existing notes */}
+        {/* Notes timeline */}
         {profile.notes.length === 0 ? (
           <p className="text-sm text-[#94A3B8]">No notes yet.</p>
         ) : (
-          <div className="space-y-3">
+          <div className="relative space-y-3 pl-4 before:absolute before:left-1.5 before:top-0 before:h-full before:w-px before:bg-[#E2E8F0]">
             {profile.notes.map((n) => (
-              <div key={n.id} className="rounded-lg border border-[#F1F5F9] bg-[#F8FAFC] px-4 py-3">
+              <div key={n.id} className="relative rounded-lg border border-[#F1F5F9] bg-[#F8FAFC] px-4 py-3">
+                {/* Timeline dot */}
+                <div className="absolute -left-4.75 top-4 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#FF8A1F]" />
+
                 <div className="flex items-start justify-between gap-2">
                   <p className="flex-1 whitespace-pre-wrap text-sm text-[#0B1F3A]">{n.content}</p>
-                  <DeleteNoteButton noteId={n.id} studentId={studentId} groupId={id} />
+                  {n.is_own && (
+                    <DeleteNoteButton noteId={n.id} studentId={studentId} groupId={id} />
+                  )}
                 </div>
-                <div className="mt-2 flex items-center gap-2 text-[10px] text-[#94A3B8]">
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-[#94A3B8]">
+                  <span className="font-medium text-[#64748B]">{n.author_name}</span>
+                  <span>·</span>
                   <span>{new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  {n.schedule_topic && <span>· {n.schedule_topic}</span>}
-                  {n.is_private && <span>· private</span>}
+                  {n.schedule_topic && <><span>·</span><span>{n.schedule_topic}</span></>}
+                  {n.is_private && <><span>·</span><span className="text-[#FF8A1F]">private</span></>}
                 </div>
               </div>
             ))}

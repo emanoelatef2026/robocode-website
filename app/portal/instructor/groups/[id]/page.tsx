@@ -1,5 +1,5 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
-import { getInstructorByUserId, getGroupForInstructor } from '@/modules/instructor-portal/queries'
+import { getInstructorByUserId, getGroupForInstructor, getGroupAttendanceAnalytics } from '@/modules/instructor-portal/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import StartGroupSessionButton from './StartGroupSessionButton'
@@ -27,6 +27,8 @@ export default async function GroupDetailPage({ params }: Props) {
 
   const group = await getGroupForInstructor(id, instructor.id)
   if (!group) notFound()
+
+  const analytics = await getGroupAttendanceAnalytics(id, instructor.id)
 
   const hasCourse = !!group.group_course_id
   const isActive  = hasCourse
@@ -127,6 +129,53 @@ export default async function GroupDetailPage({ params }: Props) {
             </div>
           )}
         </div>
+      )}
+
+      {/* Attendance Analytics */}
+      {analytics.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Attendance Analytics</h2>
+          <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+            <div className="hidden grid-cols-[1fr_80px_80px_80px_80px_70px] gap-4 border-b border-[#F1F5F9] px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] sm:grid">
+              <span>Student</span>
+              <span className="text-center">Present</span>
+              <span className="text-center">Absent</span>
+              <span className="text-center">Late</span>
+              <span className="text-center">Total</span>
+              <span className="text-center">Rate</span>
+            </div>
+            <div className="divide-y divide-[#F1F5F9]">
+              {analytics.map((row) => (
+                <Link
+                  key={row.student_id}
+                  href={`/portal/instructor/groups/${id}/students/${row.student_id}`}
+                  className="flex flex-col gap-1 px-5 py-3 transition hover:bg-[#F8FAFC] sm:grid sm:grid-cols-[1fr_80px_80px_80px_80px_70px] sm:items-center sm:gap-4"
+                >
+                  <div className="flex items-center gap-2">
+                    {row.attention && (
+                      <span className="shrink-0 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600">
+                        ⚠ {row.absent} absent
+                      </span>
+                    )}
+                    <span className="text-sm font-medium text-[#0B1F3A] truncate">{row.student_name}</span>
+                  </div>
+                  <span className="text-center text-sm text-green-600 font-medium">{row.present}</span>
+                  <span className="text-center text-sm text-red-500 font-medium">{row.absent}</span>
+                  <span className="text-center text-sm text-yellow-600 font-medium">{row.late}</span>
+                  <span className="text-center text-sm text-[#64748B]">{row.total}</span>
+                  <span className={`text-center text-sm font-semibold ${row.pct >= 75 ? 'text-green-600' : row.pct >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    {row.total > 0 ? `${row.pct}%` : '—'}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+          {analytics.some((r) => r.attention) && (
+            <p className="mt-2 text-xs text-red-600">
+              ⚠ Students with ≥ 3 absences require attention.
+            </p>
+          )}
+        </section>
       )}
 
       <div className="grid gap-6 lg:grid-cols-3">

@@ -141,6 +141,8 @@ export interface StudentNote {
   schedule_topic: string | null
   created_at:     string
   updated_at:     string
+  author_name:    string
+  is_own:         boolean
 }
 
 export interface StudentProfileForInstructor {
@@ -163,6 +165,65 @@ export interface InstructorDashboardStats {
   studentCount:       number
   completedSessions:  number
   pendingReviews:     number
+}
+
+export interface SessionHistoryItem {
+  session_id:       string
+  session_num:      number
+  total_in_group:   number
+  scheduled_at:     string
+  group_id:         string
+  group_name:       string
+  group_course_id:  string
+  course_title:     string
+  topic:            string | null
+  status:           string
+  present_count:    number
+  absent_count:     number
+  late_count:       number
+  total_students:   number
+}
+
+export interface SessionHistoryFilters {
+  from?:    string
+  to?:      string
+  groupId?: string
+  topic?:   string
+  status?:  string
+}
+
+export interface AttendanceAnalyticsRow {
+  student_id:   string
+  student_name: string
+  total:        number
+  present:      number
+  absent:       number
+  late:         number
+  pct:          number
+  attention:    boolean
+}
+
+export interface StudentSearchResult {
+  student_id:   string
+  first_name:   string | null
+  last_name:    string | null
+  email:        string
+  group_id:     string
+  group_name:   string
+}
+
+export interface InboxSubmissionItem {
+  submission_id:      string
+  assignment_id:      string
+  assignment_title:   string
+  group_name:         string | null
+  student_id:         string
+  student_name:       string
+  submitted_at:       string
+  status:             string
+  is_late:            boolean
+  resubmission_count: number
+  score:              number | null
 }
 
 export interface GroupForInstructor {
