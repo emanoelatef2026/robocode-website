@@ -17,11 +17,17 @@ const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
   makeup:  { label: 'Makeup',  cls: 'bg-purple-100 text-purple-700' },
 }
 
-function SummaryCard({ label, count, color }: { label: string; count: number; color: string }) {
+function TrendBar({ label, count, total, color }: { label: string; count: number; total: number; color: string }) {
+  const pct = total > 0 ? Math.round((count / total) * 100) : 0
   return (
-    <div className={`rounded-xl border bg-white p-4 ${color}`}>
-      <p className="text-2xl font-bold text-[#0B1F3A]">{count}</p>
-      <p className="text-[11px] font-medium text-[#64748B]">{label}</p>
+    <div>
+      <div className="mb-1 flex justify-between text-[12px]">
+        <span className="text-[#64748B]">{label}</span>
+        <span className="font-semibold text-[#0B1F3A]">{pct}% ({count})</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-[#F1F5F9]">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
+      </div>
     </div>
   )
 }
@@ -34,7 +40,7 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
 
   if (!children.length) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
+      <div className="flex min-h-100 items-center justify-center">
         <p className="text-sm text-[#94A3B8]">No children linked to this account.</p>
       </div>
     )
@@ -47,13 +53,15 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
 
   if (!attendance) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
+      <div className="flex min-h-100 items-center justify-center">
         <p className="text-sm text-[#94A3B8]">Unable to load attendance data.</p>
       </div>
     )
   }
 
   const { summary, records } = attendance
+  const attendancePct = summary.attendance_pct
+  const showWarning   = summary.total > 0 && attendancePct < 75
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -72,35 +80,54 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
         </Link>
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
-        <SummaryCard label="Present" count={summary.present} color="border-green-100"  />
-        <SummaryCard label="Absent"  count={summary.absent}  color="border-red-100"    />
-        <SummaryCard label="Late"    count={summary.late}    color="border-yellow-100" />
-        <SummaryCard label="Excused" count={summary.excused} color="border-blue-100"   />
-        <SummaryCard label="Makeup"  count={summary.makeup}  color="border-purple-100" />
-        <SummaryCard label="Total"   count={summary.total}   color="border-[#E2E8F0]"  />
-      </div>
+      {/* Low attendance warning */}
+      {showWarning && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm font-semibold text-red-700">⚠ Attendance Warning</p>
+          <p className="mt-0.5 text-[13px] text-red-600">
+            Attendance is at {attendancePct}%, which is below the 75% minimum requirement.
+            Please contact the instructor if you need support.
+          </p>
+        </div>
+      )}
 
-      {/* Attendance % bar */}
+      {/* Overall bar */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
         <div className="mb-2 flex justify-between text-sm">
           <span className="font-medium text-[#0B1F3A]">Overall Attendance</span>
-          <span className="font-bold text-[#0B1F3A]">{summary.attendance_pct}%</span>
+          <span className={`font-bold ${attendancePct >= 75 ? 'text-green-600' : attendancePct >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+            {attendancePct}%
+          </span>
         </div>
         <div className="h-3 overflow-hidden rounded-full bg-[#F1F5F9]">
           <div
             className={`h-full rounded-full ${
-              summary.attendance_pct >= 75 ? 'bg-green-500' :
-              summary.attendance_pct >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+              attendancePct >= 75 ? 'bg-green-500' :
+              attendancePct >= 50 ? 'bg-yellow-500' : 'bg-red-500'
             }`}
-            style={{ width: `${summary.attendance_pct}%` }}
+            style={{ width: `${attendancePct}%` }}
           />
         </div>
         <p className="mt-2 text-xs text-[#94A3B8]">
-          Present/Late/Makeup counted as attended
+          Present / Late / Makeup counted as attended · {summary.total} total sessions
         </p>
       </div>
+
+      {/* Attendance trend breakdown */}
+      {summary.total > 0 && (
+        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Attendance Trend</p>
+          <TrendBar label="Present" count={summary.present} total={summary.total} color="bg-green-500"  />
+          <TrendBar label="Absent"  count={summary.absent}  total={summary.total} color="bg-red-500"    />
+          <TrendBar label="Late"    count={summary.late}    total={summary.total} color="bg-yellow-500" />
+          {summary.excused > 0 && (
+            <TrendBar label="Excused" count={summary.excused} total={summary.total} color="bg-blue-400" />
+          )}
+          {summary.makeup > 0 && (
+            <TrendBar label="Makeup" count={summary.makeup} total={summary.total} color="bg-purple-400" />
+          )}
+        </div>
+      )}
 
       {/* Records table */}
       {records.length === 0 ? (
@@ -118,6 +145,7 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="border-b border-[#F1F5F9] text-left">
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">#</th>
                   <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Date</th>
                   <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Status</th>
                   <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Course</th>
@@ -125,8 +153,8 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F8FAFC]">
-                {records.map(r => {
-                  const cfg = STATUS_CONFIG[r.status] ?? { label: r.status, cls: 'bg-gray-100 text-gray-600' }
+                {records.map((r, idx) => {
+                  const cfg     = STATUS_CONFIG[r.status] ?? { label: r.status, cls: 'bg-gray-100 text-gray-600' }
                   const dateStr = (r.class_date ?? r.recorded_at)
                     ? new Date(r.class_date ?? r.recorded_at).toLocaleDateString('en-GB', {
                         day: 'numeric', month: 'short', year: 'numeric',
@@ -134,6 +162,7 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
                     : '—'
                   return (
                     <tr key={r.id} className="hover:bg-[#F8FAFC]">
+                      <td className="px-5 py-3 text-[12px] text-[#94A3B8]">{records.length - idx}</td>
                       <td className="px-5 py-3 text-[#0B1F3A]">{dateStr}</td>
                       <td className="px-5 py-3">
                         <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>

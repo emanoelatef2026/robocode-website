@@ -29,8 +29,8 @@ const STATUS_CONFIG: Record<string, { text: string; cls: string }> = {
 }
 
 function getFilterKey(status: string | null): FilterKey {
-  if (!status)                                                    return 'pending'
-  if (status === 'graded')                                        return 'graded'
+  if (!status)              return 'pending'
+  if (status === 'graded')  return 'graded'
   return 'submitted'
 }
 
@@ -42,7 +42,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
 
   if (!children.length) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
+      <div className="flex min-h-100 items-center justify-center">
         <p className="text-sm text-[#94A3B8]">No children linked to this account.</p>
       </div>
     )
@@ -53,8 +53,8 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
 
   const all = await getChildAssignments(user.id, selected.student_id)
 
-  const filterKey  = (FILTERS.find(f => f.key === filter)?.key ?? 'all') as FilterKey
-  const items = filterKey === 'all'
+  const filterKey = (FILTERS.find(f => f.key === filter)?.key ?? 'all') as FilterKey
+  const items     = filterKey === 'all'
     ? all
     : all.filter(a => getFilterKey(a.submission_status) === filterKey)
 
@@ -138,9 +138,10 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
                       )}
                     </div>
 
-                    <p className="mt-0.5 text-[12px] text-[#64748B]">
-                      {[a.course_title, a.module_title ? `Semester: ${a.module_title}` : null].filter(Boolean).join(' · ')}
-                    </p>
+                    {/* Course — no "Semester:" prefix */}
+                    {a.course_title && (
+                      <p className="mt-0.5 text-[12px] text-[#64748B]">{a.course_title}</p>
+                    )}
 
                     <div className="mt-2 flex flex-wrap gap-4 text-[12px] text-[#94A3B8]">
                       {a.due_at && (
@@ -162,7 +163,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
                   </div>
                 </div>
 
-                {/* Public feedback only — never internal notes */}
+                {/* Public feedback only */}
                 {a.public_feedback && (
                   <div className="mt-3 rounded-lg bg-[#F8FAFC] border border-[#F1F5F9] px-3 py-2.5">
                     <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">

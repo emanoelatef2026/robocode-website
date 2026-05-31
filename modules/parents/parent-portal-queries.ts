@@ -444,3 +444,381 @@ export async function getChildSemesterHistory(
     group_name:    row.groups?.name   ?? '',
   })) as StudentCourseProgress[]
 }
+
+// ── New types for enhanced dashboard ─────────────────────────────────────────
+
+export interface ActivityEvent {
+  id:         string
+  event_type: 'attendance_marked' | 'homework_submitted' | 'homework_graded' | 'portfolio_uploaded' | 'portfolio_approved' | 'certificate_earned'
+  title:      string
+  subtitle:   string | null
+  date:       string
+}
+
+export interface UpcomingClass {
+  day_of_week:      string | null
+  time:             string | null
+  instructor_name:  string | null
+  next_session_at:  string | null
+}
+
+export interface ChildSessionsProgress {
+  completed_sessions: number
+  total_sessions:     number
+}
+
+export interface ChildDashboardData {
+  student_name:       string
+  group_name:         string | null
+  course_title:       string | null
+  instructor_name:    string | null
+  attendance_pct:     number | null
+  assignment_pct:     number | null
+  portfolio_count:    number
+  certificate_count:  number
+  completed_sessions: number
+  total_sessions:     number
+  upcoming_class:     UpcomingClass | null
+  recent_activity:    ActivityEvent[]
+}
+
+// ── Comprehensive dashboard data (single round-trip optimised) ────────────────
+
+export async function getChildDashboardData(
+  parentUserId: string,
+  studentId:    string
+): Promise<ChildDashboardData | null> {
+  if (!(await verifyParentChild(parentUserId, studentId))) return null
+
+  const db = createServiceClient()
+
+  // Student name
+  const { data: studentRow } = await db
+    .from('students')
+    .select('users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
+    .eq('id', studentId)
+    .maybeSingle()
+  const sp          = (studentRow as any)?.users?.profiles
+  const studentName = [sp?.first_name, sp?.last_name].filter(Boolean).join(' ') || 'Student'
+
+  // Active group
+  const { data: gsRow } = await db
+    .from('group_students')
+    .select('group_id')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .order('joined_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const groupId = (gsRow as any)?.group_id ?? null
+
+  const empty: Omit<ChildDashboardData, 'student_name'> = {
+    group_name: null, course_title: null, instructor_name: null,
+    attendance_pct: null, assignment_pct: null,
+    portfolio_count: 0, certificate_count: 0,
+    completed_sessions: 0, total_sessions: 24,
+    upcoming_class: null, recent_activity: [],
+  }
+
+  if (!groupId) return { student_name: studentName, ...empty }
+
+  // Group + course + instructor info
+  const [groupRes, gcRes] = await Promise.all([
+    db.from('groups').select('name, day_of_week, time').eq('id', groupId).maybeSingle(),
+    db.from('group_courses')
+      .select('id, instructor_id, total_sessions, courses!group_courses_course_id_fkey(title)')
+      .eq('group_id', groupId)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle(),
+  ])
+
+  const gc           = gcRes.data  as any
+  const gcId         = gc?.id              ?? null
+  const courseTitle  = gc?.courses?.title  ?? null
+  const instrId      = gc?.instructor_id   ?? null
+  const totalSessions = gc?.total_sessions ?? 24
+  const gRow         = groupRes.data as any
+
+  let instructorName: string | null = null
+  if (instrId) {
+    const { data: ir } = await db
+      .from('instructors')
+      .select('users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
+      .eq('id', instrId)
+      .maybeSingle()
+    const ip = (ir as any)?.users?.profiles
+    if (ip) instructorName = [ip.first_name, ip.last_name].filter(Boolean).join(' ') || null
+  }
+
+  // Sessions (completed count + next upcoming)
+  let completedSessions = 0
+  let nextSessionAt: string | null = null
+  if (gcId) {
+    const { data: schedRows } = await db
+      .from('schedules')
+      .select('id, status, scheduled_at')
+      .eq('group_course_id', gcId)
+      .order('scheduled_at', { ascending: true })
+    for (const s of schedRows ?? []) {
+      if ((s as any).status === 'completed') completedSessions++
+      if (!nextSessionAt && (s as any).status === 'scheduled' && new Date((s as any).scheduled_at) > new Date()) {
+        nextSessionAt = (s as any).scheduled_at
+      }
+    }
+  }
+
+  // Progress from student_course_progress
+  const { data: progressRow } = await db
+    .from('student_course_progress')
+    .select('attendance_score, assignment_score')
+    .eq('student_id', studentId)
+    .eq('group_id', groupId)
+    .maybeSingle()
+
+  // Portfolio count
+  let portfolioCount = 0
+  const { data: portRow } = await db
+    .from('student_portfolios').select('id').eq('student_id', studentId).maybeSingle()
+  if (portRow) {
+    const { count } = await db
+      .from('portfolio_projects')
+      .select('id', { count: 'exact', head: true })
+      .eq('portfolio_id', (portRow as any).id)
+      .eq('is_archived', false)
+    portfolioCount = count ?? 0
+  }
+
+  // Certificate count
+  const { count: certCount } = await db
+    .from('certificates')
+    .select('id', { count: 'exact', head: true })
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+  const certificateCount = certCount ?? 0
+
+  // Recent activity (latest 10 events across types)
+  const activity: ActivityEvent[] = []
+
+  // Attendance (last 5)
+  const { data: attRows } = await db
+    .from('attendance_records')
+    .select('id, status, recorded_at')
+    .eq('student_id', studentId)
+    .order('recorded_at', { ascending: false })
+    .limit(5)
+  for (const a of (attRows ?? []) as any[]) {
+    const label = a.status === 'present' ? 'Attended' : a.status === 'late' ? 'Late' : a.status === 'makeup' ? 'Makeup' : 'Absent'
+    activity.push({ id: `att-${a.id}`, event_type: 'attendance_marked', title: 'Attendance marked', subtitle: label, date: a.recorded_at })
+  }
+
+  // Homework submitted + graded (last 5)
+  const { data: subRows } = await db
+    .from('submissions')
+    .select('id, status, submitted_at, updated_at, assignments!submissions_assignment_id_fkey(title)')
+    .eq('student_id', studentId)
+    .in('status', ['submitted', 'under_review', 'resubmitted', 'graded', 'returned'])
+    .order('updated_at', { ascending: false })
+    .limit(5)
+  for (const s of (subRows ?? []) as any[]) {
+    const aTitle = (s as any).assignments?.title ?? 'Assignment'
+    if (s.status === 'graded') {
+      activity.push({ id: `hw-graded-${s.id}`, event_type: 'homework_graded', title: `Homework graded`, subtitle: aTitle, date: s.updated_at })
+    } else {
+      activity.push({ id: `hw-sub-${s.id}`, event_type: 'homework_submitted', title: `Homework submitted`, subtitle: aTitle, date: s.submitted_at ?? s.updated_at })
+    }
+  }
+
+  // Portfolio uploads + approvals (last 5)
+  if (portRow) {
+    const { data: projRows } = await db
+      .from('portfolio_projects')
+      .select('id, title, status, created_at, updated_at')
+      .eq('portfolio_id', (portRow as any).id)
+      .eq('is_archived', false)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    for (const p of (projRows ?? []) as any[]) {
+      activity.push({ id: `proj-up-${p.id}`, event_type: 'portfolio_uploaded', title: 'Portfolio uploaded', subtitle: p.title, date: p.created_at })
+      if (p.status === 'approved' || p.status === 'featured') {
+        activity.push({ id: `proj-app-${p.id}`, event_type: 'portfolio_approved', title: 'Portfolio approved', subtitle: p.title, date: p.updated_at })
+      }
+    }
+  }
+
+  // Certificates (last 3)
+  const { data: certRows } = await db
+    .from('certificates')
+    .select('id, title, issued_at')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .order('issued_at', { ascending: false })
+    .limit(3)
+  for (const c of (certRows ?? []) as any[]) {
+    activity.push({ id: `cert-${c.id}`, event_type: 'certificate_earned', title: 'Certificate earned', subtitle: c.title, date: c.issued_at })
+  }
+
+  // Sort all events newest-first, keep top 10
+  activity.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  const recentActivity = activity.slice(0, 10)
+
+  return {
+    student_name:       studentName,
+    group_name:         gRow?.name ?? null,
+    course_title:       courseTitle,
+    instructor_name:    instructorName,
+    attendance_pct:     (progressRow as any)?.attendance_score ?? null,
+    assignment_pct:     (progressRow as any)?.assignment_score ?? null,
+    portfolio_count:    portfolioCount,
+    certificate_count:  certificateCount,
+    completed_sessions: completedSessions,
+    total_sessions:     totalSessions,
+    upcoming_class: gcId ? {
+      day_of_week:     gRow?.day_of_week ?? null,
+      time:            gRow?.time        ?? null,
+      instructor_name: instructorName,
+      next_session_at: nextSessionAt,
+    } : null,
+    recent_activity: recentActivity,
+  }
+}
+
+// ── History timeline events ────────────────────────────────────────────────────
+
+export interface TimelineEvent {
+  id:         string
+  event_type: 'attendance' | 'homework_submitted' | 'homework_graded' | 'portfolio_uploaded' | 'portfolio_approved' | 'certificate_earned'
+  title:      string
+  subtitle:   string | null
+  date:       string
+  month_key:  string   // e.g. "May 2026" for grouping
+}
+
+export async function getChildHistoryTimeline(
+  parentUserId: string,
+  studentId:    string
+): Promise<TimelineEvent[]> {
+  if (!(await verifyParentChild(parentUserId, studentId))) return []
+
+  const db     = createServiceClient()
+  const events: TimelineEvent[] = []
+
+  const toMonthKey = (d: string) =>
+    new Date(d).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+
+  // Attendance
+  const { data: attRows } = await db
+    .from('attendance_records')
+    .select('id, status, recorded_at, schedules!attendance_records_schedule_id_fkey(scheduled_at)')
+    .eq('student_id', studentId)
+    .order('recorded_at', { ascending: false })
+    .limit(50)
+  for (const a of (attRows ?? []) as any[]) {
+    const date = a.schedules?.scheduled_at ?? a.recorded_at
+    const statusLabel = a.status === 'present' ? 'Present' : a.status === 'late' ? 'Late' : a.status === 'makeup' ? 'Makeup' : 'Absent'
+    events.push({
+      id:         `att-${a.id}`,
+      event_type: 'attendance',
+      title:      `Attendance: ${statusLabel}`,
+      subtitle:   null,
+      date,
+      month_key:  toMonthKey(date),
+    })
+  }
+
+  // Homework submitted + graded
+  const { data: subRows } = await db
+    .from('submissions')
+    .select('id, status, submitted_at, updated_at, assignments!submissions_assignment_id_fkey(title)')
+    .eq('student_id', studentId)
+    .in('status', ['submitted', 'under_review', 'resubmitted', 'graded', 'returned', 'resubmission_requested'])
+    .order('submitted_at', { ascending: false })
+    .limit(50)
+  for (const s of (subRows ?? []) as any[]) {
+    const aTitle = s.assignments?.title ?? 'Assignment'
+    const subDate = s.submitted_at ?? s.updated_at
+    if (subDate) {
+      events.push({ id: `sub-${s.id}`, event_type: 'homework_submitted', title: 'Homework submitted', subtitle: aTitle, date: subDate, month_key: toMonthKey(subDate) })
+    }
+    if (s.status === 'graded' && s.updated_at) {
+      events.push({ id: `graded-${s.id}`, event_type: 'homework_graded', title: 'Homework graded', subtitle: aTitle, date: s.updated_at, month_key: toMonthKey(s.updated_at) })
+    }
+  }
+
+  // Portfolio
+  const { data: portRow } = await db
+    .from('student_portfolios').select('id').eq('student_id', studentId).maybeSingle()
+  if (portRow) {
+    const { data: projRows } = await db
+      .from('portfolio_projects')
+      .select('id, title, status, created_at, updated_at')
+      .eq('portfolio_id', (portRow as any).id)
+      .eq('is_archived', false)
+      .order('created_at', { ascending: false })
+      .limit(30)
+    for (const p of (projRows ?? []) as any[]) {
+      if (p.created_at) events.push({ id: `proj-up-${p.id}`, event_type: 'portfolio_uploaded', title: 'Portfolio uploaded', subtitle: p.title, date: p.created_at, month_key: toMonthKey(p.created_at) })
+      if ((p.status === 'approved' || p.status === 'featured') && p.updated_at) {
+        events.push({ id: `proj-app-${p.id}`, event_type: 'portfolio_approved', title: 'Portfolio approved', subtitle: p.title, date: p.updated_at, month_key: toMonthKey(p.updated_at) })
+      }
+    }
+  }
+
+  // Certificates
+  const { data: certRows } = await db
+    .from('certificates')
+    .select('id, title, issued_at')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .order('issued_at', { ascending: false })
+  for (const c of (certRows ?? []) as any[]) {
+    events.push({ id: `cert-${c.id}`, event_type: 'certificate_earned', title: 'Certificate earned', subtitle: c.title, date: c.issued_at, month_key: toMonthKey(c.issued_at) })
+  }
+
+  events.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  return events
+}
+
+// ── Sessions progress (for certificate eligibility) ───────────────────────────
+
+export async function getChildSessionsProgress(
+  parentUserId: string,
+  studentId:    string
+): Promise<ChildSessionsProgress | null> {
+  if (!(await verifyParentChild(parentUserId, studentId))) return null
+
+  const db = createServiceClient()
+
+  const { data: gsRow } = await db
+    .from('group_students')
+    .select('group_id')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .order('joined_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const groupId = (gsRow as any)?.group_id ?? null
+  if (!groupId) return { completed_sessions: 0, total_sessions: 24 }
+
+  const { data: gcRow } = await db
+    .from('group_courses')
+    .select('id, total_sessions')
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle()
+  const gcId         = (gcRow as any)?.id              ?? null
+  const totalSessions = (gcRow as any)?.total_sessions ?? 24
+
+  let completedSessions = 0
+  if (gcId) {
+    const { count } = await db
+      .from('schedules')
+      .select('id', { count: 'exact', head: true })
+      .eq('group_course_id', gcId)
+      .eq('status', 'completed')
+    completedSessions = count ?? 0
+  }
+
+  return { completed_sessions: completedSessions, total_sessions: totalSessions }
+}

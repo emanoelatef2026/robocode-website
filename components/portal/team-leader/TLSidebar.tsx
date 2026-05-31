@@ -45,13 +45,20 @@ const analyticsIcon = (
   </svg>
 )
 
+const parentSatisfactionIcon = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
+  </svg>
+)
+
 const NAV_ITEMS = [
-  { label: "Dashboard",   href: "/portal/team-leader",              icon: Icons.dashboard,    exact: true },
-  { label: "Students",    href: "/portal/team-leader/students",     icon: Icons.students },
-  { label: "Instructors", href: "/portal/team-leader/instructors",  icon: Icons.instructors },
-  { label: "Groups",      href: "/portal/team-leader/groups",       icon: Icons.groups },
-  { label: "Portfolio",   href: "/portal/team-leader/portfolio",    icon: Icons.portfolio },
-  { label: "Analytics",   href: "/dashboard/analytics",             icon: analyticsIcon },
+  { label: "Dashboard",          href: "/portal/team-leader",                           icon: Icons.dashboard,           exact: true },
+  { label: "Students",           href: "/portal/team-leader/students",                  icon: Icons.students },
+  { label: "Instructors",        href: "/portal/team-leader/instructors",               icon: Icons.instructors },
+  { label: "Groups",             href: "/portal/team-leader/groups",                    icon: Icons.groups },
+  { label: "Portfolio",          href: "/portal/team-leader/portfolio",                 icon: Icons.portfolio },
+  { label: "Feedback Center",    href: "/portal/team-leader/parent-feedback",           icon: parentSatisfactionIcon },
+  { label: "Analytics",          href: "/dashboard/analytics",                          icon: analyticsIcon },
 ]
 
 function NavLink({
