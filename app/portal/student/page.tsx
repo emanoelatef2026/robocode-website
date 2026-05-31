@@ -1,9 +1,12 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
 import { getStudentDashboardData } from '@/modules/student-portal/queries'
+import { getPendingFeedbackSessions } from '@/modules/feedback/queries'
+import { createServiceClient } from '@/lib/supabase/service'
 import Link from 'next/link'
-import type { UpcomingHomework, RecentFeedbackItem } from '@/modules/student-portal/types'
+import type { UpcomingHomework, RecentFeedbackItem, StudentDashboardData } from '@/modules/student-portal/types'
+import SessionFeedbackWidget from './SessionFeedbackWidget'
 
-// ── Shared primitives ─────────────────────────────────────────────────────────
+// ── Primitives ────────────────────────────────────────────────────────────────
 
 function ProgressBar({ value, color = 'bg-[#FF8A1F]' }: { value: number; color?: string }) {
   const pct = Math.min(100, Math.max(0, value))
@@ -14,21 +17,54 @@ function ProgressBar({ value, color = 'bg-[#FF8A1F]' }: { value: number; color?:
   )
 }
 
-function StatCard({
-  label, value, sub, color,
-}: {
-  label: string
-  value: string
-  sub?: string
-  color?: string
-}) {
-  return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${color ?? 'text-[#0B1F3A]'}`}>{value}</p>
-      {sub && <p className="mt-0.5 text-xs text-[#64748B]">{sub}</p>}
-    </div>
-  )
+const DAY_LABELS: Record<string, string> = {
+  sunday: 'Sunday', monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday',
+  thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday',
+}
+
+function formatTime(t: string | null): string {
+  if (!t) return ''
+  try {
+    const [h, m] = t.split(':').map(Number)
+    const period = h >= 12 ? 'PM' : 'AM'
+    const hour   = h % 12 || 12
+    return `${hour}:${m.toString().padStart(2, '0')} ${period}`
+  } catch {
+    return t
+  }
+}
+
+// ── Next Actions ─────────────────────────────────────────────────────────────
+
+function deriveNextActions(data: StudentDashboardData): Array<{ label: string; href: string; kind: string }> {
+  const actions: Array<{ label: string; href: string; kind: string }> = []
+
+  if (!data.group_id) {
+    actions.push({ label: 'Contact admin to enroll in a group', href: '#', kind: 'info' })
+    return actions
+  }
+
+  // Pending homework
+  for (const hw of data.upcoming_homework.slice(0, 2)) {
+    actions.push({ label: `Submit: ${hw.title}`, href: `/portal/student/assignments/${hw.id}`, kind: 'homework' })
+  }
+
+  // No attendance at all → prompt to attend
+  if (data.att_total === 0 && data.completed_sessions > 0) {
+    actions.push({ label: 'Attend your next session', href: '/portal/student/attendance', kind: 'session' })
+  }
+
+  // Empty portfolio
+  if (data.portfolio_projects === 0) {
+    actions.push({ label: 'Upload your first portfolio project', href: '/portal/student/portfolio', kind: 'portfolio' })
+  }
+
+  // Eligible for certificate
+  if (data.total_sessions > 0 && data.completed_sessions >= data.total_sessions) {
+    actions.push({ label: 'Download your certificate', href: '/portal/student/certificates', kind: 'certificate' })
+  }
+
+  return actions.slice(0, 4)
 }
 
 // ── Upcoming homework card ────────────────────────────────────────────────────
@@ -36,7 +72,10 @@ function StatCard({
 function UpcomingCard({ items }: { items: UpcomingHomework[] }) {
   return (
     <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-      <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Upcoming Homework</p>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-sm font-semibold text-[#0B1F3A]">Upcoming Homework</p>
+        <Link href="/portal/student/assignments" className="text-xs text-[#FF8A1F] hover:underline">View all →</Link>
+      </div>
       {items.length === 0 ? (
         <p className="text-sm text-[#94A3B8]">No pending homework.</p>
       ) : (
@@ -70,7 +109,7 @@ function FeedbackCard({ items }: { items: RecentFeedbackItem[] }) {
     <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
       <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Recent Feedback</p>
       {items.length === 0 ? (
-        <p className="text-sm text-[#94A3B8]">No feedback yet. Submit assignments to receive grades.</p>
+        <p className="text-sm text-[#94A3B8]">No feedback yet.</p>
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
@@ -99,9 +138,18 @@ function FeedbackCard({ items }: { items: RecentFeedbackItem[] }) {
 
 export default async function StudentDashboardPage() {
   const user = await requirePortalRole('student')
-  const data = await getStudentDashboardData(user.id)
 
-  // No student record at all
+  // Resolve student_id for feedback query
+  const db = createServiceClient()
+  const { data: studentRow } = await db
+    .from('students').select('id').eq('user_id', user.id).maybeSingle()
+  const studentId = (studentRow as any)?.id ?? null
+
+  const [data, feedbackSessions] = await Promise.all([
+    getStudentDashboardData(user.id),
+    studentId ? getPendingFeedbackSessions(studentId) : Promise.resolve([]),
+  ])
+
   if (!data) {
     return (
       <div className="flex min-h-100 items-center justify-center">
@@ -113,34 +161,37 @@ export default async function StudentDashboardPage() {
     )
   }
 
-  const sessionPct = data.total_sessions > 0
+  const sessionPct   = data.total_sessions > 0
     ? Math.round((data.completed_sessions / data.total_sessions) * 100)
     : 0
+  const remaining    = Math.max(0, data.total_sessions - data.completed_sessions)
+  const notEnrolled  = !data.group_id
+  const nextActions  = deriveNextActions(data)
 
-  const notEnrolled = !data.group_id
+  const nextClassLabel = data.day_of_week
+    ? `${DAY_LABELS[data.day_of_week.toLowerCase()] ?? data.day_of_week}${data.group_time ? ` ${formatTime(data.group_time)}` : ''}`
+    : null
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
 
-      {/* ── Identity header ──────────────────────────────────────────── */}
+      {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-5">
         <h1 className="text-xl font-bold text-[#0B1F3A]">{data.student_name}</h1>
         {notEnrolled ? (
           <p className="mt-1 text-sm text-[#94A3B8]">Not enrolled in any active group yet.</p>
         ) : (
-          <div className="mt-3 grid grid-cols-3 gap-4">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Group</p>
-              <p className="mt-0.5 text-sm font-medium text-[#0B1F3A]">{data.group_name ?? '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Course</p>
-              <p className="mt-0.5 text-sm font-medium text-[#0B1F3A]">{data.course_title ?? '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Instructor</p>
-              <p className="mt-0.5 text-sm font-medium text-[#0B1F3A]">{data.instructor_name ?? '—'}</p>
-            </div>
+          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {[
+              { label: 'Group',      value: data.group_name },
+              { label: 'Course',     value: data.course_title },
+              { label: 'Instructor', value: data.instructor_name },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
+                <p className="mt-0.5 text-sm font-medium text-[#0B1F3A]">{value ?? '—'}</p>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -154,7 +205,7 @@ export default async function StudentDashboardPage() {
         </div>
       ) : (
         <>
-          {/* ── Session progress — PRIMARY KPI ───────────────────────────── */}
+          {/* ── Session Progress ──────────────────────────────────────────── */}
           <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-5">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-[#0B1F3A]">Session Progress</p>
@@ -162,52 +213,133 @@ export default async function StudentDashboardPage() {
                 {sessionPct}%
               </span>
             </div>
-            <p className="mt-1 text-2xl font-bold text-[#0B1F3A]">
-              {data.completed_sessions}
-              <span className="ml-1 text-base font-normal text-[#64748B]">/ {data.total_sessions} sessions completed</span>
-            </p>
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+              <p className="text-2xl font-bold text-[#0B1F3A]">
+                {data.completed_sessions}
+                <span className="ml-1 text-base font-normal text-[#64748B]">/ {data.total_sessions} completed</span>
+              </p>
+              {remaining > 0 && (
+                <p className="text-sm text-[#94A3B8]">{remaining} remaining</p>
+              )}
+            </div>
             <div className="mt-3">
               <ProgressBar value={sessionPct} />
             </div>
+            {nextClassLabel && (
+              <p className="mt-2 text-xs text-[#64748B]">
+                Next class: <span className="font-medium text-[#0B1F3A]">{nextClassLabel}</span>
+              </p>
+            )}
           </div>
 
-          {/* ── Stat cards row ────────────────────────────────────────────── */}
+          {/* ── Stat cards ───────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <StatCard
-              label="Attendance"
-              value={`${data.att_pct}%`}
-              sub={data.att_total > 0
-                ? `${data.att_present}P · ${data.att_absent}A · ${data.att_late}L`
-                : 'No records yet'}
-              color={data.att_pct >= 75 ? 'text-green-600' : data.att_pct >= 50 ? 'text-yellow-600' : 'text-[#0B1F3A]'}
-            />
-            <StatCard
-              label="Assignments"
-              value={data.assignments_total === 0 ? '0' : `${data.assignments_submitted}/${data.assignments_total}`}
-              sub={data.assignments_total === 0
-                ? 'None assigned yet'
-                : data.assignments_graded > 0
-                  ? `${data.assignments_graded} graded · avg ${data.assignments_avg_score ?? 0} pts`
-                  : `${data.assignments_graded} graded`}
-            />
-            <StatCard
-              label="Portfolio"
-              value={`${data.portfolio_projects}`}
-              sub={data.portfolio_projects === 0 ? 'No projects yet' : `project${data.portfolio_projects !== 1 ? 's' : ''}`}
-            />
-            <StatCard
-              label="Overall"
-              value={data.overall_pct != null ? `${Math.round(data.overall_pct)}%` : 'N/A'}
-              sub={data.overall_pct != null ? 'composite score' : 'No grades yet'}
-              color={data.overall_pct != null && data.overall_pct >= 75 ? 'text-green-600' : 'text-[#0B1F3A]'}
-            />
+            {/* Attendance */}
+            <Link
+              href="/portal/student/attendance"
+              className="rounded-xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Attendance</p>
+              <p className={`mt-1 text-2xl font-bold ${data.att_pct >= 75 ? 'text-green-600' : data.att_pct >= 50 ? 'text-yellow-600' : 'text-[#0B1F3A]'}`}>
+                {data.att_pct}%
+              </p>
+              <p className="mt-0.5 text-xs text-[#64748B]">
+                {data.att_total > 0
+                  ? `${data.att_present}P · ${data.att_absent}A · ${data.att_late}L`
+                  : 'No records yet'}
+              </p>
+            </Link>
+
+            {/* Assignments */}
+            <Link
+              href="/portal/student/assignments"
+              className="rounded-xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Assignments</p>
+              <p className="mt-1 text-2xl font-bold text-[#0B1F3A]">
+                {data.assignments_total === 0 ? '0' : `${data.assignments_submitted}/${data.assignments_total}`}
+              </p>
+              <p className="mt-0.5 text-xs text-[#64748B]">
+                {data.assignments_total === 0
+                  ? 'None assigned yet'
+                  : data.assignments_graded > 0
+                    ? `${data.assignments_graded} graded · avg ${data.assignments_avg_score ?? 0} pts`
+                    : `${data.assignments_submitted} submitted`}
+              </p>
+            </Link>
+
+            {/* Portfolio */}
+            <Link
+              href="/portal/student/portfolio"
+              className="rounded-xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Portfolio</p>
+              <p className="mt-1 text-2xl font-bold text-[#0B1F3A]">{data.portfolio_projects}</p>
+              <p className="mt-0.5 text-xs text-[#64748B]">
+                {data.portfolio_projects === 0
+                  ? 'No projects yet'
+                  : `${data.portfolio_reviewed} reviewed`}
+              </p>
+            </Link>
+
+            {/* Overall */}
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Overall</p>
+              {data.overall_pct != null ? (
+                <>
+                  <p className={`mt-1 text-2xl font-bold ${data.overall_pct >= 75 ? 'text-green-600' : 'text-[#0B1F3A]'}`}>
+                    {Math.round(data.overall_pct)}%
+                  </p>
+                  <p className="mt-0.5 text-xs text-[#64748B]">composite score</p>
+                </>
+              ) : (
+                <>
+                  <p className="mt-1 text-lg font-semibold text-[#94A3B8]">—</p>
+                  <p className="mt-0.5 text-xs text-[#94A3B8]">No grades yet</p>
+                </>
+              )}
+            </div>
           </div>
+
+          {/* ── Next Actions ──────────────────────────────────────────────── */}
+          {nextActions.length > 0 && (
+            <section>
+              <h2 className="mb-2 text-sm font-semibold text-[#0B1F3A]">Next Actions</h2>
+              <div className="space-y-2">
+                {nextActions.map((action, i) => {
+                  const colors: Record<string, string> = {
+                    homework:    'bg-amber-100 text-amber-700',
+                    session:     'bg-emerald-100 text-emerald-700',
+                    portfolio:   'bg-purple-100 text-purple-700',
+                    certificate: 'bg-[#FFF7ED] text-[#FF8A1F]',
+                    info:        'bg-[#F1F5F9] text-[#64748B]',
+                  }
+                  const icons: Record<string, string> = {
+                    homework: '📝', session: '▶', portfolio: '🖼', certificate: '🏆', info: 'ℹ',
+                  }
+                  return (
+                    <Link
+                      key={i}
+                      href={action.href}
+                      className="flex items-center gap-4 rounded-xl border border-[#E2E8F0] bg-white px-5 py-3.5 transition hover:border-[#FF8A1F]/50 hover:shadow-sm"
+                    >
+                      <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${colors[action.kind] ?? colors.info}`}>
+                        {icons[action.kind] ?? '→'}
+                      </div>
+                      <p className="flex-1 text-sm font-medium text-[#0B1F3A]">{action.label}</p>
+                      <span className="shrink-0 text-xs text-[#FF8A1F]">→</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </section>
+          )}
 
           {/* ── Quick nav ─────────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
+              { label: 'Attendance',   href: '/portal/student/attendance',   cls: 'text-green-600  bg-green-50  border-green-100'  },
               { label: 'Assignments',  href: '/portal/student/assignments',  cls: 'text-blue-600   bg-blue-50   border-blue-100'   },
-              { label: 'Portfolio',    href: '/portal/student/portfolio',    cls: 'text-purple-600 bg-purple-50 border-purple-100' },
               { label: 'Certificates', href: '/portal/student/certificates', cls: 'text-[#FF8A1F]  bg-[#FFF7ED] border-orange-100' },
               { label: 'History',      href: '/portal/student/history',      cls: 'text-teal-600   bg-teal-50   border-teal-100'   },
             ].map(({ label, href, cls }) => (
@@ -221,7 +353,12 @@ export default async function StudentDashboardPage() {
             ))}
           </div>
 
-          {/* ── Two-column content area ────────────────────────────────────── */}
+          {/* ── Session feedback ─────────────────────────────────────────── */}
+          {feedbackSessions.length > 0 && (
+            <SessionFeedbackWidget sessions={feedbackSessions} />
+          )}
+
+          {/* ── Two-column content ────────────────────────────────────────── */}
           <div className="grid gap-5 lg:grid-cols-2">
             <UpcomingCard items={data.upcoming_homework} />
             <FeedbackCard items={data.recent_feedback} />

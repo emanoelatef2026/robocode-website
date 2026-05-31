@@ -27,6 +27,11 @@ const Icons = {
       <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 14.094A5.973 5.973 0 004 17v1H1v-1a3 3 0 013.75-2.906z" />
     </svg>
   ),
+  portfolio: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+    </svg>
+  ),
   logout: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
@@ -41,11 +46,12 @@ const analyticsIcon = (
 )
 
 const NAV_ITEMS = [
-  { label: "Dashboard",   href: "/portal/team-leader",             icon: Icons.dashboard,   exact: true },
-  { label: "Students",    href: "/portal/team-leader/students",    icon: Icons.students },
-  { label: "Instructors", href: "/portal/team-leader/instructors", icon: Icons.instructors },
-  { label: "Groups",      href: "/portal/team-leader/groups",      icon: Icons.groups },
-  { label: "Analytics",   href: "/dashboard/analytics",            icon: analyticsIcon },
+  { label: "Dashboard",   href: "/portal/team-leader",              icon: Icons.dashboard,    exact: true },
+  { label: "Students",    href: "/portal/team-leader/students",     icon: Icons.students },
+  { label: "Instructors", href: "/portal/team-leader/instructors",  icon: Icons.instructors },
+  { label: "Groups",      href: "/portal/team-leader/groups",       icon: Icons.groups },
+  { label: "Portfolio",   href: "/portal/team-leader/portfolio",    icon: Icons.portfolio },
+  { label: "Analytics",   href: "/dashboard/analytics",             icon: analyticsIcon },
 ]
 
 function NavLink({

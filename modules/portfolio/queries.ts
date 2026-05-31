@@ -142,7 +142,8 @@ export async function getStudentPortfolioDetail(
     .from('portfolio_projects')
     .select(
       `id, title, description, thumbnail_url, is_featured, is_public, is_archived,
-       sort_order, final_score, created_at,
+       sort_order, final_score, created_at, student_id,
+       category, status, project_url, video_url, instructor_feedback,
        courses!portfolio_projects_course_id_fkey(title),
        semesters!portfolio_projects_semester_id_fkey(name)`
     )
@@ -151,18 +152,24 @@ export async function getStudentPortfolioDetail(
     .order('created_at', { ascending: false })
 
   const projects: PortfolioProjectListItem[] = (rawProjects ?? []).map((p: any) => ({
-    id:            p.id,
-    title:         p.title,
-    description:   p.description ?? null,
-    thumbnail_url: p.thumbnail_url ?? null,
-    is_featured:   p.is_featured,
-    is_public:     p.is_public,
-    is_archived:   p.is_archived,
-    sort_order:    p.sort_order,
-    course_title:  p.courses?.title ?? null,
-    semester_name: p.semesters?.name ?? null,
-    final_score:   p.final_score ?? null,
-    created_at:    p.created_at,
+    id:                  p.id,
+    title:               p.title,
+    description:         p.description       ?? null,
+    thumbnail_url:       p.thumbnail_url      ?? null,
+    is_featured:         p.is_featured,
+    is_public:           p.is_public,
+    is_archived:         p.is_archived,
+    sort_order:          p.sort_order,
+    course_title:        p.courses?.title     ?? null,
+    semester_name:       p.semesters?.name    ?? null,
+    final_score:         p.final_score        ?? null,
+    created_at:          p.created_at,
+    category:            p.category           ?? null,
+    status:              p.status             ?? null,
+    project_url:         p.project_url        ?? null,
+    video_url:           p.video_url          ?? null,
+    instructor_feedback: p.instructor_feedback ?? null,
+    student_id:          p.student_id,
   }))
 
   // Achievements
@@ -309,6 +316,159 @@ export async function getChildPortfolioDetail(
 
   if (!link) return null
   return getStudentPortfolioDetail(studentId)
+}
+
+// ─── Instructor portfolio review queue ────────────────────────────────────────
+
+export async function listProjectsForInstructorReview(
+  instructorId: string,
+  status: 'pending_review' | 'approved' | 'featured' | 'needs_improvement' = 'pending_review'
+): Promise<PortfolioProjectListItem[]> {
+  const db = createServiceClient()
+
+  // Get group ids from instructor's groups
+  const [{ data: gcDirect }, { data: giRows }] = await Promise.all([
+    db.from('group_courses').select('group_id').eq('instructor_id', instructorId).eq('status', 'active'),
+    db.from('group_instructors').select('group_id').eq('instructor_id', instructorId),
+  ])
+  const groupIdSet = new Set<string>([
+    ...(gcDirect ?? []).map((r: any) => r.group_id as string),
+    ...(giRows ?? []).map((r: any) => r.group_id as string),
+  ])
+  if (groupIdSet.size === 0) return []
+
+  // Get student ids from those groups
+  const { data: gsRows } = await db
+    .from('group_students')
+    .select('student_id')
+    .in('group_id', [...groupIdSet])
+    .eq('status', 'active')
+  const studentIds = [...new Set((gsRows ?? []).map((r: any) => r.student_id as string))]
+  if (studentIds.length === 0) return []
+
+  // Get portfolio ids
+  const { data: portRows } = await db
+    .from('student_portfolios')
+    .select('id, student_id')
+    .in('student_id', studentIds)
+  const portStudentMap = new Map((portRows ?? []).map((p: any) => [p.id as string, p.student_id as string]))
+  const portIds = [...portStudentMap.keys()]
+  if (portIds.length === 0) return []
+
+  // Get student names
+  const { data: studRows } = await db
+    .from('students')
+    .select('id, users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
+    .in('id', studentIds)
+  const nameMap = new Map((studRows ?? []).map((s: any) => {
+    const p = s.users?.profiles
+    return [s.id as string, [p?.first_name, p?.last_name].filter(Boolean).join(' ') || 'Unknown']
+  }))
+
+  const { data: projRows } = await db
+    .from('portfolio_projects')
+    .select(
+      `id, title, description, thumbnail_url, is_featured, is_public, is_archived,
+       sort_order, final_score, created_at, student_id, portfolio_id,
+       category, status, project_url, video_url, instructor_feedback,
+       courses!portfolio_projects_course_id_fkey(title)`
+    )
+    .in('portfolio_id', portIds)
+    .eq('status', status)
+    .eq('is_archived', false)
+    .order('created_at', { ascending: true })
+
+  return (projRows ?? []).map((p: any) => ({
+    id:                  p.id,
+    title:               p.title,
+    description:         p.description       ?? null,
+    thumbnail_url:       p.thumbnail_url      ?? null,
+    is_featured:         p.is_featured,
+    is_public:           p.is_public,
+    is_archived:         p.is_archived,
+    sort_order:          p.sort_order,
+    course_title:        p.courses?.title     ?? null,
+    semester_name:       null,
+    final_score:         p.final_score        ?? null,
+    created_at:          p.created_at,
+    category:            p.category           ?? null,
+    status:              p.status             ?? null,
+    project_url:         p.project_url        ?? null,
+    video_url:           p.video_url          ?? null,
+    instructor_feedback: p.instructor_feedback ?? null,
+    student_id:          p.student_id,
+    student_name:        nameMap.get(p.student_id) ?? 'Unknown',
+  }))
+}
+
+// ─── Team Leader: all projects in branch, by status ──────────────────────────
+
+export async function listAllProjectsForTL(
+  branchIds: string[],
+  status: 'pending_review' | 'approved' | 'needs_improvement' | 'featured' = 'pending_review'
+): Promise<PortfolioProjectListItem[]> {
+  if (!branchIds.length) return []
+  const db = createServiceClient()
+
+  // Get students in the TL's branches
+  const { data: studentRows } = await db
+    .from('students')
+    .select('id, users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
+    .in('branch_id', branchIds)
+    .is('deleted_at', null)
+    .eq('status', 'active')
+
+  if (!studentRows || studentRows.length === 0) return []
+
+  const studentIds = studentRows.map((s: any) => s.id as string)
+  const nameMap    = new Map(studentRows.map((s: any) => {
+    const p = s.users?.profiles
+    return [s.id as string, [p?.first_name, p?.last_name].filter(Boolean).join(' ') || 'Unknown']
+  }))
+
+  // Get portfolio ids for these students
+  const { data: portRows } = await db
+    .from('student_portfolios')
+    .select('id, student_id')
+    .in('student_id', studentIds)
+  if (!portRows || portRows.length === 0) return []
+
+  const portIds = portRows.map((p: any) => p.id as string)
+
+  const { data: projRows } = await db
+    .from('portfolio_projects')
+    .select(
+      `id, title, description, thumbnail_url, is_featured, is_public, is_archived,
+       sort_order, final_score, created_at, student_id,
+       category, status, project_url, video_url, instructor_feedback,
+       courses!portfolio_projects_course_id_fkey(title)`
+    )
+    .in('portfolio_id', portIds)
+    .eq('status', status)
+    .eq('is_archived', false)
+    .order('created_at', { ascending: true })
+
+  return (projRows ?? []).map((p: any) => ({
+    id:                  p.id,
+    title:               p.title,
+    description:         p.description        ?? null,
+    thumbnail_url:       p.thumbnail_url       ?? null,
+    is_featured:         p.is_featured,
+    is_public:           p.is_public,
+    is_archived:         p.is_archived,
+    sort_order:          p.sort_order,
+    course_title:        p.courses?.title      ?? null,
+    semester_name:       null,
+    final_score:         p.final_score         ?? null,
+    created_at:          p.created_at,
+    category:            p.category            ?? null,
+    status:              p.status              ?? null,
+    project_url:         p.project_url         ?? null,
+    video_url:           p.video_url           ?? null,
+    instructor_feedback: p.instructor_feedback  ?? null,
+    student_id:          p.student_id,
+    student_name:        nameMap.get(p.student_id) ?? 'Unknown',
+  }))
 }
 
 // ─── Search ────────────────────────────────────────────────────────────────────

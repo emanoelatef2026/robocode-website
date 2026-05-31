@@ -14,6 +14,9 @@ export interface StudentDashboardData {
   group_name:         string | null
   course_title:       string | null
   instructor_name:    string | null
+  // Schedule
+  day_of_week:        string | null
+  group_time:         string | null
   // Sessions
   completed_sessions: number
   total_sessions:     number
@@ -29,7 +32,8 @@ export interface StudentDashboardData {
   assignments_graded:    number
   assignments_avg_score: number | null
   // Portfolio
-  portfolio_projects: number
+  portfolio_projects:    number
+  portfolio_reviewed:    number
   // Overall
   overall_pct: number | null
   // Lists
@@ -65,8 +69,24 @@ export interface RecentFeedbackItem {
 
 export interface TimelineEvent {
   id:         string
-  event_type: 'submitted' | 'graded' | 'portfolio' | 'certificate'
+  event_type: 'submitted' | 'graded' | 'portfolio' | 'certificate' | 'attended' | 'missed'
   title:      string
   subtitle:   string | null
   date:       string
+}
+
+export interface StudentAttendanceRecord {
+  session_num: number
+  date:        string
+  topic:       string | null
+  status:      string | null
+}
+
+export interface CertificateEligibility {
+  is_eligible:       boolean
+  completed_sessions: number
+  total_sessions:    number
+  sessions_remaining: number
+  group_name:        string | null
+  course_title:      string | null
 }

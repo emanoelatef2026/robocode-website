@@ -7,6 +7,8 @@ import {
   getStudentsRequiringAttention,
   getInstructorDashboardStats,
 } from '@/modules/instructor-portal/queries'
+import { getInstructorRatingSummary } from '@/modules/feedback/queries'
+import type { InstructorRatingSummary } from '@/modules/feedback/types'
 import Link from 'next/link'
 
 const DAY_MAP: Record<string, number> = {
@@ -40,12 +42,15 @@ export default async function InstructorDashboardPage() {
     groupCount: 0, studentCount: 0, completedSessions: 0, pendingReviews: 0,
   }
 
+  let rating: InstructorRatingSummary | null = null
+
   await Promise.allSettled([
     listInstructorGroups(instructor.id).then((r)      => { groups    = r }),
     getTodayActions(instructor.id).then((r)            => { todayActs = r }),
     listPendingSubmissions(instructor.id, 999).then((r) => { pending  = r }),
     getStudentsRequiringAttention(instructor.id).then((r) => { attention = r }),
     getInstructorDashboardStats(instructor.id).then((r) => { stats   = r }),
+    getInstructorRatingSummary(instructor.id).then((r) => { rating  = r }),
   ])
 
   const activeGroups = groups.filter((g) => !!g.course_title)
@@ -77,18 +82,33 @@ export default async function InstructorDashboardPage() {
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
         {[
-          { label: 'My Groups',          value: stats.groupCount },
-          { label: 'My Students',        value: stats.studentCount },
-          { label: 'Pending Homework',   value: pending.length },
-          { label: 'Sessions Completed', value: totalCompleted },
+          { label: 'My Groups',          value: String(stats.groupCount) },
+          { label: 'My Students',        value: String(stats.studentCount) },
+          { label: 'Pending Homework',   value: String(pending.length) },
+          { label: 'Sessions Completed', value: String(totalCompleted) },
         ].map(({ label, value }) => (
           <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-4 text-center">
             <p className="text-2xl font-bold text-[#0B1F3A]">{value}</p>
             <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
           </div>
         ))}
+        {/* Instructor Rating */}
+        <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-4 text-center">
+          {rating != null ? (
+            <>
+              <p className="text-2xl font-bold text-[#FF8A1F]">⭐ {(rating as InstructorRatingSummary).avg_overall.toFixed(1)}</p>
+              <p className="mt-0.5 text-xs text-[#64748B]">Avg Rating</p>
+              <p className="text-[10px] text-[#94A3B8]">{(rating as InstructorRatingSummary).total_responses} responses</p>
+            </>
+          ) : (
+            <>
+              <p className="text-xl font-bold text-[#94A3B8]">—</p>
+              <p className="mt-0.5 text-xs text-[#64748B]">Avg Rating</p>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Today's Actions */}

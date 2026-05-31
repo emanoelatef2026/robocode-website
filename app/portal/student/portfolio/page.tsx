@@ -1,5 +1,14 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
 import { getOwnPortfolioDetail } from '@/modules/portfolio/queries'
+import { PROJECT_STATUS_CONFIG, BADGE_EMOJIS } from '@/modules/portfolio/types'
+import Link from 'next/link'
+import UploadProjectForm from './UploadProjectForm'
+import ToggleUploadPanel from './ToggleUploadPanel'
+
+const CATEGORY_ICONS: Record<string, string> = {
+  Game: '🎮', AI: '🧠', Website: '🌐', Robotics: '🤖',
+  'Mobile App': '📱', Other: '📁',
+}
 
 export default async function StudentPortfolioPage() {
   const user   = await requirePortalRole('student')
@@ -7,115 +16,150 @@ export default async function StudentPortfolioPage() {
 
   if (!detail) {
     return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg font-semibold text-[#0B1F3A]">No portfolio yet</p>
-          <p className="mt-1 text-sm text-[#64748B]">Your instructor will add projects here once you start submitting work.</p>
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div>
+          <h1 className="text-xl font-bold text-[#0B1F3A]">My Portfolio</h1>
+          <p className="mt-0.5 text-sm text-[#64748B]">Showcase your best work</p>
+        </div>
+        <div className="rounded-xl border border-[#E2E8F0] bg-white p-8 text-center">
+          <p className="text-sm text-[#94A3B8]">No student record found. Contact your administrator.</p>
         </div>
       </div>
     )
   }
 
-  const { student_name, portfolio, projects, achievements, badges } = detail
-  const activeProjects = projects.filter((p) => !p.is_archived)
+  const { projects, badges } = detail
+  const activeProjects  = projects.filter((p) => !p.is_archived)
+  const approved        = activeProjects.filter((p) => p.status === 'approved' || p.status === 'featured').length
+  const pending         = activeProjects.filter((p) => p.status === 'pending_review').length
+  const gradedProjects  = activeProjects.filter((p) => p.final_score != null)
+  const avgScore        = gradedProjects.length > 0
+    ? Math.round(gradedProjects.reduce((sum, p) => sum + (p.final_score ?? 0), 0) / gradedProjects.length)
+    : null
 
   return (
-    <div className="mx-auto max-w-4xl space-y-10 px-4 py-8">
-      <div>
-        <h1 className="text-2xl font-bold text-[#0B1F3A]">{student_name}</h1>
-        {portfolio.bio && <p className="mt-2 text-[#64748B]">{portfolio.bio}</p>}
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold text-[#0B1F3A]">My Portfolio</h1>
+          <p className="mt-0.5 text-sm text-[#64748B]">Showcase your best work</p>
+        </div>
       </div>
 
-      {/* ── Projects ─────────────────────────────────────────────────── */}
-      <section>
-        <h2 className="mb-4 text-lg font-semibold text-[#0B1F3A]">
-          Projects
-          <span className="ml-2 text-sm font-normal text-[#64748B]">({activeProjects.length})</span>
-        </h2>
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: 'Uploaded',  value: activeProjects.length, color: 'text-[#0B1F3A]' },
+          { label: 'Approved',  value: approved,              color: 'text-green-600'  },
+          { label: 'Pending',   value: pending,               color: 'text-amber-600'  },
+          { label: 'Avg Score', value: avgScore != null ? `${avgScore}` : '—', color: 'text-[#FF8A1F]' },
+        ].map(({ label, value, color }) => (
+          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-4 text-center">
+            <p className={`text-2xl font-bold ${color}`}>{value}</p>
+            <p className="mt-0.5 text-xs text-[#94A3B8]">{label}</p>
+          </div>
+        ))}
+      </div>
 
-        {activeProjects.length === 0 ? (
-          <p className="text-sm text-[#64748B]">No projects yet.</p>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {activeProjects.map((p) => (
-              <div key={p.id} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-                {p.thumbnail_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={p.thumbnail_url}
-                    alt={p.title}
-                    className="mb-3 h-32 w-full rounded-lg object-cover"
-                  />
-                )}
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-[#0B1F3A]">{p.title}</h3>
-                  {p.is_featured && (
-                    <span className="shrink-0 rounded-full bg-[#FF8A1F]/10 px-2 py-0.5 text-xs font-medium text-[#FF8A1F]">
-                      Featured
-                    </span>
-                  )}
-                </div>
-                {p.description && (
-                  <p className="mt-1 text-sm text-[#64748B] line-clamp-2">{p.description}</p>
-                )}
-                {p.course_title && (
-                  <p className="mt-2 text-xs text-[#94A3B8]">{p.course_title}</p>
-                )}
-                {p.final_score != null && (
-                  <p className="mt-1 text-xs font-medium text-[#0B1F3A]">Score: {p.final_score}</p>
-                )}
+      {/* Badges */}
+      {badges.length > 0 && (
+        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">My Badges</p>
+          <div className="flex flex-wrap gap-2">
+            {badges.map((b) => (
+              <div key={b.id} className="flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-sm font-medium text-[#0B1F3A]">
+                <span>{BADGE_EMOJIS[b.badge_name] ?? '🏅'}</span>
+                {b.badge_name}
               </div>
             ))}
           </div>
-        )}
-      </section>
-
-      {/* ── Achievements ─────────────────────────────────────────────── */}
-      {achievements.length > 0 && (
-        <section>
-          <h2 className="mb-4 text-lg font-semibold text-[#0B1F3A]">
-            Achievements
-            <span className="ml-2 text-sm font-normal text-[#64748B]">({achievements.length})</span>
-          </h2>
-          <div className="space-y-3">
-            {achievements.map((a) => (
-              <div key={a.id} className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4">
-                {a.image_url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={a.image_url} alt={a.title} className="h-10 w-10 rounded-lg object-cover" />
-                )}
-                <div>
-                  <p className="font-medium text-[#0B1F3A]">{a.title}</p>
-                  {a.description && <p className="text-sm text-[#64748B]">{a.description}</p>}
-                  <p className="mt-1 text-xs text-[#94A3B8] capitalize">
-                    {a.achievement_type} · {new Date(a.date_awarded).toLocaleDateString('en-GB')}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        </div>
       )}
 
-      {/* ── Badges ───────────────────────────────────────────────────── */}
-      {badges.length > 0 && (
-        <section>
-          <h2 className="mb-4 text-lg font-semibold text-[#0B1F3A]">
-            Badges
-            <span className="ml-2 text-sm font-normal text-[#64748B]">({badges.length})</span>
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {badges.map((b) => (
-              <div key={b.id} className="flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-3 py-2">
-                {b.badge_image && (
+      {/* Upload form (collapsible) */}
+      <ToggleUploadPanel />
+
+      {/* Projects grid */}
+      {activeProjects.length === 0 ? (
+        <div className="flex h-48 items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] text-sm text-[#64748B]">
+          No projects yet. Upload your first project above.
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {activeProjects.map((p) => {
+            const statusCfg = p.status ? (PROJECT_STATUS_CONFIG[p.status] ?? PROJECT_STATUS_CONFIG.pending_review) : PROJECT_STATUS_CONFIG.pending_review
+            return (
+              <div key={p.id} className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+                {p.thumbnail_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={b.badge_image} alt={b.badge_name} className="h-5 w-5 rounded-full object-cover" />
+                  <img src={p.thumbnail_url} alt={p.title} className="h-36 w-full object-cover" />
+                ) : (
+                  <div className="flex h-36 items-center justify-center bg-[#F1F5F9] text-4xl">
+                    {CATEGORY_ICONS[p.category ?? 'Other'] ?? '📁'}
+                  </div>
                 )}
-                <span className="text-sm font-medium text-[#0B1F3A]">{b.badge_name}</span>
+                <div className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-[#0B1F3A] leading-tight">{p.title}</h3>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusCfg.cls}`}>
+                      {statusCfg.label}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {p.category && (
+                      <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] text-[#64748B]">
+                        {CATEGORY_ICONS[p.category]} {p.category}
+                      </span>
+                    )}
+                    {p.final_score != null && (
+                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                        Score: {p.final_score}
+                      </span>
+                    )}
+                  </div>
+
+                  {p.description && (
+                    <p className="text-xs text-[#64748B] line-clamp-2">{p.description}</p>
+                  )}
+
+                  {p.instructor_feedback && (
+                    <div className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-xs text-[#64748B]">
+                      <span className="font-medium text-[#0B1F3A]">Feedback:</span> {p.instructor_feedback}
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 flex-wrap pt-1">
+                    {p.project_url && (
+                      <a
+                        href={p.project_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-[#3B82F6] hover:underline"
+                      >
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                          <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                          <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                        </svg>
+                        View Project
+                      </a>
+                    )}
+                    {p.video_url && (
+                      <a
+                        href={p.video_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-red-500 hover:underline"
+                      >
+                        ▶ Demo Video
+                      </a>
+                    )}
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
-        </section>
+            )
+          })}
+        </div>
       )}
     </div>
   )

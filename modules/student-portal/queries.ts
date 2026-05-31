@@ -6,6 +6,8 @@ import type {
   RecentFeedbackItem,
   TimelineEvent,
   StudentDashboardData,
+  StudentAttendanceRecord,
+  CertificateEligibility,
 } from './types'
 
 // ─── Shared student-id lookup ─────────────────────────────────────────────────
@@ -54,17 +56,18 @@ export async function getStudentDashboardData(
 
   const empty: Omit<StudentDashboardData, 'student_id' | 'student_name'> = {
     group_id: null, group_name: null, course_title: null, instructor_name: null,
+    day_of_week: null, group_time: null,
     completed_sessions: 0, total_sessions: 0,
     att_present: 0, att_absent: 0, att_late: 0, att_total: 0, att_pct: 0,
     assignments_total: 0, assignments_submitted: 0, assignments_graded: 0, assignments_avg_score: null,
-    portfolio_projects: 0, overall_pct: null,
+    portfolio_projects: 0, portfolio_reviewed: 0, overall_pct: null,
     upcoming_homework: [], recent_feedback: [],
   }
   if (!groupId) return { student_id: studentId, student_name: studentName, ...empty }
 
   // Group + course info
   const [groupRes, gcRes] = await Promise.all([
-    db.from('groups').select('name').eq('id', groupId).maybeSingle(),
+    db.from('groups').select('name, day_of_week, time').eq('id', groupId).maybeSingle(),
     db.from('group_courses')
       .select('id, instructor_id, course_id, courses!group_courses_course_id_fkey(title)')
       .eq('group_id', groupId)
@@ -207,19 +210,27 @@ export async function getStudentDashboardData(
   }
 
   // Portfolio project count
-  let portfolioProjects = 0
+  let portfolioProjects  = 0
+  let portfolioReviewed  = 0
   const { data: portfolioRow } = await db
     .from('student_portfolios')
     .select('id')
     .eq('student_id', studentId)
     .maybeSingle()
   if (portfolioRow) {
-    const { count } = await db
-      .from('portfolio_projects')
-      .select('id', { count: 'exact', head: true })
-      .eq('portfolio_id', (portfolioRow as any).id)
-      .eq('is_archived', false)
-    portfolioProjects = count ?? 0
+    const [totalRes, reviewedRes] = await Promise.all([
+      db.from('portfolio_projects')
+        .select('id', { count: 'exact', head: true })
+        .eq('portfolio_id', (portfolioRow as any).id)
+        .eq('is_archived', false),
+      db.from('portfolio_projects')
+        .select('id', { count: 'exact', head: true })
+        .eq('portfolio_id', (portfolioRow as any).id)
+        .eq('is_archived', false)
+        .eq('status', 'approved'),
+    ])
+    portfolioProjects = totalRes.count ?? 0
+    portfolioReviewed = reviewedRes.count ?? 0
   }
 
   // Overall from student_course_progress
@@ -250,13 +261,16 @@ export async function getStudentDashboardData(
     submitted_at:     sub.submitted_at,
   }))
 
+  const gRow = groupRes.data as any
   return {
     student_id:         studentId,
     student_name:       studentName,
     group_id:           groupId,
-    group_name:         (groupRes.data as any)?.name ?? null,
+    group_name:         gRow?.name        ?? null,
     course_title:       courseTitle,
     instructor_name:    instructorName,
+    day_of_week:        gRow?.day_of_week ?? null,
+    group_time:         gRow?.time        ?? null,
     completed_sessions: completedSessions,
     total_sessions:     totalSessions,
     att_present:        attPresent,
@@ -269,6 +283,7 @@ export async function getStudentDashboardData(
     assignments_graded:    assignGraded,
     assignments_avg_score: assignAvg,
     portfolio_projects:    portfolioProjects,
+    portfolio_reviewed:    portfolioReviewed,
     overall_pct:           overallPct,
     upcoming_homework:     upcomingHomework,
     recent_feedback:       recentFeedback,
@@ -412,6 +427,70 @@ export async function getStudentTimeline(userId: string): Promise<TimelineEvent[
 
   const events: TimelineEvent[] = []
 
+  // Resolve active group + gc for session numbering
+  const { data: gsRow } = await db
+    .from('group_students')
+    .select('group_id')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .order('joined_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const groupId = (gsRow as any)?.group_id ?? null
+
+  let schedNumMap = new Map<string, number>()
+  let topicMap    = new Map<string, string | null>()
+
+  if (groupId) {
+    const { data: gcRow } = await db
+      .from('group_courses')
+      .select('id')
+      .eq('group_id', groupId)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle()
+    const gcId = (gcRow as any)?.id ?? null
+
+    if (gcId) {
+      const { data: schedRows } = await db
+        .from('schedules')
+        .select('id, scheduled_at')
+        .eq('group_course_id', gcId)
+        .order('scheduled_at', { ascending: true })
+      ;(schedRows ?? []).forEach((s: any, idx: number) => {
+        schedNumMap.set(s.id, idx + 1)
+      })
+
+      // Safe topic enrichment
+      const schedIds = (schedRows ?? []).map((s: any) => s.id as string)
+      if (schedIds.length > 0) {
+        const { data: enrichRows } = await db
+          .from('schedules').select('id, topic').in('id', schedIds)
+        for (const r of enrichRows ?? []) topicMap.set((r as any).id, (r as any).topic ?? null)
+      }
+    }
+  }
+
+  // Attendance events
+  const { data: attRows } = await db
+    .from('attendance_records')
+    .select('id, schedule_id, status, recorded_at')
+    .eq('student_id', studentId)
+    .order('recorded_at', { ascending: false })
+    .limit(15)
+
+  for (const a of (attRows ?? []) as any[]) {
+    const num   = schedNumMap.get(a.schedule_id) ?? null
+    const topic = topicMap.get(a.schedule_id) ?? null
+    const label = num ? `Session ${num}` : 'Session'
+    const title = topic ? `${label}: ${topic}` : label
+    if (a.status === 'present' || a.status === 'late' || a.status === 'makeup') {
+      events.push({ id: `att-${a.id}`, event_type: 'attended', title, subtitle: `${a.status === 'late' ? 'Late' : 'Attended'}`, date: a.recorded_at })
+    } else if (a.status === 'absent') {
+      events.push({ id: `att-${a.id}`, event_type: 'missed', title, subtitle: 'Absent', date: a.recorded_at })
+    }
+  }
+
   // Submissions + gradings
   const { data: subs } = await db
     .from('submissions')
@@ -463,5 +542,126 @@ export async function getStudentTimeline(userId: string): Promise<TimelineEvent[
 
   return events
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 10)
+    .slice(0, 30)
+}
+
+// ─── Student attendance history (session-by-session) ──────────────────────────
+
+export async function getStudentAttendanceHistory(userId: string): Promise<StudentAttendanceRecord[]> {
+  const db        = createServiceClient()
+  const studentId = await resolveStudentId(userId)
+  if (!studentId) return []
+
+  const { data: gsRow } = await db
+    .from('group_students')
+    .select('group_id')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .order('joined_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const groupId = (gsRow as any)?.group_id ?? null
+  if (!groupId) return []
+
+  const { data: gcRow } = await db
+    .from('group_courses')
+    .select('id')
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle()
+  const gcId = (gcRow as any)?.id ?? null
+  if (!gcId) return []
+
+  // Fetch all sessions ordered chronologically to assign session numbers
+  const { data: schedRows } = await db
+    .from('schedules')
+    .select('id, scheduled_at')
+    .eq('group_course_id', gcId)
+    .order('scheduled_at', { ascending: true })
+
+  if (!schedRows || schedRows.length === 0) return []
+
+  const schedIds = schedRows.map((s: any) => s.id as string)
+  const dateMap  = new Map((schedRows as any[]).map((s, idx) => [s.id as string, { num: idx + 1, date: s.scheduled_at }]))
+
+  // Safe topic enrichment
+  const topicMap = new Map<string, string | null>()
+  const { data: enrichRows } = await db
+    .from('schedules').select('id, topic').in('id', schedIds)
+  for (const r of enrichRows ?? []) topicMap.set((r as any).id, (r as any).topic ?? null)
+
+  // Attendance records for student in these sessions
+  const { data: attRows } = await db
+    .from('attendance_records')
+    .select('schedule_id, status')
+    .eq('student_id', studentId)
+    .in('schedule_id', schedIds)
+  const attStatusMap = new Map((attRows ?? []).map((a: any) => [a.schedule_id as string, a.status as string]))
+
+  return schedRows.map((s: any) => ({
+    session_num: dateMap.get(s.id)!.num,
+    date:        dateMap.get(s.id)!.date,
+    topic:       topicMap.get(s.id) ?? null,
+    status:      attStatusMap.get(s.id) ?? null,
+  })).reverse() // newest first
+}
+
+// ─── Certificate eligibility ──────────────────────────────────────────────────
+
+export async function getCertificateEligibility(userId: string): Promise<CertificateEligibility | null> {
+  const db        = createServiceClient()
+  const studentId = await resolveStudentId(userId)
+  if (!studentId) return null
+
+  const { data: gsRow } = await db
+    .from('group_students')
+    .select('group_id')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .order('joined_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const groupId = (gsRow as any)?.group_id ?? null
+  if (!groupId) return null
+
+  const [groupRes, gcRes] = await Promise.all([
+    db.from('groups').select('name').eq('id', groupId).maybeSingle(),
+    db.from('group_courses')
+      .select('id, courses!group_courses_course_id_fkey(title)')
+      .eq('group_id', groupId)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle(),
+  ])
+
+  const gcId = (gcRes.data as any)?.id ?? null
+
+  let totalSessions = 24
+  if (gcId) {
+    const { data: tsRow } = await db
+      .from('group_courses').select('total_sessions').eq('id', gcId).maybeSingle()
+    if (tsRow) totalSessions = (tsRow as any).total_sessions ?? 24
+  }
+
+  let completedSessions = 0
+  if (gcId) {
+    const { count } = await db
+      .from('schedules')
+      .select('id', { count: 'exact', head: true })
+      .eq('group_course_id', gcId)
+      .eq('status', 'completed')
+    completedSessions = count ?? 0
+  }
+
+  const isEligible = completedSessions >= totalSessions
+
+  return {
+    is_eligible:        isEligible,
+    completed_sessions: completedSessions,
+    total_sessions:     totalSessions,
+    sessions_remaining: Math.max(0, totalSessions - completedSessions),
+    group_name:         (groupRes.data as any)?.name ?? null,
+    course_title:       (gcRes.data as any)?.courses?.title ?? null,
+  }
 }

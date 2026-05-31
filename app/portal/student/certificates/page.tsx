@@ -1,8 +1,8 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
 import { getOwnCertificates } from '@/modules/certificates/queries'
+import { getCertificateEligibility } from '@/modules/student-portal/queries'
 
 const TYPE_LABELS: Record<string, string> = {
-  semester_completion: 'Semester Completion',
   course_completion:   'Course Completion',
   competition_award:   'Competition Award',
   achievement:         'Achievement',
@@ -11,15 +11,76 @@ const TYPE_LABELS: Record<string, string> = {
 
 export default async function StudentCertificatesPage() {
   const user         = await requirePortalRole('student')
-  const certificates = await getOwnCertificates(user.id)
+  const [certificates, eligibility] = await Promise.all([
+    getOwnCertificates(user.id),
+    getCertificateEligibility(user.id),
+  ])
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-[#0B1F3A]">My Certificates</h1>
-        <p className="mt-1 text-sm text-[#64748B]">{certificates.length} certificate{certificates.length !== 1 ? 's' : ''}</p>
+        <h1 className="text-xl font-bold text-[#0B1F3A]">Certificates</h1>
+        <p className="mt-0.5 text-sm text-[#64748B]">
+          {certificates.length} certificate{certificates.length !== 1 ? 's' : ''}
+        </p>
       </div>
 
+      {/* Eligibility card */}
+      {eligibility && (
+        <div className={`rounded-xl border p-5 ${eligibility.is_eligible ? 'border-emerald-200 bg-emerald-50' : 'border-[#E2E8F0] bg-white'}`}>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">Certificate Status</p>
+              {eligibility.is_eligible ? (
+                <>
+                  <p className="mt-1 text-lg font-bold text-emerald-700">✓ Eligible for Certificate</p>
+                  <p className="mt-0.5 text-sm text-emerald-600">
+                    {eligibility.completed_sessions} / {eligibility.total_sessions} sessions completed
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="mt-1 text-base font-semibold text-[#0B1F3A]">Not Yet Eligible</p>
+                  <p className="mt-0.5 text-sm text-[#64748B]">
+                    {eligibility.completed_sessions} / {eligibility.total_sessions} sessions completed
+                    {eligibility.sessions_remaining > 0 && (
+                      <> · <span className="font-medium">{eligibility.sessions_remaining} more session{eligibility.sessions_remaining !== 1 ? 's' : ''} needed</span></>
+                    )}
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="shrink-0 text-right">
+              <p className="text-2xl font-bold text-[#0B1F3A]">
+                {eligibility.total_sessions > 0
+                  ? `${Math.round((eligibility.completed_sessions / eligibility.total_sessions) * 100)}%`
+                  : '—'}
+              </p>
+              <p className="text-xs text-[#94A3B8]">progress</p>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          {eligibility.total_sessions > 0 && (
+            <div className="mt-4">
+              <div className="h-2.5 overflow-hidden rounded-full bg-white/60">
+                <div
+                  className={`h-full rounded-full transition-all ${eligibility.is_eligible ? 'bg-emerald-500' : 'bg-[#FF8A1F]'}`}
+                  style={{ width: `${Math.min(100, Math.round((eligibility.completed_sessions / eligibility.total_sessions) * 100))}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {eligibility.course_title && (
+            <p className="mt-2 text-xs text-[#94A3B8]">
+              {eligibility.course_title}{eligibility.group_name ? ` · ${eligibility.group_name}` : ''}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Certificate list */}
       {certificates.length === 0 ? (
         <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
           <p className="text-sm text-[#64748B]">No certificates yet. Complete your sessions to become eligible.</p>

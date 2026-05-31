@@ -70,7 +70,7 @@ export default async function ParentSemestersPage({ searchParams }: Props) {
 
       {history.length === 0 ? (
         <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
-          <p className="text-sm text-[#64748B]">No semester history yet.</p>
+          <p className="text-sm text-[#64748B]">No history yet.</p>
           <p className="mt-1 text-xs text-[#94A3B8]">History will appear once progress is recorded.</p>
         </div>
       ) : (

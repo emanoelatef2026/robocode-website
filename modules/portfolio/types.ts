@@ -39,18 +39,41 @@ export interface PortfolioProject {
 }
 
 export interface PortfolioProjectListItem {
-  id: string
-  title: string
-  description: string | null
+  id:            string
+  title:         string
+  description:   string | null
   thumbnail_url: string | null
-  is_featured: boolean
-  is_public: boolean
-  is_archived: boolean
-  sort_order: number
-  course_title: string | null
+  is_featured:   boolean
+  is_public:     boolean
+  is_archived:   boolean
+  sort_order:    number
+  course_title:  string | null
   semester_name: string | null
-  final_score: number | null
-  created_at: string
+  final_score:   number | null
+  created_at:    string
+  category:      string | null
+  status:        string | null
+  project_url:   string | null
+  video_url:     string | null
+  instructor_feedback: string | null
+  student_id:    string
+  student_name?: string
+}
+
+export const PROJECT_STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
+  pending_review:   { label: 'Pending Review',   cls: 'bg-amber-100  text-amber-700'  },
+  approved:         { label: 'Approved',          cls: 'bg-green-100  text-green-700'  },
+  needs_improvement:{ label: 'Needs Improvement', cls: 'bg-red-100    text-red-700'    },
+  featured:         { label: 'Featured',          cls: 'bg-[#FFF7ED]  text-[#FF8A1F]'  },
+}
+
+export const BADGE_EMOJIS: Record<string, string> = {
+  'Featured Project':    '🏆',
+  'Best Project Video':  '🎥',
+  'Best Game Project':   '🎮',
+  'Best AI Project':     '🧠',
+  'Best Robotics Project': '🤖',
+  'Best Website Project': '🌐',
 }
 
 export interface StudentAchievement {
