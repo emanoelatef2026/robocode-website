@@ -51,14 +51,67 @@ const parentSatisfactionIcon = (
   </svg>
 )
 
+const instrPerfIcon = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+  </svg>
+)
+
+const parentMsgIcon = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+  </svg>
+)
+
+const coursesIcon = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+  </svg>
+)
+
+const assignmentsIcon = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+  </svg>
+)
+
+const attendanceIcon = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+  </svg>
+)
+
+const certificatesIcon = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+  </svg>
+)
+
+const parentsIcon = (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 14.094A5.973 5.973 0 004 17v1H1v-1a3 3 0 013.75-2.906z" />
+  </svg>
+)
+
 const NAV_ITEMS = [
-  { label: "Dashboard",          href: "/portal/team-leader",                           icon: Icons.dashboard,           exact: true },
-  { label: "Students",           href: "/portal/team-leader/students",                  icon: Icons.students },
-  { label: "Instructors",        href: "/portal/team-leader/instructors",               icon: Icons.instructors },
-  { label: "Groups",             href: "/portal/team-leader/groups",                    icon: Icons.groups },
-  { label: "Portfolio",          href: "/portal/team-leader/portfolio",                 icon: Icons.portfolio },
-  { label: "Feedback Center",    href: "/portal/team-leader/parent-feedback",           icon: parentSatisfactionIcon },
-  { label: "Analytics",          href: "/dashboard/analytics",                          icon: analyticsIcon },
+  // ── Branch Operations
+  { label: "Dashboard",           href: "/portal/team-leader",                              icon: Icons.dashboard,          exact: true },
+  { label: "Students",            href: "/portal/team-leader/students",                     icon: Icons.students },
+  { label: "Parents",             href: "/portal/team-leader/parents",                      icon: parentsIcon },
+  { label: "Instructors",         href: "/portal/team-leader/instructors",                  icon: Icons.instructors },
+  { label: "Groups",              href: "/portal/team-leader/groups",                       icon: Icons.groups },
+  // ── Academic
+  { label: "Courses",             href: "/portal/team-leader/courses",                      icon: coursesIcon },
+  { label: "Assignments",         href: "/portal/team-leader/assignments",                  icon: assignmentsIcon },
+  { label: "Attendance",          href: "/portal/team-leader/attendance",                   icon: attendanceIcon },
+  { label: "Portfolio",           href: "/portal/team-leader/portfolio",                    icon: Icons.portfolio },
+  { label: "Certificates",        href: "/portal/team-leader/certificates",                 icon: certificatesIcon },
+  // ── Performance & Feedback
+  { label: "Instr. Performance",  href: "/portal/team-leader/instructor-performance",       icon: instrPerfIcon },
+  { label: "Parent Messages",     href: "/portal/team-leader/parent-feedback?tab=messages", icon: parentMsgIcon },
+  { label: "Satisfaction",        href: "/portal/team-leader/parent-feedback?tab=reviews",  icon: parentSatisfactionIcon },
+  { label: "Analytics",           href: "/portal/team-leader/analytics",                    icon: analyticsIcon },
 ]
 
 function NavLink({

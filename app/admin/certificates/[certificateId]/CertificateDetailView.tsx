@@ -10,7 +10,7 @@ interface Props {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  semester_completion: 'Semester Completion',
+  semester_completion: 'Course Completion',
   course_completion:   'Course Completion',
   competition_award:   'Competition Award',
   achievement:         'Achievement',
@@ -89,7 +89,7 @@ export default function CertificateDetailView({ certificate }: Props) {
               : 'No expiry'}
           </Field>
           {certificate.course_title && <Field label="Course">{certificate.course_title}</Field>}
-          {certificate.semester_name && <Field label="Semester">{certificate.semester_name}</Field>}
+          {certificate.semester_name && <Field label="Learning Period">{certificate.semester_name}</Field>}
           {certificate.achievement_title && <Field label="Achievement">{certificate.achievement_title}</Field>}
         </div>
 

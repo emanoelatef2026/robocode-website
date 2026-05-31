@@ -12,7 +12,7 @@ interface Props {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  semester_completion: 'Semester Completion',
+  semester_completion: 'Course Completion',
   course_completion:   'Course Completion',
   competition_award:   'Competition Award',
   achievement:         'Achievement',

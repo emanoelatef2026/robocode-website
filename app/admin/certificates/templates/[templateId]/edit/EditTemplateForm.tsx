@@ -14,7 +14,7 @@ interface Props {
 const inputClass = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
 
 const CERT_TYPES = [
-  { value: 'semester_completion', label: 'Semester Completion' },
+  { value: 'semester_completion', label: 'Course Completion' },
   { value: 'course_completion',   label: 'Course Completion' },
   { value: 'competition_award',   label: 'Competition Award' },
   { value: 'achievement',         label: 'Achievement' },

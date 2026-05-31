@@ -7,7 +7,7 @@ interface Props {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  semester_completion: 'Semester Completion',
+  semester_completion: 'Course Completion',
   course_completion:   'Course Completion',
   competition_award:   'Competition Award',
   achievement:         'Achievement',
@@ -54,7 +54,6 @@ export default async function ParentChildCertificatesPage({ params }: Props) {
                 <p className="mt-0.5 text-sm text-[#64748B]">
                   {TYPE_LABELS[c.certificate_type] ?? c.certificate_type}
                   {c.course_title && ` · ${c.course_title}`}
-                  {c.semester_name && ` · ${c.semester_name}`}
                 </p>
                 <p className="mt-1 text-xs text-[#94A3B8]">
                   Issued {new Date(c.issued_at).toLocaleDateString('en-GB')} · <span className="font-mono">{c.certificate_code}</span>

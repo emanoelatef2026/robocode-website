@@ -1,6 +1,7 @@
 import { requirePermission } from '@/modules/rbac/guards'
 import { listAllProjectsForTL } from '@/modules/portfolio/queries'
 import { PROJECT_STATUS_CONFIG, BADGE_EMOJIS } from '@/modules/portfolio/types'
+import { getPortfolioStatusCounts } from '@/modules/tl-dashboard/queries'
 import Link from 'next/link'
 import TLProjectReviewForm from './TLProjectReviewForm'
 
@@ -26,13 +27,35 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
   const tab  = (sp.tab ?? 'pending_review') as TabKey
   const user = await requirePermission('manage_portfolio')
 
-  const projects = await listAllProjectsForTL(user.branchIds, tab)
+  const [projects, counts] = await Promise.all([
+    listAllProjectsForTL(user.branchIds, tab),
+    getPortfolioStatusCounts(user.branchIds),
+  ])
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-[#0B1F3A]">Portfolio Review</h1>
+        <h1 className="text-xl font-bold text-[#0B1F3A]">Portfolio Operations</h1>
         <p className="mt-0.5 text-sm text-[#64748B]">Review and feature student projects across your branch</p>
+      </div>
+
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { key: 'pending_review',    label: 'Pending Review',    color: 'text-amber-600'  },
+          { key: 'approved',          label: 'Approved',          color: 'text-green-600'  },
+          { key: 'needs_improvement', label: 'Needs Improvement', color: 'text-red-600'    },
+          { key: 'featured',          label: 'Featured',          color: 'text-[#FF8A1F]'  },
+        ].map(({ key, label, color }) => (
+          <Link
+            key={key}
+            href={`/portal/team-leader/portfolio?tab=${key}`}
+            className={`rounded-xl border bg-white p-4 transition hover:border-[#CBD5E1] ${tab === key ? 'border-[#FF8A1F]' : 'border-[#E2E8F0]'}`}
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
+            <p className={`mt-1 text-2xl font-bold ${color}`}>{counts[key] ?? 0}</p>
+          </Link>
+        ))}
       </div>
 
       {/* Status tabs */}
