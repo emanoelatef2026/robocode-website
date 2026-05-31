@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
-import { getSupabaseAdmin } from "@/lib/supabase/server";
+import { Resend }       from "resend";
+import { createWebsiteLead } from "@/modules/leads/actions";
 
 export const dynamic = "force-dynamic";
 export const runtime  = "nodejs";
@@ -27,22 +27,19 @@ export async function POST(request: Request) {
     if (!body.day?.trim())   return validation("Preferred day is required.");
     if (!body.time?.trim())  return validation("Preferred time is required.");
 
-    // 1. Save to Supabase
-    const { error: dbError } = await getSupabaseAdmin()
-      .from("trial_bookings")
-      .insert({
-        student_name:   body.name.trim(),
-        age:            body.age ? Number(body.age) : null,
-        school:         body.school?.trim()  || null,
-        phone:          body.phone.trim(),
-        another_phone:  body.phone2?.trim()  || null,
-        preferred_day:  body.day.trim(),
-        preferred_time: body.time.trim(),
-        notes:          body.notes?.trim()   || null,
-      });
+    // 1. Save to LMS leads (single source of truth)
+    const lead = await createWebsiteLead({
+      child_name:     body.name.trim(),
+      phone:          body.phone.trim(),
+      whatsapp:       body.phone.trim(),
+      email:          undefined,
+      age:            body.age ? Number(body.age) : undefined,
+      notes:          body.notes?.trim() || undefined,
+      preferred_day:  body.day.trim(),
+      preferred_time: body.time.trim(),
+    });
 
-    if (dbError) {
-      console.error("[book-session] Supabase error:", dbError.message);
+    if (!lead) {
       return NextResponse.json(
         { error: "Failed to save booking. Please try again." },
         { status: 500 }
@@ -64,7 +61,6 @@ export async function POST(request: Request) {
     });
 
     if (emailError) {
-      // Booking is already saved — log the email failure but don't fail the request
       console.error("[book-session] Email error:", emailError);
     }
 
@@ -167,7 +163,6 @@ function buildEmail(d: BookingBody, submittedAt: string): string {
               <tr><td style="padding-top:24px;">
                 <table width="100%" cellpadding="0" cellspacing="0">
                   ${row("Age", d.age ? `${d.age} years old` : "")}
-                  ${row("School", d.school)}
                   ${row("Phone (Call & WhatsApp)", d.phone)}
                   ${row("Second Phone Number", d.phone2)}
                   ${row("Notes", d.notes)}
