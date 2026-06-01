@@ -11,6 +11,7 @@ import { notFound } from 'next/navigation'
 import GroupDetailView from './GroupDetailView'
 import GroupStudentsTable from './GroupStudentsTable'
 import AcademicConfigCard from './AcademicConfigCard'
+import GroupHealthCard from './GroupHealthCard'
 import Link from 'next/link'
 
 interface Props { params: Promise<{ id: string }> }
@@ -71,7 +72,10 @@ export default async function GroupDetailPage({ params }: Props) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        <GroupDetailView group={group} />
+        <div className="space-y-5">
+          <GroupDetailView group={group} />
+          <GroupHealthCard groupId={id} capacity={group.capacity ?? null} />
+        </div>
         <GroupStudentsTable
           group={group}
           enrollments={enrollments}

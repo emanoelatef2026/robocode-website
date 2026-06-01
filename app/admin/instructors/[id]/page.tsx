@@ -4,6 +4,7 @@ import { getUserConfigurablePermissions } from '@/modules/user-permissions/queri
 import { requirePermission } from '@/modules/rbac/guards'
 import { notFound } from 'next/navigation'
 import InstructorEditForm from './InstructorEditForm'
+import InstructorWorkloadCard from './InstructorWorkloadCard'
 import Link from 'next/link'
 
 interface Props { params: Promise<{ id: string }> }
@@ -21,15 +22,15 @@ export default async function InstructorEditPage({ params }: Props) {
     listGroups({ branchId: instructor.branch_id, perPage: 300, status: 'active' }),
   ])
 
-  const assignedIds      = new Set(groups.map((g) => g.id))
-  const availableGroups  = branchGroupsResult.data.filter((g) => !assignedIds.has(g.id))
+  const assignedIds     = new Set(groups.map((g) => g.id))
+  const availableGroups = branchGroupsResult.data.filter((g) => !assignedIds.has(g.id))
 
   const displayName = instructor.first_name && instructor.last_name
     ? `${instructor.first_name} ${instructor.last_name}`
     : instructor.user_email
 
   return (
-    <div className="mx-auto max-w-xl">
+    <div className="mx-auto max-w-2xl">
       <div className="mb-6">
         <Link href="/admin/instructors" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← Instructors
@@ -38,12 +39,16 @@ export default async function InstructorEditPage({ params }: Props) {
         <p className="text-sm text-[#64748B]">{instructor.user_email} · {instructor.branch_name}</p>
       </div>
 
-      <InstructorEditForm
-        instructor={instructor}
-        assignedGroups={groups}
-        availableGroups={availableGroups}
-        currentPermissions={currentPermissions}
-      />
+      <div className="space-y-5">
+        <InstructorWorkloadCard instructorId={id} userId={instructor.user_id} />
+
+        <InstructorEditForm
+          instructor={instructor}
+          assignedGroups={groups}
+          availableGroups={availableGroups}
+          currentPermissions={currentPermissions}
+        />
+      </div>
     </div>
   )
 }

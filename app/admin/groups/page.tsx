@@ -1,14 +1,15 @@
-import { listGroups } from '@/modules/groups/queries'
-import { listBranches } from '@/modules/branches/queries'
-import { listInstructors } from '@/modules/instructors/queries'
-import { requirePermission } from '@/modules/rbac/guards'
-import PageHeader from '@/components/admin/PageHeader'
-import StatusBadge from '@/components/admin/StatusBadge'
-import EmptyState from '@/components/admin/EmptyState'
-import Pagination from '@/components/admin/Pagination'
-import SearchInput from '@/components/admin/SearchInput'
-import AdminFilterSelect from '@/components/admin/AdminFilterSelect'
-import Link from 'next/link'
+import { createServiceClient }   from '@/lib/supabase/service'
+import { listGroups }             from '@/modules/groups/queries'
+import { listBranches }           from '@/modules/branches/queries'
+import { listInstructors }        from '@/modules/instructors/queries'
+import { requirePermission }      from '@/modules/rbac/guards'
+import PageHeader                 from '@/components/admin/PageHeader'
+import StatusBadge                from '@/components/admin/StatusBadge'
+import EmptyState                 from '@/components/admin/EmptyState'
+import Pagination                 from '@/components/admin/Pagination'
+import SearchInput                from '@/components/admin/SearchInput'
+import AdminFilterSelect          from '@/components/admin/AdminFilterSelect'
+import Link                       from 'next/link'
 
 interface Props {
   searchParams: Promise<{
@@ -21,6 +22,33 @@ const GROUP_STATUSES = ['forming', 'active', 'completed', 'cancelled']
 const DAYS: Record<string, string> = {
   monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu',
   friday: 'Fri', saturday: 'Sat', sunday: 'Sun',
+}
+
+// Lightweight health signals for list view (no heavy computation)
+async function getGroupHealthSignals(groupIds: string[]): Promise<Record<string, { score: number; color: string; label: string }>> {
+  if (!groupIds.length) return {}
+  const db = createServiceClient()
+
+  const [giRes, gcRes] = await Promise.all([
+    db.from('group_instructors').select('group_id').in('group_id', groupIds),
+    db.from('group_courses').select('group_id').in('group_id', groupIds).eq('status', 'active'),
+  ])
+
+  const withInst   = new Set((giRes.data ?? []).map((r: any) => r.group_id as string))
+  const withCourse = new Set((gcRes.data ?? []).map((r: any) => r.group_id as string))
+
+  const result: Record<string, { score: number; color: string; label: string }> = {}
+  for (const id of groupIds) {
+    const hasInst   = withInst.has(id)
+    const hasCourse = withCourse.has(id)
+    const score     = (hasInst ? 50 : 0) + (hasCourse ? 50 : 0)
+    result[id] = {
+      score,
+      color: score === 100 ? 'bg-emerald-400' : score >= 50 ? 'bg-amber-400' : 'bg-red-400',
+      label: score === 100 ? 'Healthy' : score >= 50 ? 'Attention' : 'Critical',
+    }
+  }
+  return result
 }
 
 export default async function GroupsPage({ searchParams }: Props) {
@@ -38,6 +66,9 @@ export default async function GroupsPage({ searchParams }: Props) {
     listBranches({ perPage: 100 }),
     listInstructors({ perPage: 200 }),
   ])
+
+  const activeGroupIds = result.data.filter(g => g.status === 'active').map(g => g.id)
+  const healthSignals  = await getGroupHealthSignals(activeGroupIds)
 
   return (
     <div>
@@ -85,6 +116,7 @@ export default async function GroupsPage({ searchParams }: Props) {
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Time</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-[#64748B]">Students</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Health</th>
                     <th className="px-4 py-3" />
                   </tr>
                 </thead>
@@ -103,6 +135,14 @@ export default async function GroupsPage({ searchParams }: Props) {
                       <td className="px-4 py-3 text-[#64748B]">{group.time ?? '—'}</td>
                       <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{group.student_count}</td>
                       <td className="px-4 py-3"><StatusBadge status={group.status} /></td>
+                      <td className="px-4 py-3">
+                        {group.status === 'active' && healthSignals[group.id] ? (
+                          <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium text-white ${healthSignals[group.id].color}`}>
+                            <span className="h-1.5 w-1.5 rounded-full bg-white opacity-80" />
+                            {healthSignals[group.id].label}
+                          </span>
+                        ) : <span className="text-xs text-[#94A3B8]">—</span>}
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <Link href={`/admin/groups/${group.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">Manage</Link>
                       </td>

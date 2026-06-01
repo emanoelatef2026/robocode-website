@@ -14,7 +14,7 @@ interface Student {
   image_url:               string;
   achievement_title:       string | null;
   achievement_description: string | null;
-  project_link:            string | null;
+  youtube_url:             string | null;
 }
 
 // ── Student card ──────────────────────────────────────────────────────────────
@@ -50,9 +50,9 @@ function StudentCard({ student }: { student: Student }) {
           </p>
         )}
 
-        {student.project_link && (
+        {student.youtube_url && (
           <a
-            href={student.project_link}
+            href={student.youtube_url}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}

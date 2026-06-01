@@ -12,14 +12,14 @@ export async function PATCH(
     const { id } = await params;
     const formData = await request.formData();
 
-    const title       = (formData.get("title")       as string)?.trim();
-    const description = (formData.get("description") as string)?.trim() || null;
-    const techRaw     = (formData.get("technologies") as string)?.trim() || "";
-    const video_url   = (formData.get("video_url")   as string)?.trim() || null;
-    const difficulty  = (formData.get("difficulty")  as string) || null;
-    const age_group   = (formData.get("age_group")   as string)?.trim() || null;
-    const featured    = formData.get("featured") === "true";
-    const imageFile   = formData.get("image") as File | null;
+    const title        = (formData.get("title")        as string)?.trim();
+    const description  = (formData.get("description")  as string)?.trim() || null;
+    const techRaw      = (formData.get("technologies") as string)?.trim() || "";
+    const video_url    = (formData.get("video_url")    as string)?.trim() || null;
+    const difficulty   = (formData.get("difficulty")   as string) || null;
+    const age_group    = (formData.get("age_group")    as string)?.trim() || null;
+    const featured     = formData.get("featured") === "true";
+    const imageFile    = formData.get("image") as File | null;
 
     if (!title) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -33,7 +33,6 @@ export async function PATCH(
       title, description, technologies, video_url, difficulty, age_group, featured,
     };
 
-    // Only update image if a new one was provided
     if (imageFile && imageFile.size > 0) {
       const bytes  = await imageFile.arrayBuffer();
       const buffer = Buffer.from(bytes);
@@ -43,12 +42,12 @@ export async function PATCH(
         .from("projects")
         .upload(path, buffer, { contentType: imageFile.type, upsert: false });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("[studio/projects PATCH] storage error:", uploadError.message);
+        throw uploadError;
+      }
 
-      const { data: urlData } = getSupabaseAdmin().storage
-        .from("projects")
-        .getPublicUrl(path);
-
+      const { data: urlData } = getSupabaseAdmin().storage.from("projects").getPublicUrl(path);
       updates.image_url = urlData.publicUrl;
     }
 
@@ -59,12 +58,15 @@ export async function PATCH(
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("[studio/projects PATCH] table=student_projects id=%s error_code=%s message=%s", id, error.code, error.message);
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 500 });
+    }
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error("[projects PATCH]", err);
-    return NextResponse.json({ error: "Failed to update project" }, { status: 500 });
+    console.error("[studio/projects PATCH] unexpected:", err);
+    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
   }
 }
 
@@ -80,11 +82,14 @@ export async function DELETE(
       .delete()
       .eq("id", id);
 
-    if (error) throw error;
+    if (error) {
+      console.error("[studio/projects DELETE] table=student_projects id=%s error_code=%s message=%s", id, error.code, error.message);
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[projects DELETE]", err);
-    return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
+    console.error("[studio/projects DELETE] unexpected:", err);
+    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
   }
 }

@@ -18,6 +18,18 @@ export interface Course {
   created_at: string
   updated_at: string
   branch_name?: string | null
+  // Resource center fields
+  drive_url: string | null
+  curriculum_folder: string | null
+  instructor_notes: string | null
+  resource_links: Array<{ label: string; url: string }> | null
+  // Extended resource fields
+  session_plans: string | null
+  teaching_guide: string | null
+  expected_outcomes: string | null
+  skills_covered: string | null
+  prerequisites: string | null
+  course_roadmap: string | null
 }
 
 export interface CourseListItem {

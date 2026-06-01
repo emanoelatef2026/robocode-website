@@ -93,6 +93,72 @@ export default function CourseDetailView({ course }: Props) {
             </label>
           </div>
 
+          {/* ── Resource Center ─────────────────────────────────────── */}
+          <div className="border-t border-[#E2E8F0] pt-4 mt-2">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Resource Center</p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Google Drive Folder URL</label>
+                <input
+                  name="drive_url"
+                  type="url"
+                  defaultValue={course.drive_url ?? ''}
+                  placeholder="https://drive.google.com/…"
+                  className={cls}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Curriculum Folder Link</label>
+                <input
+                  name="curriculum_folder"
+                  type="url"
+                  defaultValue={course.curriculum_folder ?? ''}
+                  placeholder="Link to curriculum or lesson plan folder"
+                  className={cls}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Instructor Notes</label>
+                <textarea name="instructor_notes" rows={2} defaultValue={course.instructor_notes ?? ''} placeholder="Teaching notes, tips for instructors…" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Session Plans</label>
+                <textarea name="session_plans" rows={2} defaultValue={course.session_plans ?? ''} placeholder="How sessions are structured, duration, activities…" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Teaching Guide</label>
+                <textarea name="teaching_guide" rows={2} defaultValue={course.teaching_guide ?? ''} placeholder="Methodologies, examples, classroom tips…" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Prerequisites</label>
+                <textarea name="prerequisites" rows={1} defaultValue={course.prerequisites ?? ''} placeholder="What students should know before starting…" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Expected Outcomes</label>
+                <textarea name="expected_outcomes" rows={2} defaultValue={course.expected_outcomes ?? ''} placeholder="What students will be able to do after completing this course…" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Skills Covered</label>
+                <input name="skills_covered" defaultValue={course.skills_covered ?? ''} placeholder="e.g. Python, Scratch, robotics, problem solving" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Course Roadmap</label>
+                <textarea name="course_roadmap" rows={2} defaultValue={course.course_roadmap ?? ''} placeholder="Sequence of topics, milestones, progression path…" className={cls} />
+              </div>
+
+              <input type="hidden" name="resource_links" value={JSON.stringify(course.resource_links ?? [])} />
+            </div>
+          </div>
+
           <div className="flex justify-end">
             <SubmitButton label="Save Changes" />
           </div>

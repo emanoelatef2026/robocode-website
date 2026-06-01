@@ -73,15 +73,26 @@ export async function getCourse(id: string): Promise<Course | null> {
   const db = createServiceClient()
   const { data, error } = await db
     .from('courses')
-    .select(`*`)
+    .select(`id, branch_id, title, description, code, category, level, estimated_hours, thumbnail_url, scope, is_published, created_by, deleted_at, created_at, updated_at, drive_url, curriculum_folder, instructor_notes, resource_links, session_plans, teaching_guide, expected_outcomes, skills_covered, prerequisites, course_roadmap`)
     .eq('id', id)
     .is('deleted_at', null)
     .single()
 
   if (error || !data) return null
 
+  const d = data as any
   return {
-    ...(data as any),
-    branch_name: null,
+    ...d,
+    branch_name:       null,
+    drive_url:         d.drive_url         ?? null,
+    curriculum_folder: d.curriculum_folder ?? null,
+    instructor_notes:  d.instructor_notes  ?? null,
+    resource_links:    d.resource_links    ?? null,
+    session_plans:     d.session_plans     ?? null,
+    teaching_guide:    d.teaching_guide    ?? null,
+    expected_outcomes: d.expected_outcomes ?? null,
+    skills_covered:    d.skills_covered    ?? null,
+    prerequisites:     d.prerequisites     ?? null,
+    course_roadmap:    d.course_roadmap    ?? null,
   } as Course
 }

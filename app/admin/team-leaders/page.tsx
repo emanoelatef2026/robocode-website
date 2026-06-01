@@ -76,7 +76,18 @@ export default async function TeamLeadersPage({ searchParams }: Props) {
                         {tl.first_name && tl.last_name ? `${tl.first_name} ${tl.last_name}` : tl.email}
                       </td>
                       <td className="px-4 py-3 text-[#64748B]">{tl.phone ?? '—'}</td>
-                      <td className="px-4 py-3 text-[#64748B]">{tl.branch_name}</td>
+                      <td className="px-4 py-3 text-[#64748B]">
+                        {tl.branch_names.length > 1 ? (
+                          <span title={tl.branch_names.join(', ')}>
+                            {tl.branch_names[0]}
+                            <span className="ml-1 rounded-full bg-[#E2E8F0] px-1.5 py-0.5 text-[10px] font-semibold text-[#64748B]">
+                              +{tl.branch_names.length - 1}
+                            </span>
+                          </span>
+                        ) : (
+                          tl.branch_name || '—'
+                        )}
+                      </td>
                       <td className="px-4 py-3"><StatusBadge status={tl.status} /></td>
                       <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{tl.active_groups}</td>
                       <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{tl.active_students}</td>

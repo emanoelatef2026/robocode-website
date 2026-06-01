@@ -4,6 +4,9 @@ import { getSupabaseAdmin } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 export const runtime  = "nodejs";
 
+// DB columns: id, name, grade, country, image_url, youtube_url, featured,
+//             sort_order, created_at, achievement_title, achievement_description
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -19,16 +22,16 @@ export async function PATCH(
       const name      = (fd.get("name")                    as string)?.trim();
       const achTitle  = (fd.get("achievement_title")       as string)?.trim();
       const achDesc   = (fd.get("achievement_description") as string)?.trim();
-      const projLink  = (fd.get("project_link")            as string)?.trim();
+      const ytUrl     = (fd.get("youtube_url")             as string)?.trim();
       const sortOrder = fd.get("sort_order");
-      const isActive  = fd.get("is_active");
+      const featured  = fd.get("featured");
 
-      if (name)       update.name                    = name;
+      if (name)                                         update.name                    = name;
       if (achTitle  !== undefined && achTitle  !== null) update.achievement_title       = achTitle  || null;
       if (achDesc   !== undefined && achDesc   !== null) update.achievement_description = achDesc   || null;
-      if (projLink  !== undefined && projLink  !== null) update.project_link            = projLink  || null;
+      if (ytUrl     !== undefined && ytUrl     !== null) update.youtube_url             = ytUrl     || null;
       if (sortOrder !== null) update.sort_order = parseInt(sortOrder as string, 10);
-      if (isActive  !== null) update.is_active  = isActive === "true";
+      if (featured  !== null) update.featured   = featured === "true";
 
       if (imageFile && imageFile.size > 0) {
         const buffer = Buffer.from(await imageFile.arrayBuffer());
@@ -37,12 +40,15 @@ export async function PATCH(
         const { error: uploadErr } = await getSupabaseAdmin().storage
           .from("students")
           .upload(path, buffer, { contentType: imageFile.type, upsert: false });
-        if (uploadErr) throw uploadErr;
+
+        if (uploadErr) {
+          console.error("[studio/students PATCH] storage error:", uploadErr.message);
+          throw uploadErr;
+        }
 
         const { data: urlData } = getSupabaseAdmin().storage.from("students").getPublicUrl(path);
         update.image_url = urlData.publicUrl;
 
-        // Delete old image
         const { data: row } = await getSupabaseAdmin()
           .from("featured_students")
           .select("image_url")
@@ -55,7 +61,7 @@ export async function PATCH(
       }
     } else {
       const body    = await request.json() as Record<string, unknown>;
-      const allowed = ["name", "achievement_title", "achievement_description", "project_link", "is_active", "sort_order"];
+      const allowed = ["name", "achievement_title", "achievement_description", "youtube_url", "featured", "sort_order"];
       for (const k of allowed) {
         if (k in body) update[k] = body[k];
       }
@@ -72,12 +78,15 @@ export async function PATCH(
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("[studio/students PATCH] table=featured_students id=%s error_code=%s message=%s", id, error.code, error.message);
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 500 });
+    }
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error("[studio/students PATCH]", err);
-    return NextResponse.json({ error: "Failed to update student" }, { status: 500 });
+    console.error("[studio/students PATCH] unexpected:", err);
+    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
   }
 }
 
@@ -98,7 +107,11 @@ export async function DELETE(
       .from("featured_students")
       .delete()
       .eq("id", id);
-    if (error) throw error;
+
+    if (error) {
+      console.error("[studio/students DELETE] table=featured_students id=%s error_code=%s message=%s", id, error.code, error.message);
+      return NextResponse.json({ error: error.message, code: error.code }, { status: 500 });
+    }
 
     if (student?.image_url) {
       const path = new URL(student.image_url).pathname.split("/students/")[1];
@@ -107,7 +120,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[studio/students DELETE]", err);
-    return NextResponse.json({ error: "Failed to delete student" }, { status: 500 });
+    console.error("[studio/students DELETE] unexpected:", err);
+    return NextResponse.json({ error: "Unexpected server error" }, { status: 500 });
   }
 }

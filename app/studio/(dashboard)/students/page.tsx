@@ -26,8 +26,8 @@ interface Student {
   image_url:               string;
   achievement_title:       string | null;
   achievement_description: string | null;
-  project_link:            string | null;
-  is_active:               boolean;
+  youtube_url:             string | null;
+  featured:                boolean;
   sort_order:              number;
   created_at:              string;
 }
@@ -42,7 +42,7 @@ const blank = {
   name:                    "",
   achievement_title:       "",
   achievement_description: "",
-  project_link:            "",
+  youtube_url:             "",
   sort_order:              "0",
 };
 
@@ -61,9 +61,9 @@ function EditModal({
     name:                    student.name,
     achievement_title:       student.achievement_title       ?? "",
     achievement_description: student.achievement_description ?? "",
-    project_link:            student.project_link            ?? "",
+    youtube_url:             student.youtube_url             ?? "",
     sort_order:              String(student.sort_order),
-    is_active:               student.is_active,
+    featured:                student.featured,
   });
   const [file,    setFile]    = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -84,9 +84,9 @@ function EditModal({
     fd.append("name",                    form.name);
     fd.append("achievement_title",       form.achievement_title);
     fd.append("achievement_description", form.achievement_description);
-    fd.append("project_link",            form.project_link);
+    fd.append("youtube_url",             form.youtube_url);
     fd.append("sort_order",              form.sort_order);
-    fd.append("is_active",               String(form.is_active));
+    fd.append("featured",                String(form.featured));
     if (file) fd.append("image", file);
 
     const res = await fetch(`/api/studio/students/${student.id}`, { method: "PATCH", body: fd });
@@ -169,8 +169,8 @@ function EditModal({
           </div>
 
           <div>
-            <label className={LABEL}>Project Link (optional)</label>
-            <input value={form.project_link} onChange={(e) => setForm({ ...form, project_link: e.target.value })} className={INPUT} placeholder="https://…" type="url" />
+            <label className={LABEL}>YouTube / Project URL (optional)</label>
+            <input value={form.youtube_url} onChange={(e) => setForm({ ...form, youtube_url: e.target.value })} className={INPUT} placeholder="https://youtube.com/…" type="url" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -182,16 +182,16 @@ function EditModal({
               <label className="flex cursor-pointer items-center gap-2">
                 <div
                   role="switch"
-                  aria-checked={form.is_active}
-                  onClick={() => setForm({ ...form, is_active: !form.is_active })}
+                  aria-checked={form.featured}
+                  onClick={() => setForm({ ...form, featured: !form.featured })}
                   className={[
                     "relative h-5 w-9 cursor-pointer rounded-full transition-colors duration-200",
-                    form.is_active ? "bg-[#38BDF8]" : "bg-gray-200",
+                    form.featured ? "bg-[#38BDF8]" : "bg-gray-200",
                   ].join(" ")}
                 >
                   <span className={[
                     "absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-200",
-                    form.is_active ? "translate-x-4" : "translate-x-0.5",
+                    form.featured ? "translate-x-4" : "translate-x-0.5",
                   ].join(" ")} />
                 </div>
                 <span className="text-[12px] font-medium text-gray-600">Active</span>
@@ -254,7 +254,7 @@ function SortableStudentCard({
       className={[
         "overflow-hidden rounded-xl border bg-white shadow-sm transition-shadow",
         isDragging ? "border-[#38BDF8] shadow-lg opacity-70" : "border-gray-100",
-        !student.is_active ? "opacity-60" : "",
+        !student.featured ? "opacity-60" : "",
       ].join(" ")}
     >
       {/* Photo */}
@@ -269,9 +269,9 @@ function SortableStudentCard({
         {/* Status badge */}
         <span className={[
           "absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold",
-          student.is_active ? "bg-emerald-500 text-white" : "bg-gray-400 text-white",
+          student.featured ? "bg-emerald-500 text-white" : "bg-gray-400 text-white",
         ].join(" ")}>
-          {student.is_active ? "Active" : "Hidden"}
+          {student.featured ? "Active" : "Hidden"}
         </span>
         {/* Drag handle */}
         <button
@@ -295,8 +295,8 @@ function SortableStudentCard({
         {student.achievement_description && (
           <p className="mt-1 line-clamp-2 text-[11px] text-gray-400">{student.achievement_description}</p>
         )}
-        {student.project_link && (
-          <p className="mt-1 truncate text-[10px] text-gray-300">{student.project_link}</p>
+        {student.youtube_url && (
+          <p className="mt-1 truncate text-[10px] text-gray-300">{student.youtube_url}</p>
         )}
         <p className="mt-1 text-[10px] text-gray-300">Order: {student.sort_order}</p>
 
@@ -312,12 +312,12 @@ function SortableStudentCard({
             disabled={toggling === student.id}
             className={[
               "flex-1 rounded-lg border py-1.5 text-[11px] font-semibold transition disabled:opacity-50",
-              student.is_active
+              student.featured
                 ? "border-emerald-200 bg-emerald-50/60 text-emerald-600 hover:bg-emerald-100"
                 : "border-gray-200 text-gray-400 hover:border-emerald-200 hover:text-emerald-600",
             ].join(" ")}
           >
-            {toggling === student.id ? "…" : student.is_active ? "Hide" : "Show"}
+            {toggling === student.id ? "…" : student.featured ? "Hide" : "Show"}
           </button>
           <button
             onClick={() => onDelete(student.id)}
@@ -368,7 +368,7 @@ export default function StudentsPage() {
     fd.append("name",                    form.name);
     fd.append("achievement_title",       form.achievement_title);
     fd.append("achievement_description", form.achievement_description);
-    fd.append("project_link",            form.project_link);
+    fd.append("youtube_url",             form.youtube_url);
     fd.append("sort_order",              form.sort_order);
 
     const res = await fetch("/api/studio/students", { method: "POST", body: fd });
@@ -398,7 +398,7 @@ export default function StudentsPage() {
     await fetch(`/api/studio/students/${student.id}`, {
       method:  "PATCH",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ is_active: !student.is_active }),
+      body:    JSON.stringify({ featured: !student.featured }),
     });
     setToggling(null);
     load();
@@ -454,8 +454,8 @@ export default function StudentsPage() {
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="lg:col-span-2">
-              <label className={LABEL}>Project Link (optional)</label>
-              <input value={form.project_link} onChange={(e) => setForm({ ...form, project_link: e.target.value })} placeholder="https://…" type="url" className={INPUT} />
+              <label className={LABEL}>YouTube / Project URL (optional)</label>
+              <input value={form.youtube_url} onChange={(e) => setForm({ ...form, youtube_url: e.target.value })} placeholder="https://youtube.com/…" type="url" className={INPUT} />
             </div>
             <div>
               <label className={LABEL}>Sort Order</label>

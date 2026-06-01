@@ -2,21 +2,30 @@
 // One user_roles row per assigned branch — so a multi-branch TL has multiple rows.
 // No dedicated team_leaders table — everything lives in users + profiles + user_roles.
 // Status is tracked via users.metadata->>'tl_status'.
+//
+// NORMALIZED MODEL (fixed in Sprint 34C):
+//   listTeamLeaders() returns ONE record per unique user_id.
+//   branch_ids / branch_names are arrays aggregated from all user_roles rows.
+//   active_groups / active_students are TOTALS across all assigned branches.
 
 export type TeamLeaderStatus = 'active' | 'inactive'
 
-// ─── List item ───────────────────────────────────────────────────────────────
-// listTeamLeaders returns one row per user_roles entry (one per branch assignment).
+// ─── List item (NORMALIZED: one per user, all branches aggregated) ──────────
 
 export interface TeamLeaderListItem {
-  user_role_id:    string
+  user_role_id:    string          // first user_roles row id (for legacy compat)
   user_id:         string
+  // Multi-branch: arrays of all assigned branches
+  branch_ids:      string[]
+  branch_names:    string[]
+  // Convenience: first branch (backward compat)
   branch_id:       string
+  branch_name:     string
   email:           string
   first_name:      string | null
   last_name:       string | null
-  branch_name:     string
   status:          TeamLeaderStatus
+  // TOTALS across all assigned branches
   active_groups:   number
   active_students: number
   tl_code:         string | null

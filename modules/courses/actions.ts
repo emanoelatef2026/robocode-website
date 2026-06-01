@@ -89,19 +89,45 @@ export async function updateCourse(
 
   const d = parsed.data
 
+  // Resource center fields (not in Zod schema — read directly)
+  const drive_url          = (formData.get('drive_url')          as string | null)?.trim() || null
+  const curriculum_folder  = (formData.get('curriculum_folder')  as string | null)?.trim() || null
+  const instructor_notes   = (formData.get('instructor_notes')   as string | null)?.trim() || null
+  const session_plans      = (formData.get('session_plans')      as string | null)?.trim() || null
+  const teaching_guide     = (formData.get('teaching_guide')     as string | null)?.trim() || null
+  const expected_outcomes  = (formData.get('expected_outcomes')  as string | null)?.trim() || null
+  const skills_covered     = (formData.get('skills_covered')     as string | null)?.trim() || null
+  const prerequisites      = (formData.get('prerequisites')      as string | null)?.trim() || null
+  const course_roadmap     = (formData.get('course_roadmap')     as string | null)?.trim() || null
+  const resource_links_raw = (formData.get('resource_links')     as string | null)?.trim() || null
+  let resource_links: Array<{ label: string; url: string }> | null = null
+  if (resource_links_raw) {
+    try { resource_links = JSON.parse(resource_links_raw) } catch { resource_links = null }
+  }
+
   const { data: existing } = await db.from('courses').select('id').eq('id', d.id).is('deleted_at', null).single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Course not found.' } }
 
   const { error } = await db
     .from('courses')
     .update({
-      title:           d.title,
-      description:     d.description || null,
-      category:        d.category || null,
-      level:           (d.level || null) as string | null,
-      estimated_hours: d.estimated_hours ?? null,
-      scope:           d.scope,
-      is_published:    d.is_published,
+      title:              d.title,
+      description:        d.description || null,
+      category:           d.category || null,
+      level:              (d.level || null) as string | null,
+      estimated_hours:    d.estimated_hours ?? null,
+      scope:              d.scope,
+      is_published:       d.is_published,
+      drive_url,
+      curriculum_folder,
+      instructor_notes,
+      resource_links,
+      session_plans,
+      teaching_guide,
+      expected_outcomes,
+      skills_covered,
+      prerequisites,
+      course_roadmap,
     })
     .eq('id', d.id)
 

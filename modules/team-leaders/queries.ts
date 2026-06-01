@@ -11,8 +11,9 @@ function metaStatus(metadata: Record<string, unknown> | null): TeamLeaderStatus 
 }
 
 // ── List ─────────────────────────────────────────────────────────────────────
-// Returns one row per user_roles entry (one per branch assignment).
-// A multi-branch TL appears once per branch.
+// NORMALIZED: Returns ONE record per unique user_id.
+// Multi-branch TLs are aggregated — branch_ids / branch_names are arrays.
+// active_groups / active_students are totals across all assigned branches.
 
 export async function listTeamLeaders({
   page = 1,
@@ -27,108 +28,132 @@ export async function listTeamLeaders({
   branchId?: string
   status?:   TeamLeaderStatus
 } = {}): Promise<PaginatedResult<TeamLeaderListItem>> {
-  const db   = createServiceClient()
-  const from = (page - 1) * perPage
-  const to   = from + perPage - 1
+  const db = createServiceClient()
 
+  const { data: roleRow } = await db
+    .from('roles').select('id').eq('name', 'team_leader').single()
+  if (!roleRow) return { data: [], total: 0, page, perPage, totalPages: 0 }
+
+  // Fetch ALL matching user_roles rows (no pagination yet — we aggregate first)
   let q = db
     .from('user_roles')
     .select(
-      `id,
-       user_id,
-       branch_id,
-       created_at,
-       tl_code,
+      `id, user_id, branch_id, created_at, tl_code,
        users!user_roles_user_id_fkey(
-         email,
-         phone,
-         metadata,
+         email, phone, metadata,
          profiles!profiles_user_id_fkey(first_name, last_name)
        ),
-       branches!fk_user_roles_branch(name)`,
-      { count: 'exact' }
+       branches!fk_user_roles_branch(name)`
     )
+    .eq('role_id', roleRow.id)
     .not('branch_id', 'is', null)
-    .order('created_at', { ascending: false })
-    .range(from, to)
-
-  const { data: roleRow } = await db
-    .from('roles')
-    .select('id')
-    .eq('name', 'team_leader')
-    .single()
-
-  if (!roleRow) return { data: [], total: 0, page, perPage, totalPages: 0 }
-  q = q.eq('role_id', roleRow.id)
+    .order('user_id')
+    .order('created_at', { ascending: true })
 
   if (branchId) q = q.eq('branch_id', branchId)
 
-  const { data, count, error } = await q
+  const { data: rows, error } = await q
   if (error) throw new Error(error.message)
 
-  // Build branch → counts map
-  const branchIds = [...new Set((data ?? []).map((r: any) => r.branch_id).filter(Boolean))]
+  // Aggregate rows by user_id — one entry per TL person
+  const userMap = new Map<string, {
+    user_role_id: string
+    user_id:      string
+    branch_ids:   string[]
+    branch_names: string[]
+    tl_code:      string | null
+    email:        string
+    first_name:   string | null
+    last_name:    string | null
+    phone:        string | null
+    status:       TeamLeaderStatus
+  }>()
 
-  const [groupCounts, studentCounts] = branchIds.length > 0
-    ? await Promise.all([
-        db.from('groups')
-          .select('branch_id')
-          .in('branch_id', branchIds)
-          .eq('status', 'active')
-          .is('deleted_at', null),
-        db.from('students')
-          .select('branch_id')
-          .in('branch_id', branchIds)
-          .eq('status', 'active')
-          .is('deleted_at', null),
-      ])
-    : [{ data: [] }, { data: [] }]
-
-  const groupsByBranch  = groupCounts.data?.reduce<Record<string, number>>((acc, g: any) => {
-    acc[g.branch_id] = (acc[g.branch_id] ?? 0) + 1
-    return acc
-  }, {}) ?? {}
-
-  const studentsByBranch = studentCounts.data?.reduce<Record<string, number>>((acc, s: any) => {
-    acc[s.branch_id] = (acc[s.branch_id] ?? 0) + 1
-    return acc
-  }, {}) ?? {}
-
-  let items: TeamLeaderListItem[] = (data ?? []).map((row: any) => {
+  for (const row of (rows ?? []) as any[]) {
+    const uid  = row.user_id as string
     const u    = row.users
     const prof = u?.profiles
     const s    = metaStatus(u?.metadata)
-    return {
-      user_role_id:    row.id,
-      user_id:         row.user_id,
-      branch_id:       row.branch_id,
-      email:           u?.email ?? '',
-      first_name:      prof?.first_name ?? null,
-      last_name:       prof?.last_name  ?? null,
-      branch_name:     row.branches?.name ?? '',
-      status:          s,
-      active_groups:   groupsByBranch[row.branch_id]  ?? 0,
-      active_students: studentsByBranch[row.branch_id] ?? 0,
-      tl_code:         row.tl_code ?? null,
-      phone:           u?.phone ?? null,
+
+    if (!userMap.has(uid)) {
+      userMap.set(uid, {
+        user_role_id: row.id,
+        user_id:      uid,
+        branch_ids:   [],
+        branch_names: [],
+        tl_code:      row.tl_code ?? null,
+        email:        u?.email ?? '',
+        first_name:   prof?.first_name ?? null,
+        last_name:    prof?.last_name  ?? null,
+        phone:        u?.phone ?? null,
+        status:       s,
+      })
     }
-  })
+    const entry = userMap.get(uid)!
+    if (row.branch_id) {
+      entry.branch_ids.push(row.branch_id as string)
+      entry.branch_names.push(row.branches?.name ?? row.branch_id)
+    }
+    // Update tl_code if any row has one
+    if (row.tl_code && !entry.tl_code) entry.tl_code = row.tl_code
+  }
 
-  if (status) items = items.filter((i) => i.status === status)
+  let aggregated = [...userMap.values()]
 
+  // Apply status + search filters
+  if (status) {
+    aggregated = aggregated.filter(i => i.status === status)
+  }
   if (search) {
-    const q = search.toLowerCase()
-    items = items.filter((i) =>
-      `${i.first_name ?? ''} ${i.last_name ?? ''} ${i.email} ${i.branch_name}`.toLowerCase().includes(q)
+    const sq = search.toLowerCase()
+    aggregated = aggregated.filter(i =>
+      `${i.first_name ?? ''} ${i.last_name ?? ''} ${i.email} ${i.branch_names.join(' ')}`.toLowerCase().includes(sq)
     )
   }
 
+  // Get totals across all branches
+  const allBranchIds = [...new Set(aggregated.flatMap(tl => tl.branch_ids))]
+  const [groupCounts, studentCounts] = allBranchIds.length > 0
+    ? await Promise.all([
+        db.from('groups').select('branch_id').in('branch_id', allBranchIds).eq('status', 'active').is('deleted_at', null),
+        db.from('students').select('branch_id').in('branch_id', allBranchIds).eq('status', 'active').is('deleted_at', null),
+      ])
+    : [{ data: [] }, { data: [] }]
+
+  const groupsByBranch  : Record<string, number> = {}
+  const studentsByBranch: Record<string, number> = {}
+  for (const g of groupCounts.data   ?? []) groupsByBranch[(g as any).branch_id]   = (groupsByBranch[(g as any).branch_id]   ?? 0) + 1
+  for (const s of studentCounts.data ?? []) studentsByBranch[(s as any).branch_id] = (studentsByBranch[(s as any).branch_id] ?? 0) + 1
+
+  const total = aggregated.length
+
+  // Apply pagination on the unique-user list
+  const from  = (page - 1) * perPage
+  const paged = aggregated.slice(from, from + perPage)
+
+  const items: TeamLeaderListItem[] = paged.map(tl => ({
+    user_role_id:    tl.user_role_id,
+    user_id:         tl.user_id,
+    branch_ids:      tl.branch_ids,
+    branch_names:    tl.branch_names,
+    branch_id:       tl.branch_ids[0] ?? '',
+    branch_name:     tl.branch_names[0] ?? '',
+    email:           tl.email,
+    first_name:      tl.first_name,
+    last_name:       tl.last_name,
+    status:          tl.status,
+    active_groups:   tl.branch_ids.reduce((sum, bid) => sum + (groupsByBranch[bid] ?? 0), 0),
+    active_students: tl.branch_ids.reduce((sum, bid) => sum + (studentsByBranch[bid] ?? 0), 0),
+    tl_code:         tl.tl_code,
+    phone:           tl.phone,
+  }))
+
   return {
     data:       items,
-    total:      count ?? 0,
+    total,
     page,
     perPage,
-    totalPages: Math.ceil((count ?? 0) / perPage),
+    totalPages: Math.ceil(total / perPage),
   }
 }
 
@@ -261,5 +286,44 @@ export async function getTeamLeader(userId: string): Promise<TeamLeader | null> 
     payment_link:        (meta.payment_link as string) ?? null,
     wallet_number:       (meta.wallet_number as string) ?? null,
     bank_account_number: (meta.bank_account_number as string) ?? null,
+  }
+}
+
+// ── Responsibilities summary (pre-delete/disable check) ───────────────────────
+
+export async function getTeamLeaderResponsibilities(userId: string): Promise<{
+  branchIds:    string[]
+  leadCount:    number
+  groupCount:   number
+  studentCount: number
+}> {
+  const db = createServiceClient()
+  const { data: tlRole } = await db.from('roles').select('id').eq('name', 'team_leader').single()
+  if (!tlRole) return { branchIds: [], leadCount: 0, groupCount: 0, studentCount: 0 }
+
+  const { data: urRows } = await db
+    .from('user_roles').select('branch_id')
+    .eq('user_id', userId).eq('role_id', tlRole.id).not('branch_id', 'is', null)
+
+  const branchIds = (urRows ?? []).map((r: any) => r.branch_id as string)
+
+  const leadQ = db.from('leads').select('id', { count: 'exact', head: true })
+    .eq('assigned_to', userId).not('status', 'in', '("CONVERTED","LOST")')
+
+  const [leadRes, groupRes, studentRes] = await Promise.all([
+    leadQ,
+    branchIds.length
+      ? db.from('groups').select('id', { count: 'exact', head: true }).in('branch_id', branchIds).eq('status', 'active').is('deleted_at', null)
+      : Promise.resolve({ count: 0 }),
+    branchIds.length
+      ? db.from('students').select('id', { count: 'exact', head: true }).in('branch_id', branchIds).eq('status', 'active').is('deleted_at', null)
+      : Promise.resolve({ count: 0 }),
+  ])
+
+  return {
+    branchIds,
+    leadCount:    (leadRes as any).count    ?? 0,
+    groupCount:   (groupRes as any).count   ?? 0,
+    studentCount: (studentRes as any).count ?? 0,
   }
 }
