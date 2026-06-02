@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SectionTitle from "@/components/ui/SectionTitle";
-import LogoRail, { type LogoRailItem } from "@/components/ui/LogoRail";
 
 interface Accreditation {
-  id:          string;
-  name:        string;
-  logo_url:    string;
+  id:           string;
+  name:         string;
+  logo_url:     string;
   website_url?: string | null;
 }
 
@@ -25,31 +25,51 @@ export default function AccreditationsSection() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Hide entirely when loading or empty — no empty container rendered
   if (loading || items.length === 0) return null;
-
-  const rail: LogoRailItem[] = items.map((a) => ({
-    id:       a.id,
-    name:     a.name,
-    logo_url: a.logo_url,
-    href:     a.website_url ?? null,
-  }));
 
   return (
     <section id="accreditations" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24">
 
       <SectionTitle
-        eyebrow={t("accreditations.eyebrow")}
         heading={
           <>{t("accreditations.heading1")}{" "}
-          <span className="text-[#38BDF8]">{t("accreditations.heading2")}</span></>
+          <span className="text-[#FF8A1F]">{t("accreditations.heading2")}</span></>
         }
         body={t("accreditations.body")}
-        accent="navy"
       />
 
-      <div className="mt-10 md:mt-16">
-        <LogoRail items={rail} variant="accreditations" />
+      {/* Static grid: 2-col mobile → 4-col desktop. No carousel, no animation. */}
+      <div className="mt-10 grid grid-cols-2 items-center justify-items-center gap-8 md:mt-14 md:gap-10 lg:grid-cols-4 lg:gap-16">
+        {items.map((item) => {
+          const logo = (
+            <div className="relative h-20 w-full max-w-44 transition-opacity duration-200 hover:opacity-80">
+              <Image
+                src={item.logo_url}
+                alt={item.name}
+                fill
+                sizes="(max-width: 1024px) 45vw, 20vw"
+                className="object-contain object-center"
+              />
+            </div>
+          );
+
+          return item.website_url ? (
+            <a
+              key={item.id}
+              href={item.website_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={item.name}
+              className="flex w-full justify-center"
+            >
+              {logo}
+            </a>
+          ) : (
+            <div key={item.id} className="flex w-full justify-center">
+              {logo}
+            </div>
+          );
+        })}
       </div>
 
     </section>

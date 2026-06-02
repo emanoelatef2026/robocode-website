@@ -12,13 +12,14 @@
     "featuredStudents":"Featured Students",
     "bookTrial":       "Book Online Trial",
     "bookFreeTrial":   "Book Online Trial",
+    "bookTrialShort":  "Book Trial",
     "login":           "Login"
   },
   "hero": {
     "eyebrow": "The Future of Education",
     "heading1": "We Don't Teach Kids To Use Technology",
     "heading2": "We Teach Them To Build It",
-    "subtext": "AI · Robotics · Game Development · Programming · Future Skills",
+    "subtext": "AI · Robotics · Game Dev · Programming — For Ages 6–18",
     "bookSession": "Book Online Trial",
     "explorePrograms": "Explore Programs",
     "statAiProjects": "AI Projects",

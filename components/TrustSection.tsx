@@ -56,7 +56,7 @@ export default function TrustSection() {
 
   return (
     <Reveal>
-      <section className="relative z-10 mx-auto mt-6 grid max-w-7xl grid-cols-2 gap-4 px-6 pb-16 md:mt-10 md:grid-cols-4 md:gap-6 md:pb-24">
+      <section className="relative z-10 mx-auto grid max-w-7xl grid-cols-2 gap-4 px-6 pb-16 pt-2 md:grid-cols-4 md:gap-6 md:pb-24 md:pt-4">
 
         {STATS.map(({ value, labelKey, iconColor, icon, ...rest }) => (
           <div

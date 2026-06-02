@@ -147,7 +147,6 @@ export default function ProjectsSection() {
       {/* Header */}
       <div className="mx-auto max-w-7xl px-6">
         <SectionTitle
-          eyebrow={t("projects.eyebrow")}
           heading={<>{t("projects.heading1")} <span className="text-[#FF8A1F]">{t("projects.heading2")}</span></>}
           body={t("projects.body")}
         />

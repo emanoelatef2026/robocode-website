@@ -120,7 +120,6 @@ export default function ReviewsSection() {
 
       <div className="mx-auto max-w-7xl px-6">
         <SectionTitle
-          eyebrow={t("reviews.eyebrow")}
           heading={<>{t("reviews.heading1")} <span className="text-[#FF8A1F]">{t("reviews.heading2")}</span></>}
           body={t("reviews.body")}
         />

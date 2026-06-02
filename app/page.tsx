@@ -21,6 +21,7 @@ const DEFAULT_SECTIONS = [
   "accreditations",
   "partners",
   "faq",
+  "contact",  // always render the final CTA — was accidentally omitted
 ];
 
 export default async function Home() {

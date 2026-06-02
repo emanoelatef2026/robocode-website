@@ -23,7 +23,7 @@ function LangToggle({ compact = false }: { compact?: boolean }) {
     [
       "transition-all duration-200",
       compact ? "px-3 py-1.5" : "flex-1 py-2.5 text-center",
-      active ? "bg-[#0B1F3A] text-white" : "bg-white text-[#64748B] hover:text-[#0B1F3A]",
+      active ? "bg-[#0B2341] text-white" : "bg-white text-[#64748B] hover:text-[#0B2341]",
     ].join(" ");
 
   return (
@@ -80,16 +80,36 @@ export default function Navbar() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
+  // Handles all nav link clicks:
+  // – "/" on homepage  → smooth scroll to top
+  // – "/#section" on homepage → smooth scroll to section
+  // – anything on another page → let Next.js Link navigate normally
   const handleSectionClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
     href: string
   ) => {
-    if (pathname !== "/" || !href.startsWith("/#")) return;
+    if (pathname !== "/") return; // off-homepage: let Link navigate
+
+    if (href === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    if (!href.startsWith("/#")) return;
     e.preventDefault();
     const el = document.getElementById(href.slice(2));
     if (!el) return;
     const top = el.getBoundingClientRect().top + window.scrollY - NAVBAR_OFFSET;
     window.scrollTo({ top, behavior: "smooth" });
+  };
+
+  // Logo click: scroll to top if on homepage, navigate otherwise
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   return (
@@ -100,14 +120,19 @@ export default function Navbar() {
       className={[
         "fixed inset-x-0 top-0 z-50 transition-[background,box-shadow,border-color] duration-300",
         scrolled
-          ? "border-b border-[#E2E8F0] bg-white/95 shadow-[0_1px_12px_rgba(11,31,58,0.06)] backdrop-blur-xl"
+          ? "border-b border-[#E2E8F0] bg-white/95 shadow-[0_1px_12px_rgba(11,35,65,0.07)] backdrop-blur-xl"
           : "border-b border-transparent bg-transparent",
       ].join(" ")}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
 
         {/* Logo */}
-        <Link href="/" aria-label="Robocode home" className="shrink-0">
+        <Link
+          href="/"
+          aria-label="Robocode home"
+          className="shrink-0"
+          onClick={handleLogoClick}
+        >
           <Image
             src="/logo.png"
             alt="Robocode Logo"
@@ -125,10 +150,9 @@ export default function Navbar() {
               key={key}
               href={href}
               onClick={(e) => handleSectionClick(e, href)}
-              className="group relative text-[13px] font-semibold text-[#64748B] transition-colors duration-200 hover:text-[#0B1F3A]"
+              className="group relative text-[13px] font-semibold text-[#64748B] transition-colors duration-200 hover:text-[#0B2341]"
             >
               {t(key)}
-              {/* logical start-0 so underline slides from correct side in both LTR/RTL */}
               <span className="absolute -bottom-0.5 inset-s-0 h-0.5 w-0 rounded-full bg-[#FF8A1F] transition-all duration-300 group-hover:w-full" />
             </Link>
           ))}
@@ -142,7 +166,7 @@ export default function Navbar() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="inline-flex items-center rounded-full border border-[#0B1F3A]/25 px-5 py-2.5 text-[13px] font-bold text-[#0B1F3A] transition-all duration-200 hover:border-[#0B1F3A] hover:bg-[#0B1F3A] hover:text-white"
+              className="inline-flex items-center rounded-full border border-[#0B2341]/25 px-5 py-2.5 text-[13px] font-bold text-[#0B2341] transition-all duration-200 hover:border-[#0B2341] hover:bg-[#0B2341] hover:text-white"
             >
               {t("nav.login")}
             </motion.span>
@@ -152,36 +176,56 @@ export default function Navbar() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="inline-flex items-center rounded-full bg-[#38BDF8] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_2px_16px_rgba(56,189,248,0.35)] transition-shadow duration-300 hover:shadow-[0_4px_24px_rgba(56,189,248,0.5)]"
+              className="inline-flex items-center rounded-full bg-[#FF8A1F] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_2px_14px_rgba(255,138,31,0.30)] transition-all duration-300 hover:brightness-110 hover:shadow-[0_4px_20px_rgba(255,138,31,0.45)]"
             >
               {t("nav.bookTrial")}
             </motion.span>
           </Link>
         </div>
 
-        {/* Hamburger — mobile */}
-        <button
-          onClick={() => setMenuOpen((v) => !v)}
-          aria-label="Toggle navigation menu"
-          aria-expanded={menuOpen}
-          className="flex flex-col justify-center gap-1.25 p-3 md:hidden"
-        >
-          <motion.span
-            animate={menuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
-            transition={{ duration: 0.22 }}
-            className="block h-0.5 w-5 origin-center rounded-full bg-[#0B1F3A]"
-          />
-          <motion.span
-            animate={menuOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
-            transition={{ duration: 0.18 }}
-            className="block h-0.5 w-5 rounded-full bg-[#0B1F3A]"
-          />
-          <motion.span
-            animate={menuOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
-            transition={{ duration: 0.22 }}
-            className="block h-0.5 w-5 origin-center rounded-full bg-[#0B1F3A]"
-          />
-        </button>
+        {/* Mobile right actions: Book Trial (primary) + Login + Hamburger */}
+        <div className="flex items-center gap-1.5 md:hidden">
+          <Link href="/book-session">
+            <motion.span
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="inline-flex min-h-11 items-center rounded-full bg-[#FF8A1F] px-3 text-[12px] font-bold text-white shadow-[0_2px_10px_rgba(255,138,31,0.28)]"
+            >
+              {t("nav.bookTrialShort")}
+            </motion.span>
+          </Link>
+          <Link href="/login">
+            <motion.span
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
+              className="inline-flex min-h-11 items-center rounded-full border border-[#0B2341]/25 px-3 text-[12px] font-bold text-[#0B2341]"
+            >
+              {t("nav.login")}
+            </motion.span>
+          </Link>
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Toggle navigation menu"
+            aria-expanded={menuOpen}
+            className="flex min-h-11 min-w-11 flex-col items-center justify-center gap-1.5 rounded-xl p-2"
+          >
+            <motion.span
+              animate={menuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
+              transition={{ duration: 0.22 }}
+              className="block h-0.5 w-5 origin-center rounded-full bg-[#0B2341]"
+            />
+            <motion.span
+              animate={menuOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
+              transition={{ duration: 0.18 }}
+              className="block h-0.5 w-5 rounded-full bg-[#0B2341]"
+            />
+            <motion.span
+              animate={menuOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
+              transition={{ duration: 0.22 }}
+              className="block h-0.5 w-5 origin-center rounded-full bg-[#0B2341]"
+            />
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
@@ -210,23 +254,16 @@ export default function Navbar() {
                 </Link>
               ))}
 
-              {/* Language toggle row */}
+              {/* Language toggle */}
               <div className="mt-2">
                 <LangToggle />
               </div>
 
-              <Link
-                href="/login"
-                onClick={() => setMenuOpen(false)}
-                className="mt-3 block w-full rounded-full border border-[#0B1F3A]/25 py-4 text-center text-sm font-bold text-[#0B1F3A] transition duration-200 hover:border-[#0B1F3A] hover:bg-[#0B1F3A] hover:text-white"
-              >
-                {t("nav.login")}
-              </Link>
-
+              {/* Primary CTA — orange */}
               <Link
                 href="/book-session"
                 onClick={() => setMenuOpen(false)}
-                className="mt-2 block w-full rounded-full bg-[#38BDF8] py-4 text-center text-sm font-bold text-white shadow-[0_2px_16px_rgba(56,189,248,0.3)] transition duration-200 hover:brightness-110"
+                className="mt-3 block w-full rounded-full bg-[#FF8A1F] py-4 text-center text-sm font-bold text-white shadow-[0_2px_14px_rgba(255,138,31,0.28)] transition duration-200 hover:brightness-110"
               >
                 {t("nav.bookFreeTrial")}
               </Link>

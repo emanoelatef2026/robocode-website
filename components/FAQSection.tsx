@@ -120,8 +120,7 @@ export default function FAQSection() {
     <section id="faq" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24">
 
       <SectionTitle
-        eyebrow={t("faq.eyebrow")}
-        heading={<>{t("faq.heading1")} <span className="text-[#38BDF8]">{t("faq.heading2")}</span></>}
+        heading={<>{t("faq.heading1")} <span className="text-[#FF8A1F]">{t("faq.heading2")}</span></>}
         body={t("faq.body")}
       />
 

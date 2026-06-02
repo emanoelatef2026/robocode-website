@@ -130,23 +130,19 @@ export default function FeaturedStudentsSection() {
 
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="mx-auto mb-10 max-w-7xl px-6 text-center md:mb-12"
+        className="mx-auto mb-10 max-w-7xl px-6 text-center"
       >
-        <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#FF8A1F]">
-          {t("featuredStudents.eyebrow")}
-        </p>
-        <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0F172A] md:text-5xl lg:text-6xl">
+        <h2 className="text-3xl font-bold tracking-tight text-[#0B2341] md:text-4xl">
           {t("featuredStudents.heading1")}{" "}
           <span className="text-[#FF8A1F]">{t("featuredStudents.heading2")}</span>
         </h2>
-        <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#334155] md:text-lg">
+        <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[#64748B]">
           {t("featuredStudents.body")}
         </p>
-        <div className="mx-auto mt-6 h-0.75 w-14 rounded-full bg-[#FF8A1F]" />
       </motion.div>
 
       {/* Marquee */}

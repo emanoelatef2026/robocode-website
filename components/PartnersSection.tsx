@@ -39,7 +39,6 @@ export default function PartnersSection() {
     <section id="partners" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24">
 
       <SectionTitle
-        eyebrow={t("partners.eyebrow")}
         heading={
           <>{t("partners.heading1")}{" "}
           <span className="text-[#FF8A1F]">{t("partners.heading2")}</span></>

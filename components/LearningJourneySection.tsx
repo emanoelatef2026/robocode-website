@@ -102,7 +102,6 @@ export default function LearningJourneySection() {
     <section id="learning-journey" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24">
 
       <SectionTitle
-        eyebrow={t("learningJourney.eyebrow")}
         heading={<>{t("learningJourney.heading1")} <span className="text-[#FF8A1F]">{t("learningJourney.heading2")}</span></>}
         body={t("learningJourney.body")}
       />

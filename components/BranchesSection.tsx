@@ -301,7 +301,7 @@ function DesktopExplorer({
               {/* Active indicator bar */}
               {isActive && (
                 <span
-                  className="absolute inset-y-0 w-0.75 rounded-full bg-[#38BDF8]"
+                  className="absolute inset-y-0 w-0.75 rounded-full bg-[#FF8A1F]"
                   style={{ [dir === "rtl" ? "right" : "left"]: 0 }}
                 />
               )}
@@ -309,7 +309,7 @@ function DesktopExplorer({
               {/* Avatar */}
               <span
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition ${
-                  isActive ? "bg-[#38BDF8] text-white" : "bg-[#E2E8F0] text-[#64748B]"
+                  isActive ? "bg-[#FF8A1F] text-white" : "bg-[#E2E8F0] text-[#64748B]"
                 }`}
               >
                 {b.name.charAt(0)}
@@ -378,12 +378,12 @@ function MobileAccordion({
               <div className={`flex items-center gap-3 ${dir === "rtl" ? "flex-row-reverse" : ""}`}>
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold transition ${
-                    isOpen ? "bg-[#38BDF8] text-white" : "bg-[#F1F5F9] text-[#64748B]"
+                    isOpen ? "bg-[#FF8A1F] text-white" : "bg-[#F1F5F9] text-[#64748B]"
                   }`}
                 >
                   {b.name.charAt(0)}
                 </span>
-                <span className={`text-[14px] font-semibold ${isOpen ? "text-[#38BDF8]" : "text-[#0B1F3A]"}`}>
+                <span className={`text-[14px] font-semibold ${isOpen ? "text-[#FF8A1F]" : "text-[#0B2341]"}`}>
                   {b.name}
                 </span>
               </div>
@@ -391,7 +391,7 @@ function MobileAccordion({
               <motion.span
                 animate={{ rotate: isOpen ? 180 : 0 }}
                 transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                className={isOpen ? "text-[#38BDF8]" : "text-[#94A3B8]"}
+                className={isOpen ? "text-[#FF8A1F]" : "text-[#94A3B8]"}
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -451,29 +451,25 @@ export default function BranchesSection() {
 
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-10 text-center md:mb-14"
+          className="mb-10 text-center"
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#FF8A1F]">
-            {t("branches.eyebrow")}
-          </p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0F172A] md:text-5xl lg:text-6xl">
+          <h2 className="text-3xl font-bold tracking-tight text-[#0B2341] md:text-4xl">
             {t("branches.heading1")}{" "}
-            <span className="text-[#38BDF8]">{t("branches.heading2")}</span>
+            <span className="text-[#FF8A1F]">{t("branches.heading2")}</span>
           </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#334155] md:text-lg">
+          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[#64748B]">
             {t("branches.body")}
           </p>
-          <div className="mx-auto mt-6 h-0.75 w-14 rounded-full bg-[#FF8A1F]" />
         </motion.div>
 
         {/* Content */}
         {loading ? (
           <div className="flex h-64 items-center justify-center">
-            <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#38BDF8] border-t-transparent" />
+            <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
           </div>
         ) : branches.length === 0 ? (
           <SectionEmptyState

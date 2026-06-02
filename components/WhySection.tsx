@@ -86,24 +86,20 @@ export default function WhySection() {
 
         {/* ── Section header ──────────────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 22 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-10 text-center md:mb-14"
+          className="mb-10 text-center"
         >
-          <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#38BDF8]">
-            {t("why.eyebrow")}
-          </p>
-          <h2 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0F172A] md:text-5xl lg:text-6xl">
+          <h2 className="text-3xl font-bold tracking-tight text-[#0B2341] md:text-4xl">
             {title}
           </h2>
           {subtitle && (
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#334155] md:text-lg">
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[#64748B]">
               {subtitle}
             </p>
           )}
-          <div className="mx-auto mt-6 h-0.75 w-14 rounded-full bg-[#38BDF8]" />
         </motion.div>
 
         {/* ── Two-column layout ─────────────────────────────────────────── */}
@@ -135,15 +131,15 @@ export default function WhySection() {
                   "flex w-full items-center gap-5 rounded-2xl border px-6 py-5 text-left",
                   "shadow-[0_2px_12px_rgba(11,31,58,0.05)] transition-all duration-300",
                   i === activeIdx
-                    ? "border-[#38BDF8] bg-white ring-2 ring-[#38BDF8]/20"
-                    : "border-[#E2E8F0] bg-white hover:border-[#38BDF8]/50",
+                    ? "border-[#FF8A1F] bg-white ring-2 ring-[#FF8A1F]/20"
+                    : "border-[#E2E8F0] bg-white hover:border-[#FF8A1F]/50",
                 ].join(" ")}
               >
                 {/* Accent bar */}
                 <div
                   className={[
                     "h-10 w-0.75 shrink-0 rounded-full transition-colors duration-300",
-                    i === activeIdx ? "bg-[#38BDF8]" : "bg-[#E2E8F0]",
+                    i === activeIdx ? "bg-[#FF8A1F]" : "bg-[#E2E8F0]",
                   ].join(" ")}
                 />
 
@@ -153,7 +149,7 @@ export default function WhySection() {
                     "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
                     "text-[14px] font-bold transition-all duration-300",
                     i === activeIdx
-                      ? "bg-[#38BDF8] text-white"
+                      ? "bg-[#FF8A1F] text-white"
                       : "bg-[#F1F5F9] text-[#94A3B8]",
                   ].join(" ")}
                 >
@@ -175,7 +171,7 @@ export default function WhySection() {
                   <svg
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className="h-4 w-4 shrink-0 text-[#38BDF8]"
+                    className="h-4 w-4 shrink-0 text-[#FF8A1F]"
                   >
                     <path
                       fillRule="evenodd"

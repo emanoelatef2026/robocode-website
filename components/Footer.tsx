@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const SOCIALS = [
@@ -13,6 +14,7 @@ const SOCIALS = [
 
 export default function Footer() {
   const { t } = useLanguage();
+  const pathname = usePathname();
 
   const PROGRAM_LINKS = [
     { key: "footer.linkAi",       href: "/#programs" },
@@ -22,14 +24,24 @@ export default function Footer() {
   ];
 
   const COMPANY_LINKS = [
-    { key: "footer.linkAbout",        href: "#"               },
-    { key: "footer.linkBranches",     href: "/#branches"      },
-    { key: "footer.linkCompetitions", href: "/#competitions"  },
-    { key: "footer.linkContact",      href: "#"               },
+    { key: "footer.linkAbout",        href: "/#why"          },
+    { key: "footer.linkBranches",     href: "/#branches"     },
+    { key: "footer.linkCompetitions", href: "/#competitions" },
+    { key: "footer.linkContact",      href: "/#contact"      },
   ];
 
+  // Scroll-to-section helper (same logic as Navbar)
+  const handleFooterLink = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (pathname !== "/" || !href.startsWith("/#")) return;
+    e.preventDefault();
+    const id = href.slice(2);
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
-    <footer id="branches" className="relative z-10 bg-[#0B132B] text-white">
+    <footer className="relative z-10 bg-[#0B132B] text-white">
       <div className="mx-auto max-w-7xl px-6 pb-8 pt-14 md:pt-20">
 
         {/* Top grid */}
@@ -42,7 +54,7 @@ export default function Footer() {
               alt="Robocode Logo"
               width={140}
               height={60}
-              className="h-auto w-27.5 brightness-0 invert"
+              className="h-auto w-28 brightness-0 invert"
             />
 
             <p className="mt-6 max-w-xs text-sm leading-relaxed text-white/60">
@@ -73,7 +85,11 @@ export default function Footer() {
             <ul className="mt-5 space-y-3">
               {PROGRAM_LINKS.map(({ key, href }) => (
                 <li key={key}>
-                  <a href={href} className="text-sm text-white/65 transition duration-200 hover:text-white">
+                  <a
+                    href={href}
+                    onClick={(e) => handleFooterLink(e, href)}
+                    className="text-sm text-white/65 transition duration-200 hover:text-white"
+                  >
                     {t(key)}
                   </a>
                 </li>
@@ -89,7 +105,11 @@ export default function Footer() {
             <ul className="mt-5 space-y-3">
               {COMPANY_LINKS.map(({ key, href }) => (
                 <li key={key}>
-                  <a href={href} className="text-sm text-white/65 transition duration-200 hover:text-white">
+                  <a
+                    href={href}
+                    onClick={(e) => handleFooterLink(e, href)}
+                    className="text-sm text-white/65 transition duration-200 hover:text-white"
+                  >
                     {t(key)}
                   </a>
                 </li>
@@ -99,9 +119,9 @@ export default function Footer() {
 
         </div>
 
-        {/* CTA banner — border-s uses logical start for RTL compat */}
+        {/* CTA banner */}
         <div className="mt-12 flex flex-col items-center justify-between gap-6 rounded-2xl border border-white/10 bg-white/4 px-6 py-8 md:mt-16 md:flex-row md:rounded-3xl md:px-10 md:py-10">
-          <div className="border-s-2 border-[#F97316]/40 ps-5 text-center md:text-start">
+          <div className="border-s-2 border-[#FF8A1F]/50 ps-5 text-center md:text-start">
             <h3 className="text-lg font-bold md:text-2xl">
               {t("footer.ctaHeading")}
             </h3>
@@ -111,7 +131,7 @@ export default function Footer() {
           </div>
           <Link
             href="/book-session"
-            className="shrink-0 rounded-full bg-[#38BDF8] px-8 py-3 text-sm font-semibold text-white shadow-[0_4px_24px_rgba(56,189,248,0.4)] transition duration-200 hover:brightness-110 hover:shadow-[0_8px_32px_rgba(56,189,248,0.5)]"
+            className="shrink-0 rounded-full bg-[#FF8A1F] px-8 py-3 text-sm font-bold text-white shadow-[0_4px_20px_rgba(255,138,31,0.35)] transition duration-200 hover:brightness-110 hover:shadow-[0_8px_28px_rgba(255,138,31,0.45)]"
           >
             {t("footer.ctaButton")}
           </Link>
