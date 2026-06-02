@@ -34,7 +34,7 @@ export default function SearchInput({ placeholder = "Search…" }: Props) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative flex-1 sm:flex-none">
       <svg
         viewBox="0 0 20 20"
         fill="currentColor"
@@ -43,11 +43,11 @@ export default function SearchInput({ placeholder = "Search…" }: Props) {
         <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
       </svg>
       <input
-        type="text"
+        type="search"
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="w-full rounded-lg border border-[#E2E8F0] bg-white py-2 pl-9 pr-4 text-sm text-[#0B1F3A] placeholder-[#94A3B8] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15 sm:w-64"
+        className="h-10 w-full rounded-lg border border-[#E2E8F0] bg-white py-2 pl-9 pr-4 text-sm text-[#0B1F3A] placeholder-[#94A3B8] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15 sm:w-64"
       />
     </div>
   );

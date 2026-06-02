@@ -122,7 +122,57 @@ export default async function TLGroupsPage({ searchParams }: Props) {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#E2E8F0]">
+              {sorted.map((group) => {
+                const m = metricsMap.get(group.id) ?? null
+                return (
+                  <div key={group.id} className="px-4 py-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Link href={`/portal/team-leader/groups/${group.id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">
+                          {group.name}
+                        </Link>
+                        {group.instructor_name && (
+                          <p className="mt-0.5 text-[12px] text-[#64748B]">{group.instructor_name}</p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <HealthBadge score={m?.health_score ?? null} />
+                        <StatusBadge status={group.status} />
+                      </div>
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      {[
+                        { label: 'Attend.', value: m?.attendance_avg ?? null },
+                        { label: 'Homework', value: m?.assignment_avg ?? null },
+                        { label: 'Portfolio', value: m?.portfolio_avg ?? null },
+                      ].map(({ label, value }) => (
+                        <div key={label} className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
+                          <p className="text-[10px] text-[#94A3B8]">{label}</p>
+                          <p className={`text-sm font-semibold ${value == null ? 'text-[#94A3B8]' : value >= 75 ? 'text-green-600' : value >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                            {value != null ? `${value}%` : '—'}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2 text-[12px] text-[#64748B]">
+                      <span>
+                        {group.student_count} students
+                        {group.day_of_week && ` · ${DAYS[group.day_of_week]}`}
+                        {group.time && ` ${group.time}`}
+                      </span>
+                      <Link href={`/portal/team-leader/groups/${group.id}`} className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center">
+                        View →
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">

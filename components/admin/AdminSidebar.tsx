@@ -115,7 +115,7 @@ function NavLink({
       href={href}
       onClick={onClose}
       className={[
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-150",
+        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
         active
           ? "bg-[#FF8A1F]/15 text-[#FF8A1F]"
           : "text-white/50 hover:bg-white/5 hover:text-white/80",

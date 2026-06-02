@@ -81,7 +81,50 @@ export default async function TLStudentsPage({ searchParams }: Props) {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#E2E8F0]">
+              {result.data.map((student) => {
+                const health = healthMap.get(student.id) ?? null
+                const name = student.first_name && student.last_name
+                  ? `${student.first_name} ${student.last_name}`
+                  : student.user_email
+                return (
+                  <div key={student.id} className="px-4 py-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Link href={`/portal/team-leader/students/${student.id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">
+                          {name}
+                        </Link>
+                        {student.student_code && (
+                          <p className="mt-0.5 font-mono text-[11px] text-[#94A3B8]">{student.student_code}</p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        {health && (
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${health.cls}`}>
+                            {health.label}
+                          </span>
+                        )}
+                        <StatusBadge status={student.status} />
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748B]">
+                      {student.group_name && <span>{student.group_name}</span>}
+                      {student.phone && <a href={`tel:${student.phone}`} className="font-medium text-[#0B1F3A]">{student.phone}</a>}
+                      {student.school_grade && <span>Grade {student.school_grade}</span>}
+                    </div>
+                    <div className="mt-2 flex items-center justify-end">
+                      <Link href={`/portal/team-leader/students/${student.id}`} className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center">
+                        View →
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
@@ -115,14 +158,10 @@ export default async function TLStudentsPage({ searchParams }: Props) {
                         <td className="px-4 py-3">
                           {health ? (
                             <div className="flex items-center gap-2">
-                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${health.cls}`}>
-                                {health.label}
-                              </span>
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${health.cls}`}>{health.label}</span>
                               <span className="text-xs text-[#94A3B8]">{health.score}</span>
                             </div>
-                          ) : (
-                            <span className="text-xs text-[#94A3B8]">No data</span>
-                          )}
+                          ) : <span className="text-xs text-[#94A3B8]">No data</span>}
                         </td>
                         <td className="px-4 py-3 text-[#64748B]">{student.phone ?? '—'}</td>
                         <td className="px-4 py-3 text-[#64748B]">{student.parent_phone_1 ?? '—'}</td>

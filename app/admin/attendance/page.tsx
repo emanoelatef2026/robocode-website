@@ -399,7 +399,47 @@ export default async function AttendanceMonitorPage({ searchParams }: Props) {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#E2E8F0]">
+              {result.data.map(s => {
+                const isMissing = s.is_past && !s.has_records
+                return (
+                  <div key={s.id} className={`px-4 py-4 ${isMissing ? 'bg-red-50/40' : ''}`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Link href={`/admin/groups/${s.group_id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">
+                          {s.group_name}
+                        </Link>
+                        <p className="mt-0.5 text-[12px] text-[#64748B]">
+                          {new Date(s.scheduled_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          {' · '}
+                          {new Date(s.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <AttPill pct={s.attendance_pct} hasRecords={s.has_records} />
+                        {isMissing && <span className="text-[10px] font-bold text-red-600">Missing!</span>}
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748B]">
+                      {s.instructor_name && <span>{s.instructor_name}</span>}
+                      <span>{s.branch_name}</span>
+                      {s.has_records && (
+                        <span>
+                          <span className="font-medium text-emerald-700">{s.present_count}P</span>
+                          {' · '}
+                          <span className="font-medium text-red-600">{s.absent_count}A</span>
+                        </span>
+                      )}
+                      {s.topic && <span className="italic truncate max-w-40">{s.topic}</span>}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">

@@ -152,7 +152,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
       {/* ── Pipeline KPIs ── */}
       <div>
         <div className="mb-2"><SectionTitle title="Pipeline" /></div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
           <KPICard label="New"            value={kpis.new_leads}      color="text-blue-600"   href="?status=NEW" />
           <KPICard label="Contacted"      value={kpis.contacted}      color="text-yellow-600" href="?status=CONTACTED" />
           <KPICard label="Trial Booked"   value={kpis.trial_booked}   color="text-indigo-600" href="?status=TRIAL_BOOKED" />
@@ -378,7 +378,76 @@ export default async function TLLeadsPage({ searchParams }: Props) {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* ── Mobile cards (< md) ── */}
+            <div className="md:hidden divide-y divide-[#E2E8F0]">
+              {result.data.map(lead => {
+                const followUpDate    = lead.next_follow_up_at ? new Date(lead.next_follow_up_at) : null
+                const followUpOverdue = followUpDate && followUpDate < new Date()
+                return (
+                  <div key={lead.id} className="px-4 py-4">
+                    {/* Row 1: name + status + days */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={`/portal/team-leader/leads/${lead.id}`}
+                          className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight"
+                        >
+                          {lead.child_name}
+                        </Link>
+                        {lead.parent_name && (
+                          <p className="mt-0.5 text-[12px] text-[#64748B]">{lead.parent_name}</p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <DaysBadge days={lead.days_in_stage} status={lead.status} />
+                        <StatusBadge status={lead.status} />
+                      </div>
+                    </div>
+
+                    {/* Row 2: phone · source · owner */}
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748B]">
+                      {lead.phone && (
+                        <a href={`tel:${lead.phone}`} className="font-medium text-[#0B1F3A]">
+                          {lead.phone}
+                        </a>
+                      )}
+                      <span>{SOURCE_LABELS[lead.source] ?? lead.source}</span>
+                      {lead.assigned_name ? (
+                        <span className="text-[#64748B]">{lead.assigned_name}</span>
+                      ) : (
+                        <form action={assignLeadToMeFormAction} className="inline">
+                          <input type="hidden" name="lead_id" value={lead.id} />
+                          <button type="submit" className="font-medium text-[#FF8A1F]">
+                            Assign to me
+                          </button>
+                        </form>
+                      )}
+                    </div>
+
+                    {/* Row 3: follow-up + manage */}
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      {followUpDate ? (
+                        <span className={`text-[11px] font-medium ${followUpOverdue ? 'text-red-600' : 'text-[#64748B]'}`}>
+                          Follow-up: {followUpDate.toLocaleDateString('en-GB')}
+                          {followUpOverdue && ' ⚠'}
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-[#94A3B8]">No follow-up set</span>
+                      )}
+                      <Link
+                        href={`/portal/team-leader/leads/${lead.id}`}
+                        className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center"
+                      >
+                        Manage →
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* ── Desktop table (≥ md) ── */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
@@ -412,10 +481,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                           ) : (
                             <form action={assignLeadToMeFormAction}>
                               <input type="hidden" name="lead_id" value={lead.id} />
-                              <button
-                                type="submit"
-                                className="text-[11px] font-medium text-[#FF8A1F] hover:underline"
-                              >
+                              <button type="submit" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
                                 Assign to me
                               </button>
                             </form>

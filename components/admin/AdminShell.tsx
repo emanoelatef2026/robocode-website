@@ -3,6 +3,7 @@
 import { useState } from "react";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopbar from "./AdminTopbar";
+import AdminBottomNav from "./AdminBottomNav";
 
 interface Props {
   children: React.ReactNode
@@ -19,15 +20,19 @@ export default function AdminShell({ children, role, permissions }: Props) {
 
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-20 bg-black/30 md:hidden"
+          className="fixed inset-0 z-20 bg-black/40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <AdminTopbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-5 md:p-7">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:p-7 pb-bottom-nav md:pb-7 scroll-smooth-mobile">
+          {children}
+        </main>
       </div>
+
+      <AdminBottomNav />
     </div>
   );
 }

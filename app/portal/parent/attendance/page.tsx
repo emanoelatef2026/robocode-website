@@ -141,7 +141,30 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
               All Records ({records.length})
             </p>
           </div>
-          <div className="overflow-x-auto">
+          {/* Mobile list */}
+          <div className="md:hidden divide-y divide-[#F1F5F9]">
+            {records.map((r, idx) => {
+              const cfg     = STATUS_CONFIG[r.status] ?? { label: r.status, cls: 'bg-gray-100 text-gray-600' }
+              const dateStr = (r.class_date ?? r.recorded_at)
+                ? new Date(r.class_date ?? r.recorded_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                : '—'
+              return (
+                <div key={r.id} className="flex items-center gap-3 px-4 py-3">
+                  <span className="shrink-0 text-[11px] font-semibold text-[#94A3B8] w-6 text-right">{records.length - idx}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-medium text-[#0B1F3A]">{dateStr}</p>
+                    {r.course_title && <p className="text-[11px] text-[#64748B]">{r.course_title}</p>}
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>
+                    {cfg.label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="border-b border-[#F1F5F9] text-left">
@@ -149,28 +172,24 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
                   <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Date</th>
                   <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Status</th>
                   <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Course</th>
-                  <th className="hidden px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] md:table-cell">Note</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Note</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F8FAFC]">
                 {records.map((r, idx) => {
                   const cfg     = STATUS_CONFIG[r.status] ?? { label: r.status, cls: 'bg-gray-100 text-gray-600' }
                   const dateStr = (r.class_date ?? r.recorded_at)
-                    ? new Date(r.class_date ?? r.recorded_at).toLocaleDateString('en-GB', {
-                        day: 'numeric', month: 'short', year: 'numeric',
-                      })
+                    ? new Date(r.class_date ?? r.recorded_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
                     : '—'
                   return (
                     <tr key={r.id} className="hover:bg-[#F8FAFC]">
                       <td className="px-5 py-3 text-[12px] text-[#94A3B8]">{records.length - idx}</td>
                       <td className="px-5 py-3 text-[#0B1F3A]">{dateStr}</td>
                       <td className="px-5 py-3">
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>
-                          {cfg.label}
-                        </span>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>{cfg.label}</span>
                       </td>
                       <td className="px-5 py-3 text-[#64748B]">{r.course_title ?? '—'}</td>
-                      <td className="hidden px-5 py-3 text-[#94A3B8] md:table-cell">{r.note ?? '—'}</td>
+                      <td className="px-5 py-3 text-[#94A3B8]">{r.note ?? '—'}</td>
                     </tr>
                   )
                 })}

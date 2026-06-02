@@ -24,11 +24,19 @@
 
   /* Navbar */
   --navbar-offset: 72px;
+
+  /* Mobile safe area (iOS notch/home indicator) */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-left:   env(safe-area-inset-left, 0px);
+  --safe-right:  env(safe-area-inset-right, 0px);
 }
 
 html {
   scroll-behavior: smooth;
   scroll-padding-top: var(--navbar-offset);
+  /* Prevent horizontal overflow */
+  overflow-x: hidden;
 }
 
 [id] {
@@ -40,6 +48,48 @@ body {
   color: var(--text);
   font-family: var(--font-poppins), sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Prevent text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Prevent horizontal overflow */
+  overflow-x: hidden;
+}
+
+/* ── Mobile touch improvements ───────────────────────────────────────────────── */
+
+/* Minimum 44px touch target on interactive elements */
+button, [role="button"], a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure inputs don't zoom on focus on iOS (need font-size >= 16px) */
+@media (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── Mobile bottom nav helpers ───────────────────────────────────────────────── */
+.bottom-nav-safe {
+  padding-bottom: max(8px, var(--safe-bottom));
+}
+
+.pb-bottom-nav {
+  padding-bottom: calc(64px + var(--safe-bottom));
+}
+
+/* ── Smooth scrolling containers ─────────────────────────────────────────────── */
+.scroll-smooth-mobile {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
 h1, h2, h3, h4 {

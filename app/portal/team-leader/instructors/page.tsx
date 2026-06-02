@@ -51,7 +51,41 @@ export default async function TLInstructorsPage({ searchParams }: Props) {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#E2E8F0]">
+              {result.data.map((instructor) => {
+                const name = instructor.first_name && instructor.last_name
+                  ? `${instructor.first_name} ${instructor.last_name}`
+                  : instructor.user_email
+                return (
+                  <div key={instructor.id} className="px-4 py-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Link href={`/portal/team-leader/instructors/${instructor.id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">
+                          {name}
+                        </Link>
+                        {instructor.instructor_code && (
+                          <p className="mt-0.5 font-mono text-[11px] text-[#94A3B8]">{instructor.instructor_code}</p>
+                        )}
+                      </div>
+                      <StatusBadge status={instructor.status} />
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748B]">
+                      {instructor.phone && <a href={`tel:${instructor.phone}`} className="font-medium text-[#0B1F3A]">{instructor.phone}</a>}
+                      <span>{instructor.group_count} group{instructor.group_count !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-end">
+                      <Link href={`/portal/team-leader/instructors/${instructor.id}`} className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center">
+                        View →
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">

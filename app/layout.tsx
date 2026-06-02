@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cairo, Orbitron, Poppins } from "next/font/google";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import "./globals.css";
@@ -21,6 +21,14 @@ const cairo = Cairo({
   variable: "--font-cairo",
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#0B1F3A",
+}
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://robocodeschool.com"),

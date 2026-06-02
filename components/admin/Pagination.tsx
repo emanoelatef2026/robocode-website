@@ -28,39 +28,49 @@ export default function Pagination({ page, totalPages, total, perPage }: Props) 
   return (
     <div className="flex items-center justify-between border-t border-[#E2E8F0] px-4 py-3">
       <p className="text-xs text-[#64748B]">
-        Showing {from}–{to} of {total}
+        {from}–{to} of {total}
       </p>
       <div className="flex items-center gap-1">
         <button
           onClick={() => go(page - 1)}
           disabled={page <= 1}
-          className="rounded-md border border-[#E2E8F0] px-2.5 py-1.5 text-xs font-medium text-[#64748B] transition hover:border-[#CBD5E1] hover:text-[#0B1F3A] disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-9 items-center rounded-md border border-[#E2E8F0] px-3 text-xs font-medium text-[#64748B] transition hover:border-[#CBD5E1] hover:text-[#0B1F3A] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Prev
+          ← Prev
         </button>
-        {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-          const p = i + 1;
-          return (
-            <button
-              key={p}
-              onClick={() => go(p)}
-              className={[
-                "rounded-md border px-2.5 py-1.5 text-xs font-medium transition",
-                p === page
-                  ? "border-[#FF8A1F] bg-[#FF8A1F] text-white"
-                  : "border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A]",
-              ].join(" ")}
-            >
-              {p}
-            </button>
-          );
-        })}
+
+        {/* Show page numbers only on sm+ to keep mobile clean */}
+        <div className="hidden items-center gap-1 sm:flex">
+          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+            const p = i + 1;
+            return (
+              <button
+                key={p}
+                onClick={() => go(p)}
+                className={[
+                  "flex h-9 w-9 items-center justify-center rounded-md border text-xs font-medium transition",
+                  p === page
+                    ? "border-[#FF8A1F] bg-[#FF8A1F] text-white"
+                    : "border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A]",
+                ].join(" ")}
+              >
+                {p}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Mobile: just show current / total */}
+        <span className="px-2 text-xs text-[#64748B] sm:hidden">
+          {page} / {totalPages}
+        </span>
+
         <button
           onClick={() => go(page + 1)}
           disabled={page >= totalPages}
-          className="rounded-md border border-[#E2E8F0] px-2.5 py-1.5 text-xs font-medium text-[#64748B] transition hover:border-[#CBD5E1] hover:text-[#0B1F3A] disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-9 items-center rounded-md border border-[#E2E8F0] px-3 text-xs font-medium text-[#64748B] transition hover:border-[#CBD5E1] hover:text-[#0B1F3A] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Next
+          Next →
         </button>
       </div>
     </div>

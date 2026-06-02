@@ -47,7 +47,39 @@ export default async function InstructorsPage({ searchParams }: Props) {
           <EmptyState title="No instructors found" description={search ? 'Try a different search term.' : 'Add the first instructor to get started.'} />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#E2E8F0]">
+              {result.data.map((i) => {
+                const name = i.first_name && i.last_name ? `${i.first_name} ${i.last_name}` : i.user_email
+                return (
+                  <div key={i.id} className="px-4 py-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Link href={`/admin/instructors/${i.id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">{name}</Link>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-[#64748B]">
+                          {i.instructor_code && <span className="font-mono">{i.instructor_code}</span>}
+                          {i.branch_name && <span>{i.branch_name}</span>}
+                          <span>{i.group_count} group{i.group_count !== 1 ? 's' : ''}</span>
+                        </div>
+                      </div>
+                      <StatusBadge status={i.status} />
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      {i.phone
+                        ? <a href={`tel:${i.phone}`} className="text-[13px] font-medium text-[#0B1F3A]">{i.phone}</a>
+                        : <span />
+                      }
+                      <Link href={`/admin/instructors/${i.id}`} className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center">
+                        Edit →
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">

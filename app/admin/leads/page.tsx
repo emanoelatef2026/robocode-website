@@ -186,7 +186,55 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* ── Mobile cards (< md) ── */}
+            <div className="md:hidden divide-y divide-[#E2E8F0]">
+              {result.data.map(lead => {
+                const meta  = STATUS_META[lead.status]
+                const isOld = lead.days_in_stage > 7 && lead.status !== 'CONVERTED' && lead.status !== 'LOST'
+                const hasFU = lead.next_follow_up_at && new Date(lead.next_follow_up_at) < new Date()
+                return (
+                  <div key={lead.id} className="px-4 py-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Link href={`/admin/leads/${lead.id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">
+                          {lead.child_name}
+                          {lead.age && <span className="ml-1 text-[12px] font-normal text-[#94A3B8]">({lead.age}y)</span>}
+                        </Link>
+                        {lead.parent_name && (
+                          <p className="mt-0.5 text-[12px] text-[#64748B]">{lead.parent_name}</p>
+                        )}
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <span className={`text-[11px] font-semibold ${isOld ? 'text-red-600' : 'text-[#64748B]'}`}>
+                          {lead.days_in_stage}d{isOld && ' ⚠'}
+                        </span>
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${meta.color}`}>
+                          {meta.label}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748B]">
+                      {lead.phone && <a href={`tel:${lead.phone}`} className="font-medium text-[#0B1F3A]">{lead.phone}</a>}
+                      <span className="capitalize">{lead.source.replace(/_/g, ' ')}</span>
+                      {lead.branch_name && <span>{lead.branch_name}</span>}
+                      <span>{lead.assigned_name ?? 'Unassigned'}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-[#94A3B8]">
+                        {new Date(lead.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                        {hasFU && <span className="ml-1 text-red-500">● overdue</span>}
+                      </span>
+                      <Link href={`/admin/leads/${lead.id}`} className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center">
+                        View →
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* ── Desktop table (≥ md) ── */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
@@ -228,8 +276,7 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
                         <td className="px-4 py-3 text-[#64748B]">{lead.assigned_name ?? <span className="text-[#94A3B8]">Unassigned</span>}</td>
                         <td className="px-4 py-3">
                           <span className={`text-xs font-medium ${isOld ? 'text-red-600' : 'text-[#64748B]'}`}>
-                            {lead.days_in_stage}d
-                            {isOld && ' ⚠'}
+                            {lead.days_in_stage}d{isOld && ' ⚠'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-xs text-[#94A3B8]">

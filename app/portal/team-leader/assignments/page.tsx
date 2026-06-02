@@ -92,7 +92,37 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#E2E8F0]">
+              {result.data.map(a => (
+                <div key={a.id} className="px-4 py-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <Link href={`/portal/team-leader/assignments/${a.id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">
+                        {a.title}
+                      </Link>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${TYPE_COLORS[a.type] ?? 'bg-gray-100 text-gray-600'}`}>
+                          {TYPE_LABELS[a.type] ?? a.type}
+                        </span>
+                        <StatusBadge status={a.status} />
+                      </div>
+                    </div>
+                    <Link href={`/portal/team-leader/assignments/${a.id}`} className="shrink-0 rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center">
+                      Manage →
+                    </Link>
+                  </div>
+                  {a.due_at && (
+                    <p className="mt-2 text-[12px] text-[#64748B]">
+                      Due: {new Date(a.due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
@@ -113,15 +143,11 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-[#64748B]">
-                        {a.due_at
-                          ? new Date(a.due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                          : '—'}
+                        {a.due_at ? new Date(a.due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                       </td>
                       <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
                       <td className="px-4 py-3 text-right">
-                        <Link href={`/portal/team-leader/assignments/${a.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
-                          Manage
-                        </Link>
+                        <Link href={`/portal/team-leader/assignments/${a.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">Manage</Link>
                       </td>
                     </tr>
                   ))}

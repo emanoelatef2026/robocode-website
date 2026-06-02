@@ -48,7 +48,39 @@ export default async function TLParentsPage({ searchParams }: Props) {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-[#E2E8F0]">
+              {result.data.map(parent => {
+                const name = [parent.first_name, parent.last_name].filter(Boolean).join(' ') || '—'
+                return (
+                  <div key={parent.id} className="px-4 py-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <Link href={`/portal/team-leader/parents/${parent.id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">
+                          {name}
+                        </Link>
+                        {parent.email && <p className="mt-0.5 text-[12px] text-[#64748B] truncate">{parent.email}</p>}
+                      </div>
+                      <span className="shrink-0 rounded-full bg-[#F1F5F9] px-2.5 py-1 text-[12px] font-semibold text-[#64748B]">
+                        {parent.student_count} child{parent.student_count !== 1 ? 'ren' : ''}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      {parent.phone
+                        ? <a href={`tel:${parent.phone}`} className="text-[13px] font-medium text-[#0B1F3A]">{parent.phone}</a>
+                        : <span className="text-[12px] text-[#94A3B8]">No phone</span>
+                      }
+                      <Link href={`/portal/team-leader/parents/${parent.id}`} className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center">
+                        View →
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
@@ -69,9 +101,7 @@ export default async function TLParentsPage({ searchParams }: Props) {
                       <td className="px-4 py-3 text-[#64748B]">{parent.phone ?? '—'}</td>
                       <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{parent.student_count}</td>
                       <td className="px-4 py-3 text-right">
-                        <Link href={`/portal/team-leader/parents/${parent.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
-                          View
-                        </Link>
+                        <Link href={`/portal/team-leader/parents/${parent.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">View</Link>
                       </td>
                     </tr>
                   ))}
