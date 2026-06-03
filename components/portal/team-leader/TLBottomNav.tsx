@@ -57,6 +57,7 @@ const NAV = [
       "/portal/team-leader/parent-satisfaction",
       "/portal/team-leader/portfolio",
       "/portal/team-leader/courses",
+      "/portal/team-leader/finance",
     ],
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">

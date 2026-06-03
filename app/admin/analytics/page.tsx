@@ -10,6 +10,7 @@ import {
   listGroupPerformance,
   listCoursePerformance,
 }                                  from '@/modules/analytics/queries'
+import { getFinanceKPIs, getBranchFinanceStats } from '@/modules/finance/queries'
 import Pagination                  from '@/components/admin/Pagination'
 import Link                        from 'next/link'
 import type { CertReadinessStatus }from '@/modules/analytics/types'
@@ -277,7 +278,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
 
   const groupFilter = await resolveGroupFilter(user)
 
-  const [atRiskResult, certReadiness, missingResult, semesters, academyStats, branchPerf, groupPerf, coursePerf, opsData, marketingData, instructorData] = await Promise.all([
+  const [atRiskResult, certReadiness, missingResult, semesters, academyStats, branchPerf, groupPerf, coursePerf, opsData, marketingData, instructorData, financeKpis, branchFinance] = await Promise.all([
     listAtRiskStudents(groupFilter, { semesterId, sort, page, perPage: 15 }),
     listCertificateReadiness(groupFilter, { semesterId }),
     listMissingAssignments(groupFilter, { page: missPage, perPage: 15 }),
@@ -289,6 +290,8 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
     user.globalRole === 'super_admin' ? getOperationsData() : Promise.resolve(null),
     user.globalRole === 'super_admin' ? getMarketingData()  : Promise.resolve(null),
     user.globalRole === 'super_admin' ? getInstructorData() : Promise.resolve([]),
+    user.globalRole === 'super_admin' ? getFinanceKPIs()    : Promise.resolve(null),
+    user.globalRole === 'super_admin' ? getBranchFinanceStats() : Promise.resolve([]),
   ])
 
   const certCounts = certReadiness.reduce(
@@ -315,6 +318,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
       { id: 'marketing',   label: 'Marketing' },
       { id: 'instructors', label: 'Instructors' },
       { id: 'branches',    label: 'Branches' },
+      { id: 'finance',     label: 'Finance' },
       { id: 'revenue',     label: 'Revenue' },
     ] : []),
   ]
@@ -823,6 +827,105 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ── Tab: Finance ─────────────────────────────────────────────── */}
+      {tab === 'finance' && user.globalRole === 'super_admin' && financeKpis && (
+        <section className="space-y-5">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-[#0B1F3A]">Finance & Collections Analytics</h2>
+            <Link href="/admin/finance" className="text-xs font-medium text-[#FF8A1F] hover:underline">
+              Open Finance Center →
+            </Link>
+          </div>
+
+          {/* KPIs */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { label: 'Expected This Month',  value: `EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeKpis.expected_this_month)}`,  color: 'bg-violet-400' },
+              { label: 'Collected This Month', value: `EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeKpis.collected_this_month)}`, color: 'bg-emerald-400' },
+              { label: 'Outstanding',          value: `EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeKpis.outstanding_total)}`,    color: financeKpis.outstanding_total > 0 ? 'bg-amber-400' : 'bg-emerald-400' },
+              { label: 'Collection Rate',      value: `${financeKpis.collection_rate_pct}%`,  color: financeKpis.collection_rate_pct >= 80 ? 'bg-emerald-400' : financeKpis.collection_rate_pct >= 50 ? 'bg-amber-400' : 'bg-red-400' },
+              { label: 'Overdue Students',     value: financeKpis.overdue_count,              color: financeKpis.overdue_count > 0 ? 'bg-red-400' : 'bg-slate-300' },
+              { label: 'Due This Week',        value: financeKpis.due_this_week,              color: financeKpis.due_this_week > 0 ? 'bg-amber-400' : 'bg-slate-300' },
+              { label: 'Students Paid',        value: financeKpis.paid_students,              color: 'bg-teal-400' },
+              { label: 'Total Accounts',       value: financeKpis.total_students,             color: 'bg-blue-400' },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+                <div className={`mb-2 h-1.5 w-7 rounded-full ${color} opacity-80`} />
+                <p className="text-2xl font-bold text-[#0B1F3A]">{value}</p>
+                <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Branch finance performance */}
+          {(branchFinance as any[]).length > 0 && (
+            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+              <div className="border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2.5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Branch Finance Performance</p>
+              </div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Branch</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-medium text-[#64748B]">Net Total</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-medium text-[#64748B]">Collected</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-medium text-[#64748B]">Outstanding</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Collection Rate</th>
+                    <th className="px-4 py-2.5 text-right text-xs font-medium text-[#64748B]">Overdue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(branchFinance as any[]).map((b: any) => (
+                    <tr key={b.branch_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                      <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
+                        <Link href={`/admin/branches/${b.branch_id}`} className="hover:text-[#FF8A1F]">
+                          {b.branch_name}
+                        </Link>
+                      </td>
+                      <td className="px-4 py-2.5 text-right text-[#64748B]">
+                        EGP {new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(b.net_amount)}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-semibold text-emerald-600">
+                        EGP {new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(b.paid_amount)}
+                      </td>
+                      <td className="px-4 py-2.5 text-right font-semibold text-red-500">
+                        EGP {new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(b.outstanding)}
+                      </td>
+                      <td className="px-4 py-2.5 min-w-[120px]">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-2 rounded-full bg-[#F1F5F9] overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${b.collection_rate >= 80 ? 'bg-emerald-400' : b.collection_rate >= 50 ? 'bg-amber-400' : 'bg-red-400'}`}
+                              style={{ width: `${b.collection_rate}%` }}
+                            />
+                          </div>
+                          <span className="text-xs font-medium text-[#0B1F3A] w-9 text-right">{b.collection_rate}%</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        {b.overdue_count > 0 ? (
+                          <span className="inline-block rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600">
+                            {b.overdue_count}
+                          </span>
+                        ) : (
+                          <span className="text-[#94A3B8]">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {(branchFinance as any[]).length === 0 && (
+            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+              <p className="text-sm text-[#94A3B8]">No financial accounts created yet. Go to Finance Center to add student accounts.</p>
             </div>
           )}
         </section>

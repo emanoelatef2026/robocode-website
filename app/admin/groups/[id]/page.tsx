@@ -12,12 +12,13 @@ import GroupDetailView from './GroupDetailView'
 import GroupStudentsTable from './GroupStudentsTable'
 import AcademicConfigCard from './AcademicConfigCard'
 import GroupHealthCard from './GroupHealthCard'
+import GroupFinanceSection from './GroupFinanceSection'
 import Link from 'next/link'
 
 interface Props { params: Promise<{ id: string }> }
 
 export default async function GroupDetailPage({ params }: Props) {
-  await requirePermission('manage_groups')
+  const user = await requirePermission('manage_groups')
   const { id } = await params
 
   const group = await getGroup(id)
@@ -82,6 +83,12 @@ export default async function GroupDetailPage({ params }: Props) {
           availableStudents={availableStudents}
         />
       </div>
+
+      {user.permissions.includes('manage_financials') && (
+        <div className="mt-6">
+          <GroupFinanceSection groupId={id} />
+        </div>
+      )}
     </div>
   )
 }

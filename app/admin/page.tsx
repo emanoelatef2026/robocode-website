@@ -5,10 +5,11 @@
  * All numbers come from live LMS data. Every card links somewhere actionable.
  */
 
-import { createServiceClient } from '@/lib/supabase/service'
-import { requireAuth }         from '@/modules/rbac/guards'
-import { redirect }            from 'next/navigation'
-import Link                    from 'next/link'
+import { createServiceClient }        from '@/lib/supabase/service'
+import { requireAuth }               from '@/modules/rbac/guards'
+import { redirect }                  from 'next/navigation'
+import { getDashboardFinanceSummary } from '@/modules/finance/queries'
+import Link                          from 'next/link'
 
 // ── Data fetcher ──────────────────────────────────────────────────────────────
 
@@ -270,7 +271,12 @@ export default async function AdminDashboard() {
 
   const isSuperAdmin = user.globalRole === 'super_admin'
   const branchFilter = isSuperAdmin ? null : user.branchIds
-  const d            = await getDashboardData(branchFilter)
+  const [d, financeData] = await Promise.all([
+    getDashboardData(branchFilter),
+    user.permissions.includes('manage_financials')
+      ? getDashboardFinanceSummary(branchFilter ?? undefined)
+      : Promise.resolve(null),
+  ])
 
   const now       = new Date()
   const monthName = now.toLocaleString('en-US', { month: 'long' })
@@ -354,6 +360,61 @@ export default async function AdminDashboard() {
         </>
       )}
 
+      {/* ── FINANCE ─────────────────────────────────────────────────────── */}
+      {financeData && (
+        <>
+          <Section title="Finance" sub="Collections snapshot" />
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Card
+              label="Outstanding"
+              value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeData.outstanding)}`}
+              href="/admin/finance"
+              color={financeData.outstanding > 0 ? 'bg-amber-400' : 'bg-emerald-400'}
+            />
+            <Card
+              label="Collection Rate"
+              value={`${financeData.collection_rate}%`}
+              href="/admin/finance"
+              color={financeData.collection_rate >= 80 ? 'bg-emerald-400' : financeData.collection_rate >= 50 ? 'bg-amber-400' : 'bg-red-400'}
+              sub={`${financeData.collected_this_month > 0 ? `EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeData.collected_this_month)} collected this month` : 'No payments this month'}`}
+            />
+            <Card
+              label="Overdue Students"
+              value={financeData.overdue_count}
+              href="/admin/finance?status=OVERDUE"
+              color={financeData.overdue_count > 0 ? 'bg-red-400' : 'bg-slate-300'}
+              alert
+            />
+            <Card
+              label="Due This Week"
+              value={financeData.due_this_week}
+              href="/admin/finance/queue"
+              color={financeData.due_this_week > 0 ? 'bg-amber-400' : 'bg-slate-300'}
+            />
+          </div>
+          {(financeData.broken_promises > 0 || financeData.overdue_count > 0) && (
+            <div className="space-y-2">
+              <Alert
+                href="/admin/finance?status=OVERDUE"
+                label="Students with overdue balances — immediate follow-up needed"
+                count={financeData.overdue_count}
+                level="critical"
+                icon={<svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" /></svg>}
+              />
+              {financeData.broken_promises > 0 && (
+                <Alert
+                  href="/admin/finance"
+                  label="Broken payment promises — parents did not pay as promised"
+                  count={financeData.broken_promises}
+                  level="warning"
+                  icon={<svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>}
+                />
+              )}
+            </div>
+          )}
+        </>
+      )}
+
       {/* ── ALERTS ───────────────────────────────────────────────────────── */}
       <Section title="Alerts" sub="Items requiring action" />
       <div className="space-y-2">
@@ -386,6 +447,12 @@ export default async function AdminDashboard() {
             <Link href="/admin/students/new" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]">+ Student</Link>
           )}
           <Link href="/admin/leads" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]">View Leads</Link>
+          {user.permissions.includes('manage_financials') && (
+            <>
+              <Link href="/admin/finance" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]">Finance Center</Link>
+              <Link href="/admin/finance/queue" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]">Collections Queue</Link>
+            </>
+          )}
           {isSuperAdmin && (
             <>
               <Link href="/admin/system-health" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]">System Health</Link>

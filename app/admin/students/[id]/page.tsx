@@ -3,13 +3,16 @@ import { requirePermission } from '@/modules/rbac/guards'
 import { createServiceClient } from '@/lib/supabase/service'
 import { listBranches } from '@/modules/branches/queries'
 import { listGroups } from '@/modules/groups/queries'
+import { getAccountByStudentId } from '@/modules/finance/queries'
 import { notFound } from 'next/navigation'
 import StudentEditForm from './StudentEditForm'
+import StudentFinanceWidget from './StudentFinanceWidget'
 import StatusBadge from '@/components/admin/StatusBadge'
 import Link from 'next/link'
 
 interface Props {
-  params: Promise<{ id: string }>
+  params:       Promise<{ id: string }>
+  searchParams: Promise<{ tab?: string }>
 }
 
 async function getStudentFullHistory(studentId: string) {
@@ -41,19 +44,21 @@ async function getStudentFullHistory(studentId: string) {
   }
 }
 
-export default async function StudentDetailPage({ params }: Props) {
+export default async function StudentDetailPage({ params, searchParams }: Props) {
   const user    = await requirePermission('manage_students')
   const { id }  = await params
+  const { tab = 'overview' } = await searchParams
 
   const student = await getStudent(id)
   if (!student) notFound()
 
   // Branches accessible to this user (for branch transfer)
   const branchFilter = user.globalRole === 'super_admin' ? undefined : user.branchIds
-  const [history, branchesResult, groupsResult] = await Promise.all([
+  const [history, branchesResult, groupsResult, accountId] = await Promise.all([
     getStudentFullHistory(id),
     listBranches({ perPage: 100, ...(branchFilter ? {} : {}) }),
     listGroups({ branchId: student.branch_id, perPage: 300, status: 'active' }),
+    user.permissions.includes('manage_financials') ? getAccountByStudentId(id) : Promise.resolve(null),
   ])
 
   const currentGroups  = history.groups.filter((h: any) => h.status === 'active')
@@ -65,6 +70,13 @@ export default async function StudentDetailPage({ params }: Props) {
     ? `${student.first_name} ${student.last_name}`
     : student.user_email
 
+  const canFinance = user.permissions.includes('manage_financials')
+
+  const tabItems = [
+    { id: 'overview', label: 'Overview' },
+    ...(canFinance ? [{ id: 'finance', label: 'Finance' }] : []),
+  ]
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
@@ -75,6 +87,37 @@ export default async function StudentDetailPage({ params }: Props) {
         <p className="text-sm text-[#64748B]">{student.user_email} · {student.branch_name}</p>
       </div>
 
+      {/* Tabs */}
+      {canFinance && (
+        <div className="mb-5 flex gap-0 border-b border-[#E2E8F0]">
+          {tabItems.map(t => (
+            <Link
+              key={t.id}
+              href={`/admin/students/${id}?tab=${t.id}`}
+              className={[
+                'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
+                tab === t.id
+                  ? 'border-[#FF8A1F] text-[#FF8A1F]'
+                  : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]',
+              ].join(' ')}
+            >
+              {t.label}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Finance Tab */}
+      {tab === 'finance' && canFinance && (
+        <StudentFinanceWidget
+          accountId={accountId}
+          studentId={id}
+          branchId={student.branch_id}
+        />
+      )}
+
+      {/* Overview Tab */}
+      {(tab === 'overview' || !canFinance) && <>
       <StudentEditForm
         student={student}
         branches={branchesResult.data}
@@ -220,6 +263,7 @@ export default async function StudentDetailPage({ params }: Props) {
           </table>
         </div>
       )}
+      </>}
     </div>
   )
 }

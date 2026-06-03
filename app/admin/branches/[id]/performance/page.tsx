@@ -1,8 +1,9 @@
-import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission }   from '@/modules/rbac/guards'
-import { getBranch }           from '@/modules/branches/queries'
-import { notFound }            from 'next/navigation'
-import Link                    from 'next/link'
+import { createServiceClient }     from '@/lib/supabase/service'
+import { requirePermission }        from '@/modules/rbac/guards'
+import { getBranch }                from '@/modules/branches/queries'
+import { getBranchFinanceSnapshot } from '@/modules/finance/queries'
+import { notFound }                 from 'next/navigation'
+import Link                         from 'next/link'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -160,13 +161,16 @@ function KPICard({
 interface Props { params: Promise<{ id: string }> }
 
 export default async function BranchPerformancePage({ params }: Props) {
-  await requirePermission('manage_branches')
+  const user = await requirePermission('manage_branches')
   const { id } = await params
 
   const branch = await getBranch(id)
   if (!branch) notFound()
 
-  const perf = await getBranchPerformance(id)
+  const [perf, finance] = await Promise.all([
+    getBranchPerformance(id),
+    user.permissions.includes('manage_financials') ? getBranchFinanceSnapshot(id) : Promise.resolve(null),
+  ])
   const now  = new Date()
 
   return (
@@ -249,6 +253,60 @@ export default async function BranchPerformancePage({ params }: Props) {
         )}
       </section>
 
+      {/* ── Finance Snapshot ───────────────────────────────────────────── */}
+      {finance && (
+        <section>
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Finance Snapshot</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <KPICard label="Net Revenue"      value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.net_amount)}`}  color="bg-[#FF8A1F]" />
+            <KPICard label="Collected"        value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.paid_amount)}`} color="bg-emerald-400" />
+            <KPICard label="Outstanding"      value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.outstanding)}`} color={finance.outstanding > 0 ? 'bg-red-400' : 'bg-emerald-400'} />
+            <KPICard label="Collection Rate"  value={`${finance.collection_rate}%`} color={finance.collection_rate >= 80 ? 'bg-emerald-400' : finance.collection_rate >= 50 ? 'bg-amber-400' : 'bg-red-400'} />
+            <KPICard label="Overdue Students" value={finance.overdue_count}          color={finance.overdue_count > 0 ? 'bg-red-400' : 'bg-slate-300'} alert />
+            <KPICard label="Due This Week"    value={finance.due_this_week}          color={finance.due_this_week > 0 ? 'bg-amber-400' : 'bg-slate-300'} />
+          </div>
+
+          {/* Collection rate bar */}
+          <div className="mt-3 rounded-xl border border-[#E2E8F0] bg-white p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-[#64748B]">Collection Progress</p>
+              <p className="text-sm font-bold text-[#0B1F3A]">{finance.collection_rate}%</p>
+            </div>
+            <div className="h-3 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
+              <div
+                className={`h-full rounded-full ${finance.collection_rate >= 80 ? 'bg-emerald-400' : finance.collection_rate >= 50 ? 'bg-amber-400' : 'bg-red-400'}`}
+                style={{ width: `${finance.collection_rate}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Top outstanding */}
+          {finance.top_outstanding.length > 0 && (
+            <div className="mt-3 rounded-xl border border-[#E2E8F0] bg-white">
+              <div className="border-b border-[#E2E8F0] px-4 py-2.5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Top Outstanding Accounts</p>
+              </div>
+              <div className="divide-y divide-[#E2E8F0]">
+                {finance.top_outstanding.map(s => (
+                  <div key={s.student_id} className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <p className="text-sm font-medium text-[#0B1F3A]">{s.student_name}</p>
+                      {s.parent_phone_1 && <p className="text-[11px] text-[#64748B]">{s.parent_phone_1}</p>}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-red-500">EGP {new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(s.remaining_amount)}</p>
+                      {s.days_overdue > 0 && (
+                        <p className="text-[11px] text-red-400">{s.days_overdue}d overdue</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
       {/* ── Quick links ────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-2 pt-2">
         <Link href={`/admin/students?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
@@ -260,8 +318,8 @@ export default async function BranchPerformancePage({ params }: Props) {
         <Link href={`/admin/leads?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
           Leads →
         </Link>
-        <Link href={`/admin/sessions?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
-          Sessions →
+        <Link href={`/admin/finance?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+          Finance →
         </Link>
       </div>
     </div>

@@ -44,6 +44,55 @@ export async function gradeSubmission(
 
   const d = parsed.data
 
+  // ── Group-level scope enforcement for instructors ────────────────────────────
+  // super_admin and team_leader can grade any submission.
+  // Instructors may only grade submissions belonging to students in their groups.
+  if (user.globalRole === 'instructor') {
+    const { data: sub } = await db
+      .from('submissions')
+      .select('student_id')
+      .eq('id', d.submission_id)
+      .single()
+
+    if (!sub) {
+      return { success: false, error: { code: 'NOT_FOUND', message: 'Submission not found.' } }
+    }
+
+    const { data: instRow } = await db
+      .from('instructors')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!instRow) {
+      return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+    }
+
+    const { data: gi } = await db
+      .from('group_instructors')
+      .select('group_id')
+      .eq('instructor_id', (instRow as any).id)
+
+    const instructorGroupIds = (gi ?? []).map((r: any) => r.group_id as string)
+
+    if (instructorGroupIds.length > 0) {
+      const { data: gs } = await db
+        .from('group_students')
+        .select('student_id')
+        .in('group_id', instructorGroupIds)
+        .eq('student_id', (sub as any).student_id)
+        .eq('status', 'active')
+        .limit(1)
+
+      if (!gs?.length) {
+        return { success: false, error: { code: 'FORBIDDEN', message: 'Not authorized to grade this submission.' } }
+      }
+    } else {
+      return { success: false, error: { code: 'FORBIDDEN', message: 'You have no assigned groups.' } }
+    }
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
+
   let rubric_scores: Record<string, number> = {}
   if (d.rubric_scores) {
     try { rubric_scores = JSON.parse(d.rubric_scores) } catch { /* keep empty */ }
