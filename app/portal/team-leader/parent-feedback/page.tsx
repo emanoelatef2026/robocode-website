@@ -10,7 +10,7 @@ import type { MessageStatus, MessageCategory } from '@/modules/parent-messages/q
 import MessageActions                 from './MessageActions'
 import Link                           from 'next/link'
 
-type Tab = 'reviews' | 'messages'
+type Tab = 'messages' | 'satisfaction' | 'followups' | 'complaints' | 'suggestions'
 
 interface Props {
   searchParams: Promise<{
@@ -20,6 +20,13 @@ interface Props {
     from?:     string
     to?:       string
   }>
+}
+
+// SLA: messages older than 48h without resolution need a reply badge
+function needsReply(createdAt: string, status: string): boolean {
+  if (status === 'resolved') return false
+  const ageHours = (Date.now() - new Date(createdAt).getTime()) / 3600000
+  return ageHours >= 48
 }
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
@@ -62,34 +69,44 @@ function StarDisplay({ rating }: { rating: number }) {
 // ── Page ───────────────────────────────────────────────────────────────────────
 
 export default async function TLParentFeedbackPage({ searchParams }: Props) {
-  const { tab = 'reviews', status, category, from, to } = await searchParams
+  const { tab = 'messages', status, category, from, to } = await searchParams
   const user       = await requirePortalRole('team_leader')
-  const activeTab  = (tab === 'messages' ? 'messages' : 'reviews') as Tab
+  const VALID_TABS: Tab[] = ['messages', 'satisfaction', 'followups', 'complaints', 'suggestions']
+  const activeTab  = (VALID_TABS.includes(tab as Tab) ? tab : 'messages') as Tab
   const branchIds  = user.branchIds
+
+  // Map virtual tabs to category filters
+  const categoryOverride =
+    activeTab === 'complaints'  ? 'academic_concern' :
+    activeTab === 'suggestions' ? 'suggestion' :
+    activeTab === 'followups'   ? 'general_comment' :
+    category
 
   // KPI counts always loaded
   const counts = await getTLMessageCounts(branchIds)
 
   // Tab-specific data
   const [analytics, messages] = await Promise.all([
-    activeTab === 'reviews'
+    activeTab === 'satisfaction'
       ? getParentFeedbackAnalytics()
       : Promise.resolve({ aggregate: { total_responses: 0, avg_rating: 0, recommend_pct: 0, communication_pct: 0, skill_growth_pct: 0, excitement_pct: 0 }, rows: [] }),
-    activeTab === 'messages'
+    activeTab !== 'satisfaction'
       ? getTLMessages({
           branchIds,
           status:   (status as MessageStatus)   || undefined,
-          category: (category as MessageCategory) || undefined,
+          category: (categoryOverride as MessageCategory) || undefined,
           from:     from  || undefined,
           to:       to    || undefined,
         })
       : Promise.resolve([]),
   ])
 
+  const needsReplyCount = messages.filter(m => needsReply(m.created_at, m.status)).length
+
   const tabHref = (t: Tab) => `/portal/team-leader/parent-feedback?tab=${t}`
 
   const buildFilterHref = (params: Record<string, string>) => {
-    const base = new URLSearchParams({ tab: 'messages' })
+    const base = new URLSearchParams({ tab: activeTab })
     for (const [k, v] of Object.entries(params)) if (v) base.set(k, v)
     return `/portal/team-leader/parent-feedback?${base}`
   }
@@ -98,9 +115,16 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
     <div className="mx-auto max-w-5xl space-y-6">
 
       {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-[#0B1F3A]">Parent Feedback Center</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">Satisfaction reviews and parent messages</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-[#0B1F3A]">Parent Relations Center</h1>
+          <p className="mt-0.5 text-sm text-[#64748B]">Messages, satisfaction, follow-ups, complaints and suggestions</p>
+        </div>
+        {needsReplyCount > 0 && (
+          <span className="flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] font-semibold text-red-600">
+            ⚠ {needsReplyCount} Needs Reply (48h+)
+          </span>
+        )}
       </div>
 
       {/* KPI row */}
@@ -134,16 +158,19 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
       </div>
 
       {/* Tab switcher */}
-      <div className="flex rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-1 gap-1">
+      <div className="flex flex-wrap gap-1 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-1">
         {([
-          { key: 'reviews',  label: 'Satisfaction Reviews'  },
-          { key: 'messages', label: 'Parent Messages', badge: counts.open > 0 ? String(counts.open) : null },
+          { key: 'messages',     label: 'Messages',      badge: counts.open > 0 ? String(counts.open) : null },
+          { key: 'satisfaction', label: 'Satisfaction',  badge: null },
+          { key: 'followups',    label: 'Follow Ups',    badge: null },
+          { key: 'complaints',   label: 'Complaints',    badge: null },
+          { key: 'suggestions',  label: 'Suggestions',   badge: null },
         ] as { key: Tab; label: string; badge?: string | null }[]).map(({ key, label, badge }) => (
           <Link
             key={key}
             href={tabHref(key)}
             className={[
-              'flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[13px] font-medium transition-all',
+              'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-medium transition-all whitespace-nowrap',
               activeTab === key
                 ? 'bg-white text-[#0B1F3A] shadow-sm'
                 : 'text-[#64748B] hover:text-[#0B1F3A]',
@@ -159,8 +186,8 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
         ))}
       </div>
 
-      {/* ── TAB 1: SATISFACTION REVIEWS ─────────────────────────────────────── */}
-      {activeTab === 'reviews' && (
+      {/* ── TAB: SATISFACTION REVIEWS ─────────────────────────────────────── */}
+      {activeTab === 'satisfaction' && (
         <div className="space-y-6">
           {analytics.aggregate.total_responses === 0 ? (
             <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-16 text-center">
@@ -240,8 +267,8 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
         </div>
       )}
 
-      {/* ── TAB 2: PARENT MESSAGES ──────────────────────────────────────────── */}
-      {activeTab === 'messages' && (
+      {/* ── TABS: MESSAGES / FOLLOW UPS / COMPLAINTS / SUGGESTIONS ──────── */}
+      {activeTab !== 'satisfaction' && (
         <div className="space-y-5">
 
           {/* Filters */}
@@ -314,9 +341,16 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
                           {new Date(msg.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
                       </div>
-                      <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
-                        {statusCfg.label}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {needsReply(msg.created_at, msg.status) && (
+                          <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">
+                            Needs Reply
+                          </span>
+                        )}
+                        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
+                          {statusCfg.label}
+                        </span>
+                      </div>
                     </div>
 
                     {/* Message body */}

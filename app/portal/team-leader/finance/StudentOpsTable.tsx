@@ -81,6 +81,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
   const [sortAsc,         setSortAsc]         = useState(true)
   const [selectedStudent, setSelectedStudent] = useState<StudentOperationsRow | null>(null)
   const [showWizard,      setShowWizard]      = useState(false)
+  const [filtersOpen,     setFiltersOpen]     = useState(false)
 
   // Debounced search (300 ms)
   useEffect(() => {
@@ -648,6 +649,31 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
           onSuccess={() => { setShowWizard(false); window.location.reload() }}
         />
       )}
+
+      {/* ── Mobile sticky action bar ─────────────────────────────────────── */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 border-t border-[#E2E8F0] bg-white/95 backdrop-blur-sm px-4 py-3 flex gap-3">
+        <button
+          onClick={() => setFiltersOpen(o => !o)}
+          className="flex-1 rounded-xl border border-[#E2E8F0] py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1] flex items-center justify-center gap-2"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+            <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+          </svg>
+          Filters {(filterBranch || filterGroup || filterInstructor || filterRisk || filterFinStatus || overdueOnly) && '·'}
+        </button>
+        <button
+          onClick={() => setShowWizard(true)}
+          className="flex-1 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-medium text-white flex items-center justify-center gap-2"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          Enroll Student
+        </button>
+      </div>
+
+      {/* Bottom padding on mobile so sticky bar doesn't overlap content */}
+      <div className="md:hidden h-20" />
     </>
   )
 }

@@ -1091,12 +1091,13 @@ export async function getFilterOptions(branchIds: string[]): Promise<{
   branches:    { id: string; name: string }[]
   groups:      { id: string; name: string }[]
   instructors: { id: string; name: string }[]
+  courses:     { id: string; name: string }[]
 }> {
-  if (!branchIds.length) return { branches: [], groups: [], instructors: [] }
+  if (!branchIds.length) return { branches: [], groups: [], instructors: [], courses: [] }
   const db = createServiceClient()
 
-  // Step 1: branches + groups in parallel
-  const [branchRes, groupRes] = await Promise.all([
+  // branches + groups + courses in parallel
+  const [branchRes, groupRes, courseRes] = await Promise.all([
     db.from('branches')
       .select('id, name')
       .in('id', branchIds)
@@ -1110,50 +1111,57 @@ export async function getFilterOptions(branchIds: string[]): Promise<{
       .eq('status', 'active')
       .is('deleted_at', null)
       .order('name'),
+
+    db.from('courses')
+      .select('id, title')
+      .is('deleted_at', null)
+      .order('title')
+      .limit(200),
   ])
 
   const branches = (branchRes.data ?? []) as any[]
   const groups   = (groupRes.data ?? []) as any[]
   const groupIds = groups.map(g => g.id as string)
 
-  if (!groupIds.length) {
-    return {
-      branches:    branches.map(b => ({ id: b.id as string, name: b.name as string })),
-      groups:      [],
-      instructors: [],
-    }
-  }
-
-  // Step 2: instructors from active group_courses in those groups
-  const { data: gcData } = await db
-    .from('group_courses')
-    .select(`
-      instructors!group_courses_instructor_id_fkey(
-        id,
-        users!instructors_user_id_fkey(
-          profiles!profiles_user_id_fkey(first_name, last_name)
-        )
-      )
-    `)
-    .in('group_id', groupIds)
-    .eq('status', 'active')
-    .not('instructor_id', 'is', null)
-
+  // Instructors from group_courses AND from student_enrollments (covers standalone enrollments)
   const instrMap = new Map<string, string>()
-  for (const gc of (gcData ?? []) as any[]) {
+
+  const gcPromise = groupIds.length
+    ? db.from('group_courses')
+        .select(`instructors!group_courses_instructor_id_fkey(id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name,last_name)))`)
+        .in('group_id', groupIds)
+        .eq('status', 'active')
+        .not('instructor_id', 'is', null)
+    : Promise.resolve({ data: [] })
+
+  const enrollInstrPromise = db
+    .from('student_enrollments')
+    .select(`instructor_id, instructors!student_enrollments_instructor_id_fkey(id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name,last_name)))`)
+    .in('branch_id', branchIds)
+    .eq('status', 'ACTIVE')
+    .not('instructor_id', 'is', null)
+    .limit(500)
+
+  const [gcData, enrollInstrData] = await Promise.all([gcPromise, enrollInstrPromise])
+
+  for (const gc of (gcData.data ?? []) as any[]) {
     const instr = gc.instructors
     if (!instr?.id) continue
-    const p    = instr.users?.profiles
-    const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown'
-    if (!instrMap.has(instr.id as string)) instrMap.set(instr.id as string, name)
+    const p = instr.users?.profiles
+    if (!instrMap.has(instr.id)) instrMap.set(instr.id, p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown')
+  }
+  for (const e of (enrollInstrData.data ?? []) as any[]) {
+    const instr = e.instructors
+    if (!instr?.id) continue
+    const p = instr.users?.profiles
+    if (!instrMap.has(instr.id)) instrMap.set(instr.id, p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown')
   }
 
   return {
     branches:    branches.map(b => ({ id: b.id as string, name: b.name as string })),
     groups:      groups.map(g => ({ id: g.id as string, name: g.name as string })),
-    instructors: [...instrMap.entries()]
-      .map(([id, name]) => ({ id, name }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
+    instructors: [...instrMap.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)),
+    courses:     ((courseRes.data ?? []) as any[]).map(c => ({ id: c.id as string, name: c.title as string })),
   }
 }
 

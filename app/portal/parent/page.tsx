@@ -1,8 +1,16 @@
 import { requirePortalRole }                    from '@/modules/rbac/guards'
-import { getParentChildren, getChildDashboardData } from '@/modules/parents/parent-portal-queries'
+import { getParentChildren, getChildDashboardData, getChildEnrollmentContracts } from '@/modules/parents/parent-portal-queries'
 import { getChildSessionsProgress }             from '@/modules/parents/parent-portal-queries'
 import { getPendingFeedbackMilestone }           from '@/modules/parent-feedback/queries'
 import Link                                      from 'next/link'
+
+function fmtMoney(n: number) {
+  return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
+}
+function fmtDate(iso: string | null | undefined) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
 
 interface Props {
   searchParams: Promise<{ child?: string }>
@@ -63,9 +71,10 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
   const studentId = child ?? children[0].student_id
   const selected  = children.find(c => c.student_id === studentId) ?? children[0]
 
-  const [dashboard, sessions] = await Promise.all([
+  const [dashboard, sessions, contracts] = await Promise.all([
     getChildDashboardData(user.id, selected.student_id),
     getChildSessionsProgress(user.id, selected.student_id),
+    getChildEnrollmentContracts(user.id, selected.student_id),
   ])
 
   const pendingMilestone = dashboard
@@ -165,6 +174,79 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
           </Link>
         ))}
       </div>
+
+      {/* ── Enrollment Contracts (contract-centric view) ──────────────── */}
+      {contracts.length > 0 && (
+        <div>
+          <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Enrollment Contracts</p>
+          <div className="space-y-3">
+            {contracts.filter(c => c.status === 'ACTIVE').map(c => (
+              <div key={c.enrollment_id} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="font-semibold text-[#0B1F3A]">{c.course_name ?? 'Course'}</p>
+                    <p className="text-xs text-[#94A3B8]">{[c.group_name, c.instructor_name].filter(Boolean).join(' · ')}</p>
+                    {c.contract_code && <p className="font-mono text-[10px] text-[#94A3B8]">{c.contract_code}</p>}
+                  </div>
+                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 shrink-0">Active</span>
+                </div>
+
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="rounded-lg bg-[#F8FAFC] p-2">
+                    <p className={`font-bold text-sm ${c.enrolled_sessions > 0 && c.remaining_sessions <= 2 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+                      {c.enrolled_sessions > 0 ? `${c.remaining_sessions}` : '∞'}
+                    </p>
+                    <p className="text-[#94A3B8]">Sessions Left</p>
+                    {c.enrolled_sessions > 0 && <p className="text-[10px] text-[#CBD5E1]">{c.consumed_sessions}/{c.enrolled_sessions} used</p>}
+                  </div>
+                  <div className="rounded-lg bg-[#F8FAFC] p-2">
+                    <p className={`font-bold text-sm ${c.remaining_amount > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                      {c.remaining_amount > 0 ? `EGP ${fmtMoney(c.remaining_amount)}` : 'Paid ✓'}
+                    </p>
+                    <p className="text-[#94A3B8]">Balance</p>
+                  </div>
+                  <div className="rounded-lg bg-[#F8FAFC] p-2">
+                    <p className="font-bold text-sm text-[#0B1F3A]">EGP {fmtMoney(c.net_amount)}</p>
+                    <p className="text-[#94A3B8]">Total</p>
+                  </div>
+                </div>
+
+                {c.remaining_amount > 0 && c.next_due_date && (
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <span className="text-[#94A3B8]">Next due</span>
+                    <span className={`font-medium ${new Date(c.next_due_date) < new Date() ? 'text-red-600' : 'text-[#64748B]'}`}>
+                      {fmtDate(c.next_due_date)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Completed contracts summary */}
+            {contracts.filter(c => c.status !== 'ACTIVE').length > 0 && (
+              <details className="rounded-xl border border-[#E2E8F0]">
+                <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-[#64748B] hover:bg-[#F8FAFC] rounded-xl">
+                  Past Contracts ({contracts.filter(c => c.status !== 'ACTIVE').length})
+                </summary>
+                <div className="divide-y divide-[#F1F5F9]">
+                  {contracts.filter(c => c.status !== 'ACTIVE').map(c => (
+                    <div key={c.enrollment_id} className="px-4 py-3 flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-medium text-[#0B1F3A]">{c.course_name ?? '—'}</p>
+                        <p className="text-[11px] text-[#94A3B8]">{fmtDate(c.start_date)} → {fmtDate(c.end_date)}</p>
+                      </div>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
+                        ${c.status === 'COMPLETED' ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700'}`}>
+                        {c.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Course progress */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">

@@ -3,6 +3,7 @@
 import { createServiceClient }     from '@/lib/supabase/service'
 import { requirePermission }        from '@/modules/rbac/guards'
 import { revalidatePath }           from 'next/cache'
+import { logTimelineEvent }         from '@/lib/timeline'
 import type {
   CreateEnrollmentInput,
   TransferEnrollmentInput,
@@ -21,7 +22,9 @@ import type { PaymentMethod } from '@/modules/finance/types'
 export interface EnrollStudentFullInput {
   student_id:        string
   branch_id:         string
-  group_id:          string
+  group_id?:         string | null   // optional — group is a delivery container
+  course_id?:        string | null   // optional — course context for the enrollment
+  instructor_id?:    string | null   // optional — preferred instructor
   start_date:        string          // 'YYYY-MM-DD'
   enrollment_type?:  'primary' | 'secondary'
   enrolled_sessions?: number         // Sprint 44: session package count
@@ -47,48 +50,75 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
   const net = input.total_amount - input.discount_amount
 
   // ── 1. Resolve group/course/instructor ─────────────────────────────────────
-  const [{ data: groupRow }, { data: gcRow }] = await Promise.all([
-    db.from('groups').select('id, name, branch_id, start_date').eq('id', input.group_id).single(),
-    db.from('group_courses')
-      .select(`
-        id, instructor_id,
-        courses!group_courses_course_id_fkey(title),
-        instructors!group_courses_instructor_id_fkey(
-          id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))
-        )
-      `)
-      .eq('group_id', input.group_id)
-      .eq('status', 'active')
-      .maybeSingle(),
-  ])
-
-  if (!groupRow) return { error: 'Group not found' }
+  let groupName:      string | null = null
+  let courseName:     string | null = null
+  let instructorName: string | null = null
+  let gcId:           string | null = null
+  let instructorId:   string | null = input.instructor_id ?? null
+  let groupStudentId: string | null = null
 
   const { data: branchRow } = await db
     .from('branches').select('name').eq('id', input.branch_id).single()
 
-  const gcId         = (gcRow as any)?.id ?? null
-  const instructorId = (gcRow as any)?.instructor_id ?? null
-  const instrProf    = (gcRow as any)?.instructors?.users?.profiles
-  const instructorName = instrProf
-    ? [instrProf.first_name, instrProf.last_name].filter(Boolean).join(' ') || null
-    : null
+  if (input.group_id) {
+    const [{ data: groupRow }, { data: gcRow }] = await Promise.all([
+      db.from('groups').select('id, name, branch_id, start_date').eq('id', input.group_id).single(),
+      db.from('group_courses')
+        .select(`
+          id, instructor_id,
+          courses!group_courses_course_id_fkey(title),
+          instructors!group_courses_instructor_id_fkey(
+            id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))
+          )
+        `)
+        .eq('group_id', input.group_id)
+        .eq('status', 'active')
+        .maybeSingle(),
+    ])
 
-  // ── 2. Create group_students ───────────────────────────────────────────────
-  const { data: gsRow, error: gsErr } = await db
-    .from('group_students')
-    .upsert({
-      group_id:        input.group_id,
-      student_id:      input.student_id,
-      enrollment_type: input.enrollment_type ?? 'primary',
-      status:          'active',
-      joined_at:       `${input.start_date}T00:00:00`,
-    }, { onConflict: 'group_id,student_id' })
-    .select('id')
-    .single()
+    if (!groupRow) return { error: 'Group not found' }
+    groupName = (groupRow as any).name ?? null
+    gcId = (gcRow as any)?.id ?? null
+    if (!instructorId) instructorId = (gcRow as any)?.instructor_id ?? null
+    const instrProf = (gcRow as any)?.instructors?.users?.profiles
+    instructorName = instrProf
+      ? [instrProf.first_name, instrProf.last_name].filter(Boolean).join(' ') || null
+      : null
+    if (!(gcRow as any)?.courses?.title && input.course_id) {
+      const { data: cr } = await db.from('courses').select('title').eq('id', input.course_id).maybeSingle()
+      courseName = (cr as any)?.title ?? null
+    } else {
+      courseName = (gcRow as any)?.courses?.title ?? null
+    }
 
-  if (gsErr) return { error: gsErr.message }
-  const groupStudentId = (gsRow as any).id as string
+    // ── 2a. Create group_students (only when group is provided) ─────────────
+    const { data: gsRow, error: gsErr } = await db
+      .from('group_students')
+      .upsert({
+        group_id:        input.group_id,
+        student_id:      input.student_id,
+        enrollment_type: input.enrollment_type ?? 'primary',
+        status:          'active',
+        joined_at:       `${input.start_date}T00:00:00`,
+      }, { onConflict: 'group_id,student_id' })
+      .select('id')
+      .single()
+    if (gsErr) return { error: gsErr.message }
+    groupStudentId = (gsRow as any).id as string
+  } else if (input.course_id) {
+    // No group — resolve course name and instructor name directly
+    const [courseRes, instrRes] = await Promise.all([
+      db.from('courses').select('title').eq('id', input.course_id).maybeSingle(),
+      instructorId
+        ? db.from('instructors').select(`users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name,last_name))`).eq('id', instructorId).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ])
+    courseName = (courseRes.data as any)?.title ?? null
+    const instrProf = (instrRes.data as any)?.users?.profiles
+    instructorName = instrProf
+      ? [instrProf.first_name, instrProf.last_name].filter(Boolean).join(' ') || null
+      : null
+  }
 
   // ── 3. Create student_enrollments (with snapshots) ─────────────────────────
   const { data: seRow, error: seErr } = await db
@@ -96,7 +126,7 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
     .insert({
       student_id:       input.student_id,
       branch_id:        input.branch_id,
-      group_id:         input.group_id,
+      group_id:         input.group_id ?? null,
       group_course_id:  gcId,
       instructor_id:    instructorId,
       group_student_id: groupStudentId,
@@ -110,10 +140,10 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
       enrolled_sessions: input.enrolled_sessions ?? 0,
       consumed_sessions: 0,
       // Snapshots — preserve names at enrollment time
-      group_name_snapshot:      (groupRow as any).name       ?? null,
-      course_name_snapshot:     (gcRow as any)?.courses?.title ?? null,
+      group_name_snapshot:      groupName,
+      course_name_snapshot:     courseName,
       instructor_name_snapshot: instructorName,
-      branch_name_snapshot:     (branchRow as any)?.name     ?? null,
+      branch_name_snapshot:     (branchRow as any)?.name ?? null,
       pricing_snapshot: {
         total_amount:    input.total_amount,
         discount_amount: input.discount_amount,
@@ -128,16 +158,15 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
   if (seErr) {
     // Duplicate ACTIVE enrollment — return the existing one
     if (seErr.code === '23505') {
-      const { data: existing } = await db
+      let existingQ = db
         .from('student_enrollments')
         .select('id')
         .eq('student_id', input.student_id)
-        .eq('group_id', input.group_id)
         .eq('status', 'ACTIVE')
-        .maybeSingle()
+      if (input.group_id) existingQ = (existingQ as any).eq('group_id', input.group_id)
+      const { data: existing } = await (existingQ as any).maybeSingle()
       const enrollmentId = (existing as any)?.id as string | null
       if (!enrollmentId) return { error: 'Duplicate enrollment — could not resolve existing record' }
-      // Still proceed with finance creation for the existing enrollment
       return _createFinanceForEnrollment(db, user, enrollmentId, input, net)
     }
     return { error: seErr.message }
@@ -164,7 +193,7 @@ async function _createFinanceForEnrollment(
     .insert({
       student_id:       input.student_id,
       branch_id:        input.branch_id,
-      group_id:         input.group_id,
+      group_id:         input.group_id ?? null,
       enrollment_id:    enrollmentId,
       total_amount:     input.total_amount,
       discount_amount:  input.discount_amount,
@@ -256,6 +285,30 @@ async function _finishEnrollment(
       reference_number: input.initial_payment_reference ?? null,
       notes:            input.initial_payment_notes ?? 'Initial enrollment payment',
       created_by:       user.id,
+    })
+  }
+
+  // Log enrollment creation to timeline (non-fatal)
+  await logTimelineEvent({
+    student_id:    input.student_id,
+    enrollment_id: enrollmentId,
+    account_id:    accountId,
+    event_type:    'ENROLLMENT_CREATED',
+    notes:         `Contract created. Net: EGP ${net}`,
+    created_by:    user.id,
+    branch_id:     input.branch_id,
+  })
+
+  // Log initial payment if present
+  if (input.initial_payment_amount > 0) {
+    await logTimelineEvent({
+      student_id:    input.student_id,
+      enrollment_id: enrollmentId,
+      account_id:    accountId,
+      event_type:    'PAYMENT',
+      notes:         `Initial payment EGP ${input.initial_payment_amount} via ${input.initial_payment_method}`,
+      created_by:    user.id,
+      branch_id:     input.branch_id,
     })
   }
 

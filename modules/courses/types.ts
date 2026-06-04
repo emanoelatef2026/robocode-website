@@ -30,6 +30,16 @@ export interface Course {
   skills_covered: string | null
   prerequisites: string | null
   course_roadmap: string | null
+  // Sprint 48 academic asset fields
+  syllabus_url:           string | null
+  curriculum_url:         string | null
+  homework_drive_url:     string | null
+  resources_url:          string | null
+  meeting_url:            string | null
+  preparation_notes:      string | null
+  ai_tools_used:          string | null
+  recommended_age:        string | null
+  prerequisite_course_id: string | null
 }
 
 export interface CourseListItem {

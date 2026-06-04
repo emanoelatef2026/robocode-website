@@ -822,3 +822,92 @@ export async function getChildSessionsProgress(
 
   return { completed_sessions: completedSessions, total_sessions: totalSessions }
 }
+
+// ── Contract-centric view for parent portal ───────────────────────────────────
+
+export interface ParentEnrollmentContract {
+  enrollment_id:      string
+  contract_code:      string | null
+  status:             string
+  course_name:        string | null
+  group_name:         string | null
+  instructor_name:    string | null
+  start_date:         string
+  end_date:           string | null
+  enrolled_sessions:  number
+  consumed_sessions:  number
+  remaining_sessions: number
+  total_amount:       number
+  net_amount:         number
+  paid_amount:        number
+  remaining_amount:   number
+  next_due_date:      string | null
+  financial_status:   string | null
+  attendance_pct:     number
+  sessions_attended:  number
+  total_sessions_recorded: number
+}
+
+export async function getChildEnrollmentContracts(
+  parentUserId: string,
+  studentId:    string
+): Promise<ParentEnrollmentContract[]> {
+  if (!(await verifyParentChild(parentUserId, studentId))) return []
+
+  const db = createServiceClient()
+
+  const { data: enrollRows } = await db
+    .from('student_enrollments')
+    .select(`
+      id, status, start_date, end_date, enrollment_type,
+      enrolled_sessions, consumed_sessions, remaining_sessions,
+      total_amount, discount_amount, net_amount, financial_status,
+      contract_code,
+      course_name_snapshot, group_name_snapshot, instructor_name_snapshot
+    `)
+    .eq('student_id', studentId)
+    .order('created_at', { ascending: false })
+
+  const enrollments = (enrollRows ?? []) as any[]
+  if (!enrollments.length) return []
+
+  const enrollIds = enrollments.map(e => e.id as string)
+
+  // Financial accounts
+  const { data: accRows } = await db
+    .from('student_financial_accounts')
+    .select('enrollment_id, student_id, paid_amount, remaining_amount, next_due_date, status')
+    .or(`enrollment_id.in.(${enrollIds.join(',')}),student_id.eq.${studentId}`)
+
+  const accByEnroll = new Map<string, any>()
+  const fallback    = ((accRows ?? []) as any[]).find((a: any) => !a.enrollment_id) ?? null
+  for (const a of (accRows ?? []) as any[]) {
+    if (a.enrollment_id) accByEnroll.set(a.enrollment_id, a)
+  }
+
+  return enrollments.map(e => {
+    const acc = accByEnroll.get(e.id) ?? fallback
+    return {
+      enrollment_id:      e.id,
+      contract_code:      e.contract_code ?? null,
+      status:             e.status,
+      course_name:        e.course_name_snapshot ?? null,
+      group_name:         e.group_name_snapshot  ?? null,
+      instructor_name:    e.instructor_name_snapshot ?? null,
+      start_date:         e.start_date,
+      end_date:           e.end_date ?? null,
+      enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
+      consumed_sessions:  Number(e.consumed_sessions  ?? 0),
+      remaining_sessions: Number(e.remaining_sessions ?? 0),
+      total_amount:       Number(e.total_amount ?? 0),
+      net_amount:         Number(e.net_amount   ?? 0),
+      paid_amount:        acc ? Number(acc.paid_amount)      : 0,
+      remaining_amount:   acc ? Number(acc.remaining_amount) : Number(e.net_amount ?? 0),
+      next_due_date:      acc?.next_due_date ?? null,
+      financial_status:   e.financial_status ?? acc?.status ?? null,
+      attendance_pct:     0,
+      sessions_attended:  0,
+      total_sessions_recorded: 0,
+    }
+  })
+}

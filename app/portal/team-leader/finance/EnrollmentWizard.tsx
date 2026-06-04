@@ -19,13 +19,21 @@ interface StudentResult {
   parent_phone: string | null
 }
 
+interface CourseResult {
+  id:    string
+  title: string
+  level: string | null
+}
+
+interface InstructorResult {
+  id:   string
+  name: string
+}
+
 interface GroupResult {
   id:              string
   name:            string
-  capacity:        number | null
-  type:            string
-  start_date:      string | null
-  group_course_id: string | null
+  course_id:       string | null
   course_title:    string | null
   instructor_id:   string | null
   instructor_name: string | null
@@ -34,10 +42,12 @@ interface GroupResult {
 interface WizardState {
   step:            1 | 2 | 3
   student:         StudentResult | null
-  group:           GroupResult | null
+  course:          CourseResult | null
+  instructor:      InstructorResult | null
+  group:           GroupResult | null       // optional
   startDate:       string
   enrollmentType:  'primary' | 'secondary'
-  enrolledSessions: string   // Sprint 44: session package count
+  enrolledSessions: string
   totalAmount:      string
   discountAmount:   string
   installmentCount: string
@@ -58,8 +68,8 @@ interface Props {
 }
 
 export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Props) {
-  const [state,     setState]     = useState<WizardState>({
-    step: 1, student: null, group: null,
+  const [state, setState] = useState<WizardState>({
+    step: 1, student: null, course: null, instructor: null, group: null,
     startDate: new Date().toISOString().slice(0, 10),
     enrollmentType: 'primary',
     enrolledSessions: '',
@@ -70,12 +80,15 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
     initPayDate: new Date().toISOString().slice(0, 10),
     initPayRef: '', initPayNotes: '',
   })
-  const [search,    setSearch]    = useState('')
-  const [results,   setResults]   = useState<StudentResult[]>([])
-  const [groups,    setGroups]    = useState<GroupResult[]>([])
-  const [searching, setSearching] = useState(false)
-  const [submitting,setSubmitting]= useState(false)
-  const [error,     setError]     = useState<string | null>(null)
+
+  const [search,      setSearch]      = useState('')
+  const [results,     setResults]     = useState<StudentResult[]>([])
+  const [courses,     setCourses]     = useState<CourseResult[]>([])
+  const [instructors, setInstructors] = useState<InstructorResult[]>([])
+  const [groups,      setGroups]      = useState<GroupResult[]>([])
+  const [searching,   setSearching]   = useState(false)
+  const [submitting,  setSubmitting]  = useState(false)
+  const [error,       setError]       = useState<string | null>(null)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   // Close on Escape
@@ -101,29 +114,47 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
     }, 300)
   }, [search, branchIds])
 
-  // Load groups when student selected
-  const loadGroups = useCallback(async (branchId: string) => {
-    const res = await fetch(`/api/groups/by-branch?branchId=${branchId}`)
-    if (res.ok) setGroups(await res.json())
+  // Load courses + instructors + groups when student selected
+  const loadEnrollmentData = useCallback(async (branchId: string) => {
+    const [cRes, iRes, gRes] = await Promise.all([
+      fetch('/api/courses'),
+      fetch(`/api/instructors?branchIds=${branchId}`),
+      fetch(`/api/groups/by-branch?branchId=${branchId}`),
+    ])
+    if (cRes.ok) setCourses(await cRes.json())
+    if (iRes.ok) setInstructors(await iRes.json())
+    if (gRes.ok) setGroups(await gRes.json())
   }, [])
 
   function selectStudent(s: StudentResult) {
     setState(prev => ({ ...prev, student: s, step: 2 }))
     setSearch('')
     setResults([])
-    loadGroups(s.branch_id)
+    loadEnrollmentData(s.branch_id)
   }
 
-  function selectGroup(g: GroupResult) {
-    setState(prev => ({ ...prev, group: g }))
+  // When a group is selected, auto-fill course/instructor if not set
+  function selectGroup(g: GroupResult | null) {
+    setState(prev => {
+      const next = { ...prev, group: g }
+      if (g && !prev.course && g.course_id) {
+        const c = courses.find(c => c.id === g.course_id)
+        if (c) next.course = c
+      }
+      if (g && !prev.instructor && g.instructor_id) {
+        const i = instructors.find(i => i.id === g.instructor_id)
+        if (i) next.instructor = i
+      }
+      return next
+    })
   }
 
-  const net = Math.max(0, (parseFloat(state.totalAmount) || 0) - (parseFloat(state.discountAmount) || 0))
-  const initPay = parseFloat(state.initPayAmount) || 0
+  const net      = Math.max(0, (parseFloat(state.totalAmount) || 0) - (parseFloat(state.discountAmount) || 0))
+  const initPay  = parseFloat(state.initPayAmount) || 0
   const remaining = Math.max(0, net - initPay)
 
   async function handleSubmit() {
-    if (!state.student || !state.group) return
+    if (!state.student || !state.course) { setError('Please select a student and course'); return }
     if (!state.totalAmount || net <= 0) { setError('Please enter a valid total amount'); return }
     setSubmitting(true)
     setError(null)
@@ -131,7 +162,9 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
     const result = await enrollStudentFull({
       student_id:        state.student.id,
       branch_id:         state.student.branch_id,
-      group_id:          state.group.id,
+      group_id:          state.group?.id ?? null,
+      course_id:         state.course.id,
+      instructor_id:     state.instructor?.id ?? null,
       start_date:        state.startDate,
       enrollment_type:   state.enrollmentType,
       enrolled_sessions: parseInt(state.enrolledSessions) || 0,
@@ -147,7 +180,6 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
     })
 
     setSubmitting(false)
-
     if ('error' in result) {
       setError(result.error)
     } else {
@@ -164,16 +196,15 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8">
       <div className="relative w-full max-w-lg rounded-2xl border border-[#E2E8F0] bg-white shadow-2xl">
 
-        {/* ── Header ────────────────────────────────────────────────────── */}
+        {/* ── Header ──────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-6 py-4">
           <div>
             <h2 className="text-base font-bold text-[#0B1F3A]">New Enrollment</h2>
             <p className="mt-0.5 text-xs text-[#64748B]">
-              Step {state.step} of 3 — {state.step === 1 ? 'Find Student' : state.step === 2 ? 'Enrollment Setup' : 'Finance Setup'}
+              Step {state.step} of 3 — {state.step === 1 ? 'Find Student' : state.step === 2 ? 'Contract Setup' : 'Finance Setup'}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {/* Progress dots */}
             <div className="flex gap-1.5">
               {[1,2,3].map(n => (
                 <span key={n} className={`h-2 w-2 rounded-full ${n === state.step ? 'bg-[#FF8A1F]' : n < state.step ? 'bg-emerald-400' : 'bg-[#E2E8F0]'}`} />
@@ -187,7 +218,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
           </div>
         </div>
 
-        {/* ── Step 1: Find Student ─────────────────────────────────────── */}
+        {/* ── Step 1: Find Student ──────────────────────────────────────── */}
         {state.step === 1 && (
           <div className="p-6 space-y-4">
             <div>
@@ -202,7 +233,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
                   autoFocus
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  placeholder="Type name, phone number, or parent phone…"
+                  placeholder="Name, phone, student code, parent phone…"
                   className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] py-3 pl-10 pr-4 text-sm text-[#0B1F3A] placeholder:text-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
                 />
                 {searching && (
@@ -212,47 +243,37 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
                 )}
               </div>
             </div>
-
-            {/* Results */}
             {results.length > 0 && (
               <div className="max-h-64 overflow-y-auto rounded-xl border border-[#E2E8F0] divide-y divide-[#F1F5F9]">
                 {results.map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => selectStudent(s)}
-                    className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAFC] text-left"
-                  >
+                  <button key={s.id} onClick={() => selectStudent(s)} className="w-full flex items-start gap-3 px-4 py-3 hover:bg-[#F8FAFC] text-left">
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FF8A1F]/10 text-sm font-bold text-[#FF8A1F]">
                       {s.name.charAt(0).toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-[#0B1F3A]">{s.name}</p>
-                      <p className="text-xs text-[#64748B]">
-                        {s.branch_name}
-                        {s.code && <span className="ml-1 text-[#94A3B8]">#{s.code}</span>}
-                      </p>
-                      {s.parent_name && <p className="text-[11px] text-[#94A3B8]">{s.parent_name} · {s.parent_phone}</p>}
-                      {s.phone && <p className="text-[11px] text-[#94A3B8]">{s.phone}</p>}
+                      <p className="text-xs text-[#64748B]">{s.branch_name}{s.code && <span className="ml-1 text-[#94A3B8]">#{s.code}</span>}</p>
+                      {(s.parent_name || s.parent_phone || s.phone) && (
+                        <p className="text-[11px] text-[#94A3B8]">{[s.parent_name, s.parent_phone ?? s.phone].filter(Boolean).join(' · ')}</p>
+                      )}
                     </div>
                   </button>
                 ))}
               </div>
             )}
-
             {search.length >= 2 && !searching && results.length === 0 && (
               <p className="text-center text-sm text-[#94A3B8]">No students found matching &ldquo;{search}&rdquo;</p>
             )}
-
             {search.length < 2 && (
               <p className="text-center text-sm text-[#94A3B8]">Type at least 2 characters to search</p>
             )}
           </div>
         )}
 
-        {/* ── Step 2: Enrollment Setup ─────────────────────────────────── */}
+        {/* ── Step 2: Contract Setup ────────────────────────────────────── */}
         {state.step === 2 && state.student && (
-          <div className="p-6 space-y-5">
-            {/* Selected student card */}
+          <div className="p-6 space-y-4">
+            {/* Selected student */}
             <div className="flex items-center gap-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] p-3">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FF8A1F]/10 text-sm font-bold text-[#FF8A1F]">
                 {state.student.name.charAt(0).toUpperCase()}
@@ -261,23 +282,68 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
                 <p className="text-sm font-semibold text-[#0B1F3A]">{state.student.name}</p>
                 <p className="text-xs text-[#64748B]">{state.student.branch_name}{state.student.code ? ` · #${state.student.code}` : ''}</p>
               </div>
-              <button onClick={() => { setState(prev => ({ ...prev, step: 1, student: null, group: null })); setSearch('') }} className="text-xs text-[#FF8A1F] hover:underline">Change</button>
+              <button onClick={() => { setState(prev => ({ ...prev, step: 1, student: null })); setSearch('') }} className="text-xs text-[#FF8A1F] hover:underline">Change</button>
             </div>
 
-            {/* Group selection */}
+            {/* Course — REQUIRED */}
             <div>
-              <label className="block text-xs font-medium text-[#64748B] mb-1.5">Group</label>
+              <label className="block text-xs font-medium text-[#64748B] mb-1.5">
+                Course <span className="text-red-400">*</span>
+              </label>
+              <select
+                value={state.course?.id ?? ''}
+                onChange={e => {
+                  const c = courses.find(c => c.id === e.target.value) ?? null
+                  setState(prev => ({ ...prev, course: c }))
+                }}
+                className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+              >
+                <option value="">Select a course…</option>
+                {courses.map(c => <option key={c.id} value={c.id}>{c.title}{c.level ? ` (${c.level})` : ''}</option>)}
+              </select>
+            </div>
+
+            {/* Instructor — optional */}
+            <div>
+              <label className="block text-xs font-medium text-[#64748B] mb-1.5">
+                Instructor <span className="text-[#94A3B8] text-[11px]">(optional)</span>
+              </label>
+              <select
+                value={state.instructor?.id ?? ''}
+                onChange={e => {
+                  const i = instructors.find(i => i.id === e.target.value) ?? null
+                  setState(prev => ({ ...prev, instructor: i }))
+                }}
+                className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+              >
+                <option value="">No instructor assigned</option>
+                {instructors.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+              </select>
+            </div>
+
+            {/* Group — optional */}
+            <div>
+              <label className="block text-xs font-medium text-[#64748B] mb-1.5">
+                Group <span className="text-[#94A3B8] text-[11px]">(optional — delivery container)</span>
+              </label>
               {groups.length === 0 ? (
                 <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-sm text-[#94A3B8] text-center">
                   No active groups in this branch.
                 </div>
               ) : (
-                <div className="max-h-48 overflow-y-auto rounded-xl border border-[#E2E8F0] divide-y divide-[#F1F5F9]">
+                <div className="max-h-40 overflow-y-auto rounded-xl border border-[#E2E8F0] divide-y divide-[#F1F5F9]">
+                  {/* None option */}
+                  <button
+                    onClick={() => selectGroup(null)}
+                    className={`w-full flex items-center px-4 py-2.5 text-left text-sm hover:bg-[#F8FAFC] ${!state.group ? 'bg-orange-50 font-medium text-[#FF8A1F]' : 'text-[#64748B]'}`}
+                  >
+                    No group (standalone enrollment)
+                  </button>
                   {groups.map(g => (
                     <button
                       key={g.id}
                       onClick={() => selectGroup(g)}
-                      className={`w-full flex items-start justify-between px-4 py-3 hover:bg-[#F8FAFC] text-left ${state.group?.id === g.id ? 'bg-orange-50' : ''}`}
+                      className={`w-full flex items-start justify-between px-4 py-2.5 hover:bg-[#F8FAFC] text-left ${state.group?.id === g.id ? 'bg-orange-50' : ''}`}
                     >
                       <div>
                         <p className="text-sm font-medium text-[#0B1F3A]">{g.name}</p>
@@ -287,7 +353,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
                         </p>
                       </div>
                       {state.group?.id === g.id && (
-                        <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-[#FF8A1F] shrink-0">
+                        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#FF8A1F] shrink-0 mt-0.5">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       )}
@@ -297,10 +363,10 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
               )}
             </div>
 
-            {/* Session package + start date + type */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Sessions + type + start date */}
+            <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-[#64748B] mb-1.5">Session Package Count</label>
+                <label className="block text-xs font-medium text-[#64748B] mb-1.5">Session Package</label>
                 <input
                   type="number" min="0" max="200" step="1"
                   value={state.enrolledSessions}
@@ -308,10 +374,10 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
                   placeholder="e.g. 30"
                   className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
                 />
-                <p className="mt-1 text-[11px] text-[#94A3B8]">Sessions bought (0 = unlimited)</p>
+                <p className="mt-0.5 text-[10px] text-[#94A3B8]">0 = unlimited</p>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#64748B] mb-1.5">Enrollment Type</label>
+                <label className="block text-xs font-medium text-[#64748B] mb-1.5">Type</label>
                 <select
                   value={state.enrollmentType}
                   onChange={e => setState(prev => ({ ...prev, enrollmentType: e.target.value as 'primary' | 'secondary' }))}
@@ -332,13 +398,12 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex gap-3 border-t border-[#E2E8F0] pt-4">
               <button onClick={() => setState(prev => ({ ...prev, step: 1 }))} className="flex-1 rounded-xl border border-[#E2E8F0] py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]">
                 Back
               </button>
               <button
-                disabled={!state.group}
+                disabled={!state.course}
                 onClick={() => setState(prev => ({ ...prev, step: 3 }))}
                 className="flex-1 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40"
               >
@@ -348,14 +413,18 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
           </div>
         )}
 
-        {/* ── Step 3: Finance Setup ────────────────────────────────────── */}
-        {state.step === 3 && state.student && state.group && (
+        {/* ── Step 3: Finance Setup ─────────────────────────────────────── */}
+        {state.step === 3 && state.student && state.course && (
           <div className="p-6 space-y-5">
-            {/* Summary bar */}
-            <div className="rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] px-4 py-3 text-xs space-y-0.5">
+            {/* Summary */}
+            <div className="rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] px-4 py-3 text-xs space-y-1">
               <p><span className="text-[#94A3B8]">Student:</span> <span className="font-medium text-[#0B1F3A]">{state.student.name}</span></p>
-              <p><span className="text-[#94A3B8]">Group:</span> <span className="font-medium text-[#0B1F3A]">{state.group.name}</span></p>
-              {state.group.course_title && <p><span className="text-[#94A3B8]">Course:</span> <span className="text-[#64748B]">{state.group.course_title}</span></p>}
+              <p><span className="text-[#94A3B8]">Course:</span> <span className="font-medium text-[#0B1F3A]">{state.course.title}</span></p>
+              {state.instructor && <p><span className="text-[#94A3B8]">Instructor:</span> <span className="text-[#64748B]">{state.instructor.name}</span></p>}
+              {state.group && <p><span className="text-[#94A3B8]">Group:</span> <span className="text-[#64748B]">{state.group.name}</span></p>}
+              {state.enrolledSessions && parseInt(state.enrolledSessions) > 0 && (
+                <p><span className="text-[#94A3B8]">Sessions:</span> <span className="text-[#64748B]">{state.enrolledSessions} sessions</span></p>
+              )}
             </div>
 
             {/* Amounts */}
@@ -382,7 +451,6 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
               </div>
             </div>
 
-            {/* Net total display */}
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 flex items-center justify-between">
               <span className="text-sm font-medium text-emerald-700">Net Total</span>
               <span className="text-lg font-bold text-emerald-700">EGP {fmt(net)}</span>
@@ -412,7 +480,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
 
             {/* Initial payment */}
             <div>
-              <p className="text-xs font-semibold text-[#64748B] mb-2">Initial Payment (optional)</p>
+              <p className="text-xs font-semibold text-[#64748B] mb-2">Initial Payment <span className="text-[#94A3B8] font-normal">(optional)</span></p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] text-[#94A3B8] mb-1">Amount Paid Now</label>
@@ -431,9 +499,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
                     onChange={e => setState(prev => ({ ...prev, initPayMethod: e.target.value as PaymentMethod }))}
                     className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
                   >
-                    {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
-                      <option key={k} value={k}>{v}</option>
-                    ))}
+                    {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
                 <div>
@@ -450,25 +516,41 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
                   <input
                     value={state.initPayRef}
                     onChange={e => setState(prev => ({ ...prev, initPayRef: e.target.value }))}
-                    placeholder="e.g. Instapay ref"
+                    placeholder="Instapay ref, etc."
                     className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
                   />
                 </div>
               </div>
             </div>
 
-            {/* Remaining balance preview */}
+            {/* Preview card */}
             {net > 0 && (
-              <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2.5 text-xs space-y-1">
-                <div className="flex justify-between"><span className="text-[#94A3B8]">Net Total</span><span className="font-medium text-[#0B1F3A]">EGP {fmt(net)}</span></div>
-                {initPay > 0 && <div className="flex justify-between"><span className="text-[#94A3B8]">Paid Now</span><span className="font-medium text-emerald-600">EGP {fmt(initPay)}</span></div>}
-                <div className="flex justify-between border-t border-[#E2E8F0] pt-1"><span className="text-[#94A3B8]">Remaining</span><span className={`font-bold ${remaining > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>EGP {fmt(remaining)}</span></div>
+              <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-xs space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-[#94A3B8]">Net Total</span>
+                  <span className="font-medium text-[#0B1F3A]">EGP {fmt(net)}</span>
+                </div>
+                {parseInt(state.enrolledSessions) > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-[#94A3B8]">Sessions Package</span>
+                    <span className="font-medium text-[#0B1F3A]">{state.enrolledSessions} sessions</span>
+                  </div>
+                )}
+                {initPay > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-[#94A3B8]">Paid Now</span>
+                    <span className="font-medium text-emerald-600">EGP {fmt(initPay)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-[#E2E8F0] pt-1.5">
+                  <span className="text-[#94A3B8]">Remaining</span>
+                  <span className={`font-bold ${remaining > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>EGP {fmt(remaining)}</span>
+                </div>
               </div>
             )}
 
             {error && <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>}
 
-            {/* Actions */}
             <div className="flex gap-3 border-t border-[#E2E8F0] pt-4">
               <button onClick={() => setState(prev => ({ ...prev, step: 2 }))} className="flex-1 rounded-xl border border-[#E2E8F0] py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]">
                 Back

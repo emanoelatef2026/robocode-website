@@ -165,13 +165,17 @@ export interface StudentFinanceDetail {
 // ── Filters ───────────────────────────────────────────────────────────────────
 
 export interface FinanceFilters {
-  branch_id?:  string
-  branch_ids?: string[]
-  group_id?:   string
-  status?:     AccountStatus
-  search?:     string
-  page?:       number
-  perPage?:    number
+  branch_id?:    string
+  branch_ids?:   string[]
+  group_id?:     string
+  course_id?:    string
+  instructor_id?: string
+  status?:       AccountStatus
+  risk?:         'HIGH' | 'MEDIUM' | 'LOW'
+  overdue?:      boolean
+  search?:       string
+  page?:         number
+  perPage?:      number
 }
 
 // ── Form inputs ───────────────────────────────────────────────────────────────

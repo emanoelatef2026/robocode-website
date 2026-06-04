@@ -77,8 +77,50 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
     return { success: false, error: { code: 'DB_ERROR', message: scheduleError?.message ?? 'Failed to create schedule.' } }
   }
 
-  // Build attendance records from validated student IDs only
-  const records = safeStudentIds.map((sid) => ({
+  // ── Phase 14: Overdraft enforcement ───────────────────────────────────────
+  // Slot-consuming statuses: present, late, makeup (absent/excused don't consume a session)
+  const SLOT_CONSUMING = new Set(['present', 'late', 'makeup'])
+
+  const { data: enrollRows } = await db
+    .from('student_enrollments')
+    .select('student_id, remaining_sessions, allow_overdraft_sessions, enrolled_sessions')
+    .eq('group_id', group_id)
+    .eq('status', 'ACTIVE')
+    .in('student_id', safeStudentIds)
+
+  const enrollMap = new Map<string, { remaining: number; allow: boolean; enrolled: number }>()
+  for (const e of (enrollRows ?? []) as any[]) {
+    enrollMap.set(e.student_id, {
+      remaining: Number(e.remaining_sessions ?? 0),
+      allow:     Boolean(e.allow_overdraft_sessions),
+      enrolled:  Number(e.enrolled_sessions ?? 0),
+    })
+  }
+
+  // Identify overdraft students (attending but sessions exhausted + not allowed)
+  const overdraftBlocked: string[] = []
+  const overdraftGranted: string[] = []
+
+  for (const sid of safeStudentIds) {
+    const status = (formData.get(`status_${sid}`) ?? 'present') as string
+    if (!SLOT_CONSUMING.has(status)) continue
+
+    const enroll = enrollMap.get(sid)
+    if (!enroll || enroll.enrolled === 0) continue  // 0 = unlimited, skip check
+    if (enroll.remaining <= 0) {
+      if (enroll.allow) {
+        overdraftGranted.push(sid)
+      } else {
+        overdraftBlocked.push(sid)
+      }
+    }
+  }
+
+  // Allow overdraft-granted students through but remove blocked ones
+  const recordableIds = safeStudentIds.filter(sid => !overdraftBlocked.includes(sid))
+
+  // Build attendance records from recordable IDs only
+  const records = recordableIds.map((sid) => ({
     schedule_id:  schedule.id,
     student_id:   sid,
     status:       (formData.get(`status_${sid}`) ?? 'present') as AttendanceStatus,
@@ -86,9 +128,27 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
     recorded_by:  user.id,
   }))
 
+  if (records.length === 0) {
+    return { success: false, error: { code: 'OVERDRAFT_BLOCKED', message: `All students have exhausted their session packages. Enable overdraft in their enrollment or renew packages.` } }
+  }
+
   const { error: insertError } = await db.from('attendance_records').insert(records)
   if (insertError) {
     return { success: false, error: { code: 'DB_ERROR', message: insertError.message } }
+  }
+
+  // Log OVERDRAFT_GRANTED timeline events for students who attended past their limit
+  if (overdraftGranted.length > 0) {
+    const overdraftEvents = overdraftGranted.map(sid => ({
+      student_id:    sid,
+      schedule_id:   schedule.id,
+      event_type:    'OVERDRAFT_GRANTED',
+      notes:         'Session recorded past package limit (overdraft enabled)',
+      created_by:    user.id,
+      branch_id,
+    }))
+    // Non-fatal: insert timeline events if table exists
+    try { await db.from('student_timeline_events').insert(overdraftEvents) } catch { /* table may not exist yet */ }
   }
 
   await db.rpc('write_audit_log', {

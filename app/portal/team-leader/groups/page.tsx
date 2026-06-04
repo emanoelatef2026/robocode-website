@@ -71,8 +71,31 @@ export default async function TLGroupsPage({ searchParams }: Props) {
     return `/portal/team-leader/groups${qs ? `?${qs}` : ''}`
   }
 
+  // Compute operational KPIs from metrics
+  const activeGroups      = sorted.filter(g => g.status === 'active').length
+  const lowAttGroups      = sorted.filter(g => (metricsMap.get(g.id)?.attendance_avg ?? 100) < 60).length
+  const lowHomeworkGroups = sorted.filter(g => (metricsMap.get(g.id)?.assignment_avg ?? 100) < 60).length
+  const atRiskGroups      = sorted.filter(g => (metricsMap.get(g.id)?.health_score ?? 100) < 60).length
+
   return (
-    <div>
+    <div className="space-y-5">
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: 'Active Groups',       value: activeGroups,      color: 'bg-blue-400'   },
+          { label: 'Low Attendance',      value: lowAttGroups,      color: lowAttGroups > 0      ? 'bg-red-400'   : 'bg-slate-300' },
+          { label: 'Low Homework',        value: lowHomeworkGroups, color: lowHomeworkGroups > 0 ? 'bg-amber-400' : 'bg-slate-300' },
+          { label: 'Health At Risk',      value: atRiskGroups,      color: atRiskGroups > 0      ? 'bg-red-400'   : 'bg-slate-300' },
+        ].map(k => (
+          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+            <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
+            <p className="text-lg font-bold text-[#0B1F3A]">{k.value}</p>
+            <p className="text-[11px] text-[#64748B]">{k.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div>
       <PageHeader
         title="Groups"
         description={`${result.total} group${result.total !== 1 ? 's' : ''}`}
@@ -222,5 +245,6 @@ export default async function TLGroupsPage({ searchParams }: Props) {
         )}
       </div>
     </div>
+      </div>
   )
 }

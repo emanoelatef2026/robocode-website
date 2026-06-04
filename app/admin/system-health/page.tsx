@@ -172,6 +172,73 @@ async function getHealthData() {
     href: '/admin/communications',
   }))
 
+  // ── Data integrity checks ─────────────────────────────────────────────────────
+
+  const [dupEnrollData, balanceMismatch, orphanPayments, missingCodes] = await Promise.all([
+    // Duplicate ACTIVE enrollments (same student + group)
+    db.from('student_enrollments')
+      .select('student_id, group_id')
+      .eq('status', 'ACTIVE')
+      .not('group_id', 'is', null)
+      .limit(500),
+
+    // Balance mismatch: |remaining - (net - paid)| > 1 EGP
+    db.from('student_financial_accounts')
+      .select('id, student_id, branch_id, net_amount, paid_amount, remaining_amount')
+      .limit(1000),
+
+    // Orphan payments (no account and no enrollment)
+    db.from('finance_payments')
+      .select('id, student_id, amount, payment_date')
+      .is('account_id', null)
+      .is('enrollment_id', null)
+      .limit(50),
+
+    // Active enrollments missing contract_code
+    db.from('student_enrollments')
+      .select(`id, student_id, students!student_enrollments_student_id_fkey(users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name)))`)
+      .eq('status', 'ACTIVE')
+      .is('contract_code', null)
+      .limit(50),
+  ])
+
+  // Detect duplicates
+  const enrollSeen = new Map<string, number>()
+  for (const e of (dupEnrollData.data ?? []) as any[]) {
+    const k = `${e.student_id}:${e.group_id}`
+    enrollSeen.set(k, (enrollSeen.get(k) ?? 0) + 1)
+  }
+  const duplicateEnrollments: IssueItem[] = [...enrollSeen.entries()]
+    .filter(([, c]) => c > 1)
+    .map(([k]) => {
+      const [sid] = k.split(':')
+      return { id: k, name: 'Duplicate active enrollment', sub: `Student ${sid.slice(0, 8)}…`, href: `/admin/students/${sid}` }
+    })
+
+  // Balance mismatches
+  const balanceMismatches: IssueItem[] = ((balanceMismatch.data ?? []) as any[])
+    .filter(a => Math.abs(Number(a.remaining_amount) - (Number(a.net_amount) - Number(a.paid_amount))) > 1)
+    .slice(0, 20)
+    .map(a => ({
+      id:   a.id,
+      name: `Balance mismatch — EGP ${Math.abs(Number(a.remaining_amount) - (Number(a.net_amount) - Number(a.paid_amount))).toFixed(0)} diff`,
+      sub:  `Account ${a.id.slice(0, 8)}…`,
+      href: `/admin/finance`,
+    }))
+
+  const orphanPaymentItems: IssueItem[] = ((orphanPayments.data ?? []) as any[]).map(p => ({
+    id:   p.id,
+    name: `Orphan payment — EGP ${Number(p.amount).toFixed(0)}`,
+    sub:  `${p.payment_date}`,
+    href: `/admin/finance`,
+  }))
+
+  const missingContractCodes: IssueItem[] = ((missingCodes.data ?? []) as any[]).map(e => {
+    const prof = e.students?.users?.profiles
+    const name = prof ? [prof.first_name, prof.last_name].filter(Boolean).join(' ') : 'Unknown'
+    return { id: e.id, name, sub: 'Missing contract code', href: `/admin/students/${e.student_id}` }
+  })
+
   return {
     groupsWithoutInstructor,
     groupsWithoutCourse,
@@ -181,6 +248,11 @@ async function getHealthData() {
     leadsWithoutOwner,
     sessionsWithoutAttendance,
     openMessages,
+    // Integrity
+    duplicateEnrollments,
+    balanceMismatches,
+    orphanPaymentItems,
+    missingContractCodes,
   }
 }
 
@@ -265,6 +337,26 @@ export default async function SystemHealthPage() {
   const data = await getHealthData()
 
   const sections: CheckSection[] = [
+    // ── Data integrity (most critical) ──────────────────────────────────────────
+    {
+      title:        'Duplicate Active Enrollments',
+      severity:     'critical',
+      items:        data.duplicateEnrollments,
+      allClearText: 'No duplicate active enrollments detected.',
+    },
+    {
+      title:        'Financial Balance Mismatches',
+      severity:     'critical',
+      items:        data.balanceMismatches,
+      allClearText: 'All account balances are consistent.',
+    },
+    {
+      title:        'Orphan Payments (No Account)',
+      severity:     'critical',
+      items:        data.orphanPaymentItems,
+      allClearText: 'All payments are linked to accounts.',
+    },
+    // ── Operational gaps ─────────────────────────────────────────────────────────
     {
       title:        'Groups Without Instructor',
       severity:     'critical',
@@ -283,6 +375,13 @@ export default async function SystemHealthPage() {
       items:        data.sessionsWithoutAttendance,
       allClearText: 'All recent sessions have attendance recorded.',
     },
+    // ── Warnings ──────────────────────────────────────────────────────────────────
+    {
+      title:        'Enrollments Missing Contract Code',
+      severity:     'warning',
+      items:        data.missingContractCodes,
+      allClearText: 'All enrollments have contract codes.',
+    },
     {
       title:        'Leads Without Owner',
       severity:     'warning',
@@ -290,10 +389,10 @@ export default async function SystemHealthPage() {
       allClearText: 'All active leads have owners.',
     },
     {
-      title:        'Active Students Not Enrolled in Any Group',
+      title:        'Active Students Not in Any Group',
       severity:     'warning',
       items:        data.studentsWithoutGroup,
-      allClearText: 'All active students are enrolled in at least one group.',
+      allClearText: 'All active students are in at least one group.',
     },
     {
       title:        'Open Parent Messages (Unresolved)',
@@ -301,6 +400,7 @@ export default async function SystemHealthPage() {
       items:        data.openMessages,
       allClearText: 'No open parent messages.',
     },
+    // ── Info ──────────────────────────────────────────────────────────────────────
     {
       title:        'Inactive Instructors (Still in System)',
       severity:     'info',
@@ -319,6 +419,26 @@ export default async function SystemHealthPage() {
   const warningCount  = sections.filter(s => s.severity === 'warning').reduce((sum, s) => sum + s.items.length, 0)
   const infoCount     = sections.filter(s => s.severity === 'info').reduce((sum, s) => sum + s.items.length, 0)
   const totalIssues   = criticalCount + warningCount + infoCount
+
+  // Health score: start at 100, deduct for issues
+  const healthScore = Math.max(0, Math.min(100,
+    100
+    - criticalCount * 10  // each critical costs 10 points
+    - warningCount  * 3   // each warning costs 3 points
+    - infoCount     * 1   // each info costs 1 point
+  ))
+
+  const scoreColor =
+    healthScore >= 90 ? 'text-emerald-600' :
+    healthScore >= 75 ? 'text-blue-600'    :
+    healthScore >= 60 ? 'text-amber-600'   :
+    'text-red-600'
+
+  const scoreLabel =
+    healthScore >= 90 ? 'Healthy' :
+    healthScore >= 75 ? 'Good'    :
+    healthScore >= 60 ? 'Watch'   :
+    'Critical'
 
   return (
     <div className="max-w-4xl space-y-5">
@@ -344,6 +464,26 @@ export default async function SystemHealthPage() {
               {infoCount} info
             </span>
           )}
+        </div>
+      </div>
+
+      {/* ── Health Score ───────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 flex items-center gap-6">
+        <div className="text-center shrink-0">
+          <p className={`text-5xl font-black ${scoreColor}`}>{healthScore}</p>
+          <p className="text-xs font-semibold text-[#94A3B8] mt-1">/ 100</p>
+        </div>
+        <div className="flex-1">
+          <p className={`text-lg font-bold ${scoreColor}`}>System {scoreLabel}</p>
+          <div className="mt-2 h-2.5 rounded-full bg-[#F1F5F9] overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${healthScore >= 90 ? 'bg-emerald-500' : healthScore >= 75 ? 'bg-blue-500' : healthScore >= 60 ? 'bg-amber-500' : 'bg-red-500'}`}
+              style={{ width: `${healthScore}%` }}
+            />
+          </div>
+          <p className="mt-1.5 text-[11px] text-[#94A3B8]">
+            {criticalCount} critical · {warningCount} warnings · {infoCount} info · {totalIssues} total issues
+          </p>
         </div>
       </div>
 

@@ -3,57 +3,103 @@ import {
   getTLKPIs,
   getTodaysClasses,
   getTodayAttendanceSummary,
-  getAtRiskStudents,
-  getPortfolioQueue,
-  getCertReadyStudents,
+  getWorkQueues,
 }                                 from '@/modules/tl-dashboard/queries'
 import { getTLMessageCounts }    from '@/modules/parent-messages/queries'
-import { getOperationalAlerts }  from '@/modules/tl-analytics/queries'
+import { getDashboardFinanceSummary } from '@/modules/finance/queries'
 import Link                       from 'next/link'
 
-// ── Shared UI helpers ──────────────────────────────────────────────────────────
-
-function KPICard({
-  label, value, sub, href, color = 'text-[#0B1F3A]', alert = false,
-}: {
-  label: string; value: string; sub?: string; href?: string
-  color?: string; alert?: boolean
-}) {
-  const cls = [
-    'rounded-xl border bg-white p-5 transition',
-    alert ? 'border-orange-200 bg-orange-50' : 'border-[#E2E8F0] hover:border-[#CBD5E1]',
-  ].join(' ')
-  const inner = (
-    <>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
-      <p className={`mt-1 text-3xl font-bold ${color}`}>{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-[#94A3B8]">{sub}</p>}
-    </>
-  )
-  return href
-    ? <Link href={href} className={cls}>{inner}</Link>
-    : <div className={cls}>{inner}</div>
+function fmt(n: number) {
+  return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
 }
 
-function SectionHeader({ title, sub }: { title: string; sub?: string }) {
+// ── Work Queue Row ─────────────────────────────────────────────────────────────
+
+function QueueRow({
+  name, code, value, sub, phone, href, groupName,
+}: {
+  name: string; code: string | null; value: string; sub: string | null
+  phone: string | null; href: string; groupName: string | null
+}) {
   return (
-    <div>
-      <h2 className="text-[15px] font-semibold text-[#0B1F3A]">{title}</h2>
-      {sub && <p className="mt-0.5 text-[12px] text-[#94A3B8]">{sub}</p>}
+    <div className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8FAFC] border-b border-[#F1F5F9] last:border-0">
+      <div className="min-w-0 flex-1">
+        <Link href={href} className="block text-[13px] font-medium text-[#0B1F3A] hover:text-[#FF8A1F] leading-tight">
+          {name}
+        </Link>
+        <p className="text-[11px] text-[#94A3B8] truncate">
+          {[code && `#${code}`, groupName].filter(Boolean).join(' · ')}
+        </p>
+      </div>
+      <div className="shrink-0 text-right">
+        <p className="text-[13px] font-semibold text-[#0B1F3A]">{value}</p>
+        {sub && <p className="text-[10px] text-[#94A3B8]">{sub}</p>}
+      </div>
+      {phone && (
+        <a
+          href={`https://wa.me/${phone.replace(/\D/g, '')}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-600 hover:bg-emerald-100"
+        >
+          WA
+        </a>
+      )}
     </div>
   )
 }
 
-const QUICK_ACTIONS = [
-  { label: 'Add Student',         href: '/portal/team-leader/students/new',           icon: '👤' },
-  { label: 'New Group',           href: '/portal/team-leader/groups/new',             icon: '📚' },
-  { label: 'Review Portfolios',   href: '/portal/team-leader/portfolio',              icon: '🖼' },
-  { label: 'Parent Messages',     href: '/portal/team-leader/parent-feedback?tab=messages', icon: '💬' },
-  { label: 'Instructor Metrics',  href: '/portal/team-leader/instructor-performance', icon: '📊' },
-  { label: 'Satisfaction Reviews',href: '/portal/team-leader/parent-feedback?tab=reviews',  icon: '⭐' },
-]
+// ── Work Queue Card ────────────────────────────────────────────────────────────
 
-// ─────────────────────────────────────────────────────────────────────────────
+function WorkQueue({
+  title, count, items, viewHref, emptyText, accent = 'border-[#E2E8F0]',
+}: {
+  title: string; count: number
+  items: { student_id: string; student_name: string; student_code: string | null; group_name: string | null; parent_phone_1: string | null; value: string; sub: string | null; href: string }[]
+  viewHref?: string
+  emptyText: string
+  accent?: string
+}) {
+  return (
+    <div className={`rounded-xl border bg-white overflow-hidden ${accent}`}>
+      <div className={`flex items-center justify-between px-4 py-3 border-b ${accent}`}>
+        <div className="flex items-center gap-2">
+          <p className="text-[13px] font-semibold text-[#0B1F3A]">{title}</p>
+          {count > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF8A1F] px-1.5 text-[10px] font-bold text-white">
+              {count}
+            </span>
+          )}
+        </div>
+        {viewHref && count > 0 && (
+          <Link href={viewHref} className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
+            View all →
+          </Link>
+        )}
+      </div>
+      {items.length === 0 ? (
+        <p className="px-4 py-6 text-center text-[12px] text-[#94A3B8]">{emptyText}</p>
+      ) : (
+        <div>
+          {items.map(item => (
+            <QueueRow
+              key={item.student_id + item.value}
+              name={item.student_name}
+              code={item.student_code}
+              value={item.value}
+              sub={item.sub}
+              phone={item.parent_phone_1}
+              href={item.href}
+              groupName={item.group_name}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Page ───────────────────────────────────────────────────────────────────────
 
 export default async function TLDashboardPage() {
   const user = await requirePortalRole('team_leader')
@@ -61,129 +107,183 @@ export default async function TLDashboardPage() {
   if (!user.branchIds.length) {
     return (
       <div className="flex h-64 items-center justify-center text-[#64748B]">
-        No branch assigned to your account. Contact a super admin.
+        No branch assigned. Contact a super admin.
       </div>
     )
   }
 
   const branchIds = user.branchIds
 
-  const [kpis, todaysClasses, todayAtt, atRisk, portfolioQueue, certReady, msgCounts, alerts] =
-    await Promise.all([
-      getTLKPIs(branchIds),
-      getTodaysClasses(branchIds),
-      getTodayAttendanceSummary(branchIds),
-      getAtRiskStudents(branchIds),
-      getPortfolioQueue(branchIds),
-      getCertReadyStudents(branchIds),
-      getTLMessageCounts(branchIds),
-      getOperationalAlerts(branchIds),
-    ])
+  const [kpis, todaysClasses, todayAtt, msgCounts, finSummary, queues] = await Promise.all([
+    getTLKPIs(branchIds),
+    getTodaysClasses(branchIds),
+    getTodayAttendanceSummary(branchIds),
+    getTLMessageCounts(branchIds),
+    getDashboardFinanceSummary(branchIds),
+    getWorkQueues(branchIds),
+  ])
 
-  const satDisplay = kpis.parent_satisfaction_avg != null
-    ? `${kpis.parent_satisfaction_avg}★`
-    : '—'
+  const totalWorkItems =
+    queues.collect_today.length +
+    queues.renew_urgent.length +
+    queues.attendance_risks.length +
+    queues.inactive_students.length
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
 
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-[#0B1F3A]">Team Leader Dashboard</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">Branch operations overview</p>
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-[#0B1F3A]">Operations Command Center</h1>
+          <p className="mt-0.5 text-sm text-[#64748B]">
+            {todaysClasses.length > 0 ? `${todaysClasses.length} class${todaysClasses.length !== 1 ? 'es' : ''} today` : 'No classes today'}
+            {' · '}
+            {totalWorkItems > 0 ? `${totalWorkItems} items need attention` : 'All clear'}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Link href="/portal/team-leader/students/new" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+            + Student
+          </Link>
+          <Link href="/portal/team-leader/finance" className="rounded-lg bg-[#FF8A1F] px-3 py-2 text-[12px] font-medium text-white hover:bg-[#e87c18]">
+            Enroll / Collect
+          </Link>
+        </div>
       </div>
 
-      {/* Operational Alerts Banner */}
-      {alerts.length > 0 && (
-        <div className="space-y-2">
-          {alerts.slice(0, 4).map(alert => {
-            const isCritical = alert.severity === 'critical'
-            return (
-              <div
-                key={alert.id}
-                className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 ${
-                  isCritical ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'
-                }`}
-              >
-                <span className={`h-2 w-2 shrink-0 rounded-full ${isCritical ? 'bg-red-500' : 'bg-amber-500'}`} />
-                <p className={`flex-1 text-sm font-medium ${isCritical ? 'text-red-700' : 'text-amber-700'}`}>
-                  {alert.title}
-                </p>
-                {alert.action_href && (
-                  <Link href={alert.action_href} className={`shrink-0 text-xs font-medium underline ${isCritical ? 'text-red-600' : 'text-amber-600'}`}>
-                    Act →
-                  </Link>
-                )}
-              </div>
-            )
-          })}
-          {alerts.length > 4 && (
-            <Link href="/portal/team-leader/analytics?tab=overview" className="block text-center text-xs text-[#FF8A1F] hover:underline">
-              +{alerts.length - 4} more alerts → View analytics
-            </Link>
-          )}
+      {/* ── Finance KPI Strip ────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+        {[
+          { label: 'Collected Today',  value: `EGP ${fmt(finSummary.collected_today)}`,      badge: null },
+          { label: 'This Month',       value: `EGP ${fmt(finSummary.collected_this_month)}`,  badge: null },
+          { label: 'Outstanding',      value: `EGP ${fmt(finSummary.outstanding)}`,           badge: null },
+          { label: 'Collection Rate',  value: `${finSummary.collection_rate}%`,               badge: finSummary.collection_rate < 80 ? 'low' : null },
+          { label: 'Overdue',          value: String(finSummary.overdue_count),               badge: finSummary.overdue_count > 0 ? 'alert' : null },
+          { label: 'Due This Week',    value: String(finSummary.due_this_week),               badge: null },
+          { label: 'Open Messages',    value: String(msgCounts.open),                          badge: msgCounts.open > 0 ? 'alert' : null },
+        ].map(k => (
+          <div key={k.label} className={`rounded-xl border bg-white p-3 ${k.badge === 'alert' ? 'border-red-200' : 'border-[#E2E8F0]'}`}>
+            <p className="text-lg font-bold text-[#0B1F3A]">{k.value}</p>
+            <p className="text-[11px] text-[#64748B]">{k.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Today's Attendance ───────────────────────────────────────────── */}
+      {(todayAtt.present + todayAtt.absent + todayAtt.late) > 0 && (
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { label: 'Present Today', value: todayAtt.present, cls: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
+            { label: 'Absent Today',  value: todayAtt.absent,  cls: 'border-red-200 bg-red-50 text-red-700' },
+            { label: 'Late Today',    value: todayAtt.late,    cls: 'border-amber-200 bg-amber-50 text-amber-700' },
+          ].map(k => (
+            <div key={k.label} className={`rounded-xl border px-4 py-3 text-center ${k.cls}`}>
+              <p className="text-2xl font-bold">{k.value}</p>
+              <p className="text-[11px] font-medium">{k.label}</p>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* KPI Row */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <KPICard
-          label="Active Students"
-          value={String(kpis.active_students)}
-          href="/portal/team-leader/students"
-        />
-        <KPICard
-          label="Monthly Attendance"
-          value={`${kpis.monthly_attendance_pct}%`}
-          color={kpis.monthly_attendance_pct >= 75 ? 'text-green-600' : 'text-red-600'}
-          alert={kpis.monthly_attendance_pct < 75}
-        />
-        <KPICard
-          label="Homework Completion"
-          value={`${kpis.homework_completion_pct}%`}
-          color={kpis.homework_completion_pct >= 60 ? 'text-[#0B1F3A]' : 'text-orange-600'}
-        />
-        <KPICard
-          label="Parent Satisfaction"
-          value={satDisplay}
-          color="text-[#FF8A1F]"
-          href="/portal/team-leader/parent-feedback?tab=reviews"
-        />
-        <KPICard
-          label="Pending Reviews"
-          value={String(kpis.pending_portfolio_count)}
-          color={kpis.pending_portfolio_count > 0 ? 'text-amber-600' : 'text-[#0B1F3A]'}
-          href="/portal/team-leader/portfolio"
-          alert={kpis.pending_portfolio_count > 0}
-        />
-        <KPICard
-          label="Cert Ready"
-          value={String(kpis.cert_ready_count)}
-          color={kpis.cert_ready_count > 0 ? 'text-green-600' : 'text-[#0B1F3A]'}
-        />
-      </div>
+      {/* ── 8 Work Queues ────────────────────────────────────────────────── */}
+      <div>
+        <h2 className="mb-3 text-[15px] font-semibold text-[#0B1F3A]">Work Queues</h2>
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
 
-      {/* Today's operations */}
-      <div className="grid gap-6 lg:grid-cols-2">
-
-        {/* Today's Classes */}
-        <div className="space-y-3">
-          <SectionHeader
-            title="Today's Classes"
-            sub={todaysClasses.length === 0 ? 'No classes scheduled today' : `${todaysClasses.length} scheduled`}
+          {/* 1. Collect Today */}
+          <WorkQueue
+            title="💰 Collect Today"
+            count={queues.collect_today.length}
+            items={queues.collect_today}
+            viewHref="/portal/team-leader/finance"
+            emptyText="No overdue or due-today payments"
+            accent={queues.collect_today.length > 0 ? 'border-red-200' : 'border-[#E2E8F0]'}
           />
+
+          {/* 2. Renew Today (urgent) */}
+          <WorkQueue
+            title="🔄 Renew Now"
+            count={queues.renew_urgent.length}
+            items={queues.renew_urgent}
+            viewHref="/portal/team-leader/students?att=exhausted"
+            emptyText="No contracts at 0–2 sessions remaining"
+            accent={queues.renew_urgent.length > 0 ? 'border-amber-200' : 'border-[#E2E8F0]'}
+          />
+
+          {/* 3. Attendance Risks */}
+          <WorkQueue
+            title="⚠️ Attendance Risks"
+            count={queues.attendance_risks.length}
+            items={queues.attendance_risks}
+            viewHref="/portal/team-leader/attendance?att=chronic"
+            emptyText="No students with 3+ consecutive absences"
+            accent={queues.attendance_risks.length > 0 ? 'border-orange-200' : 'border-[#E2E8F0]'}
+          />
+
+          {/* 4. Parent Escalations */}
+          <WorkQueue
+            title="💬 Parent Escalations"
+            count={msgCounts.open}
+            items={[]}
+            viewHref="/portal/team-leader/parent-feedback?tab=messages&status=submitted"
+            emptyText="No unresolved parent messages"
+            accent={msgCounts.open > 0 ? 'border-blue-200' : 'border-[#E2E8F0]'}
+          />
+
+          {/* 5. Contracts Near Exhaustion */}
+          <WorkQueue
+            title="⏳ Near Exhaustion"
+            count={queues.contracts_near_exhaustion.length}
+            items={queues.contracts_near_exhaustion}
+            viewHref="/portal/team-leader/students"
+            emptyText="No contracts at 3–5 sessions remaining"
+          />
+
+          {/* 6. Inactive Students */}
+          <WorkQueue
+            title="😴 Inactive Students"
+            count={queues.inactive_students.length}
+            items={queues.inactive_students}
+            viewHref="/portal/team-leader/attendance?att=never"
+            emptyText="No students inactive for 14+ days"
+            accent={queues.inactive_students.length > 0 ? 'border-slate-300' : 'border-[#E2E8F0]'}
+          />
+
+          {/* 7. Students Missing Groups */}
+          <WorkQueue
+            title="📦 Missing Groups"
+            count={queues.students_missing_groups.length}
+            items={queues.students_missing_groups}
+            viewHref="/portal/team-leader/students"
+            emptyText="All active contracts have delivery groups"
+          />
+
+          {/* 8. Today's Classes */}
           <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0]">
+              <div className="flex items-center gap-2">
+                <p className="text-[13px] font-semibold text-[#0B1F3A]">📚 Today&apos;s Classes</p>
+                {todaysClasses.length > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-blue-500 px-1.5 text-[10px] font-bold text-white">
+                    {todaysClasses.length}
+                  </span>
+                )}
+              </div>
+              <Link href="/portal/team-leader/attendance/record" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
+                Record →
+              </Link>
+            </div>
             {todaysClasses.length === 0 ? (
-              <p className="px-5 py-10 text-center text-sm text-[#94A3B8]">No classes scheduled for today.</p>
+              <p className="px-4 py-6 text-center text-[12px] text-[#94A3B8]">No classes scheduled today</p>
             ) : (
-              <div className="divide-y divide-[#F8FAFC]">
+              <div>
                 {todaysClasses.map(cls => (
-                  <div key={cls.schedule_id} className="flex items-center justify-between gap-3 px-5 py-3.5">
+                  <div key={cls.schedule_id} className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#F1F5F9] last:border-0">
                     <div className="min-w-0">
                       <p className="truncate text-[13px] font-medium text-[#0B1F3A]">{cls.group_name}</p>
-                      <p className="truncate text-[11px] text-[#64748B]">
-                        {cls.course_title}
-                        {cls.instructor_name && ` · ${cls.instructor_name}`}
+                      <p className="truncate text-[11px] text-[#94A3B8]">
+                        {cls.course_title}{cls.instructor_name && ` · ${cls.instructor_name}`}
                       </p>
                     </div>
                     <div className="shrink-0 text-right">
@@ -197,149 +297,23 @@ export default async function TLDashboardPage() {
               </div>
             )}
           </div>
-        </div>
 
-        {/* Today's Attendance + Open Messages */}
-        <div className="space-y-4">
-          {/* Attendance */}
-          <div>
-            <SectionHeader title="Today's Attendance" />
-            <div className="mt-3 grid grid-cols-3 gap-3">
-              {[
-                { label: 'Present', value: todayAtt.present, cls: 'text-green-600 bg-green-50 border-green-100' },
-                { label: 'Absent',  value: todayAtt.absent,  cls: 'text-red-600   bg-red-50   border-red-100'   },
-                { label: 'Late',    value: todayAtt.late,    cls: 'text-amber-600 bg-amber-50 border-amber-100'  },
-              ].map(({ label, value, cls }) => (
-                <div key={label} className={`rounded-xl border px-3 py-4 text-center ${cls}`}>
-                  <p className="text-2xl font-bold">{value}</p>
-                  <p className="mt-0.5 text-[11px] font-medium">{label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Open messages */}
-          {msgCounts.open > 0 && (
-            <Link
-              href="/portal/team-leader/parent-feedback?tab=messages"
-              className="flex items-center justify-between rounded-xl border border-orange-200 bg-orange-50 px-5 py-4 transition hover:bg-orange-100"
-            >
-              <div>
-                <p className="text-sm font-semibold text-orange-700">Open Parent Messages</p>
-                <p className="text-[12px] text-orange-600">Requires your attention</p>
-              </div>
-              <span className="rounded-full bg-orange-500 px-3 py-1 text-sm font-bold text-white">
-                {msgCounts.open}
-              </span>
-            </Link>
-          )}
         </div>
       </div>
 
-      {/* Action Required */}
-      {(atRisk.length > 0 || portfolioQueue.length > 0 || certReady.length > 0) && (
-        <div className="space-y-4">
-          <SectionHeader title="Action Required" />
-          <div className="grid gap-4 lg:grid-cols-3">
-
-            {/* At-Risk Students */}
-            {atRisk.length > 0 && (
-              <div className="rounded-xl border border-red-100 bg-white overflow-hidden">
-                <div className="border-b border-red-100 bg-red-50 px-4 py-3 flex items-center justify-between">
-                  <p className="text-[13px] font-semibold text-red-700">⚠ At Risk Students</p>
-                  <span className="rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">{atRisk.length}</span>
-                </div>
-                <div className="divide-y divide-[#F8FAFC]">
-                  {atRisk.slice(0, 5).map(s => (
-                    <Link
-                      key={s.student_id}
-                      href={`/portal/team-leader/students/${s.student_id}`}
-                      className="block px-4 py-3 hover:bg-[#F8FAFC]"
-                    >
-                      <p className="text-[13px] font-medium text-[#0B1F3A]">{s.student_name}</p>
-                      <p className="text-[11px] text-[#94A3B8]">{s.group_name ?? '—'}</p>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {s.risk_reasons.map(r => (
-                          <span key={r} className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-600">{r}</span>
-                        ))}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Portfolio Queue */}
-            {portfolioQueue.length > 0 && (
-              <div className="rounded-xl border border-amber-100 bg-white overflow-hidden">
-                <div className="border-b border-amber-100 bg-amber-50 px-4 py-3 flex items-center justify-between">
-                  <p className="text-[13px] font-semibold text-amber-700">🖼 Portfolio Queue</p>
-                  <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-white">{portfolioQueue.length}</span>
-                </div>
-                <div className="divide-y divide-[#F8FAFC]">
-                  {portfolioQueue.slice(0, 5).map(p => (
-                    <Link
-                      key={p.project_id}
-                      href="/portal/team-leader/portfolio"
-                      className="block px-4 py-3 hover:bg-[#F8FAFC]"
-                    >
-                      <p className="text-[13px] font-medium text-[#0B1F3A]">{p.project_title}</p>
-                      <p className="text-[11px] text-[#94A3B8]">
-                        {p.student_name}
-                        {p.category && ` · ${p.category}`}
-                        {' · '}
-                        {new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                      </p>
-                    </Link>
-                  ))}
-                </div>
-                <div className="border-t border-amber-100 px-4 py-2">
-                  <Link href="/portal/team-leader/portfolio" className="text-[12px] font-medium text-amber-600 hover:underline">
-                    Review all →
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {/* Cert Ready */}
-            {certReady.length > 0 && (
-              <div className="rounded-xl border border-green-100 bg-white overflow-hidden">
-                <div className="border-b border-green-100 bg-green-50 px-4 py-3 flex items-center justify-between">
-                  <p className="text-[13px] font-semibold text-green-700">🏆 Certificate Ready</p>
-                  <span className="rounded-full bg-green-500 px-2 py-0.5 text-[11px] font-bold text-white">{certReady.length}</span>
-                </div>
-                <div className="divide-y divide-[#F8FAFC]">
-                  {certReady.slice(0, 5).map(s => (
-                    <div key={s.student_id} className="px-4 py-3">
-                      <p className="text-[13px] font-medium text-[#0B1F3A]">{s.student_name}</p>
-                      <p className="text-[11px] text-[#94A3B8]">
-                        {s.course_title ?? s.group_name ?? '—'}
-                        {` · ${Math.round(s.completion_pct)}%`}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <div className="space-y-3">
-        <SectionHeader title="Quick Actions" />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-          {QUICK_ACTIONS.map(({ label, href, icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex flex-col items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-3 py-4 text-center text-[13px] font-medium text-[#64748B] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
-            >
-              <span className="text-2xl">{icon}</span>
-              {label}
-            </Link>
-          ))}
-        </div>
+      {/* ── Academic KPIs ────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: 'Active Students',    value: String(kpis.active_students),           href: '/portal/team-leader/students' },
+          { label: 'Monthly Attendance', value: `${kpis.monthly_attendance_pct}%`,      href: '/portal/team-leader/attendance' },
+          { label: 'Homework Rate',      value: `${kpis.homework_completion_pct}%`,     href: '/portal/team-leader/assignments' },
+          { label: 'Satisfaction',       value: kpis.parent_satisfaction_avg != null ? `${kpis.parent_satisfaction_avg}★` : '—', href: '/portal/team-leader/parent-feedback' },
+        ].map(k => (
+          <Link key={k.label} href={k.href} className="rounded-xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#CBD5E1]">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{k.label}</p>
+            <p className="mt-1 text-2xl font-bold text-[#0B1F3A]">{k.value}</p>
+          </Link>
+        ))}
       </div>
 
     </div>

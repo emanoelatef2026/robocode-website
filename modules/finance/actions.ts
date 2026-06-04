@@ -2,6 +2,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission }   from '@/modules/rbac/guards'
 import { revalidatePath }       from 'next/cache'
+import { logTimelineEvent }     from '@/lib/timeline'
 import type {
   AddPaymentInput, AddNoteInput, AddActivityInput,
   CreateAccountInput, AddInstallmentInput, AddPromiseInput,
@@ -123,6 +124,17 @@ export async function addPayment(
     p_account_id: input.account_id,
   })
   const bal = (balRow as any[])?.[0]
+
+  // Timeline event (non-fatal)
+  await logTimelineEvent({
+    student_id:    input.student_id,
+    enrollment_id: enrollmentId,
+    account_id:    input.account_id,
+    event_type:    'PAYMENT',
+    notes:         `EGP ${input.amount} via ${input.payment_method}${input.reference_number ? ` (${input.reference_number})` : ''}`,
+    created_by:    user.id,
+    branch_id:     branchId ?? undefined,
+  })
 
   revalidatePath('/admin/finance')
   revalidatePath('/portal/team-leader/finance')
