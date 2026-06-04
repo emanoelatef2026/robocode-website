@@ -4,16 +4,58 @@ import { getCurrentUser, isBranchAccessible } from '@/modules/rbac/guards'
 import type { InstructorListItem, Instructor } from './types'
 import type { PaginatedResult } from '@/types/app'
 
+// ── Resolve instructor IDs visible in the given branches ──────────────────────
+// Sources (union):
+//   1. instructors.branch_id  — home branch
+//   2. instructor_branches    — explicit cross-branch assignments (if table exists)
+//   3. group_courses           — teaching in a group that belongs to those branches
+async function resolveInstructorIdsByBranch(branchIds: string[]): Promise<string[] | null> {
+  if (!branchIds.length) return null
+  const db = createServiceClient()
+
+  const [homeRes, pivotRes, gcRes] = await Promise.all([
+    // 1. Home branch
+    db.from('instructors').select('id').in('branch_id', branchIds).is('deleted_at', null),
+
+    // 2. instructor_branches pivot (graceful — table may not exist yet)
+    db.from('instructor_branches').select('instructor_id').in('branch_id', branchIds)
+      .then(r => r, () => ({ data: null as null })),
+
+    // 3. Active group_courses taught in these branches
+    db.from('group_courses')
+      .select('instructor_id, groups!group_courses_group_id_fkey(branch_id)')
+      .eq('status', 'active')
+      .not('instructor_id', 'is', null),
+  ])
+
+  const ids = new Set<string>()
+
+  for (const r of (homeRes.data ?? []) as any[]) ids.add(r.id)
+  for (const r of (pivotRes.data ?? []) as any[]) ids.add(r.instructor_id)
+  for (const r of (gcRes.data ?? []) as any[]) {
+    const gBranch = (r.groups as any)?.branch_id
+    if (gBranch && branchIds.includes(gBranch) && r.instructor_id) {
+      ids.add(r.instructor_id)
+    }
+  }
+
+  return ids.size > 0 ? [...ids] : []
+}
+
+// ── listInstructors ───────────────────────────────────────────────────────────
+
 export async function listInstructors({
   page = 1,
   perPage = 20,
   search = '',
   branchId,
+  includeCrossBranch = false,
 }: {
   page?: number
   perPage?: number
   search?: string
   branchId?: string | string[]
+  includeCrossBranch?: boolean
 } = {}): Promise<PaginatedResult<InstructorListItem>> {
   const db   = createServiceClient()
   const from = (page - 1) * perPage
@@ -31,10 +73,24 @@ export async function listInstructors({
     .order('created_at', { ascending: false })
 
   if (branchId) {
-    if (Array.isArray(branchId)) {
-      query = query.in('branch_id', branchId)
+    const ids = Array.isArray(branchId) ? branchId : [branchId]
+    if (includeCrossBranch) {
+      // Resolve cross-branch visibility via home branch + pivot + group_courses
+      const allIds = await resolveInstructorIdsByBranch(ids)
+      if (allIds === null) {
+        // no filter (super admin)
+      } else if (allIds.length === 0) {
+        return { data: [], total: 0, page, perPage, totalPages: 0 }
+      } else {
+        query = query.in('id', allIds)
+      }
     } else {
-      query = query.eq('branch_id', branchId)
+      // Simple home-branch filter (backward compat)
+      if (ids.length === 1) {
+        query = query.eq('branch_id', ids[0])
+      } else {
+        query = query.in('branch_id', ids)
+      }
     }
   }
 
@@ -73,16 +129,21 @@ export async function listInstructors({
     group_count:     0,
   }))
 
-  // Batch-fetch group counts from group_instructors
+  // Batch-fetch group counts from group_instructors + group_courses
   const instructorIds = items.map((i) => i.id)
   if (instructorIds.length > 0) {
-    const { data: giRows } = await db
-      .from('group_instructors')
-      .select('instructor_id')
-      .in('instructor_id', instructorIds)
+    const [giRes, gcRes] = await Promise.all([
+      db.from('group_instructors').select('instructor_id').in('instructor_id', instructorIds),
+      db.from('group_courses').select('instructor_id').in('instructor_id', instructorIds).eq('status', 'active').not('instructor_id', 'is', null),
+    ])
     const countMap: Record<string, number> = {}
-    for (const r of giRows ?? []) {
-      countMap[(r as any).instructor_id] = (countMap[(r as any).instructor_id] ?? 0) + 1
+    const seen = new Set<string>()
+    for (const r of [...(giRes.data ?? []), ...(gcRes.data ?? [])] as any[]) {
+      const key = `gi:${r.instructor_id}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        countMap[r.instructor_id] = (countMap[r.instructor_id] ?? 0) + 1
+      }
     }
     items.forEach((item) => { item.group_count = countMap[item.id] ?? 0 })
   }
@@ -140,7 +201,6 @@ export async function getInstructorGroups(instructorId: string): Promise<Instruc
     .select('group_id, groups!group_instructors_group_id_fkey(id, name, code, type, status, branch_id, branches!groups_branch_id_fkey(name))')
     .eq('instructor_id', instructorId)
 
-  // Also get from group_courses
   const { data: gcRows } = await db
     .from('group_courses')
     .select('group_id, groups!group_courses_group_id_fkey(id, name, code, type, status, branch_id, branches!groups_branch_id_fkey(name))')
@@ -167,7 +227,6 @@ export async function getInstructorGroups(instructorId: string): Promise<Instruc
   const groups = [...allGroupMap.values()]
   if (!groups.length) return []
 
-  // Fetch active student counts
   const { data: gsCounts } = await db
     .from('group_students')
     .select('group_id')

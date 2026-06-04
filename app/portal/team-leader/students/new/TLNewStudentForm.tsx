@@ -7,10 +7,13 @@ import Link from 'next/link'
 import type { ActionResult } from '@/types/app'
 
 interface Props {
-  branchId: string
+  branchId?:  string
+  branchIds?: string[]
+  branches?:  { id: string; name: string }[]
 }
 
-export default function TLNewStudentForm({ branchId }: Props) {
+export default function TLNewStudentForm({ branchId, branchIds, branches }: Props) {
+  const singleBranch = branchId ?? (branchIds?.length === 1 ? branchIds[0] : undefined)
   const [state, action] = useActionState<ActionResult<{ id: string }> | null, FormData>(
     createStudent,
     null
@@ -25,7 +28,17 @@ export default function TLNewStudentForm({ branchId }: Props) {
       )}
 
       <form action={action} className="space-y-4">
-        <input type="hidden" name="branch_id"   value={branchId} />
+        {singleBranch ? (
+          <input type="hidden" name="branch_id" value={singleBranch} />
+        ) : (
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Branch <span className="text-red-500">*</span></label>
+            <select name="branch_id" required className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+              <option value="">— Select branch —</option>
+              {(branches ?? []).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          </div>
+        )}
         <input type="hidden" name="_return_to"  value="/portal/team-leader/students" />
 
         <div className="grid grid-cols-2 gap-4">

@@ -19,7 +19,7 @@ export default async function TLInstructorsPage({ searchParams }: Props) {
   const page   = Number(params.page ?? 1)
   const search = params.q ?? ''
 
-  const result = await listInstructors({ page, perPage: 20, search, branchId: user.branchIds })
+  const result = await listInstructors({ page, perPage: 20, search, branchId: user.branchIds, includeCrossBranch: true })
 
   return (
     <div>

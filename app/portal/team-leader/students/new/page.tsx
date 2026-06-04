@@ -1,19 +1,27 @@
 import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
-import PageHeader from '@/components/admin/PageHeader'
-import TLNewStudentForm from './TLNewStudentForm'
-import Link from 'next/link'
+import { createServiceClient }                  from '@/lib/supabase/service'
+import PageHeader                               from '@/components/admin/PageHeader'
+import TLNewStudentForm                         from './TLNewStudentForm'
+import Link                                     from 'next/link'
 
 export default async function TLNewStudentPage() {
   const user = await requirePortalRole('team_leader')
   await requirePermission('manage_students')
-  const branchId = user.branchIds[0]
 
-  if (!branchId) {
+  const branchIds = user.branchIds
+  if (!branchIds.length) {
     return (
       <div className="flex h-64 items-center justify-center text-[#64748B]">
         No branch assigned. Contact a super admin.
       </div>
     )
+  }
+
+  let branches: { id: string; name: string }[] = []
+  if (branchIds.length > 1) {
+    const db = createServiceClient()
+    const { data } = await db.from('branches').select('id, name').in('id', branchIds).order('name')
+    branches = (data ?? []) as { id: string; name: string }[]
   }
 
   return (
@@ -30,7 +38,10 @@ export default async function TLNewStudentPage() {
           </Link>
         }
       />
-      <TLNewStudentForm branchId={branchId} />
+      <TLNewStudentForm
+        branchIds={branchIds}
+        branches={branches}
+      />
     </div>
   )
 }

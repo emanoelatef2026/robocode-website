@@ -1,10 +1,11 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import {
-  computePriority, computeDaysOverdue,
+  computePriority, computeDaysOverdue, computeStudentRisk,
   type FinanceListItem, type FinanceKPIs, type StudentFinanceDetail,
   type FinanceFilters, type GroupFinanceSummary, type DashboardFinanceSummary,
   type AccountStatus, type ActivityType,
+  type StudentOperationsRow, type StudentOpsFilters, type RiskLevel,
 } from './types'
 
 // ── KPI Cards ──────────────────────────────────────────────────────────────────
@@ -117,8 +118,9 @@ export async function listFinancialAccounts(
     )
     .order('updated_at', { ascending: false })
 
-  if (filters.branch_id) q = q.eq('branch_id', filters.branch_id)
-  if (filters.group_id)  q = q.eq('group_id', filters.group_id)
+  if (filters.branch_ids?.length) q = (q as any).in('branch_id', filters.branch_ids)
+  else if (filters.branch_id)     q = q.eq('branch_id', filters.branch_id)
+  if (filters.group_id)           q = q.eq('group_id', filters.group_id)
   if (filters.status)    q = q.eq('status', filters.status)
 
   if (filters.search) {
@@ -296,10 +298,16 @@ export async function getStudentFinanceDetail(accountId: string): Promise<Studen
     })),
     payments: ((paymentRes.data ?? []) as any[]).map(r => ({
       id: r.id, student_id: r.student_id, account_id: r.account_id,
-      installment_id: r.installment_id,
+      enrollment_id:       r.enrollment_id       ?? null,
+      installment_id:      r.installment_id      ?? null,
+      allocation_strategy: r.allocation_strategy ?? null,
       amount: Number(r.amount), payment_date: r.payment_date,
       payment_method: r.payment_method, reference_number: r.reference_number,
-      notes: r.notes, created_by: r.created_by, created_at: r.created_at,
+      notes: r.notes,
+      receipt_url:   r.receipt_url   ?? null,
+      receipt_image: r.receipt_image ?? null,
+      receipt_notes: r.receipt_notes ?? null,
+      created_by: r.created_by, created_at: r.created_at,
       created_by_name: mapCreatedBy(r),
     })),
     notes: ((noteRes.data ?? []) as any[]).map(r => ({
@@ -779,4 +787,560 @@ export async function getParentChildFinance(parentUserId: string, studentId: str
     installments: (installRes.data ?? []) as any[],
     payments:     (paymentRes.data ?? []) as any[],
   }
+}
+
+// ── Student Operations Center — enrollment-centric main list ──────────────────
+// Sprint 41: one row per ACTIVE enrollment (not per student).
+// Attendance is filtered to sessions on/after enrollment.start_date so late-joining
+// or transferred students never see pre-enrollment history.
+//
+// FALLBACK: if sprint41 migration hasn't been applied yet (student_enrollments is
+// empty for these branches), the function falls back to the Sprint 40 student-centric
+// approach so the page keeps working in all environments.
+
+export async function listStudentOperations(
+  branchIds: string[],
+  _filters: StudentOpsFilters = {}
+): Promise<StudentOperationsRow[]> {
+  if (!branchIds.length) return []
+  const db = createServiceClient()
+
+  // ── Determine which code path to use ─────────────────────────────────────
+  // A single COUNT(head=true) tells us if the sprint41 migration has run.
+  const { count: enrollCount } = await db
+    .from('student_enrollments')
+    .select('id', { count: 'exact', head: true })
+    .in('branch_id', branchIds)
+
+  if ((enrollCount ?? 0) > 0) {
+    return _listFromEnrollments(db, branchIds)
+  }
+  // Pre-migration fallback (Sprint 40 logic)
+  return _listFromStudents(db, branchIds)
+}
+
+// ── Post-migration: enrollment-centric ───────────────────────────────────────
+
+async function _listFromEnrollments(db: ReturnType<typeof createServiceClient>, branchIds: string[]): Promise<StudentOperationsRow[]> {
+
+  // ── 1. Active enrollments with nested student + group + gc/instructor ──────
+  const { data: enrollData, error: enrollErr } = await db
+    .from('student_enrollments')
+    .select(`
+      id, student_id, branch_id, group_id, group_course_id,
+      start_date, net_amount, total_amount, discount_amount,
+      enrolled_sessions, consumed_sessions, remaining_sessions,
+      financial_status,
+      students!student_enrollments_student_id_fkey(
+        id, student_code, branch_id, emergency_contact,
+        users!students_user_id_fkey(
+          email, phone,
+          profiles!profiles_user_id_fkey(first_name, last_name)
+        )
+      ),
+      groups!student_enrollments_group_id_fkey(id, name, start_date),
+      group_courses!student_enrollments_group_course_id_fkey(
+        id,
+        instructors!group_courses_instructor_id_fkey(
+          id,
+          users!instructors_user_id_fkey(
+            profiles!profiles_user_id_fkey(first_name, last_name)
+          )
+        )
+      )
+    `)
+    .in('branch_id', branchIds)
+    .eq('status', 'ACTIVE')
+    .limit(1000)
+
+  if (enrollErr) throw new Error(enrollErr.message)
+  const enrollments = (enrollData ?? []) as any[]
+  if (!enrollments.length) return []
+
+  const studentIds    = [...new Set(enrollments.map(e => e.student_id as string))]
+  const enrollmentIds = enrollments.map(e => e.id as string)
+  const gcIds         = [...new Set(enrollments.map(e => e.group_course_id as string).filter(Boolean))]
+
+  // ── 2. Branch names ────────────────────────────────────────────────────────
+  const { data: branchData } = await db
+    .from('branches').select('id, name').in('id', branchIds)
+  const branchNameMap = new Map<string, string>()
+  for (const b of (branchData ?? []) as any[]) branchNameMap.set(b.id, b.name)
+
+  // ── 3. Financial accounts — enrollment-linked first, then student fallback ─
+  const accByEnrollMap = new Map<string, any>()
+  const { data: accEnrollData } = await db
+    .from('student_financial_accounts')
+    .select('id, student_id, enrollment_id, status, total_amount, net_amount, paid_amount, remaining_amount, next_due_date')
+    .in('enrollment_id', enrollmentIds)
+  for (const a of (accEnrollData ?? []) as any[]) {
+    if (a.enrollment_id) accByEnrollMap.set(a.enrollment_id as string, a)
+  }
+
+  // Students whose enrollment has no linked account yet → use student-level account
+  const missingStudentIds = enrollments
+    .filter(e => !accByEnrollMap.has(e.id))
+    .map(e => e.student_id as string)
+
+  const accByStudentMap = new Map<string, any>()
+  if (missingStudentIds.length) {
+    const { data: accStuData } = await db
+      .from('student_financial_accounts')
+      .select('id, student_id, enrollment_id, status, total_amount, net_amount, paid_amount, remaining_amount, next_due_date')
+      .in('student_id', [...new Set(missingStudentIds)])
+    for (const a of (accStuData ?? []) as any[]) {
+      if (!accByStudentMap.has(a.student_id)) accByStudentMap.set(a.student_id as string, a)
+    }
+  }
+
+  // ── 4. Schedules (non-cancelled, last 18 months) ───────────────────────────
+  const cutoff = new Date(Date.now() - 548 * 86400000).toISOString()
+  const schedsByGc   = new Map<string, any[]>()
+  const schedInfoMap = new Map<string, any>()
+
+  if (gcIds.length) {
+    const { data: schedData } = await db
+      .from('schedules')
+      .select('id, group_course_id, scheduled_at, status')
+      .in('group_course_id', gcIds)
+      .neq('status', 'cancelled')
+      .gte('scheduled_at', cutoff)
+    for (const s of (schedData ?? []) as any[]) {
+      if (!schedsByGc.has(s.group_course_id)) schedsByGc.set(s.group_course_id, [])
+      schedsByGc.get(s.group_course_id)!.push(s)
+      schedInfoMap.set(s.id, s)
+    }
+  }
+
+  // ── 5. Attendance records for completed sessions ───────────────────────────
+  const completedIds = [...schedInfoMap.values()]
+    .filter(s => s.status === 'completed')
+    .map(s => s.id as string)
+
+  const attByKey = new Map<string, Map<string, { status: string; scheduled_at: string }>>()
+
+  if (completedIds.length && studentIds.length) {
+    const { data: arData } = await db
+      .from('attendance_records')
+      .select('student_id, schedule_id, status')
+      .in('student_id', studentIds)
+      .in('schedule_id', completedIds)
+    for (const ar of (arData ?? []) as any[]) {
+      const sched = schedInfoMap.get(ar.schedule_id)
+      if (!sched) continue
+      const key = `${ar.student_id}:${sched.group_course_id}`
+      if (!attByKey.has(key)) attByKey.set(key, new Map())
+      attByKey.get(key)!.set(ar.schedule_id, { status: ar.status, scheduled_at: sched.scheduled_at })
+    }
+  }
+
+  // ── 6. Installment counts ─────────────────────────────────────────────────
+  const allAccIds = [
+    ...[...accByEnrollMap.values()].map(a => a.id as string),
+    ...[...accByStudentMap.values()].map(a => a.id as string),
+  ]
+  const instMap = new Map<string, { total: number; paid: number }>()
+  if (allAccIds.length) {
+    const { data: instData } = await db
+      .from('finance_installments').select('account_id, status').in('account_id', allAccIds)
+    for (const i of (instData ?? []) as any[]) {
+      if (!instMap.has(i.account_id)) instMap.set(i.account_id, { total: 0, paid: 0 })
+      const m = instMap.get(i.account_id)!
+      m.total++
+      if (i.status === 'PAID') m.paid++
+    }
+  }
+
+  // ── 7. Build rows (one per enrollment) ────────────────────────────────────
+  const POSITIVE = new Set(['present', 'late', 'makeup'])
+  const rows: StudentOperationsRow[] = []
+
+  for (const enroll of enrollments) {
+    const student  = enroll.students   ?? {}
+    const user     = student.users     ?? {}
+    const profile  = user.profiles     ?? {}
+    const ec       = (student.emergency_contact ?? {}) as Record<string, string>
+    const group    = enroll.groups     ?? null
+    const gc       = enroll.group_courses ?? null
+
+    const instrProf     = gc?.instructors?.users?.profiles
+    const instructorName = instrProf
+      ? [instrProf.first_name, instrProf.last_name].filter(Boolean).join(' ') || null
+      : null
+
+    // Financial account: enrollment-linked > student-fallback
+    const account = accByEnrollMap.get(enroll.id) ?? accByStudentMap.get(enroll.student_id)
+
+    // ── Enrollment-aware session filtering ─────────────────────────────────
+    // Only count sessions AFTER the student's enrollment start_date.
+    const enrollStart = enroll.start_date as string  // 'YYYY-MM-DD'
+    const gcId        = enroll.group_course_id as string | null
+
+    const allGcScheds = gcId ? (schedsByGc.get(gcId) ?? []) : []
+    const eligibleScheds = enrollStart
+      ? allGcScheds.filter((s: any) => s.scheduled_at >= `${enrollStart}T00:00:00`)
+      : allGcScheds
+
+    const totalSessions = eligibleScheds.filter((s: any) => s.status !== 'cancelled').length
+
+    const completedEligible = eligibleScheds
+      .filter((s: any) => s.status === 'completed')
+      .sort((a: any, b: any) => b.scheduled_at.localeCompare(a.scheduled_at))
+
+    const attKey  = `${enroll.student_id}:${gcId ?? ''}`
+    const stuAttM = attByKey.get(attKey) ?? new Map()
+
+    let sessionsAttended    = 0
+    let lastAttendanceDate: string | null = null
+    let consecutiveAbsences = 0
+    let streakDone          = false
+
+    for (const session of completedEligible) {
+      const rec      = stuAttM.get(session.id)
+      const attended = rec ? POSITIVE.has(rec.status) : false
+      if (attended) {
+        sessionsAttended++
+        if (!lastAttendanceDate) lastAttendanceDate = session.scheduled_at.slice(0, 10)
+        if (!streakDone) streakDone = true
+      } else {
+        if (!streakDone) consecutiveAbsences++
+      }
+    }
+
+    const totalCompleted = completedEligible.length
+    const attendancePct  = totalCompleted > 0
+      ? Math.round((sessionsAttended / totalCompleted) * 100)
+      : 0
+
+    // Finance
+    const financialStatus = (account?.status ?? null) as AccountStatus | null
+    const netAmount       = account ? Number(account.net_amount) : Number(enroll.net_amount ?? 0)
+    const paidAmount      = account ? Number(account.paid_amount) : 0
+    const remainingAmount = account ? Number(account.remaining_amount) : netAmount
+    const nextDueDate     = (account?.next_due_date as string | null) ?? null
+    const daysOverdue     = computeDaysOverdue(nextDueDate)
+    const paymentPct      = netAmount > 0 ? Math.round((paidAmount / netAmount) * 100) : 0
+
+    const inst = account ? (instMap.get(account.id) ?? { total: 0, paid: 0 }) : { total: 0, paid: 0 }
+
+    const { level: riskLevel, flags: riskFlags } = computeStudentRisk({
+      attendance_pct:       attendancePct,
+      financial_status:     financialStatus,
+      days_overdue:         daysOverdue,
+      consecutive_absences: consecutiveAbsences,
+      sessions_attended:    sessionsAttended,
+      remaining_amount:     remainingAmount,
+    })
+
+    rows.push({
+      enrollment_id: enroll.id,
+      student_id:    enroll.student_id,
+      account_id:    account?.id ?? null,
+      group_id:      enroll.group_id,
+      instructor_id: gc?.instructors?.id ?? null,
+      student_name:   [profile.first_name, profile.last_name].filter(Boolean).join(' ') || user.email || 'Unknown',
+      student_code:   student.student_code ?? null,
+      student_phone:  user.phone ?? null,
+      student_status: 'active',
+      parent_name:    ec.name   ?? null,
+      parent_phone_1: ec.phone1 ?? null,
+      parent_phone_2: ec.phone2 ?? null,
+      branch_id:   enroll.branch_id,
+      branch_name: branchNameMap.get(enroll.branch_id) ?? '',
+      group_name:       group?.name     ?? null,
+      group_start_date: enroll.start_date ?? null,
+      instructor_name:  instructorName,
+      total_sessions:     totalSessions,
+      sessions_attended:  sessionsAttended,
+      attendance_pct:     attendancePct,
+      last_attendance_date: lastAttendanceDate,
+      consecutive_absences: consecutiveAbsences,
+      // Sprint 44: session contract fields
+      enrolled_sessions:  Number(enroll.enrolled_sessions  ?? 0),
+      consumed_sessions:  Number(enroll.consumed_sessions  ?? 0),
+      remaining_sessions: Number(enroll.remaining_sessions ?? Math.max(0, (enroll.enrolled_sessions ?? 0) - (enroll.consumed_sessions ?? 0))),
+      financial_status:   (enroll.financial_status ?? financialStatus) as any,
+      total_amount:       account ? Number(account.total_amount) : Number(enroll.total_amount ?? 0),
+      net_amount:         netAmount,
+      paid_amount:        paidAmount,
+      remaining_amount:   remainingAmount,
+      installments_total:     inst.total,
+      installments_paid:      inst.paid,
+      installments_remaining: inst.total - inst.paid,
+      next_due_date:          nextDueDate,
+      payment_progress_pct:   paymentPct,
+      days_overdue:           daysOverdue,
+      risk_level: riskLevel,
+      risk_flags: riskFlags,
+    })
+  }
+
+  const riskOrder: Record<RiskLevel, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 }
+  rows.sort((a, b) => {
+    const d = riskOrder[a.risk_level] - riskOrder[b.risk_level]
+    return d !== 0 ? d : b.remaining_amount - a.remaining_amount
+  })
+  return rows
+}
+
+// ── Filter options for Operations Center dropdowns ────────────────────────────
+// Loads branches, groups, and instructors independently (not derived from rows).
+// All instructors who teach any active group_course in the TL's branches are included.
+
+export async function getFilterOptions(branchIds: string[]): Promise<{
+  branches:    { id: string; name: string }[]
+  groups:      { id: string; name: string }[]
+  instructors: { id: string; name: string }[]
+}> {
+  if (!branchIds.length) return { branches: [], groups: [], instructors: [] }
+  const db = createServiceClient()
+
+  // Step 1: branches + groups in parallel
+  const [branchRes, groupRes] = await Promise.all([
+    db.from('branches')
+      .select('id, name')
+      .in('id', branchIds)
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .order('name'),
+
+    db.from('groups')
+      .select('id, name')
+      .in('branch_id', branchIds)
+      .eq('status', 'active')
+      .is('deleted_at', null)
+      .order('name'),
+  ])
+
+  const branches = (branchRes.data ?? []) as any[]
+  const groups   = (groupRes.data ?? []) as any[]
+  const groupIds = groups.map(g => g.id as string)
+
+  if (!groupIds.length) {
+    return {
+      branches:    branches.map(b => ({ id: b.id as string, name: b.name as string })),
+      groups:      [],
+      instructors: [],
+    }
+  }
+
+  // Step 2: instructors from active group_courses in those groups
+  const { data: gcData } = await db
+    .from('group_courses')
+    .select(`
+      instructors!group_courses_instructor_id_fkey(
+        id,
+        users!instructors_user_id_fkey(
+          profiles!profiles_user_id_fkey(first_name, last_name)
+        )
+      )
+    `)
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+    .not('instructor_id', 'is', null)
+
+  const instrMap = new Map<string, string>()
+  for (const gc of (gcData ?? []) as any[]) {
+    const instr = gc.instructors
+    if (!instr?.id) continue
+    const p    = instr.users?.profiles
+    const name = p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown'
+    if (!instrMap.has(instr.id as string)) instrMap.set(instr.id as string, name)
+  }
+
+  return {
+    branches:    branches.map(b => ({ id: b.id as string, name: b.name as string })),
+    groups:      groups.map(g => ({ id: g.id as string, name: g.name as string })),
+    instructors: [...instrMap.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name)),
+  }
+}
+
+// ── Pre-migration fallback: student-centric (Sprint 40 behavior) ──────────────
+
+async function _listFromStudents(db: ReturnType<typeof createServiceClient>, branchIds: string[]): Promise<StudentOperationsRow[]> {
+
+  const { data: stuData, error: stuErr } = await db
+    .from('students')
+    .select(`
+      id, student_code, branch_id, status, emergency_contact,
+      users!students_user_id_fkey(
+        email, phone,
+        profiles!profiles_user_id_fkey(first_name, last_name)
+      )
+    `)
+    .in('branch_id', branchIds)
+    .eq('status', 'active')
+    .is('deleted_at', null)
+    .limit(1000)
+  if (stuErr) throw new Error(stuErr.message)
+  const students = (stuData ?? []) as any[]
+  if (!students.length) return []
+
+  const studentIds = students.map(s => s.id as string)
+
+  const { data: branchData } = await db.from('branches').select('id, name').in('id', branchIds)
+  const branchNameMap = new Map<string, string>()
+  for (const b of (branchData ?? []) as any[]) branchNameMap.set(b.id, b.name)
+
+  const { data: accData } = await db
+    .from('student_financial_accounts')
+    .select('id, student_id, status, total_amount, net_amount, paid_amount, remaining_amount, next_due_date')
+    .in('student_id', studentIds)
+  const accountMap = new Map<string, any>()
+  for (const a of (accData ?? []) as any[]) accountMap.set(a.student_id as string, a)
+
+  const { data: enrollData } = await db
+    .from('group_students')
+    .select('student_id, group_id')
+    .in('student_id', studentIds)
+    .eq('status', 'active')
+    .eq('enrollment_type', 'primary')
+  const enrollMap = new Map<string, string>()
+  for (const e of (enrollData ?? []) as any[]) {
+    if (!enrollMap.has(e.student_id)) enrollMap.set(e.student_id as string, e.group_id as string)
+  }
+
+  const groupIds = [...new Set([...enrollMap.values()])]
+  const groupMap = new Map<string, any>()
+  const gcMap    = new Map<string, any>()
+
+  if (groupIds.length) {
+    const [{ data: gData }, { data: gcData }] = await Promise.all([
+      db.from('groups').select('id, name, start_date').in('id', groupIds),
+      db.from('group_courses').select(`id, group_id, instructors!group_courses_instructor_id_fkey(id,users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name,last_name)))`).in('group_id', groupIds).eq('status', 'active'),
+    ])
+    for (const g of (gData ?? []) as any[]) groupMap.set(g.id, g)
+    for (const gc of (gcData ?? []) as any[]) { if (!gcMap.has(gc.group_id)) gcMap.set(gc.group_id, gc) }
+  }
+
+  const gcIds = [...gcMap.values()].map(gc => gc.id as string)
+  const cutoff = new Date(Date.now() - 548 * 86400000).toISOString()
+  const schedsByGc = new Map<string, any[]>()
+  const schedInfoMap = new Map<string, any>()
+
+  if (gcIds.length) {
+    const { data: sData } = await db.from('schedules').select('id,group_course_id,scheduled_at,status').in('group_course_id', gcIds).neq('status','cancelled').gte('scheduled_at', cutoff)
+    for (const s of (sData ?? []) as any[]) {
+      if (!schedsByGc.has(s.group_course_id)) schedsByGc.set(s.group_course_id, [])
+      schedsByGc.get(s.group_course_id)!.push(s)
+      schedInfoMap.set(s.id, s)
+    }
+  }
+
+  const completedIds = [...schedInfoMap.values()].filter(s => s.status === 'completed').map(s => s.id as string)
+  const attByKey = new Map<string, Map<string, { status: string; scheduled_at: string }>>()
+
+  if (completedIds.length && studentIds.length) {
+    const { data: arData } = await db.from('attendance_records').select('student_id,schedule_id,status').in('student_id', studentIds).in('schedule_id', completedIds)
+    for (const ar of (arData ?? []) as any[]) {
+      const sched = schedInfoMap.get(ar.schedule_id)
+      if (!sched) continue
+      const key = `${ar.student_id}:${sched.group_course_id}`
+      if (!attByKey.has(key)) attByKey.set(key, new Map())
+      attByKey.get(key)!.set(ar.schedule_id, { status: ar.status, scheduled_at: sched.scheduled_at })
+    }
+  }
+
+  const accIds = [...accountMap.values()].map(a => a.id as string)
+  const instMap = new Map<string, { total: number; paid: number }>()
+  if (accIds.length) {
+    const { data: instData } = await db.from('finance_installments').select('account_id,status').in('account_id', accIds)
+    for (const i of (instData ?? []) as any[]) {
+      if (!instMap.has(i.account_id)) instMap.set(i.account_id, { total: 0, paid: 0 })
+      const m = instMap.get(i.account_id)!
+      m.total++
+      if (i.status === 'PAID') m.paid++
+    }
+  }
+
+  const POSITIVE = new Set(['present', 'late', 'makeup'])
+  const rows: StudentOperationsRow[] = []
+
+  for (const s of students) {
+    const user     = s.users    ?? {}
+    const profile  = user.profiles ?? {}
+    const ec       = (s.emergency_contact ?? {}) as Record<string, string>
+    const account  = accountMap.get(s.id)
+    const groupId  = enrollMap.get(s.id) ?? null
+    const group    = groupId ? groupMap.get(groupId) : null
+    const gc       = groupId ? gcMap.get(groupId) : null
+    const gcId     = gc?.id as string | undefined
+
+    const instrProf = gc?.instructors?.users?.profiles
+    const instructorName = instrProf ? [instrProf.first_name, instrProf.last_name].filter(Boolean).join(' ') || null : null
+    const totalSessions = gcId ? (schedsByGc.get(gcId) ?? []).length : 0
+
+    const completedGcScheds = gcId ? (schedsByGc.get(gcId) ?? []).filter((s: any) => s.status === 'completed').sort((a: any, b: any) => b.scheduled_at.localeCompare(a.scheduled_at)) : []
+    const attKey  = `${s.id}:${gcId ?? ''}`
+    const stuAttM = attByKey.get(attKey) ?? new Map()
+
+    let sessionsAttended = 0, lastAttendanceDate: string | null = null, consecutiveAbsences = 0, streakDone = false
+    for (const session of completedGcScheds) {
+      const rec = stuAttM.get(session.id)
+      const attended = rec ? POSITIVE.has(rec.status) : false
+      if (attended) { sessionsAttended++; if (!lastAttendanceDate) lastAttendanceDate = session.scheduled_at.slice(0, 10); if (!streakDone) streakDone = true }
+      else { if (!streakDone) consecutiveAbsences++ }
+    }
+
+    const totalCompleted = completedGcScheds.length
+    const attendancePct  = totalCompleted > 0 ? Math.round((sessionsAttended / totalCompleted) * 100) : 0
+    const financialStatus = (account?.status ?? null) as AccountStatus | null
+    const netAmount = account ? Number(account.net_amount) : 0
+    const paidAmount = account ? Number(account.paid_amount) : 0
+    const remainingAmount = account ? Number(account.remaining_amount) : 0
+    const nextDueDate = (account?.next_due_date as string | null) ?? null
+    const daysOverdue = computeDaysOverdue(nextDueDate)
+    const paymentPct = netAmount > 0 ? Math.round((paidAmount / netAmount) * 100) : 0
+    const inst = account ? (instMap.get(account.id) ?? { total: 0, paid: 0 }) : { total: 0, paid: 0 }
+
+    const { level: riskLevel, flags: riskFlags } = computeStudentRisk({ attendance_pct: attendancePct, financial_status: financialStatus, days_overdue: daysOverdue, consecutive_absences: consecutiveAbsences, sessions_attended: sessionsAttended, remaining_amount: remainingAmount })
+
+    rows.push({
+      enrollment_id:  null,   // no enrollment record yet (pre-migration)
+      student_id:     s.id,
+      account_id:     account?.id ?? null,
+      group_id:       groupId,
+      instructor_id:  gc?.instructors?.id ?? null,
+      student_name:   [profile.first_name, profile.last_name].filter(Boolean).join(' ') || user.email || 'Unknown',
+      student_code:   s.student_code ?? null,
+      student_phone:  user.phone ?? null,
+      student_status: s.status,
+      parent_name:    ec.name   ?? null,
+      parent_phone_1: ec.phone1 ?? null,
+      parent_phone_2: ec.phone2 ?? null,
+      branch_id:   s.branch_id,
+      branch_name: branchNameMap.get(s.branch_id) ?? '',
+      group_name:       group?.name       ?? null,
+      group_start_date: group?.start_date ?? null,
+      instructor_name:  instructorName,
+      total_sessions:  totalSessions,
+      sessions_attended: sessionsAttended,
+      attendance_pct:  attendancePct,
+      last_attendance_date: lastAttendanceDate,
+      consecutive_absences: consecutiveAbsences,
+      // Sprint 44 defaults (pre-migration path has no session contract)
+      enrolled_sessions:  0,
+      consumed_sessions:  0,
+      remaining_sessions: 0,
+      financial_status: financialStatus,
+      total_amount:    account ? Number(account.total_amount) : 0,
+      net_amount:      netAmount,
+      paid_amount:     paidAmount,
+      remaining_amount: remainingAmount,
+      installments_total:     inst.total,
+      installments_paid:      inst.paid,
+      installments_remaining: inst.total - inst.paid,
+      next_due_date:   nextDueDate,
+      payment_progress_pct: paymentPct,
+      days_overdue:    daysOverdue,
+      risk_level: riskLevel,
+      risk_flags: riskFlags,
+    })
+  }
+
+  const riskOrder: Record<RiskLevel, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 }
+  rows.sort((a, b) => { const d = riskOrder[a.risk_level] - riskOrder[b.risk_level]; return d !== 0 ? d : b.remaining_amount - a.remaining_amount })
+  return rows
 }

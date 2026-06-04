@@ -413,7 +413,7 @@ function InstallmentsTab({
         due_date:           fd.get('due_date') as string,
         notes:              (fd.get('notes') as string) || undefined,
       })
-      if (r?.error) { setErr(r.error); return }
+      if (r && 'error' in r) { setErr(String(r.error ?? 'Error')); return }
       setShowAdd(false)
       onRefresh()
     })
@@ -539,7 +539,7 @@ function PaymentTab({
         notes:            (fd.get('notes') as string) || undefined,
         installment_id:   (fd.get('installment_id') as string) || undefined,
       })
-      if (r?.error) { setErr(r.error); return }
+      if (r && 'error' in r) { setErr(String(r.error ?? 'Error')); return }
       setSuccess(true)
       ;(e.target as HTMLFormElement).reset()
       onRefresh()
@@ -643,7 +643,7 @@ function NotesTab({
         note_text:   fd.get('note_text') as string,
         is_internal: fd.get('is_internal') === 'true',
       })
-      if (r?.error) { setErr(r.error); return }
+      if (r && 'error' in r) { setErr(String(r.error ?? 'Error')); return }
       ;(e.target as HTMLFormElement).reset()
       onRefresh()
     })
@@ -721,7 +721,7 @@ function ActivitiesTab({
         activity_type: fd.get('activity_type') as ActivityType,
         notes:         (fd.get('notes') as string) || undefined,
       })
-      if (r?.error) { setErr(r.error); return }
+      if (r && 'error' in r) { setErr(String(r.error ?? 'Error')); return }
       ;(e.target as HTMLFormElement).reset()
       onRefresh()
     })

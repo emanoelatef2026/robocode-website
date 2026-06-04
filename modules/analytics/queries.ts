@@ -30,17 +30,27 @@ export async function resolveGroupFilter(user: AppUser): Promise<string[] | null
   }
 
   if (user.globalRole === 'instructor') {
-    const { data: instructorRow } = await db
+    // Find instructor rows for this user (may span multiple branches)
+    const { data: instructorRows } = await db
       .from('instructors')
       .select('id')
       .eq('user_id', user.id)
-      .maybeSingle()
-    if (!instructorRow) return []
-    const { data } = await db
-      .from('group_instructors')
-      .select('group_id')
-      .eq('instructor_id', (instructorRow as any).id)
-    return (data ?? []).map((r: any) => r.group_id)
+      .is('deleted_at', null)
+    if (!instructorRows?.length) return []
+
+    const instrIds = (instructorRows as any[]).map((r: any) => r.id as string)
+
+    // Collect groups from group_instructors AND active group_courses across all instructor rows
+    const [giRes, gcRes] = await Promise.all([
+      db.from('group_instructors').select('group_id').in('instructor_id', instrIds),
+      db.from('group_courses').select('group_id').in('instructor_id', instrIds).eq('status', 'active'),
+    ])
+
+    const ids = [
+      ...(giRes.data ?? []).map((r: any) => r.group_id as string),
+      ...(gcRes.data ?? []).map((r: any) => r.group_id as string),
+    ]
+    return [...new Set(ids)]
   }
 
   return []

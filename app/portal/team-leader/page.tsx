@@ -8,6 +8,7 @@ import {
   getCertReadyStudents,
 }                                 from '@/modules/tl-dashboard/queries'
 import { getTLMessageCounts }    from '@/modules/parent-messages/queries'
+import { getOperationalAlerts }  from '@/modules/tl-analytics/queries'
 import Link                       from 'next/link'
 
 // ── Shared UI helpers ──────────────────────────────────────────────────────────
@@ -67,7 +68,7 @@ export default async function TLDashboardPage() {
 
   const branchIds = user.branchIds
 
-  const [kpis, todaysClasses, todayAtt, atRisk, portfolioQueue, certReady, msgCounts] =
+  const [kpis, todaysClasses, todayAtt, atRisk, portfolioQueue, certReady, msgCounts, alerts] =
     await Promise.all([
       getTLKPIs(branchIds),
       getTodaysClasses(branchIds),
@@ -76,6 +77,7 @@ export default async function TLDashboardPage() {
       getPortfolioQueue(branchIds),
       getCertReadyStudents(branchIds),
       getTLMessageCounts(branchIds),
+      getOperationalAlerts(branchIds),
     ])
 
   const satDisplay = kpis.parent_satisfaction_avg != null
@@ -90,6 +92,38 @@ export default async function TLDashboardPage() {
         <h1 className="text-xl font-bold text-[#0B1F3A]">Team Leader Dashboard</h1>
         <p className="mt-0.5 text-sm text-[#64748B]">Branch operations overview</p>
       </div>
+
+      {/* Operational Alerts Banner */}
+      {alerts.length > 0 && (
+        <div className="space-y-2">
+          {alerts.slice(0, 4).map(alert => {
+            const isCritical = alert.severity === 'critical'
+            return (
+              <div
+                key={alert.id}
+                className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 ${
+                  isCritical ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'
+                }`}
+              >
+                <span className={`h-2 w-2 shrink-0 rounded-full ${isCritical ? 'bg-red-500' : 'bg-amber-500'}`} />
+                <p className={`flex-1 text-sm font-medium ${isCritical ? 'text-red-700' : 'text-amber-700'}`}>
+                  {alert.title}
+                </p>
+                {alert.action_href && (
+                  <Link href={alert.action_href} className={`shrink-0 text-xs font-medium underline ${isCritical ? 'text-red-600' : 'text-amber-600'}`}>
+                    Act →
+                  </Link>
+                )}
+              </div>
+            )
+          })}
+          {alerts.length > 4 && (
+            <Link href="/portal/team-leader/analytics?tab=overview" className="block text-center text-xs text-[#FF8A1F] hover:underline">
+              +{alerts.length - 4} more alerts → View analytics
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">

@@ -1,10 +1,12 @@
 import { requirePortalRole }       from '@/modules/rbac/guards'
 import { getParentChildren }       from '@/modules/parents/parent-portal-queries'
 import { getParentChildFinance }   from '@/modules/finance/queries'
+import { listStudentEnrollments }  from '@/modules/enrollments/queries'
 import Link                        from 'next/link'
 import {
   STATUS_COLORS, STATUS_LABELS, INSTALLMENT_STATUS_COLORS, PAYMENT_METHOD_LABELS,
 } from '@/modules/finance/types'
+import { ENROLLMENT_STATUS_COLORS, ENROLLMENT_STATUS_LABELS } from '@/modules/enrollments/types'
 
 interface Props {
   searchParams: Promise<{ child?: string }>
@@ -33,7 +35,14 @@ export default async function ParentFinancePage({ searchParams }: Props) {
 
   const studentId = childParam ?? children[0].student_id
   const selected  = children.find(c => c.student_id === studentId) ?? children[0]
-  const data      = await getParentChildFinance(user.id, selected.student_id)
+
+  // Load finance + enrollments in parallel
+  const [data, enrollments] = await Promise.all([
+    getParentChildFinance(user.id, selected.student_id),
+    listStudentEnrollments(selected.student_id),
+  ])
+
+  const activeEnrollments = enrollments.filter(e => e.status === 'ACTIVE')
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -64,7 +73,125 @@ export default async function ParentFinancePage({ searchParams }: Props) {
         </div>
       )}
 
-      {/* No finance account */}
+      {/* ── Active Enrollments ─────────────────────────────────────────── */}
+      {activeEnrollments.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Current Enrollments</h2>
+          <div className="space-y-3">
+            {activeEnrollments.map(enroll => {
+              const attendancePct = enroll.expected_sessions > 0
+                ? Math.round((enroll.attendance_count / enroll.expected_sessions) * 100)
+                : 0
+              // Sprint 44: session package progress
+              const hasSessions  = enroll.enrolled_sessions > 0
+              const sessProgress = hasSessions
+                ? Math.min(100, Math.round((enroll.consumed_sessions / enroll.enrolled_sessions) * 100))
+                : 0
+
+              return (
+                <div key={enroll.id} className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
+                  {/* Card header */}
+                  <div className="bg-linear-to-br from-[#0B1F3A] to-[#1a3460] px-4 py-3 text-white">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-semibold">
+                          {enroll.group_name_snapshot ?? enroll.group_name ?? 'Unknown Group'}
+                        </p>
+                        {(enroll.course_name_snapshot ?? enroll.course_title) && (
+                          <p className="text-xs text-white/70 mt-0.5">
+                            {enroll.course_name_snapshot ?? enroll.course_title}
+                          </p>
+                        )}
+                        {(enroll.instructor_name_snapshot ?? enroll.instructor_name) && (
+                          <p className="text-[11px] text-white/50 mt-0.5">
+                            {enroll.instructor_name_snapshot ?? enroll.instructor_name}
+                          </p>
+                        )}
+                      </div>
+                      <span className="shrink-0 rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/80">
+                        {ENROLLMENT_STATUS_LABELS[enroll.status]}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="px-4 py-3 space-y-3">
+
+                    {/* Session package progress (Sprint 44) */}
+                    {hasSessions && (
+                      <div>
+                        <div className="mb-1 flex items-center justify-between text-xs">
+                          <span className="text-[#64748B]">Session Package</span>
+                          <span className="font-semibold text-[#0B1F3A]">
+                            {enroll.consumed_sessions} / {enroll.enrolled_sessions} sessions
+                            {enroll.remaining_sessions > 0 && (
+                              <span className="ml-1 text-emerald-600">({enroll.remaining_sessions} remaining)</span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-[#F1F5F9]">
+                          <div
+                            className={`h-full rounded-full ${
+                              sessProgress >= 90 ? 'bg-red-500' : sessProgress >= 70 ? 'bg-amber-500' : 'bg-blue-500'
+                            }`}
+                            style={{ width: `${sessProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Attendance bar */}
+                    {enroll.expected_sessions > 0 && (
+                      <div>
+                        <div className="mb-1 flex items-center justify-between text-xs">
+                          <span className="text-[#64748B]">Attendance</span>
+                          <span className={`font-semibold ${
+                            attendancePct >= 80 ? 'text-emerald-600' :
+                            attendancePct >= 60 ? 'text-amber-600' : 'text-red-600'
+                          }`}>
+                            {enroll.attendance_count} / {enroll.expected_sessions} sessions ({attendancePct}%)
+                          </span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-[#F1F5F9]">
+                          <div
+                            className={`h-full rounded-full ${
+                              attendancePct >= 80 ? 'bg-emerald-500' :
+                              attendancePct >= 60 ? 'bg-amber-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${Math.min(100, attendancePct)}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Pricing row */}
+                    {enroll.net_amount > 0 && (
+                      <div className="grid grid-cols-3 gap-2 border-t border-[#F1F5F9] pt-2 text-[11px]">
+                        <div>
+                          <p className="text-[#94A3B8]">Course Fee</p>
+                          <p className="font-semibold text-[#0B1F3A]">EGP {fmt(enroll.net_amount)}</p>
+                        </div>
+                        {enroll.discount_amount > 0 && (
+                          <div>
+                            <p className="text-[#94A3B8]">Discount</p>
+                            <p className="font-semibold text-emerald-600">-EGP {fmt(enroll.discount_amount)}</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[#94A3B8]">Since</p>
+                          <p className="font-semibold text-[#0B1F3A]">{dateFmt(enroll.start_date)}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ── Finance Account ─────────────────────────────────────────────── */}
       {!data ? (
         <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F1F5F9]">
@@ -82,8 +209,8 @@ export default async function ParentFinancePage({ searchParams }: Props) {
         <>
           {/* Financial summary card */}
           <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
-            <div className="bg-gradient-to-br from-[#0B1F3A] to-[#1a3460] px-5 py-4 text-white">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Finance Account</p>
+            <div className="bg-linear-to-br from-[#0B1F3A] to-[#1a3460] px-5 py-4 text-white">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Payment Summary</p>
               <h1 className="mt-1 text-xl font-bold">{selected.student_name}</h1>
               <div className="mt-3 flex items-center gap-2">
                 <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${
@@ -145,9 +272,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-bold text-[#0B1F3A]">EGP {fmt(Number(inst.amount))}</p>
-                      <span className={`text-[11px] font-semibold ${
-                        INSTALLMENT_STATUS_COLORS[inst.status as keyof typeof INSTALLMENT_STATUS_COLORS]
-                      } rounded-full px-2 py-0.5`}>
+                      <span className={`text-[11px] font-semibold ${INSTALLMENT_STATUS_COLORS[inst.status as keyof typeof INSTALLMENT_STATUS_COLORS] ?? ''} rounded-full px-2 py-0.5`}>
                         {inst.status}
                       </span>
                     </div>
@@ -182,7 +307,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
             </div>
           )}
 
-          {/* Contact note */}
+          {/* Outstanding balance warning */}
           {data.account.remaining_amount > 0 && (
             <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
               <p className="text-sm font-semibold text-amber-800">Outstanding Balance</p>

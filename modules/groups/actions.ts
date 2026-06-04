@@ -224,19 +224,47 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
     }
   }
 
-  const { error } = await db.from('group_students').insert({
+  const today = new Date().toISOString()
+
+  const { data: gsRow, error } = await db.from('group_students').insert({
     group_id,
     student_id,
     enrollment_type,
     status:    'active',
-    joined_at: new Date().toISOString(),
-  })
+    joined_at: today,
+  }).select('id').single()
 
   if (error) {
     if (error.code === '23505') {
       return { success: false, error: { code: 'DUPLICATE', message: 'Student is already enrolled in this group.' } }
     }
     return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  }
+
+  // ── Dual-write: create student_enrollments record (Sprint 41) ────────────
+  // Best-effort — failures are non-fatal to keep backward compatibility.
+  try {
+    const { data: gcRow } = await db
+      .from('group_courses')
+      .select('id, instructor_id')
+      .eq('group_id', group_id)
+      .eq('status', 'active')
+      .maybeSingle()
+
+    await db.from('student_enrollments').insert({
+      student_id,
+      branch_id:       group.branch_id,
+      group_id,
+      group_course_id: (gcRow as any)?.id   ?? null,
+      instructor_id:   (gcRow as any)?.instructor_id ?? null,
+      group_student_id: (gsRow as any).id,
+      start_date:      today.slice(0, 10),
+      status:          'ACTIVE',
+      enrollment_type,
+      created_by:      user.id,
+    })
+  } catch {
+    // Non-fatal: enrollment record will be backfilled by migration if missed
   }
 
   await db.rpc('write_audit_log', {
@@ -378,14 +406,27 @@ export async function unenrollStudent(groupId: string, studentId: string): Promi
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
 
+  const today = new Date().toISOString()
+
   const { error } = await db
     .from('group_students')
-    .update({ status: 'dropped', left_at: new Date().toISOString() })
+    .update({ status: 'dropped', left_at: today })
     .eq('group_id', groupId)
     .eq('student_id', studentId)
 
   if (error) {
     return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  }
+
+  // ── Dual-write: mark enrollment as DROPPED (Sprint 41) ───────────────────
+  try {
+    await db.from('student_enrollments')
+      .update({ status: 'DROPPED', end_date: today.slice(0, 10) })
+      .eq('student_id', studentId)
+      .eq('group_id', groupId)
+      .eq('status', 'ACTIVE')
+  } catch {
+    // Non-fatal
   }
 
   await db.rpc('write_audit_log', {

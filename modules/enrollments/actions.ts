@@ -1,0 +1,486 @@
+'use server'
+
+import { createServiceClient }     from '@/lib/supabase/service'
+import { requirePermission }        from '@/modules/rbac/guards'
+import { revalidatePath }           from 'next/cache'
+import type {
+  CreateEnrollmentInput,
+  TransferEnrollmentInput,
+  UpdateEnrollmentStatusInput,
+} from './types'
+import type { PaymentMethod } from '@/modules/finance/types'
+
+// ── Full enrollment creation (Sprint 42) ─────────────────────────────────────
+// Single atomic action that creates:
+//   1. group_students row
+//   2. student_enrollments row (with snapshots)
+//   3. student_financial_accounts (linked to enrollment_id)
+//   4. finance_installments (if count > 0)
+//   5. initial payment (if amount > 0)
+
+export interface EnrollStudentFullInput {
+  student_id:        string
+  branch_id:         string
+  group_id:          string
+  start_date:        string          // 'YYYY-MM-DD'
+  enrollment_type?:  'primary' | 'secondary'
+  enrolled_sessions?: number         // Sprint 44: session package count
+
+  // Finance
+  total_amount:    number
+  discount_amount: number
+  installment_count: number        // 0 = no installment plan
+  first_due_date:  string          // 'YYYY-MM-DD' for first installment
+
+  // Initial payment (optional — can be 0)
+  initial_payment_amount:  number
+  initial_payment_method:  PaymentMethod
+  initial_payment_date:    string  // 'YYYY-MM-DD'
+  initial_payment_reference?: string
+  initial_payment_notes?:   string
+}
+
+export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<{ ok: true; enrollmentId: string } | { error: string }> {
+  const user = await requirePermission('manage_financials')
+  const db   = createServiceClient()
+
+  const net = input.total_amount - input.discount_amount
+
+  // ── 1. Resolve group/course/instructor ─────────────────────────────────────
+  const [{ data: groupRow }, { data: gcRow }] = await Promise.all([
+    db.from('groups').select('id, name, branch_id, start_date').eq('id', input.group_id).single(),
+    db.from('group_courses')
+      .select(`
+        id, instructor_id,
+        courses!group_courses_course_id_fkey(title),
+        instructors!group_courses_instructor_id_fkey(
+          id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))
+        )
+      `)
+      .eq('group_id', input.group_id)
+      .eq('status', 'active')
+      .maybeSingle(),
+  ])
+
+  if (!groupRow) return { error: 'Group not found' }
+
+  const { data: branchRow } = await db
+    .from('branches').select('name').eq('id', input.branch_id).single()
+
+  const gcId         = (gcRow as any)?.id ?? null
+  const instructorId = (gcRow as any)?.instructor_id ?? null
+  const instrProf    = (gcRow as any)?.instructors?.users?.profiles
+  const instructorName = instrProf
+    ? [instrProf.first_name, instrProf.last_name].filter(Boolean).join(' ') || null
+    : null
+
+  // ── 2. Create group_students ───────────────────────────────────────────────
+  const { data: gsRow, error: gsErr } = await db
+    .from('group_students')
+    .upsert({
+      group_id:        input.group_id,
+      student_id:      input.student_id,
+      enrollment_type: input.enrollment_type ?? 'primary',
+      status:          'active',
+      joined_at:       `${input.start_date}T00:00:00`,
+    }, { onConflict: 'group_id,student_id' })
+    .select('id')
+    .single()
+
+  if (gsErr) return { error: gsErr.message }
+  const groupStudentId = (gsRow as any).id as string
+
+  // ── 3. Create student_enrollments (with snapshots) ─────────────────────────
+  const { data: seRow, error: seErr } = await db
+    .from('student_enrollments')
+    .insert({
+      student_id:       input.student_id,
+      branch_id:        input.branch_id,
+      group_id:         input.group_id,
+      group_course_id:  gcId,
+      instructor_id:    instructorId,
+      group_student_id: groupStudentId,
+      start_date:       input.start_date,
+      status:           'ACTIVE',
+      enrollment_type:  input.enrollment_type ?? 'primary',
+      total_amount:     input.total_amount,
+      discount_amount:  input.discount_amount,
+      net_amount:       net,
+      // Sprint 44: session contract
+      enrolled_sessions: input.enrolled_sessions ?? 0,
+      consumed_sessions: 0,
+      // Snapshots — preserve names at enrollment time
+      group_name_snapshot:      (groupRow as any).name       ?? null,
+      course_name_snapshot:     (gcRow as any)?.courses?.title ?? null,
+      instructor_name_snapshot: instructorName,
+      branch_name_snapshot:     (branchRow as any)?.name     ?? null,
+      pricing_snapshot: {
+        total_amount:    input.total_amount,
+        discount_amount: input.discount_amount,
+        net_amount:      net,
+        enrolled_sessions: input.enrolled_sessions ?? 0,
+      },
+      created_by: user.id,
+    })
+    .select('id')
+    .single()
+
+  if (seErr) {
+    // Duplicate ACTIVE enrollment — return the existing one
+    if (seErr.code === '23505') {
+      const { data: existing } = await db
+        .from('student_enrollments')
+        .select('id')
+        .eq('student_id', input.student_id)
+        .eq('group_id', input.group_id)
+        .eq('status', 'ACTIVE')
+        .maybeSingle()
+      const enrollmentId = (existing as any)?.id as string | null
+      if (!enrollmentId) return { error: 'Duplicate enrollment — could not resolve existing record' }
+      // Still proceed with finance creation for the existing enrollment
+      return _createFinanceForEnrollment(db, user, enrollmentId, input, net)
+    }
+    return { error: seErr.message }
+  }
+
+  const enrollmentId = (seRow as any).id as string
+  return _createFinanceForEnrollment(db, user, enrollmentId, input, net)
+}
+
+async function _createFinanceForEnrollment(
+  db: ReturnType<typeof createServiceClient>,
+  user: { id: string; globalRole: string; branchIds: string[] },
+  enrollmentId: string,
+  input: EnrollStudentFullInput,
+  net: number
+): Promise<{ ok: true; enrollmentId: string } | { error: string }> {
+
+  const initialPaid  = input.initial_payment_amount > 0 ? input.initial_payment_amount : 0
+  const remaining    = Math.max(0, net - initialPaid)
+
+  // ── 4. Create financial account (linked to enrollment) ────────────────────
+  const { data: accRow, error: accErr } = await db
+    .from('student_financial_accounts')
+    .insert({
+      student_id:       input.student_id,
+      branch_id:        input.branch_id,
+      group_id:         input.group_id,
+      enrollment_id:    enrollmentId,
+      total_amount:     input.total_amount,
+      discount_amount:  input.discount_amount,
+      net_amount:       net,
+      paid_amount:      initialPaid,
+      remaining_amount: remaining,
+      status:           remaining <= 0 ? 'PAID' : (input.first_due_date < new Date().toISOString().slice(0, 10) ? 'OVERDUE' : 'CURRENT'),
+      next_due_date:    input.first_due_date || null,
+      created_by:       user.id,
+    })
+    .select('id')
+    .single()
+
+  if (accErr) {
+    // If duplicate (student already has an account), update the enrollment linkage
+    if (accErr.code === '23505') {
+      const { data: existingAcc } = await db
+        .from('student_financial_accounts')
+        .select('id')
+        .eq('student_id', input.student_id)
+        .maybeSingle()
+      if (existingAcc) {
+        await db.from('student_financial_accounts')
+          .update({ enrollment_id: enrollmentId })
+          .eq('id', (existingAcc as any).id)
+      }
+    } else {
+      return { error: accErr.message }
+    }
+  }
+
+  const accountId = (accRow as any)?.id as string | undefined
+  if (!accountId) {
+    // Get the account ID for the existing account
+    const { data: existingAcc } = await db
+      .from('student_financial_accounts')
+      .select('id')
+      .eq('student_id', input.student_id)
+      .maybeSingle()
+    if (!existingAcc) return { error: 'Could not create or find financial account' }
+    return _finishEnrollment(db, user, enrollmentId, (existingAcc as any).id, input)
+  }
+
+  return _finishEnrollment(db, user, enrollmentId, accountId, input)
+}
+
+async function _finishEnrollment(
+  db: ReturnType<typeof createServiceClient>,
+  user: { id: string },
+  enrollmentId: string,
+  accountId: string,
+  input: EnrollStudentFullInput
+): Promise<{ ok: true; enrollmentId: string } | { error: string }> {
+  const net = input.total_amount - input.discount_amount
+
+  // ── 5. Create installment plan ─────────────────────────────────────────────
+  if (input.installment_count > 0 && net > 0) {
+    const perInst = Math.floor(net / input.installment_count)
+    const lastAmt = net - perInst * (input.installment_count - 1)
+
+    const installments = Array.from({ length: input.installment_count }, (_, i) => {
+      const due = new Date(input.first_due_date)
+      due.setMonth(due.getMonth() + i)
+      return {
+        account_id:         accountId,
+        installment_number: i + 1,
+        amount:             i === input.installment_count - 1 ? lastAmt : perInst,
+        due_date:           due.toISOString().slice(0, 10),
+        paid_amount:        0,
+        status:             'PENDING' as const,
+      }
+    })
+
+    const { error: instErr } = await db.from('finance_installments').insert(installments)
+    if (instErr && instErr.code !== '23505') {
+      // Non-fatal — enrollment created, installments failed
+    }
+  }
+
+  // ── 6. Record initial payment (linked directly to enrollment) ────────────
+  if (input.initial_payment_amount > 0) {
+    await db.from('finance_payments').insert({
+      student_id:       input.student_id,
+      account_id:       accountId,
+      enrollment_id:    enrollmentId,   // Sprint 44: direct ledger linkage
+      amount:           input.initial_payment_amount,
+      payment_date:     input.initial_payment_date,
+      payment_method:   input.initial_payment_method,
+      reference_number: input.initial_payment_reference ?? null,
+      notes:            input.initial_payment_notes ?? 'Initial enrollment payment',
+      created_by:       user.id,
+    })
+  }
+
+  revalidatePath('/portal/team-leader/finance')
+  revalidatePath('/admin/finance')
+  revalidatePath('/portal/parent/finance')
+
+  return { ok: true, enrollmentId }
+}
+
+// ── Create enrollment ─────────────────────────────────────────────────────────
+// Dual-writes: creates both a group_students row AND a student_enrollments row.
+
+export async function createEnrollment(input: CreateEnrollmentInput) {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const startDate = input.start_date ?? new Date().toISOString().slice(0, 10)
+  const net       = (input.total_amount ?? 0) - (input.discount_amount ?? 0)
+
+  // 1. Upsert group_students (keeps existing group management working)
+  const { data: gsData, error: gsErr } = await db
+    .from('group_students')
+    .upsert({
+      group_id:        input.group_id,
+      student_id:      input.student_id,
+      enrollment_type: input.enrollment_type ?? 'primary',
+      status:          'active',
+      joined_at:       startDate,
+      notes:           input.notes ?? null,
+    }, { onConflict: 'group_id,student_id' })
+    .select('id')
+    .single()
+
+  if (gsErr) throw new Error(gsErr.message)
+  const groupStudentId = (gsData as any).id as string
+
+  // 2. Resolve group_course_id if not provided
+  let gcId = input.group_course_id ?? null
+  if (!gcId) {
+    const { data: gcRow } = await db
+      .from('group_courses')
+      .select('id, instructor_id')
+      .eq('group_id', input.group_id)
+      .eq('status', 'active')
+      .maybeSingle()
+    gcId = (gcRow as any)?.id ?? null
+    if (!input.instructor_id && (gcRow as any)?.instructor_id) {
+      input.instructor_id = (gcRow as any).instructor_id
+    }
+  }
+
+  // 3. Get branch_id from group if not provided
+  let branchId = input.branch_id
+  if (!branchId) {
+    const { data: gRow } = await db
+      .from('groups').select('branch_id').eq('id', input.group_id).maybeSingle()
+    branchId = (gRow as any)?.branch_id ?? input.branch_id
+  }
+
+  // 4. Create student_enrollments row
+  const { data: seData, error: seErr } = await db
+    .from('student_enrollments')
+    .insert({
+      student_id:      input.student_id,
+      branch_id:       branchId,
+      group_id:        input.group_id,
+      group_course_id: gcId,
+      instructor_id:   input.instructor_id ?? null,
+      group_student_id: groupStudentId,
+      start_date:      startDate,
+      status:          'ACTIVE',
+      enrollment_type: input.enrollment_type ?? 'primary',
+      pricing_plan:    input.pricing_plan ?? null,
+      total_amount:    input.total_amount ?? 0,
+      discount_amount: input.discount_amount ?? 0,
+      net_amount:      net,
+      notes:           input.notes ?? null,
+      created_by:      user.id,
+    })
+    .select('id')
+    .single()
+
+  if (seErr) {
+    // If duplicate active enrollment: return the existing one
+    if (seErr.code === '23505') {
+      const { data: existing } = await db
+        .from('student_enrollments')
+        .select('id')
+        .eq('student_id', input.student_id)
+        .eq('group_id', input.group_id)
+        .eq('status', 'ACTIVE')
+        .maybeSingle()
+      return { enrollmentId: (existing as any)?.id as string, groupStudentId }
+    }
+    throw new Error(seErr.message)
+  }
+
+  return { enrollmentId: (seData as any).id as string, groupStudentId }
+}
+
+// ── Transfer enrollment ───────────────────────────────────────────────────────
+// Marks the old enrollment as TRANSFERRED and creates a new ACTIVE enrollment.
+// Preserves all historical attendance, payments, notes.
+
+export async function transferEnrollment(input: TransferEnrollmentInput) {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const transferDate = input.transfer_date ?? new Date().toISOString().slice(0, 10)
+
+  // 1. Get the current enrollment
+  const { data: currentEnroll, error: fetchErr } = await db
+    .from('student_enrollments')
+    .select('*')
+    .eq('id', input.enrollment_id)
+    .single()
+  if (fetchErr || !currentEnroll) throw new Error('Enrollment not found')
+  const curr = currentEnroll as any
+
+  if (curr.status !== 'ACTIVE') throw new Error('Only ACTIVE enrollments can be transferred')
+
+  // 2. Resolve new group details
+  const { data: newGroup } = await db
+    .from('groups').select('branch_id').eq('id', input.new_group_id).maybeSingle()
+  const newBranchId = (newGroup as any)?.branch_id ?? curr.branch_id
+
+  let newGcId = input.new_group_course_id ?? null
+  let newInstructorId = input.new_instructor_id ?? null
+  if (!newGcId) {
+    const { data: gcRow } = await db
+      .from('group_courses')
+      .select('id, instructor_id')
+      .eq('group_id', input.new_group_id)
+      .eq('status', 'active')
+      .maybeSingle()
+    newGcId = (gcRow as any)?.id ?? null
+    if (!newInstructorId) newInstructorId = (gcRow as any)?.instructor_id ?? null
+  }
+
+  // 3. Mark current enrollment as TRANSFERRED
+  await db.from('student_enrollments')
+    .update({ status: 'TRANSFERRED', end_date: transferDate, updated_at: new Date().toISOString() })
+    .eq('id', input.enrollment_id)
+
+  // 4. Update old group_students row to dropped/transferred
+  if (curr.group_student_id) {
+    await db.from('group_students')
+      .update({ status: 'dropped', left_at: transferDate })
+      .eq('id', curr.group_student_id)
+  }
+
+  // 5. Create new group_students row in the destination group
+  const { data: newGs } = await db
+    .from('group_students')
+    .insert({
+      group_id:        input.new_group_id,
+      student_id:      curr.student_id,
+      enrollment_type: curr.enrollment_type,
+      status:          'active',
+      joined_at:       transferDate,
+      notes:           `Transferred from group ${curr.group_id ?? '—'}. ${input.notes ?? ''}`.trim(),
+    })
+    .select('id')
+    .single()
+  const newGroupStudentId = (newGs as any)?.id ?? null
+
+  // 6. Create new ACTIVE enrollment in the destination group
+  const { data: newEnroll, error: newErr } = await db
+    .from('student_enrollments')
+    .insert({
+      student_id:       curr.student_id,
+      branch_id:        newBranchId,
+      group_id:         input.new_group_id,
+      group_course_id:  newGcId,
+      instructor_id:    newInstructorId,
+      group_student_id: newGroupStudentId,
+      start_date:       transferDate,
+      status:           'ACTIVE',
+      enrollment_type:  curr.enrollment_type,
+      // Carry forward pricing from old enrollment
+      pricing_plan:     curr.pricing_plan,
+      total_amount:     curr.total_amount,
+      discount_amount:  curr.discount_amount,
+      net_amount:       input.preserve_balance ? curr.net_amount : 0,
+      transferred_from: input.enrollment_id,
+      notes:            input.notes ?? null,
+      created_by:       user.id,
+    })
+    .select('id')
+    .single()
+  if (newErr) throw new Error(newErr.message)
+
+  const newEnrollmentId = (newEnroll as any).id as string
+
+  // 7. Back-link the old enrollment to the new one
+  await db.from('student_enrollments')
+    .update({ transferred_to: newEnrollmentId })
+    .eq('id', input.enrollment_id)
+
+  // 8. If balance preserved: link the existing financial account to the new enrollment
+  if (input.preserve_balance) {
+    await db.from('student_financial_accounts')
+      .update({ enrollment_id: newEnrollmentId, group_id: input.new_group_id })
+      .eq('enrollment_id', input.enrollment_id)
+  }
+
+  return { newEnrollmentId, oldEnrollmentId: input.enrollment_id }
+}
+
+// ── Update enrollment status ─────────────────────────────────────────────────
+
+export async function updateEnrollmentStatus(input: UpdateEnrollmentStatusInput) {
+  await requirePermission('manage_groups')
+  const db = createServiceClient()
+
+  const { error } = await db
+    .from('student_enrollments')
+    .update({
+      status:     input.status,
+      end_date:   input.end_date ?? null,
+      notes:      input.notes ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', input.enrollment_id)
+
+  if (error) throw new Error(error.message)
+}

@@ -1,0 +1,958 @@
+'use client'
+
+import { useEffect, useState, useCallback, useTransition, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import type {
+  StudentOperationsRow, StudentOpsDetail, PaymentMethod,
+  FinancePayment, FinancePaymentReversal,
+} from '@/modules/finance/types'
+import {
+  RISK_LEVEL_CLASSES, RISK_FLAG_LABELS,
+  PAYMENT_METHOD_LABELS, ACTIVITY_TYPE_LABELS,
+  STATUS_COLORS, STATUS_LABELS,
+  INSTALLMENT_STATUS_COLORS,
+  computeSessionExhaustion,
+  SESSION_EXHAUSTION_LABELS, SESSION_EXHAUSTION_COLORS,
+} from '@/modules/finance/types'
+import {
+  addPayment, quickPayment, addFinanceNote,
+  recordActivity, addPaymentPromise, createReversal,
+} from '@/modules/finance/actions'
+import { compressImage } from '@/lib/finance/compress-image'
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmt(n: number) {
+  return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
+}
+function fmtDate(iso: string | null | undefined) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+function fmtDateShort(iso: string | null | undefined) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+}
+
+// ── Running balance computation ────────────────────────────────────────────────
+
+function computeRunningBalance(
+  payments: FinancePayment[],
+  netAmount: number
+): Map<string, { remainingAfter: number; runningPaid: number }> {
+  const sorted = [...payments].sort((a, b) => a.payment_date.localeCompare(b.payment_date))
+  const map = new Map<string, { remainingAfter: number; runningPaid: number }>()
+  let running = 0
+  for (const p of sorted) {
+    running += p.amount
+    const remainingAfter = Math.max(0, netAmount - running)
+    map.set(p.id, { remainingAfter, runningPaid: Math.max(0, running) })
+  }
+  return map
+}
+
+// ── Timeline builder ──────────────────────────────────────────────────────────
+
+type TL = {
+  id: string; date: string; kind: string
+  title: string; sub: string | null
+  amount?: number; badge?: string; bColor?: string
+  isCredit?: boolean; isReversal?: boolean
+  receiptUrl?: string | null
+  paymentId?: string
+}
+
+function buildTimeline(detail: StudentOpsDetail): TL[] {
+  const out: TL[] = []
+
+  for (const p of detail.payments) {
+    const isRev = p.amount < 0
+    out.push({
+      id: `pay-${p.id}`, date: p.payment_date, kind: 'payment',
+      title: isRev
+        ? `Reversal — EGP ${fmt(Math.abs(p.amount))}`
+        : `Payment — EGP ${fmt(p.amount)}`,
+      sub: [
+        PAYMENT_METHOD_LABELS[p.payment_method] ?? p.payment_method,
+        p.reference_number ? `Ref: ${p.reference_number}` : null,
+        p.created_by_name ? `by ${p.created_by_name}` : null,
+      ].filter(Boolean).join(' · '),
+      amount: p.amount, isCredit: !isRev, isReversal: isRev,
+      receiptUrl: p.receipt_url,
+      paymentId: p.id,
+    })
+  }
+
+  for (const a of detail.activities) {
+    out.push({
+      id: `act-${a.id}`, date: a.created_at, kind: 'activity',
+      title: ACTIVITY_TYPE_LABELS[a.activity_type] ?? a.activity_type,
+      sub: [a.notes, a.created_by_name && `by ${a.created_by_name}`].filter(Boolean).join(' · '),
+      badge: a.activity_type, bColor: 'bg-slate-50 text-slate-600',
+    })
+  }
+
+  for (const n of detail.notes) {
+    out.push({
+      id: `note-${n.id}`, date: n.created_at, kind: 'note',
+      title: n.is_internal ? 'Internal Note' : 'Note',
+      sub: n.note_text,
+    })
+  }
+
+  for (const p of detail.promises) {
+    out.push({
+      id: `prom-${p.id}`, date: p.created_at, kind: 'promise',
+      title: `Promise — EGP ${fmt(p.promised_amount)}`,
+      sub: `Due ${fmtDate(p.promised_date)}`,
+      badge: p.status,
+      bColor: { ACTIVE:'bg-amber-50 text-amber-700', FULFILLED:'bg-emerald-50 text-emerald-700', BROKEN:'bg-red-50 text-red-600' }[p.status] ?? '',
+    })
+  }
+
+  for (const s of detail.attendance_sessions) {
+    if (!s.attendance_status) continue
+    const pos = ['present','late','makeup'].includes(s.attendance_status)
+    out.push({
+      id: `att-${s.schedule_id}`, date: s.scheduled_at, kind: 'attendance',
+      title: s.topic ?? 'Session',
+      sub: s.late_minutes ? `${s.late_minutes}m late` : null,
+      badge: s.attendance_status, isCredit: pos,
+      bColor: { present:'bg-emerald-50 text-emerald-700', late:'bg-amber-50 text-amber-700',
+                makeup:'bg-blue-50 text-blue-700', absent:'bg-red-50 text-red-600',
+                excused:'bg-purple-50 text-purple-700' }[s.attendance_status] ?? '',
+    })
+  }
+
+  return out.sort((a, b) => b.date.localeCompare(a.date))
+}
+
+const QUICK_AMOUNTS = [500, 1000, 2000] as const
+type DrawerTab = 'ledger' | 'timeline' | 'attendance'
+
+// ── Main Component ────────────────────────────────────────────────────────────
+
+interface Props {
+  student: StudentOperationsRow
+  onClose: () => void
+}
+
+export default function StudentOpsDrawer({ student, onClose }: Props) {
+  const router = useRouter()
+
+  // Detail
+  const [detail,    setDetail]    = useState<StudentOpsDetail | null>(null)
+  const [loading,   setLoading]   = useState(false)
+  const [detailErr, setDetailErr] = useState<string | null>(null)
+
+  // Authoritative balance (from server, updated after every payment)
+  const [netAmt,       setNetAmt]       = useState(student.net_amount)
+  const [paidAmt,      setPaidAmt]      = useState(student.paid_amount)
+  const [remainingAmt, setRemainingAmt] = useState(student.remaining_amount)
+
+  // UI state
+  const [tab,          setTab]          = useState<DrawerTab>('ledger')
+  const [quickPaying,  setQuickPaying]  = useState<number | 'full' | null>(null)
+  const [quickErr,     setQuickErr]     = useState<string | null>(null)
+  const [showPayForm,  setShowPayForm]  = useState(false)
+
+  // Payment form
+  const [payAmt,    setPayAmt]    = useState('')
+  const [payMethod, setPayMethod] = useState<PaymentMethod>('cash')
+  const [payDate,   setPayDate]   = useState(new Date().toISOString().slice(0, 10))
+  const [payRef,    setPayRef]    = useState('')
+  const [payNotes,  setPayNotes]  = useState('')
+  const [payErr,    setPayErr]    = useState<string | null>(null)
+
+  // Receipt upload
+  const [receiptFile,  setReceiptFile]  = useState<File | null>(null)
+  const [receiptPrev,  setReceiptPrev]  = useState<string | null>(null)
+  const [receiptUpErr, setReceiptUpErr] = useState<string | null>(null)
+  const [compressing,  setCompressing]  = useState(false)
+  const [uploading,    setUploading]    = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  // Reversal state
+  const [reversing,      setReversing]      = useState<string | null>(null)
+  const [reversalType,   setReversalType]   = useState<'REVERSAL'|'REFUND'|'CORRECTION'>('REVERSAL')
+  const [reversalReason, setReversalReason] = useState('')
+  const [reversalErr,    setReversalErr]    = useState<string | null>(null)
+
+  // Collection actions
+  const [noteText,    setNoteText]    = useState('')
+  const [noteOpen,    setNoteOpen]    = useState(false)
+  const [promiseAmt,  setPromiseAmt]  = useState('')
+  const [promiseDate, setPromiseDate] = useState('')
+  const [promiseOpen, setPromiseOpen] = useState(false)
+
+  const [isPending, startTransition] = useTransition()
+
+  // ── Fetch detail — no 'detail' dependency so the ref trick works ──────────
+  const fetchDetail = useCallback(async () => {
+    setLoading(true); setDetailErr(null)
+    try {
+      const qs  = student.enrollment_id ? `?enrollmentId=${student.enrollment_id}` : ''
+      const res = await fetch(`/api/student-ops/${student.student_id}${qs}`)
+      if (!res.ok) throw new Error('Failed to load')
+      const data = await res.json()
+      setDetail(data)
+      if (data.net_amount !== undefined)       setNetAmt(data.net_amount)
+      if (data.paid_amount !== undefined)      setPaidAmt(data.paid_amount)
+      if (data.remaining_amount !== undefined) setRemainingAmt(data.remaining_amount)
+    } catch (e: any) {
+      setDetailErr(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [student.student_id, student.enrollment_id])
+
+  // Always hold the latest fetchDetail in a ref so refreshAll never uses a stale closure
+  const fetchDetailRef = useRef(fetchDetail)
+  useEffect(() => { fetchDetailRef.current = fetchDetail }, [fetchDetail])
+
+  // Initial load
+  useEffect(() => { fetchDetail() }, [fetchDetail])
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [onClose])
+
+  // ── Refresh after action ──────────────────────────────────────────────────
+  function refreshAll() {
+    setDetail(null)
+    setTimeout(() => fetchDetailRef.current(), 400)
+    router.refresh()
+  }
+
+  function syncBalance(paid: number, remaining: number) {
+    setPaidAmt(paid); setRemainingAmt(remaining)
+  }
+
+  // ── Receipt handlers ──────────────────────────────────────────────────────
+  async function handleFilePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]; if (!f) return
+    setReceiptUpErr(null); setCompressing(true)
+    try {
+      const { blob } = await compressImage(f, { maxKB: 50, maxWidth: 1200 })
+      const compressed = new File([blob], f.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' })
+      setReceiptFile(compressed)
+      setReceiptPrev(URL.createObjectURL(blob))
+    } catch (err: any) {
+      setReceiptUpErr(`Compress error: ${err.message}`)
+    } finally { setCompressing(false) }
+  }
+
+  async function uploadReceipt(): Promise<string | null> {
+    if (!receiptFile) return null
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append('file', receiptFile)
+      if (student.enrollment_id) form.append('enrollmentId', student.enrollment_id)
+      const res = await fetch('/api/finance/receipts', { method: 'POST', body: form })
+      if (!res.ok) { const b = await res.json(); setReceiptUpErr(b.error ?? 'Upload failed'); return null }
+      return (await res.json()).url as string
+    } finally { setUploading(false) }
+  }
+
+  // ── Quick pay ─────────────────────────────────────────────────────────────
+  async function handleQuickPay(amount: number | 'full') {
+    if (!student.account_id) return
+    setQuickPaying(amount); setQuickErr(null)
+    startTransition(async () => {
+      const res = await quickPayment({
+        account_id:    student.account_id!,
+        student_id:    student.student_id,
+        enrollment_id: student.enrollment_id ?? undefined,
+        amount,
+      })
+      if ('error' in res) {
+        setQuickErr(res.error)
+      } else {
+        syncBalance(res.paid_amount, res.remaining_amount)
+        refreshAll()
+      }
+      setQuickPaying(null)
+    })
+  }
+
+  // ── Full payment form submit ───────────────────────────────────────────────
+  async function handlePayFormSubmit() {
+    if (!student.account_id) return
+    const amount = parseFloat(payAmt)
+    if (!amount || amount <= 0) { setPayErr('Enter a valid amount'); return }
+    setPayErr(null)
+
+    let receiptUrl: string | null = null
+    if (receiptFile) {
+      receiptUrl = await uploadReceipt()
+      if (!receiptUrl && receiptFile) return
+    }
+
+    startTransition(async () => {
+      const res = await addPayment({
+        account_id:       student.account_id!,
+        student_id:       student.student_id,
+        enrollment_id:    student.enrollment_id ?? undefined,
+        amount,
+        payment_date:     payDate,
+        payment_method:   payMethod,
+        reference_number: payRef  || undefined,
+        notes:            payNotes || undefined,
+        receipt_url:      receiptUrl ?? undefined,
+      })
+      if ('error' in res) {
+        setPayErr(res.error as string)
+      } else {
+        syncBalance((res as any).paid_amount, (res as any).remaining_amount)
+        setShowPayForm(false)
+        setPayAmt(''); setPayRef(''); setPayNotes('')
+        setReceiptFile(null); setReceiptPrev(null)
+        refreshAll()
+      }
+    })
+  }
+
+  // ── Reversal submit ───────────────────────────────────────────────────────
+  async function handleReversalSubmit(paymentId: string, paymentAmount: number) {
+    if (!reversalReason.trim()) { setReversalErr('Reason is required'); return }
+    setReversalErr(null)
+    startTransition(async () => {
+      const res = await createReversal({
+        original_payment_id: paymentId,
+        amount:              paymentAmount,
+        reversal_type:       reversalType,
+        reason:              reversalReason,
+      })
+      if (res && 'error' in res) {
+        setReversalErr((res as any).error)
+      } else {
+        setReversing(null); setReversalReason('')
+        refreshAll()
+      }
+    })
+  }
+
+  // ── Collection actions (all pass enrollment_id) ───────────────────────────
+  async function handleLogActivity(type: 'CALL' | 'WHATSAPP' | 'PAYMENT_REMINDER' | 'FOLLOW_UP') {
+    startTransition(async () => {
+      await recordActivity({
+        student_id:    student.student_id,
+        account_id:    student.account_id    ?? undefined,
+        enrollment_id: student.enrollment_id ?? undefined,
+        activity_type: type,
+      })
+      refreshAll()
+    })
+  }
+
+  async function handleAddNote() {
+    if (!noteText.trim()) return
+    startTransition(async () => {
+      await addFinanceNote({
+        student_id:    student.student_id,
+        account_id:    student.account_id    ?? undefined,
+        enrollment_id: student.enrollment_id ?? undefined,
+        note_text:     noteText.trim(),
+        is_internal:   true,
+      })
+      setNoteText(''); setNoteOpen(false)
+      refreshAll()
+    })
+  }
+
+  async function handleAddPromise() {
+    const amt = parseFloat(promiseAmt)
+    if (!amt || !promiseDate) return
+    startTransition(async () => {
+      await addPaymentPromise({
+        student_id:      student.student_id,
+        account_id:      student.account_id    ?? undefined,
+        enrollment_id:   student.enrollment_id ?? undefined,
+        promised_amount: amt,
+        promised_date:   promiseDate,
+      })
+      setPromiseAmt(''); setPromiseDate(''); setPromiseOpen(false)
+      refreshAll()
+    })
+  }
+
+  // ── Derived values ────────────────────────────────────────────────────────
+  const parentPhone   = student.parent_phone_1 || student.parent_phone_2
+  const progressPct   = netAmt > 0 ? Math.min(100, Math.round((paidAmt / netAmt) * 100)) : 0
+  const exhaustion    = computeSessionExhaustion(student.enrolled_sessions, student.remaining_sessions)
+  const timeline      = detail ? buildTimeline(detail) : []
+  const runningBal    = detail ? computeRunningBalance(detail.payments, netAmt) : new Map()
+  const posPayments   = detail?.payments.filter(p => p.amount > 0) ?? []
+  const negPayments   = detail?.payments.filter(p => p.amount < 0) ?? []
+  const lastFiveSess  = detail?.attendance_sessions.slice(0, 5) ?? []
+  const payAmtNum     = parseFloat(payAmt) || 0
+  const previewRemaining = Math.max(0, remainingAmt - payAmtNum)
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
+
+      <div
+        className="fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-white shadow-2xl sm:max-w-130 animate-slide-right"
+        role="dialog" aria-modal="true"
+      >
+
+        {/* ── HEADER ──────────────────────────────────────────────────────── */}
+        <div className="shrink-0 border-b border-[#E2E8F0] px-5 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-base font-bold text-[#0B1F3A]">{student.student_name}</h2>
+                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${RISK_LEVEL_CLASSES[student.risk_level]}`}>
+                  {student.risk_level}
+                </span>
+                {student.financial_status && student.financial_status !== 'CURRENT' && (
+                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[student.financial_status as keyof typeof STATUS_COLORS] ?? ''}`}>
+                    {STATUS_LABELS[student.financial_status as keyof typeof STATUS_LABELS] ?? student.financial_status}
+                  </span>
+                )}
+                {student.enrolled_sessions > 0 && exhaustion !== 'HEALTHY' && (
+                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${SESSION_EXHAUSTION_COLORS[exhaustion]}`}>
+                    {SESSION_EXHAUSTION_LABELS[exhaustion]}
+                  </span>
+                )}
+              </div>
+              <p className="mt-0.5 text-xs text-[#64748B]">
+                {student.group_name ?? 'No group'}
+                {student.instructor_name
+                  ? <span> · {student.instructor_name}</span>
+                  : <span className="text-amber-600"> · Unassigned</span>}
+                {student.student_code && <span className="ml-1 text-[#94A3B8]">#{student.student_code}</span>}
+              </p>
+              {student.risk_flags.filter(f => f !== 'session_milestone').length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {student.risk_flags.filter(f => f !== 'session_milestone').slice(0, 4).map(f => (
+                    <span key={f} className="rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
+                      {RISK_FLAG_LABELS[f] ?? f}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              {parentPhone && (
+                <>
+                  <a href={`https://wa.me/${parentPhone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
+                    onClick={() => handleLogActivity('WHATSAPP')}
+                    title="WhatsApp (logs activity)"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.555 4.127 1.528 5.856L0 24l6.335-1.652A11.946 11.946 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.875 9.875 0 01-5.031-1.375l-.361-.214-3.741.975.997-3.645-.236-.374A9.86 9.86 0 012.118 12c0-5.453 4.43-9.882 9.882-9.882 5.453 0 9.882 4.43 9.882 9.882 0 5.453-4.43 9.882-9.882 9.882z"/>
+                    </svg>
+                  </a>
+                  <a href={`tel:${parentPhone}`} onClick={() => handleLogActivity('CALL')}
+                    title="Call (logs activity)"
+                    className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-700 hover:bg-blue-100">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/>
+                    </svg>
+                  </a>
+                </>
+              )}
+              <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-[#64748B] hover:bg-[#F1F5F9]" aria-label="Close">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ── ENROLLMENT CONTRACT SUMMARY ──────────────────────────────────── */}
+        <div className="shrink-0 border-b border-[#E2E8F0] bg-[#F8FAFC] px-5 py-3 space-y-2">
+          {/* Session package */}
+          {student.enrolled_sessions > 0 ? (
+            <div>
+              <div className="mb-1 flex items-center justify-between text-[11px]">
+                <span className="text-[#64748B]">Sessions</span>
+                <span className={`font-semibold ${
+                  exhaustion === 'EXHAUSTED' ? 'text-red-700' :
+                  exhaustion === 'CRITICAL'  ? 'text-red-600' :
+                  exhaustion === 'WARNING'   ? 'text-amber-700' : 'text-emerald-600'
+                }`}>
+                  {student.consumed_sessions}/{student.enrolled_sessions} consumed
+                  {student.remaining_sessions > 0 && ` · ${student.remaining_sessions} left`}
+                  {student.remaining_sessions <= 0 && ' · Package exhausted'}
+                </span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-[#E2E8F0]">
+                <div className={`h-full rounded-full ${
+                  exhaustion === 'EXHAUSTED' || exhaustion === 'CRITICAL' ? 'bg-red-500' :
+                  exhaustion === 'WARNING' ? 'bg-amber-500' : 'bg-blue-500'
+                }`} style={{ width: `${Math.min(100, student.enrolled_sessions > 0 ? Math.round((student.consumed_sessions / student.enrolled_sessions) * 100) : 0)}%` }} />
+              </div>
+            </div>
+          ) : (
+            <p className="text-[11px] font-medium text-amber-600">No session package — enroll student to set up contract</p>
+          )}
+
+          {/* Payment progress */}
+          <div>
+            <div className="mb-1 flex items-center justify-between text-[11px]">
+              <span className="text-[#64748B]">
+                Paid <strong className="text-emerald-700">EGP {fmt(paidAmt)}</strong>
+                {' / '}
+                <strong className="text-[#0B1F3A]">EGP {fmt(netAmt)}</strong>
+              </span>
+              <span className={remainingAmt > 0 ? 'font-semibold text-red-600' : 'font-semibold text-emerald-600'}>
+                {remainingAmt > 0 ? `EGP ${fmt(remainingAmt)} due` : 'Fully paid ✓'}
+              </span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-[#E2E8F0]">
+              <div className={`h-full rounded-full transition-all ${progressPct >= 80 ? 'bg-emerald-500' : progressPct >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                style={{ width: `${progressPct}%` }} />
+            </div>
+          </div>
+
+          {/* Meta row: attendance + next due */}
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#64748B]">
+            {student.sessions_attended > 0 && (
+              <span>
+                Attendance: <strong className={student.attendance_pct >= 80 ? 'text-emerald-600' : student.attendance_pct >= 60 ? 'text-amber-600' : 'text-red-600'}>
+                  {student.attendance_pct}%
+                </strong>
+                {' '}({student.sessions_attended}/{student.total_sessions})
+              </span>
+            )}
+            {student.next_due_date && (
+              <span>
+                Next due: <span className={student.days_overdue > 0 ? 'font-semibold text-red-600' : 'font-medium'}>
+                  {fmtDate(student.next_due_date)}{student.days_overdue > 0 ? ` (${student.days_overdue}d overdue)` : ''}
+                </span>
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* ── QUICK ACTIONS ────────────────────────────────────────────────── */}
+        {student.account_id ? (
+          <div className="shrink-0 border-b border-[#E2E8F0] px-5 py-3 space-y-2">
+            {quickErr && <p className="rounded-lg bg-red-50 px-3 py-1.5 text-xs text-red-600">{quickErr}</p>}
+
+            {/* One-click pay */}
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_AMOUNTS.map(amt => (
+                <button key={amt} onClick={() => handleQuickPay(amt)}
+                  disabled={!!quickPaying || isPending || remainingAmt <= 0}
+                  className="flex items-center gap-1 rounded-lg bg-[#0B1F3A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#1a3356] disabled:opacity-40">
+                  {quickPaying === amt && <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />}
+                  +{fmt(amt)}
+                </button>
+              ))}
+              <button onClick={() => handleQuickPay('full')}
+                disabled={!!quickPaying || isPending || remainingAmt <= 0}
+                className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-40">
+                {quickPaying === 'full' && <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />}
+                Paid Full ({fmt(remainingAmt)})
+              </button>
+              <button onClick={() => { setShowPayForm(o => !o) }}
+                className="rounded-lg border border-[#FF8A1F]/40 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-[#FF8A1F] hover:bg-orange-100">
+                + Add Payment
+              </button>
+            </div>
+
+            {/* Collection actions */}
+            <div className="flex flex-wrap gap-1.5">
+              <button onClick={() => handleLogActivity('PAYMENT_REMINDER')} disabled={isPending}
+                className="rounded-lg bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100">
+                Reminder
+              </button>
+              <button onClick={() => setPromiseOpen(o => !o)}
+                className="rounded-lg bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 hover:bg-amber-100">
+                Promise
+              </button>
+              <button onClick={() => setNoteOpen(o => !o)}
+                className="rounded-lg bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100">
+                Note
+              </button>
+            </div>
+
+            {/* Note form */}
+            {noteOpen && (
+              <div className="flex gap-2">
+                <input autoFocus value={noteText} onChange={e => setNoteText(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleAddNote()}
+                  placeholder="Write a note…"
+                  className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                <button onClick={handleAddNote} disabled={isPending}
+                  className="rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40">Save</button>
+                <button onClick={() => setNoteOpen(false)} className="text-xs text-[#94A3B8]">✕</button>
+              </div>
+            )}
+
+            {/* Promise form */}
+            {promiseOpen && (
+              <div className="flex flex-wrap gap-2">
+                <input type="number" min="1" value={promiseAmt} onChange={e => setPromiseAmt(e.target.value)}
+                  placeholder="Amount…" className="w-28 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                <input type="date" value={promiseDate} onChange={e => setPromiseDate(e.target.value)}
+                  className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                <button onClick={handleAddPromise} disabled={isPending}
+                  className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40">Save</button>
+                <button onClick={() => setPromiseOpen(false)} className="text-xs text-[#94A3B8]">✕</button>
+              </div>
+            )}
+
+            {/* Full payment form */}
+            {showPayForm && (
+              <div className="rounded-xl border border-[#E2E8F0] bg-white p-3 space-y-2">
+                <p className="text-xs font-semibold text-[#0B1F3A]">Record payment</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] text-[#94A3B8] mb-1">Amount (EGP)</label>
+                    <input type="number" min="1" autoFocus value={payAmt} onChange={e => setPayAmt(e.target.value)}
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[#94A3B8] mb-1">Method</label>
+                    <select value={payMethod} onChange={e => setPayMethod(e.target.value as PaymentMethod)}
+                      className="w-full rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none">
+                      {Object.entries(PAYMENT_METHOD_LABELS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[#94A3B8] mb-1">Date</label>
+                    <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)}
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-[#94A3B8] mb-1">Reference</label>
+                    <input value={payRef} onChange={e => setPayRef(e.target.value)} placeholder="Instapay / VF ref"
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                  </div>
+                </div>
+                <input value={payNotes} onChange={e => setPayNotes(e.target.value)} placeholder="Notes (optional)"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+
+                {/* Live payment preview */}
+                {payAmtNum > 0 && (
+                  <div className="rounded-lg bg-blue-50 border border-blue-100 px-3 py-2 text-[11px]">
+                    <p className="font-semibold text-blue-800 mb-1">After this payment:</p>
+                    <div className="flex justify-between">
+                      <span className="text-[#64748B]">Paid:</span>
+                      <span className="font-semibold text-emerald-700">EGP {fmt(paidAmt + payAmtNum)} / {fmt(netAmt)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[#64748B]">Remaining:</span>
+                      <span className={`font-semibold ${previewRemaining > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {previewRemaining > 0 ? `EGP ${fmt(previewRemaining)}` : 'Fully paid ✓'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Receipt upload */}
+                <div>
+                  <label className="block text-[10px] text-[#94A3B8] mb-1">Receipt (auto-compressed ≤50 KB)</label>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => fileRef.current?.click()}
+                      className="rounded-lg border border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-3 py-1.5 text-xs text-[#64748B] hover:border-[#FF8A1F]">
+                      {compressing ? 'Compressing…' : receiptFile ? `✓ ${receiptFile.name}` : 'Choose image'}
+                    </button>
+                    {receiptPrev && <img src={receiptPrev} alt="Preview" className="h-10 w-10 rounded object-cover border border-[#E2E8F0]" />}
+                    {receiptFile && <button onClick={() => { setReceiptFile(null); setReceiptPrev(null) }} className="text-xs text-red-500">✕</button>}
+                  </div>
+                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFilePick} />
+                  {receiptUpErr && <p className="mt-1 text-xs text-red-600">{receiptUpErr}</p>}
+                </div>
+
+                {payErr && <p className="text-xs text-red-600">{payErr}</p>}
+                <div className="flex gap-2">
+                  <button onClick={() => { setShowPayForm(false); setPayErr(null); setPayAmt('') }}
+                    className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-xs text-[#64748B]">Cancel</button>
+                  <button onClick={handlePayFormSubmit} disabled={isPending || uploading}
+                    className="flex-1 rounded-lg bg-[#FF8A1F] py-1.5 text-xs font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-1">
+                    {(isPending || uploading) && <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />}
+                    {uploading ? 'Uploading…' : 'Save Payment'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="shrink-0 border-b border-[#E2E8F0] bg-amber-50/50 px-5 py-3">
+            <p className="text-xs text-amber-700 font-medium">No financial account yet — use Enroll to set up a package and payments.</p>
+          </div>
+        )}
+
+        {/* ── TAB BAR ──────────────────────────────────────────────────────── */}
+        <div className="shrink-0 flex border-b border-[#E2E8F0] bg-[#F8FAFC] px-5">
+          {(['ledger','timeline','attendance'] as DrawerTab[]).map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              className={`py-2.5 px-4 text-xs font-medium capitalize border-b-2 transition-colors ${
+                tab === t ? 'border-[#FF8A1F] text-[#0B1F3A]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'
+              }`}>
+              {t}
+            </button>
+          ))}
+        </div>
+
+        {/* ── SCROLLABLE BODY ──────────────────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+
+          {loading && (
+            <div className="space-y-3">
+              {[1,2,3].map(i => <div key={i} className="h-12 animate-pulse rounded-xl bg-[#F1F5F9]" />)}
+            </div>
+          )}
+          {detailErr && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{detailErr}</div>
+          )}
+
+          {/* ── LEDGER TAB ────────────────────────────────────────────────── */}
+          {tab === 'ledger' && detail && !loading && (
+            <div className="space-y-4">
+              {/* Installments */}
+              {detail.installments.length > 0 && (
+                <section>
+                  <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Installment Plan</h3>
+                  <div className="space-y-1.5">
+                    {detail.installments.map(inst => {
+                      const today  = new Date().toISOString().slice(0, 10)
+                      const isLate = inst.status !== 'PAID' && inst.due_date < today
+                      const daysLate = isLate ? Math.floor((Date.now() - new Date(inst.due_date).getTime()) / 86400000) : 0
+                      return (
+                        <div key={inst.id}
+                          className={`flex items-center justify-between rounded-xl border px-4 py-2 text-xs ${isLate ? 'border-red-200 bg-red-50/50' : 'border-[#E2E8F0]'}`}>
+                          <div>
+                            <span className="font-medium text-[#0B1F3A]">#{inst.installment_number}</span>
+                            <span className="ml-2 text-[#64748B]">{fmtDate(inst.due_date)}</span>
+                            {isLate && <span className="ml-2 font-medium text-red-600">{daysLate}d late</span>}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-[#0B1F3A]">EGP {fmt(inst.amount - inst.paid_amount)}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-[9px] font-medium ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>{inst.status}</span>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </section>
+              )}
+
+              {/* Payment ledger table */}
+              <section>
+                <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+                  Payment Ledger <span className="normal-case font-normal text-[#CBD5E1]">({posPayments.length} payments)</span>
+                </h3>
+                {posPayments.length === 0 ? (
+                  <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-6 text-center text-xs text-[#94A3B8]">
+                    No payments recorded yet.
+                    {student.account_id && (
+                      <p className="mt-1">Use the <strong>+ Add Payment</strong> button above to record the first payment.</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                        <tr>
+                          <th className="px-3 py-2 text-left text-[#64748B] font-medium">Date</th>
+                          <th className="px-3 py-2 text-left text-[#64748B] font-medium">Amount</th>
+                          <th className="px-3 py-2 text-left text-[#64748B] font-medium">Method</th>
+                          <th className="px-3 py-2 text-left text-[#64748B] font-medium">Remaining After</th>
+                          <th className="px-3 py-2 text-left text-[#64748B] font-medium"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {posPayments.map(p => {
+                          const bal = runningBal.get(p.id)
+                          return (
+                            <tr key={p.id} className="border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC]">
+                              <td className="px-3 py-2 text-[#64748B]">{fmtDateShort(p.payment_date)}</td>
+                              <td className="px-3 py-2 font-semibold text-emerald-700">EGP {fmt(p.amount)}</td>
+                              <td className="px-3 py-2 text-[#64748B]">
+                                {PAYMENT_METHOD_LABELS[p.payment_method] ?? p.payment_method}
+                                {p.reference_number && <span className="block text-[10px] text-[#94A3B8]">{p.reference_number}</span>}
+                                {p.receipt_url && (
+                                  <a href={p.receipt_url} target="_blank" rel="noopener noreferrer"
+                                    className="block text-[10px] text-blue-600 hover:underline">receipt ↗</a>
+                                )}
+                              </td>
+                              <td className="px-3 py-2 font-medium">
+                                <span className={bal && bal.remainingAfter > 0 ? 'text-red-600' : 'text-emerald-600'}>
+                                  EGP {fmt(bal?.remainingAfter ?? 0)}
+                                </span>
+                              </td>
+                              <td className="px-3 py-2">
+                                {reversing === p.id ? (
+                                  <div className="flex flex-col gap-1.5 min-w-50">
+                                    <select value={reversalType} onChange={e => setReversalType(e.target.value as any)}
+                                      className="w-full rounded border border-[#E2E8F0] px-2 py-1 text-xs focus:border-[#FF8A1F] focus:outline-none">
+                                      <option value="REVERSAL">Reversal</option>
+                                      <option value="REFUND">Refund</option>
+                                      <option value="CORRECTION">Correction</option>
+                                    </select>
+                                    <input value={reversalReason} onChange={e => setReversalReason(e.target.value)}
+                                      placeholder="Reason (required)" autoFocus
+                                      className="w-full rounded border border-[#E2E8F0] px-2 py-1 text-xs focus:border-[#FF8A1F] focus:outline-none" />
+                                    {reversalErr && <p className="text-[10px] text-red-600">{reversalErr}</p>}
+                                    <div className="flex gap-1">
+                                      <button onClick={() => handleReversalSubmit(p.id, p.amount)} disabled={isPending}
+                                        className="flex-1 rounded bg-red-600 py-1 text-[10px] font-semibold text-white disabled:opacity-40">Confirm</button>
+                                      <button onClick={() => { setReversing(null); setReversalReason(''); setReversalErr(null) }}
+                                        className="flex-1 rounded border border-[#E2E8F0] py-1 text-[10px] text-[#64748B]">Cancel</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button onClick={() => { setReversing(p.id); setReversalErr(null) }}
+                                    className="rounded px-2 py-0.5 text-[10px] font-medium text-red-600 bg-red-50 hover:bg-red-100">
+                                    Reverse
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                      {(negPayments.length > 0 || posPayments.length > 0) && (
+                        <tfoot className="border-t border-[#E2E8F0] bg-[#F8FAFC]">
+                          <tr>
+                            <td className="px-3 py-2 font-semibold text-[#0B1F3A]">Total</td>
+                            <td className="px-3 py-2 font-bold text-emerald-700">EGP {fmt(paidAmt)}</td>
+                            <td colSpan={2} className="px-3 py-2 text-[#64748B]">
+                              {negPayments.length > 0 && (
+                                <span className="text-red-600">{negPayments.length} reversal{negPayments.length > 1 ? 's' : ''} applied</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 font-bold">
+                              <span className={remainingAmt > 0 ? 'text-red-600' : 'text-emerald-600'}>
+                                EGP {fmt(remainingAmt)} {remainingAmt > 0 ? 'due' : 'paid'}
+                              </span>
+                            </td>
+                          </tr>
+                        </tfoot>
+                      )}
+                    </table>
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
+
+          {/* ── TIMELINE TAB ───────────────────────────────────────────────── */}
+          {tab === 'timeline' && detail && !loading && (
+            <div>
+              {timeline.length === 0 ? (
+                <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-8 text-center text-xs text-[#94A3B8]">
+                  No activity yet
+                </div>
+              ) : (
+                <div className="relative space-y-0">
+                  <div className="absolute left-3.75 top-0 bottom-0 w-px bg-[#E2E8F0]" />
+                  {timeline.map(ev => (
+                    <div key={ev.id} className="relative flex gap-3 pb-3">
+                      <div className={`relative z-10 mt-1 flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold ${
+                        ev.kind === 'payment' ? (ev.isCredit ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600') :
+                        ev.kind === 'attendance' ? (ev.isCredit ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500') :
+                        ev.kind === 'promise' ? 'bg-amber-100 text-amber-700' :
+                        'bg-slate-100 text-slate-500'
+                      }`}>
+                        {ev.kind === 'payment' ? (ev.isCredit ? '₯' : '↩') :
+                         ev.kind === 'attendance' ? (ev.isCredit ? '✓' : '✗') :
+                         ev.kind === 'promise' ? '!' : '·'}
+                      </div>
+                      <div className="flex-1 min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-3 py-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-xs font-medium text-[#0B1F3A] truncate">{ev.title}</p>
+                            {ev.sub && <p className="mt-0.5 text-[11px] text-[#64748B] line-clamp-2">{ev.sub}</p>}
+                          </div>
+                          <div className="flex shrink-0 flex-col items-end gap-1">
+                            <span className="text-[10px] text-[#94A3B8] whitespace-nowrap">{fmtDateShort(ev.date)}</span>
+                            {ev.badge && (
+                              <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold capitalize ${ev.bColor ?? 'bg-slate-50 text-slate-600'}`}>{ev.badge}</span>
+                            )}
+                          </div>
+                        </div>
+                        {ev.receiptUrl && (
+                          <a href={ev.receiptUrl} target="_blank" rel="noopener noreferrer"
+                            className="mt-1 inline-flex items-center gap-1 text-[10px] text-blue-600 hover:underline">
+                            View receipt →
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── ATTENDANCE TAB ─────────────────────────────────────────────── */}
+          {tab === 'attendance' && detail && !loading && (
+            <div className="space-y-3">
+              {lastFiveSess.length > 0 && (
+                <div className="flex items-center gap-3 pb-2 border-b border-[#F1F5F9]">
+                  {lastFiveSess.map(s => {
+                    const icon = s.attendance_status === 'present' ? '✅' : s.attendance_status === 'absent' ? '❌' : s.attendance_status === 'late' ? '⚠' : '—'
+                    return (
+                      <div key={s.schedule_id} className="flex flex-col items-center gap-0.5"
+                        title={`${fmtDate(s.scheduled_at)} — ${s.attendance_status ?? 'No record'}`}>
+                        <span className="text-lg leading-none">{icon}</span>
+                        <span className="text-[9px] text-[#94A3B8]">{fmtDateShort(s.scheduled_at)}</span>
+                      </div>
+                    )
+                  })}
+                  <span className="ml-auto text-xs text-[#64748B]">
+                    {student.sessions_attended}/{student.total_sessions} attended
+                    {student.attendance_pct > 0 && ` (${student.attendance_pct}%)`}
+                  </span>
+                </div>
+              )}
+
+              {detail.attendance_sessions.length === 0 ? (
+                <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-6 text-center text-xs text-[#94A3B8]">
+                  No sessions recorded yet.
+                </div>
+              ) : (
+                <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                      <tr>
+                        <th className="px-3 py-2 text-left text-[#64748B] font-medium">Date</th>
+                        <th className="px-3 py-2 text-left text-[#64748B] font-medium">Topic</th>
+                        <th className="px-3 py-2 text-left text-[#64748B] font-medium">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {detail.attendance_sessions.map(s => {
+                        const pos = s.attendance_status && ['present','late','makeup'].includes(s.attendance_status)
+                        return (
+                          <tr key={s.schedule_id} className="border-b border-[#F1F5F9] last:border-0">
+                            <td className="px-3 py-2 text-[#64748B]">{fmtDateShort(s.scheduled_at)}</td>
+                            <td className="px-3 py-2 text-[#0B1F3A]">{s.topic ?? <span className="text-[#94A3B8]">—</span>}</td>
+                            <td className="px-3 py-2">
+                              {s.attendance_status ? (
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
+                                  pos ? 'bg-emerald-50 text-emerald-700' :
+                                  s.attendance_status === 'absent' ? 'bg-red-50 text-red-600' :
+                                  'bg-purple-50 text-purple-700'
+                                }`}>{s.attendance_status}</span>
+                              ) : (
+                                <span className="text-[#94A3B8]">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  )
+}

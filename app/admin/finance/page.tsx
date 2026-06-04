@@ -34,13 +34,21 @@ export default async function AdminFinancePage({ searchParams }: Props) {
   const status   = params.status as AccountStatus | undefined
 
   const isSA = user.globalRole === 'super_admin'
+  // For non-admin users: if a specific branch is requested and they have access, use it;
+  // otherwise show all their branches
   const branchFilter = isSA
-    ? branchId
-    : (branchId && user.branchIds.includes(branchId)) ? branchId : user.branchIds[0]
+    ? branchId  // admin: any branch or null for all
+    : (branchId && user.branchIds.includes(branchId)) ? branchId : undefined
+
+  const branchIds = isSA ? undefined : user.branchIds
 
   const [result, kpis, branchesRes, groupsRes] = await Promise.all([
-    listFinancialAccounts({ page, search, branch_id: branchFilter, group_id: groupId, status, perPage: 30 }),
-    getFinanceKPIs(isSA ? undefined : user.branchIds),
+    listFinancialAccounts({
+      page, search, status, group_id: groupId,
+      ...(branchFilter ? { branch_id: branchFilter } : branchIds ? { branch_ids: branchIds } : {}),
+      perPage: 30,
+    }),
+    getFinanceKPIs(branchIds),
     listBranches({ perPage: 100 }),
     listGroups({ perPage: 200 }),
   ])

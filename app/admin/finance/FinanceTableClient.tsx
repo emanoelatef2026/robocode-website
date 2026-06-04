@@ -434,7 +434,7 @@ function InstallmentsTab({ detail, accountId, onRefresh }: { detail: StudentFina
         due_date:           fd.get('due_date') as string,
         notes:              (fd.get('notes') as string) || undefined,
       })
-      if (r?.error) { setErr(r.error); return }
+      if (r && 'error' in r) { setErr(String(r.error ?? 'Error')); return }
       setShowAdd(false)
       onRefresh()
     })
@@ -544,7 +544,7 @@ function PaymentTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDe
         notes:            (fd.get('notes') as string) || undefined,
         installment_id:   (fd.get('installment_id') as string) || undefined,
       })
-      if (r?.error) { setErr(r.error); return }
+      if (r && 'error' in r) { setErr(String(r.error ?? 'Error')); return }
       setOk(true)
       ;(e.target as HTMLFormElement).reset()
       onRefresh()
@@ -640,7 +640,7 @@ function NotesTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDeta
         note_text:   fd.get('note_text') as string,
         is_internal: (e.currentTarget.elements.namedItem('is_internal') as HTMLInputElement)?.checked ?? false,
       })
-      if (r?.error) { setErr(r.error); return }
+      if (r && 'error' in r) { setErr(String(r.error ?? 'Error')); return }
       ;(e.target as HTMLFormElement).reset()
       onRefresh()
     })
@@ -708,7 +708,7 @@ function ActivitiesTab({ detail, accountId, onRefresh }: { detail: StudentFinanc
         activity_type: fd.get('activity_type') as ActivityType,
         notes:         (fd.get('notes') as string) || undefined,
       })
-      if (r?.error) { setErr(r.error); return }
+      if (r && 'error' in r) { setErr(String(r.error ?? 'Error')); return }
       ;(e.target as HTMLFormElement).reset()
       onRefresh()
     })
@@ -789,7 +789,7 @@ function PromisesTab({ detail, accountId, onRefresh }: { detail: StudentFinanceD
         promised_date:   fd.get('promised_date') as string,
         notes:           (fd.get('notes') as string) || undefined,
       })
-      if (r?.error) { setErr(r.error); return }
+      if (r && 'error' in r) { setErr(String(r.error ?? 'Error')); return }
       setShowAdd(false); setPromises(null)
     })
   }

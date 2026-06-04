@@ -16,16 +16,21 @@ interface Props { params: Promise<{ id: string }> }
 export default async function TLGroupDetailPage({ params }: Props) {
   const user = await requirePortalRole('team_leader')
   await requirePermission('manage_groups')
-  const branchId = user.branchIds[0]
   const { id } = await params
 
   const group = await getGroupDetail(id)
   if (!group) notFound()
 
+  // Guard: TL must have access to this group's branch
+  if (user.globalRole !== 'super_admin' && !user.branchIds.includes(group.branch_id)) {
+    notFound()
+  }
+
   const [allStudents, courses, instructors, upcomingSessions, pastSessions] = await Promise.all([
     listStudents({ branchId: group.branch_id, perPage: 200 }),
     listCourses({ perPage: 100 }),
-    listInstructors({ branchId: group.branch_id, perPage: 100 }),
+    // Include cross-branch instructors so TLs can assign visiting instructors
+    listInstructors({ branchId: user.branchIds, includeCrossBranch: true, perPage: 200 }),
     group.group_course_id
       ? listSchedules({ groupCourseId: group.group_course_id, upcoming: true, limit: 5 })
       : Promise.resolve([]),

@@ -5,6 +5,7 @@ import { revalidatePath }       from 'next/cache'
 import type {
   AddPaymentInput, AddNoteInput, AddActivityInput,
   CreateAccountInput, AddInstallmentInput, AddPromiseInput,
+  QuickPaymentInput, CreateReversalInput,
 } from './types'
 import { getStudentFinanceDetail, getAccountPromises } from './queries'
 
@@ -73,7 +74,9 @@ export async function createOrUpdateFinancialAccount(input: CreateAccountInput) 
 
 // ── Add payment ───────────────────────────────────────────────────────────────
 
-export async function addPayment(input: AddPaymentInput) {
+export async function addPayment(
+  input: AddPaymentInput
+): Promise<{ ok: true; paid_amount: number; remaining_amount: number } | { error: string }> {
   const user = await requirePermission('manage_financials')
   const db   = createServiceClient()
 
@@ -81,24 +84,129 @@ export async function addPayment(input: AddPaymentInput) {
   if (!branchId) return { error: 'Account not found' }
   assertBranchAccess(user, branchId)
 
+  // Resolve enrollment_id: explicit > via SFA
+  let enrollmentId = input.enrollment_id ?? null
+  if (!enrollmentId) {
+    const { data: sfa } = await db
+      .from('student_financial_accounts')
+      .select('enrollment_id')
+      .eq('id', input.account_id)
+      .maybeSingle()
+    enrollmentId = (sfa as any)?.enrollment_id ?? null
+  }
+
+  // Determine allocation strategy
+  const strategy: import('./types').AllocationStrategy =
+    input.enrollment_id ? 'MANUAL' : (input.allocation_strategy ?? 'AUTO_FIFO')
+
   const { error } = await db.from('finance_payments').insert({
-    student_id:       input.student_id,
-    account_id:       input.account_id,
-    installment_id:   input.installment_id ?? null,
-    amount:           input.amount,
-    payment_date:     input.payment_date,
-    payment_method:   input.payment_method,
-    reference_number: input.reference_number ?? null,
-    notes:            input.notes ?? null,
-    created_by:       user.id,
+    student_id:          input.student_id,
+    account_id:          input.account_id,
+    enrollment_id:       enrollmentId,
+    installment_id:      input.installment_id ?? null,
+    amount:              input.amount,
+    payment_date:        input.payment_date,
+    payment_method:      input.payment_method,
+    reference_number:    input.reference_number ?? null,
+    notes:               input.notes ?? null,
+    allocation_strategy: strategy,
+    receipt_url:         input.receipt_url   ?? null,
+    receipt_image:       input.receipt_image ?? null,
+    receipt_notes:       input.receipt_notes ?? null,
+    created_by:          user.id,
   })
 
   if (error) return { error: error.message }
 
+  // Explicit balance recompute — ensures correctness even if trigger missed
+  const { data: balRow } = await db.rpc('recompute_account_balance' as any, {
+    p_account_id: input.account_id,
+  })
+  const bal = (balRow as any[])?.[0]
+
   revalidatePath('/admin/finance')
   revalidatePath('/portal/team-leader/finance')
+  revalidatePath('/portal/team-leader/collections')
   revalidatePath('/portal/parent/finance')
-  return { ok: true }
+
+  return {
+    ok:               true as const,
+    paid_amount:      Number(bal?.paid_amount      ?? 0),
+    remaining_amount: Number(bal?.remaining_amount ?? 0),
+  }
+}
+
+// ── Quick payment (one-click collection) ──────────────────────────────────────
+// Records a fast cash payment. 'full' pays the entire remaining balance.
+
+export async function quickPayment(
+  input: QuickPaymentInput
+): Promise<{ ok: true; paid_amount: number; remaining_amount: number } | { error: string }> {
+  const user = await requirePermission('manage_financials')
+  const db   = createServiceClient()
+
+  const branchId = await getAccountBranchId(db, input.account_id)
+  if (!branchId) return { error: 'Account not found' }
+  assertBranchAccess(user, branchId)
+
+  // Resolve amount
+  let amount: number
+  if (input.amount === 'full') {
+    const { data: acc } = await db
+      .from('student_financial_accounts')
+      .select('remaining_amount')
+      .eq('id', input.account_id)
+      .single()
+    amount = Number((acc as any)?.remaining_amount ?? 0)
+    if (amount <= 0) return { error: 'No remaining balance' }
+  } else {
+    amount = input.amount
+    if (amount <= 0) return { error: 'Amount must be positive' }
+  }
+
+  // Resolve enrollment_id
+  let enrollmentId = input.enrollment_id ?? null
+  if (!enrollmentId) {
+    const { data: sfa } = await db
+      .from('student_financial_accounts')
+      .select('enrollment_id')
+      .eq('id', input.account_id)
+      .maybeSingle()
+    enrollmentId = (sfa as any)?.enrollment_id ?? null
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+
+  const { error: payErr } = await db.from('finance_payments').insert({
+    student_id:          input.student_id,
+    account_id:          input.account_id,
+    enrollment_id:       enrollmentId,
+    amount,
+    payment_date:        today,
+    payment_method:      input.method ?? 'cash',
+    allocation_strategy: enrollmentId ? 'MANUAL' : 'AUTO_FIFO',
+    notes:               `Quick payment — EGP ${amount}`,
+    created_by:          user.id,
+  })
+
+  if (payErr) return { error: payErr.message }
+
+  // Explicit balance recompute — guarantees correctness regardless of trigger state
+  const { data: balRow } = await db.rpc('recompute_account_balance' as any, {
+    p_account_id: input.account_id,
+  })
+  const bal = (balRow as any[])?.[0]
+
+  revalidatePath('/portal/team-leader/finance')
+  revalidatePath('/portal/team-leader/collections')
+  revalidatePath('/admin/finance')
+  revalidatePath('/portal/parent/finance')
+
+  return {
+    ok:               true as const,
+    paid_amount:      Number(bal?.paid_amount      ?? 0),
+    remaining_amount: Number(bal?.remaining_amount ?? 0),
+  }
 }
 
 // ── Add installment ───────────────────────────────────────────────────────────
@@ -151,11 +259,12 @@ export async function addFinanceNote(input: AddNoteInput) {
   try { assertBranchAccess(user, branchId) } catch { return { error: 'Not authorized for this branch' } }
 
   const { error } = await db.from('finance_notes').insert({
-    student_id:  input.student_id,
-    account_id:  input.account_id ?? null,
-    note_text:   input.note_text,
-    is_internal: input.is_internal,
-    created_by:  user.id,
+    student_id:    input.student_id,
+    account_id:    input.account_id    ?? null,
+    enrollment_id: input.enrollment_id ?? null,
+    note_text:     input.note_text,
+    is_internal:   input.is_internal,
+    created_by:    user.id,
   })
 
   if (error) return { error: error.message }
@@ -175,7 +284,8 @@ export async function recordActivity(input: AddActivityInput) {
 
   const { error } = await db.from('collection_activities').insert({
     student_id:    input.student_id,
-    account_id:    input.account_id ?? null,
+    account_id:    input.account_id    ?? null,
+    enrollment_id: input.enrollment_id ?? null,
     activity_type: input.activity_type,
     notes:         input.notes ?? null,
     created_by:    user.id,
@@ -257,7 +367,8 @@ export async function addPaymentPromise(input: AddPromiseInput) {
 
   const { error } = await db.from('payment_promises').insert({
     student_id:      input.student_id,
-    account_id:      input.account_id ?? null,
+    account_id:      input.account_id    ?? null,
+    enrollment_id:   input.enrollment_id ?? null,
     promised_amount: input.promised_amount,
     promised_date:   input.promised_date,
     notes:           input.notes ?? null,
@@ -283,6 +394,64 @@ export async function markPromiseFulfilled(promiseId: string) {
   if (error) return { error: error.message }
   revalidatePath('/admin/finance')
   revalidatePath('/admin/finance/queue')
+  return { ok: true }
+}
+
+// ── Create payment reversal (Sprint 44) ───────────────────────────────────────
+// Immutable. Records a reversal/refund as a new negative ledger entry.
+// Does NOT delete the original payment.
+
+export async function createReversal(input: CreateReversalInput) {
+  const user = await requirePermission('manage_financials')
+  const db   = createServiceClient()
+
+  // Load original payment
+  const { data: original, error: loadErr } = await db
+    .from('finance_payments')
+    .select('id, student_id, account_id, enrollment_id, amount')
+    .eq('id', input.original_payment_id)
+    .single()
+
+  if (loadErr || !original) return { error: 'Original payment not found' }
+  const o = original as any
+
+  const branchId = await getAccountBranchId(db, o.account_id)
+  if (!branchId) return { error: 'Account not found' }
+  assertBranchAccess(user, branchId)
+
+  const amount = Math.min(input.amount, Number(o.amount))
+  if (amount <= 0) return { error: 'Reversal amount must be positive and <= original amount' }
+
+  // Insert reversal record
+  const { error: revErr } = await db.from('finance_payment_reversals').insert({
+    original_payment_id: input.original_payment_id,
+    enrollment_id:       o.enrollment_id ?? null,
+    account_id:          o.account_id,
+    student_id:          o.student_id,
+    amount,
+    reversal_type:       input.reversal_type ?? 'REVERSAL',
+    reason:              input.reason ?? null,
+    created_by:          user.id,
+  })
+
+  if (revErr) return { error: revErr.message }
+
+  // Debit the account balance by inserting a negative payment entry
+  await db.from('finance_payments').insert({
+    student_id:    o.student_id,
+    account_id:    o.account_id,
+    enrollment_id: o.enrollment_id ?? null,
+    amount:        -amount,
+    payment_date:  new Date().toISOString().slice(0, 10),
+    payment_method: 'cash',
+    notes:         `${input.reversal_type ?? 'REVERSAL'}: ${input.reason ?? 'No reason provided'} (original payment ${input.original_payment_id})`,
+    created_by:    user.id,
+  })
+
+  revalidatePath('/portal/team-leader/finance')
+  revalidatePath('/admin/finance')
+  revalidatePath('/portal/parent/finance')
+
   return { ok: true }
 }
 

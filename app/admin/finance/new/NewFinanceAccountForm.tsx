@@ -4,18 +4,28 @@ import { useRouter }                from 'next/navigation'
 import { createOrUpdateFinancialAccount } from '@/modules/finance/actions'
 
 interface Props {
-  branches: { id: string; name: string }[]
-  groups:   { id: string; name: string }[]
-  students: { id: string; name: string; code: string | null }[]
+  branches:        { id: string; name: string }[]
+  groups:          { id: string; name: string; branch_id?: string }[]
+  students:        { id: string; name: string; code: string | null; branch_id?: string }[]
+  successRedirect?: string
 }
 
-export default function NewFinanceAccountForm({ branches, groups, students }: Props) {
+export default function NewFinanceAccountForm({ branches, groups, students, successRedirect }: Props) {
   const router = useRouter()
   const [pending, startPending] = useTransition()
   const [err, setErr]           = useState('')
   const [search, setSearch]     = useState('')
+  const [selectedBranch, setSelectedBranch] = useState(branches.length === 1 ? branches[0].id : '')
 
-  const filteredStudents = students.filter(s =>
+  // When multiple branches, filter groups and students to the selected branch
+  const visibleGroups = selectedBranch
+    ? groups.filter(g => !g.branch_id || g.branch_id === selectedBranch)
+    : groups
+
+  const filteredStudents = (selectedBranch
+    ? students.filter(s => !s.branch_id || s.branch_id === selectedBranch)
+    : students
+  ).filter(s =>
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     (s.code ?? '').toLowerCase().includes(search.toLowerCase())
   ).slice(0, 50)
@@ -44,7 +54,7 @@ export default function NewFinanceAccountForm({ branches, groups, students }: Pr
         notes:           (fd.get('notes') as string) || undefined,
       })
       if (r.error) { setErr(r.error); return }
-      router.push('/admin/finance')
+      router.push(successRedirect ?? '/admin/finance')
     })
   }
 
@@ -75,8 +85,13 @@ export default function NewFinanceAccountForm({ branches, groups, students }: Pr
         {/* Branch */}
         <div>
           <label className="block text-sm font-medium text-[#0B1F3A] mb-1">Branch *</label>
-          <select name="branch_id" required
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+          <select
+            name="branch_id"
+            required
+            value={selectedBranch}
+            onChange={e => setSelectedBranch(e.target.value)}
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20"
+          >
             <option value="">— Select branch —</option>
             {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
@@ -88,7 +103,7 @@ export default function NewFinanceAccountForm({ branches, groups, students }: Pr
           <select name="group_id"
             className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
             <option value="">— No group —</option>
-            {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+            {visibleGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
         </div>
       </div>

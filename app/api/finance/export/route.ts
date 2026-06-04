@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient }       from '@/lib/supabase/service'
-import { getCurrentUser }            from '@/modules/rbac/guards'
-import { computePriority, computeDaysOverdue } from '@/modules/finance/types'
+import { NextRequest, NextResponse }   from 'next/server'
+import { getCurrentUser }              from '@/modules/rbac/guards'
+import { listStudentOperations }       from '@/modules/finance/queries'
+import type { StudentOpsFilters }      from '@/modules/finance/types'
 
 export async function GET(req: NextRequest) {
   const user = await getCurrentUser()
@@ -10,44 +10,46 @@ export async function GET(req: NextRequest) {
   }
 
   const { searchParams } = req.nextUrl
-  const branchId = searchParams.get('branch')
-  const status   = searchParams.get('status')
-  const db       = createServiceClient()
+  const branchParam  = searchParams.get('branch')
+  const branchsParam = searchParams.get('branches')
+  const statusParam  = searchParams.get('status')
 
-  let q = db
-    .from('student_financial_accounts')
-    .select(
-      `id, status, total_amount, discount_amount, net_amount, paid_amount, remaining_amount, next_due_date,
-       students!student_financial_accounts_student_id_fkey(
-         student_code, emergency_contact,
-         users!students_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name))
-       ),
-       branches!student_financial_accounts_branch_id_fkey(name),
-       groups!student_financial_accounts_group_id_fkey(name)`
-    )
-    .order('status')
-    .order('remaining_amount', { ascending: false })
-
-  if (branchId) q = (q as any).eq('branch_id', branchId)
-  if (status)   q = (q as any).eq('status', status)
-
-  // Scope TLs to their branches
-  if (user.globalRole !== 'super_admin' && user.branchIds.length > 0) {
-    q = (q as any).in('branch_id', user.branchIds)
+  // Resolve branch scope
+  let requestedIds: string[] = []
+  if (branchsParam) {
+    requestedIds = branchsParam.split(',').map(s => s.trim()).filter(Boolean)
+  } else if (branchParam) {
+    requestedIds = [branchParam]
   }
 
-  const { data, error } = await q.limit(2000)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  const effectiveIds =
+    user.globalRole === 'super_admin'
+      ? requestedIds.length > 0 ? requestedIds : []
+      : requestedIds.length > 0
+        ? requestedIds.filter(id => user.branchIds.includes(id))
+        : user.branchIds
 
-  const rows = (data ?? []) as any[]
+  if (!effectiveIds.length) {
+    return NextResponse.json({ error: 'No accessible branches' }, { status: 400 })
+  }
 
-  const csvHeaders = [
-    'Student Name', 'Student Code', 'Email', 'Phone',
-    'Parent Name', 'Parent Phone 1', 'Parent Phone 2',
-    'Branch', 'Group',
-    'Total (EGP)', 'Discount (EGP)', 'Net Total (EGP)',
-    'Paid (EGP)', 'Remaining (EGP)',
-    'Next Due Date', 'Status', 'Priority', 'Days Overdue',
+  const filters: StudentOpsFilters = {}
+  if (statusParam) filters.financial_status = statusParam as any
+
+  const rows = await listStudentOperations(effectiveIds, filters)
+
+  const headers = [
+    'Student Name', 'Student Code', 'Phone', 'Parent Name', 'Parent Phone 1', 'Parent Phone 2',
+    'Branch', 'Group', 'Instructor', 'Enrollment Start Date',
+    // Session contract (Sprint 44)
+    'Sessions Enrolled', 'Sessions Consumed', 'Sessions Remaining',
+    // Attendance
+    'Total Sessions', 'Sessions Attended', 'Attendance %', 'Last Attendance', 'Consecutive Absences',
+    // Finance
+    'Financial Status', 'Total (EGP)', 'Paid (EGP)', 'Remaining (EGP)',
+    'Installments Paid', 'Installments Remaining', 'Next Due Date', 'Days Overdue', 'Payment %',
+    // Risk
+    'Risk Level', 'Risk Flags',
   ]
 
   const escape = (v: string | number | null | undefined) => {
@@ -59,44 +61,49 @@ export async function GET(req: NextRequest) {
     return s
   }
 
-  const csvRows = rows.map(row => {
-    const s   = row.students   ?? {}
-    const u   = s.users        ?? {}
-    const p   = u.profiles     ?? {}
-    const ec  = (s.emergency_contact ?? {}) as Record<string, string>
-    const prio = computePriority({ status: row.status, remaining_amount: Number(row.remaining_amount), next_due_date: row.next_due_date })
-    const days = computeDaysOverdue(row.next_due_date)
+  const csvRows = rows.map(r => [
+    r.student_name,
+    r.student_code ?? '',
+    r.student_phone ?? '',
+    r.parent_name ?? '',
+    r.parent_phone_1 ?? '',
+    r.parent_phone_2 ?? '',
+    r.branch_name,
+    r.group_name ?? '',
+    r.instructor_name ?? '',
+    r.group_start_date ?? '',
+    // Session contract
+    r.enrolled_sessions > 0 ? r.enrolled_sessions : '',
+    r.consumed_sessions > 0 ? r.consumed_sessions : '',
+    r.enrolled_sessions > 0 ? r.remaining_sessions : '',
+    // Attendance
+    r.total_sessions,
+    r.sessions_attended,
+    r.attendance_pct > 0 ? `${r.attendance_pct}%` : '',
+    r.last_attendance_date ?? '',
+    r.consecutive_absences,
+    // Finance
+    r.financial_status ?? '',
+    r.net_amount > 0 ? r.net_amount : '',
+    r.paid_amount > 0 ? r.paid_amount : '',
+    r.remaining_amount > 0 ? r.remaining_amount : '',
+    r.installments_paid,
+    r.installments_remaining,
+    r.next_due_date ?? '',
+    r.days_overdue > 0 ? r.days_overdue : '',
+    r.payment_progress_pct > 0 ? `${r.payment_progress_pct}%` : '',
+    r.risk_level,
+    r.risk_flags.join('; '),
+  ].map(escape).join(','))
 
-    return [
-      [p.first_name, p.last_name].filter(Boolean).join(' ') || u.email || '',
-      s.student_code ?? '',
-      u.email ?? '',
-      u.phone ?? '',
-      ec.name   ?? '',
-      ec.phone1 ?? '',
-      ec.phone2 ?? '',
-      (row.branches as any)?.name ?? '',
-      (row.groups   as any)?.name ?? '',
-      Number(row.total_amount),
-      Number(row.discount_amount),
-      Number(row.net_amount),
-      Number(row.paid_amount),
-      Number(row.remaining_amount),
-      row.next_due_date ?? '',
-      row.status,
-      prio,
-      days,
-    ].map(escape).join(',')
-  })
-
-  const csv  = [csvHeaders.join(','), ...csvRows].join('\n')
+  const csv  = [headers.join(','), ...csvRows].join('\n')
   const date = new Date().toISOString().slice(0, 10)
 
   return new NextResponse(csv, {
-    status:  200,
+    status: 200,
     headers: {
       'Content-Type':        'text/csv; charset=utf-8',
-      'Content-Disposition': `attachment; filename="finance-export-${date}.csv"`,
+      'Content-Disposition': `attachment; filename="student-operations-${date}.csv"`,
     },
   })
 }
