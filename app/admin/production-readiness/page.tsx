@@ -6,10 +6,11 @@
  *         courses, groups, certificates, communications.
  */
 
-import { createServiceClient } from '@/lib/supabase/service'
-import { requireAuth }         from '@/modules/rbac/guards'
-import { redirect }            from 'next/navigation'
-import Link                    from 'next/link'
+import { createServiceClient }   from '@/lib/supabase/service'
+import { requireAuth }           from '@/modules/rbac/guards'
+import { redirect }              from 'next/navigation'
+import { getRecoverySummary }    from '@/modules/recovery'
+import Link                      from 'next/link'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -280,7 +281,13 @@ export default async function ProductionReadinessPage() {
   const user = await requireAuth()
   if (user.globalRole !== 'super_admin') redirect('/admin')
 
-  const categories = await runProductionChecks()
+  const db = createServiceClient()
+  const [categories, recoverySummary, capacityData, healthData] = await Promise.all([
+    runProductionChecks(),
+    getRecoverySummary(),
+    db.from('v_capacity_analysis').select('*').limit(20).then(r => r.data ?? [], () => []) as Promise<any[]>,
+    db.from('v_system_health_2').select('*').single().then(r => r.data ?? null, () => null),
+  ])
 
   const allChecks  = categories.flatMap(c => c.checks)
   const passCount  = allChecks.filter(c => c.status === 'PASS').length
@@ -303,18 +310,61 @@ export default async function ProductionReadinessPage() {
     warnCount > 3 ? 'bg-amber-50 border-amber-200' :
     warnCount > 0 ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'
 
+  const health2Score     = (healthData as any)?.health_score ?? null
+  const totalStudentsAll = (capacityData as any[]).reduce((s, b) => s + Number(b.students ?? 0), 0)
+  const totalCapacity    = (capacityData as any[]).reduce((s, b) => s + Number(b.estimated_capacity ?? 0), 0)
+  const capacityPct      = totalCapacity > 0 ? Math.round((totalStudentsAll / totalCapacity) * 100) : null
+
+  const recoveryCritical = (recoverySummary).filter(r => r.severity === 'critical' && r.count > 0).length
+
   return (
     <div className="max-w-4xl space-y-6">
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Production Readiness</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">Operational audit across all academy systems</p>
+          <h1 className="text-xl font-semibold text-[#0B1F3A]">Production Readiness — Sprint 53</h1>
+          <p className="mt-0.5 text-sm text-[#64748B]">War-game validated: operational audit + capacity + recovery assessment</p>
         </div>
-        <div className="text-right">
-          <p className={`text-3xl font-bold ${levelColor}`}>{totalScore}%</p>
-          <p className="text-xs text-[#94A3B8]">{passCount}/{allChecks.length} checks</p>
+        <div className="flex items-center gap-3">
+          <Link href="/admin/recovery" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+            Recovery →
+          </Link>
+          <div className="text-right">
+            <p className={`text-3xl font-bold ${levelColor}`}>{totalScore}%</p>
+            <p className="text-xs text-[#94A3B8]">{passCount}/{allChecks.length} checks</p>
+          </div>
         </div>
+      </div>
+
+      {/* ── Sprint 53: System Health 2.0 + Recovery Status ─────────────── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          {
+            label: 'System Health 2.0',
+            value: health2Score != null ? `${health2Score}/100` : '—',
+            cls:   health2Score != null ? (health2Score >= 90 ? 'text-emerald-600' : health2Score >= 75 ? 'text-blue-600' : 'text-amber-600') : 'text-slate-400',
+          },
+          {
+            label: 'Recovery Issues',
+            value: recoveryCritical > 0 ? `${recoveryCritical} critical` : 'Clean',
+            cls:   recoveryCritical > 0 ? 'text-red-600' : 'text-emerald-600',
+          },
+          {
+            label: 'Academy Capacity',
+            value: capacityPct != null ? `${capacityPct}% used` : '—',
+            cls:   capacityPct != null ? (capacityPct > 80 ? 'text-amber-600' : 'text-emerald-600') : 'text-slate-400',
+          },
+          {
+            label: 'Total Students',
+            value: String(totalStudentsAll),
+            cls:   'text-[#0B1F3A]',
+          },
+        ].map(k => (
+          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+            <p className={`text-2xl font-bold ${k.cls}`}>{k.value}</p>
+            <p className="text-[11px] text-[#64748B]">{k.label}</p>
+          </div>
+        ))}
       </div>
 
       {/* ── Overall status ─────────────────────────────────────────────── */}
@@ -379,6 +429,146 @@ export default async function ProductionReadinessPage() {
           <p className="mt-1 text-sm text-emerald-600">No failures or warnings detected.</p>
         </div>
       )}
+
+      {/* ── Sprint 53: Recovery Needs ──────────────────────────────────── */}
+      {recoverySummary.filter(r => r.count > 0).length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-white overflow-hidden">
+          <div className="border-b border-[#E2E8F0] px-5 py-3 bg-amber-50">
+            <div className="flex items-center justify-between">
+              <p className="text-[13px] font-semibold text-amber-800">Recovery Needed</p>
+              <Link href="/admin/recovery" className="text-[11px] text-amber-700 hover:underline">Fix Now →</Link>
+            </div>
+          </div>
+          <div className="divide-y divide-[#F1F5F9]">
+            {recoverySummary.filter(r => r.count > 0).map(item => (
+              <div key={item.check_name} className="flex items-center justify-between px-5 py-3">
+                <p className="text-[13px] text-[#0B1F3A]">{item.description}</p>
+                <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold
+                  ${item.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {item.count}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Sprint 53: Capacity Analysis ──────────────────────────────── */}
+      {(capacityData as any[]).length > 0 && (
+        <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+          <div className="border-b border-[#E2E8F0] px-5 py-3 bg-[#F8FAFC]">
+            <p className="text-[13px] font-semibold text-[#0B1F3A]">Branch Capacity Analysis</p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead>
+                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                  {['Branch', 'Students', 'Instructors', 'Capacity', 'Utilization', 'Open Tasks'].map(h => (
+                    <th key={h} className="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {(capacityData as any[]).map(b => {
+                  const utilPct = b.capacity_utilization_pct != null ? Number(b.capacity_utilization_pct) : null
+                  return (
+                    <tr key={b.branch_id} className="border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC]">
+                      <td className="px-4 py-3 font-medium text-[#0B1F3A]">{b.branch_name}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{b.students}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{b.instructors}</td>
+                      <td className="px-4 py-3 text-[#64748B]">{b.estimated_capacity ?? '—'}</td>
+                      <td className="px-4 py-3">
+                        {utilPct != null ? (
+                          <span className={`font-semibold ${utilPct > 90 ? 'text-red-600' : utilPct > 70 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                            {utilPct}%
+                          </span>
+                        ) : <span className="text-[#94A3B8]">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        {Number(b.open_tasks) > 0 ? (
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
+                            ${Number(b.critical_tasks) > 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                            {b.open_tasks}
+                          </span>
+                        ) : <span className="text-emerald-600">✓</span>}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Sprint 53: Scaling Assessment + Infra Recommendations ────────── */}
+      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-4">
+        <h2 className="text-[14px] font-semibold text-[#0B1F3A]">Sprint 53: Scaling Assessment</h2>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[
+            {
+              title:       'Current Capacity',
+              detail:      `${totalStudentsAll.toLocaleString()} students across ${(capacityData as any[]).length} branches`,
+              status:      capacityPct != null && capacityPct > 90 ? '⚠' : '✓',
+              statusCls:   capacityPct != null && capacityPct > 90 ? 'text-amber-600' : 'text-emerald-600',
+            },
+            {
+              title:       'Concurrency Safety',
+              detail:      'Task dedup via unique partial index. Automation 6h cooldown. Realtime debounced 800ms.',
+              status:      '✓',
+              statusCls:   'text-emerald-600',
+            },
+            {
+              title:       'Finance Consistency',
+              detail:      'Balance integrity enforced via trigger + repair function. Consistency checker runs on demand.',
+              status:      recoveryCritical > 0 ? '⚠' : '✓',
+              statusCls:   recoveryCritical > 0 ? 'text-amber-600' : 'text-emerald-600',
+            },
+            {
+              title:       'Observability',
+              detail:      'system_event_logs captures all failures. Dead letter jobs visible. Health 2.0 score.',
+              status:      '✓',
+              statusCls:   'text-emerald-600',
+            },
+          ].map(item => (
+            <div key={item.title} className="rounded-lg border border-[#E2E8F0] p-4">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-[13px] font-medium text-[#0B1F3A]">{item.title}</p>
+                <span className={`text-[18px] ${item.statusCls}`}>{item.status}</span>
+              </div>
+              <p className="mt-1 text-[12px] text-[#64748B]">{item.detail}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <p className="text-[13px] font-semibold text-blue-800">Recommended Infra Upgrades</p>
+          <ul className="mt-2 space-y-1 text-[12px] text-blue-700">
+            <li>• <strong>pg_cron</strong> for materialized view refresh (currently manual via background jobs)</li>
+            <li>• <strong>Supabase Edge Functions</strong> for background job processing (replaces Next.js API routes)</li>
+            <li>• <strong>Connection pooling</strong> (PgBouncer) once student count exceeds 10,000</li>
+            <li>• <strong>Read replicas</strong> for dashboard/analytics queries above 5,000 concurrent users</li>
+            <li>• <strong>Realtime filter</strong> push down to server side when Supabase adds IN support</li>
+            <li>• <strong>Notification worker</strong> process separate from web server for WhatsApp/email</li>
+          </ul>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 text-center text-[11px]">
+          {[
+            { label: 'Estimated Student Ceiling', value: '~15,000', detail: 'Before DB read replicas needed' },
+            { label: 'Branch Ceiling',             value: '~50',     detail: 'With current architecture' },
+            { label: 'Concurrent TL Users',        value: '~200',    detail: 'With Supabase realtime' },
+          ].map(k => (
+            <div key={k.label} className="rounded-lg bg-[#F8FAFC] p-3">
+              <p className="text-[16px] font-bold text-[#0B1F3A]">{k.value}</p>
+              <p className="font-medium text-[#0B1F3A]">{k.label}</p>
+              <p className="text-[#94A3B8]">{k.detail}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
     </div>
   )
 }

@@ -1,0 +1,789 @@
+'use client'
+
+import { useActionState, useEffect, useMemo, useRef, useState } from 'react'
+import { createStudentModal, updateStudentModal } from '@/modules/students/modal-actions'
+import type { StudentOperationalRow, GroupPickerOption } from '@/modules/students/operational'
+import type { ActionResult } from '@/types/app'
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+interface GuardianBlock {
+  _key:               string
+  name:               string
+  relation:           string
+  phone1:             string
+  phone2:             string
+  whatsapp_preferred: boolean
+  is_primary:         boolean
+  is_emergency:       boolean
+}
+
+interface Props {
+  mode:         'create' | 'edit'
+  student?:     StudentOperationalRow
+  branchId:     string
+  branchIds:    string[]
+  branches:     { id: string; name: string }[]
+  groupOptions?: GroupPickerOption[]
+  onClose:      () => void
+  onSuccess:    () => void
+}
+
+// ── Constants ──────────────────────────────────────────────────────────────────
+
+const RELATIONS = ['father', 'mother', 'guardian', 'other'] as const
+const STATUSES  = ['active', 'inactive', 'graduated', 'paused', 'banned'] as const
+
+function newGuardian(isPrimary = false): GuardianBlock {
+  return {
+    _key:               crypto.randomUUID(),
+    name:               '',
+    relation:           'guardian',
+    phone1:             '',
+    phone2:             '',
+    whatsapp_preferred: false,
+    is_primary:         isPrimary,
+    is_emergency:       true,
+  }
+}
+
+// Derive age from ISO date string
+function ageFromDob(dob: string): number | null {
+  const d = new Date(dob)
+  if (isNaN(d.getTime())) return null
+  const today = new Date()
+  let age = today.getFullYear() - d.getFullYear()
+  const m = today.getMonth() - d.getMonth()
+  if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--
+  return age
+}
+
+// ── Component ──────────────────────────────────────────────────────────────────
+
+export default function StudentFormModal({
+  mode, student, branchId, branchIds, branches, groupOptions = [], onClose, onSuccess,
+}: Props) {
+  const singleBranch = branchId || (branchIds.length === 1 ? branchIds[0] : undefined)
+  const isEdit       = mode === 'edit'
+
+  // ── Guardian state ──────────────────────────────────────────────────────────
+  const initialGuardians: GuardianBlock[] = isEdit && student?.guardians?.length
+    ? student.guardians.map(g => ({
+        _key:               crypto.randomUUID(),
+        name:               g.name,
+        relation:           g.relation,
+        phone1:             g.phone1  ?? '',
+        phone2:             g.phone2  ?? '',
+        whatsapp_preferred: g.whatsapp_preferred,
+        is_primary:         g.is_primary,
+        is_emergency:       g.is_emergency,
+      }))
+    : [newGuardian(true)]
+
+  const [guardians, setGuardians] = useState<GuardianBlock[]>(initialGuardians)
+
+  // ── Age / DOB cross-validation ──────────────────────────────────────────────
+  const [ageVal,       setAgeVal]       = useState<string>(isEdit ? String(student?.age ?? '') : '')
+  const [dobVal,       setDobVal]       = useState<string>(isEdit ? (student?.date_of_birth ?? '') : '')
+  const [ageWarn,      setAgeWarn]      = useState<string | null>(null)
+  const [ageErr,       setAgeErr]       = useState<string | null>(null)
+
+  function validateAge(rawAge: string) {
+    const n = parseInt(rawAge, 10)
+    if (!rawAge) { setAgeErr('Age is required'); return }
+    if (isNaN(n) || !Number.isInteger(n)) { setAgeErr('Age must be a whole number'); return }
+    if (n < 3 || n > 25) { setAgeErr('Age must be between 3 and 25'); return }
+    setAgeErr(null)
+  }
+
+  function onAgeChange(v: string) {
+    setAgeVal(v)
+    validateAge(v)
+    // Cross-check with DOB if both present
+    if (dobVal && v) {
+      const dobAge = ageFromDob(dobVal)
+      const enteredAge = parseInt(v, 10)
+      if (dobAge !== null && Math.abs(dobAge - enteredAge) > 1) {
+        setAgeWarn(`DOB suggests age ${dobAge}, but you entered ${enteredAge}`)
+      } else {
+        setAgeWarn(null)
+      }
+    }
+  }
+
+  function onDobChange(v: string) {
+    setDobVal(v)
+    if (v) {
+      const derived = ageFromDob(v)
+      if (derived !== null && !ageVal) {
+        // Auto-fill age from DOB if age is empty
+        setAgeVal(String(derived))
+        setAgeErr(null)
+      }
+      if (derived !== null && ageVal) {
+        const enteredAge = parseInt(ageVal, 10)
+        if (!isNaN(enteredAge) && Math.abs(derived - enteredAge) > 1) {
+          setAgeWarn(`DOB suggests age ${derived}, but age is ${enteredAge}`)
+        } else {
+          setAgeWarn(null)
+        }
+      }
+    } else {
+      setAgeWarn(null)
+    }
+  }
+
+  // ── Group assignment state ──────────────────────────────────────────────────
+  const [groupLinks, setGroupLinks] = useState<GroupPickerOption[]>(() => {
+    if (!isEdit || !student?.group_memberships?.length || !groupOptions.length) return []
+    const optMap = new Map<string, GroupPickerOption>()
+    for (const g of groupOptions) optMap.set(g.group_id, g)
+    return student.group_memberships.flatMap(m => {
+      const opt = optMap.get(m.group_id)
+      return opt ? [opt] : []
+    })
+  })
+  const [groupPickerQ,      setGroupPickerQ]      = useState('')
+  const [showGroupPicker,   setShowGroupPicker]   = useState(false)
+  const [groupPickerBranch, setGroupPickerBranch] = useState('')
+  const [groupPickerStatus, setGroupPickerStatus] = useState('')
+  const pickerRef = useRef<HTMLDivElement>(null)
+
+  const originalGroupIds = useMemo<Set<string>>(() => {
+    if (!isEdit || !student?.group_memberships?.length) return new Set()
+    return new Set(student.group_memberships.map(m => m.group_id))
+  }, []) // intentionally stable — original set never changes in one modal session
+
+  const selectedGroupIds = useMemo(() => new Set(groupLinks.map(g => g.group_id)), [groupLinks])
+
+  const pickerResults = useMemo(() => {
+    const q = groupPickerQ.toLowerCase()
+    return groupOptions.filter(g => {
+      if (selectedGroupIds.has(g.group_id)) return false
+      if (groupPickerBranch && g.branch_id !== groupPickerBranch) return false
+      if (groupPickerStatus && g.status    !== groupPickerStatus) return false
+      if (q && !g.group_name.toLowerCase().includes(q) &&
+               !(g.course_name?.toLowerCase().includes(q)) &&
+               !(g.instructor_name?.toLowerCase().includes(q))) return false
+      return true
+    })
+  }, [groupOptions, selectedGroupIds, groupPickerQ, groupPickerBranch, groupPickerStatus])
+
+  const groupsToAdd    = useMemo(() => groupLinks.filter(g => !originalGroupIds.has(g.group_id)).map(g => g.group_id), [groupLinks, originalGroupIds])
+  const groupsToRemove = useMemo(() => [...originalGroupIds].filter(id => !selectedGroupIds.has(id)), [originalGroupIds, selectedGroupIds])
+
+  const sameCourseWarning = useMemo(() => {
+    const courseIds = groupLinks.map(g => g.course_id).filter(Boolean)
+    return courseIds.length > 0 && courseIds.length !== new Set(courseIds).size
+  }, [groupLinks])
+
+  const addGroupLink = (g: GroupPickerOption) => { setDirty(true); setGroupLinks(prev => [...prev, g]) }
+  const removeGroupLink = (groupId: string) => { setDirty(true); setGroupLinks(prev => prev.filter(g => g.group_id !== groupId)) }
+
+  // ── Dirty state ─────────────────────────────────────────────────────────────
+  const [dirty, setDirty] = useState(false)
+  const dialogRef         = useRef<HTMLDivElement>(null)
+
+  // ── Server action ───────────────────────────────────────────────────────────
+  const action = isEdit ? updateStudentModal : createStudentModal
+  const [state, formAction, isPending] = useActionState<ActionResult<{ id: string }> | null, FormData>(
+    action as any,
+    null
+  )
+
+  useEffect(() => {
+    if (state?.success) onSuccess()
+  }, [state]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ESC to close
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (dirty && !confirm('You have unsaved changes. Close anyway?')) return
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [dirty, onClose])
+
+  // Close group picker on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowGroupPicker(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // ── Guardian helpers ────────────────────────────────────────────────────────
+  const updateGuardian = (key: string, field: keyof GuardianBlock, value: any) => {
+    setDirty(true)
+    setGuardians(gs => gs.map(g => g._key === key ? { ...g, [field]: value } : g))
+  }
+  const addGuardian = () => {
+    setDirty(true)
+    setGuardians(gs => [...gs, newGuardian(false)])
+  }
+  const removeGuardian = (key: string) => {
+    if (guardians.length <= 1) return
+    setDirty(true)
+    setGuardians(gs => gs.filter(g => g._key !== key))
+  }
+
+  const overlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      if (dirty && !confirm('You have unsaved changes. Close anyway?')) return
+      onClose()
+    }
+  }
+
+  // ── Validate before submit ──────────────────────────────────────────────────
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    // Client-side age validation (in addition to server)
+    if (!ageVal || ageErr) {
+      e.preventDefault()
+      validateAge(ageVal)
+      return
+    }
+    const hasNamedGuardian = guardians.some(g => g.name.trim() && g.phone1.trim())
+    if (!hasNamedGuardian) {
+      e.preventDefault()
+      alert('At least one guardian with name and phone is required.')
+      return
+    }
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center"
+      onClick={overlayClick}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={isEdit ? 'Edit Student' : 'Add Student'}
+        className="relative w-full max-w-2xl max-h-[95vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E2E8F0] bg-white px-6 py-4">
+          <h2 className="text-base font-semibold text-[#0B1F3A]">
+            {isEdit ? `Edit — ${student?.student_name}` : 'Add Student'}
+          </h2>
+          <button
+            type="button"
+            onClick={() => { if (dirty && !confirm('Close without saving?')) return; onClose() }}
+            className="rounded-lg p-1.5 text-[#94A3B8] hover:bg-[#F1F5F9] hover:text-[#0B1F3A]"
+            aria-label="Close"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Server error */}
+        {state && !state.success && (
+          <div className="mx-6 mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+            {state.error.message}
+          </div>
+        )}
+
+        <form
+          action={formAction}
+          onSubmit={handleSubmit}
+          onChange={() => setDirty(true)}
+          className="space-y-5 p-6"
+        >
+          {/* Hidden fields */}
+          {singleBranch && <input type="hidden" name="branch_id" value={singleBranch} />}
+          {isEdit && student && <input type="hidden" name="id" value={student.student_id} />}
+
+          {/* Branch picker for multi-branch TL */}
+          {!singleBranch && !isEdit && (
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                Branch <span className="text-red-500">*</span>
+              </label>
+              <select name="branch_id" required
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                <option value="">— Select branch —</option>
+                {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+          )}
+
+          {/* ── Student Identity ────────────────────────────────────── */}
+          <fieldset className="space-y-3 rounded-xl border border-[#E2E8F0] p-4">
+            <legend className="px-1 text-xs font-semibold text-[#64748B] uppercase tracking-wide">Student</legend>
+
+            {/* Name row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                  First name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="first_name"
+                  required
+                  defaultValue={student?.first_name ?? ''}
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                  Last name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="last_name"
+                  required
+                  defaultValue={student?.last_name ?? ''}
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Age + Phone row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                  Age <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="age"
+                  type="number"
+                  min={3}
+                  max={25}
+                  step={1}
+                  required
+                  value={ageVal}
+                  onChange={e => onAgeChange(e.target.value)}
+                  placeholder="e.g. 10"
+                  className={`w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none
+                    ${ageErr ? 'border-red-400 bg-red-50' : 'border-[#E2E8F0] focus:border-[#FF8A1F]'}`}
+                />
+                {ageErr && <p className="mt-0.5 text-[11px] text-red-600">{ageErr}</p>}
+                {ageWarn && !ageErr && <p className="mt-0.5 text-[11px] text-amber-600">{ageWarn}</p>}
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                  Student phone <span className="text-red-500">*</span>
+                </label>
+                <input
+                  name="phone"
+                  required
+                  defaultValue={student?.student_phone ?? ''}
+                  placeholder="01XXXXXXXXX"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* DOB + Grade row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                  Date of birth <span className="text-[11px] text-[#94A3B8]">(optional)</span>
+                </label>
+                <input
+                  name="date_of_birth"
+                  type="date"
+                  value={dobVal}
+                  onChange={e => onDobChange(e.target.value)}
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                  Grade <span className="text-[11px] text-[#94A3B8]">(optional)</span>
+                </label>
+                <input
+                  name="school_grade"
+                  defaultValue={student?.school_grade ?? ''}
+                  placeholder="e.g. Grade 5"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Auth fields (create only) */}
+            {!isEdit && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    name="password"
+                    type="password"
+                    required
+                    autoComplete="new-password"
+                    placeholder="Min 6 characters"
+                    className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Status (edit only) */}
+            {isEdit && (
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Status</label>
+                <select
+                  name="status"
+                  defaultValue={student?.student_status ?? 'active'}
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                >
+                  {STATUSES.map(s => <option key={s} value={s} className="capitalize">{s}</option>)}
+                </select>
+              </div>
+            )}
+
+            {/* Enrollment date (create only) */}
+            {!isEdit && (
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Enrollment date</label>
+                <input
+                  name="enrollment_date"
+                  type="date"
+                  defaultValue={new Date().toISOString().split('T')[0]}
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                />
+              </div>
+            )}
+
+            {/* Student code read-only in edit */}
+            {isEdit && student?.student_code && (
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Student Code</label>
+                <input
+                  readOnly
+                  value={student.student_code}
+                  className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#94A3B8] font-mono cursor-not-allowed"
+                />
+                <p className="mt-0.5 text-[11px] text-[#94A3B8]">Student code cannot be changed.</p>
+              </div>
+            )}
+
+            {/* Notes */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Notes</label>
+              <textarea
+                name="notes"
+                rows={2}
+                defaultValue={student?.notes ?? ''}
+                className="w-full resize-none rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+              />
+            </div>
+          </fieldset>
+
+          {/* ── Guardians / Contacts ────────────────────────────────── */}
+          <fieldset className="space-y-3 rounded-xl border border-[#E2E8F0] p-4">
+            <div className="flex items-center justify-between">
+              <legend className="px-1 text-xs font-semibold text-[#64748B] uppercase tracking-wide">
+                Guardians / Contacts <span className="text-red-500">*</span>
+              </legend>
+              <button
+                type="button"
+                onClick={addGuardian}
+                className="flex items-center gap-1 rounded-lg bg-[#FF8A1F]/10 px-2.5 py-1 text-xs font-semibold text-[#FF8A1F] hover:bg-[#FF8A1F]/20"
+              >
+                <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                Add Guardian
+              </button>
+            </div>
+
+            {guardians.map((g, i) => (
+              <div key={g._key} className="space-y-2 rounded-lg border border-[#E2E8F0] p-3">
+                {/* Guardian header */}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#64748B]">Guardian {i + 1}</span>
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-1.5 cursor-pointer text-xs text-[#64748B]">
+                      <input
+                        type="checkbox"
+                        checked={g.is_primary}
+                        onChange={e => updateGuardian(g._key, 'is_primary', e.target.checked)}
+                        className="h-3 w-3 rounded border-[#E2E8F0] accent-[#FF8A1F]"
+                      />
+                      Primary
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer text-xs text-[#64748B]">
+                      <input
+                        type="checkbox"
+                        checked={g.is_emergency}
+                        onChange={e => updateGuardian(g._key, 'is_emergency', e.target.checked)}
+                        className="h-3 w-3 rounded border-[#E2E8F0] accent-[#FF8A1F]"
+                      />
+                      Emergency
+                    </label>
+                    {guardians.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeGuardian(g._key)}
+                        className="rounded p-0.5 text-red-400 hover:bg-red-50 hover:text-red-600"
+                        aria-label="Remove guardian"
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Name + Relation */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="mb-0.5 block text-xs text-[#64748B]">
+                      Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      value={g.name}
+                      onChange={e => updateGuardian(g._key, 'name', e.target.value)}
+                      placeholder="Guardian name"
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-0.5 block text-xs text-[#64748B]">Relation</label>
+                    <select
+                      value={g.relation}
+                      onChange={e => updateGuardian(g._key, 'relation', e.target.value)}
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                    >
+                      {RELATIONS.map(r => (
+                        <option key={r} value={r} className="capitalize">{r}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Phone 1 + Phone 2 */}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="mb-0.5 block text-xs text-[#64748B]">
+                      Phone 1 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      value={g.phone1}
+                      onChange={e => updateGuardian(g._key, 'phone1', e.target.value)}
+                      placeholder="01XXXXXXXXX"
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-0.5 block text-xs text-[#64748B]">Phone 2</label>
+                    <input
+                      value={g.phone2}
+                      onChange={e => updateGuardian(g._key, 'phone2', e.target.value)}
+                      placeholder="Optional"
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* WhatsApp */}
+                <label className="flex cursor-pointer items-center gap-2 text-xs text-[#64748B]">
+                  <input
+                    type="checkbox"
+                    checked={g.whatsapp_preferred}
+                    onChange={e => updateGuardian(g._key, 'whatsapp_preferred', e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-[#E2E8F0] accent-[#25D366]"
+                  />
+                  WhatsApp preferred
+                </label>
+              </div>
+            ))}
+
+            {/* Serialize guardians as JSON hidden field */}
+            <input
+              type="hidden"
+              name="guardians_json"
+              value={JSON.stringify(guardians.map(({ _key, ...g }) => g))}
+            />
+          </fieldset>
+
+          {/* ── Group Assignments ───────────────────────────────────── */}
+          {groupOptions.length > 0 && (
+            <fieldset className="space-y-3 rounded-xl border border-[#E2E8F0] p-4">
+              <legend className="px-1 text-xs font-semibold text-[#64748B] uppercase tracking-wide">
+                Group Assignments
+              </legend>
+
+              {/* Selected group cards */}
+              {groupLinks.length > 0 && (
+                <div className="space-y-2">
+                  {groupLinks.map(g => {
+                    const isFull = g.capacity != null && g.student_count >= g.capacity
+                    const sessionStr = g.day_of_week
+                      ? `${g.day_of_week}${g.start_time ? ` · ${g.start_time}` : ''}`
+                      : null
+                    return (
+                      <div
+                        key={g.group_id}
+                        className={`flex items-start justify-between gap-3 rounded-lg border p-3
+                          ${isFull ? 'border-amber-200 bg-amber-50' : 'border-[#E2E8F0] bg-[#F8FAFC]'}`}
+                      >
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="text-[13px] font-semibold text-[#0B1F3A]">{g.group_name}</p>
+                            {isFull && (
+                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">FULL</span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-[#64748B]">
+                            {g.course_name ?? '—'}{g.instructor_name ? ` · ${g.instructor_name}` : ''}
+                          </p>
+                          {sessionStr && <p className="text-[11px] text-[#64748B]">{sessionStr}</p>}
+                          <p className="text-[11px] text-[#94A3B8]">
+                            {g.student_count}{g.capacity != null ? `/${g.capacity}` : ''} students
+                            {' · '}{g.status}
+                            {' · '}{g.branch_name}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeGroupLink(g.group_id)}
+                          className="shrink-0 rounded p-0.5 text-[#94A3B8] hover:bg-red-50 hover:text-red-500"
+                          aria-label="Remove group"
+                        >
+                          <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {sameCourseWarning && (
+                <p className="text-[11px] text-amber-600">
+                  Warning: multiple selected groups share the same course.
+                </p>
+              )}
+
+              {/* Picker */}
+              <div className="relative" ref={pickerRef}>
+                <div className="mb-2 flex flex-wrap gap-2">
+                  <input
+                    value={groupPickerQ}
+                    onChange={e => setGroupPickerQ(e.target.value)}
+                    onFocus={() => setShowGroupPicker(true)}
+                    placeholder="Search groups…"
+                    className="min-w-40 flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  />
+                  {branches.length > 1 && (
+                    <select
+                      value={groupPickerBranch}
+                      onChange={e => setGroupPickerBranch(e.target.value)}
+                      className="rounded-lg border border-[#E2E8F0] px-2 py-2 text-xs text-[#64748B] focus:border-[#FF8A1F] focus:outline-none"
+                    >
+                      <option value="">All Branches</option>
+                      {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    </select>
+                  )}
+                  <select
+                    value={groupPickerStatus}
+                    onChange={e => setGroupPickerStatus(e.target.value)}
+                    className="rounded-lg border border-[#E2E8F0] px-2 py-2 text-xs text-[#64748B] focus:border-[#FF8A1F] focus:outline-none"
+                  >
+                    <option value="">Forming + Active</option>
+                    <option value="forming">Forming</option>
+                    <option value="active">Active</option>
+                  </select>
+                </div>
+
+                {showGroupPicker && pickerResults.length > 0 && (
+                  <div className="absolute z-20 max-h-60 w-full overflow-y-auto rounded-xl border border-[#E2E8F0] bg-white shadow-xl">
+                    {pickerResults.map(g => {
+                      const isFull = g.capacity != null && g.student_count >= g.capacity
+                      const sessionStr = g.day_of_week
+                        ? `${g.day_of_week}${g.start_time ? ` · ${g.start_time}` : ''}`
+                        : null
+                      return (
+                        <button
+                          key={g.group_id}
+                          type="button"
+                          disabled={isFull}
+                          onClick={() => { addGroupLink(g); setGroupPickerQ(''); setShowGroupPicker(false) }}
+                          className={`w-full border-b border-[#E2E8F0] px-4 py-3 text-left last:border-0 transition
+                            ${isFull ? 'cursor-not-allowed opacity-60' : 'hover:bg-[#F8FAFC]'}`}
+                        >
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="text-[13px] font-semibold text-[#0B1F3A]">{g.group_name}</p>
+                            {isFull && (
+                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">FULL</span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-[#64748B]">
+                            {g.course_name ?? '—'}{g.instructor_name ? ` · ${g.instructor_name}` : ''}
+                          </p>
+                          {sessionStr && <p className="text-[11px] text-[#64748B]">{sessionStr}</p>}
+                          <p className="text-[11px] text-[#94A3B8]">
+                            {g.student_count}{g.capacity != null ? `/${g.capacity}` : ''} students
+                            {' · '}{g.status}
+                            {' · '}{g.branch_name}
+                          </p>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {showGroupPicker && groupPickerQ && pickerResults.length === 0 && (
+                  <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#94A3B8]">
+                    No groups match your search.
+                  </div>
+                )}
+              </div>
+
+              {/* Hidden inputs consumed by server action */}
+              <input type="hidden" name="groups_to_add_json"    value={JSON.stringify(groupsToAdd)} />
+              <input type="hidden" name="groups_to_remove_json" value={JSON.stringify(groupsToRemove)} />
+            </fieldset>
+          )}
+
+          {/* ── Footer ──────────────────────────────────────────────── */}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => { if (dirty && !confirm('Close without saving?')) return; onClose() }}
+              className="rounded-lg border border-[#E2E8F0] px-4 py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isPending || !!ageErr}
+              className="rounded-lg bg-[#FF8A1F] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-60"
+            >
+              {isPending
+                ? (isEdit ? 'Saving…' : 'Enrolling…')
+                : (isEdit ? 'Save Changes' : 'Enroll Student')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}

@@ -1,250 +1,28 @@
-import { listGroups }                           from '@/modules/groups/queries'
-import { requirePortalRole, requirePermission }  from '@/modules/rbac/guards'
-import { getGroupMetrics }                        from '@/modules/tl-dashboard/queries'
-import PageHeader                                from '@/components/admin/PageHeader'
-import StatusBadge                               from '@/components/admin/StatusBadge'
-import EmptyState                                from '@/components/admin/EmptyState'
-import Pagination                                from '@/components/admin/Pagination'
-import SearchInput                               from '@/components/admin/SearchInput'
-import Link                                      from 'next/link'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
+import { listGroupsOperational, getGroupFormOptions, getGroupStudentOptions } from '@/modules/groups/operational'
+import GroupsClient from './GroupsClient'
 
-interface Props {
-  searchParams: Promise<{ page?: string; q?: string; status?: string; sort?: string }>
-}
-
-const DAYS: Record<string, string> = {
-  monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu',
-  friday: 'Fri', saturday: 'Sat', sunday: 'Sun',
-}
-
-function PctCell({ value }: { value: number | null }) {
-  if (value == null) return <span className="text-xs text-[#94A3B8]">—</span>
-  const color = value >= 75 ? 'text-green-600' : value >= 60 ? 'text-yellow-600' : 'text-red-600'
-  return <span className={`text-xs font-semibold ${color}`}>{value}%</span>
-}
-
-function HealthBadge({ score }: { score: number | null }) {
-  if (score == null) return <span className="text-xs text-[#94A3B8]">—</span>
-  const cls =
-    score >= 90 ? 'bg-green-100 text-green-700'   :
-    score >= 75 ? 'bg-blue-100  text-blue-700'    :
-    score >= 60 ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-red-100   text-red-700'
-  const label = score >= 90 ? 'Excellent' : score >= 75 ? 'Good' : score >= 60 ? 'Attention' : 'At Risk'
-  return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${cls}`}>
-      {label} ({score})
-    </span>
-  )
-}
-
-type SortKey = 'default' | 'att_asc' | 'health_asc' | 'health_desc'
-
-export default async function TLGroupsPage({ searchParams }: Props) {
+export default async function TLGroupsPage() {
   const user = await requirePortalRole('team_leader')
-  await requirePermission('manage_groups')
+  const canManage = await requirePermission('manage_groups').then(() => true).catch(() => false)
 
-  const params = await searchParams
-  const page   = Number(params.page ?? 1)
-  const search = params.q ?? ''
-  const status = params.status
-  const sort   = (params.sort ?? 'default') as SortKey
+  const branchIds = user.branchIds ?? []
 
-  const result = await listGroups({ page, perPage: 20, search, branchId: user.branchIds, status })
+  const [groups, options, studentOptions] = await Promise.all([
+    listGroupsOperational(branchIds),
+    getGroupFormOptions(branchIds),
+    canManage ? getGroupStudentOptions(branchIds) : Promise.resolve([]),
+  ])
 
-  const groupIds   = result.data.map(g => g.id)
-  const metricsMap = await getGroupMetrics(groupIds)
-
-  let sorted = [...result.data]
-  if (sort === 'att_asc') {
-    sorted.sort((a, b) => (metricsMap.get(a.id)?.attendance_avg ?? 100) - (metricsMap.get(b.id)?.attendance_avg ?? 100))
-  } else if (sort === 'health_asc') {
-    sorted.sort((a, b) => (metricsMap.get(a.id)?.health_score ?? 100) - (metricsMap.get(b.id)?.health_score ?? 100))
-  } else if (sort === 'health_desc') {
-    sorted.sort((a, b) => (metricsMap.get(b.id)?.health_score ?? 0) - (metricsMap.get(a.id)?.health_score ?? 0))
-  }
-
-  const sortHref = (key: SortKey) => {
-    const base = new URLSearchParams({ ...(search ? { q: search } : {}), ...(status ? { status } : {}) })
-    if (key !== 'default') base.set('sort', key)
-    const qs = base.toString()
-    return `/portal/team-leader/groups${qs ? `?${qs}` : ''}`
-  }
-
-  // Compute operational KPIs from metrics
-  const activeGroups      = sorted.filter(g => g.status === 'active').length
-  const lowAttGroups      = sorted.filter(g => (metricsMap.get(g.id)?.attendance_avg ?? 100) < 60).length
-  const lowHomeworkGroups = sorted.filter(g => (metricsMap.get(g.id)?.assignment_avg ?? 100) < 60).length
-  const atRiskGroups      = sorted.filter(g => (metricsMap.get(g.id)?.health_score ?? 100) < 60).length
+  const defaultBranchId = branchIds[0] ?? ''
 
   return (
-    <div className="space-y-5">
-      {/* KPI strip */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          { label: 'Active Groups',       value: activeGroups,      color: 'bg-blue-400'   },
-          { label: 'Low Attendance',      value: lowAttGroups,      color: lowAttGroups > 0      ? 'bg-red-400'   : 'bg-slate-300' },
-          { label: 'Low Homework',        value: lowHomeworkGroups, color: lowHomeworkGroups > 0 ? 'bg-amber-400' : 'bg-slate-300' },
-          { label: 'Health At Risk',      value: atRiskGroups,      color: atRiskGroups > 0      ? 'bg-red-400'   : 'bg-slate-300' },
-        ].map(k => (
-          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-            <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-            <p className="text-lg font-bold text-[#0B1F3A]">{k.value}</p>
-            <p className="text-[11px] text-[#64748B]">{k.label}</p>
-          </div>
-        ))}
-      </div>
-
-      <div>
-      <PageHeader
-        title="Groups"
-        description={`${result.total} group${result.total !== 1 ? 's' : ''}`}
-        action={
-          <Link
-            href="/portal/team-leader/groups/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            New Group
-          </Link>
-        }
-      />
-
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
-        <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
-          <SearchInput placeholder="Search groups…" />
-          <div className="ml-auto flex flex-wrap gap-2">
-            {([
-              { key: 'default',     label: 'Default'            },
-              { key: 'att_asc',     label: '↑ Low Attendance'   },
-              { key: 'health_asc',  label: '↑ Low Health'       },
-              { key: 'health_desc', label: '↓ High Performance' },
-            ] as { key: SortKey; label: string }[]).map(({ key, label }) => (
-              <Link
-                key={key}
-                href={sortHref(key)}
-                className={[
-                  'rounded-full border px-3 py-1 text-[12px] font-medium transition',
-                  sort === key
-                    ? 'border-[#FF8A1F] bg-[#FF8A1F]/10 text-[#FF8A1F]'
-                    : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]',
-                ].join(' ')}
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {sorted.length === 0 ? (
-          <EmptyState
-            title="No groups found"
-            description={search ? 'Try a different search term.' : 'Create the first group to get started.'}
-          />
-        ) : (
-          <>
-            {/* Mobile cards */}
-            <div className="md:hidden divide-y divide-[#E2E8F0]">
-              {sorted.map((group) => {
-                const m = metricsMap.get(group.id) ?? null
-                return (
-                  <div key={group.id} className="px-4 py-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <Link href={`/portal/team-leader/groups/${group.id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">
-                          {group.name}
-                        </Link>
-                        {group.instructor_name && (
-                          <p className="mt-0.5 text-[12px] text-[#64748B]">{group.instructor_name}</p>
-                        )}
-                      </div>
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <HealthBadge score={m?.health_score ?? null} />
-                        <StatusBadge status={group.status} />
-                      </div>
-                    </div>
-                    <div className="mt-2 grid grid-cols-3 gap-2">
-                      {[
-                        { label: 'Attend.', value: m?.attendance_avg ?? null },
-                        { label: 'Homework', value: m?.assignment_avg ?? null },
-                        { label: 'Portfolio', value: m?.portfolio_avg ?? null },
-                      ].map(({ label, value }) => (
-                        <div key={label} className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
-                          <p className="text-[10px] text-[#94A3B8]">{label}</p>
-                          <p className={`text-sm font-semibold ${value == null ? 'text-[#94A3B8]' : value >= 75 ? 'text-green-600' : value >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
-                            {value != null ? `${value}%` : '—'}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-2 flex items-center justify-between gap-2 text-[12px] text-[#64748B]">
-                      <span>
-                        {group.student_count} students
-                        {group.day_of_week && ` · ${DAYS[group.day_of_week]}`}
-                        {group.time && ` ${group.time}`}
-                      </span>
-                      <Link href={`/portal/team-leader/groups/${group.id}`} className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center">
-                        View →
-                      </Link>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Desktop table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Instructor</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Day / Time</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-[#64748B]">Students</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Attendance</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Homework</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Portfolio</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Health</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {sorted.map((group) => {
-                    const m = metricsMap.get(group.id) ?? null
-                    return (
-                      <tr key={group.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
-                        <td className="px-4 py-3">
-                          <p className="font-medium text-[#0B1F3A]">{group.name}</p>
-                          {group.code && <p className="font-mono text-[10px] text-[#94A3B8]">{group.code}</p>}
-                        </td>
-                        <td className="px-4 py-3 text-[#64748B]">{group.instructor_name ?? '—'}</td>
-                        <td className="px-4 py-3 text-[#64748B]">
-                          {group.day_of_week ? DAYS[group.day_of_week] : '—'}
-                          {group.time ? ` · ${group.time}` : ''}
-                        </td>
-                        <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{group.student_count}</td>
-                        <td className="px-4 py-3 text-center"><PctCell value={m?.attendance_avg ?? null} /></td>
-                        <td className="px-4 py-3 text-center"><PctCell value={m?.assignment_avg ?? null} /></td>
-                        <td className="px-4 py-3 text-center"><PctCell value={m?.portfolio_avg  ?? null} /></td>
-                        <td className="px-4 py-3"><HealthBadge score={m?.health_score ?? null} /></td>
-                        <td className="px-4 py-3"><StatusBadge status={group.status} /></td>
-                        <td className="px-4 py-3 text-right">
-                          <Link href={`/portal/team-leader/groups/${group.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">View</Link>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <Pagination page={result.page} totalPages={result.totalPages} total={result.total} perPage={result.perPage} />
-          </>
-        )}
-      </div>
-    </div>
-      </div>
+    <GroupsClient
+      groups={groups}
+      options={options}
+      studentOptions={studentOptions}
+      defaultBranchId={defaultBranchId}
+      isTL={canManage}
+    />
   )
 }

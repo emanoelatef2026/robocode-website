@@ -404,8 +404,14 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
         <div className="shrink-0 border-b border-[#E2E8F0] px-5 py-4">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
+              {/* Name + badges */}
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-base font-bold text-[#0B1F3A]">{student.student_name}</h2>
+                {student.student_code && (
+                  <span className="rounded bg-[#F1F5F9] px-1.5 py-px font-mono text-[10px] text-[#64748B]">
+                    #{student.student_code}
+                  </span>
+                )}
                 <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${RISK_LEVEL_CLASSES[student.risk_level]}`}>
                   {student.risk_level}
                 </span>
@@ -420,13 +426,32 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                   </span>
                 )}
               </div>
+
+              {/* Group + Instructor */}
               <p className="mt-0.5 text-xs text-[#64748B]">
-                {student.group_name ?? 'No group'}
+                {student.group_name ?? <span className="text-amber-600">No group</span>}
                 {student.instructor_name
                   ? <span> · {student.instructor_name}</span>
                   : <span className="text-amber-600"> · Unassigned</span>}
-                {student.student_code && <span className="ml-1 text-[#94A3B8]">#{student.student_code}</span>}
               </p>
+
+              {/* Phones */}
+              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-[#64748B]">
+                {student.student_phone && (
+                  <span>Student: <span className="font-medium text-[#0B1F3A]">{student.student_phone}</span></span>
+                )}
+                {student.parent_name && (
+                  <span>Parent: <span className="font-medium text-[#0B1F3A]">{student.parent_name}</span></span>
+                )}
+                {student.parent_phone_1 && (
+                  <span className="font-medium text-[#0B1F3A]">{student.parent_phone_1}</span>
+                )}
+                {student.parent_phone_2 && student.parent_phone_2 !== student.parent_phone_1 && (
+                  <span className="font-medium text-[#0B1F3A]">{student.parent_phone_2}</span>
+                )}
+              </div>
+
+              {/* Risk flags */}
               {student.risk_flags.filter(f => f !== 'session_milestone').length > 0 && (
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {student.risk_flags.filter(f => f !== 'session_milestone').slice(0, 4).map(f => (
@@ -437,6 +462,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                 </div>
               )}
             </div>
+
             <div className="flex shrink-0 items-center gap-1.5">
               {parentPhone && (
                 <>
@@ -467,69 +493,86 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
           </div>
         </div>
 
-        {/* ── ENROLLMENT CONTRACT SUMMARY ──────────────────────────────────── */}
-        <div className="shrink-0 border-b border-[#E2E8F0] bg-[#F8FAFC] px-5 py-3 space-y-2">
-          {/* Session package */}
-          {student.enrolled_sessions > 0 ? (
-            <div>
-              <div className="mb-1 flex items-center justify-between text-[11px]">
-                <span className="text-[#64748B]">Sessions</span>
-                <span className={`font-semibold ${
-                  exhaustion === 'EXHAUSTED' ? 'text-red-700' :
-                  exhaustion === 'CRITICAL'  ? 'text-red-600' :
-                  exhaustion === 'WARNING'   ? 'text-amber-700' : 'text-emerald-600'
-                }`}>
-                  {student.consumed_sessions}/{student.enrolled_sessions} consumed
-                  {student.remaining_sessions > 0 && ` · ${student.remaining_sessions} left`}
-                  {student.remaining_sessions <= 0 && ' · Package exhausted'}
-                </span>
-              </div>
-              <div className="h-1.5 w-full rounded-full bg-[#E2E8F0]">
-                <div className={`h-full rounded-full ${
-                  exhaustion === 'EXHAUSTED' || exhaustion === 'CRITICAL' ? 'bg-red-500' :
-                  exhaustion === 'WARNING' ? 'bg-amber-500' : 'bg-blue-500'
-                }`} style={{ width: `${Math.min(100, student.enrolled_sessions > 0 ? Math.round((student.consumed_sessions / student.enrolled_sessions) * 100) : 0)}%` }} />
-              </div>
+        {/* ── FINANCIAL SUMMARY CARDS ──────────────────────────────────────── */}
+        <div className="shrink-0 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
+          <div className="grid grid-cols-3 gap-2">
+            {/* Paid */}
+            <div className="rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-2">
+              <p className="text-[10px] text-[#94A3B8]">Paid</p>
+              <p className="text-xs font-bold text-emerald-700">EGP {fmt(paidAmt)}</p>
+              {netAmt > 0 && <p className="text-[10px] text-[#94A3B8]">of {fmt(netAmt)}</p>}
             </div>
-          ) : (
-            <p className="text-[11px] font-medium text-amber-600">No session package — enroll student to set up contract</p>
-          )}
-
-          {/* Payment progress */}
-          <div>
-            <div className="mb-1 flex items-center justify-between text-[11px]">
-              <span className="text-[#64748B]">
-                Paid <strong className="text-emerald-700">EGP {fmt(paidAmt)}</strong>
-                {' / '}
-                <strong className="text-[#0B1F3A]">EGP {fmt(netAmt)}</strong>
-              </span>
-              <span className={remainingAmt > 0 ? 'font-semibold text-red-600' : 'font-semibold text-emerald-600'}>
-                {remainingAmt > 0 ? `EGP ${fmt(remainingAmt)} due` : 'Fully paid ✓'}
-              </span>
+            {/* Remaining */}
+            <div className={`rounded-lg border px-2.5 py-2 ${remainingAmt > 0 ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50'}`}>
+              <p className="text-[10px] text-[#94A3B8]">Remaining</p>
+              <p className={`text-xs font-bold ${remainingAmt > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                {remainingAmt > 0 ? `EGP ${fmt(remainingAmt)}` : 'Paid ✓'}
+              </p>
+              {student.days_overdue > 0 && (
+                <p className="text-[10px] font-medium text-red-500">{student.days_overdue}d overdue</p>
+              )}
             </div>
-            <div className="h-1.5 w-full rounded-full bg-[#E2E8F0]">
-              <div className={`h-full rounded-full transition-all ${progressPct >= 80 ? 'bg-emerald-500' : progressPct >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
-                style={{ width: `${progressPct}%` }} />
+            {/* Sessions */}
+            <div className={`rounded-lg border px-2.5 py-2 ${
+              exhaustion === 'EXHAUSTED' ? 'border-purple-200 bg-purple-50' :
+              exhaustion === 'CRITICAL'  ? 'border-red-200 bg-red-50' :
+              exhaustion === 'WARNING'   ? 'border-amber-200 bg-amber-50' :
+              'border-[#E2E8F0] bg-white'
+            }`}>
+              <p className="text-[10px] text-[#94A3B8]">Sessions</p>
+              {student.enrolled_sessions > 0 ? (
+                <>
+                  <p className={`text-xs font-bold ${
+                    exhaustion === 'EXHAUSTED' ? 'text-purple-700' :
+                    exhaustion === 'CRITICAL'  ? 'text-red-600' :
+                    exhaustion === 'WARNING'   ? 'text-amber-700' : 'text-blue-600'
+                  }`}>
+                    {student.remaining_sessions <= 0 ? 'Exhausted' : `${student.remaining_sessions} left`}
+                  </p>
+                  <p className="text-[10px] text-[#94A3B8]">{student.consumed_sessions}/{student.enrolled_sessions}</p>
+                </>
+              ) : (
+                <p className="text-xs font-medium text-amber-600">No pkg</p>
+              )}
             </div>
-          </div>
-
-          {/* Meta row: attendance + next due */}
-          <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#64748B]">
-            {student.sessions_attended > 0 && (
-              <span>
-                Attendance: <strong className={student.attendance_pct >= 80 ? 'text-emerald-600' : student.attendance_pct >= 60 ? 'text-amber-600' : 'text-red-600'}>
-                  {student.attendance_pct}%
-                </strong>
-                {' '}({student.sessions_attended}/{student.total_sessions})
-              </span>
-            )}
-            {student.next_due_date && (
-              <span>
-                Next due: <span className={student.days_overdue > 0 ? 'font-semibold text-red-600' : 'font-medium'}>
-                  {fmtDate(student.next_due_date)}{student.days_overdue > 0 ? ` (${student.days_overdue}d overdue)` : ''}
-                </span>
-              </span>
-            )}
+            {/* Attendance */}
+            <div className="rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-2">
+              <p className="text-[10px] text-[#94A3B8]">Attendance</p>
+              <p className={`text-xs font-bold ${
+                student.attendance_pct >= 80 ? 'text-emerald-600' :
+                student.attendance_pct >= 60 ? 'text-amber-600' :
+                student.total_sessions > 0   ? 'text-red-600' : 'text-[#94A3B8]'
+              }`}>
+                {student.total_sessions > 0 ? `${student.attendance_pct}%` : '—'}
+              </p>
+              {student.total_sessions > 0 && (
+                <p className="text-[10px] text-[#94A3B8]">{student.sessions_attended}/{student.total_sessions}</p>
+              )}
+            </div>
+            {/* Last payment (from detail, fallback to static) */}
+            <div className="rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-2">
+              <p className="text-[10px] text-[#94A3B8]">Last Payment</p>
+              <p className="text-xs font-bold text-[#0B1F3A]">
+                {detail?.payments.filter(p => p.amount > 0)[0]
+                  ? fmtDateShort(detail.payments.filter(p => p.amount > 0)[0].payment_date)
+                  : '—'}
+              </p>
+              {detail?.payments.filter(p => p.amount > 0)[0] && (
+                <p className="text-[10px] text-emerald-600">
+                  EGP {fmt(detail.payments.filter(p => p.amount > 0)[0].amount)}
+                </p>
+              )}
+            </div>
+            {/* Next due */}
+            <div className={`rounded-lg border px-2.5 py-2 ${student.days_overdue > 0 ? 'border-red-200 bg-red-50' : 'border-[#E2E8F0] bg-white'}`}>
+              <p className="text-[10px] text-[#94A3B8]">Next Due</p>
+              <p className={`text-xs font-bold ${student.days_overdue > 0 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+                {student.next_due_date ? fmtDateShort(student.next_due_date) : '—'}
+              </p>
+              {student.days_overdue > 0 && (
+                <p className="text-[10px] font-medium text-red-500">{student.days_overdue}d late</p>
+              )}
+            </div>
           </div>
         </div>
 

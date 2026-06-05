@@ -17,32 +17,30 @@ export default async function StudentOperationsPage() {
     )
   }
 
-  // Load data and filter options in parallel
   const [rows, filterOptions] = await Promise.all([
     listStudentOperations(user.branchIds),
     getFilterOptions(user.branchIds),
   ])
 
-  // ── Summary KPIs ────────────────────────────────────────────────────────
-  const totalStudents  = rows.length
-  const highRisk       = rows.filter(r => r.risk_level === 'HIGH').length
-  const mediumRisk     = rows.filter(r => r.risk_level === 'MEDIUM').length
-  const overdue        = rows.filter(r => r.financial_status === 'OVERDUE').length
-  const totalRemaining = rows.reduce((s, r) => s + r.remaining_amount, 0)
-  const totalPaid      = rows.reduce((s, r) => s + r.paid_amount, 0)
-  const totalNet       = rows.reduce((s, r) => s + r.net_amount, 0)
-  const collectionRate = totalNet > 0 ? Math.round((totalPaid / totalNet) * 100) : 0
-  const avgAttendance  = rows.filter(r => r.sessions_attended > 0).length > 0
-    ? Math.round(rows.filter(r => r.sessions_attended > 0).reduce((s, r) => s + r.attendance_pct, 0) / rows.filter(r => r.sessions_attended > 0).length)
+  // ── KPIs ─────────────────────────────────────────────────────────────────────
+  const totalStudents     = rows.length
+  const activePackages    = rows.filter(r => r.enrolled_sessions > 0 && r.remaining_sessions > 0).length
+  const exhaustedPackages = rows.filter(r => r.enrolled_sessions > 0 && r.remaining_sessions <= 0).length
+  const totalRemaining    = rows.reduce((s, r) => s + r.remaining_amount, 0)
+  const totalPaid         = rows.reduce((s, r) => s + r.paid_amount, 0)
+  const totalNet          = rows.reduce((s, r) => s + r.net_amount, 0)
+  const collectionRate    = totalNet > 0 ? Math.round((totalPaid / totalNet) * 100) : 0
+  const attendedRows      = rows.filter(r => r.sessions_attended > 0)
+  const avgAttendance     = attendedRows.length > 0
+    ? Math.round(attendedRows.reduce((s, r) => s + r.attendance_pct, 0) / attendedRows.length)
     : 0
 
-  // Dynamically import the client table to keep server component clean
   const { default: StudentOpsTable } = await import('./StudentOpsTable')
 
   return (
     <div className="space-y-5">
 
-      {/* ── Header ────────────────────────────────────────────────────────── */}
+      {/* ── Header ───────────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-[#0B1F3A]">Student Operations Center</h1>
@@ -50,19 +48,42 @@ export default async function StudentOperationsPage() {
             {user.branchIds.length > 1 ? 'All branches' : 'Branch'} — {totalStudents} students monitored
           </p>
         </div>
-        <p className="text-xs text-[#94A3B8]">Use the Enroll button in the table to add students.</p>
+        <p className="text-xs text-[#94A3B8]">Use the Add Payment button in the table to create contracts.</p>
       </div>
 
-      {/* ── KPI strip ─────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+      {/* ── KPI strip ────────────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
-          { label: 'Students',       value: totalStudents,           color: 'bg-blue-400' },
-          { label: 'High Risk',      value: highRisk,                color: highRisk > 0      ? 'bg-red-400'     : 'bg-slate-300' },
-          { label: 'Medium Risk',    value: mediumRisk,              color: mediumRisk > 0    ? 'bg-amber-400'   : 'bg-slate-300' },
-          { label: 'Overdue',        value: overdue,                 color: overdue > 0       ? 'bg-red-400'     : 'bg-slate-300' },
-          { label: 'Collection',     value: `${collectionRate}%`,    color: collectionRate >= 80 ? 'bg-emerald-400' : collectionRate >= 60 ? 'bg-amber-400' : 'bg-red-400' },
-          { label: 'Outstanding',    value: `EGP ${fmt(totalRemaining)}`, color: 'bg-amber-400' },
-          { label: 'Avg Attendance', value: avgAttendance > 0 ? `${avgAttendance}%` : '—', color: avgAttendance >= 75 ? 'bg-emerald-400' : avgAttendance >= 60 ? 'bg-amber-400' : 'bg-red-400' },
+          {
+            label: 'Total Students',
+            value: totalStudents,
+            color: 'bg-blue-400',
+          },
+          {
+            label: 'Active Packages',
+            value: activePackages,
+            color: activePackages > 0 ? 'bg-emerald-400' : 'bg-slate-300',
+          },
+          {
+            label: 'Exhausted Packages',
+            value: exhaustedPackages,
+            color: exhaustedPackages > 0 ? 'bg-purple-400' : 'bg-slate-300',
+          },
+          {
+            label: 'Outstanding',
+            value: `EGP ${fmt(totalRemaining)}`,
+            color: totalRemaining > 0 ? 'bg-amber-400' : 'bg-emerald-400',
+          },
+          {
+            label: 'Collection Rate',
+            value: `${collectionRate}%`,
+            color: collectionRate >= 80 ? 'bg-emerald-400' : collectionRate >= 60 ? 'bg-amber-400' : 'bg-red-400',
+          },
+          {
+            label: 'Avg Attendance',
+            value: avgAttendance > 0 ? `${avgAttendance}%` : '—',
+            color: avgAttendance >= 75 ? 'bg-emerald-400' : avgAttendance >= 60 ? 'bg-amber-400' : avgAttendance > 0 ? 'bg-red-400' : 'bg-slate-300',
+          },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
             <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
@@ -72,7 +93,7 @@ export default async function StudentOperationsPage() {
         ))}
       </div>
 
-      {/* ── Operations table (client component) ───────────────────────────── */}
+      {/* ── Operations table ─────────────────────────────────────────────────── */}
       {rows.length === 0 ? (
         <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
           <p className="text-sm font-medium text-[#0B1F3A]">No active students found</p>

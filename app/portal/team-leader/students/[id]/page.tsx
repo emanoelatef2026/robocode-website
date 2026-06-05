@@ -41,6 +41,26 @@ export default async function TLStudentDetailPage({ params }: Props) {
   const ec     = (s.emergency_contact ?? {}) as Record<string, string>
   const fullName = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || user.email || '—'
 
+  // Load guardians from student_guardians (preferred) with fallback to emergency_contact
+  const { data: guardianRows } = await db
+    .from('student_guardians')
+    .select('id, name, relation, phone1, phone2, whatsapp_preferred, is_primary, is_emergency')
+    .eq('student_id', studentId)
+    .order('is_primary', { ascending: false })
+
+  const guardians = (guardianRows ?? []) as {
+    id: string; name: string; relation: string
+    phone1: string | null; phone2: string | null
+    whatsapp_preferred: boolean; is_primary: boolean; is_emergency: boolean
+  }[]
+
+  // Fallback: if no guardian rows yet, use legacy JSONB
+  const displayGuardians = guardians.length > 0
+    ? guardians
+    : (ec.phone1 || ec.phone2)
+      ? [{ id: '', name: ec.name ?? 'Guardian', relation: 'guardian', phone1: ec.phone1 ?? null, phone2: ec.phone2 ?? null, whatsapp_preferred: false, is_primary: true, is_emergency: true }]
+      : []
+
   // ── Load ALL enrollments (active + historical) ────────────────────────────
   const { data: enrollRows } = await db
     .from('student_enrollments')
@@ -152,26 +172,45 @@ export default async function TLStudentDetailPage({ params }: Props) {
         </div>
 
         <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-          <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Parent / Guardian</h2>
-          <dl className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-[#94A3B8]">Name</dt>
-              <dd className="text-[#0B1F3A]">{ec.name ?? '—'}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-[#94A3B8]">Phone 1</dt>
-              <dd>{ec.phone1 ? (
-                <div className="flex items-center gap-2">
-                  <a href={`tel:${ec.phone1}`} className="text-[#0B1F3A]">{ec.phone1}</a>
-                  <a href={`https://wa.me/${ec.phone1.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#25D366] border border-[#25D366]/30 rounded px-1.5 py-0.5">WA</a>
+          <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">
+            Guardians ({displayGuardians.length})
+          </h2>
+          {displayGuardians.length === 0 ? (
+            <p className="text-sm text-[#94A3B8]">No guardian contacts recorded.</p>
+          ) : (
+            <div className="space-y-3">
+              {displayGuardians.map((g, i) => (
+                <div key={g.id || i} className="space-y-1.5">
+                  {i > 0 && <hr className="border-[#E2E8F0]" />}
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-[#0B1F3A]">{g.name}</span>
+                    <span className="text-[10px] text-[#94A3B8] capitalize">({g.relation})</span>
+                    {g.is_primary   && <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">Primary</span>}
+                    {g.is_emergency && <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600">Emergency</span>}
+                  </div>
+                  <dl className="space-y-1 text-sm">
+                    {g.phone1 && (
+                      <div className="flex justify-between">
+                        <dt className="text-[#94A3B8]">Phone 1</dt>
+                        <dd className="flex items-center gap-2">
+                          <a href={`tel:${g.phone1}`} className="text-[#0B1F3A]">{g.phone1}</a>
+                          {g.whatsapp_preferred && (
+                            <a href={`https://wa.me/${g.phone1.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#25D366] border border-[#25D366]/30 rounded px-1.5 py-0.5">WA</a>
+                          )}
+                        </dd>
+                      </div>
+                    )}
+                    {g.phone2 && (
+                      <div className="flex justify-between">
+                        <dt className="text-[#94A3B8]">Phone 2</dt>
+                        <dd><a href={`tel:${g.phone2}`} className="text-[#0B1F3A]">{g.phone2}</a></dd>
+                      </div>
+                    )}
+                  </dl>
                 </div>
-              ) : '—'}</dd>
+              ))}
             </div>
-            <div className="flex justify-between">
-              <dt className="text-[#94A3B8]">Phone 2</dt>
-              <dd>{ec.phone2 ? <a href={`tel:${ec.phone2}`} className="text-[#0B1F3A]">{ec.phone2}</a> : '—'}</dd>
-            </div>
-          </dl>
+          )}
         </div>
       </div>
 

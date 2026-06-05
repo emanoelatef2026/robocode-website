@@ -1,7 +1,10 @@
-import { createServiceClient } from '@/lib/supabase/service'
-import { requireAuth }         from '@/modules/rbac/guards'
-import { redirect }            from 'next/navigation'
-import Link                    from 'next/link'
+import { createServiceClient }    from '@/lib/supabase/service'
+import { requireAuth }            from '@/modules/rbac/guards'
+import { redirect }               from 'next/navigation'
+import { getEventSummaryCounts }  from '@/modules/observability'
+import { getDeadLetterJobs }      from '@/modules/background-jobs'
+import type { JobRow }            from '@/modules/background-jobs'
+import Link                       from 'next/link'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -334,7 +337,12 @@ export default async function SystemHealthPage() {
   const user = await requireAuth()
   if (user.globalRole !== 'super_admin') redirect('/admin')
 
-  const data = await getHealthData()
+  const [data, eventCounts, deadLetterJobs, executiveAlertsResult] = await Promise.all([
+    getHealthData(),
+    getEventSummaryCounts(24),
+    getDeadLetterJobs(10),
+    createServiceClient().from('v_executive_alerts').select('*').limit(20).then(r => r.data ?? [], () => []) as Promise<any[]>,
+  ])
 
   const sections: CheckSection[] = [
     // ── Data integrity (most critical) ──────────────────────────────────────────
@@ -440,31 +448,95 @@ export default async function SystemHealthPage() {
     healthScore >= 60 ? 'Watch'   :
     'Critical'
 
+  const alerts = (executiveAlertsResult as any[])
+
   return (
     <div className="max-w-4xl space-y-5">
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">System Health</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">Data integrity and operational gap report — all items are clickable</p>
+          <h1 className="text-xl font-semibold text-[#0B1F3A]">System Health 2.0</h1>
+          <p className="mt-0.5 text-sm text-[#64748B]">Data integrity, observability, and operational reliability</p>
         </div>
-        <div className="flex items-center gap-2 text-right">
-          {criticalCount > 0 && (
-            <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
-              {criticalCount} critical
-            </span>
-          )}
-          {warningCount > 0 && (
-            <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
-              {warningCount} warnings
-            </span>
-          )}
-          {infoCount > 0 && (
-            <span className="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
-              {infoCount} info
-            </span>
-          )}
+        <div className="flex items-center gap-2">
+          <Link href="/admin/system-events" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+            Event Log
+          </Link>
+          <Link href="/admin/executive" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+            Exec Ops
+          </Link>
         </div>
+      </div>
+
+      {/* ── Sprint 52: Observability KPIs ──────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+        {[
+          { label: 'Health Score',          value: String(healthScore),                    cls: scoreColor },
+          { label: 'Critical Events (24h)', value: String(eventCounts.critical),            cls: eventCounts.critical > 0 ? 'text-red-600' : 'text-emerald-600', badge: eventCounts.critical > 0 },
+          { label: 'Errors (24h)',           value: String(eventCounts.error),              cls: eventCounts.error > 0 ? 'text-orange-600' : 'text-emerald-600', badge: false },
+          { label: 'Automation Failures',   value: String(eventCounts.automation_failures), cls: eventCounts.automation_failures > 0 ? 'text-amber-600' : 'text-emerald-600', badge: false },
+          { label: 'Slow Queries',          value: String(eventCounts.slow_queries),        cls: eventCounts.slow_queries > 5 ? 'text-amber-600' : 'text-emerald-600', badge: false },
+          { label: 'Dead Letter Jobs',      value: String(deadLetterJobs.length),           cls: deadLetterJobs.length > 0 ? 'text-red-600' : 'text-emerald-600', badge: deadLetterJobs.length > 0 },
+          { label: 'Integrity Issues',      value: String(totalIssues),                    cls: criticalCount > 0 ? 'text-red-600' : warningCount > 0 ? 'text-amber-600' : 'text-emerald-600', badge: criticalCount > 0 },
+        ].map(k => (
+          <div key={k.label} className={`rounded-xl border bg-white p-3 ${(k as any).badge ? 'border-red-200' : 'border-[#E2E8F0]'}`}>
+            <p className={`text-xl font-bold ${k.cls}`}>{k.value}</p>
+            <p className="text-[10px] text-[#64748B]">{k.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Executive Alerts (Sprint 52 Phase 13) ───────────────────────── */}
+      {alerts.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="text-[14px] font-semibold text-[#0B1F3A]">Executive Alerts</h2>
+          {alerts.map((a: any, i: number) => {
+            const cls = a.severity === 'CRITICAL' ? 'border-red-200 bg-red-50 text-red-800'
+              : a.severity === 'HIGH' ? 'border-orange-200 bg-orange-50 text-orange-800'
+              : 'border-amber-200 bg-amber-50 text-amber-800'
+            return (
+              <div key={i} className={`flex items-start gap-3 rounded-xl border p-3 ${cls}`}>
+                <span className="text-base">{a.severity === 'CRITICAL' ? '🚨' : a.severity === 'HIGH' ? '⚠️' : '📊'}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold">{a.alert_type?.replace(/_/g, ' ')}</p>
+                  <p className="text-[12px]">{a.message}{a.branch_name ? ` — ${a.branch_name}` : ''}</p>
+                </div>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${a.severity === 'CRITICAL' ? 'bg-red-200 text-red-800' : 'bg-amber-200 text-amber-800'}`}>
+                  {a.severity}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* ── Dead Letter Jobs (Sprint 52 Phase 6) ────────────────────────── */}
+      {deadLetterJobs.length > 0 && (
+        <div className="rounded-xl border border-red-200 bg-white overflow-hidden">
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-3 bg-red-50">
+            <p className="text-sm font-semibold text-red-800">Dead Letter Jobs ({deadLetterJobs.length})</p>
+            <Link href="/admin/system-events?type=JOB_DEAD_LETTER" className="text-[11px] text-red-600 hover:underline">View all →</Link>
+          </div>
+          <div className="divide-y divide-[#F1F5F9]">
+            {deadLetterJobs.slice(0, 5).map((job: JobRow) => (
+              <div key={job.id} className="flex items-center justify-between px-4 py-3">
+                <div>
+                  <p className="text-sm font-medium text-[#0B1F3A]">{job.type}</p>
+                  <p className="text-[11px] text-red-500 truncate max-w-80">{job.error ?? 'Unknown error'}</p>
+                </div>
+                <p className="text-[11px] text-[#94A3B8]">{new Date(job.created_at).toLocaleDateString('en-GB')}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Original issue counts header ────────────────────────────────── */}
+      <div className="flex items-center gap-2">
+        <h2 className="text-[15px] font-semibold text-[#0B1F3A]">Integrity &amp; Operational Gaps</h2>
+        {criticalCount > 0 && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">{criticalCount} critical</span>}
+        {warningCount > 0 && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">{warningCount} warnings</span>}
+        {infoCount > 0 && <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">{infoCount} info</span>}
       </div>
 
       {/* ── Health Score ───────────────────────────────────────────────── */}

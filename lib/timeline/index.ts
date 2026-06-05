@@ -15,12 +15,25 @@ export type TimelineEventType =
   | 'OVERDRAFT_GRANTED'
   | 'ATTENDANCE_RECORDED'
   | 'RENEWAL_NEEDED'
+  | 'RENEWAL_CREATED'
   | 'TRANSFER'
+  | 'TRANSFER_REQUESTED'
   | 'COMPLAINT_LOGGED'
   | 'PARENT_MESSAGE'
+  | 'PARENT_ESCALATION'
   | 'MANUAL_ADJUSTMENT'
   | 'BLOCK_APPLIED'
   | 'BLOCK_LIFTED'
+  // Sprint 51: new coverage
+  | 'HOMEWORK_ASSIGNED'
+  | 'HOMEWORK_COMPLETED'
+  | 'CERTIFICATE_ISSUED'
+  | 'CALL_LOGGED'
+  | 'WHATSAPP_SENT'
+  | 'TASK_CREATED'
+  | 'TASK_COMPLETED'
+  | 'SCORE_COMPUTED'
+  | 'COLLECTION_STAGE_ADVANCED'
 
 export type TimelineEventSeverity = 'INFO' | 'WARNING' | 'CRITICAL'
 
@@ -39,23 +52,36 @@ export interface TimelineEventInput {
 // ── Severity map ───────────────────────────────────────────────────────────────
 
 const SEVERITY_MAP: Record<TimelineEventType, TimelineEventSeverity> = {
-  ENROLLMENT_CREATED: 'INFO',
-  PAYMENT:            'INFO',
-  PAYMENT_REVERSAL:   'WARNING',
-  REMINDER_SENT:      'INFO',
-  NOTE_ADDED:         'INFO',
-  PROMISE_MADE:       'INFO',
-  PROMISE_FULFILLED:  'INFO',
-  PROMISE_BROKEN:     'WARNING',
-  OVERDRAFT_GRANTED:  'WARNING',
-  ATTENDANCE_RECORDED:'INFO',
-  RENEWAL_NEEDED:     'WARNING',
-  TRANSFER:           'INFO',
-  COMPLAINT_LOGGED:   'WARNING',
-  PARENT_MESSAGE:     'INFO',
-  MANUAL_ADJUSTMENT:  'WARNING',
-  BLOCK_APPLIED:      'CRITICAL',
-  BLOCK_LIFTED:       'INFO',
+  ENROLLMENT_CREATED:        'INFO',
+  PAYMENT:                   'INFO',
+  PAYMENT_REVERSAL:          'WARNING',
+  REMINDER_SENT:             'INFO',
+  NOTE_ADDED:                'INFO',
+  PROMISE_MADE:              'INFO',
+  PROMISE_FULFILLED:         'INFO',
+  PROMISE_BROKEN:            'WARNING',
+  OVERDRAFT_GRANTED:         'WARNING',
+  ATTENDANCE_RECORDED:       'INFO',
+  RENEWAL_NEEDED:            'WARNING',
+  RENEWAL_CREATED:           'INFO',
+  TRANSFER:                  'INFO',
+  TRANSFER_REQUESTED:        'INFO',
+  COMPLAINT_LOGGED:          'WARNING',
+  PARENT_MESSAGE:            'INFO',
+  PARENT_ESCALATION:         'CRITICAL',
+  MANUAL_ADJUSTMENT:         'WARNING',
+  BLOCK_APPLIED:             'CRITICAL',
+  BLOCK_LIFTED:              'INFO',
+  // Sprint 51
+  HOMEWORK_ASSIGNED:         'INFO',
+  HOMEWORK_COMPLETED:        'INFO',
+  CERTIFICATE_ISSUED:        'INFO',
+  CALL_LOGGED:               'INFO',
+  WHATSAPP_SENT:             'INFO',
+  TASK_CREATED:              'INFO',
+  TASK_COMPLETED:            'INFO',
+  SCORE_COMPUTED:            'INFO',
+  COLLECTION_STAGE_ADVANCED: 'WARNING',
 }
 
 // ── Log event ──────────────────────────────────────────────────────────────────
@@ -146,23 +172,36 @@ export async function getStudentTimeline(
 // ── Event labels ───────────────────────────────────────────────────────────────
 
 export const TIMELINE_EVENT_LABELS: Record<TimelineEventType, string> = {
-  ENROLLMENT_CREATED: 'Enrollment Created',
-  PAYMENT:            'Payment Received',
-  PAYMENT_REVERSAL:   'Payment Reversed',
-  REMINDER_SENT:      'Reminder Sent',
-  NOTE_ADDED:         'Note Added',
-  PROMISE_MADE:       'Payment Promise Made',
-  PROMISE_FULFILLED:  'Promise Fulfilled',
-  PROMISE_BROKEN:     'Promise Broken',
-  OVERDRAFT_GRANTED:  'Overdraft Granted',
-  ATTENDANCE_RECORDED:'Session Recorded',
-  RENEWAL_NEEDED:     'Renewal Needed',
-  TRANSFER:           'Contract Transferred',
-  COMPLAINT_LOGGED:   'Complaint Logged',
-  PARENT_MESSAGE:     'Parent Message',
-  MANUAL_ADJUSTMENT:  'Manual Adjustment',
-  BLOCK_APPLIED:      'Account Blocked',
-  BLOCK_LIFTED:       'Block Lifted',
+  ENROLLMENT_CREATED:        'Enrollment Created',
+  PAYMENT:                   'Payment Received',
+  PAYMENT_REVERSAL:          'Payment Reversed',
+  REMINDER_SENT:             'Reminder Sent',
+  NOTE_ADDED:                'Note Added',
+  PROMISE_MADE:              'Payment Promise Made',
+  PROMISE_FULFILLED:         'Promise Fulfilled',
+  PROMISE_BROKEN:            'Promise Broken',
+  OVERDRAFT_GRANTED:         'Overdraft Granted',
+  ATTENDANCE_RECORDED:       'Session Recorded',
+  RENEWAL_NEEDED:            'Renewal Needed',
+  RENEWAL_CREATED:           'Renewal Created',
+  TRANSFER:                  'Contract Transferred',
+  TRANSFER_REQUESTED:        'Transfer Requested',
+  COMPLAINT_LOGGED:          'Complaint Logged',
+  PARENT_MESSAGE:            'Parent Message',
+  PARENT_ESCALATION:         'Parent Escalation',
+  MANUAL_ADJUSTMENT:         'Manual Adjustment',
+  BLOCK_APPLIED:             'Account Blocked',
+  BLOCK_LIFTED:              'Block Lifted',
+  // Sprint 51
+  HOMEWORK_ASSIGNED:         'Homework Assigned',
+  HOMEWORK_COMPLETED:        'Homework Completed',
+  CERTIFICATE_ISSUED:        'Certificate Issued',
+  CALL_LOGGED:               'Call Logged',
+  WHATSAPP_SENT:             'WhatsApp Sent',
+  TASK_CREATED:              'Task Created',
+  TASK_COMPLETED:            'Task Completed',
+  SCORE_COMPUTED:            'Risk Score Updated',
+  COLLECTION_STAGE_ADVANCED: 'Collection Stage Advanced',
 }
 
 export const TIMELINE_SEVERITY_COLORS: Record<TimelineEventSeverity, string> = {

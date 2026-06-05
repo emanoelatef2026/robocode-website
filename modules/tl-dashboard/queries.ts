@@ -1015,3 +1015,117 @@ export async function getWorkQueues(branchIds: string[]): Promise<WorkQueues> {
     inactive_students:       inactive_students.slice(0, 20),
   }
 }
+
+// ─── Sprint 51: Instructor Operations Center ──────────────────────────────────
+// Combines InstructorPerf (existing) with v_instructor_operations (new view).
+// Falls back gracefully if view not yet deployed.
+
+export interface InstructorOpsRow extends InstructorPerf {
+  revenue_managed:    number
+  outstanding_amount: number
+  retention_pct:      number | null
+  risk_students:      number
+  critical_students:  number
+  health_score:       number  // 0-100 composite
+}
+
+export async function getInstructorOpsData(branchIds: string[]): Promise<InstructorOpsRow[]> {
+  if (!branchIds.length) return []
+  const db = createServiceClient()
+
+  // Try new view first
+  const { data: viewRows, error: viewErr } = await db
+    .from('v_instructor_operations')
+    .select('instructor_id, active_students, revenue_managed, outstanding_amount, retention_pct, risk_students, critical_students')
+    .in('branch_id', branchIds)
+
+  // Existing performance data
+  const perfRows = await getInstructorPerformance(branchIds)
+
+  // Merge
+  const viewMap = new Map<string, any>()
+  if (!viewErr) {
+    for (const r of (viewRows ?? []) as any[]) viewMap.set(r.instructor_id, r)
+  }
+
+  return perfRows.map(p => {
+    const v = viewMap.get(p.instructor_id)
+    const retPct  = v?.retention_pct  != null ? Number(v.retention_pct)  : null
+    const riskStu = v?.risk_students  != null ? Number(v.risk_students)  : 0
+    const revenue = v?.revenue_managed != null ? Number(v.revenue_managed) : 0
+
+    // Health score: 40% attendance_rate + 30% avg_rating(÷5) + 20% retention + 10% no risk students
+    const ratingNorm  = p.avg_student_rating != null ? (p.avg_student_rating / 5) * 100 : 70
+    const retNorm     = retPct != null ? retPct : 70
+    const riskPenalty = Math.min(30, riskStu * 5)
+    const health = Math.round(
+      p.attendance_rate * 0.40 +
+      ratingNorm        * 0.30 +
+      retNorm           * 0.20 +
+      Math.max(0, 100 - riskPenalty) * 0.10
+    )
+
+    return {
+      ...p,
+      active_students:    v?.active_students  != null ? Number(v.active_students) : p.active_students,
+      revenue_managed:    revenue,
+      outstanding_amount: v?.outstanding_amount != null ? Number(v.outstanding_amount) : 0,
+      retention_pct:      retPct,
+      risk_students:      riskStu,
+      critical_students:  v?.critical_students != null ? Number(v.critical_students) : 0,
+      health_score:       Math.min(100, Math.max(0, health)),
+    }
+  }).sort((a, b) => b.health_score - a.health_score)
+}
+
+// ─── Sprint 51: Branch performance summary ────────────────────────────────────
+
+export interface BranchPerfRow {
+  branch_id:              string
+  branch_name:            string
+  active_students:        number
+  active_contracts:       number
+  revenue_contracted:     number
+  revenue_collected:      number
+  outstanding:            number
+  overdue_count:          number
+  collection_rate_pct:    number
+  retention_pct:          number | null
+  risk_students:          number
+  renewal_urgent:         number
+  active_instructors:     number
+  operational_health_score: number
+  open_tasks:             number
+  critical_tasks:         number
+}
+
+export async function getBranchPerformance(branchIds: string[]): Promise<BranchPerfRow[]> {
+  if (!branchIds.length) return []
+  const db = createServiceClient()
+
+  const { data, error } = await db
+    .from('v_executive_overview')
+    .select('*')
+    .in('branch_id', branchIds)
+
+  if (error || !data) return []
+
+  return ((data ?? []) as any[]).map(r => ({
+    branch_id:               r.branch_id,
+    branch_name:             r.branch_name,
+    active_students:         Number(r.active_students ?? 0),
+    active_contracts:        Number(r.active_contracts ?? 0),
+    revenue_contracted:      Number(r.revenue_contracted ?? 0),
+    revenue_collected:       Number(r.revenue_collected ?? 0),
+    outstanding:             Number(r.outstanding ?? 0),
+    overdue_count:           Number(r.overdue_count ?? 0),
+    collection_rate_pct:     Number(r.collection_rate_pct ?? 0),
+    retention_pct:           r.retention_pct != null ? Number(r.retention_pct) : null,
+    risk_students:           Number(r.risk_students ?? 0),
+    renewal_urgent:          Number(r.renewal_urgent ?? 0),
+    active_instructors:      Number(r.active_instructors ?? 0),
+    operational_health_score: Number(r.operational_health_score ?? 50),
+    open_tasks:              Number(r.open_tasks ?? 0),
+    critical_tasks:          Number(r.critical_tasks ?? 0),
+  }))
+}

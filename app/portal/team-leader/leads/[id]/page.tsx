@@ -29,7 +29,7 @@ export default async function LeadDetailPage({ params }: Props) {
   const branchId = lead.branch_id ?? user.branchIds[0] ?? null
   const { data: groups } = branchId
     ? await db.from('groups').select('id, name, type')
-        .eq('branch_id', branchId).eq('status', 'active').order('name')
+        .eq('branch_id', branchId).eq('status', 'active').is('deleted_at', null).order('name')
     : { data: [] }
 
   return (

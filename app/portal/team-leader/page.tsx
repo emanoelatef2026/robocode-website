@@ -7,6 +7,8 @@ import {
 }                                 from '@/modules/tl-dashboard/queries'
 import { getTLMessageCounts }    from '@/modules/parent-messages/queries'
 import { getDashboardFinanceSummary } from '@/modules/finance/queries'
+import { getOpenTasks, getTaskCounts } from '@/modules/tasks/queries'
+import { TASK_TYPE_CONFIG, TASK_SEVERITY_CONFIG } from '@/modules/tasks/types'
 import Link                       from 'next/link'
 
 function fmt(n: number) {
@@ -114,20 +116,23 @@ export default async function TLDashboardPage() {
 
   const branchIds = user.branchIds
 
-  const [kpis, todaysClasses, todayAtt, msgCounts, finSummary, queues] = await Promise.all([
+  const [kpis, todaysClasses, todayAtt, msgCounts, finSummary, queues, openTasks, taskCounts] = await Promise.all([
     getTLKPIs(branchIds),
     getTodaysClasses(branchIds),
     getTodayAttendanceSummary(branchIds),
     getTLMessageCounts(branchIds),
     getDashboardFinanceSummary(branchIds),
     getWorkQueues(branchIds),
+    getOpenTasks(branchIds, { limit: 10 }),
+    getTaskCounts(branchIds),
   ])
 
   const totalWorkItems =
     queues.collect_today.length +
     queues.renew_urgent.length +
     queues.attendance_risks.length +
-    queues.inactive_students.length
+    queues.inactive_students.length +
+    taskCounts.total
 
   return (
     <div className="space-y-6">
@@ -300,6 +305,71 @@ export default async function TLDashboardPage() {
 
         </div>
       </div>
+
+      {/* ── Operational Tasks Queue (Sprint 51) ─────────────────────────── */}
+      {(taskCounts.total > 0 || openTasks.length > 0) && (
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h2 className="text-[15px] font-semibold text-[#0B1F3A]">Operational Tasks</h2>
+              {taskCounts.total > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#FF8A1F] px-1.5 text-[10px] font-bold text-white">
+                  {taskCounts.total}
+                </span>
+              )}
+              {taskCounts.critical > 0 && (
+                <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">
+                  {taskCounts.critical} critical
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+            {openTasks.length === 0 ? (
+              <p className="px-4 py-6 text-center text-[12px] text-[#94A3B8]">No open tasks. All clear!</p>
+            ) : (
+              <div>
+                {openTasks.map(task => {
+                  const typeConf = TASK_TYPE_CONFIG[task.type]
+                  const sevConf  = TASK_SEVERITY_CONFIG[task.severity]
+                  return (
+                    <div key={task.id} className="flex items-center gap-3 border-b border-[#F1F5F9] px-4 py-3 last:border-0 hover:bg-[#F8FAFC]">
+                      <span className="text-lg">{typeConf.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${typeConf.color} ${typeConf.text}`}>
+                            {typeConf.label}
+                          </span>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${sevConf.color} ${sevConf.text}`}>
+                            {task.severity}
+                          </span>
+                        </div>
+                        <p className="mt-0.5 text-[13px] font-medium text-[#0B1F3A]">
+                          {task.student_name ?? 'Unknown Student'}
+                          {task.student_code && <span className="ml-1 font-mono text-[11px] text-[#94A3B8]">#{task.student_code}</span>}
+                        </p>
+                        {task.notes && (
+                          <p className="text-[11px] text-[#64748B] truncate">{task.notes}</p>
+                        )}
+                      </div>
+                      {task.due_date && (
+                        <span className={`shrink-0 text-[11px] font-medium ${new Date(task.due_date) < new Date() ? 'text-red-500' : 'text-[#94A3B8]'}`}>
+                          {new Date(task.due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        </span>
+                      )}
+                      {task.student_id && (
+                        <Link href={`/portal/team-leader/students/${task.student_id}`} className="shrink-0 rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[11px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+                          View
+                        </Link>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Academic KPIs ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

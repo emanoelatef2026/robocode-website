@@ -82,15 +82,17 @@ export async function listStudents({
       ]),
     ]
 
-    // Resolve student IDs directly via student_code and parent phones (JSONB)
-    const [codeHits, p1Hits, p2Hits] = await Promise.all([
+    // Resolve student IDs via student_code, student_guardians table, and legacy JSONB
+    const [codeHits, guardianHits, p1Hits, p2Hits] = await Promise.all([
       db.from('students').select('id').ilike('student_code', q).is('deleted_at', null),
+      db.from('student_guardians').select('student_id').or(`phone1.ilike.${q},phone2.ilike.${q},name.ilike.${q}`),
       db.from('students').select('id').filter('emergency_contact->>phone1', 'ilike', q).is('deleted_at', null),
       db.from('students').select('id').filter('emergency_contact->>phone2', 'ilike', q).is('deleted_at', null),
     ])
     const uniqueStudentIds = [
       ...new Set([
         ...(codeHits.data?.map((s: any) => s.id) ?? []),
+        ...(guardianHits.data?.map((g: any) => g.student_id) ?? []),
         ...(p1Hits.data?.map((s: any) => s.id) ?? []),
         ...(p2Hits.data?.map((s: any) => s.id) ?? []),
       ]),

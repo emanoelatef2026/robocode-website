@@ -813,7 +813,9 @@ export async function listStudentOperations(
     .in('branch_id', branchIds)
 
   if ((enrollCount ?? 0) > 0) {
-    return _listFromEnrollments(db, branchIds)
+    const rows = await _listFromEnrollments(db, branchIds)
+    // Sprint 50.1: surface students who have no active enrollment
+    return _appendNoContractStudents(db, branchIds, rows)
   }
   // Pre-migration fallback (Sprint 40 logic)
   return _listFromStudents(db, branchIds)
@@ -1108,7 +1110,6 @@ export async function getFilterOptions(branchIds: string[]): Promise<{
     db.from('groups')
       .select('id, name')
       .in('branch_id', branchIds)
-      .eq('status', 'active')
       .is('deleted_at', null)
       .order('name'),
 
@@ -1130,17 +1131,16 @@ export async function getFilterOptions(branchIds: string[]): Promise<{
     ? db.from('group_courses')
         .select(`instructors!group_courses_instructor_id_fkey(id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name,last_name)))`)
         .in('group_id', groupIds)
-        .eq('status', 'active')
         .not('instructor_id', 'is', null)
     : Promise.resolve({ data: [] })
 
+  // Independent instructor source: all enrollments in branch regardless of status
   const enrollInstrPromise = db
     .from('student_enrollments')
     .select(`instructor_id, instructors!student_enrollments_instructor_id_fkey(id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name,last_name)))`)
     .in('branch_id', branchIds)
-    .eq('status', 'ACTIVE')
     .not('instructor_id', 'is', null)
-    .limit(500)
+    .limit(1000)
 
   const [gcData, enrollInstrData] = await Promise.all([gcPromise, enrollInstrPromise])
 
@@ -1351,4 +1351,91 @@ async function _listFromStudents(db: ReturnType<typeof createServiceClient>, bra
   const riskOrder: Record<RiskLevel, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 }
   rows.sort((a, b) => { const d = riskOrder[a.risk_level] - riskOrder[b.risk_level]; return d !== 0 ? d : b.remaining_amount - a.remaining_amount })
   return rows
+}
+
+// ── Sprint 50.1: append students with no active enrollment ────────────────────
+// These students are created in the system but haven't been enrolled yet.
+// They must appear in the Students page (with NO_CONTRACT badge) but NOT in Finance.
+
+async function _appendNoContractStudents(
+  db: ReturnType<typeof createServiceClient>,
+  branchIds: string[],
+  existingRows: StudentOperationsRow[]
+): Promise<StudentOperationsRow[]> {
+  const enrolledStudentIds = new Set(existingRows.map(r => r.student_id))
+
+  // Fetch branch names (reuse or re-fetch cheaply)
+  const { data: branchData } = await db.from('branches').select('id, name').in('id', branchIds)
+  const branchNameMap = new Map<string, string>()
+  for (const b of (branchData ?? []) as any[]) branchNameMap.set(b.id, b.name)
+
+  // Fetch all active students in these branches
+  const { data: stuData } = await db
+    .from('students')
+    .select(`
+      id, student_code, branch_id, emergency_contact,
+      users!students_user_id_fkey(
+        email, phone,
+        profiles!profiles_user_id_fkey(first_name, last_name)
+      )
+    `)
+    .in('branch_id', branchIds)
+    .eq('status', 'active')
+    .is('deleted_at', null)
+    .limit(1000)
+
+  const noContractRows: StudentOperationsRow[] = []
+
+  for (const stu of (stuData ?? []) as any[]) {
+    // Skip students who already have an active enrollment row
+    if (enrolledStudentIds.has(stu.id)) continue
+
+    const user    = stu.users    ?? {}
+    const profile = user.profiles ?? {}
+    const ec      = (stu.emergency_contact ?? {}) as Record<string, string>
+
+    noContractRows.push({
+      enrollment_id:           null,
+      student_id:              stu.id,
+      account_id:              null,
+      group_id:                null,
+      instructor_id:           null,
+      student_name:            [profile.first_name, profile.last_name].filter(Boolean).join(' ') || user.email || 'Unknown',
+      student_code:            stu.student_code ?? null,
+      student_phone:           user.phone       ?? null,
+      student_status:          'active',
+      parent_name:             ec.name   ?? null,
+      parent_phone_1:          ec.phone1 ?? null,
+      parent_phone_2:          ec.phone2 ?? null,
+      branch_id:               stu.branch_id,
+      branch_name:             branchNameMap.get(stu.branch_id) ?? '',
+      group_name:              null,
+      group_start_date:        null,
+      instructor_name:         null,
+      total_sessions:          0,
+      sessions_attended:       0,
+      attendance_pct:          0,
+      last_attendance_date:    null,
+      consecutive_absences:    0,
+      enrolled_sessions:       0,
+      consumed_sessions:       0,
+      remaining_sessions:      0,
+      financial_status:        null,
+      total_amount:            0,
+      net_amount:              0,
+      paid_amount:             0,
+      remaining_amount:        0,
+      installments_total:      0,
+      installments_paid:       0,
+      installments_remaining:  0,
+      next_due_date:           null,
+      payment_progress_pct:    0,
+      days_overdue:            0,
+      risk_level:              'LOW' as RiskLevel,
+      risk_flags:              ['no_contract'],
+    })
+  }
+
+  // No-contract rows go at the END (after all risk-sorted enrollment rows)
+  return [...existingRows, ...noContractRows]
 }

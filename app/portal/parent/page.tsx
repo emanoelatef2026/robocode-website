@@ -248,6 +248,40 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
         </div>
       )}
 
+      {/* ── Sprint 51: Recommended Actions ─────────────────────────────── */}
+      {(() => {
+        const alerts: { icon: string; text: string; cls: string }[] = []
+        const activeContract = contracts.find(c => c.status === 'ACTIVE')
+        if (activeContract) {
+          if (activeContract.enrolled_sessions > 0 && activeContract.remaining_sessions <= 2) {
+            alerts.push({ icon: '🔄', text: `Sessions running low — ${activeContract.remaining_sessions} sessions remaining. Please renew soon.`, cls: 'border-amber-200 bg-amber-50 text-amber-800' })
+          }
+          if (activeContract.remaining_amount > 0 && activeContract.next_due_date && new Date(activeContract.next_due_date) < new Date()) {
+            alerts.push({ icon: '💰', text: `Payment overdue — EGP ${fmtMoney(activeContract.remaining_amount)} due since ${fmtDate(activeContract.next_due_date)}.`, cls: 'border-red-200 bg-red-50 text-red-800' })
+          }
+          if (activeContract.remaining_amount > 0 && activeContract.next_due_date && new Date(activeContract.next_due_date) >= new Date()) {
+            const daysUntil = Math.ceil((new Date(activeContract.next_due_date).getTime() - Date.now()) / 86400000)
+            if (daysUntil <= 7) {
+              alerts.push({ icon: '📅', text: `Payment due in ${daysUntil} day${daysUntil !== 1 ? 's' : ''} — EGP ${fmtMoney(activeContract.remaining_amount)}.`, cls: 'border-blue-200 bg-blue-50 text-blue-800' })
+            }
+          }
+        }
+        if ((dashboard?.attendance_pct ?? 100) < 60 && (dashboard?.attendance_pct ?? 100) > 0) {
+          alerts.push({ icon: '⚠️', text: `Attendance is below 60%. Regular attendance is essential for progress.`, cls: 'border-orange-200 bg-orange-50 text-orange-800' })
+        }
+        if (!alerts.length) return null
+        return (
+          <div className="space-y-2">
+            {alerts.map((a, i) => (
+              <div key={i} className={`flex items-start gap-3 rounded-xl border p-4 ${a.cls}`}>
+                <span className="text-lg">{a.icon}</span>
+                <p className="text-sm font-medium leading-tight">{a.text}</p>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
+
       {/* Course progress */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
         <div className="flex items-center justify-between">
