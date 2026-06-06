@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { getInstructorFilterOptions } from '@/modules/query-standards'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -372,33 +373,12 @@ export async function getOperationalFilterOptions(branchIds: string[]) {
   if (!branchIds.length) return { branches: [], groups: [], courses: [], instructors: [] }
   const db = createServiceClient()
 
-  // Groups: all statuses (active + forming + completed) — no status filter
-  const [branchRes, groupRes, courseRes] = await Promise.all([
+  const [branchRes, groupRes, courseRes, instructors] = await Promise.all([
     db.from('branches').select('id, name').in('id', branchIds).order('name'),
     db.from('groups').select('id, name').in('branch_id', branchIds).is('deleted_at', null).order('name'),
     db.from('courses').select('id, title').order('title'),
+    getInstructorFilterOptions(branchIds),
   ])
-
-  // Instructors: via group_instructors for all visible groups (independent query, no FK-hint)
-  const groupIds = (groupRes.data ?? []).map((g: any) => g.id as string)
-  let instructors: { id: string; name: string }[] = []
-  if (groupIds.length) {
-    const { data: giRows } = await db
-      .from('group_instructors')
-      .select('instructor_id')
-      .in('group_id', groupIds)
-    const uniqueIds = [...new Set((giRows ?? []).map((gi: any) => gi.instructor_id as string))]
-    if (uniqueIds.length) {
-      const { data: instrRows } = await db
-        .from('instructors')
-        .select(`id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
-        .in('id', uniqueIds)
-      instructors = (instrRows ?? []).map((i: any) => {
-        const prof = i.users?.profiles ?? {}
-        return { id: i.id as string, name: [prof.first_name, prof.last_name].filter(Boolean).join(' ') || 'Unknown' }
-      }).sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name))
-    }
-  }
 
   return {
     branches:    (branchRes.data ?? []) as { id: string; name: string }[],

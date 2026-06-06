@@ -84,6 +84,9 @@ export default function GroupFormModal({ isOpen, mode, group, options, studentOp
   const action = mode === 'create' ? createGroupModal : updateGroupModal
   const [state, dispatch, pending] = useActionState<ActionResult<{ id: string }> | null, FormData>(action as any, null)
 
+  // Branch selection — controlled so it can be initialized on open
+  const [selectedBranchId, setSelectedBranchId] = useState('')
+
   // Controlled instructor selects — prevents same-person-in-both bug
   const [leadInstrId, setLeadInstrId] = useState('')
   const [asstInstrId, setAsstInstrId] = useState('')
@@ -105,6 +108,7 @@ export default function GroupFormModal({ isOpen, mode, group, options, studentOp
   useEffect(() => {
     if (!isOpen) return
 
+    setSelectedBranchId(group?.branch_id ?? defaultBranchId ?? options.branches[0]?.id ?? '')
     setLeadInstrId(group?.lead_instructor_id ?? '')
     setAsstInstrId(group?.asst_instructor_id ?? '')
 
@@ -225,7 +229,6 @@ export default function GroupFormModal({ isOpen, mode, group, options, studentOp
   const removeJson = JSON.stringify(toRemove)
 
   // ── Derived defaults ─────────────────────────────────────────────────────────
-  const branchId    = group?.branch_id       ?? defaultBranchId ?? options.branches[0]?.id ?? ''
   const name        = group?.name            ?? ''
   const type        = group?.type            ?? 'class'
   const status      = group?.status          ?? 'forming'
@@ -256,7 +259,6 @@ export default function GroupFormModal({ isOpen, mode, group, options, studentOp
 
         <form action={dispatch} className="px-5 py-4 space-y-5">
           {mode === 'edit' && <input type="hidden" name="id" value={group?.group_id} />}
-          <input type="hidden" name="branch_id" value={branchId} />
           <input type="hidden" name="students_to_add_json"    value={addJson} />
           <input type="hidden" name="students_to_remove_json" value={removeJson} />
 
@@ -270,6 +272,31 @@ export default function GroupFormModal({ isOpen, mode, group, options, studentOp
                   className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
                   placeholder="e.g. Scratch Beginners – Batch 3" />
               </div>
+
+              {/* Branch — visible selector ensures branch is always intentionally set */}
+              {options.branches.length === 1 ? (
+                <div className="sm:col-span-2">
+                  <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Branch</label>
+                  <div className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#374151]">
+                    {options.branches[0].name}
+                  </div>
+                  <input type="hidden" name="branch_id" value={options.branches[0].id} />
+                </div>
+              ) : (
+                <div className="sm:col-span-2">
+                  <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Branch <span className="text-red-500">*</span></label>
+                  <select
+                    name="branch_id"
+                    value={selectedBranchId}
+                    onChange={e => setSelectedBranchId(e.target.value)}
+                    required
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                  >
+                    <option value="">— Select branch —</option>
+                    {options.branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Type <span className="text-red-500">*</span></label>

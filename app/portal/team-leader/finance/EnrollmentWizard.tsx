@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { enrollStudentFull } from '@/modules/enrollments/actions'
+import { addPayment } from '@/modules/finance/actions'
 import type { PaymentMethod } from '@/modules/finance/types'
 import { PAYMENT_METHOD_LABELS } from '@/modules/finance/types'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-interface StudentResult {
+export interface StudentResult {
   id:                       string
   name:                     string
   code:                     string | null
@@ -30,6 +31,16 @@ interface StudentResult {
     remaining_sessions: number
     financial_status:   string | null
   }>
+}
+
+export interface PreselectedPackage {
+  enrollment_id:      string
+  account_id:         string | null
+  course_name:        string | null
+  group_name:         string | null
+  enrolled_sessions:  number
+  remaining_sessions: number
+  financial_status:   string | null
 }
 
 interface CourseResult   { id: string; title: string; level: string | null }
@@ -168,14 +179,16 @@ const FIN_LABEL: Record<string, string> = {
 // ── Component ──────────────────────────────────────────────────────────────────
 
 interface Props {
-  branchIds: string[]
-  onClose:   () => void
-  onSuccess: () => void
+  branchIds:            string[]
+  onClose:              () => void
+  onSuccess:            () => void
+  preselectedStudent?:  StudentResult
+  preselectedPackages?: PreselectedPackage[]
 }
 
-export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Props) {
+export default function EnrollmentWizard({ branchIds, onClose, onSuccess, preselectedStudent, preselectedPackages }: Props) {
   const [state, setState] = useState<WizardState>({
-    step: 1, student: null, course: null, instructor: null, group: null,
+    step: preselectedStudent ? 2 : 1, student: preselectedStudent ?? null, course: null, instructor: null, group: null,
     startDate: new Date().toISOString().slice(0, 10),
     enrollmentType: 'primary',
     enrolledSessions: '',
@@ -198,6 +211,14 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
   const [selectedIndex,       setSelectedIndex]       = useState(-1)
   const [warnings,            setWarnings]            = useState<string[]>([])
   const [courseConflict,      setCourseConflict]      = useState<string | null>(null)
+
+  // Existing package quick-pay mode (used when opened from drawer with packages)
+  const [payMode,        setPayMode]        = useState<'new' | 'existing'>(() => (preselectedPackages?.length ?? 0) > 0 ? 'existing' : 'new')
+  const [selectedPkg,    setSelectedPkg]    = useState<PreselectedPackage | null>(() => preselectedPackages?.[0] ?? null)
+  const [quickPayAmt,    setQuickPayAmt]    = useState('')
+  const [quickPayMethod, setQuickPayMethod] = useState<PaymentMethod>('cash')
+  const [quickPayDate,   setQuickPayDate]   = useState(new Date().toISOString().slice(0, 10))
+  const [quickPayRef,    setQuickPayRef]    = useState('')
 
   // Modal filters (client-side filter on search results)
   const [mFilterFinStatus,   setMFilterFinStatus]   = useState('')
@@ -249,6 +270,15 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
     if (cRes.ok) setCourses(await cRes.json())
     if (iRes.ok) setInstructors(await iRes.json())
     if (gRes.ok) setGroups(await gRes.json())
+  }, [])
+
+  // When opened with a pre-selected student, skip straight to step 2
+  useEffect(() => {
+    if (preselectedStudent) {
+      setWarnings(computeWarnings(preselectedStudent))
+      loadEnrollmentData(preselectedStudent.branch_id)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function selectStudent(s: StudentResult) {
@@ -334,6 +364,26 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
 
     setSubmitting(false)
     if ('error' in result) { setError(result.error) }
+    else { onSuccess(); onClose() }
+  }
+
+  async function handleExistingPaySubmit() {
+    if (!selectedPkg?.account_id) { setError('Selected package has no financial account'); return }
+    if (!state.student)           { setError('No student selected'); return }
+    const amount = parseFloat(quickPayAmt)
+    if (!amount || amount <= 0)   { setError('Enter a valid amount'); return }
+    setSubmitting(true); setError(null)
+    const result = await addPayment({
+      account_id:       selectedPkg.account_id,
+      student_id:       state.student.id,
+      enrollment_id:    selectedPkg.enrollment_id,
+      amount,
+      payment_date:     quickPayDate,
+      payment_method:   quickPayMethod,
+      reference_number: quickPayRef || undefined,
+    })
+    setSubmitting(false)
+    if ('error' in result) setError(result.error)
     else { onSuccess(); onClose() }
   }
 
@@ -625,6 +675,139 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
               </div>
             )}
 
+            {/* ── Mode selector: pay existing OR create new contract ──────────── */}
+            {preselectedPackages && preselectedPackages.length > 0 && (
+              <div className="flex gap-1.5 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-1">
+                <button
+                  type="button"
+                  onClick={() => setPayMode('existing')}
+                  className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${payMode === 'existing' ? 'bg-[#FF8A1F] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
+                >
+                  Pay Existing Package
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPayMode('new')}
+                  className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${payMode === 'new' ? 'bg-[#FF8A1F] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
+                >
+                  + New Contract
+                </button>
+              </div>
+            )}
+
+            {/* ── Existing package quick-pay form ───────────────────────────── */}
+            {preselectedPackages && preselectedPackages.length > 0 && payMode === 'existing' && (
+              <div className="space-y-3">
+                <div>
+                  <label className="mb-1.5 block text-xs font-medium text-[#64748B]">Select Package</label>
+                  <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0]">
+                    {preselectedPackages.map(pkg => {
+                      const isSelected = selectedPkg?.enrollment_id === pkg.enrollment_id
+                      const canPay = !!pkg.account_id
+                      const finColor =
+                        pkg.financial_status === 'BLOCKED' ? 'text-red-700' :
+                        pkg.financial_status === 'OVERDUE'  ? 'text-amber-700' :
+                        pkg.remaining_sessions <= 0 ? 'text-purple-700' : 'text-emerald-700'
+                      return (
+                        <button
+                          key={pkg.enrollment_id}
+                          type="button"
+                          onClick={() => canPay && setSelectedPkg(pkg)}
+                          disabled={!canPay}
+                          className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors ${isSelected ? 'bg-orange-50' : 'hover:bg-[#F8FAFC]'} ${!canPay ? 'cursor-not-allowed opacity-50' : ''}`}
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-[#0B1F3A]">
+                              {pkg.course_name ?? pkg.group_name ?? 'Contract'}
+                            </p>
+                            <p className="text-xs text-[#64748B]">
+                              {pkg.group_name && pkg.course_name ? `${pkg.group_name} · ` : ''}
+                              {pkg.enrolled_sessions > 0 ? `${pkg.remaining_sessions}/${pkg.enrolled_sessions} sessions` : 'Unlimited'}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            {pkg.financial_status && (
+                              <p className={`text-[11px] font-semibold ${finColor}`}>{pkg.financial_status}</p>
+                            )}
+                            {!canPay && <p className="text-[10px] text-[#94A3B8]">No account</p>}
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {selectedPkg?.account_id && (
+                  <>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-[#64748B]">Amount (EGP)</label>
+                      <input
+                        type="number" min="1" step="0.01"
+                        value={quickPayAmt}
+                        onChange={e => setQuickPayAmt(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-[#64748B]">Method</label>
+                        <select
+                          value={quickPayMethod}
+                          onChange={e => setQuickPayMethod(e.target.value as PaymentMethod)}
+                          className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        >
+                          {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
+                            <option key={k} value={k}>{v}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs font-medium text-[#64748B]">Date</label>
+                        <input
+                          type="date"
+                          value={quickPayDate}
+                          onChange={e => setQuickPayDate(e.target.value)}
+                          className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-[#64748B]">
+                        Reference <span className="text-[11px] text-[#94A3B8]">(optional)</span>
+                      </label>
+                      <input
+                        value={quickPayRef}
+                        onChange={e => setQuickPayRef(e.target.value)}
+                        placeholder="e.g. Instapay ref, receipt #"
+                        className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {error && (
+                  <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">{error}</p>
+                )}
+
+                <div className="flex justify-between gap-3 pt-1">
+                  <button type="button" onClick={onClose}
+                    className="rounded-xl border border-[#E2E8F0] px-5 py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]">
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleExistingPaySubmit}
+                    disabled={submitting || !selectedPkg?.account_id || !quickPayAmt}
+                    className="flex items-center gap-2 rounded-xl bg-[#FF8A1F] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#e87c18] disabled:opacity-40"
+                  >
+                    {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                    Add Payment
+                  </button>
+                </div>
+              </div>
+            )}
+
             {state.student.active_summaries.length > 0 && (
               <div>
                 <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
@@ -775,19 +958,21 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess }: Prop
               </div>
             </div>
 
-            <div className="flex gap-3 border-t border-[#E2E8F0] pt-4">
-              <button onClick={() => setState(prev => ({ ...prev, step: 1 }))}
-                className="flex-1 rounded-xl border border-[#E2E8F0] py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]">
-                Back
-              </button>
-              <button
-                disabled={!state.course}
-                onClick={() => setState(prev => ({ ...prev, step: 3 }))}
-                className="flex-1 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40"
-              >
-                Next: Finance →
-              </button>
-            </div>
+            {payMode !== 'existing' && (
+              <div className="flex gap-3 border-t border-[#E2E8F0] pt-4">
+                <button onClick={() => setState(prev => ({ ...prev, step: 1 }))}
+                  className="flex-1 rounded-xl border border-[#E2E8F0] py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]">
+                  Back
+                </button>
+                <button
+                  disabled={!state.course}
+                  onClick={() => setState(prev => ({ ...prev, step: 3 }))}
+                  className="flex-1 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40"
+                >
+                  Next: Finance →
+                </button>
+              </div>
+            )}
           </div>
         )}
 

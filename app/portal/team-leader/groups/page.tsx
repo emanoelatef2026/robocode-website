@@ -1,9 +1,9 @@
 import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { listGroupsOperational, getGroupFormOptions, getGroupStudentOptions } from '@/modules/groups/operational'
-import GroupsClient from './GroupsClient'
+import GroupsWorkspaceClient from './GroupsWorkspaceClient'
 
 export default async function TLGroupsPage() {
-  const user = await requirePortalRole('team_leader')
+  const user      = await requirePortalRole('team_leader')
   const canManage = await requirePermission('manage_groups').then(() => true).catch(() => false)
 
   const branchIds = user.branchIds ?? []
@@ -17,7 +17,7 @@ export default async function TLGroupsPage() {
   const defaultBranchId = branchIds[0] ?? ''
 
   return (
-    <GroupsClient
+    <GroupsWorkspaceClient
       groups={groups}
       options={options}
       studentOptions={studentOptions}

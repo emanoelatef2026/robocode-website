@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { getInstructorFilterOptions } from '@/modules/query-standards'
 import {
   computePriority, computeDaysOverdue, computeStudentRisk,
   type FinanceListItem, type FinanceKPIs, type StudentFinanceDetail,
@@ -832,7 +833,7 @@ async function _listFromEnrollments(db: ReturnType<typeof createServiceClient>, 
       id, student_id, branch_id, group_id, group_course_id,
       start_date, net_amount, total_amount, discount_amount,
       enrolled_sessions, consumed_sessions, remaining_sessions,
-      financial_status,
+      financial_status, course_name_snapshot,
       students!student_enrollments_student_id_fkey(
         id, student_code, branch_id, emergency_contact,
         users!students_user_id_fkey(
@@ -953,7 +954,25 @@ async function _listFromEnrollments(db: ReturnType<typeof createServiceClient>, 
     }
   }
 
-  // ── 7. Build rows (one per enrollment) ────────────────────────────────────
+  // ── 7. Student guardians (preferred over legacy emergency_contact JSONB) ────
+  const guardianByStudent = new Map<string, { name: string | null; phone1: string | null; phone2: string | null }>()
+  if (studentIds.length) {
+    const { data: guardData } = await db
+      .from('student_guardians')
+      .select('student_id, name, phone1, phone2')
+      .in('student_id', studentIds)
+    for (const g of (guardData ?? []) as any[]) {
+      if (!guardianByStudent.has(g.student_id)) {
+        guardianByStudent.set(g.student_id, {
+          name:   g.name   ?? null,
+          phone1: g.phone1 ?? null,
+          phone2: g.phone2 ?? null,
+        })
+      }
+    }
+  }
+
+  // ── 8. Build rows (one per enrollment) ────────────────────────────────────
   const POSITIVE = new Set(['present', 'late', 'makeup'])
   const rows: StudentOperationsRow[] = []
 
@@ -962,6 +981,7 @@ async function _listFromEnrollments(db: ReturnType<typeof createServiceClient>, 
     const user     = student.users     ?? {}
     const profile  = user.profiles     ?? {}
     const ec       = (student.emergency_contact ?? {}) as Record<string, string>
+    const guardian = guardianByStudent.get(enroll.student_id)
     const group    = enroll.groups     ?? null
     const gc       = enroll.group_courses ?? null
 
@@ -1044,12 +1064,13 @@ async function _listFromEnrollments(db: ReturnType<typeof createServiceClient>, 
       student_code:   student.student_code ?? null,
       student_phone:  user.phone ?? null,
       student_status: 'active',
-      parent_name:    ec.name   ?? null,
-      parent_phone_1: ec.phone1 ?? null,
-      parent_phone_2: ec.phone2 ?? null,
+      parent_name:    guardian?.name   ?? ec.name   ?? null,
+      parent_phone_1: guardian?.phone1 ?? ec.phone1 ?? null,
+      parent_phone_2: guardian?.phone2 ?? ec.phone2 ?? null,
       branch_id:   enroll.branch_id,
       branch_name: branchNameMap.get(enroll.branch_id) ?? '',
       group_name:       group?.name     ?? null,
+      course_name:      (enroll.course_name_snapshot as string | null) ?? null,
       group_start_date: enroll.start_date ?? null,
       instructor_name:  instructorName,
       total_sessions:     totalSessions,
@@ -1098,69 +1119,17 @@ export async function getFilterOptions(branchIds: string[]): Promise<{
   if (!branchIds.length) return { branches: [], groups: [], instructors: [], courses: [] }
   const db = createServiceClient()
 
-  // branches + groups + courses in parallel
-  const [branchRes, groupRes, courseRes] = await Promise.all([
-    db.from('branches')
-      .select('id, name')
-      .in('id', branchIds)
-      .eq('is_active', true)
-      .is('deleted_at', null)
-      .order('name'),
-
-    db.from('groups')
-      .select('id, name')
-      .in('branch_id', branchIds)
-      .is('deleted_at', null)
-      .order('name'),
-
-    db.from('courses')
-      .select('id, title')
-      .is('deleted_at', null)
-      .order('title')
-      .limit(200),
+  const [branchRes, groupRes, courseRes, instructors] = await Promise.all([
+    db.from('branches').select('id, name').in('id', branchIds).eq('is_active', true).is('deleted_at', null).order('name'),
+    db.from('groups').select('id, name').in('branch_id', branchIds).is('deleted_at', null).order('name'),
+    db.from('courses').select('id, title').is('deleted_at', null).order('title').limit(200),
+    getInstructorFilterOptions(branchIds),
   ])
 
-  const branches = (branchRes.data ?? []) as any[]
-  const groups   = (groupRes.data ?? []) as any[]
-  const groupIds = groups.map(g => g.id as string)
-
-  // Instructors from group_courses AND from student_enrollments (covers standalone enrollments)
-  const instrMap = new Map<string, string>()
-
-  const gcPromise = groupIds.length
-    ? db.from('group_courses')
-        .select(`instructors!group_courses_instructor_id_fkey(id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name,last_name)))`)
-        .in('group_id', groupIds)
-        .not('instructor_id', 'is', null)
-    : Promise.resolve({ data: [] })
-
-  // Independent instructor source: all enrollments in branch regardless of status
-  const enrollInstrPromise = db
-    .from('student_enrollments')
-    .select(`instructor_id, instructors!student_enrollments_instructor_id_fkey(id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name,last_name)))`)
-    .in('branch_id', branchIds)
-    .not('instructor_id', 'is', null)
-    .limit(1000)
-
-  const [gcData, enrollInstrData] = await Promise.all([gcPromise, enrollInstrPromise])
-
-  for (const gc of (gcData.data ?? []) as any[]) {
-    const instr = gc.instructors
-    if (!instr?.id) continue
-    const p = instr.users?.profiles
-    if (!instrMap.has(instr.id)) instrMap.set(instr.id, p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown')
-  }
-  for (const e of (enrollInstrData.data ?? []) as any[]) {
-    const instr = e.instructors
-    if (!instr?.id) continue
-    const p = instr.users?.profiles
-    if (!instrMap.has(instr.id)) instrMap.set(instr.id, p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown')
-  }
-
   return {
-    branches:    branches.map(b => ({ id: b.id as string, name: b.name as string })),
-    groups:      groups.map(g => ({ id: g.id as string, name: g.name as string })),
-    instructors: [...instrMap.entries()].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)),
+    branches:    (branchRes.data ?? []).map((b: any) => ({ id: b.id as string, name: b.name as string })),
+    groups:      (groupRes.data ?? []).map((g: any) => ({ id: g.id as string, name: g.name as string })),
+    instructors,
     courses:     ((courseRes.data ?? []) as any[]).map(c => ({ id: c.id as string, name: c.title as string })),
   }
 }
@@ -1321,6 +1290,7 @@ async function _listFromStudents(db: ReturnType<typeof createServiceClient>, bra
       branch_id:   s.branch_id,
       branch_name: branchNameMap.get(s.branch_id) ?? '',
       group_name:       group?.name       ?? null,
+      course_name:      null,
       group_start_date: group?.start_date ?? null,
       instructor_name:  instructorName,
       total_sessions:  totalSessions,
@@ -1410,6 +1380,7 @@ async function _appendNoContractStudents(
       branch_id:               stu.branch_id,
       branch_name:             branchNameMap.get(stu.branch_id) ?? '',
       group_name:              null,
+      course_name:             null,
       group_start_date:        null,
       instructor_name:         null,
       total_sessions:          0,

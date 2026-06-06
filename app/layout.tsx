@@ -6,12 +6,14 @@ import "./globals.css";
 const orbitron = Orbitron({
   subsets: ["latin"],
   variable: "--font-orbitron",
+  preload: false,
 });
 
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-poppins",
+  preload: false,
 });
 
 // Arabic companion — loaded at build time, activated via CSS when locale = "ar"
@@ -20,6 +22,7 @@ const cairo = Cairo({
   weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-cairo",
   display: "swap",
+  preload: false,
 });
 
 export const viewport: Viewport = {

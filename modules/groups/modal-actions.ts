@@ -361,6 +361,12 @@ export interface GroupDetailStudent {
   attendance_pct:     number
   sessions_remaining: number | null
   risk_level:         'HIGH' | 'MEDIUM' | 'LOW'
+  // Finance fields (Sprint 57 workspace)
+  paid_amount:        number
+  remaining_balance:  number
+  payment_status:     string | null
+  sessions_used:      number | null
+  sessions_total:     number | null
 }
 
 export async function getGroupDetailDataAction(groupId: string): Promise<GroupDetailData> {
@@ -387,7 +393,7 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
   const gsRows = (gsRes.data ?? []) as any[]
   const studentIds = gsRows.map((r: any) => r.student_id as string)
 
-  const [progRes, enrollRes, guardianRes] = await Promise.all([
+  const [progRes, enrollRes, guardianRes, financeRes] = await Promise.all([
     studentIds.length
       ? db.from('student_course_progress')
           .select('student_id, attendance_score')
@@ -397,7 +403,7 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       : Promise.resolve({ data: [] }),
     studentIds.length
       ? db.from('student_enrollments')
-          .select('student_id, remaining_sessions')
+          .select('student_id, remaining_sessions, consumed_sessions, enrolled_sessions')
           .in('student_id', studentIds)
           .eq('group_id', groupId)
           .eq('status', 'ACTIVE')
@@ -408,28 +414,58 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
           .in('student_id', studentIds)
           .not('phone1', 'is', null)
       : Promise.resolve({ data: [] }),
+    studentIds.length
+      ? db.from('student_financial_accounts')
+          .select('student_id, paid_amount, remaining_amount, status')
+          .in('student_id', studentIds)
+      : Promise.resolve({ data: [] }),
   ])
 
   const progMap     = new Map<string, number>()
-  const sessMap     = new Map<string, number>()
+  const sessMap     = new Map<string, { remaining: number; used: number | null; total: number | null }>()
   const guardianMap = new Map<string, string>()
+  const financeMap  = new Map<string, { paid: number; balance: number; status: string | null }>()
+
   for (const p of (progRes.data ?? []) as any[])    progMap.set(p.student_id, p.attendance_score ?? 0)
-  for (const e of (enrollRes.data ?? []) as any[])  sessMap.set(e.student_id, e.remaining_sessions ?? 0)
+  for (const e of (enrollRes.data ?? []) as any[]) {
+    sessMap.set(e.student_id as string, {
+      remaining: e.remaining_sessions ?? 0,
+      used:      e.consumed_sessions  != null ? Number(e.consumed_sessions)  : null,
+      total:     e.enrolled_sessions  != null ? Number(e.enrolled_sessions)  : null,
+    })
+  }
   for (const g of (guardianRes.data ?? []) as any[]) {
     if (!guardianMap.has(g.student_id) && g.phone1) guardianMap.set(g.student_id as string, g.phone1 as string)
   }
+  // Keep one finance record per student (prefer the most relevant account)
+  for (const f of (financeRes.data ?? []) as any[]) {
+    if (!financeMap.has(f.student_id)) {
+      financeMap.set(f.student_id as string, {
+        paid:    Number(f.paid_amount    ?? 0),
+        balance: Number(f.remaining_amount ?? 0),
+        status:  f.status ?? null,
+      })
+    }
+  }
 
   const students: GroupDetailStudent[] = gsRows.map((r: any) => {
-    const s    = r.students ?? {}
-    const prof = s.users?.profiles ?? {}
-    const name = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || '—'
-    const att  = progMap.get(r.student_id) ?? 0
-    const age  = s.age != null
+    const s       = r.students ?? {}
+    const prof    = s.users?.profiles ?? {}
+    const name    = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || '—'
+    const att     = progMap.get(r.student_id) ?? 0
+    const age     = s.age != null
       ? s.age as number
       : s.date_of_birth
         ? Math.floor((Date.now() - new Date(s.date_of_birth as string).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
         : null
-    const risk: 'HIGH' | 'MEDIUM' | 'LOW' = att < 50 ? 'HIGH' : att < 70 ? 'MEDIUM' : 'LOW'
+    const sessInfo  = sessMap.get(r.student_id as string)
+    const finInfo   = financeMap.get(r.student_id as string)
+    const sessLeft  = sessInfo?.remaining ?? null
+    const isExhausted = sessLeft != null && sessLeft <= 0
+    const isOverdue   = finInfo?.status === 'OVERDUE'
+    const risk: 'HIGH' | 'MEDIUM' | 'LOW' =
+      (att < 50 || isExhausted || isOverdue) ? 'HIGH' :
+      (att < 70 || (sessLeft != null && sessLeft <= 2)) ? 'MEDIUM' : 'LOW'
     return {
       student_id:         r.student_id,
       student_name:       name,
@@ -439,8 +475,13 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       parent_phone:       guardianMap.get(r.student_id) ?? null,
       joined_at:          r.joined_at,
       attendance_pct:     att,
-      sessions_remaining: sessMap.get(r.student_id) ?? null,
+      sessions_remaining: sessInfo?.remaining ?? null,
       risk_level:         risk,
+      paid_amount:        finInfo?.paid    ?? 0,
+      remaining_balance:  finInfo?.balance ?? 0,
+      payment_status:     finInfo?.status  ?? null,
+      sessions_used:      sessInfo?.used   ?? null,
+      sessions_total:     sessInfo?.total  ?? null,
     }
   })
 

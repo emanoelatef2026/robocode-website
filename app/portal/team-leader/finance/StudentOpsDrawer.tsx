@@ -19,6 +19,7 @@ import {
   recordActivity, addPaymentPromise, createReversal,
 } from '@/modules/finance/actions'
 import { compressImage } from '@/lib/finance/compress-image'
+import EnrollmentWizard, { type StudentResult, type PreselectedPackage } from './EnrollmentWizard'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -186,6 +187,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
   const [promiseOpen, setPromiseOpen] = useState(false)
 
   const [isPending, startTransition] = useTransition()
+  const [showAddPayment, setShowAddPayment] = useState(false)
 
   // ── Fetch detail — no 'detail' dependency so the ref trick works ──────────
   const fetchDetail = useCallback(async () => {
@@ -381,6 +383,30 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
 
   // ── Derived values ────────────────────────────────────────────────────────
   const parentPhone   = student.parent_phone_1 || student.parent_phone_2
+
+  // Shape used to pre-fill EnrollmentWizard when "Add Payment" is opened from the drawer
+  const preselectedStudent: StudentResult = {
+    id:                       student.student_id,
+    name:                     student.student_name,
+    code:                     student.student_code ?? null,
+    email:                    null,
+    phone:                    student.student_phone ?? null,
+    age:                      null,
+    branch_id:                student.branch_id,
+    branch_name:              student.branch_name,
+    parent_name:              student.parent_name ?? null,
+    parent_phone:             student.parent_phone_1 ?? student.parent_phone_2 ?? null,
+    active_enrollments_count: student.enrollment_id ? 1 : 0,
+    active_course_ids:        [],
+    active_group_name:        student.group_name ?? null,
+    financial_status:         student.financial_status ?? null,
+    enrolled_sessions:        student.enrolled_sessions > 0 ? student.enrolled_sessions : null,
+    remaining_sessions:       student.enrolled_sessions > 0 ? student.remaining_sessions : null,
+    active_summaries:         [],
+  }
+
+  const preselectedPackages: PreselectedPackage[] = (detail?.all_enrollments ?? []).filter(e => !!e.account_id)
+
   const progressPct   = netAmt > 0 ? Math.min(100, Math.round((paidAmt / netAmt) * 100)) : 0
   const exhaustion    = computeSessionExhaustion(student.enrolled_sessions, student.remaining_sessions)
   const timeline      = detail ? buildTimeline(detail) : []
@@ -484,6 +510,15 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                   </a>
                 </>
               )}
+              <button
+                onClick={() => setShowAddPayment(true)}
+                title="Add Payment"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8A1F] text-white hover:bg-[#e87c18]"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+              </button>
               <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-[#64748B] hover:bg-[#F1F5F9]" aria-label="Close">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
@@ -492,6 +527,34 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
             </div>
           </div>
         </div>
+
+        {/* ── PACKAGES OVERVIEW (only when student has multiple active contracts) ── */}
+        {detail?.all_enrollments && detail.all_enrollments.length > 1 && (
+          <div className="shrink-0 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2.5">
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Active Contracts</p>
+            <div className="flex flex-wrap gap-1.5">
+              {detail.all_enrollments.map(pkg => {
+                const isCurrent = pkg.enrollment_id === student.enrollment_id
+                const finCls =
+                  pkg.financial_status === 'BLOCKED' ? 'border-red-300 bg-red-50 text-red-700' :
+                  pkg.financial_status === 'OVERDUE'  ? 'border-amber-300 bg-amber-50 text-amber-700' :
+                  isCurrent ? 'border-[#FF8A1F]/40 bg-orange-50 text-[#FF8A1F]' :
+                  'border-[#E2E8F0] bg-white text-[#0B1F3A]'
+                return (
+                  <div key={pkg.enrollment_id} className={`rounded-lg border px-2.5 py-1.5 text-xs ${finCls}`}>
+                    <p className="max-w-28 truncate font-medium">
+                      {pkg.course_name ?? pkg.group_name ?? 'Contract'}
+                      {isCurrent && <span className="ml-1 text-[9px] opacity-70">●</span>}
+                    </p>
+                    <p className="text-[10px] opacity-70">
+                      {pkg.remaining_sessions > 0 ? `${pkg.remaining_sessions} sess. left` : 'Exhausted'}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ── FINANCIAL SUMMARY CARDS ──────────────────────────────────────── */}
         <div className="shrink-0 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
@@ -722,8 +785,19 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
             )}
           </div>
         ) : (
-          <div className="shrink-0 border-b border-[#E2E8F0] bg-amber-50/50 px-5 py-3">
-            <p className="text-xs text-amber-700 font-medium">No financial account yet — use Enroll to set up a package and payments.</p>
+          <div className="shrink-0 border-b border-[#E2E8F0] bg-amber-50/60 px-5 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-medium text-amber-700">No financial package yet.</p>
+              <button
+                onClick={() => setShowAddPayment(true)}
+                className="inline-flex items-center gap-1 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#e87c18]"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                Add Payment
+              </button>
+            </div>
           </div>
         )}
 
@@ -782,100 +856,103 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                 </section>
               )}
 
-              {/* Payment ledger table */}
+              {/* Payment ledger — compact cards */}
               <section>
-                <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">
-                  Payment Ledger <span className="normal-case font-normal text-[#CBD5E1]">({posPayments.length} payments)</span>
-                </h3>
+                <div className="mb-2 flex items-center justify-between">
+                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+                    Payment Ledger
+                  </h3>
+                  <span className="text-[10px] text-[#94A3B8]">
+                    {posPayments.length} payment{posPayments.length !== 1 ? 's' : ''}
+                    {negPayments.length > 0 && ` · ${negPayments.length} reversal${negPayments.length > 1 ? 's' : ''}`}
+                  </span>
+                </div>
+
                 {posPayments.length === 0 ? (
-                  <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-6 text-center text-xs text-[#94A3B8]">
-                    No payments recorded yet.
+                  <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-6 text-center">
+                    <p className="text-xs text-[#94A3B8]">No payments recorded yet.</p>
                     {student.account_id && (
-                      <p className="mt-1">Use the <strong>+ Add Payment</strong> button above to record the first payment.</p>
+                      <p className="mt-1 text-xs text-[#94A3B8]">Use <strong>+ Add Payment</strong> above to record the first payment.</p>
                     )}
                   </div>
                 ) : (
-                  <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
-                    <table className="w-full text-xs">
-                      <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
-                        <tr>
-                          <th className="px-3 py-2 text-left text-[#64748B] font-medium">Date</th>
-                          <th className="px-3 py-2 text-left text-[#64748B] font-medium">Amount</th>
-                          <th className="px-3 py-2 text-left text-[#64748B] font-medium">Method</th>
-                          <th className="px-3 py-2 text-left text-[#64748B] font-medium">Remaining After</th>
-                          <th className="px-3 py-2 text-left text-[#64748B] font-medium"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {posPayments.map(p => {
-                          const bal = runningBal.get(p.id)
-                          return (
-                            <tr key={p.id} className="border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC]">
-                              <td className="px-3 py-2 text-[#64748B]">{fmtDateShort(p.payment_date)}</td>
-                              <td className="px-3 py-2 font-semibold text-emerald-700">EGP {fmt(p.amount)}</td>
-                              <td className="px-3 py-2 text-[#64748B]">
-                                {PAYMENT_METHOD_LABELS[p.payment_method] ?? p.payment_method}
-                                {p.reference_number && <span className="block text-[10px] text-[#94A3B8]">{p.reference_number}</span>}
+                  <div className="space-y-1.5">
+                    {posPayments.map(p => {
+                      const bal = runningBal.get(p.id)
+                      return (
+                        <div key={p.id} className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                <span className="text-sm font-bold text-emerald-700">EGP {fmt(p.amount)}</span>
+                                <span className="rounded bg-[#F1F5F9] px-1.5 py-px text-[10px] text-[#64748B]">
+                                  {PAYMENT_METHOD_LABELS[p.payment_method] ?? p.payment_method}
+                                </span>
+                                <span className="text-[11px] text-[#94A3B8]">{fmtDateShort(p.payment_date)}</span>
+                                {p.created_by_name && (
+                                  <span className="text-[10px] text-[#CBD5E1]">by {p.created_by_name}</span>
+                                )}
+                              </div>
+                              {p.reference_number && (
+                                <p className="mt-0.5 text-[11px] text-[#94A3B8]">Ref: {p.reference_number}</p>
+                              )}
+                              {p.notes && (
+                                <p className="mt-0.5 text-[11px] text-[#64748B]">{p.notes}</p>
+                              )}
+                              <div className="mt-1 flex items-center gap-2">
+                                <span className={`text-[10px] font-medium ${bal && bal.remainingAfter > 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                                  Remaining after: EGP {fmt(bal?.remainingAfter ?? 0)}
+                                </span>
                                 {p.receipt_url && (
                                   <a href={p.receipt_url} target="_blank" rel="noopener noreferrer"
-                                    className="block text-[10px] text-blue-600 hover:underline">receipt ↗</a>
+                                    className="text-[10px] text-blue-600 hover:underline">
+                                    receipt ↗
+                                  </a>
                                 )}
-                              </td>
-                              <td className="px-3 py-2 font-medium">
-                                <span className={bal && bal.remainingAfter > 0 ? 'text-red-600' : 'text-emerald-600'}>
-                                  EGP {fmt(bal?.remainingAfter ?? 0)}
-                                </span>
-                              </td>
-                              <td className="px-3 py-2">
-                                {reversing === p.id ? (
-                                  <div className="flex flex-col gap-1.5 min-w-50">
-                                    <select value={reversalType} onChange={e => setReversalType(e.target.value as any)}
-                                      className="w-full rounded border border-[#E2E8F0] px-2 py-1 text-xs focus:border-[#FF8A1F] focus:outline-none">
-                                      <option value="REVERSAL">Reversal</option>
-                                      <option value="REFUND">Refund</option>
-                                      <option value="CORRECTION">Correction</option>
-                                    </select>
-                                    <input value={reversalReason} onChange={e => setReversalReason(e.target.value)}
-                                      placeholder="Reason (required)" autoFocus
-                                      className="w-full rounded border border-[#E2E8F0] px-2 py-1 text-xs focus:border-[#FF8A1F] focus:outline-none" />
-                                    {reversalErr && <p className="text-[10px] text-red-600">{reversalErr}</p>}
-                                    <div className="flex gap-1">
-                                      <button onClick={() => handleReversalSubmit(p.id, p.amount)} disabled={isPending}
-                                        className="flex-1 rounded bg-red-600 py-1 text-[10px] font-semibold text-white disabled:opacity-40">Confirm</button>
-                                      <button onClick={() => { setReversing(null); setReversalReason(''); setReversalErr(null) }}
-                                        className="flex-1 rounded border border-[#E2E8F0] py-1 text-[10px] text-[#64748B]">Cancel</button>
-                                    </div>
+                              </div>
+                            </div>
+                            <div className="shrink-0">
+                              {reversing === p.id ? (
+                                <div className="flex flex-col gap-1.5 w-44">
+                                  <select value={reversalType} onChange={e => setReversalType(e.target.value as any)}
+                                    className="w-full rounded border border-[#E2E8F0] px-2 py-1 text-xs focus:border-[#FF8A1F] focus:outline-none">
+                                    <option value="REVERSAL">Reversal</option>
+                                    <option value="REFUND">Refund</option>
+                                    <option value="CORRECTION">Correction</option>
+                                  </select>
+                                  <input value={reversalReason} onChange={e => setReversalReason(e.target.value)}
+                                    placeholder="Reason (required)" autoFocus
+                                    className="w-full rounded border border-[#E2E8F0] px-2 py-1 text-xs focus:border-[#FF8A1F] focus:outline-none" />
+                                  {reversalErr && <p className="text-[10px] text-red-600">{reversalErr}</p>}
+                                  <div className="flex gap-1">
+                                    <button onClick={() => handleReversalSubmit(p.id, p.amount)} disabled={isPending}
+                                      className="flex-1 rounded bg-red-600 py-1 text-[10px] font-semibold text-white disabled:opacity-40">Confirm</button>
+                                    <button onClick={() => { setReversing(null); setReversalReason(''); setReversalErr(null) }}
+                                      className="flex-1 rounded border border-[#E2E8F0] py-1 text-[10px] text-[#64748B]">Cancel</button>
                                   </div>
-                                ) : (
-                                  <button onClick={() => { setReversing(p.id); setReversalErr(null) }}
-                                    className="rounded px-2 py-0.5 text-[10px] font-medium text-red-600 bg-red-50 hover:bg-red-100">
-                                    Reverse
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                      {(negPayments.length > 0 || posPayments.length > 0) && (
-                        <tfoot className="border-t border-[#E2E8F0] bg-[#F8FAFC]">
-                          <tr>
-                            <td className="px-3 py-2 font-semibold text-[#0B1F3A]">Total</td>
-                            <td className="px-3 py-2 font-bold text-emerald-700">EGP {fmt(paidAmt)}</td>
-                            <td colSpan={2} className="px-3 py-2 text-[#64748B]">
-                              {negPayments.length > 0 && (
-                                <span className="text-red-600">{negPayments.length} reversal{negPayments.length > 1 ? 's' : ''} applied</span>
+                                </div>
+                              ) : (
+                                <button onClick={() => { setReversing(p.id); setReversalErr(null) }}
+                                  className="rounded px-2 py-0.5 text-[10px] font-medium text-red-600 bg-red-50 hover:bg-red-100">
+                                  Reverse
+                                </button>
                               )}
-                            </td>
-                            <td className="px-3 py-2 font-bold">
-                              <span className={remainingAmt > 0 ? 'text-red-600' : 'text-emerald-600'}>
-                                EGP {fmt(remainingAmt)} {remainingAmt > 0 ? 'due' : 'paid'}
-                              </span>
-                            </td>
-                          </tr>
-                        </tfoot>
-                      )}
-                    </table>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+
+                    {/* Footer totals */}
+                    <div className="flex items-center justify-between rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-xs">
+                      <span className="font-semibold text-[#0B1F3A]">Total paid</span>
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-emerald-700">EGP {fmt(paidAmt)}</span>
+                        <span className={`font-bold ${remainingAmt > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                          {remainingAmt > 0 ? `EGP ${fmt(remainingAmt)} due` : 'Fully paid ✓'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </section>
@@ -996,6 +1073,17 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
           )}
         </div>
       </div>
+
+      {/* ── Add Payment Wizard (pre-fills student, opens on step 2) ───────── */}
+      {showAddPayment && (
+        <EnrollmentWizard
+          branchIds={[student.branch_id]}
+          preselectedStudent={preselectedStudent}
+          preselectedPackages={preselectedPackages.length > 0 ? preselectedPackages : undefined}
+          onClose={() => setShowAddPayment(false)}
+          onSuccess={() => { setShowAddPayment(false); refreshAll() }}
+        />
+      )}
     </>
   )
 }

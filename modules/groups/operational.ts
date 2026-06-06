@@ -1,6 +1,7 @@
 import 'server-only'
-import { createServiceClient } from '@/lib/supabase/service'
-import { getGroupMetrics }     from '@/modules/tl-dashboard/queries'
+import { createServiceClient }      from '@/lib/supabase/service'
+import { getGroupMetrics }          from '@/modules/tl-dashboard/queries'
+import { getInstructorFilterOptions } from '@/modules/query-standards'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -222,66 +223,16 @@ export async function getGroupFormOptions(branchIds: string[]): Promise<GroupFor
   if (!branchIds.length) return { branches: [], courses: [], instructors: [] }
   const db = createServiceClient()
 
-  // instructor_branches is queried separately to avoid FK-hint failures that silently
-  // return null for the entire instructors query when the hint name mismatches.
-  const [branchRes, courseRes, instrRes, instrBranchRes, groupRes] = await Promise.all([
+  const [branchRes, courseRes, instructors] = await Promise.all([
     db.from('branches').select('id, name').in('id', branchIds).order('name'),
     db.from('courses').select('id, title').order('title'),
-    db.from('instructors')
-      .select(`
-        id,
-        users!instructors_user_id_fkey(
-          profiles!profiles_user_id_fkey(first_name, last_name)
-        )
-      `),
-    db.from('instructor_branches').select('instructor_id, branch_id'),
-    db.from('groups').select('id').in('branch_id', branchIds).is('deleted_at', null),
+    getInstructorFilterOptions(branchIds),
   ])
-
-  // Fallback set: instructors already linked to any visible group must always appear.
-  const visibleGroupIds = (groupRes.data ?? []).map((g: any) => g.id as string)
-  const groupLinkedInstrIds = new Set<string>()
-  if (visibleGroupIds.length) {
-    const { data: giRows } = await db
-      .from('group_instructors')
-      .select('instructor_id')
-      .in('group_id', visibleGroupIds)
-    for (const gi of (giRows ?? []) as any[]) {
-      groupLinkedInstrIds.add(gi.instructor_id as string)
-    }
-  }
-
-  // Build instructor → branch_ids map from the separate query.
-  const instrBranchMap = new Map<string, string[]>()
-  for (const ib of (instrBranchRes.data ?? []) as any[]) {
-    const arr = instrBranchMap.get(ib.instructor_id as string) ?? []
-    arr.push(ib.branch_id as string)
-    instrBranchMap.set(ib.instructor_id as string, arr)
-  }
-
-  const instrRows = (instrRes.data ?? []) as any[]
-  const filteredInstructors = instrRows
-    .filter((i: any) => {
-      // Always include instructors already assigned to a visible group (legacy/unregistered branches)
-      if (groupLinkedInstrIds.has(i.id as string)) return true
-      const iBranches = instrBranchMap.get(i.id as string) ?? []
-      // Legacy instructors with no branch assignment — visible everywhere
-      if (!iBranches.length) return true
-      return iBranches.some((bid: string) => branchIds.includes(bid))
-    })
-    .map((i: any) => {
-      const prof = i.users?.profiles ?? {}
-      return {
-        id:   i.id as string,
-        name: [prof.first_name, prof.last_name].filter(Boolean).join(' ') || 'Unknown',
-      }
-    })
-    .sort((a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name))
 
   return {
     branches:    (branchRes.data ?? []) as { id: string; name: string }[],
     courses:     (courseRes.data ?? []).map((c: any) => ({ id: c.id as string, title: c.title as string })),
-    instructors: filteredInstructors,
+    instructors,
   }
 }
 

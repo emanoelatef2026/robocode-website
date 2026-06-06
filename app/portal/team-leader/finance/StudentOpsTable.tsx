@@ -287,17 +287,17 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
           </div>
         ) : (
           <>
-            <div className="hidden md:block">
-              <table className="w-full table-fixed text-sm">
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full min-w-175 table-fixed text-sm">
                 <colgroup>
                   <col style={{ width: '22%' }} />
-                  <col style={{ width: '18%' }} />
-                  <col style={{ width: '14%' }} />
-                  <col style={{ width: '10%' }} />
+                  <col style={{ width: '16%' }} />
+                  <col style={{ width: '12%' }} />
+                  <col style={{ width: '9%' }} />
                   <col style={{ width: '14%' }} />
                   <col style={{ width: '11%' }} />
                   <col style={{ width: '7%' }} />
-                  <col style={{ width: '4%' }} />
+                  <col style={{ width: '9%' }} />
                 </colgroup>
                 <thead className="sticky top-0 z-10 bg-[#F8FAFC]">
                   <tr className="border-b border-[#E2E8F0]">
@@ -335,9 +335,14 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                         {/* Group / Course */}
                         <td className="px-3 py-2.5">
                           {row.group_name
-                            ? <p className="truncate text-xs text-[#0B1F3A]">{row.group_name}</p>
-                            : <span className="text-[11px] font-medium text-amber-600">No group</span>}
-                          {row.group_start_date && (
+                            ? <p className="truncate text-xs font-medium text-[#0B1F3A]">{row.group_name}</p>
+                            : row.course_name
+                              ? <p className="truncate text-xs text-[#0B1F3A]">{row.course_name}</p>
+                              : <span className="text-[11px] font-medium text-amber-600">No group</span>}
+                          {row.course_name && row.group_name && (
+                            <p className="truncate text-[11px] text-[#94A3B8]">{row.course_name}</p>
+                          )}
+                          {!row.course_name && row.group_start_date && (
                             <p className="text-[11px] text-[#94A3B8]">Since {fmtDateShort(row.group_start_date)}</p>
                           )}
                         </td>
@@ -424,15 +429,15 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                         </td>
 
                         {/* Actions */}
-                        <td className="px-3 py-2.5">
-                          <div className="flex items-center gap-0.5">
+                        <td className="overflow-hidden px-2 py-2.5">
+                          <div className="flex items-center justify-end gap-1">
                             {row.parent_phone_1 && (
                               <>
                                 <a
                                   href={`https://wa.me/${row.parent_phone_1.replace(/\D/g, '')}`}
                                   target="_blank" rel="noopener noreferrer"
                                   title="WhatsApp parent"
-                                  className="rounded p-1 text-emerald-600 hover:bg-emerald-50"
+                                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-emerald-600 hover:bg-emerald-50"
                                 >
                                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                                     <path fillRule="evenodd" d="M18 10c0 4.418-3.582 8-8 8a7.96 7.96 0 01-4.126-1.144L2 18l1.168-3.744A7.96 7.96 0 012 10c0-4.418 3.582-8 8-8s8 3.582 8 8zm-8 6a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
@@ -441,7 +446,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                                 <a
                                   href={`tel:${row.parent_phone_1}`}
                                   title="Call parent"
-                                  className="rounded p-1 text-blue-600 hover:bg-blue-50"
+                                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-blue-600 hover:bg-blue-50"
                                 >
                                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                                     <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
@@ -452,7 +457,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                             <button
                               onClick={() => setSelectedStudent(row)}
                               title="View detail"
-                              className="rounded p-1 text-[#FF8A1F] hover:bg-orange-50"
+                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#FF8A1F] hover:bg-orange-50"
                             >
                               <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                                 <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />

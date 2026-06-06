@@ -118,7 +118,7 @@ export async function GET(
   }
 
   // ── Parallel fetches ──────────────────────────────────────────────────────
-  const [instRes, actRes, noteRes, promRes, sessRes, revRes, sfaRes] = await Promise.all([
+  const [instRes, actRes, noteRes, promRes, sessRes, revRes, sfaRes, allEnrollRes] = await Promise.all([
     // (payments already resolved above)
 
     // Installments
@@ -194,6 +194,14 @@ export async function GET(
           .eq('id', accountId)
           .maybeSingle()
       : Promise.resolve({ data: null }),
+
+    // All active enrollments for this student (packages overview)
+    db.from('student_enrollments')
+      .select('id, course_name_snapshot, group_name_snapshot, enrolled_sessions, remaining_sessions, financial_status')
+      .eq('student_id', studentId)
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: true })
+      .limit(20),
   ])
 
   const mapCreatedBy = (r: any) => {
@@ -235,6 +243,28 @@ export async function GET(
     paid_amount:      Number(sfaBalance?.paid_amount      ?? 0),
     remaining_amount: Number(sfaBalance?.remaining_amount ?? 0),
   }
+
+  // Build all_enrollments with account_ids
+  const aeIds = ((allEnrollRes as any).data ?? []).map((e: any) => e.id as string)
+  const aeAccMap = new Map<string, string>()
+  if (aeIds.length) {
+    const { data: aeAccData } = await db
+      .from('student_financial_accounts')
+      .select('id, enrollment_id')
+      .in('enrollment_id', aeIds)
+    for (const a of (aeAccData ?? []) as any[]) {
+      if (a.enrollment_id) aeAccMap.set(a.enrollment_id as string, a.id as string)
+    }
+  }
+  const all_enrollments = ((allEnrollRes as any).data ?? []).map((e: any) => ({
+    enrollment_id:      e.id as string,
+    account_id:         aeAccMap.get(e.id) ?? null,
+    course_name:        (e.course_name_snapshot as string | null) ?? null,
+    group_name:         (e.group_name_snapshot  as string | null) ?? null,
+    enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
+    remaining_sessions: Number(e.remaining_sessions ?? 0),
+    financial_status:   (e.financial_status as string | null) ?? null,
+  }))
 
   const installments = ((instRes.data ?? []) as any[]).map(r => ({
     id: r.id, account_id: r.account_id,
@@ -289,6 +319,7 @@ export async function GET(
     notes,
     promises,
     attendance_sessions,
+    all_enrollments,
     ...balanceInfo,
   })
 }

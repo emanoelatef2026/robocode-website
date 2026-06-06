@@ -413,6 +413,7 @@ export interface StudentOperationsRow {
   branch_name: string
   // Group & enrollment dates
   group_name:            string | null
+  course_name:           string | null
   group_start_date:      string | null   // enrollment start_date (when student joined)
   instructor_name:       string | null
   // Session stats (attendance-based)
@@ -494,6 +495,16 @@ export interface StudentOpsDetail {
   net_amount:       number
   paid_amount:      number
   remaining_amount: number
+  // All active enrollment contracts for this student
+  all_enrollments: {
+    enrollment_id:      string
+    account_id:         string | null
+    course_name:        string | null
+    group_name:         string | null
+    enrolled_sessions:  number
+    remaining_sessions: number
+    financial_status:   string | null
+  }[]
 }
 
 export function computeStudentRisk(row: {
