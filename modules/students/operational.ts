@@ -99,6 +99,9 @@ export interface StudentOperationalRow {
 
   // Multi-contract
   active_enrollment_count: number
+
+  // Auth account
+  user_email: string | null
 }
 
 // ── Query ──────────────────────────────────────────────────────────────────────
@@ -115,11 +118,11 @@ export async function listStudentsOperational(
     .select(`
       id, user_id, branch_id, student_code, enrollment_date, status,
       school_grade, emergency_contact, age, notes,
-      users!students_user_id_fkey(
-        phone,
-        profiles!profiles_user_id_fkey(first_name, last_name, date_of_birth)
+      users!students_user_id_fkey!left(
+        email, phone,
+        profiles!profiles_user_id_fkey!left(first_name, last_name, date_of_birth)
       ),
-      branches!students_branch_id_fkey(name)
+      branches!students_branch_id_fkey!left(name)
     `)
     .in('branch_id', branchIds)
     .is('deleted_at', null)
@@ -309,6 +312,7 @@ export async function listStudentsOperational(
     return {
       student_id:       s.id,
       user_id:          s.user_id,
+      user_email:       s.users?.email ?? null,
       first_name:       firstName,
       last_name:        lastName,
       student_name:     name,

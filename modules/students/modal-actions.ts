@@ -50,6 +50,14 @@ const updateSchema = z.object({
   status:         z.enum(['active', 'inactive', 'graduated', 'paused', 'banned']).optional(),
   notes:          z.string().max(1000).optional().or(z.literal('')),
   guardians_json: z.string(),
+  new_email:      z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() ? v.trim().toLowerCase() : undefined),
+    z.string().email('Invalid email address').optional()
+  ),
+  new_password:   z.preprocess(
+    (v) => (typeof v === 'string' && v ? v : undefined),
+    z.string().min(6, 'Password must be at least 6 characters').optional()
+  ),
 })
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -308,6 +316,8 @@ export async function updateStudentModal(
     status:         formData.get('status')        || undefined,
     notes:          formData.get('notes')         || undefined,
     guardians_json: formData.get('guardians_json') || '[]',
+    new_email:      formData.get('new_email'),
+    new_password:   formData.get('new_password'),
   }
 
   const parsed = updateSchema.safeParse(raw)
@@ -323,10 +333,28 @@ export async function updateStudentModal(
   const user = await requirePermission('manage_students')
   const db   = createServiceClient()
 
-  const { id, first_name, last_name, phone, age, school_grade, date_of_birth, status, notes } = parsed.data
+  const { id, first_name, last_name, phone, age, school_grade, date_of_birth, status, notes, new_email, new_password } = parsed.data
 
   const { data: old } = await db.from('students').select('user_id, branch_id').eq('id', id).single()
   if (!old) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+
+  // Email update
+  if (new_email && old.user_id) {
+    const { data: currentUser } = await db.from('users').select('email').eq('id', old.user_id).maybeSingle()
+    if (currentUser?.email?.toLowerCase() !== new_email) {
+      const { data: dup } = await db.from('users').select('id').eq('email', new_email).neq('id', old.user_id).maybeSingle()
+      if (dup) return { success: false, error: { code: 'DUPLICATE', message: 'This email is already in use by another account.' } }
+      const { error: authErr } = await db.auth.admin.updateUserById(old.user_id, { email: new_email })
+      if (authErr) return { success: false, error: { code: 'AUTH_ERROR', message: authErr.message } }
+      await db.from('users').update({ email: new_email }).eq('id', old.user_id)
+    }
+  }
+
+  // Password update
+  if (new_password && old.user_id) {
+    const { error: authErr } = await db.auth.admin.updateUserById(old.user_id, { password: new_password })
+    if (authErr) return { success: false, error: { code: 'AUTH_ERROR', message: `Password update failed: ${authErr.message}` } }
+  }
 
   // Profile update (name + optional DOB)
   const profileUpd: Record<string, unknown> = {}
@@ -376,4 +404,85 @@ export async function updateStudentModal(
   revalidatePath(`/portal/team-leader/students/${id}`)
   revalidatePath('/admin/students')
   return { success: true, data: { id } }
+}
+
+// ── Delete (soft) ──────────────────────────────────────────────────────────────
+
+export async function deleteStudentAction(studentId: string): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_students')
+  const db   = createServiceClient()
+
+  const { data: student } = await db
+    .from('students')
+    .select('branch_id, user_id')
+    .eq('id', studentId)
+    .is('deleted_at', null)
+    .maybeSingle()
+
+  if (!student) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+
+  const now = new Date().toISOString()
+
+  await db.from('students')
+    .update({ deleted_at: now, status: 'inactive' })
+    .eq('id', studentId)
+
+  await db.from('group_students')
+    .update({ status: 'dropped', left_at: now })
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+
+  await db.from('student_enrollments')
+    .update({ status: 'DROPPED' })
+    .eq('student_id', studentId)
+    .eq('status', 'ACTIVE')
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'delete',
+    p_entity_type:  'student',
+    p_entity_id:    studentId,
+    p_branch_id:    student.branch_id,
+  })
+
+  revalidatePath('/portal/team-leader/students')
+  revalidatePath('/admin/students')
+  return { success: true, data: undefined }
+}
+
+export async function bulkDeleteStudentsAction(
+  studentIds: string[]
+): Promise<ActionResult<{ deleted: string[]; failed: string[] }>> {
+  if (!studentIds.length) return { success: true, data: { deleted: [], failed: [] } }
+
+  await requirePermission('manage_students')
+  const db  = createServiceClient()
+  const now = new Date().toISOString()
+
+  const deleted: string[] = []
+  const failed:  string[] = []
+
+  for (const id of studentIds) {
+    try {
+      const { error } = await db
+        .from('students')
+        .update({ deleted_at: now, status: 'inactive' })
+        .eq('id', id)
+        .is('deleted_at', null)
+
+      if (error) { failed.push(id); continue }
+
+      await db.from('group_students')
+        .update({ status: 'dropped', left_at: now })
+        .eq('student_id', id)
+        .eq('status', 'active')
+
+      deleted.push(id)
+    } catch {
+      failed.push(id)
+    }
+  }
+
+  revalidatePath('/portal/team-leader/students')
+  return { success: true, data: { deleted, failed } }
 }

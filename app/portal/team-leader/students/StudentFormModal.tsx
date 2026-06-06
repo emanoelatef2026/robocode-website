@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react'
-import { createStudentModal, updateStudentModal } from '@/modules/students/modal-actions'
+import { createStudentModal, updateStudentModal, deleteStudentAction } from '@/modules/students/modal-actions'
 import type { StudentOperationalRow, GroupPickerOption } from '@/modules/students/operational'
 import type { ActionResult } from '@/types/app'
 
@@ -25,8 +25,10 @@ interface Props {
   branchIds:    string[]
   branches:     { id: string; name: string }[]
   groupOptions?: GroupPickerOption[]
+  isTL:         boolean
   onClose:      () => void
   onSuccess:    () => void
+  onDelete?:    () => void
 }
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -61,7 +63,7 @@ function ageFromDob(dob: string): number | null {
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export default function StudentFormModal({
-  mode, student, branchId, branchIds, branches, groupOptions = [], onClose, onSuccess,
+  mode, student, branchId, branchIds, branches, groupOptions = [], isTL, onClose, onSuccess, onDelete,
 }: Props) {
   const singleBranch = branchId || (branchIds.length === 1 ? branchIds[0] : undefined)
   const isEdit       = mode === 'edit'
@@ -87,6 +89,11 @@ export default function StudentFormModal({
   const [dobVal,       setDobVal]       = useState<string>(isEdit ? (student?.date_of_birth ?? '') : '')
   const [ageWarn,      setAgeWarn]      = useState<string | null>(null)
   const [ageErr,       setAgeErr]       = useState<string | null>(null)
+  const [pwErr,        setPwErr]        = useState<string | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteErr,     setDeleteErr]     = useState<string | null>(null)
+  const newPasswordRef = useRef<HTMLInputElement>(null)
 
   function validateAge(rawAge: string) {
     const n = parseInt(rawAge, 10)
@@ -242,7 +249,6 @@ export default function StudentFormModal({
 
   // ── Validate before submit ──────────────────────────────────────────────────
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    // Client-side age validation (in addition to server)
     if (!ageVal || ageErr) {
       e.preventDefault()
       validateAge(ageVal)
@@ -254,6 +260,26 @@ export default function StudentFormModal({
       alert('At least one guardian with name and phone is required.')
       return
     }
+    const pw = newPasswordRef.current?.value
+    if (isEdit && pw && pw.length < 6) {
+      e.preventDefault()
+      setPwErr('Password must be at least 6 characters')
+      return
+    }
+    setPwErr(null)
+  }
+
+  async function handleConfirmDelete() {
+    if (!student) return
+    setDeleteLoading(true)
+    setDeleteErr(null)
+    const res = await deleteStudentAction(student.student_id)
+    setDeleteLoading(false)
+    if (!res.success) {
+      setDeleteErr(res.error.message)
+      return
+    }
+    onDelete?.()
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -492,6 +518,43 @@ export default function StudentFormModal({
               />
             </div>
           </fieldset>
+
+          {/* ── Account (edit only) ─────────────────────────────────── */}
+          {isEdit && (
+            <fieldset className="space-y-3 rounded-xl border border-[#E2E8F0] p-4">
+              <legend className="px-1 text-xs font-semibold text-[#64748B] uppercase tracking-wide">Account</legend>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                    Email <span className="text-[11px] text-[#94A3B8]">(leave unchanged to keep)</span>
+                  </label>
+                  <input
+                    name="new_email"
+                    type="email"
+                    defaultValue={student?.user_email ?? ''}
+                    placeholder="student@example.com"
+                    autoComplete="off"
+                    className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                    New Password <span className="text-[11px] text-[#94A3B8]">(optional)</span>
+                  </label>
+                  <input
+                    ref={newPasswordRef}
+                    name="new_password"
+                    type="password"
+                    placeholder="Leave blank to keep current"
+                    autoComplete="new-password"
+                    className={`w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none
+                      ${pwErr ? 'border-red-400 bg-red-50' : 'border-[#E2E8F0] focus:border-[#FF8A1F]'}`}
+                  />
+                  {pwErr && <p className="mt-0.5 text-[11px] text-red-600">{pwErr}</p>}
+                </div>
+              </div>
+            </fieldset>
+          )}
 
           {/* ── Guardians / Contacts ────────────────────────────────── */}
           <fieldset className="space-y-3 rounded-xl border border-[#E2E8F0] p-4">
@@ -764,23 +827,62 @@ export default function StudentFormModal({
           )}
 
           {/* ── Footer ──────────────────────────────────────────────── */}
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => { if (dirty && !confirm('Close without saving?')) return; onClose() }}
-              className="rounded-lg border border-[#E2E8F0] px-4 py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isPending || !!ageErr}
-              className="rounded-lg bg-[#FF8A1F] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-60"
-            >
-              {isPending
-                ? (isEdit ? 'Saving…' : 'Enrolling…')
-                : (isEdit ? 'Save Changes' : 'Enroll Student')}
-            </button>
+          <div className="flex items-center justify-between gap-3 pt-2">
+            {/* Delete section (edit + TL only) */}
+            <div className="flex-1">
+              {isEdit && isTL && onDelete && (
+                deleteConfirm ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm text-red-600">
+                      Delete <span className="font-semibold">{student?.student_name}</span>?
+                    </p>
+                    {deleteErr && <p className="w-full text-xs text-red-500">{deleteErr}</p>}
+                    <button
+                      type="button"
+                      onClick={handleConfirmDelete}
+                      disabled={deleteLoading}
+                      className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                    >
+                      {deleteLoading ? 'Deleting…' : 'Confirm'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setDeleteConfirm(false); setDeleteErr(null) }}
+                      className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-medium text-[#64748B]"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirm(true)}
+                    className="text-sm font-medium text-red-500 hover:text-red-700"
+                  >
+                    Delete Student
+                  </button>
+                )
+              )}
+            </div>
+            {/* Cancel + Save */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => { if (dirty && !confirm('Close without saving?')) return; onClose() }}
+                className="rounded-lg border border-[#E2E8F0] px-4 py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isPending || !!ageErr}
+                className="rounded-lg bg-[#FF8A1F] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-60"
+              >
+                {isPending
+                  ? (isEdit ? 'Saving…' : 'Enrolling…')
+                  : (isEdit ? 'Save Changes' : 'Enroll Student')}
+              </button>
+            </div>
           </div>
         </form>
       </div>

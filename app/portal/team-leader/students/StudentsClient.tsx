@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import type { StudentOperationalRow, GroupPickerOption } from '@/modules/students/operational'
+import { bulkDeleteStudentsAction } from '@/modules/students/modal-actions'
 import StudentFormModal from './StudentFormModal'
 import StudentDetailDrawer from './StudentDetailDrawer'
 import GroupAssignModal from './GroupAssignModal'
@@ -75,6 +76,15 @@ export default function StudentsClient({
   const [drawerStudent, setDrawerStudent] = useState<StudentOperationalRow | null>(null)
   const [assignStudent, setAssignStudent] = useState<StudentOperationalRow | null>(null)
 
+  // ── Bulk selection state ────────────────────────────────────────────────────
+  const [selectedIds,       setSelectedIds]       = useState<Set<string>>(new Set())
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false)
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false)
+  const [bulkDeleteErr,     setBulkDeleteErr]     = useState<string | null>(null)
+
+  // Clear selection when data changes (after refresh)
+  useEffect(() => { setSelectedIds(new Set()) }, [rows])
+
   // ── URL persistence helper ──────────────────────────────────────────────────
   const pushFilters = useCallback((overrides: Record<string, string> = {}) => {
     const params = new URLSearchParams()
@@ -132,6 +142,7 @@ export default function StudentsClient({
         const haystack = [
           r.student_name,
           r.student_code ?? '',
+          r.user_email   ?? '',
           r.primary_guardian_name ?? '',
           ...r.guardians.map(g => g.name),
         ]
@@ -140,6 +151,41 @@ export default function StudentsClient({
       return true
     })
   }, [rows, search, filterBranch, filterGroup, filterCourse, filterRisk, filterStatus, filterActive, filterHasGrp, filterMulti, filterInstructor])
+
+  // ── Selection helpers ───────────────────────────────────────────────────────
+  function toggleStudent(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleAll() {
+    if (selectedIds.size === filtered.length && filtered.length > 0) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filtered.map(r => r.student_id)))
+    }
+  }
+
+  // ── Bulk delete ─────────────────────────────────────────────────────────────
+  async function handleBulkDelete() {
+    setBulkDeleteLoading(true)
+    setBulkDeleteErr(null)
+    const res = await bulkDeleteStudentsAction(Array.from(selectedIds))
+    setBulkDeleteLoading(false)
+    if (!res.success) {
+      setBulkDeleteErr(res.error.message)
+      return
+    }
+    const { deleted, failed } = res.data
+    setBulkDeleteConfirm(false)
+    setSelectedIds(new Set())
+    if (failed.length > 0) setBulkDeleteErr(`${deleted.length} deleted, ${failed.length} failed.`)
+    router.refresh()
+  }
 
   // ── KPI strip ───────────────────────────────────────────────────────────────
   const kpis = useMemo(() => [
@@ -192,7 +238,7 @@ export default function StudentsClient({
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Name, code, phone, parent…"
+            placeholder="Name, code, phone, parent, email…"
             className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none min-w-52"
           />
           <button
@@ -294,6 +340,28 @@ export default function StudentsClient({
         )}
       </div>
 
+      {/* Bulk selection toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-xl bg-[#0B1F3A] px-4 py-2.5 text-white">
+          <span className="text-sm font-medium">{selectedIds.size} selected</span>
+          <div className="flex-1" />
+          {isTL && (
+            <button
+              onClick={() => { setBulkDeleteErr(null); setBulkDeleteConfirm(true) }}
+              className="rounded-lg border border-red-500 bg-red-600/20 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-600/40"
+            >
+              Delete Selected
+            </button>
+          )}
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       {/* Table / Cards */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
         {filtered.length === 0 ? (
@@ -316,7 +384,18 @@ export default function StudentsClient({
                     className="cursor-pointer px-4 py-4 hover:bg-[#F8FAFC]"
                     onClick={() => setDrawerStudent(row)}
                   >
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2">
+                      {/* Checkbox */}
+                      {isTL && (
+                        <div className="pt-0.5 shrink-0" onClick={e => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(row.student_id)}
+                            onChange={() => toggleStudent(row.student_id)}
+                            className="h-4 w-4 rounded border-[#E2E8F0] accent-[#FF8A1F]"
+                          />
+                        </div>
+                      )}
                       <div className="min-w-0 flex-1">
                         <p className="text-[15px] font-semibold text-[#0B1F3A] leading-tight">{row.student_name}</p>
                         <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
@@ -383,6 +462,17 @@ export default function StudentsClient({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                    {isTL && (
+                      <th className="px-4 py-3 w-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.size === filtered.length && filtered.length > 0}
+                          onChange={toggleAll}
+                          className="h-4 w-4 rounded border-[#E2E8F0] accent-[#FF8A1F]"
+                          aria-label="Select all"
+                        />
+                      </th>
+                    )}
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Student</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Course / Group</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Instructor</th>
@@ -401,9 +491,22 @@ export default function StudentsClient({
                     return (
                       <tr
                         key={row.student_id}
-                        className="cursor-pointer border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]"
+                        className={`cursor-pointer border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]
+                          ${selectedIds.has(row.student_id) ? 'bg-[#FFF7ED]' : ''}`}
                         onClick={() => setDrawerStudent(row)}
                       >
+                        {/* Checkbox */}
+                        {isTL && (
+                          <td className="px-4 py-3 w-10" onClick={e => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(row.student_id)}
+                              onChange={() => toggleStudent(row.student_id)}
+                              className="h-4 w-4 rounded border-[#E2E8F0] accent-[#FF8A1F]"
+                            />
+                          </td>
+                        )}
+
                         {/* Student identity */}
                         <td className="px-4 py-3">
                           <p className="font-medium text-[#0B1F3A]">{row.student_name}</p>
@@ -546,6 +649,7 @@ export default function StudentsClient({
           branchIds={branchIds}
           branches={branches}
           groupOptions={groupOptions}
+          isTL={isTL}
           onClose={() => setCreateOpen(false)}
           onSuccess={() => { setCreateOpen(false); router.refresh() }}
         />
@@ -558,8 +662,10 @@ export default function StudentsClient({
           branchIds={branchIds}
           branches={branches}
           groupOptions={groupOptions}
+          isTL={isTL}
           onClose={() => setEditStudent(null)}
           onSuccess={() => { setEditStudent(null); router.refresh() }}
+          onDelete={() => { setEditStudent(null); router.refresh() }}
         />
       )}
       {drawerStudent && (
@@ -580,6 +686,38 @@ export default function StudentsClient({
           onClose={() => setAssignStudent(null)}
           onSuccess={() => { setAssignStudent(null); router.refresh() }}
         />
+      )}
+
+      {/* Bulk delete confirmation modal */}
+      {bulkDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+            <h3 className="text-base font-semibold text-[#0B1F3A]">
+              Delete {selectedIds.size} {selectedIds.size === 1 ? 'Student' : 'Students'}?
+            </h3>
+            <p className="mt-2 text-sm text-[#64748B]">
+              Selected students will be soft-deleted. Their attendance and payment history is preserved but they will be hidden from all views.
+            </p>
+            {bulkDeleteErr && (
+              <p className="mt-2 text-sm text-red-600">{bulkDeleteErr}</p>
+            )}
+            <div className="mt-5 flex gap-3">
+              <button
+                onClick={() => { setBulkDeleteConfirm(false); setBulkDeleteErr(null) }}
+                className="flex-1 rounded-lg border border-[#E2E8F0] py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={bulkDeleteLoading}
+                className="flex-1 rounded-lg bg-red-600 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+              >
+                {bulkDeleteLoading ? 'Deleting…' : `Delete ${selectedIds.size}`}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

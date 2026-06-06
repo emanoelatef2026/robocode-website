@@ -333,6 +333,95 @@ export async function archiveGroupAction(groupId: string): Promise<ActionResult<
   return { success: true, data: undefined }
 }
 
+// ── Delete ─────────────────────────────────────────────────────────────────────
+
+export async function deleteGroupAction(groupId: string): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const { data: existing } = await db.from('groups').select('branch_id').eq('id', groupId).single()
+  if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, existing.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'No access to this branch.' } }
+  }
+
+  const now = new Date().toISOString()
+  await db.from('group_students')
+    .update({ status: 'dropped', left_at: now })
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+  await db.from('groups')
+    .update({ status: 'cancelled', deleted_at: now })
+    .eq('id', groupId)
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id, p_action: 'delete', p_entity_type: 'group',
+    p_entity_id: groupId, p_branch_id: existing.branch_id,
+  })
+  revalidatePath('/portal/team-leader/groups')
+  return { success: true, data: undefined }
+}
+
+// ── Remove student from group ────────────────────────────────────────────────
+
+export async function removeStudentFromGroupAction(
+  groupId: string,
+  studentId: string,
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const { data: existing } = await db.from('groups').select('branch_id').eq('id', groupId).single()
+  if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, existing.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'No access to this branch.' } }
+  }
+
+  await applyStudentChanges(db, user.id, groupId, existing.branch_id, [], [studentId])
+  revalidatePath('/portal/team-leader/groups')
+  return { success: true, data: undefined }
+}
+
+// ── Add students to group ────────────────────────────────────────────────────
+
+export async function addStudentsToGroupAction(
+  groupId: string,
+  studentIds: string[],
+): Promise<ActionResult<void>> {
+  if (!studentIds.length) return { success: true, data: undefined }
+
+  const user = await requirePermission('manage_groups')
+  const db   = createServiceClient()
+
+  const { data: existing } = await db
+    .from('groups')
+    .select('branch_id, capacity')
+    .eq('id', groupId)
+    .single()
+  if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  if (!isBranchAccessible(user, existing.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'No access to this branch.' } }
+  }
+
+  const cap = (existing as any).capacity as number | null
+  if (cap) {
+    const { count } = await db
+      .from('group_students')
+      .select('*', { count: 'exact', head: true })
+      .eq('group_id', groupId)
+      .eq('status', 'active')
+    if ((count ?? 0) + studentIds.length > cap) {
+      return {
+        success: false,
+        error: { code: 'CAPACITY', message: `Adding ${studentIds.length} student(s) would exceed capacity of ${cap}.` },
+      }
+    }
+  }
+
+  await applyStudentChanges(db, user.id, groupId, existing.branch_id, studentIds, [])
+  revalidatePath('/portal/team-leader/groups')
+  return { success: true, data: undefined }
+}
+
 // ── Detail data (called from drawer) ──────────────────────────────────────────
 
 export interface GroupDetailData {
@@ -351,22 +440,23 @@ export interface GroupDetailSession {
 }
 
 export interface GroupDetailStudent {
-  student_id:         string
-  student_name:       string
-  student_code:       string | null
-  age:                number | null
-  phone:              string | null
-  parent_phone:       string | null
-  joined_at:          string
-  attendance_pct:     number
-  sessions_remaining: number | null
-  risk_level:         'HIGH' | 'MEDIUM' | 'LOW'
+  student_id:          string
+  student_name:        string
+  student_code:        string | null
+  age:                 number | null
+  phone:               string | null
+  parent_phone:        string | null
+  joined_at:           string
+  attendance_pct:      number
+  sessions_remaining:  number | null
+  risk_level:          'HIGH' | 'MEDIUM' | 'LOW'
   // Finance fields (Sprint 57 workspace)
-  paid_amount:        number
-  remaining_balance:  number
-  payment_status:     string | null
-  sessions_used:      number | null
-  sessions_total:     number | null
+  paid_amount:         number
+  remaining_balance:   number
+  payment_status:      string | null
+  sessions_used:       number | null
+  sessions_total:      number | null
+  subscription_amount: number | null
 }
 
 export async function getGroupDetailDataAction(groupId: string): Promise<GroupDetailData> {
@@ -477,11 +567,12 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       attendance_pct:     att,
       sessions_remaining: sessInfo?.remaining ?? null,
       risk_level:         risk,
-      paid_amount:        finInfo?.paid    ?? 0,
-      remaining_balance:  finInfo?.balance ?? 0,
-      payment_status:     finInfo?.status  ?? null,
-      sessions_used:      sessInfo?.used   ?? null,
-      sessions_total:     sessInfo?.total  ?? null,
+      paid_amount:         finInfo?.paid    ?? 0,
+      remaining_balance:   finInfo?.balance ?? 0,
+      payment_status:      finInfo?.status  ?? null,
+      sessions_used:       sessInfo?.used   ?? null,
+      sessions_total:      sessInfo?.total  ?? null,
+      subscription_amount: ((finInfo?.paid ?? 0) + (finInfo?.balance ?? 0)) || null,
     }
   })
 
