@@ -334,6 +334,13 @@ export async function assignGroupModalAction(
   )
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
 
+  // Ensure instructor_branches has an entry for the group's branch (cross-branch assignment support).
+  // is_primary=false so it never overrides the home branch flag.
+  await db.from('instructor_branches').upsert(
+    { instructor_id: instructorId, branch_id: grp.branch_id, is_primary: false },
+    { onConflict: 'instructor_id,branch_id', ignoreDuplicates: true }
+  )
+
   // Sync group_courses.instructor_id
   const { data: gcRows } = await db
     .from('group_courses').select('id, status').eq('group_id', groupId).order('status', { ascending: true })
@@ -500,5 +507,111 @@ export async function setPasswordAction(instructorId: string, newPassword: strin
   if (error) return { success: false, error: { code: 'AUTH_ERROR', message: error.message } }
 
   revalidatePath('/portal/team-leader/instructors')
+  return { success: true, data: undefined }
+}
+
+// ── Delete instructor ─────────────────────────────────────────────────────────
+
+export async function deleteInstructorAction(id: string): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_instructors')
+  const db   = createServiceClient()
+
+  const { data: instr } = await db
+    .from('instructors')
+    .select('user_id, branch_id')
+    .eq('id', id)
+    .is('deleted_at', null)
+    .single()
+
+  if (!instr) return { success: false, error: { code: 'NOT_FOUND', message: 'Instructor not found.' } }
+  if (!isBranchAccessible(user, instr.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'No access to this branch.' } }
+  }
+
+  // Safety check 1: active groups
+  const { data: giRows } = await db
+    .from('group_instructors')
+    .select('groups!group_instructors_group_id_fkey(status)')
+    .eq('instructor_id', id)
+
+  const activeGroupCount = ((giRows ?? []) as unknown as { groups: { status: string } | null }[])
+    .filter(r => r.groups?.status === 'active').length
+
+  if (activeGroupCount > 0) {
+    return {
+      success: false,
+      error: {
+        code: 'BLOCKED_ACTIVE_GROUPS',
+        message: `Cannot delete: instructor has ${activeGroupCount} active group(s). Remove from active groups first, or archive instead.`,
+      },
+    }
+  }
+
+  // Safety check 2: future sessions (via group_courses → schedules)
+  const { data: gcRows } = await db
+    .from('group_courses')
+    .select('id')
+    .eq('instructor_id', id)
+
+  const gcIds = ((gcRows ?? []) as { id: string }[]).map(r => r.id)
+
+  if (gcIds.length > 0) {
+    const { data: futureSched } = await db
+      .from('schedules')
+      .select('id')
+      .in('group_course_id', gcIds)
+      .gt('scheduled_at', new Date().toISOString())
+      .neq('status', 'cancelled')
+      .limit(1)
+
+    if ((futureSched ?? []).length > 0) {
+      return {
+        success: false,
+        error: {
+          code: 'BLOCKED_FUTURE_SESSIONS',
+          message: 'Cannot delete: instructor has upcoming sessions scheduled. Cancel them first, or archive instead.',
+        },
+      }
+    }
+  }
+
+  // Cleanup relational data
+  await db.from('group_instructors').delete().eq('instructor_id', id)
+  await db.from('group_courses').update({ instructor_id: null }).eq('instructor_id', id)
+  await db.from('instructor_branches').delete().eq('instructor_id', id)
+  await db.from('instructor_notes').delete().eq('instructor_id', id)
+  await db.from('instructor_certifications').delete().eq('instructor_id', id)
+
+  // Soft delete
+  const { error: deleteError } = await db.from('instructors')
+    .update({ status: 'deleted', deleted_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (deleteError) {
+    return { success: false, error: { code: 'DB_ERROR', message: deleteError.message } }
+  }
+
+  // Revoke all instructor roles across all branches
+  const { data: instrRole } = await db.from('roles').select('id').eq('name', 'instructor').single()
+  if (instrRole) {
+    await db.from('user_roles')
+      .delete()
+      .eq('user_id', instr.user_id)
+      .eq('role_id', (instrRole as { id: string }).id)
+  }
+
+  // Disable auth user (10-year ban — effectively permanent, preserves audit trail)
+  await db.auth.admin.updateUserById(instr.user_id, { ban_duration: '87600h' } as { ban_duration: string })
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'delete',
+    p_entity_type:  'instructor',
+    p_entity_id:    id,
+    p_new_values:   { deleted: true },
+  })
+
+  revalidatePath('/portal/team-leader/instructors')
+  revalidatePath('/admin/instructors')
   return { success: true, data: undefined }
 }

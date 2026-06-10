@@ -4,6 +4,7 @@ import {
   getTodaysClasses,
   getTodayAttendanceSummary,
   getWorkQueues,
+  type WorkQueueItem,
 }                                 from '@/modules/tl-dashboard/queries'
 import { getTLMessageCounts }    from '@/modules/parent-messages/queries'
 import { getDashboardFinanceSummary } from '@/modules/finance/queries'
@@ -57,7 +58,7 @@ function WorkQueue({
   title, count, items, viewHref, emptyText, accent = 'border-[#E2E8F0]',
 }: {
   title: string; count: number
-  items: { student_id: string; student_name: string; student_code: string | null; group_name: string | null; parent_phone_1: string | null; value: string; sub: string | null; href: string }[]
+  items: WorkQueueItem[]
   viewHref?: string
   emptyText: string
   accent?: string
@@ -85,7 +86,7 @@ function WorkQueue({
         <div>
           {items.map(item => (
             <QueueRow
-              key={item.student_id + item.value}
+              key={item.queue_id}
               name={item.student_name}
               code={item.student_code}
               value={item.value}

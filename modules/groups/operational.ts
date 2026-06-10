@@ -268,7 +268,7 @@ export async function getGroupStudentOptions(branchIds: string[], excludeGroupId
       .select('student_id, group_id, groups!group_students_group_id_fkey(name)')
       .in('student_id', studentIds)
       .eq('status', 'active'),
-    db.from('student_guardians')
+    db.from('student_parent_contacts')
       .select('student_id, phone1')
       .in('student_id', studentIds)
       .not('phone1', 'is', null)

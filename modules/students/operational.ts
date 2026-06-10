@@ -13,7 +13,7 @@ export type StudentOpStatus =
   | 'MULTI_CONTRACT'
   | 'NEW_STUDENT'
 
-export interface StudentGuardian {
+export interface StudentParentContact {
   id: string
   name: string
   relation: string
@@ -91,11 +91,11 @@ export interface StudentOperationalRow {
   // Operational status
   op_status: StudentOpStatus
 
-  // Guardians
-  guardians:            StudentGuardian[]
-  primary_guardian_name:  string | null
-  primary_guardian_phone: string | null
-  guardian_count:       number
+  // Parent contacts
+  parent_contacts:          StudentParentContact[]
+  primary_contact_name:     string | null
+  primary_contact_phone:    string | null
+  parent_contact_count:     number
 
   // Multi-contract
   active_enrollment_count: number
@@ -117,7 +117,7 @@ export async function listStudentsOperational(
     .from('students')
     .select(`
       id, user_id, branch_id, student_code, enrollment_date, status,
-      school_grade, emergency_contact, age, notes,
+      school_grade, age, notes,
       users!students_user_id_fkey!left(
         email, phone,
         profiles!profiles_user_id_fkey!left(first_name, last_name, date_of_birth)
@@ -215,23 +215,23 @@ export async function listStudentsOperational(
     attMap.set(sid, { total, attended, pct, consec_absences: consec, last_date: recs[0]?.session_date ?? null })
   }
 
-  // 5. Load guardians
-  const { data: guardianRows } = await db
-    .from('student_guardians')
+  // 5. Load parent contacts
+  const { data: contactRows } = await db
+    .from('student_parent_contacts')
     .select('id, student_id, name, relation, phone1, phone2, whatsapp_preferred, is_primary, is_emergency')
     .in('student_id', studentIds)
     .order('is_primary', { ascending: false })
 
-  const guardianMap = new Map<string, StudentGuardian[]>()
-  for (const g of (guardianRows ?? []) as any[]) {
-    const arr = guardianMap.get(g.student_id) ?? []
+  const contactMap = new Map<string, StudentParentContact[]>()
+  for (const g of (contactRows ?? []) as any[]) {
+    const arr = contactMap.get(g.student_id) ?? []
     arr.push({
       id: g.id, name: g.name, relation: g.relation,
       phone1: g.phone1, phone2: g.phone2,
       whatsapp_preferred: g.whatsapp_preferred,
       is_primary: g.is_primary, is_emergency: g.is_emergency,
     })
-    guardianMap.set(g.student_id, arr)
+    contactMap.set(g.student_id, arr)
   }
 
   // 6. Assemble rows
@@ -240,8 +240,6 @@ export async function listStudentsOperational(
     const firstName  = prof.first_name ?? null
     const lastName   = prof.last_name  ?? null
     const name       = [firstName, lastName].filter(Boolean).join(' ') || s.users?.email || '—'
-    const ec         = (s.emergency_contact ?? {}) as Record<string, string>
-
     const gs        = gsMap.get(s.id)
     const groupObj  = gs?.groups ?? null
     const gcFirst   = (groupObj?.group_courses ?? [])[0] ?? null
@@ -259,17 +257,8 @@ export async function listStudentsOperational(
       total: 0, attended: 0, pct: 0, consec_absences: 0, last_date: null,
     }
 
-    // Guardians — prefer student_guardians table, fallback to emergency_contact JSONB
-    let guardians = guardianMap.get(s.id) ?? []
-    if (!guardians.length && (ec.phone1 || ec.phone2)) {
-      guardians = [{
-        id: '', name: ec.name ?? 'Guardian', relation: 'guardian',
-        phone1: ec.phone1 ?? null, phone2: ec.phone2 ?? null,
-        whatsapp_preferred: false, is_primary: true, is_emergency: true,
-      }]
-    }
-
-    const primaryGuardian = guardians.find(g => g.is_primary) ?? guardians[0] ?? null
+    const contacts       = contactMap.get(s.id) ?? []
+    const primaryContact = contacts.find(c => c.is_primary) ?? contacts[0] ?? null
 
     // Risk flags (attendance-only — zero finance)
     const risk_flags: string[] = []
@@ -279,7 +268,7 @@ export async function listStudentsOperational(
     else if (att.total >= 3 && att.pct < 70)                            risk_flags.push('low_attendance')
     if (mainEnroll && mainEnroll.remaining_sessions <= 2 && mainEnroll.enrolled_sessions > 0)
                                                                         risk_flags.push('near_exhaustion')
-    if (!guardians.length)                                              risk_flags.push('no_guardian')
+    if (!contacts.length)                                               risk_flags.push('no_contact')
 
     let risk_level: 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW'
     if (att.consec_absences >= 3 || (att.total >= 4 && att.pct < 50) || s.status !== 'active') {
@@ -349,26 +338,26 @@ export async function listStudentsOperational(
       risk_flags,
       op_status,
 
-      guardians,
-      primary_guardian_name:  primaryGuardian?.name  ?? null,
-      primary_guardian_phone: primaryGuardian?.phone1 ?? null,
-      guardian_count:         guardians.length,
+      parent_contacts:       contacts,
+      primary_contact_name:  primaryContact?.name  ?? null,
+      primary_contact_phone: primaryContact?.phone1 ?? null,
+      parent_contact_count:  contacts.length,
 
       active_enrollment_count: activeEnrolls.length,
     } satisfies StudentOperationalRow
   })
 }
 
-// ── Guardian helpers ──────────────────────────────────────────────────────────
+// ── Parent contact helpers ────────────────────────────────────────────────────
 
-export async function getStudentGuardians(studentId: string): Promise<StudentGuardian[]> {
+export async function getStudentParentContacts(studentId: string): Promise<StudentParentContact[]> {
   const db = createServiceClient()
   const { data } = await db
-    .from('student_guardians')
+    .from('student_parent_contacts')
     .select('id, name, relation, phone1, phone2, whatsapp_preferred, is_primary, is_emergency')
     .eq('student_id', studentId)
     .order('is_primary', { ascending: false })
-  return (data ?? []) as StudentGuardian[]
+  return (data ?? []) as StudentParentContact[]
 }
 
 // ── Filter options ────────────────────────────────────────────────────────────

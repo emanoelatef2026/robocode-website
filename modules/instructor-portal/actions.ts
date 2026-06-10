@@ -211,7 +211,7 @@ export async function startGroupSession(
 const updateSessionSchema = z.object({
   session_id:       z.string().uuid(),
   group_id:         z.string().uuid(),
-  status:           z.enum(['scheduled', 'ongoing', 'completed', 'cancelled']),
+  status:           z.enum(['scheduled', 'ongoing', 'completed', 'cancelled', 'cancelled_with_makeup', 'postponed']),
   topic:            z.string().optional().or(z.literal('')),
   notes:            z.string().optional().or(z.literal('')),
   meeting_url:      z.string().optional().or(z.literal('')),
@@ -621,18 +621,24 @@ export async function updateSessionResources(
   return { success: true, data: undefined }
 }
 
-// ── Quick homework from session ───────────────────────────────────────────────
+// ── Session homework: full model ──────────────────────────────────────────────
+// module_id is optional — session-only assignments allowed since migration 0043.
 
-// module_id is optional: new groups without course modules create session-only
-// assignments (lesson_id=null, module_id=null, schedule_id=sessionId).
-// Migration 0043 relaxes the assignment_has_parent constraint to allow this.
 const homeworkSchema = z.object({
-  session_id:  z.string().uuid(),
-  group_id:    z.string().uuid(),
-  module_id:   z.string().uuid().optional().or(z.literal('')),
-  title:       z.string().min(1, 'Title is required').max(200),
-  description: z.string().max(2000).optional().or(z.literal('')),
-  due_at:      z.string().optional().or(z.literal('')),
+  session_id:           z.string().uuid(),
+  group_id:             z.string().uuid(),
+  module_id:            z.string().uuid().optional().or(z.literal('')),
+  title:                z.string().min(1, 'Title is required').max(200),
+  description:          z.string().max(5000).optional().or(z.literal('')),
+  instructions:         z.string().max(5000).optional().or(z.literal('')),
+  due_at:               z.string().optional().or(z.literal('')),
+  type:                 z.enum(['homework', 'classwork', 'project', 'challenge']).default('homework'),
+  submission_type:      z.enum(['text', 'drive_link', 'github_link', 'url', 'video_link', 'image', 'multiple']).default('text'),
+  max_score:            z.coerce.number().int().min(1).max(10000).default(100),
+  allow_late:           z.string().optional().transform((v) => v !== 'false' && v !== 'off'),
+  resubmission_allowed: z.string().optional().transform((v) => v === 'true' || v === 'on'),
+  max_resubmissions:    z.coerce.number().int().min(0).max(10).default(1),
+  portfolio_eligible:   z.string().optional().transform((v) => v === 'true' || v === 'on'),
 })
 
 export async function createSessionHomework(
@@ -644,12 +650,20 @@ export async function createSessionHomework(
   if (!instructor) return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
 
   const raw = {
-    session_id:  formData.get('session_id'),
-    group_id:    formData.get('group_id'),
-    module_id:   formData.get('module_id') || undefined,
-    title:       formData.get('title'),
-    description: formData.get('description') || undefined,
-    due_at:      formData.get('due_at') || undefined,
+    session_id:           formData.get('session_id'),
+    group_id:             formData.get('group_id'),
+    module_id:            formData.get('module_id') || undefined,
+    title:                formData.get('title'),
+    description:          formData.get('description') || undefined,
+    instructions:         formData.get('instructions') || undefined,
+    due_at:               formData.get('due_at') || undefined,
+    type:                 formData.get('type') || 'homework',
+    submission_type:      formData.get('submission_type') || 'text',
+    max_score:            formData.get('max_score') || 100,
+    allow_late:           formData.get('allow_late') as string | undefined,
+    resubmission_allowed: formData.get('resubmission_allowed') as string | undefined,
+    max_resubmissions:    formData.get('max_resubmissions') || 1,
+    portfolio_eligible:   formData.get('portfolio_eligible') as string | undefined,
   }
 
   const parsed = homeworkSchema.safeParse(raw)
@@ -664,19 +678,20 @@ export async function createSessionHomework(
   const { data: assignment, error } = await db
     .from('assignments')
     .insert({
-      module_id:            d.module_id || null,   // null for session-only homework
+      module_id:            d.module_id || null,
       schedule_id:          d.session_id,
       title:                d.title,
       description:          d.description || null,
-      type:                 'homework',
-      submission_type:      'text',
-      max_score:            100,
+      instructions:         d.instructions || null,
+      type:                 d.type,
+      submission_type:      d.submission_type,
+      max_score:            d.max_score,
       due_at:               d.due_at ? new Date(d.due_at).toISOString() : null,
       status:               'published',
-      allow_late:           true,
-      resubmission_allowed: true,
-      max_resubmissions:    1,
-      portfolio_eligible:   false,
+      allow_late:           d.allow_late,
+      resubmission_allowed: d.resubmission_allowed,
+      max_resubmissions:    d.max_resubmissions,
+      portfolio_eligible:   d.portfolio_eligible,
       rubric:               [],
       created_by:           user.id,
     })
@@ -688,6 +703,194 @@ export async function createSessionHomework(
   revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
   revalidatePath('/portal/instructor/homework')
   return { success: true, data: { assignmentId: (assignment as any).id } }
+}
+
+// ── Cancel Session ────────────────────────────────────────────────────────────
+
+const cancelSessionSchema = z.object({
+  session_id:     z.string().uuid(),
+  group_id:       z.string().uuid(),
+  reason:         z.string().min(1, 'Cancellation reason is required').max(500),
+  create_makeup:  z.string().optional().transform((v) => v === 'true' || v === 'on'),
+  makeup_date:    z.string().optional().or(z.literal('')),
+})
+
+export async function cancelSession(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<{ makeupSessionId?: string }>> {
+  const user       = await requirePermission('manage_attendance')
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+  }
+
+  const raw = {
+    session_id:    formData.get('session_id'),
+    group_id:      formData.get('group_id'),
+    reason:        formData.get('reason'),
+    create_makeup: formData.get('create_makeup') ?? undefined,
+    makeup_date:   formData.get('makeup_date') || undefined,
+  }
+
+  const parsed = cancelSessionSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+  }
+
+  const d  = parsed.data
+  const db = createServiceClient()
+
+  const ctx = await getSessionAccessContext(d.session_id, instructor.id, db)
+  if (!ctx) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
+  }
+
+  const { data: sessRow } = await db
+    .from('schedules')
+    .select('id, status, group_course_id, scheduled_at, duration_minutes, type, delivery, meeting_url, room')
+    .eq('id', d.session_id)
+    .single()
+
+  if (!sessRow) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  }
+
+  const currentStatus = (sessRow as any).status as string
+  if (currentStatus === 'cancelled' || currentStatus === 'cancelled_with_makeup') {
+    return { success: false, error: { code: 'VALIDATION', message: 'Session is already cancelled.' } }
+  }
+  if (currentStatus === 'completed') {
+    return { success: false, error: { code: 'VALIDATION', message: 'Cannot cancel a completed session.' } }
+  }
+
+  const now = new Date().toISOString()
+  let makeupSessionId: string | undefined
+
+  if (d.create_makeup) {
+    // Create a makeup session linked to this one
+    const makeupDate = d.makeup_date
+      ? new Date(d.makeup_date).toISOString()
+      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // +7 days default
+
+    const { data: makeup, error: makeupErr } = await db
+      .from('schedules')
+      .insert({
+        group_course_id:     (sessRow as any).group_course_id,
+        branch_id:           ctx.branchId,
+        scheduled_at:        makeupDate,
+        duration_minutes:    (sessRow as any).duration_minutes,
+        type:                'makeup',
+        delivery:            (sessRow as any).delivery ?? null,
+        meeting_url:         (sessRow as any).meeting_url ?? null,
+        room:                (sessRow as any).room ?? null,
+        status:              'scheduled',
+        original_session_id: d.session_id,
+        created_by:          user.id,
+      })
+      .select('id')
+      .single()
+
+    if (makeupErr || !makeup) {
+      return { success: false, error: { code: 'DB_ERROR', message: makeupErr?.message ?? 'Failed to create makeup session.' } }
+    }
+    makeupSessionId = (makeup as any).id as string
+  }
+
+  const newStatus = d.create_makeup ? 'cancelled_with_makeup' : 'cancelled'
+
+  const { error: updateErr } = await db
+    .from('schedules')
+    .update({
+      status:               newStatus,
+      cancellation_reason:  d.reason,
+      cancelled_by:         user.id,
+      cancelled_at:         now,
+    })
+    .eq('id', d.session_id)
+
+  if (updateErr) {
+    return { success: false, error: { code: 'DB_ERROR', message: updateErr.message } }
+  }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'session.cancel',
+    p_entity_type:  'schedule',
+    p_entity_id:    d.session_id,
+    p_new_values:   { status: newStatus, reason: d.reason, makeup_session_id: makeupSessionId },
+    p_branch_id:    ctx.branchId,
+  })
+
+  revalidatePath(`/portal/instructor/groups/${d.group_id}`)
+  revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
+  return { success: true, data: { makeupSessionId } }
+}
+
+// ── Postpone Session ──────────────────────────────────────────────────────────
+
+const postponeSessionSchema = z.object({
+  session_id: z.string().uuid(),
+  group_id:   z.string().uuid(),
+  reason:     z.string().max(500).optional().or(z.literal('')),
+  new_date:   z.string().optional().or(z.literal('')),
+})
+
+export async function postponeSession(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<void>> {
+  const user       = await requirePermission('manage_attendance')
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+  }
+
+  const raw = {
+    session_id: formData.get('session_id'),
+    group_id:   formData.get('group_id'),
+    reason:     formData.get('reason') || undefined,
+    new_date:   formData.get('new_date') || undefined,
+  }
+
+  const parsed = postponeSessionSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+  }
+
+  const d  = parsed.data
+  const db = createServiceClient()
+
+  const ctx = await getSessionAccessContext(d.session_id, instructor.id, db)
+  if (!ctx) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
+  }
+
+  const updates: Record<string, unknown> = {
+    status:           'postponed',
+    postponed_reason: d.reason || null,
+  }
+  if (d.new_date) {
+    updates.scheduled_at = new Date(d.new_date).toISOString()
+  }
+
+  const { error } = await db.from('schedules').update(updates).eq('id', d.session_id)
+  if (error) {
+    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'session.postpone',
+    p_entity_type:  'schedule',
+    p_entity_id:    d.session_id,
+    p_new_values:   { reason: d.reason, new_date: d.new_date },
+    p_branch_id:    ctx.branchId,
+  })
+
+  revalidatePath(`/portal/instructor/groups/${d.group_id}`)
+  revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
+  return { success: true, data: undefined }
 }
 
 // ── Student Notes ─────────────────────────────────────────────────────────────

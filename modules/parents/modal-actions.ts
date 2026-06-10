@@ -304,6 +304,95 @@ export async function updateParentModal(
   return { success: true, data: { id } }
 }
 
+// ── Delete ─────────────────────────────────────────────────────────────────────
+
+/**
+ * Soft-deletes a parent record.
+ *
+ * Safety rules (unless force=true):
+ * - Blocked if the parent has any linked student with status='active'.
+ * - Allowed (and those links are preserved) for all other states.
+ *
+ * With force=true the deletion proceeds regardless of child status.
+ * All parent_students links are removed before the parent is soft-deleted.
+ */
+export async function deleteParentAction(
+  parentId: string,
+  opts: { force?: boolean } = {}
+): Promise<ActionResult<{ id: string }>> {
+  const user = await requirePermission('manage_parents')
+  const db   = createServiceClient()
+
+  // Load parent + current links
+  const { data: parent } = await db
+    .from('parents')
+    .select('user_id')
+    .eq('id', parentId)
+    .is('deleted_at', null)
+    .maybeSingle()
+
+  if (!parent) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Parent not found or already deleted.' } }
+  }
+
+  if (!opts.force) {
+    // Check for active linked students
+    const { data: links } = await db
+      .from('parent_students')
+      .select('student_id, students!parent_students_student_id_fkey(status, deleted_at)')
+      .eq('parent_id', parentId)
+
+    const activeStudents = ((links ?? []) as any[]).filter(l => {
+      const s = l.students
+      return s && s.deleted_at === null && s.status === 'active'
+    })
+
+    if (activeStudents.length > 0) {
+      return {
+        success: false,
+        error: {
+          code: 'HAS_ACTIVE_STUDENTS',
+          message: `This parent has ${activeStudents.length} active linked student${activeStudents.length !== 1 ? 's' : ''}. Remove those links first, or use force delete.`,
+        },
+      }
+    }
+  }
+
+  // Remove all student links
+  await db.from('parent_students').delete().eq('parent_id', parentId)
+
+  // Soft-delete the parent
+  const { error: delErr } = await db
+    .from('parents')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', parentId)
+
+  if (delErr) {
+    return { success: false, error: { code: 'DB_ERROR', message: delErr.message } }
+  }
+
+  // Revoke parent role from user_roles
+  const { data: parentRole } = await db.from('roles').select('id').eq('name', 'parent').maybeSingle()
+  if (parentRole) {
+    await db.from('user_roles')
+      .delete()
+      .eq('user_id', parent.user_id)
+      .eq('role_id', (parentRole as { id: string }).id)
+  }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action:       'delete',
+    p_entity_type:  'parent',
+    p_entity_id:    parentId,
+    p_new_values:   { force: opts.force ?? false },
+  })
+
+  revalidatePath('/portal/team-leader/parents')
+  revalidatePath('/admin/parents')
+  return { success: true, data: { id: parentId } }
+}
+
 // ── Reset Password ─────────────────────────────────────────────────────────────
 
 export async function resetParentPassword(

@@ -6,7 +6,7 @@ export type UserStatus = 'active' | 'inactive'
 
 export type StudentStatus = 'active' | 'inactive' | 'graduated' | 'paused' | 'banned'
 
-export type InstructorStatus = 'active' | 'inactive' | 'on_leave'
+export type InstructorStatus = 'active' | 'inactive' | 'on_leave' | 'deleted'
 
 export type GroupType = 'class' | 'workshop' | 'bootcamp' | 'trial' | 'makeup'
 
@@ -20,7 +20,13 @@ export type CourseScope = 'branch' | 'template' | 'global'
 
 export type LessonType = 'video' | 'text' | 'live' | 'quiz' | 'mixed'
 
-export type ScheduleStatus = 'scheduled' | 'ongoing' | 'completed' | 'cancelled'
+export type ScheduleStatus =
+  | 'scheduled'
+  | 'ongoing'
+  | 'completed'
+  | 'cancelled'
+  | 'cancelled_with_makeup'
+  | 'postponed'
 
 export type ScheduleDelivery = 'online' | 'offline' | 'hybrid'
 

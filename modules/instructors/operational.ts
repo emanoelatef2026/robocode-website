@@ -320,14 +320,19 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
     .is('deleted_at', null)
     .single()
 
-  if (instrError || !instrRaw) return null
+  if (instrError) {
+    console.error('[getInstructorDetailData] instructor fetch failed:', instrError.message, instrError.details ?? '', { instructorId })
+    return null
+  }
+  if (!instrRaw) return null
   const instrRow = instrRaw as unknown as RawInstructorRow
 
   // Fetch instructor_branches for multi-branch data
-  const { data: ibData } = await db
+  const { data: ibData, error: ibError } = await db
     .from('instructor_branches')
     .select('branch_id, branches!instructor_branches_branch_id_fkey(name)')
     .eq('instructor_id', instructorId)
+  if (ibError) console.error('[getInstructorDetailData] instructor_branches fetch failed:', ibError.message, { instructorId })
 
   const branch_ids:   string[] = []
   const branch_names: string[] = []
@@ -383,6 +388,9 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
       .eq('instructor_id', instructorId)
       .eq('status', 'active'),
   ])
+
+  if (giRes.error) console.error('[getInstructorDetailData] group_instructors fetch failed:', giRes.error.message, { instructorId })
+  if (gcRes.error) console.error('[getInstructorDetailData] group_courses fetch failed:', gcRes.error.message, { instructorId })
 
   const giRows = (giRes.data ?? []) as unknown as RawGiRow[]
   const gcRows = (gcRes.data ?? []) as unknown as RawGcRow[]

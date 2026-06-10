@@ -1,7 +1,8 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useRef, useState } from 'react'
 import { submitAssignment } from '@/modules/assignments/submissions/actions'
+import { compressToFile } from '@/lib/uploads/compressImage'
 import type { AssignmentSubmissionType } from '@/types/enums'
 import type { Submission } from '@/modules/assignments/submissions/types'
 
@@ -12,16 +13,81 @@ interface Props {
   maxScore:       number
 }
 
+interface UploadedImage {
+  url:      string
+  previewSrc: string
+  name:     string
+}
+
 const INITIAL_STATE = { success: false as const, error: { code: '', message: '' } }
 
 export default function SubmitForm({ assignmentId, submissionType, submission, maxScore }: Props) {
   const [state, action, pending] = useActionState(submitAssignment, INITIAL_STATE)
+
+  // ── Image upload state ────────────────────────────────────────────────────────
+  const [images, setImages]         = useState<UploadedImage[]>([])
+  const [uploading, setUploading]   = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const isResubmit =
     submission?.status === 'resubmission_requested' ||
     submission?.status === 'returned'
 
   const alreadySubmitted = !!submission && !isResubmit
+
+  const showText   = submissionType === 'text'       || submissionType === 'multiple'
+  const showDrive  = submissionType === 'drive_link'  || submissionType === 'multiple'
+  const showGithub = submissionType === 'github_link' || submissionType === 'multiple'
+  const showUrl    = submissionType === 'url'         || submissionType === 'multiple'
+  const showVideo  = submissionType === 'video_link'  || submissionType === 'multiple'
+  const showImage  = submissionType === 'image'       || submissionType === 'multiple'
+
+  // ── Handle image pick & upload ───────────────────────────────────────────────
+  const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
+    if (images.length + files.length > 5) {
+      setUploadError('Maximum 5 images allowed.')
+      return
+    }
+
+    setUploadError(null)
+    setUploading(true)
+
+    try {
+      const uploaded: UploadedImage[] = []
+      for (const file of files) {
+        const compressed = await compressToFile(file, { maxKB: 100, maxWidth: 1200 })
+        const fd = new FormData()
+        fd.set('file', compressed)
+        const res = await fetch('/api/uploads/submission-image', { method: 'POST', body: fd })
+        const json = await res.json() as { url?: string; error?: string }
+        if (!res.ok || !json.url) {
+          setUploadError(json.error ?? 'Upload failed. Please try again.')
+          break
+        }
+        uploaded.push({
+          url:        json.url,
+          previewSrc: URL.createObjectURL(compressed),
+          name:       file.name,
+        })
+      }
+      setImages((prev) => [...prev, ...uploaded])
+    } catch {
+      setUploadError('Image upload failed. Please try again.')
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const removeImage = (idx: number) => {
+    setImages((prev) => {
+      const updated = prev.filter((_, i) => i !== idx)
+      return updated
+    })
+  }
 
   if (alreadySubmitted) {
     return (
@@ -37,19 +103,31 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             Score: {submission!.score} / {maxScore}
           </p>
         )}
+        {/* Show previously uploaded images */}
+        {submission!.image_urls && submission!.image_urls.length > 0 && (
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-medium text-[#64748B]">Submitted images</p>
+            <div className="flex flex-wrap gap-2">
+              {submission!.image_urls.map((url, i) => (
+                <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+                  <img src={url} alt={`submission image ${i + 1}`}
+                    className="h-20 w-20 rounded-lg border border-[#E2E8F0] object-cover hover:opacity-80 transition" />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
 
-  const showText   = submissionType === 'text'     || submissionType === 'multiple'
-  const showDrive  = submissionType === 'drive_link'  || submissionType === 'multiple'
-  const showGithub = submissionType === 'github_link' || submissionType === 'multiple'
-  const showUrl    = submissionType === 'url'      || submissionType === 'multiple'
-  const showVideo  = submissionType === 'video_link'  || submissionType === 'multiple'
-
   return (
     <form action={action} className="space-y-5">
       <input type="hidden" name="assignment_id" value={assignmentId} />
+      {/* Pass uploaded image URLs as hidden fields */}
+      {images.map((img, i) => (
+        <input key={i} type="hidden" name="image_urls[]" value={img.url} />
+      ))}
 
       {isResubmit && (
         <div className="rounded-lg bg-orange-50 px-4 py-3 text-sm text-orange-700">
@@ -70,6 +148,78 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             placeholder="Write your answer here…"
             className="w-full rounded-lg border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#0B132B] outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
           />
+        </div>
+      )}
+
+      {showImage && (
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-[#0B132B]">
+            Images
+            <span className="ml-1 text-xs font-normal text-[#94A3B8]">
+              (up to 5, auto-compressed to ~100 KB each)
+            </span>
+          </label>
+
+          {/* Preview grid */}
+          {images.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {images.map((img, i) => (
+                <div key={i} className="relative">
+                  <img src={img.previewSrc} alt={img.name}
+                    className="h-20 w-20 rounded-lg border border-[#E2E8F0] object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white hover:bg-red-600 transition"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {uploadError && (
+            <p className="mb-2 text-xs text-red-600">{uploadError}</p>
+          )}
+
+          {images.length < 5 && (
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={handleImagePick}
+                className="hidden"
+                id="image-upload"
+                disabled={uploading}
+              />
+              <label
+                htmlFor="image-upload"
+                className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[#E2E8F0] px-4 py-3 text-sm transition
+                  ${uploading ? 'cursor-not-allowed opacity-50' : 'hover:border-[#19C6F4] hover:text-[#19C6F4]'} text-[#64748B]`}
+              >
+                {uploading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    </svg>
+                    Uploading…
+                  </span>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd"/>
+                    </svg>
+                    {images.length === 0 ? 'Choose images' : 'Add more images'}
+                    <span className="text-xs text-[#94A3B8]">({5 - images.length} remaining)</span>
+                  </>
+                )}
+              </label>
+            </div>
+          )}
         </div>
       )}
 
@@ -145,7 +295,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
 
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || uploading}
         className="w-full rounded-lg bg-[#0B132B] py-3 text-sm font-semibold text-white transition hover:bg-[#19C6F4] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending

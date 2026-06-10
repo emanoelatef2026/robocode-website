@@ -150,7 +150,7 @@ export async function listGroupEnrollments(groupId: string): Promise<GroupEnroll
     .select(
       `id, group_id, student_id, enrollment_type, status, joined_at, left_at, notes,
        students!group_students_student_id_fkey(
-         student_code, emergency_contact,
+         student_code,
          users!students_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name))
        )`
     )
@@ -161,7 +161,6 @@ export async function listGroupEnrollments(groupId: string): Promise<GroupEnroll
 
   return (data ?? []).map((row: any) => {
     const s  = row.students
-    const ec = (s?.emergency_contact ?? {}) as Record<string, string>
     return {
       id:              row.id,
       group_id:        row.group_id,
@@ -176,8 +175,8 @@ export async function listGroupEnrollments(groupId: string): Promise<GroupEnroll
       first_name:      s?.users?.profiles?.first_name ?? null,
       last_name:       s?.users?.profiles?.last_name  ?? null,
       phone:           s?.users?.phone ?? null,
-      parent_phone_1:  ec.phone1 ?? null,
-      parent_phone_2:  ec.phone2 ?? null,
+      parent_phone_1:  null,
+      parent_phone_2:  null,
     }
   }) as GroupEnrollment[]
 }

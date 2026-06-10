@@ -135,16 +135,16 @@ export default function StudentsClient({
         const qPhone = normalizePhone(search)
         const phoneNumbers = [
           r.student_phone       ?? '',
-          r.primary_guardian_phone ?? '',
-          ...r.guardians.flatMap(g => [g.phone1 ?? '', g.phone2 ?? '']),
+          r.primary_contact_phone ?? '',
+          ...r.parent_contacts.flatMap(g => [g.phone1 ?? '', g.phone2 ?? '']),
         ].filter(Boolean)
         const phoneMatch = qPhone.length >= 5 && phoneNumbers.some(p => normalizePhone(p).includes(qPhone))
         const haystack = [
           r.student_name,
           r.student_code ?? '',
           r.user_email   ?? '',
-          r.primary_guardian_name ?? '',
-          ...r.guardians.map(g => g.name),
+          r.primary_contact_name ?? '',
+          ...r.parent_contacts.map(g => g.name),
         ]
         if (!phoneMatch && !haystack.some(h => h.toLowerCase().includes(q))) return false
       }
@@ -429,18 +429,18 @@ export default function StudentsClient({
                         <p className="text-[#94A3B8]">Sessions</p>
                       </div>
                       <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
-                        <p className="font-bold text-[#0B1F3A]">{row.guardian_count}</p>
+                        <p className="font-bold text-[#0B1F3A]">{row.parent_contact_count}</p>
                         <p className="text-[#94A3B8]">Contacts</p>
                       </div>
                     </div>
                     <div className="mt-2 flex items-center justify-between">
-                      {row.primary_guardian_phone && (
+                      {row.primary_contact_phone && (
                         <a
-                          href={`tel:${row.primary_guardian_phone}`}
+                          href={`tel:${row.primary_contact_phone}`}
                           className="text-[12px] text-[#64748B]"
                           onClick={e => e.stopPropagation()}
                         >
-                          {row.primary_guardian_phone}
+                          {row.primary_contact_phone}
                         </a>
                       )}
                       {!row.group_id && isTL && (
@@ -583,20 +583,20 @@ export default function StudentsClient({
 
                         {/* Guardian contacts */}
                         <td className="px-4 py-3">
-                          {row.guardians.length > 0 ? (
+                          {row.parent_contacts.length > 0 ? (
                             <>
-                              <p className="text-[12px] font-medium text-[#0B1F3A]">{row.guardians[0].name}</p>
-                              {row.guardians[0].phone1 && (
+                              <p className="text-[12px] font-medium text-[#0B1F3A]">{row.parent_contacts[0].name}</p>
+                              {row.parent_contacts[0].phone1 && (
                                 <a
-                                  href={`tel:${row.guardians[0].phone1}`}
+                                  href={`tel:${row.parent_contacts[0].phone1}`}
                                   className="text-[11px] text-[#64748B] hover:text-[#FF8A1F]"
                                   onClick={e => e.stopPropagation()}
                                 >
-                                  {row.guardians[0].phone1}
+                                  {row.parent_contacts[0].phone1}
                                 </a>
                               )}
-                              {row.guardian_count > 1 && (
-                                <p className="text-[10px] text-[#94A3B8]">+{row.guardian_count - 1} more</p>
+                              {row.parent_contact_count > 1 && (
+                                <p className="text-[10px] text-[#94A3B8]">+{row.parent_contact_count - 1} more</p>
                               )}
                             </>
                           ) : (

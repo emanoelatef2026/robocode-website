@@ -168,6 +168,11 @@ export async function submitAssignment(
 
   const d = parsed.data
 
+  // Collect uploaded image URLs (already uploaded client-side to /api/uploads/submission-image)
+  const imageUrls = (formData.getAll('image_urls[]') as string[]).filter((u) => {
+    try { new URL(u); return true } catch { return false }
+  }).slice(0, 5)
+
   // Resolve student_id
   const { data: studentRow } = await db
     .from('students')
@@ -198,7 +203,8 @@ export async function submitAssignment(
     (d.drive_url   ?? '').length > 0 ||
     (d.github_url  ?? '').length > 0 ||
     (d.project_url ?? '').length > 0 ||
-    (d.video_url   ?? '').length > 0
+    (d.video_url   ?? '').length > 0 ||
+    imageUrls.length > 0
 
   if (!hasContent) {
     return { success: false, error: { code: 'VALIDATION', message: 'At least one content field is required.' } }
@@ -236,6 +242,7 @@ export async function submitAssignment(
         github_url:         d.github_url  || null,
         project_url:        d.project_url || null,
         video_url:          d.video_url   || null,
+        image_urls:         imageUrls,
         status:             'resubmitted',
         submitted_at:       new Date().toISOString(),
         resubmission_count: (existing.resubmission_count ?? 0) + 1,
@@ -278,13 +285,13 @@ export async function submitAssignment(
       github_url:         d.github_url  || null,
       project_url:        d.project_url || null,
       video_url:          d.video_url   || null,
+      image_urls:         imageUrls,
       submission_type:    (assignment as any).submission_type,
       status:             'submitted',
       submitted_at:       new Date().toISOString(),
       is_late:            isLate,
       resubmission_count: 0,
       file_keys:          [],
-      image_urls:         [],
       rubric_scores:      {},
       portfolio_visible:  false,
     })

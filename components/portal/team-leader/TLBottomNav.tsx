@@ -50,14 +50,10 @@ const NAV = [
       "/portal/team-leader/groups",
       "/portal/team-leader/instructors",
       "/portal/team-leader/parents",
-      "/portal/team-leader/assignments",
-      "/portal/team-leader/attendance",
       "/portal/team-leader/certificates",
       "/portal/team-leader/parent-feedback",
       "/portal/team-leader/parent-satisfaction",
-      "/portal/team-leader/portfolio",
       "/portal/team-leader/courses",
-      "/portal/team-leader/finance",
     ],
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
@@ -89,7 +85,7 @@ export default function TLBottomNav() {
               key={item.href}
               href={item.href}
               className={[
-                "relative flex flex-col items-center justify-center gap-1 py-2 min-h-[60px] transition-colors",
+                "relative flex flex-col items-center justify-center gap-1 py-2 min-h-15 transition-colors",
                 active ? "text-[#FF8A1F]" : "text-[#94A3B8] active:text-[#64748B]",
               ].join(" ")}
               aria-current={active ? "page" : undefined}

@@ -5,6 +5,7 @@ import type {
   InstructorGroup,
   InstructorSession,
   SessionDetail,
+  SessionHomeworkItem,
   PendingSubmissionItem,
   StudentProfileForInstructor,
   StudentNote,
@@ -524,9 +525,14 @@ export async function getSessionDetail(
   let ended_at:        string | null   = null
   let resources_links: ResourceLink[]  = []
 
+  let cancellation_reason: string | null = null
+  let cancelled_at:        string | null = null
+  let postponed_reason:    string | null = null
+  let original_session_id: string | null = null
+
   const { data: enrichRow, error: enrichErr } = await db
     .from('schedules')
-    .select('topic, notes, started_at, ended_at, resources_links')
+    .select('topic, notes, started_at, ended_at, resources_links, cancellation_reason, cancelled_at, postponed_reason, original_session_id')
     .eq('id', sessionId)
     .maybeSingle()
 
@@ -537,11 +543,15 @@ export async function getSessionDetail(
     // Non-fatal — continue with empty defaults
   } else if (enrichRow) {
     const e     = enrichRow as any
-    topic       = e.topic          ?? null
-    notes       = e.notes          ?? null
-    started_at  = e.started_at     ?? null
-    ended_at    = e.ended_at       ?? null
-    const raw   = e.resources_links
+    topic               = e.topic               ?? null
+    notes               = e.notes               ?? null
+    started_at          = e.started_at          ?? null
+    ended_at            = e.ended_at            ?? null
+    cancellation_reason = e.cancellation_reason ?? null
+    cancelled_at        = e.cancelled_at        ?? null
+    postponed_reason    = e.postponed_reason    ?? null
+    original_session_id = e.original_session_id ?? null
+    const raw           = e.resources_links
     resources_links = Array.isArray(raw) ? raw : []
   }
 
@@ -597,7 +607,7 @@ export async function getSessionDetail(
   // Progress query only selects guaranteed columns (id, scheduled_at, status).
   // topic is fetched via enrichment in step 1b for the current session only;
   // sibling session topics are omitted to avoid breaking older DBs.
-  const [studentRes, attRes, recordingsRes, modulesRes, progressRes, groupRes, courseRes] =
+  const [studentRes, attRes, recordingsRes, modulesRes, progressRes, groupRes, courseRes, homeworkRes] =
     await Promise.all([
       db.from('group_students')
         .select(
@@ -629,6 +639,12 @@ export async function getSessionDetail(
       courseId
         ? db.from('courses').select('title').eq('id', courseId).maybeSingle()
         : Promise.resolve({ data: null as any }),
+      // Homework created for this specific session
+      db.from('assignments')
+        .select('id, title, type, submission_type, due_at, status')
+        .eq('schedule_id', sessionId)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: true }),
     ])
 
   const attMap = new Map<string, any>()
@@ -678,32 +694,46 @@ export async function getSessionDetail(
   const groupName   = (groupRes.data  as any)?.name  ?? ''
   const courseTitle = (courseRes.data as any)?.title ?? ''
 
+  const session_homework: SessionHomeworkItem[] = (homeworkRes.data ?? []).map((h: any) => ({
+    id:              h.id,
+    title:           h.title,
+    type:            h.type,
+    submission_type: h.submission_type,
+    due_at:          h.due_at ?? null,
+    status:          h.status,
+  }))
+
   return {
-    id:               s.id,
-    group_course_id:  s.group_course_id,
-    group_id:         groupId,
-    branch_id:        s.branch_id,
-    scheduled_at:     s.scheduled_at,
+    id:                  s.id,
+    group_course_id:     s.group_course_id,
+    group_id:            groupId,
+    branch_id:           s.branch_id,
+    scheduled_at:        s.scheduled_at,
     started_at,
     ended_at,
-    duration_minutes: s.duration_minutes,
-    type:             s.type,
-    delivery:         s.delivery    ?? null,
-    meeting_url:      s.meeting_url ?? null,
-    room:             s.room        ?? null,
-    status:           s.status,
+    duration_minutes:    s.duration_minutes,
+    type:                s.type,
+    delivery:            s.delivery    ?? null,
+    meeting_url:         s.meeting_url ?? null,
+    room:                s.room        ?? null,
+    status:              s.status,
     topic,
     notes,
-    group_name:       groupName,
-    course_title:     courseTitle,
-    course_id:        courseId ?? '',
+    cancellation_reason,
+    cancelled_at,
+    postponed_reason,
+    original_session_id,
+    group_name:          groupName,
+    course_title:        courseTitle,
+    course_id:           courseId ?? '',
     attendance,
-    student_count:    (studentRes.data ?? []).length,
+    student_count:       (studentRes.data ?? []).length,
     recordings,
     resources_links,
-    course_modules:   courseModules,
+    course_modules:      courseModules,
     progress,
     current_session_num: currentNum,
+    session_homework,
   }
 }
 

@@ -8,7 +8,7 @@ import type { ActionResult } from '@/types/app'
 
 // ── Validation ─────────────────────────────────────────────────────────────────
 
-const guardianSchema = z.object({
+const parentContactSchema = z.object({
   name:               z.string().min(1, 'Guardian name required').max(200),
   relation:           z.enum(['father', 'mother', 'guardian', 'other']).default('guardian'),
   phone1:             z.string().min(7, 'Phone 1 required').max(30),
@@ -36,7 +36,7 @@ const createSchema = z.object({
   date_of_birth:   z.string().optional().or(z.literal('')),
   enrollment_date: z.string().optional().or(z.literal('')),
   notes:           z.string().max(1000).optional().or(z.literal('')),
-  guardians_json:  z.string(),
+  parent_contacts_json:  z.string(),
 })
 
 const updateSchema = z.object({
@@ -49,7 +49,7 @@ const updateSchema = z.object({
   date_of_birth:  z.string().optional().or(z.literal('')),
   status:         z.enum(['active', 'inactive', 'graduated', 'paused', 'banned']).optional(),
   notes:          z.string().max(1000).optional().or(z.literal('')),
-  guardians_json: z.string(),
+  parent_contacts_json: z.string(),
   new_email:      z.preprocess(
     (v) => (typeof v === 'string' && v.trim() ? v.trim().toLowerCase() : undefined),
     z.string().email('Invalid email address').optional()
@@ -122,57 +122,46 @@ async function applyGroupAssignments(
   }
 }
 
-type ParsedGuardians =
-  | { ok: true;  guardians: z.infer<typeof guardianSchema>[]; error: null }
-  | { ok: false; guardians: never[];                          error: string }
+type ParsedParentContacts =
+  | { ok: true;  contacts: z.infer<typeof parentContactSchema>[]; error: null }
+  | { ok: false; contacts: never[];                               error: string }
 
-function parseGuardians(raw: string): ParsedGuardians {
+function parseParentContacts(raw: string): ParsedParentContacts {
   try {
     const arr = JSON.parse(raw)
-    if (!Array.isArray(arr)) return { ok: false, guardians: [], error: 'Invalid guardians data' }
-    const result: z.infer<typeof guardianSchema>[] = []
+    if (!Array.isArray(arr)) return { ok: false, contacts: [], error: 'Invalid contacts data' }
+    const result: z.infer<typeof parentContactSchema>[] = []
     for (let i = 0; i < arr.length; i++) {
-      const r = guardianSchema.safeParse(arr[i])
-      if (!r.success) return { ok: false, guardians: [], error: `Guardian ${i + 1}: ${r.error.issues[0].message}` }
+      const r = parentContactSchema.safeParse(arr[i])
+      if (!r.success) return { ok: false, contacts: [], error: `Contact ${i + 1}: ${r.error.issues[0].message}` }
       result.push(r.data)
     }
-    if (result.length === 0) return { ok: false, guardians: [], error: 'At least one guardian is required' }
-    return { ok: true, guardians: result, error: null }
+    if (result.length === 0) return { ok: false, contacts: [], error: 'At least one contact is required' }
+    return { ok: true, contacts: result, error: null }
   } catch {
-    return { ok: false, guardians: [], error: 'Invalid guardians data' }
+    return { ok: false, contacts: [], error: 'Invalid contacts data' }
   }
 }
 
-async function syncGuardians(
+async function syncParentContacts(
   db: ReturnType<typeof createServiceClient>,
   studentId: string,
-  guardians: z.infer<typeof guardianSchema>[]
+  contacts: z.infer<typeof parentContactSchema>[]
 ) {
-  // Replace all guardians for this student
-  await db.from('student_guardians').delete().eq('student_id', studentId)
-  if (guardians.length > 0) {
-    await db.from('student_guardians').insert(
-      guardians.map(g => ({
+  await db.from('student_parent_contacts').delete().eq('student_id', studentId)
+  if (contacts.length > 0) {
+    await db.from('student_parent_contacts').insert(
+      contacts.map(c => ({
         student_id:         studentId,
-        name:               g.name,
-        relation:           g.relation,
-        phone1:             g.phone1 || null,
-        phone2:             g.phone2 || null,
-        whatsapp_preferred: g.whatsapp_preferred,
-        is_primary:         g.is_primary,
-        is_emergency:       g.is_emergency,
+        name:               c.name,
+        relation:           c.relation,
+        phone1:             c.phone1 || null,
+        phone2:             c.phone2 || null,
+        whatsapp_preferred: c.whatsapp_preferred,
+        is_primary:         c.is_primary,
+        is_emergency:       c.is_emergency,
       }))
     )
-  }
-
-  // Keep emergency_contact JSONB in sync for backward compat
-  const primary = guardians.find(g => g.is_primary) ?? guardians[0]
-  if (primary) {
-    const ec: Record<string, string> = {}
-    if (primary.name)   ec.name   = primary.name
-    if (primary.phone1) ec.phone1 = primary.phone1
-    if (primary.phone2) ec.phone2 = primary.phone2
-    await db.from('students').update({ emergency_contact: ec }).eq('id', studentId)
   }
 }
 
@@ -194,7 +183,7 @@ export async function createStudentModal(
     date_of_birth:   formData.get('date_of_birth') || undefined,
     enrollment_date: formData.get('enrollment_date') || undefined,
     notes:           formData.get('notes') || undefined,
-    guardians_json:  formData.get('guardians_json') || '[]',
+    parent_contacts_json:  formData.get('parent_contacts_json') || '[]',
   }
 
   const parsed = createSchema.safeParse(raw)
@@ -202,9 +191,9 @@ export async function createStudentModal(
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const guardianResult = parseGuardians(parsed.data.guardians_json)
-  if (!guardianResult.ok) {
-    return { success: false, error: { code: 'VALIDATION', message: guardianResult.error! } }
+  const contactResult = parseParentContacts(parsed.data.parent_contacts_json)
+  if (!contactResult.ok) {
+    return { success: false, error: { code: 'VALIDATION', message: contactResult.error! } }
   }
 
   const user = await requirePermission('manage_students', { branchId: parsed.data.branch_id })
@@ -237,25 +226,17 @@ export async function createStudentModal(
   if (!existingProf) await db.from('profiles').insert(profileData)
   else               await db.from('profiles').update(profileData).eq('user_id', authUserId)
 
-  // 4. Build legacy emergency_contact from primary guardian
-  const primaryG  = guardianResult.guardians.find(g => g.is_primary) ?? guardianResult.guardians[0]
-  const emergencyContact: Record<string, string> = {}
-  if (primaryG?.name)   emergencyContact.name   = primaryG.name
-  if (primaryG?.phone1) emergencyContact.phone1 = primaryG.phone1
-  if (primaryG?.phone2) emergencyContact.phone2 = primaryG.phone2
-
-  // 5. Student record (with required age)
+  // 4. Student record (with required age)
   const { data: student, error: stuErr } = await db
     .from('students')
     .insert({
-      user_id:           authUserId,
+      user_id:         authUserId,
       branch_id,
-      enrollment_date:   enrollment_date || new Date().toISOString().split('T')[0],
-      status:            'active',
+      enrollment_date: enrollment_date || new Date().toISOString().split('T')[0],
+      status:          'active',
       age,
-      notes:             notes || null,
-      school_grade:      school_grade || null,
-      emergency_contact: emergencyContact,
+      notes:           notes || null,
+      school_grade:    school_grade || null,
     })
     .select('id')
     .single()
@@ -267,7 +248,7 @@ export async function createStudentModal(
     return { success: false, error: { code: 'DB_ERROR', message: stuErr.message } }
   }
 
-  // 6. Student role
+  // 5b. Student role
   const { data: studentRole } = await db.from('roles').select('id').eq('name', 'student').single()
   if (studentRole) {
     await db.from('user_roles').upsert(
@@ -276,8 +257,8 @@ export async function createStudentModal(
     )
   }
 
-  // 7. Guardians
-  await syncGuardians(db, student.id, guardianResult.guardians)
+  // 5. Parent contacts
+  await syncParentContacts(db, student.id, contactResult.contacts)
 
   // 8. Group assignments
   const groupsToAdd = parseGroupIds(formData.get('groups_to_add_json'))
@@ -315,7 +296,7 @@ export async function updateStudentModal(
     date_of_birth:  formData.get('date_of_birth') || undefined,
     status:         formData.get('status')        || undefined,
     notes:          formData.get('notes')         || undefined,
-    guardians_json: formData.get('guardians_json') || '[]',
+    parent_contacts_json: formData.get('parent_contacts_json') || '[]',
     new_email:      formData.get('new_email'),
     new_password:   formData.get('new_password'),
   }
@@ -325,9 +306,9 @@ export async function updateStudentModal(
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const guardianResult = parseGuardians(parsed.data.guardians_json)
-  if (!guardianResult.ok) {
-    return { success: false, error: { code: 'VALIDATION', message: guardianResult.error! } }
+  const contactResult = parseParentContacts(parsed.data.parent_contacts_json)
+  if (!contactResult.ok) {
+    return { success: false, error: { code: 'VALIDATION', message: contactResult.error! } }
   }
 
   const user = await requirePermission('manage_students')
@@ -382,8 +363,8 @@ export async function updateStudentModal(
     if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
   }
 
-  // Guardians sync
-  await syncGuardians(db, id, guardianResult.guardians)
+  // Parent contacts sync
+  await syncParentContacts(db, id, contactResult.contacts)
 
   // Group assignment sync
   const groupsToAdd    = parseGroupIds(formData.get('groups_to_add_json'))

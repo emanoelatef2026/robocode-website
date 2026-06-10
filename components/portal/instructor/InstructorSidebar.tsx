@@ -5,7 +5,9 @@ import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 
-const Icons = {
+// ── Icons ─────────────────────────────────────────────────────────────────────
+
+const I = {
   dashboard: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
@@ -32,6 +34,11 @@ const Icons = {
       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
     </svg>
   ),
+  password: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+    </svg>
+  ),
   logout: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
@@ -39,13 +46,38 @@ const Icons = {
   ),
 }
 
-const NAV_ITEMS = [
-  { label: "Dashboard",       href: "/portal/instructor",           icon: Icons.dashboard, exact: true },
-  { label: "My Groups",       href: "/portal/instructor/groups",    icon: Icons.groups },
-  { label: "Homework",        href: "/portal/instructor/homework",  icon: Icons.homework },
-  { label: "Portfolio",       href: "/portal/instructor/portfolio", icon: Icons.portfolio },
-  { label: "Session History", href: "/portal/instructor/history",   icon: Icons.history },
+// ── Nav config ────────────────────────────────────────────────────────────────
+
+interface NavItem {
+  label: string
+  href: string
+  icon: React.ReactNode
+  exact?: boolean
+}
+
+interface NavSection {
+  title?: string
+  items: NavItem[]
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    items: [
+      { label: "Dashboard", href: "/portal/instructor", icon: I.dashboard, exact: true },
+    ],
+  },
+  {
+    title: "Teaching",
+    items: [
+      { label: "My Groups",       href: "/portal/instructor/groups",    icon: I.groups },
+      { label: "Homework",        href: "/portal/instructor/homework",  icon: I.homework },
+      { label: "Portfolio",       href: "/portal/instructor/portfolio", icon: I.portfolio },
+      { label: "Session History", href: "/portal/instructor/history",   icon: I.history },
+    ],
+  },
 ]
+
+// ── NavLink ───────────────────────────────────────────────────────────────────
 
 function NavLink({
   href, label, icon, active, onClose,
@@ -70,6 +102,8 @@ function NavLink({
   )
 }
 
+// ── NavContent ────────────────────────────────────────────────────────────────
+
 function NavContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname()
   const router   = useRouter()
@@ -85,48 +119,63 @@ function NavContent({ onClose }: { onClose?: () => void }) {
 
   return (
     <div className="flex h-full flex-col">
+      {/* Logo */}
       <div className="flex h-14 items-center border-b border-white/8 px-5">
         <Image src="/logo.png" alt="Robocode" width={120} height={52} className="h-auto w-24 brightness-0 invert" />
       </div>
 
-      <div className="px-5 pt-5 pb-2">
+      {/* Role badge */}
+      <div className="px-5 pt-4 pb-1">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/25">Instructor</p>
       </div>
 
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3">
-        {NAV_ITEMS.map(({ label, href, icon, exact }) => (
-          <NavLink
-            key={href}
-            href={href}
-            label={label}
-            icon={icon}
-            active={isActive(href, exact)}
-            onClose={onClose}
-          />
+      {/* Grouped nav */}
+      <nav className="flex-1 overflow-y-auto px-3 pb-2">
+        {NAV_SECTIONS.map((section, idx) => (
+          <div key={section.title ?? "__top"} className={idx === 0 ? "mb-1" : "mt-5"}>
+            {section.title && (
+              <p className="mb-1.5 px-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/25">
+                {section.title}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {section.items.map(({ label, href, icon, exact }) => (
+                <NavLink
+                  key={href}
+                  href={href}
+                  label={label}
+                  icon={icon}
+                  active={isActive(href, exact)}
+                  onClose={onClose}
+                />
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 
+      {/* Footer */}
       <div className="border-t border-white/8 p-4 space-y-1">
         <Link
           href="/account/password"
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/35 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
         >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-          </svg>
+          {I.password}
           Change Password
         </Link>
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/35 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
         >
-          {Icons.logout}
+          {I.logout}
           Logout
         </button>
       </div>
     </div>
   )
 }
+
+// ── InstructorSidebar ─────────────────────────────────────────────────────────
 
 interface Props {
   isOpen:  boolean

@@ -53,7 +53,6 @@ export async function globalSearch(
     profileHits,
     phoneHits,
     codeHits,
-    parentPhoneHits,
     instructorHits,
     courseHits,
     groupHits,
@@ -76,14 +75,6 @@ export async function globalSearch(
       .ilike('student_code', pct)
       .in('branch_id', branchIds)
       .is('deleted_at', null)
-      .limit(30),
-
-    // Student: by parent phone (JSONB)
-    db.from('students')
-      .select('id')
-      .in('branch_id', branchIds)
-      .is('deleted_at', null)
-      .or(`emergency_contact->phone1.ilike.${pct},emergency_contact->phone2.ilike.${pct},emergency_contact->name.ilike.${pct}`)
       .limit(30),
 
     // Instructor: by name
@@ -131,7 +122,6 @@ export async function globalSearch(
     ...(fromProfiles.data ?? []).map((r: any) => r.id as string),
     ...(fromPhone.data    ?? []).map((r: any) => r.id as string),
     ...(codeHits.data     ?? []).map((r: any) => r.id as string),
-    ...(parentPhoneHits.data ?? []).map((r: any) => r.id as string),
   ])].slice(0, 30)
 
   // ── Fetch full student detail ────────────────────────────────────────────────
@@ -140,7 +130,7 @@ export async function globalSearch(
     const [stuRes, enrollRes, accRes] = await Promise.all([
       db.from('students')
         .select(`
-          id, student_code, branch_id, emergency_contact,
+          id, student_code, branch_id,
           users!students_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name)),
           branches!students_branch_id_fkey(name)
         `)
@@ -183,7 +173,6 @@ export async function globalSearch(
     studentHits = ((stuRes.data ?? []) as any[]).map(s => {
       const u   = s.users    ?? {}
       const p   = u.profiles ?? {}
-      const ec  = (s.emergency_contact ?? {}) as Record<string, string>
       const name      = [p.first_name, p.last_name].filter(Boolean).join(' ') || u.email || 'Unknown'
       const remaining = balanceMap.get(s.id) ?? 0
       const nextDue   = nextDueMap.get(s.id) ?? null
@@ -229,8 +218,8 @@ export async function globalSearch(
         subtitle:    (s.branches as any)?.name ?? null,
         student_code: s.student_code ?? null,
         phone:        u.phone ?? null,
-        parent_name:  ec.name   ?? null,
-        parent_phone: ec.phone1 ?? null,
+        parent_name:  null,
+        parent_phone: null,
         branch_name:  (s.branches as any)?.name ?? null,
         active_enrollments: enrollCountMap.get(s.id) ?? 0,
         remaining_balance:  remaining,
@@ -282,7 +271,7 @@ export async function globalSearch(
 
   return {
     students:    studentHits,
-    parents:     [],   // parent search via emergency_contact already folded into student hits
+    parents:     [],
     instructors: instrHits,
     courses:     courseResults,
     groups:      groupResults,

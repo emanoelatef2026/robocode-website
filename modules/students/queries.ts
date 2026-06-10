@@ -42,7 +42,7 @@ export async function listStudents({
   let query = db
     .from('students')
     .select(
-      `id, user_id, branch_id, student_code, enrollment_date, status, school_grade, emergency_contact,
+      `id, user_id, branch_id, student_code, enrollment_date, status, school_grade,
        users!students_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name)),
        branches!students_branch_id_fkey(name),
        group_students!group_students_student_id_fkey(
@@ -82,19 +82,15 @@ export async function listStudents({
       ]),
     ]
 
-    // Resolve student IDs via student_code, student_guardians table, and legacy JSONB
-    const [codeHits, guardianHits, p1Hits, p2Hits] = await Promise.all([
+    // Resolve student IDs via student_code and parent contact table
+    const [codeHits, contactHits] = await Promise.all([
       db.from('students').select('id').ilike('student_code', q).is('deleted_at', null),
-      db.from('student_guardians').select('student_id').or(`phone1.ilike.${q},phone2.ilike.${q},name.ilike.${q}`),
-      db.from('students').select('id').filter('emergency_contact->>phone1', 'ilike', q).is('deleted_at', null),
-      db.from('students').select('id').filter('emergency_contact->>phone2', 'ilike', q).is('deleted_at', null),
+      db.from('student_parent_contacts').select('student_id').or(`phone1.ilike.${q},phone2.ilike.${q},name.ilike.${q}`),
     ])
     const uniqueStudentIds = [
       ...new Set([
         ...(codeHits.data?.map((s: any) => s.id) ?? []),
-        ...(guardianHits.data?.map((g: any) => g.student_id) ?? []),
-        ...(p1Hits.data?.map((s: any) => s.id) ?? []),
-        ...(p2Hits.data?.map((s: any) => s.id) ?? []),
+        ...(contactHits.data?.map((c: any) => c.student_id) ?? []),
       ]),
     ]
 
@@ -123,7 +119,6 @@ export async function listStudents({
     const activeGs = gsMemberships.find((gs: any) => gs.status === 'active')
     const groupName = activeGs?.groups?.name ?? null
 
-    const ec = (row.emergency_contact ?? {}) as Record<string, string>
     return {
       id:              row.id,
       user_id:         row.user_id,
@@ -138,8 +133,8 @@ export async function listStudents({
       branch_name:     row.branches?.name ?? '',
       group_name:      groupName,
       phone:           row.users?.phone ?? null,
-      parent_phone_1:  ec.phone1 ?? null,
-      parent_phone_2:  ec.phone2 ?? null,
+      parent_phone_1:  null,
+      parent_phone_2:  null,
     }
   })
 
@@ -173,7 +168,6 @@ export async function getStudent(id: string): Promise<Student | null> {
   if (!user || !isBranchAccessible(user, (data as any).branch_id)) return null
 
   const row = data as any
-  const ec  = (row.emergency_contact ?? {}) as Record<string, string>
   const gsMemberships = Array.isArray(row.group_students) ? row.group_students : []
   const activeGs = gsMemberships.find((gs: any) => gs.status === 'active')
 
@@ -185,8 +179,8 @@ export async function getStudent(id: string): Promise<Student | null> {
     branch_name:    row.branches?.name ?? '',
     phone:          row.users?.phone ?? null,
     date_of_birth:  row.users?.profiles?.date_of_birth ?? null,
-    parent_phone_1: ec.phone1 ?? null,
-    parent_phone_2: ec.phone2 ?? null,
+    parent_phone_1: null,
+    parent_phone_2: null,
     group_name:     activeGs?.groups?.name ?? null,
   } as Student
 }

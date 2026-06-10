@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useCallback, useRef } from 'react'
+import { useState, useTransition, useCallback, useRef, useEffect } from 'react'
 import {
   getInstructorDetailAction,
   createInstructorModalAction,
@@ -11,6 +11,7 @@ import {
   refreshInstructorListAction,
   saveNoteAction,
   deleteNoteAction,
+  deleteInstructorAction,
 } from '@/modules/instructors/modal-actions'
 import type {
   InstructorOperationalRow,
@@ -190,7 +191,7 @@ function Avatar({ first, last, email, size = 'md', selected = false }: {
 // ═══════════════════════════════════════════════════════════════════════
 
 function InstructorGridCard({
-  instructor, selected, onClick, canManage, onAssign, onEdit,
+  instructor, selected, onClick, canManage, onAssign, onEdit, onDelete,
 }: {
   instructor: InstructorOperationalRow
   selected:   boolean
@@ -198,6 +199,7 @@ function InstructorGridCard({
   canManage:  boolean
   onAssign:   (e: React.MouseEvent) => void
   onEdit:     (e: React.MouseEvent) => void
+  onDelete:   (e: React.MouseEvent) => void
 }) {
   const name = displayName(instructor.first_name, instructor.last_name, instructor.user_email)
   const wa   = instructor.phone
@@ -276,6 +278,10 @@ function InstructorGridCard({
             className="flex-1 rounded-lg bg-[#F8FAFC] py-1.5 text-[10px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition">
             Edit
           </button>
+          <button onClick={onDelete}
+            className="flex-1 rounded-lg border border-red-200 py-1.5 text-[10px] font-medium text-red-500 hover:bg-red-500 hover:text-white transition">
+            Delete
+          </button>
           {wa && (
             <a href={`https://wa.me/${wa.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
@@ -296,7 +302,7 @@ function InstructorGridCard({
 // ═══════════════════════════════════════════════════════════════════════
 
 function InstructorListRow({
-  instructor, selected, onClick, canManage, onAssign, onEdit,
+  instructor, selected, onClick, canManage, onAssign, onEdit, onDelete,
 }: {
   instructor: InstructorOperationalRow
   selected:   boolean
@@ -304,6 +310,7 @@ function InstructorListRow({
   canManage:  boolean
   onAssign:   (e: React.MouseEvent) => void
   onEdit:     (e: React.MouseEvent) => void
+  onDelete:   (e: React.MouseEvent) => void
 }) {
   const name = displayName(instructor.first_name, instructor.last_name, instructor.user_email)
   const wa   = instructor.phone
@@ -363,6 +370,7 @@ function InstructorListRow({
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button onClick={onAssign} className="rounded bg-[#FF8A1F] px-2 py-1 text-[10px] font-semibold text-white hover:bg-[#e87c18] transition">Assign</button>
             <button onClick={onEdit}   className="rounded border border-[#E2E8F0] px-2 py-1 text-[10px] text-[#374151] hover:bg-[#F1F5F9] transition">Edit</button>
+            <button onClick={onDelete} className="rounded border border-red-200 px-2 py-1 text-[10px] text-red-500 hover:bg-red-500 hover:text-white transition">Delete</button>
             {wa && (
               <a href={`https://wa.me/${wa.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
                 className="rounded border border-green-200 bg-green-50 px-2 py-1 text-[10px] text-green-600 hover:bg-green-100 transition">WA</a>
@@ -818,7 +826,7 @@ function NotesTab({ instructorId, notes, onRefresh }: {
 
 function InstructorPopup({
   instructor, detail, loading, activeTab, onTabChange, canManage,
-  onEdit, onAssignGroup, onArchive, onRemoveGroup, onClose, onRefreshDetail,
+  onEdit, onAssignGroup, onArchive, onDelete, onRemoveGroup, onClose, onRefreshDetail,
 }: {
   instructor:      InstructorOperationalRow
   detail:          InstructorDetailData | null
@@ -829,6 +837,7 @@ function InstructorPopup({
   onEdit:          () => void
   onAssignGroup:   () => void
   onArchive:       () => void
+  onDelete:        () => void
   onRemoveGroup:   (g: InstructorGroupDetail) => void
   onClose:         () => void
   onRefreshDetail: () => void
@@ -908,6 +917,7 @@ function InstructorPopup({
                     <button onClick={onAssignGroup} className="rounded-lg bg-[#FF8A1F] px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[#e87c18] transition">Assign Group</button>
                     <button onClick={onEdit} className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] text-[#374151] hover:bg-[#F8FAFC] transition">Edit</button>
                     <button onClick={onArchive} className="rounded-lg border border-red-100 px-2.5 py-1.5 text-[11px] text-red-500 hover:bg-red-50 transition">Archive</button>
+                    <button onClick={onDelete} className="rounded-lg border border-red-500 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 hover:bg-red-600 hover:text-white transition">Delete</button>
                   </>
                 )}
                 <button onClick={onClose} className="rounded-lg border border-[#E2E8F0] p-1.5 text-[#94A3B8] hover:bg-[#F1F5F9] transition">
@@ -1242,13 +1252,12 @@ function InstructorFormModal({ instructor, options, defaultBranchIds, onClose, o
 //  ASSIGN GROUP MODAL
 // ═══════════════════════════════════════════════════════════════════════
 
-function AssignGroupModal({ instructorId, currentGroupIds, instructorBranchIds, options, onClose, onAssigned }: {
-  instructorId:       string
-  currentGroupIds:    string[]
-  instructorBranchIds: string[]
-  options:            InstructorFormOptions
-  onClose:            () => void
-  onAssigned:         () => void
+function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onAssigned }: {
+  instructorId:    string
+  currentGroupIds: string[]
+  options:         InstructorFormOptions
+  onClose:         () => void
+  onAssigned:      () => void
 }) {
   const [groupId, setGroupId]        = useState('')
   const [role, setRole]              = useState<'lead' | 'assistant'>('lead')
@@ -1256,10 +1265,13 @@ function AssignGroupModal({ instructorId, currentGroupIds, instructorBranchIds, 
   const [isPending, startTransition] = useTransition()
   const [error, setError]            = useState<string | null>(null)
 
-  // Show groups from ANY of the instructor's branches
+  // options.groups is already scoped to the TL's branches at page-load time.
+  // Filtering further by the instructor's home branch would wrongly exclude
+  // groups from branches the instructor teaches cross-branch but hasn't been
+  // formally added to via instructor_branches.
   const eligible = options.groups.filter(g =>
-    (instructorBranchIds.length === 0 || instructorBranchIds.includes(g.branch_id)) &&
     g.status !== 'cancelled' &&
+    g.status !== 'archived' &&
     !currentGroupIds.includes(g.id) &&
     (!q || g.name.toLowerCase().includes(q.toLowerCase()) || (g.code ?? '').toLowerCase().includes(q.toLowerCase()))
   )
@@ -1291,7 +1303,7 @@ function AssignGroupModal({ instructorId, currentGroupIds, instructorBranchIds, 
             <div className="max-h-64 overflow-y-auto rounded-xl border border-[#E2E8F0]">
               {eligible.length === 0 ? (
                 <p className="px-4 py-6 text-center text-[12px] text-[#94A3B8]">
-                  {q ? 'No groups match' : currentGroupIds.length > 0 ? 'All eligible groups already assigned' : 'No eligible groups in instructor branches'}
+                  {q ? 'No groups match' : currentGroupIds.length > 0 ? 'All eligible groups already assigned' : 'No active groups available to assign'}
                 </p>
               ) : (
                 eligible.map(g => (
@@ -1361,6 +1373,149 @@ function ConfirmArchive({ name, onConfirm, onCancel, isPending }: {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════════════════════
+
+function Toast({ msg, type }: { msg: string; type: 'success' | 'error' }) {
+  return (
+    <div className={`fixed top-6 right-6 z-[100] flex items-center gap-2 rounded-xl border px-4 py-3 text-[13px] font-medium shadow-lg ${
+      type === 'success'
+        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+        : 'border-red-200 bg-red-50 text-red-700'
+    }`}>
+      {type === 'success' ? (
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+        </svg>
+      ) : (
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+        </svg>
+      )}
+      {msg}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  CONFIRM DELETE
+// ═══════════════════════════════════════════════════════════════════════
+
+function ConfirmDelete({
+  name, instructorCode, branchNames, groupCount, studentCount,
+  activeGroupCount, futureSessionCount,
+  onConfirm, onCancel, onArchiveInstead, isPending,
+}: {
+  name:               string
+  instructorCode:     string | null
+  branchNames:        string[]
+  groupCount:         number
+  studentCount:       number
+  activeGroupCount:   number
+  futureSessionCount: number
+  onConfirm:          () => void
+  onCancel:           () => void
+  onArchiveInstead:   () => void
+  isPending:          boolean
+}) {
+  const [confirmText, setConfirmText] = useState('')
+  const isBlocked  = activeGroupCount > 0 || futureSessionCount > 0
+  const canConfirm = !isBlocked && confirmText === 'DELETE' && !isPending
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+        <div className="border-b border-red-100 bg-red-50 px-6 py-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-red-600">
+                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/>
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-[15px] font-bold text-[#0B1F3A]">Delete Instructor</h2>
+              <p className="text-[12px] text-red-500">This action cannot be undone</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-5 space-y-4">
+          <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-[13px] font-bold text-[#0B1F3A]">{name}</p>
+              {instructorCode && (
+                <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 font-mono text-[10px] text-[#94A3B8]">{instructorCode}</span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {branchNames.map(b => (
+                <span key={b} className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] text-[#64748B]">{b}</span>
+              ))}
+            </div>
+            <div className="flex gap-4 text-[11px] text-[#64748B]">
+              <span><strong className="text-[#0B1F3A]">{groupCount}</strong> groups</span>
+              <span><strong className="text-[#0B1F3A]">{studentCount}</strong> students affected</span>
+            </div>
+          </div>
+
+          {isBlocked ? (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-1.5">
+              <p className="text-[12px] font-semibold text-amber-800">Cannot delete — active obligations remain:</p>
+              {activeGroupCount > 0 && (
+                <p className="text-[12px] text-amber-700">• {activeGroupCount} active group(s) still assigned</p>
+              )}
+              {futureSessionCount > 0 && (
+                <p className="text-[12px] text-amber-700">• {futureSessionCount} upcoming session(s) scheduled</p>
+              )}
+              <p className="mt-1 text-[11px] text-amber-600">Remove from active groups and cancel upcoming sessions first, or archive to preserve the record.</p>
+            </div>
+          ) : (
+            <>
+              <div className="rounded-xl border border-red-100 bg-red-50 p-3">
+                <p className="text-[12px] text-red-700">
+                  This permanently removes the instructor and operational history links. The auth account will be disabled. Audit data is preserved.
+                </p>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">
+                  Type <strong className="font-mono text-red-600">DELETE</strong> to confirm
+                </label>
+                <input
+                  type="text"
+                  value={confirmText}
+                  onChange={e => setConfirmText(e.target.value)}
+                  placeholder="DELETE"
+                  autoFocus
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 font-mono text-[13px] outline-none focus:border-red-400 transition"
+                />
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="flex gap-2 border-t border-[#E2E8F0] px-6 py-4">
+          <button onClick={onCancel} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition">
+            Cancel
+          </button>
+          {isBlocked ? (
+            <button onClick={onArchiveInstead} className="flex-1 rounded-lg bg-amber-500 py-2 text-[13px] font-semibold text-white hover:bg-amber-600 transition">
+              Archive Instead
+            </button>
+          ) : (
+            <button
+              onClick={onConfirm}
+              disabled={!canConfirm}
+              className="flex-1 rounded-lg border border-red-500 bg-white py-2 text-[13px] font-semibold text-red-600 hover:bg-red-600 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition">
+              {isPending ? 'Deleting…' : 'Delete Permanently'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 //  MAIN CLIENT
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -1393,6 +1548,9 @@ export default function InstructorsWorkspaceClient({
   const [showAssignGroup, setShowAssignGroup]     = useState(false)
   const [showArchive, setShowArchive]             = useState(false)
   const [isArchiving, startArchiveTransition]     = useTransition()
+  const [showDelete, setShowDelete]               = useState(false)
+  const [isDeleting, startDeleteTransition]       = useTransition()
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null)
 
   const selectedInstructor = instructors.find(i => i.id === selectedId) ?? null
   const visible = filterInstructors(instructors, searchQ, branchFilter, quickFilter)
@@ -1401,7 +1559,8 @@ export default function InstructorsWorkspaceClient({
   const totalAssigned  = instructors.filter(i => i.group_count > 0).length
   const totalUnassigned = instructors.filter(i => i.group_count === 0).length
 
-  const pendingEditRef = useRef(false)
+  const pendingEditRef   = useRef(false)
+  const pendingDeleteRef = useRef(false)
 
   const loadDetail = useCallback(async (id: string) => {
     setDetailLoading(true)
@@ -1413,6 +1572,10 @@ export default function InstructorsWorkspaceClient({
         setEditingInstructor(res.data.instructor)
         setShowForm(true)
         pendingEditRef.current = false
+      }
+      if (pendingDeleteRef.current) {
+        setShowDelete(true)
+        pendingDeleteRef.current = false
       }
     }
     setDetailLoading(false)
@@ -1479,8 +1642,43 @@ export default function InstructorsWorkspaceClient({
     })
   }
 
-  const currentGroupIds      = detail?.groups.map(g => g.id) ?? []
-  const instructorBranchIds  = detail?.instructor.branch_ids ?? selectedInstructor?.branch_ids ?? []
+  function openDeleteForInstructor(i: InstructorOperationalRow, e: React.MouseEvent) {
+    e.stopPropagation()
+    if (selectedId === i.id && detail) {
+      setShowDelete(true)
+    } else {
+      setSelectedId(i.id)
+      setActiveTab('overview')
+      pendingDeleteRef.current = true
+      loadDetail(i.id)
+    }
+  }
+
+  function confirmDelete() {
+    if (!selectedId) return
+    const deletedId = selectedId
+    startDeleteTransition(async () => {
+      const res = await deleteInstructorAction(deletedId)
+      if (res.success) {
+        setShowDelete(false)
+        setSelectedId(null)
+        setDetail(null)
+        setInstructors(prev => prev.filter(i => i.id !== deletedId))
+        setToast({ msg: 'Instructor permanently deleted.', type: 'success' })
+      } else {
+        setShowDelete(false)
+        setToast({ msg: res.error?.message ?? 'Delete failed.', type: 'error' })
+      }
+    })
+  }
+
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 3500)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  const currentGroupIds = detail?.groups.map(g => g.id) ?? []
 
   return (
     <div className="flex h-[calc(100vh-64px)] flex-col overflow-hidden bg-[#F8FAFC]">
@@ -1584,6 +1782,7 @@ export default function InstructorsWorkspaceClient({
                 canManage={canManage}
                 onAssign={e => openAssignForInstructor(i, e)}
                 onEdit={e => openEditForInstructor(i, e)}
+                onDelete={e => openDeleteForInstructor(i, e)}
               />
             ))}
           </div>
@@ -1613,6 +1812,7 @@ export default function InstructorsWorkspaceClient({
                     canManage={canManage}
                     onAssign={e => openAssignForInstructor(i, e)}
                     onEdit={e => openEditForInstructor(i, e)}
+                    onDelete={e => openDeleteForInstructor(i, e)}
                   />
                 ))}
               </tbody>
@@ -1633,6 +1833,7 @@ export default function InstructorsWorkspaceClient({
           onEdit={() => { setEditingInstructor(detail?.instructor ?? null); setShowForm(true) }}
           onAssignGroup={() => setShowAssignGroup(true)}
           onArchive={() => setShowArchive(true)}
+          onDelete={() => setShowDelete(true)}
           onRemoveGroup={handleRemoveGroup}
           onClose={() => { setSelectedId(null); setDetail(null) }}
           onRefreshDetail={refreshDetail}
@@ -1653,7 +1854,6 @@ export default function InstructorsWorkspaceClient({
         <AssignGroupModal
           instructorId={selectedId}
           currentGroupIds={currentGroupIds}
-          instructorBranchIds={instructorBranchIds}
           options={options}
           onClose={() => setShowAssignGroup(false)}
           onAssigned={handleAssigned}
@@ -1667,6 +1867,22 @@ export default function InstructorsWorkspaceClient({
           isPending={isArchiving}
         />
       )}
+      {showDelete && selectedInstructor && (
+        <ConfirmDelete
+          name={displayName(selectedInstructor.first_name, selectedInstructor.last_name, selectedInstructor.user_email)}
+          instructorCode={selectedInstructor.instructor_code}
+          branchNames={selectedInstructor.branch_names}
+          groupCount={selectedInstructor.group_count}
+          studentCount={selectedInstructor.student_count}
+          activeGroupCount={detail?.groups.filter(g => g.status === 'active').length ?? 0}
+          futureSessionCount={detail?.sessions.filter(s => isFuture(s.scheduled_at) && s.status !== 'cancelled').length ?? 0}
+          onConfirm={confirmDelete}
+          onCancel={() => setShowDelete(false)}
+          onArchiveInstead={() => { setShowDelete(false); setShowArchive(true) }}
+          isPending={isDeleting}
+        />
+      )}
+      {toast && <Toast msg={toast.msg} type={toast.type} />}
     </div>
   )
 }

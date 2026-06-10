@@ -7,7 +7,7 @@ import type { ActionResult } from '@/types/app'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-interface GuardianBlock {
+interface ParentContactBlock {
   _key:               string
   name:               string
   relation:           string
@@ -36,7 +36,7 @@ interface Props {
 const RELATIONS = ['father', 'mother', 'guardian', 'other'] as const
 const STATUSES  = ['active', 'inactive', 'graduated', 'paused', 'banned'] as const
 
-function newGuardian(isPrimary = false): GuardianBlock {
+function newContact(isPrimary = false): ParentContactBlock {
   return {
     _key:               crypto.randomUUID(),
     name:               '',
@@ -68,21 +68,21 @@ export default function StudentFormModal({
   const singleBranch = branchId || (branchIds.length === 1 ? branchIds[0] : undefined)
   const isEdit       = mode === 'edit'
 
-  // ── Guardian state ──────────────────────────────────────────────────────────
-  const initialGuardians: GuardianBlock[] = isEdit && student?.guardians?.length
-    ? student.guardians.map(g => ({
+  // ── Contact state ───────────────────────────────────────────────────────────
+  const initialContacts: ParentContactBlock[] = isEdit && student?.parent_contacts?.length
+    ? student.parent_contacts.map(c => ({
         _key:               crypto.randomUUID(),
-        name:               g.name,
-        relation:           g.relation,
-        phone1:             g.phone1  ?? '',
-        phone2:             g.phone2  ?? '',
-        whatsapp_preferred: g.whatsapp_preferred,
-        is_primary:         g.is_primary,
-        is_emergency:       g.is_emergency,
+        name:               c.name,
+        relation:           c.relation,
+        phone1:             c.phone1  ?? '',
+        phone2:             c.phone2  ?? '',
+        whatsapp_preferred: c.whatsapp_preferred,
+        is_primary:         c.is_primary,
+        is_emergency:       c.is_emergency,
       }))
-    : [newGuardian(true)]
+    : [newContact(true)]
 
-  const [guardians, setGuardians] = useState<GuardianBlock[]>(initialGuardians)
+  const [contacts, setContacts] = useState<ParentContactBlock[]>(initialContacts)
 
   // ── Age / DOB cross-validation ──────────────────────────────────────────────
   const [ageVal,       setAgeVal]       = useState<string>(isEdit ? String(student?.age ?? '') : '')
@@ -225,19 +225,19 @@ export default function StudentFormModal({
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  // ── Guardian helpers ────────────────────────────────────────────────────────
-  const updateGuardian = (key: string, field: keyof GuardianBlock, value: any) => {
+  // ── Contact helpers ─────────────────────────────────────────────────────────
+  const updateContact = (key: string, field: keyof ParentContactBlock, value: any) => {
     setDirty(true)
-    setGuardians(gs => gs.map(g => g._key === key ? { ...g, [field]: value } : g))
+    setContacts(cs => cs.map(c => c._key === key ? { ...c, [field]: value } : c))
   }
-  const addGuardian = () => {
+  const addContact = () => {
     setDirty(true)
-    setGuardians(gs => [...gs, newGuardian(false)])
+    setContacts(cs => [...cs, newContact(false)])
   }
-  const removeGuardian = (key: string) => {
-    if (guardians.length <= 1) return
+  const removeContact = (key: string) => {
+    if (contacts.length <= 1) return
     setDirty(true)
-    setGuardians(gs => gs.filter(g => g._key !== key))
+    setContacts(cs => cs.filter(c => c._key !== key))
   }
 
   const overlayClick = (e: React.MouseEvent) => {
@@ -254,10 +254,10 @@ export default function StudentFormModal({
       validateAge(ageVal)
       return
     }
-    const hasNamedGuardian = guardians.some(g => g.name.trim() && g.phone1.trim())
-    if (!hasNamedGuardian) {
+    const hasNamedContact = contacts.some(c => c.name.trim() && c.phone1.trim())
+    if (!hasNamedContact) {
       e.preventDefault()
-      alert('At least one guardian with name and phone is required.')
+      alert('At least one contact with name and phone is required.')
       return
     }
     const pw = newPasswordRef.current?.value
@@ -556,35 +556,35 @@ export default function StudentFormModal({
             </fieldset>
           )}
 
-          {/* ── Guardians / Contacts ────────────────────────────────── */}
+          {/* ── Parent Contacts ─────────────────────────────────────── */}
           <fieldset className="space-y-3 rounded-xl border border-[#E2E8F0] p-4">
             <div className="flex items-center justify-between">
               <legend className="px-1 text-xs font-semibold text-[#64748B] uppercase tracking-wide">
-                Guardians / Contacts <span className="text-red-500">*</span>
+                Parent Contacts <span className="text-red-500">*</span>
               </legend>
               <button
                 type="button"
-                onClick={addGuardian}
+                onClick={addContact}
                 className="flex items-center gap-1 rounded-lg bg-[#FF8A1F]/10 px-2.5 py-1 text-xs font-semibold text-[#FF8A1F] hover:bg-[#FF8A1F]/20"
               >
                 <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
-                Add Guardian
+                + Add Contact
               </button>
             </div>
 
-            {guardians.map((g, i) => (
-              <div key={g._key} className="space-y-2 rounded-lg border border-[#E2E8F0] p-3">
-                {/* Guardian header */}
+            {contacts.map((c, i) => (
+              <div key={c._key} className="space-y-2 rounded-lg border border-[#E2E8F0] p-3">
+                {/* Contact header */}
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[#64748B]">Guardian {i + 1}</span>
+                  <span className="text-xs font-semibold text-[#64748B]">Contact {i + 1}</span>
                   <div className="flex items-center gap-3">
                     <label className="flex items-center gap-1.5 cursor-pointer text-xs text-[#64748B]">
                       <input
                         type="checkbox"
-                        checked={g.is_primary}
-                        onChange={e => updateGuardian(g._key, 'is_primary', e.target.checked)}
+                        checked={c.is_primary}
+                        onChange={e => updateContact(c._key, 'is_primary', e.target.checked)}
                         className="h-3 w-3 rounded border-[#E2E8F0] accent-[#FF8A1F]"
                       />
                       Primary
@@ -592,18 +592,18 @@ export default function StudentFormModal({
                     <label className="flex items-center gap-1.5 cursor-pointer text-xs text-[#64748B]">
                       <input
                         type="checkbox"
-                        checked={g.is_emergency}
-                        onChange={e => updateGuardian(g._key, 'is_emergency', e.target.checked)}
+                        checked={c.is_emergency}
+                        onChange={e => updateContact(c._key, 'is_emergency', e.target.checked)}
                         className="h-3 w-3 rounded border-[#E2E8F0] accent-[#FF8A1F]"
                       />
                       Emergency
                     </label>
-                    {guardians.length > 1 && (
+                    {contacts.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => removeGuardian(g._key)}
+                        onClick={() => removeContact(c._key)}
                         className="rounded p-0.5 text-red-400 hover:bg-red-50 hover:text-red-600"
-                        aria-label="Remove guardian"
+                        aria-label="Remove contact"
                       >
                         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -620,17 +620,17 @@ export default function StudentFormModal({
                       Name <span className="text-red-500">*</span>
                     </label>
                     <input
-                      value={g.name}
-                      onChange={e => updateGuardian(g._key, 'name', e.target.value)}
-                      placeholder="Guardian name"
+                      value={c.name}
+                      onChange={e => updateContact(c._key, 'name', e.target.value)}
+                      placeholder="Contact name"
                       className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
                     />
                   </div>
                   <div>
                     <label className="mb-0.5 block text-xs text-[#64748B]">Relation</label>
                     <select
-                      value={g.relation}
-                      onChange={e => updateGuardian(g._key, 'relation', e.target.value)}
+                      value={c.relation}
+                      onChange={e => updateContact(c._key, 'relation', e.target.value)}
                       className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
                     >
                       {RELATIONS.map(r => (
@@ -647,8 +647,8 @@ export default function StudentFormModal({
                       Phone 1 <span className="text-red-500">*</span>
                     </label>
                     <input
-                      value={g.phone1}
-                      onChange={e => updateGuardian(g._key, 'phone1', e.target.value)}
+                      value={c.phone1}
+                      onChange={e => updateContact(c._key, 'phone1', e.target.value)}
                       placeholder="01XXXXXXXXX"
                       className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
                     />
@@ -656,8 +656,8 @@ export default function StudentFormModal({
                   <div>
                     <label className="mb-0.5 block text-xs text-[#64748B]">Phone 2</label>
                     <input
-                      value={g.phone2}
-                      onChange={e => updateGuardian(g._key, 'phone2', e.target.value)}
+                      value={c.phone2}
+                      onChange={e => updateContact(c._key, 'phone2', e.target.value)}
                       placeholder="Optional"
                       className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
                     />
@@ -668,8 +668,8 @@ export default function StudentFormModal({
                 <label className="flex cursor-pointer items-center gap-2 text-xs text-[#64748B]">
                   <input
                     type="checkbox"
-                    checked={g.whatsapp_preferred}
-                    onChange={e => updateGuardian(g._key, 'whatsapp_preferred', e.target.checked)}
+                    checked={c.whatsapp_preferred}
+                    onChange={e => updateContact(c._key, 'whatsapp_preferred', e.target.checked)}
                     className="h-3.5 w-3.5 rounded border-[#E2E8F0] accent-[#25D366]"
                   />
                   WhatsApp preferred
@@ -677,11 +677,11 @@ export default function StudentFormModal({
               </div>
             ))}
 
-            {/* Serialize guardians as JSON hidden field */}
+            {/* Serialize contacts as JSON hidden field */}
             <input
               type="hidden"
-              name="guardians_json"
-              value={JSON.stringify(guardians.map(({ _key, ...g }) => g))}
+              name="parent_contacts_json"
+              value={JSON.stringify(contacts.map(({ _key, ...c }) => c))}
             />
           </fieldset>
 

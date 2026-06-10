@@ -92,31 +92,45 @@ export interface CourseModuleItem {
 }
 
 export interface SessionDetail {
-  id:               string
-  group_course_id:  string
-  group_id:         string
-  branch_id:        string
-  scheduled_at:     string
-  started_at:       string | null
-  ended_at:         string | null
-  duration_minutes: number
-  type:             string
-  delivery:         string | null
-  meeting_url:      string | null
-  room:             string | null
-  status:           string
-  topic:            string | null
-  notes:            string | null
-  group_name:       string
-  course_title:     string
-  course_id:        string
-  attendance:       SessionAttendanceRow[]
-  student_count:    number
-  recordings:       SessionRecording[]
-  resources_links:  ResourceLink[]
-  course_modules:   CourseModuleItem[]
-  progress:         SessionProgressItem[]
+  id:                  string
+  group_course_id:     string
+  group_id:            string
+  branch_id:           string
+  scheduled_at:        string
+  started_at:          string | null
+  ended_at:            string | null
+  duration_minutes:    number
+  type:                string
+  delivery:            string | null
+  meeting_url:         string | null
+  room:                string | null
+  status:              string
+  topic:               string | null
+  notes:               string | null
+  cancellation_reason: string | null
+  cancelled_at:        string | null
+  postponed_reason:    string | null
+  original_session_id: string | null
+  group_name:          string
+  course_title:        string
+  course_id:           string
+  attendance:          SessionAttendanceRow[]
+  student_count:       number
+  recordings:          SessionRecording[]
+  resources_links:     ResourceLink[]
+  course_modules:      CourseModuleItem[]
+  progress:            SessionProgressItem[]
   current_session_num: number
+  session_homework:    SessionHomeworkItem[]
+}
+
+export interface SessionHomeworkItem {
+  id:              string
+  title:           string
+  type:            string
+  submission_type: string
+  due_at:          string | null
+  status:          string
 }
 
 export interface PendingSubmissionItem {

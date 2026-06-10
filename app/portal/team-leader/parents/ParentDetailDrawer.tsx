@@ -14,11 +14,14 @@ interface Props {
 type Tab = 'overview' | 'children' | 'contracts' | 'attendance' | 'communication' | 'account'
 
 const HEALTH_CONFIG: Record<string, { label: string; color: string; text: string }> = {
-  HEALTHY:         { label: 'Healthy',      color: 'bg-emerald-100', text: 'text-emerald-700' },
+  HEALTHY:         { label: 'Active',       color: 'bg-emerald-100', text: 'text-emerald-700' },
   AT_RISK:         { label: 'At Risk',      color: 'bg-red-100',     text: 'text-red-600'     },
   NEEDS_ATTENTION: { label: 'Needs Action', color: 'bg-amber-100',   text: 'text-amber-700'   },
-  NO_CHILDREN:     { label: 'No Children',  color: 'bg-slate-100',   text: 'text-slate-500'   },
+  NO_ENROLLMENTS:  { label: 'No Enrollment',color: 'bg-orange-100',  text: 'text-orange-700'  },
+  GRADUATED:       { label: 'Graduated',    color: 'bg-blue-100',    text: 'text-blue-700'    },
   INACTIVE:        { label: 'Inactive',     color: 'bg-slate-100',   text: 'text-slate-500'   },
+  ARCHIVED:        { label: 'Archived',     color: 'bg-slate-100',   text: 'text-slate-400'   },
+  NO_CHILDREN:     { label: 'No Children',  color: 'bg-slate-100',   text: 'text-slate-500'   },
 }
 
 const RISK_CLR: Record<string, string> = {

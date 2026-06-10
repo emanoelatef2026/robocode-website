@@ -649,149 +649,6 @@ export async function getGroupMetrics(groupIds: string[]): Promise<Map<string, G
   return result
 }
 
-// ─── Branch-filtered parents list ────────────────────────────────────────────
-
-export interface TLParentListItem {
-  id:              string
-  user_id:         string
-  first_name:      string | null
-  last_name:       string | null
-  email:           string | null
-  phone:           string | null
-  student_count:   number
-  // CRM enrichment
-  student_ids:     string[]
-  total_remaining: number
-  has_overdue:     boolean
-  risk_level:      'HIGH' | 'MEDIUM' | 'LOW' | null
-  // Parent health score (0-100)
-  // Based on: payment compliance, no overdue, number of active contracts
-  health_score:    number
-  renewal_candidates: number   // students with ≤ 2 sessions remaining
-}
-
-export async function listParentsByBranch(
-  branchIds: string[],
-  { page = 1, perPage = 30, search = '' }: { page?: number; perPage?: number; search?: string } = {}
-): Promise<{ data: TLParentListItem[]; total: number; page: number; perPage: number; totalPages: number }> {
-  if (!branchIds.length) return { data: [], total: 0, page, perPage, totalPages: 0 }
-
-  const db = createServiceClient()
-
-  // 1. Get active students in this branch
-  const { data: studRows } = await db
-    .from('students')
-    .select('id')
-    .in('branch_id', branchIds)
-    .eq('status', 'active')
-    .is('deleted_at', null)
-    .limit(2000)
-  const studIds = (studRows ?? []).map((r: any) => r.id as string)
-  if (!studIds.length) return { data: [], total: 0, page, perPage, totalPages: 0 }
-
-  // 2. Get parent→student links
-  const { data: psRows } = await db
-    .from('parent_students')
-    .select('parent_id, student_id')
-    .in('student_id', studIds)
-    .limit(2000)
-
-  // Build parent→student mapping
-  const parentToStudents = new Map<string, string[]>()
-  for (const ps of (psRows ?? []) as any[]) {
-    const pid = ps.parent_id as string
-    if (!parentToStudents.has(pid)) parentToStudents.set(pid, [])
-    parentToStudents.get(pid)!.push(ps.student_id as string)
-  }
-
-  const parentIds = [...parentToStudents.keys()]
-  if (!parentIds.length) return { data: [], total: 0, page, perPage, totalPages: 0 }
-
-  // 3. Fetch financial data for all student IDs
-  const { data: accRows } = await db
-    .from('student_financial_accounts')
-    .select('student_id, remaining_amount, status')
-    .in('student_id', studIds)
-  const finByStudent = new Map<string, { remaining: number; overdue: boolean }>()
-  for (const a of (accRows ?? []) as any[]) {
-    const existing = finByStudent.get(a.student_id) ?? { remaining: 0, overdue: false }
-    finByStudent.set(a.student_id, {
-      remaining: existing.remaining + Number(a.remaining_amount ?? 0),
-      overdue:   existing.overdue || a.status === 'OVERDUE',
-    })
-  }
-
-  // 4. Fetch parents with profile
-  const { data: parentData, count } = await db
-    .from('parents')
-    .select(`
-      id, user_id,
-      users!parents_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name))
-    `, { count: 'exact' })
-    .in('id', parentIds)
-    .order('id')
-    .range((page - 1) * perPage, page * perPage - 1)
-
-  let rows: TLParentListItem[] = ((parentData ?? []) as any[]).map(r => {
-    const prof    = r.users?.profiles
-    const sIds    = parentToStudents.get(r.id) ?? []
-    let totalRem  = 0
-    let hasOverdue = false
-
-    for (const sid of sIds) {
-      const fin = finByStudent.get(sid)
-      if (fin) { totalRem += fin.remaining; if (fin.overdue) hasOverdue = true }
-    }
-
-    const riskLevel: 'HIGH' | 'MEDIUM' | 'LOW' | null =
-      hasOverdue ? 'HIGH' :
-      totalRem > 0 ? 'MEDIUM' :
-      null
-
-    // Parent health score 0-100:
-    // 100 = no overdue, no balance → fully paid up
-    //  80 = has balance but not overdue
-    //  50 = overdue
-    //   0 = blocked
-    const healthScore =
-      hasOverdue ? 50 :
-      totalRem > 0 ? 80 :
-      100
-
-    return {
-      id:            r.id,
-      user_id:       r.user_id,
-      first_name:    prof?.first_name ?? null,
-      last_name:     prof?.last_name  ?? null,
-      email:         r.users?.email   ?? null,
-      phone:         r.users?.phone   ?? null,
-      student_count: sIds.length,
-      student_ids:   sIds,
-      total_remaining: totalRem,
-      has_overdue:   hasOverdue,
-      risk_level:    riskLevel,
-      health_score:  healthScore,
-      renewal_candidates: 0,   // computed from enrollment data separately
-    }
-  })
-
-  // Client-side search (name/email/phone match)
-  if (search) {
-    const lower = search.toLowerCase()
-    rows = rows.filter(r => {
-      const name = [r.first_name, r.last_name].filter(Boolean).join(' ').toLowerCase()
-      return (
-        name.includes(lower) ||
-        (r.email?.toLowerCase().includes(lower) ?? false) ||
-        (r.phone?.includes(search) ?? false)
-      )
-    })
-  }
-
-  const total = count ?? rows.length
-  return { data: rows, total, page, perPage, totalPages: Math.ceil(total / perPage) }
-}
-
 // ─── Portfolio counts by status ───────────────────────────────────────────────
 
 export async function getPortfolioStatusCounts(
@@ -824,16 +681,31 @@ export async function getPortfolioStatusCounts(
 
 // ─── Work Queues (Phase 3 — Dashboard as actionable work lists) ───────────────
 
+export type QueueCategory =
+  | 'collect_today'
+  | 'renew_urgent'
+  | 'attendance_risks'
+  | 'contracts_near_exhaustion'
+  | 'students_missing_groups'
+  | 'inactive_students'
+
+export type QueueSeverity = 'critical' | 'high' | 'medium' | 'low'
+
 export interface WorkQueueItem {
-  student_id:       string
-  student_name:     string
-  student_code:     string | null
-  group_name:       string | null
-  instructor_name:  string | null
-  parent_phone_1:   string | null
-  value:            string   // primary display value (amount, sessions, days, etc.)
-  sub:              string | null
-  href:             string
+  queue_id:        string          // `${category}:${enrollment_id}` — stable, unique
+  enrollment_id:   string
+  student_id:      string
+  student_name:    string
+  student_code:    string | null
+  group_id:        string | null   // raw null — never "No group"
+  group_name:      string | null   // raw null — UI adds fallback label
+  instructor_name: string | null
+  parent_phone_1:  string | null
+  value:           string          // primary display value (amount, sessions, days, etc.)
+  sub:             string | null
+  href:            string
+  category:        QueueCategory
+  severity:        QueueSeverity
 }
 
 export interface WorkQueues {
@@ -853,17 +725,48 @@ export async function getWorkQueues(branchIds: string[]): Promise<WorkQueues> {
     }
   }
 
-  const db    = createServiceClient()
-  const today = new Date().toISOString().slice(0, 10)
+  const db           = createServiceClient()
+  const today        = new Date().toISOString().slice(0, 10)
+  const sixtyDaysAgo = new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10)
 
-  // Single pass: load ACTIVE enrollments with finance + attendance aggregates
+  // ── Raw row types (Supabase join shapes) ──────────────────────────────────
+  interface RawEnrollStudents {
+    student_code: string | null
+    users: { email?: string; profiles: { first_name: string | null; last_name: string | null } | null } | null
+  }
+  interface RawEnrollRow {
+    id: string
+    student_id: string
+    group_id: string | null
+    enrolled_sessions: number | null
+    remaining_sessions: number | null
+    students: RawEnrollStudents | null
+    groups: { name: string } | null
+    group_courses: {
+      instructors: {
+        users: { profiles: { first_name: string | null; last_name: string | null } | null } | null
+      } | null
+    } | null
+  }
+  interface RawFinAccount {
+    enrollment_id: string | null
+    student_id: string
+    remaining_amount: number | null
+    next_due_date: string | null
+  }
+  interface RawAttRow {
+    student_id: string
+    recorded_at: string
+    status: string
+  }
+
+  // Single pass: load ACTIVE enrollments with nested student / group / instructor
   const { data: enrollRows } = await db
     .from('student_enrollments')
     .select(`
-      id, student_id, group_id, enrolled_sessions, consumed_sessions, remaining_sessions,
-      financial_status, start_date,
+      id, student_id, group_id, enrolled_sessions, remaining_sessions,
       students!student_enrollments_student_id_fkey(
-        student_code, emergency_contact,
+        student_code,
         users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))
       ),
       groups!student_enrollments_group_id_fkey(name),
@@ -877,7 +780,7 @@ export async function getWorkQueues(branchIds: string[]): Promise<WorkQueues> {
     .eq('status', 'ACTIVE')
     .limit(1000)
 
-  const enrollments = (enrollRows ?? []) as any[]
+  const enrollments = (enrollRows ?? []) as unknown as RawEnrollRow[]
   if (!enrollments.length) {
     return {
       collect_today: [], renew_urgent: [], attendance_risks: [],
@@ -885,134 +788,165 @@ export async function getWorkQueues(branchIds: string[]): Promise<WorkQueues> {
     }
   }
 
-  // Load financial accounts for these enrollments
-  const enrollIds    = enrollments.map(e => e.id as string)
-  const studentIds   = [...new Set(enrollments.map(e => e.student_id as string))]
+  const enrollIds  = enrollments.map(e => e.id)
+  const studentIds = [...new Set(enrollments.map(e => e.student_id))]
 
   const [accRes, attRes] = await Promise.all([
+    // Legacy fallback: some accounts may be linked by student_id only (pre-enrollment era)
     db.from('student_financial_accounts')
-      .select('enrollment_id, student_id, remaining_amount, status, next_due_date')
+      .select('enrollment_id, student_id, remaining_amount, next_due_date')
       .or(`enrollment_id.in.(${enrollIds.join(',')}),student_id.in.(${studentIds.join(',')})`),
 
-    // Last attendance per student
     db.from('attendance_records')
       .select('student_id, recorded_at, status')
       .in('student_id', studentIds)
-      .order('recorded_at', { ascending: false }),
+      .gte('recorded_at', sixtyDaysAgo)
+      .order('recorded_at', { ascending: false })
+      .limit(5000),
   ])
 
-  // Maps
-  const accByEnroll = new Map<string, any>()
-  const accByStudent = new Map<string, any>()
-  for (const a of (accRes.data ?? []) as any[]) {
+  // Financial lookup: exact by enrollment first, student fallback for legacy rows
+  const accByEnroll  = new Map<string, RawFinAccount>()
+  const accByStudent = new Map<string, RawFinAccount>()
+  for (const a of (accRes.data ?? []) as unknown as RawFinAccount[]) {
     if (a.enrollment_id) accByEnroll.set(a.enrollment_id, a)
-    else if (!accByStudent.has(a.student_id)) accByStudent.set(a.student_id, a)
+    if (!accByStudent.has(a.student_id)) accByStudent.set(a.student_id, a)
   }
 
-  // Consecutive absences per student (from most recent)
+  // Consecutive-absence count per student (records ordered DESC: newest first)
   const consAbsMap = new Map<string, number>()
   const lastAttMap  = new Map<string, string>()
-  const POSITIVE = new Set(['present', 'late', 'makeup'])
-  const seenStu  = new Set<string>()
+  const POSITIVE    = new Set(['present', 'late', 'makeup'])
+  const seenPos     = new Set<string>()
 
-  for (const ar of (attRes.data ?? []) as any[]) {
+  for (const ar of (attRes.data ?? []) as unknown as RawAttRow[]) {
     if (!lastAttMap.has(ar.student_id)) lastAttMap.set(ar.student_id, ar.recorded_at)
-    if (seenStu.has(ar.student_id)) continue
-    // Count consecutive absences from most-recent backward
-    let cons = consAbsMap.get(ar.student_id) ?? 0
-    if (POSITIVE.has(ar.status)) { seenStu.add(ar.student_id) }
-    else { consAbsMap.set(ar.student_id, cons + 1) }
+    if (seenPos.has(ar.student_id)) continue
+    if (POSITIVE.has(ar.status)) {
+      seenPos.add(ar.student_id)
+    } else {
+      consAbsMap.set(ar.student_id, (consAbsMap.get(ar.student_id) ?? 0) + 1)
+    }
   }
 
   const fmt = (n: number) => new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
 
-  const toItem = (e: any, value: string, sub: string | null): WorkQueueItem => {
-    const s    = e.students     ?? {}
-    const prof = s.users?.profiles ?? {}
-    const ec   = (s.emergency_contact ?? {}) as Record<string, string>
-    const gc   = e.group_courses ?? null
-    const instrP = gc?.instructors?.users?.profiles
+  const toItem = (
+    e: RawEnrollRow,
+    category: QueueCategory,
+    severity: QueueSeverity,
+    value: string,
+    sub: string | null,
+  ): WorkQueueItem => {
+    const s      = e.students ?? ({} as RawEnrollStudents)
+    const prof   = (s.users?.profiles ?? {}) as { first_name: string | null; last_name: string | null }
+    const instrP = e.group_courses?.instructors?.users?.profiles
     return {
+      queue_id:        `${category}:${e.id}`,
+      enrollment_id:   e.id,
       student_id:      e.student_id,
       student_name:    [prof.first_name, prof.last_name].filter(Boolean).join(' ') || s.users?.email || 'Unknown',
       student_code:    s.student_code ?? null,
+      group_id:        e.group_id,
       group_name:      e.groups?.name ?? null,
       instructor_name: instrP ? [instrP.first_name, instrP.last_name].filter(Boolean).join(' ') || null : null,
-      parent_phone_1:  ec.phone1 ?? null,
+      parent_phone_1:  null,
       value,
       sub,
-      href: `/portal/team-leader/students/${e.student_id}`,
+      href:            `/portal/team-leader/students/${e.student_id}`,
+      category,
+      severity,
     }
   }
 
-  const collect_today:          WorkQueueItem[] = []
-  const renew_urgent:           WorkQueueItem[] = []
-  const attendance_risks:       WorkQueueItem[] = []
+  const collect_today:             WorkQueueItem[] = []
+  const renew_urgent:              WorkQueueItem[] = []
+  const attendance_risks:          WorkQueueItem[] = []
   const contracts_near_exhaustion: WorkQueueItem[] = []
-  const students_missing_groups: WorkQueueItem[] = []
-  const inactive_students:       WorkQueueItem[] = []
+  const students_missing_groups:   WorkQueueItem[] = []
+  const inactive_students:         WorkQueueItem[] = []
+
+  // Per-student dedup sets for student-level queues
+  const seenRisk     = new Set<string>()
+  const seenInactive = new Set<string>()
+  const seenMissing  = new Set<string>()
 
   for (const e of enrollments) {
-    const acc   = accByEnroll.get(e.id) ?? accByStudent.get(e.student_id)
-    const remaining = acc ? Number(acc.remaining_amount) : 0
-    const daysOvr   = acc?.next_due_date && acc.next_due_date <= today && remaining > 0
-      ? Math.floor((Date.now() - new Date(acc.next_due_date).getTime()) / 86400000)
+    const acc       = accByEnroll.get(e.id) ?? accByStudent.get(e.student_id)
+    const remaining = acc ? Number(acc.remaining_amount ?? 0) : 0
+    const dueDate   = acc?.next_due_date ?? null
+    const daysOvr   = dueDate && dueDate <= today && remaining > 0
+      ? Math.floor((Date.now() - new Date(dueDate).getTime()) / 86400000)
       : 0
-
-    const sessLeft = Number(e.remaining_sessions ?? 0)
+    const sessLeft  = Number(e.remaining_sessions ?? 0)
     const sessTotal = Number(e.enrolled_sessions ?? 0)
-    const cons  = consAbsMap.get(e.student_id) ?? 0
-    const lastAtt = lastAttMap.get(e.student_id) ?? null
-    const daysSinceLast = lastAtt
+    const cons      = consAbsMap.get(e.student_id) ?? 0
+    const lastAtt   = lastAttMap.get(e.student_id) ?? null
+    const daysSince = lastAtt
       ? Math.floor((Date.now() - new Date(lastAtt).getTime()) / 86400000)
       : null
 
-    // 1. Collect today (overdue or due today with balance)
-    if (remaining > 0 && (daysOvr > 0 || acc?.next_due_date === today)) {
-      collect_today.push(toItem(e, `EGP ${fmt(remaining)}`, daysOvr > 0 ? `${daysOvr}d overdue` : 'Due today'))
+    // 1. Collect today — per enrollment (each overdue balance is an independent action)
+    if (remaining > 0 && (daysOvr > 0 || dueDate === today)) {
+      const sev: QueueSeverity = daysOvr > 7 ? 'critical' : daysOvr > 0 ? 'high' : 'medium'
+      collect_today.push(toItem(e, 'collect_today', sev,
+        `EGP ${fmt(remaining)}`, daysOvr > 0 ? `${daysOvr}d overdue` : 'Due today'))
     }
 
-    // 2. Renew urgent (0-2 sessions left, finite package)
+    // 2. Renew urgent — per enrollment
     if (sessTotal > 0 && sessLeft <= 2) {
-      renew_urgent.push(toItem(e, sessLeft <= 0 ? 'Exhausted' : `${sessLeft} left`, `of ${sessTotal}`))
+      renew_urgent.push(toItem(e, 'renew_urgent', sessLeft <= 0 ? 'critical' : 'high',
+        sessLeft <= 0 ? 'Exhausted' : `${sessLeft} left`, `of ${sessTotal}`))
     }
 
-    // 3. Attendance risks (consec absences ≥ 3)
-    if (cons >= 3) {
-      attendance_risks.push(toItem(e, `${cons} absences`, 'consecutive'))
+    // 3. Attendance risks — per student (worst enrollment wins via first-seen order)
+    if (cons >= 3 && !seenRisk.has(e.student_id)) {
+      seenRisk.add(e.student_id)
+      attendance_risks.push(toItem(e, 'attendance_risks', cons >= 5 ? 'critical' : 'high',
+        `${cons} absences`, 'consecutive'))
     }
 
-    // 4. Contracts near exhaustion (3-5 sessions left)
+    // 4. Contracts near exhaustion — per enrollment
     if (sessTotal > 0 && sessLeft >= 3 && sessLeft <= 5) {
-      contracts_near_exhaustion.push(toItem(e, `${sessLeft} left`, `of ${sessTotal}`))
+      contracts_near_exhaustion.push(toItem(e, 'contracts_near_exhaustion', 'medium',
+        `${sessLeft} left`, `of ${sessTotal}`))
     }
 
-    // 5. Students missing groups (no group_id)
-    if (!e.group_id) {
-      students_missing_groups.push(toItem(e, 'No group', remaining > 0 ? `EGP ${fmt(remaining)} balance` : null))
+    // 5. Missing groups — per student (avoid N rows for same unassigned student)
+    if (!e.group_id && !seenMissing.has(e.student_id)) {
+      seenMissing.add(e.student_id)
+      students_missing_groups.push(toItem(e, 'students_missing_groups', 'low',
+        'Unassigned', remaining > 0 ? `EGP ${fmt(remaining)} balance` : null))
     }
 
-    // 6. Inactive students (14+ days without attendance)
-    if (daysSinceLast !== null && daysSinceLast >= 14) {
-      inactive_students.push(toItem(e, `${daysSinceLast}d inactive`, lastAtt ? `Last: ${lastAtt.slice(0,10)}` : null))
+    // 6. Inactive students — per student
+    if (daysSince !== null && daysSince >= 14 && !seenInactive.has(e.student_id)) {
+      seenInactive.add(e.student_id)
+      inactive_students.push(toItem(e, 'inactive_students', daysSince >= 30 ? 'high' : 'medium',
+        `${daysSince}d inactive`, lastAtt ? `Last: ${lastAtt.slice(0, 10)}` : null))
     }
   }
 
-  // Sort each queue by urgency
-  collect_today.sort((a, b) => {
-    const aD = parseInt(a.sub ?? '0')
-    const bD = parseInt(b.sub ?? '0')
-    return bD - aD
-  })
-  inactive_students.sort((a, b) => parseInt(b.value) - parseInt(a.value))
+  const SEV: Record<QueueSeverity, number> = { critical: 4, high: 3, medium: 2, low: 1 }
+  const byUrgency = (a: WorkQueueItem, b: WorkQueueItem) =>
+    (SEV[b.severity] - SEV[a.severity]) || a.queue_id.localeCompare(b.queue_id)
+
+  collect_today.sort((a, b) =>
+    (parseInt(b.sub ?? '0') - parseInt(a.sub ?? '0')) || byUrgency(a, b))
+  inactive_students.sort((a, b) =>
+    (parseInt(b.value) - parseInt(a.value)) || byUrgency(a, b))
+  attendance_risks.sort(byUrgency)
+  renew_urgent.sort(byUrgency)
+  contracts_near_exhaustion.sort(byUrgency)
+  students_missing_groups.sort(byUrgency)
 
   return {
-    collect_today:           collect_today.slice(0, 20),
-    renew_urgent:            renew_urgent.slice(0, 20),
-    attendance_risks:        attendance_risks.slice(0, 20),
+    collect_today:             collect_today.slice(0, 20),
+    renew_urgent:              renew_urgent.slice(0, 20),
+    attendance_risks:          attendance_risks.slice(0, 20),
     contracts_near_exhaustion: contracts_near_exhaustion.slice(0, 20),
-    students_missing_groups: students_missing_groups.slice(0, 20),
-    inactive_students:       inactive_students.slice(0, 20),
+    students_missing_groups:   students_missing_groups.slice(0, 20),
+    inactive_students:         inactive_students.slice(0, 20),
   }
 }
 

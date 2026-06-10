@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { createParentModal, updateParentModal } from '@/modules/parents/modal-actions'
 import type { ParentOperationalRow, StudentPickerOption } from '@/modules/parents/operational'
 import type { ActionResult } from '@/types/app'
@@ -65,8 +66,23 @@ export default function ParentFormModal({
   const [dirty,      setDirty]      = useState(false)
   const [pickerQ,    setPickerQ]    = useState('')
   const [showPicker, setShowPicker] = useState(false)
-  const pickerRef                   = useRef<HTMLDivElement>(null)
-  const pickerInputRef              = useRef<HTMLInputElement>(null)
+  // portal refs — dropdownRef covers the portaled element so click-outside
+  // doesn't incorrectly fire when the user clicks a result
+  const pickerRef      = useRef<HTMLDivElement>(null)
+  const pickerInputRef = useRef<HTMLInputElement>(null)
+  const dropdownRef    = useRef<HTMLDivElement>(null)
+  // fixed-position style for the portaled dropdown
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({})
+  // portal needs the DOM to be mounted (SSR guard)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
+  function positionDropdown() {
+    const input = pickerInputRef.current
+    if (!input) return
+    const rect = input.getBoundingClientRect()
+    setDropdownStyle({ top: rect.bottom + 4, left: rect.left, width: rect.width })
+  }
 
   // ── Duplicate detection state ───────────────────────────────────────────────
   const [dupWarning,   setDupWarning]   = useState<string | null>(null)
@@ -117,9 +133,9 @@ export default function ParentFormModal({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
-        setShowPicker(false)
-      }
+      const inInput    = pickerRef.current?.contains(e.target as Node)
+      const inDropdown = dropdownRef.current?.contains(e.target as Node)
+      if (!inInput && !inDropdown) setShowPicker(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -133,7 +149,7 @@ export default function ParentFormModal({
   // ── Student picker ──────────────────────────────────────────────────────────
   const linkedIds = new Set(links.map(l => l.student_id))
 
-  const pickerResults = pickerQ.length >= 1
+  const pickerResults = pickerQ.length >= 2
     ? studentOptions.filter(s => {
         if (linkedIds.has(s.student_id)) return false
         const q      = pickerQ.toLowerCase()
@@ -377,8 +393,8 @@ export default function ParentFormModal({
                     ref={pickerInputRef}
                     type="text"
                     value={pickerQ}
-                    onChange={e => { setPickerQ(e.target.value); setShowPicker(true) }}
-                    onFocus={() => setShowPicker(true)}
+                    onChange={e => { setPickerQ(e.target.value); setShowPicker(true); positionDropdown() }}
+                    onFocus={() => { setShowPicker(true); positionDropdown() }}
                     placeholder="Search by name, code, phone…"
                     className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] pl-9 pr-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
                   />
@@ -395,9 +411,24 @@ export default function ParentFormModal({
                   )}
                 </div>
 
-                {showPicker && pickerQ.length >= 1 && (
-                  <div className="absolute z-20 mt-1 w-full rounded-xl border border-[#E2E8F0] bg-white shadow-xl overflow-hidden">
-                    {pickerResults.length > 0 ? (
+                {/* diagnostic: shows scope count so TL knows server returned data */}
+                {studentOptions.length > 0 ? (
+                  <p className="mt-1 text-[10px] text-[#94A3B8]">{studentOptions.length} student{studentOptions.length !== 1 ? 's' : ''} in your branches — type 2+ chars to search</p>
+                ) : (
+                  <p className="mt-1 text-[10px] text-red-400">No students found in your branches</p>
+                )}
+
+                {mounted && showPicker && pickerQ.length >= 2 && createPortal(
+                  <div
+                    ref={dropdownRef}
+                    style={{ position: 'fixed', zIndex: 9999, ...dropdownStyle }}
+                    className="rounded-xl border border-[#E2E8F0] bg-white shadow-xl overflow-hidden"
+                  >
+                    {studentOptions.length === 0 ? (
+                      <div className="px-4 py-3">
+                        <p className="text-[12px] text-[#94A3B8]">No students in scope.</p>
+                      </div>
+                    ) : pickerResults.length > 0 ? (
                       <div className="max-h-52 overflow-y-auto">
                         {pickerResults.map(s => (
                           <button
@@ -407,7 +438,14 @@ export default function ParentFormModal({
                             className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-[#F8FAFC] border-b border-[#F1F5F9] last:border-0"
                           >
                             <div className="min-w-0 flex-1">
-                              <p className="text-[13px] font-semibold text-[#0B1F3A] leading-tight">{s.student_name}</p>
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-[13px] font-semibold text-[#0B1F3A] leading-tight">{s.student_name}</p>
+                                {s.status !== 'active' && (
+                                  <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase text-amber-700">
+                                    {s.status}
+                                  </span>
+                                )}
+                              </div>
                               <div className="flex flex-wrap items-center gap-1 mt-0.5">
                                 {s.student_code && (
                                   <span className="font-mono text-[10px] text-[#94A3B8]">#{s.student_code}</span>
@@ -423,7 +461,7 @@ export default function ParentFormModal({
                             </div>
                             <div className="shrink-0 flex items-center justify-center h-5 w-5 rounded-full bg-[#FF8A1F]/15">
                               <svg className="h-3 w-3 text-[#FF8A1F]" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 011-1z" clipRule="evenodd" />
                               </svg>
                             </div>
                           </button>
@@ -431,10 +469,11 @@ export default function ParentFormModal({
                       </div>
                     ) : (
                       <div className="px-4 py-3">
-                        <p className="text-[12px] text-[#94A3B8]">No matching active students found.</p>
+                        <p className="text-[12px] text-[#94A3B8]">No results for &ldquo;{pickerQ}&rdquo;</p>
                       </div>
                     )}
-                  </div>
+                  </div>,
+                  document.body
                 )}
               </div>
 

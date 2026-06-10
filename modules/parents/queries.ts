@@ -24,6 +24,7 @@ export async function listParents({
        parent_students(count)`,
       { count: 'exact' }
     )
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .range(from, to)
 
@@ -75,6 +76,7 @@ export async function getParent(id: string): Promise<Parent | null> {
        )`
     )
     .eq('id', id)
+    .is('deleted_at', null)
     .single()
 
   if (error || !data) return null

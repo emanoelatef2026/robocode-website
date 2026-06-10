@@ -118,7 +118,7 @@ export async function getOperationalStudents(branchIds: string[]): Promise<{
   const { data } = await db
     .from('students')
     .select(`
-      id, student_code, branch_id, emergency_contact,
+      id, student_code, branch_id,
       users!students_user_id_fkey(
         email, phone,
         profiles!profiles_user_id_fkey(first_name, last_name)
@@ -133,7 +133,6 @@ export async function getOperationalStudents(branchIds: string[]): Promise<{
   return ((data ?? []) as any[]).map(s => {
     const u  = s.users    ?? {}
     const p  = u.profiles ?? {}
-    const ec = (s.emergency_contact ?? {}) as Record<string, string>
     return {
       id:           s.id,
       student_code: s.student_code ?? null,
@@ -141,8 +140,8 @@ export async function getOperationalStudents(branchIds: string[]): Promise<{
       name:         [p.first_name, p.last_name].filter(Boolean).join(' ') || u.email || 'Unknown',
       email:        u.email ?? '',
       phone:        u.phone ?? null,
-      parent_name:  ec.name   ?? null,
-      parent_phone: ec.phone1 ?? null,
+      parent_name:  null,
+      parent_phone: null,
     }
   })
 }

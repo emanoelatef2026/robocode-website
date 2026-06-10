@@ -105,7 +105,6 @@ export async function listFinancialAccounts(
            email, phone,
            profiles!profiles_user_id_fkey(first_name, last_name)
          ),
-         emergency_contact
        ),
        branches!student_financial_accounts_branch_id_fkey(name),
        groups!student_financial_accounts_group_id_fkey(
@@ -155,8 +154,6 @@ export async function listFinancialAccounts(
     const group    = row.groups     ?? null
     const user     = student.users  ?? {}
     const profile  = user.profiles  ?? {}
-    const ec       = (student.emergency_contact ?? {}) as Record<string, string>
-
     const gc = Array.isArray(group?.group_courses)
       ? (group.group_courses as any[]).find((c: any) => c.status === 'active')
       : null
@@ -182,9 +179,9 @@ export async function listFinancialAccounts(
       student_email:   user.email ?? '',
       student_phone:   user.phone ?? null,
       student_code:    student.student_code ?? null,
-      parent_name:     ec.name  ?? null,
-      parent_phone_1:  ec.phone1 ?? null,
-      parent_phone_2:  ec.phone2 ?? null,
+      parent_name:     null,
+      parent_phone_1:  null,
+      parent_phone_2:  null,
       branch_id:       row.branch_id,
       branch_name:     branch.name ?? '',
       group_id:        row.group_id,
@@ -217,8 +214,7 @@ export async function getStudentFinanceDetail(accountId: string): Promise<Studen
            users!students_user_id_fkey(
              email, phone,
              profiles!profiles_user_id_fkey(first_name, last_name)
-           ),
-           emergency_contact
+           )
          ),
          branches!student_financial_accounts_branch_id_fkey(name),
          groups!student_financial_accounts_group_id_fkey(
@@ -261,8 +257,6 @@ export async function getStudentFinanceDetail(accountId: string): Promise<Studen
   const profile  = user.profiles ?? {}
   const branch   = row.branches  ?? {}
   const group    = row.groups    ?? null
-  const ec       = (student.emergency_contact ?? {}) as Record<string, string>
-
   const gc = Array.isArray(group?.group_courses)
     ? (group.group_courses as any[]).find((c: any) => c.status === 'active')
     : null
@@ -332,9 +326,9 @@ export async function getStudentFinanceDetail(accountId: string): Promise<Studen
       branch_name:   branch.name ?? '',
       group_name:    group?.name  ?? null,
       course_title:  gc?.courses?.title ?? null,
-      parent_name:   ec.name   ?? null,
-      parent_phone_1: ec.phone1 ?? null,
-      parent_phone_2: ec.phone2 ?? null,
+      parent_name:   null,
+      parent_phone_1: null,
+      parent_phone_2: null,
     },
   }
 }
@@ -405,7 +399,7 @@ export async function getCollectionQueue(branchIds?: string[]) {
     .select(
       `id, student_id, branch_id, group_id, remaining_amount, status, next_due_date,
        students!student_financial_accounts_student_id_fkey(
-         id, student_code, emergency_contact,
+         id, student_code,
          users!students_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name))
        ),
        branches!student_financial_accounts_branch_id_fkey(name),
@@ -456,7 +450,6 @@ export async function getCollectionQueue(branchIds?: string[]) {
     const student = row.students ?? {}
     const user    = student.users ?? {}
     const profile = user.profiles ?? {}
-    const ec      = (student.emergency_contact ?? {}) as Record<string, string>
     const last    = lastActivityMap[row.id]
     const days    = computeDaysOverdue(row.next_due_date)
 
@@ -465,9 +458,9 @@ export async function getCollectionQueue(branchIds?: string[]) {
       student_id:         row.student_id as string,
       student_name:       [profile.first_name, profile.last_name].filter(Boolean).join(' ') || user.email || 'Unknown',
       student_code:       student.student_code as string | null,
-      parent_name:        ec.name   ?? null,
-      parent_phone_1:     ec.phone1 ?? null,
-      parent_phone_2:     ec.phone2 ?? null,
+      parent_name:        null,
+      parent_phone_1:     null,
+      parent_phone_2:     null,
       branch_name:        (row.branches as any)?.name ?? '',
       group_name:         (row.groups as any)?.name ?? null,
       remaining_amount:   Number(row.remaining_amount),
@@ -558,7 +551,7 @@ export async function getBranchFinanceSnapshot(branchId: string) {
     .select(
       `id, student_id, net_amount, paid_amount, remaining_amount, status, next_due_date,
        students!student_financial_accounts_student_id_fkey(
-         student_code, emergency_contact,
+         student_code,
          users!students_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name))
        )`
     )
@@ -577,14 +570,13 @@ export async function getBranchFinanceSnapshot(branchId: string) {
     .slice(0, 5)
     .map(r => {
       const p = r.students?.users?.profiles
-      const ec = (r.students?.emergency_contact ?? {}) as Record<string, string>
       return {
         student_id:      r.student_id as string,
         student_name:    p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || r.students?.users?.email : r.students?.users?.email,
         account_id:      r.id as string,
         remaining_amount: Number(r.remaining_amount),
         days_overdue:    computeDaysOverdue(r.next_due_date),
-        parent_phone_1:  ec.phone1 ?? null,
+        parent_phone_1:  null,
       }
     })
 
@@ -835,7 +827,7 @@ async function _listFromEnrollments(db: ReturnType<typeof createServiceClient>, 
       enrolled_sessions, consumed_sessions, remaining_sessions,
       financial_status, course_name_snapshot,
       students!student_enrollments_student_id_fkey(
-        id, student_code, branch_id, emergency_contact,
+        id, student_code, branch_id,
         users!students_user_id_fkey(
           email, phone,
           profiles!profiles_user_id_fkey(first_name, last_name)
@@ -954,11 +946,11 @@ async function _listFromEnrollments(db: ReturnType<typeof createServiceClient>, 
     }
   }
 
-  // ── 7. Student guardians (preferred over legacy emergency_contact JSONB) ────
+  // ── 7. Parent contacts ───────────────────────────────────────────────────────
   const guardianByStudent = new Map<string, { name: string | null; phone1: string | null; phone2: string | null }>()
   if (studentIds.length) {
     const { data: guardData } = await db
-      .from('student_guardians')
+      .from('student_parent_contacts')
       .select('student_id, name, phone1, phone2')
       .in('student_id', studentIds)
     for (const g of (guardData ?? []) as any[]) {
@@ -980,7 +972,6 @@ async function _listFromEnrollments(db: ReturnType<typeof createServiceClient>, 
     const student  = enroll.students   ?? {}
     const user     = student.users     ?? {}
     const profile  = user.profiles     ?? {}
-    const ec       = (student.emergency_contact ?? {}) as Record<string, string>
     const guardian = guardianByStudent.get(enroll.student_id)
     const group    = enroll.groups     ?? null
     const gc       = enroll.group_courses ?? null
@@ -1064,9 +1055,9 @@ async function _listFromEnrollments(db: ReturnType<typeof createServiceClient>, 
       student_code:   student.student_code ?? null,
       student_phone:  user.phone ?? null,
       student_status: 'active',
-      parent_name:    guardian?.name   ?? ec.name   ?? null,
-      parent_phone_1: guardian?.phone1 ?? ec.phone1 ?? null,
-      parent_phone_2: guardian?.phone2 ?? ec.phone2 ?? null,
+      parent_name:    guardian?.name   ?? null,
+      parent_phone_1: guardian?.phone1 ?? null,
+      parent_phone_2: guardian?.phone2 ?? null,
       branch_id:   enroll.branch_id,
       branch_name: branchNameMap.get(enroll.branch_id) ?? '',
       group_name:       group?.name     ?? null,
@@ -1141,7 +1132,7 @@ async function _listFromStudents(db: ReturnType<typeof createServiceClient>, bra
   const { data: stuData, error: stuErr } = await db
     .from('students')
     .select(`
-      id, student_code, branch_id, status, emergency_contact,
+      id, student_code, branch_id, status,
       users!students_user_id_fkey(
         email, phone,
         profiles!profiles_user_id_fkey(first_name, last_name)
@@ -1238,7 +1229,6 @@ async function _listFromStudents(db: ReturnType<typeof createServiceClient>, bra
   for (const s of students) {
     const user     = s.users    ?? {}
     const profile  = user.profiles ?? {}
-    const ec       = (s.emergency_contact ?? {}) as Record<string, string>
     const account  = accountMap.get(s.id)
     const groupId  = enrollMap.get(s.id) ?? null
     const group    = groupId ? groupMap.get(groupId) : null
@@ -1284,9 +1274,9 @@ async function _listFromStudents(db: ReturnType<typeof createServiceClient>, bra
       student_code:   s.student_code ?? null,
       student_phone:  user.phone ?? null,
       student_status: s.status,
-      parent_name:    ec.name   ?? null,
-      parent_phone_1: ec.phone1 ?? null,
-      parent_phone_2: ec.phone2 ?? null,
+      parent_name:    null,
+      parent_phone_1: null,
+      parent_phone_2: null,
       branch_id:   s.branch_id,
       branch_name: branchNameMap.get(s.branch_id) ?? '',
       group_name:       group?.name       ?? null,
@@ -1343,7 +1333,7 @@ async function _appendNoContractStudents(
   const { data: stuData } = await db
     .from('students')
     .select(`
-      id, student_code, branch_id, emergency_contact,
+      id, student_code, branch_id,
       users!students_user_id_fkey(
         email, phone,
         profiles!profiles_user_id_fkey(first_name, last_name)
@@ -1362,7 +1352,6 @@ async function _appendNoContractStudents(
 
     const user    = stu.users    ?? {}
     const profile = user.profiles ?? {}
-    const ec      = (stu.emergency_contact ?? {}) as Record<string, string>
 
     noContractRows.push({
       enrollment_id:           null,
@@ -1374,9 +1363,9 @@ async function _appendNoContractStudents(
       student_code:            stu.student_code ?? null,
       student_phone:           user.phone       ?? null,
       student_status:          'active',
-      parent_name:             ec.name   ?? null,
-      parent_phone_1:          ec.phone1 ?? null,
-      parent_phone_2:          ec.phone2 ?? null,
+      parent_name:             null,
+      parent_phone_1:          null,
+      parent_phone_2:          null,
       branch_id:               stu.branch_id,
       branch_name:             branchNameMap.get(stu.branch_id) ?? '',
       group_name:              null,

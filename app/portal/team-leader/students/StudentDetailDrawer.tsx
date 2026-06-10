@@ -12,7 +12,7 @@ interface Props {
   onAssign?: () => void
 }
 
-type Tab = 'overview' | 'groups' | 'attendance' | 'guardians'
+type Tab = 'overview' | 'groups' | 'attendance' | 'contacts'
 
 const OP_STATUS_CONFIG: Record<string, { label: string; color: string; text: string }> = {
   ACTIVE:           { label: 'Active',          color: 'bg-emerald-100', text: 'text-emerald-700' },
@@ -95,7 +95,7 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
 
         {/* Tabs */}
         <div className="flex border-b border-[#E2E8F0]">
-          {(['overview', 'groups', 'attendance', 'guardians'] as Tab[]).map(t => (
+          {(['overview', 'groups', 'attendance', 'contacts'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -114,7 +114,7 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
           {tab === 'overview' && <OverviewTab s={s} />}
           {tab === 'groups'   && <GroupsTab   s={s} />}
           {tab === 'attendance' && <AttendanceTab s={s} />}
-          {tab === 'guardians' && <GuardiansTab s={s} />}
+          {tab === 'contacts' && <ContactsTab s={s} />}
         </div>
       </div>
     </>
@@ -321,41 +321,41 @@ function AttendanceTab({ s }: { s: StudentOperationalRow }) {
   )
 }
 
-// ── Tab: Guardians ─────────────────────────────────────────────────────────────
+// ── Tab: Contacts ─────────────────────────────────────────────────────────────
 
-function GuardiansTab({ s }: { s: StudentOperationalRow }) {
-  if (!s.guardians.length) {
+function ContactsTab({ s }: { s: StudentOperationalRow }) {
+  if (!s.parent_contacts.length) {
     return (
       <div className="rounded-xl border border-[#E2E8F0] px-4 py-8 text-center">
-        <p className="text-sm font-medium text-[#0B1F3A]">No guardians recorded</p>
-        <p className="mt-1 text-xs text-[#94A3B8]">Edit the student to add guardian contacts.</p>
+        <p className="text-sm font-medium text-[#0B1F3A]">No parent contacts recorded</p>
+        <p className="mt-1 text-xs text-[#94A3B8]">Edit the student to add parent contacts.</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-3">
-      {s.guardians.map((g, i) => (
-        <div key={g.id || i} className="rounded-xl border border-[#E2E8F0] p-4 space-y-2">
+      {s.parent_contacts.map((c, i) => (
+        <div key={c.id || i} className="rounded-xl border border-[#E2E8F0] p-4 space-y-2">
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm font-semibold text-[#0B1F3A]">{g.name}</p>
-              <p className="text-[11px] text-[#94A3B8] capitalize">{g.relation}</p>
+              <p className="text-sm font-semibold text-[#0B1F3A]">{c.name}</p>
+              <p className="text-[11px] text-[#94A3B8] capitalize">{c.relation}</p>
             </div>
             <div className="flex gap-1">
-              {g.is_primary   && <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Primary</span>}
-              {g.is_emergency && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-600">Emergency</span>}
+              {c.is_primary   && <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Primary</span>}
+              {c.is_emergency && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-600">Emergency</span>}
             </div>
           </div>
           <div className="space-y-1.5">
-            {g.phone1 && (
+            {c.phone1 && (
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-[#94A3B8]">Phone 1</span>
                 <div className="flex items-center gap-2">
-                  <a href={`tel:${g.phone1}`} className="text-[12px] text-[#0B1F3A] hover:text-[#FF8A1F]">{g.phone1}</a>
-                  {g.whatsapp_preferred && (
+                  <a href={`tel:${c.phone1}`} className="text-[12px] text-[#0B1F3A] hover:text-[#FF8A1F]">{c.phone1}</a>
+                  {c.whatsapp_preferred && (
                     <a
-                      href={`https://wa.me/${g.phone1.replace(/\D/g,'')}`}
+                      href={`https://wa.me/${c.phone1.replace(/\D/g,'')}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[10px] text-[#25D366] border border-[#25D366]/30 rounded px-1.5 py-0.5"
@@ -366,10 +366,10 @@ function GuardiansTab({ s }: { s: StudentOperationalRow }) {
                 </div>
               </div>
             )}
-            {g.phone2 && (
+            {c.phone2 && (
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-[#94A3B8]">Phone 2</span>
-                <a href={`tel:${g.phone2}`} className="text-[12px] text-[#0B1F3A] hover:text-[#FF8A1F]">{g.phone2}</a>
+                <a href={`tel:${c.phone2}`} className="text-[12px] text-[#0B1F3A] hover:text-[#FF8A1F]">{c.phone2}</a>
               </div>
             )}
           </div>

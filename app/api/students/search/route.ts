@@ -117,7 +117,7 @@ export async function GET(req: NextRequest) {
 
   // ── Phase 2: resolve each vector to student IDs ─────────────────────────────
   const [
-    fromProfiles, fromPhone, fromGuardians, fromParentContact,
+    fromProfiles, fromPhone, fromContacts,
     fromGroups, fromInstructors,
   ] = await Promise.all([
     // From student name
@@ -130,28 +130,14 @@ export async function GET(req: NextRequest) {
       ? db.from('students').select('id').in('user_id', phoneUserIds).in('branch_id', branchIds).is('deleted_at', null)
       : Promise.resolve({ data: [] }),
 
-    // From parent phone/name — student_guardians table
-    db.from('student_guardians')
+    // From parent phone/name — student_parent_contacts table
+    db.from('student_parent_contacts')
       .select('student_id')
       .or([
         ...phonePatterns.map(p => `phone1.ilike.${p}`),
         ...phonePatterns.map(p => `phone2.ilike.${p}`),
         `name.ilike.${pct}`,
       ].join(','))
-      .limit(30),
-
-    // Fallback: legacy emergency_contact JSONB
-    db.from('students')
-      .select('id')
-      .in('branch_id', branchIds)
-      .is('deleted_at', null)
-      .or(
-        phonePatterns.flatMap(p => [
-          `emergency_contact->phone1.ilike.${p}`,
-          `emergency_contact->phone2.ilike.${p}`,
-        ]).concat([`emergency_contact->name.ilike.${pct}`])
-        .join(',')
-      )
       .limit(30),
 
     // From group name
@@ -178,12 +164,11 @@ export async function GET(req: NextRequest) {
   ])
 
   const allStudentIds = [...new Set([
-    ...(codeRes.data         ?? []).map((r: any) => r.id          as string),
-    ...(fromProfiles.data    ?? []).map((r: any) => r.id          as string),
-    ...(fromPhone.data       ?? []).map((r: any) => r.id          as string),
-    ...(fromGuardians.data   ?? []).map((r: any) => r.student_id  as string),
-    ...(fromParentContact.data ?? []).map((r: any) => r.id        as string),
-    ...(fromGroups.data      ?? []).map((r: any) => r.student_id  as string),
+    ...(codeRes.data      ?? []).map((r: any) => r.id         as string),
+    ...(fromProfiles.data ?? []).map((r: any) => r.id         as string),
+    ...(fromPhone.data    ?? []).map((r: any) => r.id         as string),
+    ...(fromContacts.data ?? []).map((r: any) => r.student_id as string),
+    ...(fromGroups.data   ?? []).map((r: any) => r.student_id as string),
     ...((fromInstructors as any).data ?? []).map((r: any) => r.student_id as string),
   ])].slice(0, 40)
 
@@ -195,7 +180,7 @@ export async function GET(req: NextRequest) {
   }
 
   // ── Phase 3: student details + active enrollments in parallel ───────────────
-  const [studentsRes, enrollmentsRes, guardiansRes] = await Promise.all([
+  const [studentsRes, enrollmentsRes, contactsRes] = await Promise.all([
     db.from('students')
       .select(`
         id, student_code, branch_id,
@@ -203,8 +188,7 @@ export async function GET(req: NextRequest) {
           email, phone,
           profiles!profiles_user_id_fkey(first_name, last_name, date_of_birth)
         ),
-        branches!students_branch_id_fkey(name),
-        emergency_contact
+        branches!students_branch_id_fkey(name)
       `)
       .in('id', allStudentIds)
       .eq('status', 'active')
@@ -222,18 +206,17 @@ export async function GET(req: NextRequest) {
       .eq('status', 'ACTIVE')
       .limit(80),
 
-    // Prefer student_guardians over JSONB emergency_contact
-    db.from('student_guardians')
+    db.from('student_parent_contacts')
       .select('student_id, name, phone1, phone2')
       .in('student_id', allStudentIds)
       .limit(60),
   ])
 
-  // Map guardians by student_id (first guardian wins)
-  const guardianByStudent = new Map<string, { name: string | null; phone: string | null }>()
-  for (const g of (guardiansRes.data ?? []) as any[]) {
-    if (!guardianByStudent.has(g.student_id)) {
-      guardianByStudent.set(g.student_id, { name: g.name ?? null, phone: g.phone1 ?? null })
+  // Map parent contact by student_id (primary contact first, otherwise first row)
+  const contactByStudent = new Map<string, { name: string | null; phone: string | null }>()
+  for (const c of (contactsRes.data ?? []) as any[]) {
+    if (!contactByStudent.has(c.student_id)) {
+      contactByStudent.set(c.student_id, { name: c.name ?? null, phone: c.phone1 ?? null })
     }
   }
 
@@ -249,16 +232,15 @@ export async function GET(req: NextRequest) {
   const results = ((studentsRes.data ?? []) as any[]).map(s => {
     const u   = s.users    ?? {}
     const p   = u.profiles ?? {}
-    const ec  = (s.emergency_contact ?? {}) as Record<string, string>
 
     // Age from DOB
     const dob = p.date_of_birth ? new Date(p.date_of_birth) : null
     const age  = dob ? Math.floor((now - dob.getTime()) / (365.25 * 24 * 3600000)) : null
 
-    // Parent info: prefer student_guardians, fallback to emergency_contact
-    const guardian  = guardianByStudent.get(s.id)
-    const parentName  = guardian?.name  ?? ec.name   ?? null
-    const parentPhone = guardian?.phone ?? ec.phone1 ?? null
+    // Primary parent contact
+    const contact     = contactByStudent.get(s.id)
+    const parentName  = contact?.name  ?? null
+    const parentPhone = contact?.phone ?? null
 
     const enrollments    = enrollsByStudent.get(s.id) ?? []
     const primaryEnroll  = enrollments[0] ?? null

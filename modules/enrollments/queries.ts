@@ -36,7 +36,7 @@ export async function listStudentEnrollments(
   const student = await db
     .from('students')
     .select(`
-      student_code, emergency_contact,
+      student_code,
       users!students_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name))
     `)
     .eq('id', studentId)
@@ -45,7 +45,6 @@ export async function listStudentEnrollments(
   const s   = (student.data as any) ?? {}
   const u   = s.users ?? {}
   const p   = u.profiles ?? {}
-  const ec  = (s.emergency_contact ?? {}) as Record<string, string>
 
   return ((data ?? []) as any[]).map(row => {
     const gc   = row.group_courses ?? null
@@ -57,9 +56,9 @@ export async function listStudentEnrollments(
       student_code:   s.student_code ?? null,
       student_email:  u.email ?? '',
       student_phone:  u.phone ?? null,
-      parent_name:    ec.name   ?? null,
-      parent_phone_1: ec.phone1 ?? null,
-      parent_phone_2: ec.phone2 ?? null,
+      parent_name:    null,
+      parent_phone_1: null,
+      parent_phone_2: null,
       branch_name:    (row.branches as any)?.name ?? '',
       group_name:     (row.groups   as any)?.name ?? null,
       instructor_name: instrP ? [instrP.first_name, instrP.last_name].filter(Boolean).join(' ') || null : null,

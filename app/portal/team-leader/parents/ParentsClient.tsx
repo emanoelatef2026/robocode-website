@@ -17,11 +17,14 @@ function normalizePhone(p: string): string {
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const HEALTH_CONFIG: Record<string, { label: string; color: string; text: string }> = {
-  HEALTHY:         { label: 'Healthy',      color: 'bg-emerald-100', text: 'text-emerald-700' },
-  AT_RISK:         { label: 'At Risk',      color: 'bg-red-100',     text: 'text-red-600'     },
-  NEEDS_ATTENTION: { label: 'Needs Action', color: 'bg-amber-100',   text: 'text-amber-700'   },
-  NO_CHILDREN:     { label: 'No Children',  color: 'bg-slate-100',   text: 'text-slate-500'   },
-  INACTIVE:        { label: 'Inactive',     color: 'bg-slate-100',   text: 'text-slate-500'   },
+  HEALTHY:         { label: 'Active',         color: 'bg-emerald-100', text: 'text-emerald-700' },
+  AT_RISK:         { label: 'At Risk',         color: 'bg-red-100',    text: 'text-red-600'     },
+  NEEDS_ATTENTION: { label: 'Needs Action',    color: 'bg-amber-100',  text: 'text-amber-700'   },
+  NO_ENROLLMENTS:  { label: 'No Enrollment',   color: 'bg-orange-100', text: 'text-orange-700'  },
+  GRADUATED:       { label: 'Graduated',       color: 'bg-blue-100',   text: 'text-blue-700'    },
+  INACTIVE:        { label: 'Inactive',        color: 'bg-slate-100',  text: 'text-slate-500'   },
+  ARCHIVED:        { label: 'Archived',        color: 'bg-slate-100',  text: 'text-slate-400'   },
+  NO_CHILDREN:     { label: 'No Children',     color: 'bg-slate-100',  text: 'text-slate-500'   },
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────────
@@ -125,12 +128,12 @@ export default function ParentsClient({
 
   // ── KPI strip ───────────────────────────────────────────────────────────────
   const kpis = useMemo(() => [
-    { label: 'Total Families',   value: rows.length,                                                  color: 'bg-blue-400' },
-    { label: 'At Risk',          value: rows.filter(r => r.op_health === 'AT_RISK').length,           color: rows.some(r => r.op_health === 'AT_RISK') ? 'bg-red-400' : 'bg-slate-300' },
-    { label: 'Needs Action',     value: rows.filter(r => r.op_health === 'NEEDS_ATTENTION').length,   color: rows.some(r => r.op_health === 'NEEDS_ATTENTION') ? 'bg-amber-400' : 'bg-slate-300' },
-    { label: 'Multi-Child',      value: rows.filter(r => r.children_count > 1).length,               color: 'bg-purple-400' },
-    { label: 'Near Exhaustion',  value: rows.filter(r => r.near_exhaustion_children_count > 0).length, color: rows.some(r => r.near_exhaustion_children_count > 0) ? 'bg-orange-400' : 'bg-slate-300' },
-    { label: 'No Children',      value: rows.filter(r => r.op_health === 'NO_CHILDREN').length,      color: rows.some(r => r.op_health === 'NO_CHILDREN') ? 'bg-slate-400' : 'bg-slate-300' },
+    { label: 'Total Families',  value: rows.length,                                                                                              color: 'bg-blue-400'   },
+    { label: 'At Risk',         value: rows.filter(r => r.op_health === 'AT_RISK').length,                                                       color: rows.some(r => r.op_health === 'AT_RISK') ? 'bg-red-400' : 'bg-slate-300'    },
+    { label: 'Needs Action',    value: rows.filter(r => r.op_health === 'NEEDS_ATTENTION').length,                                               color: rows.some(r => r.op_health === 'NEEDS_ATTENTION') ? 'bg-amber-400' : 'bg-slate-300' },
+    { label: 'No Enrollment',   value: rows.filter(r => r.op_health === 'NO_ENROLLMENTS').length,                                                color: rows.some(r => r.op_health === 'NO_ENROLLMENTS') ? 'bg-orange-400' : 'bg-slate-300' },
+    { label: 'Multi-Child',     value: rows.filter(r => r.children_count > 1).length,                                                           color: 'bg-purple-400' },
+    { label: 'Graduated/Inact', value: rows.filter(r => r.op_health === 'GRADUATED' || r.op_health === 'INACTIVE' || r.op_health === 'ARCHIVED').length, color: 'bg-slate-300'  },
   ], [rows])
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -447,9 +450,9 @@ export default function ParentsClient({
                                 NEAR END
                               </span>
                             )}
-                            {row.op_health === 'NO_CHILDREN' && (
+                            {(row.op_health === 'NO_CHILDREN' || row.op_health === 'ARCHIVED') && (
                               <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500">
-                                NO CHILD
+                                {row.op_health === 'ARCHIVED' ? 'ARCHIVED' : 'NO CHILD'}
                               </span>
                             )}
                           </div>

@@ -2,9 +2,50 @@ import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getInstructorFilterOptions } from '@/modules/query-standards'
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+// ── Internal raw-query types ───────────────────────────────────────────────────
+// These map directly to Supabase PostgREST response shapes.
+// Using explicit types here eliminates `as any[]` from critical loops.
 
-export type ParentOpHealth = 'HEALTHY' | 'AT_RISK' | 'NEEDS_ATTENTION' | 'NO_CHILDREN' | 'INACTIVE'
+interface RawStudentRow {
+  id:           string
+  user_id:      string
+  branch_id:    string
+  student_code: string | null
+  status:       string
+  age:          number | null
+  deleted_at:   string | null
+  users:        { phone: string | null; profiles: { first_name: string | null; last_name: string | null } | null } | null
+  branches:     { name: string } | null
+}
+
+interface RawPsLink {
+  parent_id:    string
+  student_id:   string
+  relationship: string
+  is_primary:   boolean
+}
+
+interface RawParentRow {
+  id:      string
+  user_id: string
+  users:   { email: string; phone: string | null; profiles: { first_name: string | null; last_name: string | null } | null } | null
+}
+
+// ── Public types ───────────────────────────────────────────────────────────────
+
+/**
+ * Family health status. Priority (high → low):
+ *   NO_CHILDREN → ARCHIVED → GRADUATED → INACTIVE → AT_RISK → NEEDS_ATTENTION → NO_ENROLLMENTS → HEALTHY
+ */
+export type ParentOpHealth =
+  | 'HEALTHY'          // ≥1 active child with active enrollment
+  | 'AT_RISK'          // ≥1 child with consecutive absences or poor attendance
+  | 'NEEDS_ATTENTION'  // ≥1 active child near session exhaustion (≤2 remaining)
+  | 'NO_ENROLLMENTS'   // active children exist but none have an active enrollment
+  | 'GRADUATED'        // all non-archived children are graduated
+  | 'INACTIVE'         // all non-archived children are inactive/paused/banned
+  | 'ARCHIVED'         // all children are soft-deleted (parent is historical)
+  | 'NO_CHILDREN'      // parent has zero student links in DB
 
 export interface LinkedChild {
   student_id:          string
@@ -16,6 +57,7 @@ export interface LinkedChild {
   relationship:        string
   is_primary:          boolean
   student_status:      string
+  is_archived:         boolean   // student.deleted_at IS NOT NULL
   // Academic
   group_id:            string | null
   group_name:          string | null
@@ -27,7 +69,7 @@ export interface LinkedChild {
   enrolled_sessions:   number
   consumed_sessions:   number
   remaining_sessions:  number
-  // Attendance
+  // Attendance (last 180 days)
   attendance_pct:        number
   sessions_attended:     number
   total_sessions:        number
@@ -45,9 +87,9 @@ export interface ParentOperationalRow {
   last_name:    string | null
   email:        string
   phone:        string | null
-  // Children
+  // Children — includes soft-deleted students (is_archived=true)
   children:       LinkedChild[]
-  children_count: number
+  children_count: number          // total links (including archived)
   // Operational aggregates
   op_health:                      ParentOpHealth
   active_contracts_count:         number
@@ -66,10 +108,77 @@ export interface StudentPickerOption {
   student_id:   string
   student_name: string
   student_code: string | null
+  status:       string
   branch_name:  string
   group_name:   string | null
   age:          number | null
   phone:        string | null
+}
+
+// ── Scope helper ───────────────────────────────────────────────────────────────
+
+interface ParentScope {
+  stuRows:    RawStudentRow[]
+  studentIds: string[]
+  psLinkRows: RawPsLink[]
+  parentIds:  string[]
+}
+
+/**
+ * Resolves the three-step parent scope for a given branch set.
+ *
+ * Step 1 intentionally includes soft-deleted students so a parent whose only
+ * child has been archived does NOT disappear from the TL's view. Branch scope
+ * is enforced via branch_id IN branchIds — students outside the TL's branches
+ * are never returned.
+ *
+ * Returns null when there are genuinely no parents in scope (not an error).
+ * Throws for unexpected DB errors so callers can distinguish the two cases.
+ */
+export async function resolveParentScope(
+  db: ReturnType<typeof createServiceClient>,
+  branchIds: string[]
+): Promise<ParentScope | null> {
+  // Step 1: All students in branch (including soft-deleted for historical visibility)
+  const { data: stuData, error: stuErr } = await db
+    .from('students')
+    .select(`
+      id, user_id, branch_id, student_code, status, age, deleted_at,
+      users!students_user_id_fkey(
+        phone,
+        profiles!profiles_user_id_fkey(first_name, last_name)
+      ),
+      branches!students_branch_id_fkey(name)
+    `)
+    .in('branch_id', branchIds)
+
+  if (stuErr) {
+    console.error('[resolveParentScope] students error:', stuErr.message, stuErr.details, stuErr.hint)
+    throw new Error(`DB error in resolveParentScope (students): ${stuErr.message}`)
+  }
+
+  const stuRows = (stuData ?? []) as unknown as RawStudentRow[]
+  if (!stuRows.length) return null
+
+  const studentIds = stuRows.map(s => s.id)
+
+  // Step 2: Parent-student links for the resolved student set
+  const { data: psData, error: psErr } = await db
+    .from('parent_students')
+    .select('parent_id, student_id, relationship, is_primary')
+    .in('student_id', studentIds)
+
+  if (psErr) {
+    console.error('[resolveParentScope] parent_students error:', psErr.message, psErr.details)
+    throw new Error(`DB error in resolveParentScope (parent_students): ${psErr.message}`)
+  }
+
+  const psLinkRows = (psData ?? []) as RawPsLink[]
+  if (!psLinkRows.length) return null
+
+  const parentIds = [...new Set(psLinkRows.map(ps => ps.parent_id))]
+
+  return { stuRows, studentIds, psLinkRows, parentIds }
 }
 
 // ── Main operational query ─────────────────────────────────────────────────────
@@ -80,35 +189,20 @@ export async function listParentsOperational(
   if (!branchIds.length) return []
   const db = createServiceClient()
 
-  // 1. Students in branch (basic identity + age)
-  const { data: students } = await db
-    .from('students')
-    .select(`
-      id, user_id, branch_id, student_code, status, age,
-      users!students_user_id_fkey(
-        phone,
-        profiles!profiles_user_id_fkey(first_name, last_name)
-      ),
-      branches!students_branch_id_fkey(name)
-    `)
-    .in('branch_id', branchIds)
-    .is('deleted_at', null)
+  // 1–2. Resolve scope (students + parent links in branch)
+  let scope: ParentScope | null
+  try {
+    scope = await resolveParentScope(db, branchIds)
+  } catch (err) {
+    console.error('[listParentsOperational] scope resolution failed:', err)
+    return []
+  }
+  if (!scope) return []
 
-  const stuRows = (students ?? []) as any[]
-  if (!stuRows.length) return []
-  const studentIds = stuRows.map((s: any) => s.id as string)
+  const { stuRows, studentIds, psLinkRows, parentIds } = scope
 
-  // 2. Parent → student links for these students
-  const { data: psLinks } = await db
-    .from('parent_students')
-    .select('parent_id, student_id, relationship, is_primary')
-    .in('student_id', studentIds)
-
-  if (!(psLinks as any[])?.length) return []
-  const parentIds = [...new Set((psLinks as any[]).map((ps: any) => ps.parent_id as string))]
-
-  // 3. Parent records with user + profile
-  const { data: parents } = await db
+  // 3. Parent records with user + profile — exclude soft-deleted parents
+  const { data: parData, error: parErr } = await db
     .from('parents')
     .select(`
       id, user_id,
@@ -118,11 +212,17 @@ export async function listParentsOperational(
       )
     `)
     .in('id', parentIds)
+    .is('deleted_at', null)
 
-  if (!(parents as any[])?.length) return []
+  if (parErr) {
+    console.error('[listParentsOperational] parents error:', parErr.message, parErr.details)
+    return []
+  }
+  const parents = (parData ?? []) as unknown as RawParentRow[]
+  if (!parents.length) return []
 
-  // 4. Group memberships for students
-  const { data: gsMem } = await db
+  // 4. Group memberships for active group enrollments
+  const { data: gsData, error: gsErr } = await db
     .from('group_students')
     .select(`
       student_id,
@@ -142,42 +242,61 @@ export async function listParentsOperational(
     .in('student_id', studentIds)
     .eq('status', 'active')
 
+  if (gsErr) {
+    console.error('[listParentsOperational] group_students error:', gsErr.message, '— proceeding without group data')
+  }
+
+  // Keep only the first active group per student
   const gsMap = new Map<string, any>()
-  for (const gs of (gsMem ?? []) as any[]) {
+  for (const gs of (gsData ?? []) as any[]) {
     if (!gsMap.has(gs.student_id)) gsMap.set(gs.student_id, gs)
   }
 
-  // 5. Active enrollments (sessions only, no finance)
-  const { data: enrolls } = await db
+  // 5. Active enrollments (sessions contract data)
+  const { data: enrollData, error: enrollErr } = await db
     .from('student_enrollments')
     .select('student_id, enrolled_sessions, consumed_sessions, remaining_sessions')
     .in('student_id', studentIds)
     .eq('status', 'ACTIVE')
 
-  const enrollMap = new Map<string, any[]>()
-  for (const e of (enrolls ?? []) as any[]) {
+  if (enrollErr) {
+    console.error('[listParentsOperational] enrollments error:', enrollErr.message, '— proceeding without enrollment data')
+  }
+
+  const enrollMap = new Map<string, { enrolled_sessions: number; consumed_sessions: number; remaining_sessions: number }[]>()
+  for (const e of (enrollData ?? []) as any[]) {
     const arr = enrollMap.get(e.student_id) ?? []
-    arr.push(e)
+    arr.push({ enrolled_sessions: e.enrolled_sessions, consumed_sessions: e.consumed_sessions, remaining_sessions: e.remaining_sessions })
     enrollMap.set(e.student_id, arr)
   }
 
-  // 6. Attendance per student
-  const { data: attRows } = await db
+  // 6. Attendance — capped at 180 days to prevent unbounded scans
+  const cutoff = new Date()
+  cutoff.setDate(cutoff.getDate() - 180)
+  const cutoffStr = cutoff.toISOString().split('T')[0]
+
+  const { data: attData, error: attErr } = await db
     .from('attendance_records')
     .select('student_id, status, session_date')
     .in('student_id', studentIds)
+    .gte('session_date', cutoffStr)
     .order('session_date', { ascending: false })
 
-  const attMap = new Map<string, { total: number; attended: number; pct: number; consec: number; last_date: string | null }>()
-  const grouped = new Map<string, any[]>()
-  for (const r of (attRows ?? []) as any[]) {
-    const arr = grouped.get(r.student_id) ?? []
-    arr.push(r)
-    grouped.set(r.student_id, arr)
+  if (attErr) {
+    console.error('[listParentsOperational] attendance error:', attErr.message, '— proceeding without attendance data')
   }
-  for (const [sid, recs] of grouped) {
+
+  interface AttStats { total: number; attended: number; pct: number; consec: number; last_date: string | null }
+  const attMap = new Map<string, AttStats>()
+  const attGrouped = new Map<string, { status: string; session_date: string }[]>()
+  for (const r of (attData ?? []) as { student_id: string; status: string; session_date: string }[]) {
+    const arr = attGrouped.get(r.student_id) ?? []
+    arr.push(r)
+    attGrouped.set(r.student_id, arr)
+  }
+  for (const [sid, recs] of attGrouped) {
     const total    = recs.length
-    const attended = recs.filter((r: any) => r.status === 'present').length
+    const attended = recs.filter(r => r.status === 'present').length
     const pct      = total > 0 ? Math.round((attended / total) * 100) : 0
     let consec = 0
     for (const r of recs) {
@@ -188,30 +307,32 @@ export async function listParentsOperational(
   }
 
   // Build lookup maps
-  const stuMap = new Map<string, any>()
+  const stuMap = new Map<string, RawStudentRow>()
   for (const s of stuRows) stuMap.set(s.id, s)
 
-  const psMap = new Map<string, any[]>()
-  for (const ps of (psLinks as any[])) {
+  const psMap = new Map<string, RawPsLink[]>()
+  for (const ps of psLinkRows) {
     const arr = psMap.get(ps.parent_id) ?? []
     arr.push(ps)
     psMap.set(ps.parent_id, arr)
   }
 
   // 7. Assemble parent rows
-  return (parents as any[]).map((p: any): ParentOperationalRow => {
+  return parents.map((p): ParentOperationalRow => {
     const links     = psMap.get(p.id) ?? []
-    const prof      = p.users?.profiles ?? {}
-    const firstName = prof.first_name ?? null
-    const lastName  = prof.last_name  ?? null
+    const prof      = p.users?.profiles ?? null
+    const firstName = prof?.first_name ?? null
+    const lastName  = prof?.last_name  ?? null
     const name      = [firstName, lastName].filter(Boolean).join(' ') || p.users?.email || '—'
 
-    const children: LinkedChild[] = (links as any[]).flatMap((link: any) => {
+    const children: LinkedChild[] = links.flatMap((link): LinkedChild[] => {
       const s = stuMap.get(link.student_id)
-      if (!s) return []
+      if (!s) return []   // student outside TL's branch scope — skip
 
-      const sProf     = s.users?.profiles ?? {}
-      const sName     = [sProf.first_name, sProf.last_name].filter(Boolean).join(' ') || '—'
+      const sProf      = s.users?.profiles ?? null
+      const sName      = [sProf?.first_name, sProf?.last_name].filter(Boolean).join(' ') || '—'
+      const isArchived = s.deleted_at !== null
+
       const gs        = gsMap.get(s.id)
       const groupObj  = gs?.groups ?? null
       const gcFirst   = (groupObj?.group_courses ?? [])[0] ?? null
@@ -227,14 +348,16 @@ export async function listParentsOperational(
       const att           = attMap.get(s.id) ?? { total: 0, attended: 0, pct: 0, consec: 0, last_date: null }
 
       let risk_level: 'HIGH' | 'MEDIUM' | 'LOW' = 'LOW'
-      if (att.consec >= 3 || (att.total >= 4 && att.pct < 50) || s.status !== 'active') {
-        risk_level = 'HIGH'
-      } else if (
-        att.consec >= 2 ||
-        (att.total >= 3 && att.pct < 70) ||
-        (mainEnroll && mainEnroll.remaining_sessions <= 2 && mainEnroll.enrolled_sessions > 0)
-      ) {
-        risk_level = 'MEDIUM'
+      if (!isArchived) {
+        if (att.consec >= 3 || (att.total >= 4 && att.pct < 50) || s.status !== 'active') {
+          risk_level = 'HIGH'
+        } else if (
+          att.consec >= 2 ||
+          (att.total >= 3 && att.pct < 70) ||
+          (mainEnroll && mainEnroll.remaining_sessions <= 2 && mainEnroll.enrolled_sessions > 0)
+        ) {
+          risk_level = 'MEDIUM'
+        }
       }
 
       return [{
@@ -247,6 +370,7 @@ export async function listParentsOperational(
         relationship:        link.relationship,
         is_primary:          link.is_primary,
         student_status:      s.status,
+        is_archived:         isArchived,
         group_id:            groupObj?.id ?? null,
         group_name:          groupObj?.name ?? null,
         course_id:           courseObj?.id ?? null,
@@ -265,25 +389,46 @@ export async function listParentsOperational(
       }]
     })
 
-    const activeContracts         = children.filter(c => c.enrolled_sessions > 0)
-    const totalSessionsRemaining  = children.reduce((s, c) => s + c.remaining_sessions, 0)
-    const attRiskChildren         = children.filter(c => c.risk_level === 'HIGH').length
-    const nearExhaustionChildren  = children.filter(c => c.remaining_sessions <= 2 && c.enrolled_sessions > 0).length
-    const lastAttDate             = children.reduce<string | null>((best, c) => {
+    // ── Aggregates ────────────────────────────────────────────────────────────
+
+    // Visible children = non-archived; these drive the health state
+    const visibleChildren   = children.filter(c => !c.is_archived)
+    const activeChildren    = visibleChildren.filter(c => c.student_status === 'active')
+    const graduatedChildren = visibleChildren.filter(c => c.student_status === 'graduated')
+
+    const activeContracts          = activeChildren.filter(c => c.enrolled_sessions > 0)
+    // Only count sessions for active (non-archived, status='active') children — archived/graduated
+    // students' remaining sessions are not actionable and must not be included in this total.
+    const totalSessionsRemaining   = activeChildren.reduce((s, c) => s + c.remaining_sessions, 0)
+    const attRiskChildren          = visibleChildren.filter(c => c.risk_level === 'HIGH').length
+    const nearExhaustionChildren   = activeChildren.filter(c => c.remaining_sessions <= 2 && c.enrolled_sessions > 0).length
+    const lastAttDate              = children.reduce<string | null>((best, c) => {
       if (!c.last_attendance_date) return best
       if (!best) return c.last_attendance_date
       return c.last_attendance_date > best ? c.last_attendance_date : best
     }, null)
 
-    let op_health: ParentOpHealth = 'HEALTHY'
-    if (!children.length) {
+    // ── Health state — priority order ─────────────────────────────────────────
+    let op_health: ParentOpHealth
+    if (children.length === 0) {
       op_health = 'NO_CHILDREN'
-    } else if (children.every(c => c.student_status !== 'active')) {
+    } else if (visibleChildren.length === 0) {
+      // All linked students are archived
+      op_health = 'ARCHIVED'
+    } else if (graduatedChildren.length === visibleChildren.length) {
+      op_health = 'GRADUATED'
+    } else if (activeChildren.length === 0) {
+      // All non-archived children are inactive/paused/banned
       op_health = 'INACTIVE'
     } else if (attRiskChildren > 0) {
       op_health = 'AT_RISK'
     } else if (nearExhaustionChildren > 0) {
       op_health = 'NEEDS_ATTENTION'
+    } else if (activeContracts.length === 0) {
+      // Has active children but no active enrollment contract
+      op_health = 'NO_ENROLLMENTS'
+    } else {
+      op_health = 'HEALTHY'
     }
 
     return {
@@ -311,15 +456,23 @@ export async function listParentsOperational(
 }
 
 // ── Student picker for form modal ──────────────────────────────────────────────
+// Branch scope is always enforced via .in('branch_id', branchIds).
+// Soft-deleted students are excluded (you cannot link to a deleted student),
+// but all active statuses (inactive, graduated, paused, banned) are returned
+// so a TL can link a parent to any current or historical non-deleted student.
 
 export async function getStudentPickerOptions(branchIds: string[]): Promise<StudentPickerOption[]> {
-  if (!branchIds.length) return []
+  if (!branchIds.length) {
+    console.warn('[getStudentPickerOptions] called with empty branchIds — TL has no branch assigned')
+    return []
+  }
+  console.log('[getStudentPickerOptions] querying', branchIds.length, 'branch(es):', branchIds)
   const db = createServiceClient()
 
-  const { data: students } = await db
+  const { data: stuData, error: stuErr } = await db
     .from('students')
     .select(`
-      id, student_code, age,
+      id, student_code, age, status,
       users!students_user_id_fkey(
         phone,
         profiles!profiles_user_id_fkey(first_name, last_name)
@@ -327,38 +480,55 @@ export async function getStudentPickerOptions(branchIds: string[]): Promise<Stud
       branches!students_branch_id_fkey(name)
     `)
     .in('branch_id', branchIds)
-    .eq('status', 'active')
-    .is('deleted_at', null)
+    .is('deleted_at', null)   // Picker only shows non-deleted students (can't link to archived)
     .limit(500)
 
-  const stuRows = (students ?? []) as any[]
-  if (!stuRows.length) return []
+  if (stuErr) {
+    console.error('[getStudentPickerOptions] DB error:', stuErr.message, '| details:', stuErr.details, '| hint:', stuErr.hint)
+    return []
+  }
 
-  const studentIds = stuRows.map((s: any) => s.id as string)
-  const { data: gsMem } = await db
+  const stuRows = (stuData ?? []) as unknown as RawStudentRow[]
+  console.log('[getStudentPickerOptions] query returned', stuRows.length, 'student(s)')
+
+  if (!stuRows.length) {
+    console.warn('[getStudentPickerOptions] 0 students found — check that branch_id values are correct and students exist with deleted_at IS NULL')
+    return []
+  }
+
+  const studentIds = stuRows.map(s => s.id)
+  const { data: gsData } = await db
     .from('group_students')
     .select('student_id, groups!group_students_group_id_fkey(name)')
     .in('student_id', studentIds)
     .eq('status', 'active')
 
   const groupMap = new Map<string, string>()
-  for (const gs of (gsMem ?? []) as any[]) {
+  for (const gs of (gsData ?? []) as any[]) {
     groupMap.set(gs.student_id, gs.groups?.name ?? '')
   }
 
-  return stuRows.map((s: any): StudentPickerOption => {
-    const prof = s.users?.profiles ?? {}
-    const name = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || '—'
+  const result = stuRows.map((s): StudentPickerOption => {
+    const prof = s.users?.profiles ?? null
+    const name = [prof?.first_name, prof?.last_name].filter(Boolean).join(' ') || '—'
     return {
       student_id:   s.id,
       student_name: name,
       student_code: s.student_code ?? null,
+      status:       s.status ?? 'active',
       branch_name:  s.branches?.name ?? '',
       group_name:   groupMap.get(s.id) ?? null,
       age:          s.age ?? null,
       phone:        s.users?.phone ?? null,
     }
   })
+
+  const unnamed = result.filter(r => r.student_name === '—').length
+  if (unnamed > 0) {
+    console.warn('[getStudentPickerOptions]', unnamed, 'student(s) have missing profile data (name shown as —) — profile join may be failing')
+  }
+
+  return result
 }
 
 // ── Branch lookup ──────────────────────────────────────────────────────────────

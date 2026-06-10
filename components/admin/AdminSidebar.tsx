@@ -4,8 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
 const I = {
@@ -76,7 +74,6 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { label: 'Groups',        href: '/admin/groups',      icon: I.groups,      permission: 'manage_groups' },
       { label: 'Courses',       href: '/admin/courses',     icon: I.courses,     permission: 'manage_courses' },
-      { label: 'Portfolio',     href: '/admin/portfolio',   icon: I.portfolio,   permission: 'manage_portfolio' },
       { label: 'Certificates',  href: '/admin/certificates',icon: I.certs,       permission: 'manage_certificates' },
     ],
   },
