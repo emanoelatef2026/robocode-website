@@ -41,7 +41,7 @@ interface RawGroupMeta {
   status: string; branch_id: string; capacity: number | null
   branches: RawBranch | null
 }
-interface RawGiRow  { group_id: string; instructor_id: string; role: string | null; groups: RawGroupMeta | null }
+interface RawGiRow  { group_id: string; role: string | null; groups: RawGroupMeta | null }
 interface RawGcRow  { id: string; group_id: string; instructor_id: string | null; status: string; groups: RawGroupMeta | null; courses: { id: string; title: string } | null }
 interface RawIbRow  { instructor_id: string; branch_id: string; branches: RawBranch | null }
 interface RawGcIdRow { id: string; instructor_id: string | null; group_id: string }
@@ -384,8 +384,8 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
       .eq('status', 'active'),
   ])
 
-  const giRows = (giRes.data ?? []) as RawGiRow[]
-  const gcRows = (gcRes.data ?? []) as RawGcRow[]
+  const giRows = (giRes.data ?? []) as unknown as RawGiRow[]
+  const gcRows = (gcRes.data ?? []) as unknown as RawGcRow[]
 
   const { groupIds, roleMap, gcIdMap } = resolveInstructorGroups(giRows, gcRows)
 
@@ -416,12 +416,12 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
       db.from('instructor_notes').select('id, content, category, author_id, created_at, updated_at, users!instructor_notes_author_id_fkey(profiles!profiles_user_id_fkey(first_name,last_name))').eq('instructor_id', instructorId).order('created_at', { ascending: false }),
     ])
 
-    const certifications: InstructorCertification[] = ((certRes.data ?? []) as RawCertRow[]).map(r => ({
+    const certifications: InstructorCertification[] = ((certRes.data ?? []) as unknown as RawCertRow[]).map(r => ({
       id: r.id, instructor_id: instructorId, certification: r.certification,
       level: r.level, status: r.status, issued_at: r.issued_at, expires_at: r.expires_at,
       notes: r.notes, created_at: r.created_at, updated_at: r.updated_at,
     }))
-    const notes: InstructorNote[] = ((notesRes.data ?? []) as RawNoteRow[]).map(r => ({
+    const notes: InstructorNote[] = ((notesRes.data ?? []) as unknown as RawNoteRow[]).map(r => ({
       id: r.id, content: r.content, category: r.category, author_id: r.author_id,
       author_name: r.users?.profiles
         ? `${r.users.profiles.first_name ?? ''} ${r.users.profiles.last_name ?? ''}`.trim() || null
@@ -464,7 +464,7 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
 
   // 4. Build group student maps
   const studentsByGroup: Record<string, RawStudentMeta[]> = {}
-  for (const r of (gsRes.data ?? []) as RawGsFullRow[]) {
+  for (const r of (gsRes.data ?? []) as unknown as RawGsFullRow[]) {
     const gid = r.group_id
     if (!studentsByGroup[gid]) studentsByGroup[gid] = []
     if (r.students) studentsByGroup[gid].push(r.students)
@@ -536,7 +536,7 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
 
   // 8. Build students list (derived from groups)
   const uniqueStudents = new Map<string, InstructorStudentRow>()
-  for (const r of (gsRes.data ?? []) as RawGsFullRow[]) {
+  for (const r of (gsRes.data ?? []) as unknown as RawGsFullRow[]) {
     const gid = r.group_id
     const stu = r.students
     if (!stu) continue
@@ -572,7 +572,7 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
       .not('status', 'in', '("cancelled","withdrawn")')
 
     const paymentMap: Record<string, { paid: number; remaining: number; overdue: boolean }> = {}
-    for (const e of (enrollData ?? []) as RawEnrollRow[]) {
+    for (const e of (enrollData ?? []) as unknown as RawEnrollRow[]) {
       const sid       = e.student_id
       const paid      = Number(e.paid_amount ?? 0)
       const total     = Number(e.total_amount ?? 0)
@@ -586,7 +586,7 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
     finance.total_outstanding     = Object.values(paymentMap).reduce((s, v) => s + v.remaining, 0)
     finance.students_with_balance = Object.values(paymentMap).filter(v => v.remaining > 0).length
     finance.students_overdue      = Object.values(paymentMap).filter(v => v.overdue).length
-    finance.active_contracts      = ((enrollData ?? []) as RawEnrollRow[]).filter(e => e.status === 'active').length
+    finance.active_contracts      = ((enrollData ?? []) as unknown as RawEnrollRow[]).filter(e => e.status === 'active').length
 
     for (const s of students) {
       const fin = paymentMap[s.student_id]
@@ -632,12 +632,12 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
   }
 
   // 12. Certifications + notes
-  const certifications: InstructorCertification[] = ((certRes.data ?? []) as RawCertRow[]).map(r => ({
+  const certifications: InstructorCertification[] = ((certRes.data ?? []) as unknown as RawCertRow[]).map(r => ({
     id: r.id, instructor_id: instructorId, certification: r.certification,
     level: r.level, status: r.status, issued_at: r.issued_at, expires_at: r.expires_at,
     notes: r.notes, created_at: r.created_at, updated_at: r.updated_at,
   }))
-  const notes: InstructorNote[] = ((notesRes.data ?? []) as RawNoteRow[]).map(r => ({
+  const notes: InstructorNote[] = ((notesRes.data ?? []) as unknown as RawNoteRow[]).map(r => ({
     id: r.id, content: r.content, category: r.category, author_id: r.author_id,
     author_name: r.users?.profiles
       ? `${r.users.profiles.first_name ?? ''} ${r.users.profiles.last_name ?? ''}`.trim() || null
@@ -689,7 +689,7 @@ export async function getInstructorFormOptions(branchIds: string[]): Promise<Ins
 
   const branches = ((branchRes.data ?? []) as RawBranchRow[]).map(b => ({ id: b.id, name: b.name }))
 
-  const groupFormRows = (groupRes.data ?? []) as RawGroupFormRow[]
+  const groupFormRows = (groupRes.data ?? []) as unknown as RawGroupFormRow[]
   const groupFormIds  = groupFormRows.map(g => g.id)
 
   const { data: gsData } = groupFormIds.length > 0
@@ -697,7 +697,7 @@ export async function getInstructorFormOptions(branchIds: string[]): Promise<Ins
     : { data: [] as RawGsIdRow[] }
 
   const studentCountByGroup: Record<string, number> = {}
-  for (const r of (gsData ?? []) as RawGsIdRow[]) {
+  for (const r of (gsData ?? []) as unknown as RawGsIdRow[]) {
     studentCountByGroup[r.group_id] = (studentCountByGroup[r.group_id] ?? 0) + 1
   }
 
