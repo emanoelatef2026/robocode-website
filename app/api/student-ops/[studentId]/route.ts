@@ -197,7 +197,7 @@ export async function GET(
 
     // All active enrollments for this student (packages overview)
     db.from('student_enrollments')
-      .select('id, course_name_snapshot, group_name_snapshot, enrolled_sessions, remaining_sessions, financial_status')
+      .select('id, course_name_snapshot, group_name_snapshot, instructor_name_snapshot, enrolled_sessions, remaining_sessions, financial_status')
       .eq('student_id', studentId)
       .eq('status', 'ACTIVE')
       .order('created_at', { ascending: true })
@@ -244,27 +244,42 @@ export async function GET(
     remaining_amount: Number(sfaBalance?.remaining_amount ?? 0),
   }
 
-  // Build all_enrollments with account_ids
+  // Build all_enrollments with account_ids + per-enrollment balance
   const aeIds = ((allEnrollRes as any).data ?? []).map((e: any) => e.id as string)
-  const aeAccMap = new Map<string, string>()
+  type AeAccEntry = { account_id: string; net_amount: number; paid_amount: number; remaining_amount: number }
+  const aeAccMap = new Map<string, AeAccEntry>()
   if (aeIds.length) {
     const { data: aeAccData } = await db
       .from('student_financial_accounts')
-      .select('id, enrollment_id')
+      .select('id, enrollment_id, net_amount, paid_amount, remaining_amount')
       .in('enrollment_id', aeIds)
     for (const a of (aeAccData ?? []) as any[]) {
-      if (a.enrollment_id) aeAccMap.set(a.enrollment_id as string, a.id as string)
+      if (a.enrollment_id) {
+        aeAccMap.set(a.enrollment_id as string, {
+          account_id:       a.id,
+          net_amount:       Number(a.net_amount       ?? 0),
+          paid_amount:      Number(a.paid_amount      ?? 0),
+          remaining_amount: Number(a.remaining_amount ?? 0),
+        })
+      }
     }
   }
-  const all_enrollments = ((allEnrollRes as any).data ?? []).map((e: any) => ({
-    enrollment_id:      e.id as string,
-    account_id:         aeAccMap.get(e.id) ?? null,
-    course_name:        (e.course_name_snapshot as string | null) ?? null,
-    group_name:         (e.group_name_snapshot  as string | null) ?? null,
-    enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
-    remaining_sessions: Number(e.remaining_sessions ?? 0),
-    financial_status:   (e.financial_status as string | null) ?? null,
-  }))
+  const all_enrollments = ((allEnrollRes as any).data ?? []).map((e: any) => {
+    const acc = aeAccMap.get(e.id)
+    return {
+      enrollment_id:      e.id as string,
+      account_id:         acc?.account_id ?? null,
+      course_name:        (e.course_name_snapshot    as string | null) ?? null,
+      group_name:         (e.group_name_snapshot     as string | null) ?? null,
+      instructor_name:    (e.instructor_name_snapshot as string | null) ?? null,
+      enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
+      remaining_sessions: Number(e.remaining_sessions ?? 0),
+      financial_status:   (e.financial_status as string | null) ?? null,
+      net_amount:         acc?.net_amount       ?? 0,
+      paid_amount:        acc?.paid_amount      ?? 0,
+      remaining_amount:   acc?.remaining_amount ?? 0,
+    }
+  })
 
   const installments = ((instRes.data ?? []) as any[]).map(r => ({
     id: r.id, account_id: r.account_id,

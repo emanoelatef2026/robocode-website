@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { enrollStudentFull } from '@/modules/enrollments/actions'
+import { enrollStudentFull, cancelContract } from '@/modules/enrollments/actions'
+import type { CancellationReport } from '@/modules/enrollments/actions'
 import { addPayment } from '@/modules/finance/actions'
 import type { PaymentMethod } from '@/modules/finance/types'
 import { PAYMENT_METHOD_LABELS } from '@/modules/finance/types'
@@ -38,9 +39,13 @@ export interface PreselectedPackage {
   account_id:         string | null
   course_name:        string | null
   group_name:         string | null
+  instructor_name:    string | null
   enrolled_sessions:  number
   remaining_sessions: number
   financial_status:   string | null
+  net_amount:         number
+  paid_amount:        number
+  remaining_amount:   number
 }
 
 interface CourseResult   { id: string; title: string; level: string | null }
@@ -220,6 +225,12 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
   const [quickPayDate,   setQuickPayDate]   = useState(new Date().toISOString().slice(0, 10))
   const [quickPayRef,    setQuickPayRef]    = useState('')
 
+  // Cancel contract flow
+  const [cancelConfirm,   setCancelConfirm]   = useState(false)
+  const [cancelling,      setCancelling]      = useState(false)
+  const [cancelReport,    setCancelReport]    = useState<CancellationReport | null>(null)
+  const [cancelErr,       setCancelErr]       = useState<string | null>(null)
+
   // Modal filters (client-side filter on search results)
   const [mFilterFinStatus,   setMFilterFinStatus]   = useState('')
   const [mFilterExhausted,   setMFilterExhausted]   = useState(false)
@@ -333,13 +344,23 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
     return out
   }, [results, mFilterFinStatus, mFilterExhausted, mFilterNoPackage])
 
-  const net      = Math.max(0, (parseFloat(state.totalAmount) || 0) - (parseFloat(state.discountAmount) || 0))
-  const initPay  = parseFloat(state.initPayAmount) || 0
-  const remaining = Math.max(0, net - initPay)
+  const net             = Math.max(0, (parseFloat(state.totalAmount) || 0) - (parseFloat(state.discountAmount) || 0))
+  const initPay         = parseFloat(state.initPayAmount) || 0
+  const remaining       = Math.max(0, net - initPay)
+  const instCount       = Math.max(0, parseInt(state.installmentCount) || 0)
+  const perInstAmt      = instCount > 0 && net > 0 ? Math.floor(net / instCount) : 0
+  const instAmtTooSmall = instCount > 0 && net > 0 && perInstAmt < 1
 
   async function handleSubmit() {
     if (!state.student || !state.course) { setError('Please select a student and course'); return }
     if (!state.totalAmount || net <= 0)  { setError('Please enter a valid total amount'); return }
+    if (instAmtTooSmall) {
+      setError(
+        `Installment amount too small: EGP ${net} ÷ ${instCount} = EGP ${perInstAmt}. ` +
+        `Max ${Math.floor(net)} installments for this total.`
+      )
+      return
+    }
     setSubmitting(true); setError(null)
 
     const result = await enrollStudentFull({
@@ -385,6 +406,15 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
     setSubmitting(false)
     if ('error' in result) setError(result.error)
     else { onSuccess(); onClose() }
+  }
+
+  async function handleCancelContract() {
+    if (!selectedPkg) return
+    setCancelling(true); setCancelErr(null)
+    const result = await cancelContract(selectedPkg.enrollment_id)
+    setCancelling(false)
+    if ('error' in result) { setCancelErr(result.error) }
+    else { setCancelReport(result.report) }
   }
 
   function fmt(n: number) {
@@ -695,49 +725,92 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
               </div>
             )}
 
-            {/* ── Existing package quick-pay form ───────────────────────────── */}
+            {/* ── Existing Package Payment Flow ─────────────────────────────── */}
             {preselectedPackages && preselectedPackages.length > 0 && payMode === 'existing' && (
               <div className="space-y-3">
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium text-[#64748B]">Select Package</label>
-                  <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0]">
-                    {preselectedPackages.map(pkg => {
-                      const isSelected = selectedPkg?.enrollment_id === pkg.enrollment_id
-                      const canPay = !!pkg.account_id
-                      const finColor =
-                        pkg.financial_status === 'BLOCKED' ? 'text-red-700' :
-                        pkg.financial_status === 'OVERDUE'  ? 'text-amber-700' :
-                        pkg.remaining_sessions <= 0 ? 'text-purple-700' : 'text-emerald-700'
-                      return (
-                        <button
-                          key={pkg.enrollment_id}
-                          type="button"
-                          onClick={() => canPay && setSelectedPkg(pkg)}
-                          disabled={!canPay}
-                          className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors ${isSelected ? 'bg-orange-50' : 'hover:bg-[#F8FAFC]'} ${!canPay ? 'cursor-not-allowed opacity-50' : ''}`}
-                        >
-                          <div>
+
+                {/* Package selector (only when multiple) */}
+                {preselectedPackages.length > 1 && (
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-[#64748B]">Select Contract</label>
+                    <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0]">
+                      {preselectedPackages.map(pkg => {
+                        const isSelected = selectedPkg?.enrollment_id === pkg.enrollment_id
+                        const canPay = !!pkg.account_id
+                        return (
+                          <button
+                            key={pkg.enrollment_id}
+                            type="button"
+                            onClick={() => canPay && setSelectedPkg(pkg)}
+                            disabled={!canPay}
+                            className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors ${isSelected ? 'bg-orange-50' : 'hover:bg-[#F8FAFC]'} ${!canPay ? 'cursor-not-allowed opacity-50' : ''}`}
+                          >
                             <p className="text-sm font-medium text-[#0B1F3A]">
                               {pkg.course_name ?? pkg.group_name ?? 'Contract'}
                             </p>
-                            <p className="text-xs text-[#64748B]">
-                              {pkg.group_name && pkg.course_name ? `${pkg.group_name} · ` : ''}
-                              {pkg.enrolled_sessions > 0 ? `${pkg.remaining_sessions}/${pkg.enrolled_sessions} sessions` : 'Unlimited'}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            {pkg.financial_status && (
-                              <p className={`text-[11px] font-semibold ${finColor}`}>{pkg.financial_status}</p>
-                            )}
                             {!canPay && <p className="text-[10px] text-[#94A3B8]">No account</p>}
-                          </div>
-                        </button>
-                      )
-                    })}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {selectedPkg?.account_id && (
+                {/* ── Contract summary card (READ-ONLY) ─────────────────────── */}
+                {selectedPkg && (
+                  <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] divide-y divide-[#F1F5F9]">
+                    <div className="px-4 py-2.5">
+                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Contract Summary</p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                        <div>
+                          <span className="text-[#94A3B8]">Course</span>
+                          <p className="font-medium text-[#0B1F3A] truncate">{selectedPkg.course_name ?? '—'}</p>
+                        </div>
+                        <div>
+                          <span className="text-[#94A3B8]">Group</span>
+                          <p className="font-medium text-[#0B1F3A] truncate">{selectedPkg.group_name ?? '—'}</p>
+                        </div>
+                        <div>
+                          <span className="text-[#94A3B8]">Instructor</span>
+                          <p className="font-medium text-[#0B1F3A] truncate">{selectedPkg.instructor_name ?? '—'}</p>
+                        </div>
+                        <div>
+                          <span className="text-[#94A3B8]">Status</span>
+                          <p className={`font-semibold ${
+                            selectedPkg.financial_status === 'BLOCKED' ? 'text-red-700' :
+                            selectedPkg.financial_status === 'OVERDUE'  ? 'text-amber-700' :
+                            selectedPkg.financial_status === 'CURRENT'  ? 'text-emerald-700' : 'text-[#64748B]'
+                          }`}>{selectedPkg.financial_status ?? '—'}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 divide-x divide-[#F1F5F9] px-0">
+                      <div className="px-4 py-2.5 text-center">
+                        <p className="text-[10px] text-[#94A3B8]">Sessions Left</p>
+                        <p className={`text-sm font-bold ${selectedPkg.remaining_sessions <= 0 ? 'text-purple-700' : selectedPkg.remaining_sessions <= 3 ? 'text-red-600' : 'text-blue-700'}`}>
+                          {selectedPkg.remaining_sessions <= 0 ? 'Exhausted' : selectedPkg.remaining_sessions}
+                        </p>
+                        {selectedPkg.enrolled_sessions > 0 && (
+                          <p className="text-[10px] text-[#94A3B8]">of {selectedPkg.enrolled_sessions}</p>
+                        )}
+                      </div>
+                      <div className="px-4 py-2.5 text-center">
+                        <p className="text-[10px] text-[#94A3B8]">Paid</p>
+                        <p className="text-sm font-bold text-emerald-700">EGP {fmt(selectedPkg.paid_amount)}</p>
+                        <p className="text-[10px] text-[#94A3B8]">of {fmt(selectedPkg.net_amount)}</p>
+                      </div>
+                      <div className={`px-4 py-2.5 text-center ${selectedPkg.remaining_amount > 0 ? 'bg-red-50' : 'bg-emerald-50'}`}>
+                        <p className="text-[10px] text-[#94A3B8]">Remaining</p>
+                        <p className={`text-sm font-bold ${selectedPkg.remaining_amount > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                          {selectedPkg.remaining_amount > 0 ? `EGP ${fmt(selectedPkg.remaining_amount)}` : 'Paid ✓'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Payment form ───────────────────────────────────────────── */}
+                {selectedPkg?.account_id && !cancelConfirm && !cancelReport && (
                   <>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-[#64748B]">Amount (EGP)</label>
@@ -746,8 +819,26 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                         value={quickPayAmt}
                         onChange={e => setQuickPayAmt(e.target.value)}
                         placeholder="0.00"
+                        autoFocus
                         className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
                       />
+                      {/* Quick-amount buttons */}
+                      {selectedPkg.remaining_amount > 0 && (
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {[500, 1000, 2000].filter(a => a <= selectedPkg.remaining_amount).map(a => (
+                            <button key={a} type="button"
+                              onClick={() => setQuickPayAmt(String(a))}
+                              className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${quickPayAmt === String(a) ? 'border-[#FF8A1F] bg-orange-50 text-[#FF8A1F]' : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'}`}>
+                              +{fmt(a)}
+                            </button>
+                          ))}
+                          <button type="button"
+                            onClick={() => setQuickPayAmt(String(selectedPkg.remaining_amount))}
+                            className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${quickPayAmt === String(selectedPkg.remaining_amount) ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'}`}>
+                            Full ({fmt(selectedPkg.remaining_amount)})
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -783,31 +874,114 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                         className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
                       />
                     </div>
+
+                    {error && (
+                      <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">{error}</p>
+                    )}
+
+                    <div className="flex justify-between gap-3 pt-1">
+                      <button type="button" onClick={onClose}
+                        className="rounded-xl border border-[#E2E8F0] px-5 py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]">
+                        Close
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleExistingPaySubmit}
+                        disabled={submitting || !quickPayAmt}
+                        className="flex items-center gap-2 rounded-xl bg-[#FF8A1F] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#e87c18] disabled:opacity-40"
+                      >
+                        {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                        Add Payment
+                      </button>
+                    </div>
+
+                    {/* Cancel contract separator */}
+                    <div className="border-t border-[#F1F5F9] pt-3">
+                      <button
+                        type="button"
+                        onClick={() => { setCancelConfirm(true); setCancelErr(null) }}
+                        className="w-full rounded-xl border border-red-200 bg-red-50 py-2 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
+                      >
+                        Cancel Contract
+                      </button>
+                    </div>
                   </>
                 )}
 
-                {error && (
-                  <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">{error}</p>
+                {/* ── Cancel confirmation ────────────────────────────────────── */}
+                {cancelConfirm && !cancelReport && selectedPkg && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-3">
+                    <p className="text-sm font-bold text-red-700">Cancel this contract?</p>
+                    <div className="text-xs text-red-700 space-y-0.5">
+                      <p><span className="text-[#64748B]">Course:</span> {selectedPkg.course_name ?? '—'}</p>
+                      <p><span className="text-[#64748B]">Group:</span> {selectedPkg.group_name ?? '—'}</p>
+                      <p><span className="text-[#64748B]">Sessions remaining:</span> {selectedPkg.remaining_sessions} of {selectedPkg.enrolled_sessions}</p>
+                      <p><span className="text-[#64748B]">Balance due:</span> EGP {fmt(selectedPkg.remaining_amount)}</p>
+                    </div>
+                    <p className="text-[11px] text-red-600">
+                      This action is irreversible. The contract will be archived and no new payments or sessions will be allowed.
+                    </p>
+                    {cancelErr && <p className="rounded-lg bg-red-100 px-3 py-2 text-xs font-medium text-red-700">{cancelErr}</p>}
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => { setCancelConfirm(false); setCancelErr(null) }}
+                        className="flex-1 rounded-xl border border-red-200 bg-white py-2 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1]">
+                        Go Back
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelContract}
+                        disabled={cancelling}
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-red-600 py-2 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-40"
+                      >
+                        {cancelling && <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />}
+                        Confirm Cancellation
+                      </button>
+                    </div>
+                  </div>
                 )}
 
-                <div className="flex justify-between gap-3 pt-1">
-                  <button type="button" onClick={onClose}
-                    className="rounded-xl border border-[#E2E8F0] px-5 py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]">
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleExistingPaySubmit}
-                    disabled={submitting || !selectedPkg?.account_id || !quickPayAmt}
-                    className="flex items-center gap-2 rounded-xl bg-[#FF8A1F] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#e87c18] disabled:opacity-40"
-                  >
-                    {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
-                    Add Payment
-                  </button>
-                </div>
+                {/* ── Cancellation report ────────────────────────────────────── */}
+                {cancelReport && (
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-600 text-lg">✓</span>
+                      <p className="text-sm font-bold text-[#0B1F3A]">Contract Cancelled</p>
+                    </div>
+                    <div className="rounded-lg border border-[#E2E8F0] bg-white p-3 text-xs space-y-1.5">
+                      <p className="font-semibold text-[#0B1F3A] mb-2">Cancellation Report</p>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                        <div><span className="text-[#94A3B8]">Student</span><p className="font-medium">{cancelReport.student_name}</p></div>
+                        <div><span className="text-[#94A3B8]">Date</span><p className="font-medium">{new Date(cancelReport.cancelled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p></div>
+                        <div><span className="text-[#94A3B8]">Course</span><p className="font-medium">{cancelReport.course_name ?? '—'}</p></div>
+                        <div><span className="text-[#94A3B8]">Group</span><p className="font-medium">{cancelReport.group_name ?? '—'}</p></div>
+                        <div><span className="text-[#94A3B8]">Instructor</span><p className="font-medium">{cancelReport.instructor_name ?? '—'}</p></div>
+                        <div><span className="text-[#94A3B8]">By</span><p className="font-medium">{cancelReport.cancelled_by_name}</p></div>
+                      </div>
+                      <div className="border-t border-[#F1F5F9] pt-2 mt-2 grid grid-cols-3 gap-1 text-center">
+                        <div><p className="text-[#94A3B8]">Package</p><p className="font-bold text-[#0B1F3A]">{cancelReport.enrolled_sessions}</p></div>
+                        <div><p className="text-[#94A3B8]">Attended</p><p className="font-bold text-emerald-700">{cancelReport.sessions_attended}</p></div>
+                        <div><p className="text-[#94A3B8]">Absent</p><p className="font-bold text-red-600">{cancelReport.sessions_absent}</p></div>
+                        <div><p className="text-[#94A3B8]">Consumed</p><p className="font-bold text-[#0B1F3A]">{cancelReport.consumed_sessions}</p></div>
+                        <div><p className="text-[#94A3B8]">Remaining</p><p className="font-bold text-purple-700">{cancelReport.remaining_sessions}</p></div>
+                        <div><p className="text-[#94A3B8]">Bal. Due</p><p className={`font-bold ${cancelReport.remaining_balance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>EGP {fmt(cancelReport.remaining_balance)}</p></div>
+                      </div>
+                      <div className="border-t border-[#F1F5F9] pt-2 flex justify-between">
+                        <span className="text-[#94A3B8]">Total Paid / Contract</span>
+                        <span className="font-semibold text-[#0B1F3A]">EGP {fmt(cancelReport.paid_amount)} / {fmt(cancelReport.net_amount)}</span>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => { onSuccess(); onClose() }}
+                      className="w-full rounded-xl bg-[#0B1F3A] py-2.5 text-sm font-semibold text-white hover:bg-[#1a3356]">
+                      Done
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
+            {/* ── New contract academic fields (hidden in existing mode) ────── */}
+            {payMode !== 'existing' && (
+              <>
             {state.student.active_summaries.length > 0 && (
               <div>
                 <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
@@ -957,6 +1131,8 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                 />
               </div>
             </div>
+              </>
+            )}
 
             {payMode !== 'existing' && (
               <div className="flex gap-3 border-t border-[#E2E8F0] pt-4">
@@ -1078,6 +1254,23 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                   <div className="flex justify-between">
                     <span className="text-[#94A3B8]">Sessions Package</span>
                     <span className="font-medium text-[#0B1F3A]">{state.enrolledSessions} sessions</span>
+                  </div>
+                )}
+                {instCount > 0 && !instAmtTooSmall && (
+                  <div className="flex justify-between">
+                    <span className="text-[#94A3B8]">Installment Plan</span>
+                    <span className="font-medium text-[#0B1F3A]">
+                      {instCount} × EGP {fmt(perInstAmt)}
+                      {net - perInstAmt * (instCount - 1) !== perInstAmt && (
+                        <span className="text-[#94A3B8]"> (last EGP {fmt(net - perInstAmt * (instCount - 1))})</span>
+                      )}
+                    </span>
+                  </div>
+                )}
+                {instAmtTooSmall && (
+                  <div className="flex justify-between text-red-600">
+                    <span>Installments too many</span>
+                    <span>Each ≈ EGP {perInstAmt} — reduce count</span>
                   </div>
                 )}
                 {initPay > 0 && (

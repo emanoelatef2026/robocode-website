@@ -501,9 +501,13 @@ export interface StudentOpsDetail {
     account_id:         string | null
     course_name:        string | null
     group_name:         string | null
+    instructor_name:    string | null
     enrolled_sessions:  number
     remaining_sessions: number
     financial_status:   string | null
+    net_amount:         number
+    paid_amount:        number
+    remaining_amount:   number
   }[]
 }
 

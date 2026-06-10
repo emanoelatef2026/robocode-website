@@ -34,6 +34,7 @@ export type TimelineEventType =
   | 'TASK_COMPLETED'
   | 'SCORE_COMPUTED'
   | 'COLLECTION_STAGE_ADVANCED'
+  | 'ENROLLMENT_CANCELLED'
 
 export type TimelineEventSeverity = 'INFO' | 'WARNING' | 'CRITICAL'
 
@@ -82,6 +83,7 @@ const SEVERITY_MAP: Record<TimelineEventType, TimelineEventSeverity> = {
   TASK_COMPLETED:            'INFO',
   SCORE_COMPUTED:            'INFO',
   COLLECTION_STAGE_ADVANCED: 'WARNING',
+  ENROLLMENT_CANCELLED:      'CRITICAL',
 }
 
 // ── Log event ──────────────────────────────────────────────────────────────────
@@ -202,6 +204,7 @@ export const TIMELINE_EVENT_LABELS: Record<TimelineEventType, string> = {
   TASK_COMPLETED:            'Task Completed',
   SCORE_COMPUTED:            'Risk Score Updated',
   COLLECTION_STAGE_ADVANCED: 'Collection Stage Advanced',
+  ENROLLMENT_CANCELLED:      'Contract Cancelled',
 }
 
 export const TIMELINE_SEVERITY_COLORS: Record<TimelineEventSeverity, string> = {

@@ -6,6 +6,8 @@ import Link from 'next/link'
 import GroupFormModal from './GroupFormModal'
 import EnrollmentWizard from '../finance/EnrollmentWizard'
 import type { StudentResult } from '../finance/EnrollmentWizard'
+import StudentOpsDrawer from '../finance/StudentOpsDrawer'
+import type { StudentOperationsRow } from '@/modules/finance/types'
 import {
   getGroupDetailDataAction,
   deleteGroupAction,
@@ -19,10 +21,6 @@ import type { GroupOperationalRow, GroupFormOptions, GroupStudentOption } from '
 //  HELPERS
 // ════════════════════════════════════════════════════════════════════
 
-const DAYS_SHORT: Record<string, string> = {
-  monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed',
-  thursday: 'Thu', friday: 'Fri', saturday: 'Sat', sunday: 'Sun',
-}
 const DAYS_FULL: Record<string, string> = {
   monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday',
   thursday: 'Thursday', friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday',
@@ -48,9 +46,10 @@ function fmtDate(iso: string | null): string {
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-function fmtDateShort(iso: string | null): string {
+function fmtDateShort(iso: string | null | undefined): string {
   if (!iso) return '—'
-  const [y, m, d] = iso.split('-').map(Number)
+  const clean = iso.slice(0, 10)
+  const [y, m, d] = clean.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 }
 
@@ -81,12 +80,12 @@ function estimateElapsedSessions(
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  FILTER TYPES  (FIX 2: single quickFilter replaces chip booleans)
+//  FILTER TYPES
 // ════════════════════════════════════════════════════════════════════
 
 type QuickFilter =
   | '' | 'active' | 'forming' | 'no_instructor'
-  | 'low_attendance' | 'low_capacity' | 'overloaded' | 'starts_soon'
+  | 'low_attendance' | 'low_capacity' | 'overloaded' | 'starts_soon' | 'archived'
 
 interface Filters {
   q:           string
@@ -99,13 +98,14 @@ const DEFAULT_FILTERS: Filters = { q: '', branch_id: '', quickFilter: '' }
 function applyFilters(groups: GroupOperationalRow[], f: Filters): GroupOperationalRow[] {
   return groups.filter(g => {
     if (f.branch_id && g.branch_id !== f.branch_id) return false
-    if (f.quickFilter === 'active'         && g.status !== 'active')    return false
-    if (f.quickFilter === 'forming'        && g.status !== 'forming')   return false
-    if (f.quickFilter === 'no_instructor'  && g.has_instructor)         return false
-    if (f.quickFilter === 'low_attendance' && !g.is_low_attendance)     return false
-    if (f.quickFilter === 'low_capacity'   && !g.is_low_capacity)       return false
-    if (f.quickFilter === 'overloaded'     && !g.is_overloaded)         return false
-    if (f.quickFilter === 'starts_soon'    && !g.starts_soon)           return false
+    if (f.quickFilter === 'active'         && g.status !== 'active')                                       return false
+    if (f.quickFilter === 'forming'        && g.status !== 'forming')                                      return false
+    if (f.quickFilter === 'no_instructor'  && g.has_instructor)                                            return false
+    if (f.quickFilter === 'low_attendance' && !g.is_low_attendance)                                        return false
+    if (f.quickFilter === 'low_capacity'   && !g.is_low_capacity)                                          return false
+    if (f.quickFilter === 'overloaded'     && !g.is_overloaded)                                            return false
+    if (f.quickFilter === 'starts_soon'    && !g.starts_soon)                                              return false
+    if (f.quickFilter === 'archived'       && g.status !== 'cancelled' && g.status !== 'archived')         return false
     if (f.q) {
       const q   = f.q.toLowerCase()
       const hay = [g.name, g.code, g.lead_instructor_name, g.course_name, g.branch_name]
@@ -159,7 +159,7 @@ function LoadingSpinner() {
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  FIX 1 — COMPACT GROUP LIST ITEM
+//  COMPACT GROUP LIST ITEM
 // ════════════════════════════════════════════════════════════════════
 
 function GroupListItem({
@@ -191,7 +191,7 @@ function GroupListItem({
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  FIX 2 — LEFT SIDEBAR with dropdown quick-filter + counts (FIX 6)
+//  LEFT SIDEBAR — search, filters, group list
 // ════════════════════════════════════════════════════════════════════
 
 const QUICK_FILTER_OPTIONS: {
@@ -207,6 +207,7 @@ const QUICK_FILTER_OPTIONS: {
   { value: 'low_capacity',   label: 'Under Capacity', count: g => g.filter(x => x.is_low_capacity).length      },
   { value: 'overloaded',     label: 'Full',           count: g => g.filter(x => x.is_overloaded).length        },
   { value: 'starts_soon',    label: 'Starting Soon',  count: g => g.filter(x => x.starts_soon).length          },
+  { value: 'archived',       label: 'Archived',       count: g => g.filter(x => x.status === 'cancelled' || x.status === 'archived').length },
 ]
 
 function GroupSidebar({
@@ -223,9 +224,7 @@ function GroupSidebar({
   isTL:            boolean
   onCreateGroup:   () => void
 }) {
-  // base = branch + search filtered (no quickFilter) — used for quick-filter counts
   const baseFiltered   = applyFilters(allGroups, { ...filters, quickFilter: '' })
-  // search-only filtered — used for branch counts
   const searchFiltered = applyFilters(allGroups, { q: filters.q, branch_id: '', quickFilter: '' })
 
   return (
@@ -317,7 +316,7 @@ function GroupSidebar({
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  GROUP SUMMARY BAR — Top of right workspace panel
+//  GROUP SUMMARY BAR — compact header for selected group
 // ════════════════════════════════════════════════════════════════════
 
 function GroupSummaryBar({
@@ -409,11 +408,11 @@ function GroupSummaryBar({
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  FIX 3 — SELECTION TOOLBAR (replaces inline action icons)
+//  SELECTION TOOLBAR — labeled bulk actions + Move Group
 // ════════════════════════════════════════════════════════════════════
 
 function StudentSelectionToolbar({
-  students, selectedIds, group, isTL, onRemove, onAddPayment, onClear,
+  students, selectedIds, group, isTL, onRemove, onAddPayment, onMoveGroup, onClear,
 }: {
   students:     GroupDetailStudent[]
   selectedIds:  Set<string>
@@ -421,6 +420,7 @@ function StudentSelectionToolbar({
   isTL:         boolean
   onRemove:     (ids: string[]) => void
   onAddPayment: (student: GroupDetailStudent) => void
+  onMoveGroup:  () => void
   onClear:      () => void
 }) {
   const [removeConfirm, setRemoveConfirm] = useState(false)
@@ -432,35 +432,38 @@ function StudentSelectionToolbar({
   const callPhone = single?.phone
 
   return (
-    <div className="flex items-center gap-1.5 rounded-lg border border-[#FF8A1F]/40 bg-[#FFF7ED] px-2.5 py-1.5">
-      <span className="text-[11px] font-semibold text-[#FF8A1F] mr-0.5">{selectedIds.size}</span>
-      <div className="h-3.5 w-px bg-[#FF8A1F]/30" />
+    <div className="flex items-center gap-1 rounded-lg border border-[#FF8A1F]/40 bg-[#FFF7ED] px-2.5 py-1.5 flex-wrap">
+      <span className="text-[11px] font-bold text-[#FF8A1F] mr-1">
+        {selectedIds.size} selected
+      </span>
+      <div className="h-3.5 w-px bg-[#FF8A1F]/30 mr-0.5" />
 
-      {/* WhatsApp — first selected student with a phone */}
+      {/* WhatsApp */}
       {waPhone && (
         <a
           href={`https://wa.me/${waPhone}`}
           target="_blank"
           rel="noopener noreferrer"
           title={selected.length > 1 ? `WhatsApp first (${selected.length} selected)` : 'WhatsApp'}
-          className="rounded p-1.5 text-green-600 hover:bg-green-50 transition"
+          className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-green-700 hover:bg-green-50 transition"
         >
-          <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
+          <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 shrink-0">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
           </svg>
+          WhatsApp
         </a>
       )}
 
-      {/* Call — first selected student */}
+      {/* Call — single only */}
       {callPhone && (
         <a
           href={`tel:${callPhone}`}
-          title="Call student"
-          className="rounded p-1.5 text-[#64748B] hover:bg-white transition"
+          className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-[#64748B] hover:bg-white transition"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5 shrink-0">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
           </svg>
+          Call
         </a>
       )}
 
@@ -468,37 +471,50 @@ function StudentSelectionToolbar({
       {single && (
         <Link
           href={`/portal/team-leader/students?search=${encodeURIComponent(single.student_name)}`}
-          title="View student"
-          className="rounded p-1.5 text-[#64748B] hover:bg-white transition"
+          className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-[#64748B] hover:bg-white transition"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5 shrink-0">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
           </svg>
+          View
         </Link>
       )}
 
-      {/* Add Payment — single + TL only (FIX 4) */}
+      {/* Add Payment — single + TL only */}
       {single && isTL && (
         <button
           onClick={() => onAddPayment(single)}
-          title="Add payment"
-          className="rounded p-1.5 text-[#FF8A1F] hover:bg-white transition"
+          className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-[#FF8A1F] hover:bg-white transition"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5 shrink-0">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
           </svg>
+          Add Payment
         </button>
       )}
 
-      {/* Remove from Group — TL only, with inline confirm */}
+      {/* Move Group — TL only */}
+      {isTL && (
+        <button
+          onClick={onMoveGroup}
+          className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-[#64748B] hover:bg-white transition"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5 shrink-0">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+          Move Group
+        </button>
+      )}
+
+      {/* Remove — TL only, inline confirm */}
       {isTL && (
         removeConfirm ? (
           <span className="flex items-center gap-1 ml-1">
             <button
               onClick={() => { setRemoveConfirm(false); onRemove(Array.from(selectedIds)) }}
-              className="rounded px-2 py-0.5 text-[10px] font-semibold text-white bg-red-500 hover:bg-red-600 transition"
+              className="rounded px-2 py-1 text-[11px] font-semibold text-white bg-red-500 hover:bg-red-600 transition"
             >
-              Remove ({selectedIds.size})
+              Confirm Remove ({selectedIds.size})
             </button>
             <button
               onClick={() => setRemoveConfirm(false)}
@@ -512,25 +528,25 @@ function StudentSelectionToolbar({
         ) : (
           <button
             onClick={() => setRemoveConfirm(true)}
-            title="Remove from group"
-            className="rounded p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600 transition"
+            className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-red-500 hover:bg-red-50 hover:text-red-700 transition"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5 shrink-0">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6h7m5-5l4 4m0 0l4-4m-4 4V7" />
             </svg>
+            Remove
           </button>
         )
       )}
 
       <div className="h-3.5 w-px bg-[#FF8A1F]/30 ml-0.5" />
 
-      {/* Clear selection */}
+      {/* Clear */}
       <button
         onClick={() => { setRemoveConfirm(false); onClear() }}
         title="Clear selection"
-        className="rounded p-1.5 text-[#94A3B8] hover:text-[#374151] hover:bg-white transition"
+        className="rounded p-1 text-[#94A3B8] hover:text-[#374151] hover:bg-white transition"
       >
-        <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
           <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
         </svg>
       </button>
@@ -539,7 +555,7 @@ function StudentSelectionToolbar({
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  FIX 3+5+7 — STUDENTS TABLE (selection, subscription col, no scroll)
+//  HIGH-DENSITY STUDENTS TABLE — py-1.5 rows, 12 columns incl. Joined
 // ════════════════════════════════════════════════════════════════════
 
 function GroupStudentsTable({
@@ -573,29 +589,29 @@ function GroupStudentsTable({
   const allSelected = sorted.length > 0 && sorted.every(s => selectedIds.has(s.student_id))
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm min-w-205">
+    <div className="overflow-x-auto h-full">
+      <table className="w-full text-sm min-w-240">
         <thead>
           <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] sticky top-0 z-10">
-            {/* Checkbox */}
-            <th className="pl-4 pr-2 py-2.5 w-8">
+            <th className="pl-3 pr-2 py-2 w-8">
               <input
                 type="checkbox"
                 checked={allSelected}
                 onChange={onToggleAll}
-                className="h-4 w-4 cursor-pointer rounded border-[#CBD5E1] accent-[#FF8A1F]"
+                className="h-3.5 w-3.5 cursor-pointer rounded border-[#CBD5E1] accent-[#FF8A1F]"
               />
             </th>
-            <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Student</th>
-            <th className="px-2 py-2.5 text-center text-[11px] font-semibold text-[#64748B]">Age</th>
-            <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Stu. Phone</th>
-            <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Par. Phone</th>
-            <th className="px-2 py-2.5 text-center text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Sessions</th>
-            <th className="px-2 py-2.5 text-center text-[11px] font-semibold text-[#64748B]">Left</th>
-            <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Subscription</th>
-            <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B]">Paid</th>
-            <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B]">Balance</th>
-            <th className="px-3 py-2.5 text-center text-[11px] font-semibold text-[#64748B]">Risk</th>
+            <th className="px-3 py-2 text-left text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Student</th>
+            <th className="px-2 py-2 text-center text-[11px] font-semibold text-[#64748B]">Age</th>
+            <th className="px-3 py-2 text-left text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Stu. Phone</th>
+            <th className="px-3 py-2 text-left text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Par. Phone</th>
+            <th className="px-2 py-2 text-center text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Sessions</th>
+            <th className="px-2 py-2 text-center text-[11px] font-semibold text-[#64748B]">Left</th>
+            <th className="px-3 py-2 text-right text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Subscription</th>
+            <th className="px-3 py-2 text-right text-[11px] font-semibold text-[#64748B]">Paid</th>
+            <th className="px-3 py-2 text-right text-[11px] font-semibold text-[#64748B]">Balance</th>
+            <th className="px-3 py-2 text-center text-[11px] font-semibold text-[#64748B]">Risk</th>
+            <th className="px-3 py-2 text-center text-[11px] font-semibold text-[#64748B]">Joined</th>
           </tr>
         </thead>
         <tbody>
@@ -608,7 +624,7 @@ function GroupStudentsTable({
                                                     : 'text-[#CBD5E1]'
 
             const sessStat = s.sessions_used != null && s.sessions_total != null
-              ? `${s.sessions_used} / ${s.sessions_total}`
+              ? `${s.sessions_used}/${s.sessions_total}`
               : s.sessions_used != null ? `${s.sessions_used}` : '—'
 
             const sessLeft      = s.sessions_remaining
@@ -625,82 +641,84 @@ function GroupStudentsTable({
                   isSelected ? 'bg-[#FFF7ED]' : 'hover:bg-[#FAFAFA]',
                 ].join(' ')}
               >
-                {/* Checkbox — stop propagation to avoid double-toggle */}
-                <td className="pl-4 pr-2 py-2.5 w-8" onClick={e => e.stopPropagation()}>
+                {/* Checkbox */}
+                <td className="pl-3 pr-2 py-1.5 w-8" onClick={e => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => onToggleStudent(s.student_id)}
-                    className="h-4 w-4 cursor-pointer rounded border-[#CBD5E1] accent-[#FF8A1F]"
+                    className="h-3.5 w-3.5 cursor-pointer rounded border-[#CBD5E1] accent-[#FF8A1F]"
                   />
                 </td>
 
-                {/* Student — name + code + att% + joined (FIX 7: subtext) */}
-                <td className="px-3 py-2.5">
-                  <p className="text-[13px] font-semibold text-[#0B1F3A] whitespace-nowrap">{s.student_name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
+                {/* Student — name + code + att% */}
+                <td className="px-3 py-1.5">
+                  <p className="text-[12px] font-semibold text-[#0B1F3A] whitespace-nowrap leading-tight">{s.student_name}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
                     {s.student_code && (
                       <span className="font-mono text-[10px] text-[#94A3B8]">{s.student_code}</span>
                     )}
                     {s.attendance_pct > 0 && (
                       <span className={`text-[10px] font-semibold ${attColor}`}>{s.attendance_pct}%</span>
                     )}
-                    <span className="text-[10px] text-[#CBD5E1]">
-                      {fmtDateShort(s.joined_at?.slice(0, 10))}
-                    </span>
                   </div>
                 </td>
 
                 {/* Age */}
-                <td className="px-2 py-2.5 text-center text-[12px] text-[#64748B]">
+                <td className="px-2 py-1.5 text-center text-[11px] text-[#64748B]">
                   {s.age != null ? `${s.age}y` : '—'}
                 </td>
 
                 {/* Student phone */}
-                <td className="px-3 py-2.5">
-                  <span className="font-mono text-[12px] text-[#374151] whitespace-nowrap">{s.phone ?? '—'}</span>
+                <td className="px-3 py-1.5">
+                  <span className="font-mono text-[11px] text-[#374151] whitespace-nowrap">{s.phone ?? '—'}</span>
                 </td>
 
                 {/* Parent phone */}
-                <td className="px-3 py-2.5">
-                  <span className="font-mono text-[12px] text-[#374151] whitespace-nowrap">{s.parent_phone ?? '—'}</span>
+                <td className="px-3 py-1.5">
+                  <span className="font-mono text-[11px] text-[#374151] whitespace-nowrap">{s.parent_phone ?? '—'}</span>
                 </td>
 
                 {/* Sessions used/total */}
-                <td className="px-2 py-2.5 text-center text-[12px] text-[#64748B] whitespace-nowrap">
+                <td className="px-2 py-1.5 text-center text-[11px] text-[#64748B] whitespace-nowrap">
                   {sessStat}
                 </td>
 
                 {/* Sessions remaining */}
-                <td className="px-2 py-2.5 text-center">
-                  <span className={`text-[12px] ${sessLeftColor}`}>
+                <td className="px-2 py-1.5 text-center">
+                  <span className={`text-[11px] ${sessLeftColor}`}>
                     {sessLeft != null ? sessLeft : '—'}
                   </span>
                 </td>
 
-                {/* Subscription — FIX 5 */}
-                <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                {/* Subscription */}
+                <td className="px-3 py-1.5 text-right whitespace-nowrap">
                   {s.subscription_amount
-                    ? <span className="text-[12px] text-[#374151]">{fmtCurrency(s.subscription_amount)}</span>
-                    : <span className="text-[11px] text-[#CBD5E1]">No Package</span>
+                    ? <span className="text-[11px] text-[#374151]">{fmtCurrency(s.subscription_amount)}</span>
+                    : <span className="text-[10px] text-[#CBD5E1]">No Package</span>
                   }
                 </td>
 
                 {/* Paid */}
-                <td className="px-3 py-2.5 text-right text-[12px] text-[#374151] whitespace-nowrap">
+                <td className="px-3 py-1.5 text-right text-[11px] text-[#374151] whitespace-nowrap">
                   {s.paid_amount > 0 ? fmtCurrency(s.paid_amount) : '—'}
                 </td>
 
                 {/* Balance */}
-                <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                  <span className={`text-[12px] ${s.remaining_balance > 0 ? 'text-red-600 font-semibold' : 'text-[#94A3B8]'}`}>
+                <td className="px-3 py-1.5 text-right whitespace-nowrap">
+                  <span className={`text-[11px] ${s.remaining_balance > 0 ? 'text-red-600 font-semibold' : 'text-[#94A3B8]'}`}>
                     {s.remaining_balance > 0 ? fmtCurrency(s.remaining_balance) : '—'}
                   </span>
                 </td>
 
                 {/* Risk */}
-                <td className="px-3 py-2.5 text-center">
+                <td className="px-3 py-1.5 text-center">
                   <RiskBadge level={s.risk_level} />
+                </td>
+
+                {/* Joined */}
+                <td className="px-3 py-1.5 text-center text-[11px] text-[#94A3B8] whitespace-nowrap">
+                  {fmtDateShort(s.joined_at)}
                 </td>
               </tr>
             )
@@ -1123,7 +1141,177 @@ function QuickAddStudentModal({
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  FIX 4 — build StudentResult from GroupDetailStudent for wizard
+//  MOVE GROUP MODAL — move selected students to another group
+// ════════════════════════════════════════════════════════════════════
+
+function MoveGroupModal({
+  isOpen, currentGroup, allGroups, selectedIds, onClose, onMoved,
+}: {
+  isOpen:        boolean
+  currentGroup:  GroupOperationalRow
+  allGroups:     GroupOperationalRow[]
+  selectedIds:   Set<string>
+  onClose:       () => void
+  onMoved:       () => void
+}) {
+  const [targetGroupId, setTargetGroupId] = useState<string | null>(null)
+  const [search, setSearch]               = useState('')
+  const [error, setError]                 = useState<string | null>(null)
+  const [loading, setLoading]             = useState(false)
+
+  useEffect(() => {
+    if (isOpen) { setTargetGroupId(null); setSearch(''); setError(null); setLoading(false) }
+  }, [isOpen])
+
+  if (!isOpen) return null
+
+  const eligible = allGroups.filter(g =>
+    g.group_id !== currentGroup.group_id &&
+    g.status !== 'cancelled' &&
+    g.status !== 'archived'
+  )
+
+  const q        = search.trim().toLowerCase()
+  const filtered = q
+    ? eligible.filter(g => {
+        const hay = [g.name, g.code, g.course_name, g.branch_name, g.lead_instructor_name]
+          .filter(Boolean).join(' ').toLowerCase()
+        return hay.includes(q)
+      })
+    : eligible
+
+  const targetGroup   = filtered.find(g => g.group_id === targetGroupId) ?? null
+  const wouldOverfill = targetGroup?.capacity != null
+    ? (targetGroup.student_count + selectedIds.size) > targetGroup.capacity
+    : false
+
+  async function handleMove() {
+    if (!targetGroupId) return
+    setLoading(true)
+    setError(null)
+    try {
+      for (const sid of Array.from(selectedIds)) {
+        await removeStudentFromGroupAction(currentGroup.group_id, sid)
+      }
+      const res = await addStudentsToGroupAction(targetGroupId, Array.from(selectedIds))
+      if (!res.success) {
+        setError(res.error?.message ?? 'Failed to add students to new group')
+        return
+      }
+      onMoved()
+      onClose()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Move failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="flex w-full max-w-md flex-col rounded-2xl bg-white shadow-xl" style={{ maxHeight: '80vh' }}>
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-4 shrink-0">
+          <div>
+            <h3 className="text-[15px] font-bold text-[#0B1F3A]">Move to Group</h3>
+            <p className="mt-0.5 text-[12px] text-[#64748B]">
+              Moving {selectedIds.size} student{selectedIds.size !== 1 ? 's' : ''} from {currentGroup.name}
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-2 text-[#94A3B8] hover:bg-[#F1F5F9] transition">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="border-b border-[#E2E8F0] px-4 py-3 shrink-0">
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search groups by name, course, branch…"
+            autoFocus
+            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:bg-white"
+          />
+          <p className="mt-1.5 text-[11px] text-[#94A3B8]">{filtered.length} available groups</p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto min-h-0">
+          {filtered.length === 0 ? (
+            <p className="py-10 text-center text-sm text-[#94A3B8]">No eligible groups found.</p>
+          ) : filtered.map(g => {
+            const isSelected  = targetGroupId === g.group_id
+            const capDisplay  = g.capacity ? `${g.student_count}/${g.capacity}` : `${g.student_count} students`
+            const isOverCap   = g.capacity != null && (g.student_count + selectedIds.size) > g.capacity
+            return (
+              <button
+                key={g.group_id}
+                onClick={() => setTargetGroupId(g.group_id)}
+                className={[
+                  'w-full border-b border-[#F1F5F9] px-4 py-3 text-left transition-colors',
+                  isSelected ? 'bg-[#FFF7ED]' : 'hover:bg-[#F8FAFC]',
+                ].join(' ')}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={[
+                      'h-4 w-4 shrink-0 rounded-full border-2 flex items-center justify-center',
+                      isSelected ? 'border-[#FF8A1F] bg-[#FF8A1F]' : 'border-[#CBD5E1]',
+                    ].join(' ')}>
+                      {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-semibold text-[#0B1F3A] truncate">{g.name}</p>
+                      <p className="text-[11px] text-[#64748B] truncate">
+                        {g.course_name ?? '—'} · {g.branch_name}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {isOverCap && (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Over cap</span>
+                    )}
+                    <span className="text-[11px] text-[#94A3B8]">{capDisplay}</span>
+                    <StatusChip status={g.status} />
+                  </div>
+                </div>
+              </button>
+            )
+          })}
+        </div>
+
+        <div className="shrink-0 border-t border-[#E2E8F0] px-5 py-4">
+          {error && (
+            <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-[12px] text-red-600">{error}</p>
+          )}
+          {wouldOverfill && !error && (
+            <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+              Warning: this will exceed the target group&apos;s capacity.
+            </p>
+          )}
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] text-[#374151] hover:bg-[#F8FAFC] transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleMove}
+              disabled={!targetGroupId || loading}
+              className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading ? 'Moving…' : targetGroup ? `Move to ${targetGroup.name}` : 'Select a Group'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  BUILD STUDENT RESULT — for EnrollmentWizard
 // ════════════════════════════════════════════════════════════════════
 
 function buildStudentResult(s: GroupDetailStudent, group: GroupOperationalRow): StudentResult {
@@ -1149,13 +1337,62 @@ function buildStudentResult(s: GroupDetailStudent, group: GroupOperationalRow): 
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  GROUP WORKSPACE — Right panel
+//  MAP GROUP STUDENT → StudentOperationsRow for the Finance drawer
+// ════════════════════════════════════════════════════════════════════
+
+function mapToOpsRow(s: GroupDetailStudent, group: GroupOperationalRow): StudentOperationsRow {
+  const sub = s.subscription_amount ?? 0
+  return {
+    enrollment_id:          s.enrollment_id,
+    student_id:             s.student_id,
+    account_id:             s.account_id,
+    group_id:               group.group_id,
+    instructor_id:          group.lead_instructor_id,
+    student_name:           s.student_name,
+    student_code:           s.student_code,
+    student_phone:          s.phone,
+    student_status:         'active',
+    parent_name:            null,
+    parent_phone_1:         s.parent_phone,
+    parent_phone_2:         null,
+    branch_id:              group.branch_id,
+    branch_name:            group.branch_name,
+    group_name:             group.name,
+    course_name:            group.course_name,
+    group_start_date:       group.start_date,
+    instructor_name:        group.lead_instructor_name,
+    total_sessions:         0,
+    sessions_attended:      0,
+    attendance_pct:         s.attendance_pct,
+    last_attendance_date:   null,
+    consecutive_absences:   0,
+    enrolled_sessions:      s.sessions_total  ?? 0,
+    consumed_sessions:      s.sessions_used   ?? 0,
+    remaining_sessions:     s.sessions_remaining ?? 0,
+    financial_status:       s.payment_status as StudentOperationsRow['financial_status'],
+    total_amount:           sub,
+    net_amount:             sub,
+    paid_amount:            s.paid_amount,
+    remaining_amount:       s.remaining_balance,
+    installments_total:     0,
+    installments_paid:      0,
+    installments_remaining: 0,
+    next_due_date:          null,
+    payment_progress_pct:   sub > 0 ? Math.min(100, Math.round((s.paid_amount / sub) * 100)) : 0,
+    days_overdue:           0,
+    risk_level:             s.risk_level,
+    risk_flags:             [],
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  GROUP WORKSPACE — right panel with tabs
 // ════════════════════════════════════════════════════════════════════
 
 type WorkspaceTab = 'students' | 'attendance' | 'finance' | 'performance'
 
 function GroupWorkspace({
-  group, isTL, onEdit, onDelete, onStudentsChanged, studentOptions, refreshKey,
+  group, isTL, onEdit, onDelete, onStudentsChanged, studentOptions, refreshKey, allGroups,
 }: {
   group:             GroupOperationalRow
   isTL:              boolean
@@ -1164,18 +1401,21 @@ function GroupWorkspace({
   onStudentsChanged: () => void
   studentOptions:    GroupStudentOption[]
   refreshKey:        number
+  allGroups:         GroupOperationalRow[]
 }) {
-  const [tab, setTab]                     = useState<WorkspaceTab>('students')
-  const [detailData, setDetailData]       = useState<GroupDetailData | null>(null)
-  const [loading, setLoading]             = useState(false)
-  const [deleteConfirm, setDeleteConfirm] = useState(false)
-  const [deleteError, setDeleteError]     = useState<string | null>(null)
-  const [quickAddOpen, setQuickAddOpen]   = useState(false)
-  const [selectedIds, setSelectedIds]     = useState<Set<string>>(new Set())
+  const [tab, setTab]                       = useState<WorkspaceTab>('students')
+  const [detailData, setDetailData]         = useState<GroupDetailData | null>(null)
+  const [loading, setLoading]               = useState(false)
+  const [deleteConfirm, setDeleteConfirm]   = useState(false)
+  const [deleteError, setDeleteError]       = useState<string | null>(null)
+  const [quickAddOpen, setQuickAddOpen]     = useState(false)
+  const [moveGroupOpen, setMoveGroupOpen]   = useState(false)
+  const [selectedIds, setSelectedIds]       = useState<Set<string>>(new Set())
+  // Finance gateway: drawer for existing contracts, wizard for new ones
+  const [drawerOpsRow, setDrawerOpsRow]     = useState<StudentOperationsRow | null>(null)
   const [paymentStudent, setPaymentStudent] = useState<GroupDetailStudent | null>(null)
-  const [, startT]                        = useTransition()
+  const [, startT]                          = useTransition()
 
-  // FIX 8 — re-fetch + clear selection on group change or refresh
   useEffect(() => {
     setSelectedIds(new Set())
     setLoading(true)
@@ -1210,6 +1450,15 @@ function GroupWorkspace({
     onStudentsChanged()
   }
 
+  // Finance gateway: open drawer if student has existing contract, wizard otherwise
+  function handleAddPayment(student: GroupDetailStudent) {
+    if (student.account_id) {
+      setDrawerOpsRow(mapToOpsRow(student, group))
+    } else {
+      setPaymentStudent(student)
+    }
+  }
+
   function handleDeleteClick() { setDeleteError(null); setDeleteConfirm(true) }
 
   function handleDeleteConfirm() {
@@ -1222,8 +1471,8 @@ function GroupWorkspace({
     })
   }
 
-  const currentStudentIds  = (detailData?.students ?? []).map(s => s.student_id)
-  const sessionsCompleted  = estimateElapsedSessions(group.start_date, group.day_of_week, group.end_date)
+  const currentStudentIds = (detailData?.students ?? []).map(s => s.student_id)
+  const sessionsCompleted = estimateElapsedSessions(group.start_date, group.day_of_week, group.end_date)
 
   const TABS: { key: WorkspaceTab; label: string }[] = [
     { key: 'students',    label: `Students (${group.student_count})` },
@@ -1261,13 +1510,13 @@ function GroupWorkspace({
         ))}
       </div>
 
-      {/* Students tab toolbar — FIX 3: selection toolbar + Add Student */}
+      {/* Students tab toolbar */}
       {tab === 'students' && (
-        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#E2E8F0] bg-white px-4 py-2">
+        <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#E2E8F0] bg-white px-4 py-2 flex-wrap">
           <span className="text-[12px] text-[#64748B]">
             {loading ? '' : `${detailData?.students.length ?? 0} students`}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {selectedIds.size > 0 && (
               <StudentSelectionToolbar
                 students={detailData?.students ?? []}
@@ -1275,7 +1524,8 @@ function GroupWorkspace({
                 group={group}
                 isTL={isTL}
                 onRemove={handleRemoveStudents}
-                onAddPayment={s => setPaymentStudent(s)}
+                onAddPayment={handleAddPayment}
+                onMoveGroup={() => setMoveGroupOpen(true)}
                 onClear={() => setSelectedIds(new Set())}
               />
             )}
@@ -1310,7 +1560,19 @@ function GroupWorkspace({
         {tab === 'performance' && <GroupPerformanceTab group={group} />}
       </div>
 
-      {/* FIX 4 — EnrollmentWizard opened from selection toolbar */}
+      {/* Finance drawer — student has existing contract */}
+      {drawerOpsRow && isTL && (
+        <StudentOpsDrawer
+          student={drawerOpsRow}
+          onClose={() => {
+            setDrawerOpsRow(null)
+            setSelectedIds(new Set())
+            onStudentsChanged()
+          }}
+        />
+      )}
+
+      {/* EnrollmentWizard — student has no contract yet */}
       {paymentStudent && isTL && (
         <EnrollmentWizard
           branchIds={[group.branch_id]}
@@ -1323,6 +1585,20 @@ function GroupWorkspace({
           }}
         />
       )}
+
+      {/* Move Group modal */}
+      <MoveGroupModal
+        isOpen={moveGroupOpen}
+        currentGroup={group}
+        allGroups={allGroups}
+        selectedIds={selectedIds}
+        onClose={() => setMoveGroupOpen(false)}
+        onMoved={() => {
+          setMoveGroupOpen(false)
+          setSelectedIds(new Set())
+          onStudentsChanged()
+        }}
+      />
 
       {/* Delete confirmation modal */}
       {deleteConfirm && (
@@ -1371,7 +1647,7 @@ function GroupWorkspace({
         </div>
       )}
 
-      {/* Quick add student modal */}
+      {/* Quick Add Student modal */}
       <QuickAddStudentModal
         isOpen={quickAddOpen}
         group={group}
@@ -1385,7 +1661,7 @@ function GroupWorkspace({
 }
 
 // ════════════════════════════════════════════════════════════════════
-//  EMPTY STATE — No group selected
+//  EMPTY STATE
 // ════════════════════════════════════════════════════════════════════
 
 function EmptyWorkspace() {
@@ -1418,14 +1694,14 @@ export default function GroupsWorkspaceClient({
 }: Props) {
   const router = useRouter()
 
-  const [filters, setFilters]             = useState<Filters>(DEFAULT_FILTERS)
+  const [filters, setFilters]                 = useState<Filters>(DEFAULT_FILTERS)
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null)
   const selectedGroup = groups.find(g => g.group_id === selectedGroupId) ?? null
-  const [refreshKey, setRefreshKey]       = useState(0)
-  const [modalOpen, setModalOpen]         = useState(false)
-  const [modalMode, setModalMode]         = useState<'create' | 'edit'>('create')
-  const [editGroup, setEditGroup]         = useState<GroupOperationalRow | undefined>()
-  const [mobilePanel, setMobilePanel]     = useState<'list' | 'detail'>('list')
+  const [refreshKey, setRefreshKey]           = useState(0)
+  const [modalOpen, setModalOpen]             = useState(false)
+  const [modalMode, setModalMode]             = useState<'create' | 'edit'>('create')
+  const [editGroup, setEditGroup]             = useState<GroupOperationalRow | undefined>()
+  const [mobilePanel, setMobilePanel]         = useState<'list' | 'detail'>('list')
 
   const visible = applyFilters(groups, filters)
   const kpis    = buildKpis(groups)
@@ -1467,24 +1743,27 @@ export default function GroupsWorkspaceClient({
   }
 
   return (
-    <div className="flex flex-col h-full gap-4">
-      {/* ── KPI strip ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-6 shrink-0">
+    <div className="flex flex-col h-full gap-2">
+
+      {/* ── Compact KPI strip — single row ──────────────────────────── */}
+      <div className="flex items-center gap-5 bg-white border border-[#E2E8F0] rounded-xl px-4 py-2 shrink-0 flex-wrap">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Overview</span>
+        <div className="h-4 w-px bg-[#E2E8F0]" />
         {kpis.map(k => (
-          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-            <div className={`mb-1.5 h-1 w-5 rounded-full ${k.color} opacity-80`} />
-            <p className="text-lg font-bold text-[#0B1F3A]">{k.value}</p>
-            <p className="text-[11px] text-[#64748B] leading-tight">{k.label}</p>
+          <div key={k.label} className="flex items-center gap-1.5">
+            <span className={`h-2 w-2 rounded-full ${k.color} shrink-0`} />
+            <span className="text-[13px] font-bold text-[#0B1F3A]">{k.value}</span>
+            <span className="text-[11px] text-[#94A3B8]">{k.label}</span>
           </div>
         ))}
       </div>
 
-      {/* ── Split panel workspace ─────────────────────────────────────── */}
+      {/* ── Split panel workspace ────────────────────────────────────── */}
       <div className="flex-1 min-h-0 flex overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
 
-        {/* Left sidebar */}
+        {/* Left sidebar — 320px */}
         <div className={[
-          'w-75 shrink-0 border-r border-[#E2E8F0] overflow-hidden flex flex-col',
+          'w-80 shrink-0 border-r border-[#E2E8F0] overflow-hidden flex flex-col',
           mobilePanel === 'detail' ? 'hidden md:flex' : 'flex',
         ].join(' ')}>
           <GroupSidebar
@@ -1530,6 +1809,7 @@ export default function GroupsWorkspaceClient({
               onStudentsChanged={handleStudentsChanged}
               studentOptions={studentOptions}
               refreshKey={refreshKey}
+              allGroups={groups}
             />
           ) : (
             <EmptyWorkspace />
@@ -1537,7 +1817,7 @@ export default function GroupsWorkspaceClient({
         </div>
       </div>
 
-      {/* ── Create / Edit modal ───────────────────────────────────────── */}
+      {/* ── Create / Edit modal ──────────────────────────────────────── */}
       <GroupFormModal
         key={`${modalMode}-${editGroup?.group_id ?? 'new'}`}
         isOpen={modalOpen}

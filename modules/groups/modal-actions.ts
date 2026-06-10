@@ -457,6 +457,9 @@ export interface GroupDetailStudent {
   sessions_used:       number | null
   sessions_total:      number | null
   subscription_amount: number | null
+  // Finance gateway — presence means student has an existing contract
+  account_id:          string | null
+  enrollment_id:       string | null
 }
 
 export async function getGroupDetailDataAction(groupId: string): Promise<GroupDetailData> {
@@ -493,7 +496,7 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       : Promise.resolve({ data: [] }),
     studentIds.length
       ? db.from('student_enrollments')
-          .select('student_id, remaining_sessions, consumed_sessions, enrolled_sessions')
+          .select('id, student_id, remaining_sessions, consumed_sessions, enrolled_sessions')
           .in('student_id', studentIds)
           .eq('group_id', groupId)
           .eq('status', 'ACTIVE')
@@ -506,22 +509,23 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       : Promise.resolve({ data: [] }),
     studentIds.length
       ? db.from('student_financial_accounts')
-          .select('student_id, paid_amount, remaining_amount, status')
+          .select('id, student_id, paid_amount, remaining_amount, status')
           .in('student_id', studentIds)
       : Promise.resolve({ data: [] }),
   ])
 
   const progMap     = new Map<string, number>()
-  const sessMap     = new Map<string, { remaining: number; used: number | null; total: number | null }>()
+  const sessMap     = new Map<string, { remaining: number; used: number | null; total: number | null; enrollment_id: string | null }>()
   const guardianMap = new Map<string, string>()
-  const financeMap  = new Map<string, { paid: number; balance: number; status: string | null }>()
+  const financeMap  = new Map<string, { paid: number; balance: number; status: string | null; account_id: string | null }>()
 
   for (const p of (progRes.data ?? []) as any[])    progMap.set(p.student_id, p.attendance_score ?? 0)
   for (const e of (enrollRes.data ?? []) as any[]) {
     sessMap.set(e.student_id as string, {
-      remaining: e.remaining_sessions ?? 0,
-      used:      e.consumed_sessions  != null ? Number(e.consumed_sessions)  : null,
-      total:     e.enrolled_sessions  != null ? Number(e.enrolled_sessions)  : null,
+      remaining:     e.remaining_sessions ?? 0,
+      used:          e.consumed_sessions  != null ? Number(e.consumed_sessions)  : null,
+      total:         e.enrolled_sessions  != null ? Number(e.enrolled_sessions)  : null,
+      enrollment_id: (e.id as string) ?? null,
     })
   }
   for (const g of (guardianRes.data ?? []) as any[]) {
@@ -531,9 +535,10 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
   for (const f of (financeRes.data ?? []) as any[]) {
     if (!financeMap.has(f.student_id)) {
       financeMap.set(f.student_id as string, {
-        paid:    Number(f.paid_amount    ?? 0),
-        balance: Number(f.remaining_amount ?? 0),
-        status:  f.status ?? null,
+        paid:       Number(f.paid_amount    ?? 0),
+        balance:    Number(f.remaining_amount ?? 0),
+        status:     f.status ?? null,
+        account_id: (f.id as string) ?? null,
       })
     }
   }
@@ -573,6 +578,8 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       sessions_used:       sessInfo?.used   ?? null,
       sessions_total:      sessInfo?.total  ?? null,
       subscription_amount: ((finInfo?.paid ?? 0) + (finInfo?.balance ?? 0)) || null,
+      account_id:          finInfo?.account_id    ?? null,
+      enrollment_id:       sessInfo?.enrollment_id ?? null,
     }
   })
 

@@ -405,7 +405,21 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
     active_summaries:         [],
   }
 
-  const preselectedPackages: PreselectedPackage[] = (detail?.all_enrollments ?? []).filter(e => !!e.account_id)
+  const preselectedPackages: PreselectedPackage[] = (detail?.all_enrollments ?? [])
+    .filter(e => !!e.account_id)
+    .map(e => ({
+      enrollment_id:      e.enrollment_id,
+      account_id:         e.account_id,
+      course_name:        e.course_name,
+      group_name:         e.group_name,
+      instructor_name:    e.instructor_name,
+      enrolled_sessions:  e.enrolled_sessions,
+      remaining_sessions: e.remaining_sessions,
+      financial_status:   e.financial_status,
+      net_amount:         e.net_amount,
+      paid_amount:        e.paid_amount,
+      remaining_amount:   e.remaining_amount,
+    }))
 
   const progressPct   = netAmt > 0 ? Math.min(100, Math.round((paidAmt / netAmt) * 100)) : 0
   const exhaustion    = computeSessionExhaustion(student.enrolled_sessions, student.remaining_sessions)
@@ -834,20 +848,37 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                   <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Installment Plan</h3>
                   <div className="space-y-1.5">
                     {detail.installments.map(inst => {
-                      const today  = new Date().toISOString().slice(0, 10)
-                      const isLate = inst.status !== 'PAID' && inst.due_date < today
+                      const today    = new Date().toISOString().slice(0, 10)
+                      const isPaid   = inst.status === 'PAID'
+                      const isLate   = !isPaid && inst.due_date < today
                       const daysLate = isLate ? Math.floor((Date.now() - new Date(inst.due_date).getTime()) / 86400000) : 0
+                      const leftOver = Math.max(0, inst.amount - inst.paid_amount)
                       return (
                         <div key={inst.id}
-                          className={`flex items-center justify-between rounded-xl border px-4 py-2 text-xs ${isLate ? 'border-red-200 bg-red-50/50' : 'border-[#E2E8F0]'}`}>
+                          className={`flex items-center justify-between rounded-xl border px-4 py-2 text-xs ${
+                            isPaid   ? 'border-emerald-200 bg-emerald-50/40' :
+                            isLate   ? 'border-red-200 bg-red-50/50' :
+                            'border-[#E2E8F0]'
+                          }`}>
                           <div>
                             <span className="font-medium text-[#0B1F3A]">#{inst.installment_number}</span>
                             <span className="ml-2 text-[#64748B]">{fmtDate(inst.due_date)}</span>
                             {isLate && <span className="ml-2 font-medium text-red-600">{daysLate}d late</span>}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-[#0B1F3A]">EGP {fmt(inst.amount - inst.paid_amount)}</span>
-                            <span className={`rounded-full px-2 py-0.5 text-[9px] font-medium ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>{inst.status}</span>
+                            {/* Primary: full installment amount */}
+                            <span className={`font-semibold ${isPaid ? 'text-emerald-700' : 'text-[#0B1F3A]'}`}>
+                              EGP {fmt(inst.amount)}
+                            </span>
+                            {/* Secondary: remaining if partially paid */}
+                            {!isPaid && inst.paid_amount > 0 && (
+                              <span className="text-[10px] text-amber-600">
+                                EGP {fmt(leftOver)} left
+                              </span>
+                            )}
+                            <span className={`rounded-full px-2 py-0.5 text-[9px] font-medium ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>
+                              {inst.status}
+                            </span>
                           </div>
                         </div>
                       )

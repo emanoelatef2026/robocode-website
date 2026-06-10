@@ -251,16 +251,25 @@ async function _finishEnrollment(
 
   // ── 5. Create installment plan ─────────────────────────────────────────────
   if (input.installment_count > 0 && net > 0) {
-    const perInst = Math.floor(net / input.installment_count)
-    const lastAmt = net - perInst * (input.installment_count - 1)
+    const count    = Math.floor(input.installment_count)  // ensure integer
+    const perInst  = Math.floor(net / count)
+    const lastAmt  = net - perInst * (count - 1)
 
-    const installments = Array.from({ length: input.installment_count }, (_, i) => {
+    // Guard: per-installment amount must be at least 1 EGP
+    if (perInst < 1) {
+      return {
+        error: `Installment amount too small: EGP ${net} ÷ ${count} installments = EGP ${perInst.toFixed(2)}. ` +
+               `Maximum ${Math.floor(net)} installments allowed for this total.`,
+      }
+    }
+
+    const installments = Array.from({ length: count }, (_, i) => {
       const due = new Date(input.first_due_date)
       due.setMonth(due.getMonth() + i)
       return {
         account_id:         accountId,
         installment_number: i + 1,
-        amount:             i === input.installment_count - 1 ? lastAmt : perInst,
+        amount:             i === count - 1 ? lastAmt : perInst,
         due_date:           due.toISOString().slice(0, 10),
         paid_amount:        0,
         status:             'PENDING' as const,
@@ -517,6 +526,141 @@ export async function transferEnrollment(input: TransferEnrollmentInput) {
   }
 
   return { newEnrollmentId, oldEnrollmentId: input.enrollment_id }
+}
+
+// ── Cancel contract ───────────────────────────────────────────────────────────
+// Marks enrollment CANCELLED, removes student from group, logs timeline event.
+// Returns an immutable cancellation report for display to the operator.
+
+export interface CancellationReport {
+  student_name:       string
+  course_name:        string | null
+  group_name:         string | null
+  instructor_name:    string | null
+  enrolled_sessions:  number
+  consumed_sessions:  number
+  remaining_sessions: number
+  sessions_attended:  number
+  sessions_absent:    number
+  net_amount:         number
+  paid_amount:        number
+  remaining_balance:  number
+  cancelled_at:       string
+  cancelled_by_name:  string
+}
+
+export async function cancelContract(
+  enrollment_id: string
+): Promise<{ ok: true; report: CancellationReport } | { error: string }> {
+  const user = await requirePermission('manage_financials')
+  const db   = createServiceClient()
+
+  const { data: enRow, error: enErr } = await db
+    .from('student_enrollments')
+    .select(`
+      id, status, student_id, branch_id, group_id, group_course_id,
+      course_name_snapshot, group_name_snapshot, instructor_name_snapshot,
+      enrolled_sessions, consumed_sessions, remaining_sessions
+    `)
+    .eq('id', enrollment_id)
+    .single()
+
+  if (enErr || !enRow) return { error: 'Enrollment not found' }
+  const en = enRow as any
+  if (en.status !== 'ACTIVE') return { error: 'Only ACTIVE enrollments can be cancelled' }
+
+  const [stuRes, accRes, userRes] = await Promise.all([
+    db.from('students').select('first_name, last_name').eq('id', en.student_id).maybeSingle(),
+    db.from('student_financial_accounts')
+      .select('net_amount, paid_amount, remaining_amount')
+      .eq('enrollment_id', enrollment_id)
+      .maybeSingle(),
+    db.from('users')
+      .select('profiles!profiles_user_id_fkey(first_name, last_name)')
+      .eq('id', user.id)
+      .maybeSingle(),
+  ])
+
+  const stu  = stuRes.data  as any
+  const acc  = accRes.data  as any
+  const uprof = (userRes.data as any)?.profiles
+  const studentName     = stu   ? [stu.first_name, stu.last_name].filter(Boolean).join(' ') : 'Unknown'
+  const cancelledByName = uprof ? [uprof.first_name, uprof.last_name].filter(Boolean).join(' ') || user.id : user.id
+
+  // Count attendance (present/absent) for this student in the group
+  let sessionsAttended = 0
+  let sessionsAbsent   = 0
+  if (en.group_course_id) {
+    const { data: schedIds } = await db
+      .from('schedules')
+      .select('id')
+      .eq('group_course_id', en.group_course_id)
+      .neq('status', 'cancelled')
+    const ids = ((schedIds ?? []) as any[]).map(s => s.id as string)
+    if (ids.length) {
+      const { data: attRows } = await db
+        .from('attendance_records')
+        .select('status')
+        .eq('student_id', en.student_id)
+        .in('schedule_id', ids)
+      for (const r of (attRows ?? []) as any[]) {
+        if (['present', 'late', 'makeup'].includes(r.status)) sessionsAttended++
+        else if (r.status === 'absent') sessionsAbsent++
+      }
+    }
+  }
+
+  const cancelledAt = new Date().toISOString()
+
+  await db.from('student_enrollments')
+    .update({
+      status:     'CANCELLED',
+      end_date:   cancelledAt.slice(0, 10),
+      updated_at: cancelledAt,
+      notes:      `Cancelled by ${cancelledByName} on ${cancelledAt.slice(0, 10)}`,
+    })
+    .eq('id', enrollment_id)
+
+  if (en.group_id) {
+    await db.from('group_students')
+      .update({ status: 'dropped', left_at: cancelledAt.slice(0, 10) })
+      .eq('student_id', en.student_id)
+      .eq('group_id', en.group_id)
+      .eq('status', 'active')
+  }
+
+  await logTimelineEvent({
+    student_id:    en.student_id,
+    enrollment_id: enrollment_id,
+    event_type:    'ENROLLMENT_CANCELLED',
+    notes:         `Contract cancelled by ${cancelledByName}. Consumed: ${en.consumed_sessions ?? 0}/${en.enrolled_sessions ?? 0} sessions.`,
+    created_by:    user.id,
+    branch_id:     en.branch_id,
+  })
+
+  revalidatePath('/portal/team-leader/finance')
+  revalidatePath('/portal/team-leader/groups')
+  revalidatePath('/admin/finance')
+
+  return {
+    ok: true,
+    report: {
+      student_name:       studentName,
+      course_name:        en.course_name_snapshot    ?? null,
+      group_name:         en.group_name_snapshot     ?? null,
+      instructor_name:    en.instructor_name_snapshot ?? null,
+      enrolled_sessions:  Number(en.enrolled_sessions  ?? 0),
+      consumed_sessions:  Number(en.consumed_sessions  ?? 0),
+      remaining_sessions: Number(en.remaining_sessions ?? 0),
+      sessions_attended:  sessionsAttended,
+      sessions_absent:    sessionsAbsent,
+      net_amount:         Number(acc?.net_amount       ?? 0),
+      paid_amount:        Number(acc?.paid_amount      ?? 0),
+      remaining_balance:  Number(acc?.remaining_amount ?? 0),
+      cancelled_at:       cancelledAt,
+      cancelled_by_name:  cancelledByName,
+    },
+  }
 }
 
 // ── Update enrollment status ─────────────────────────────────────────────────
