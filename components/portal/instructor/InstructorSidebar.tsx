@@ -69,10 +69,9 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: "Teaching",
     items: [
-      { label: "My Groups",       href: "/portal/instructor/groups",    icon: I.groups },
-      { label: "Homework",        href: "/portal/instructor/homework",  icon: I.homework },
-      { label: "Portfolio",       href: "/portal/instructor/portfolio", icon: I.portfolio },
-      { label: "Session History", href: "/portal/instructor/history",   icon: I.history },
+      { label: "My Groups",       href: "/portal/instructor/groups",   icon: I.groups },
+      { label: "Homework",        href: "/portal/instructor/homework", icon: I.homework },
+      { label: "Session History", href: "/portal/instructor/history",  icon: I.history },
     ],
   },
 ]

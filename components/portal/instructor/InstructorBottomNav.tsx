@@ -46,12 +46,11 @@ const NAV = [
     ),
   },
   {
-    label: "More",
-    href: "/portal/instructor/portfolio",
-    moreRoutes: ["/portal/instructor/portfolio", "/portal/instructor/history"],
+    label: "History",
+    href: "/portal/instructor/history",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-        <path fillRule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+        <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
       </svg>
     ),
   },
@@ -62,8 +61,7 @@ export default function InstructorBottomNav() {
 
   const isActive = (item: (typeof NAV)[number]) => {
     if (item.exact) return pathname === item.href
-    if (item.moreRoutes) return item.moreRoutes.some(r => pathname.startsWith(r))
-    return pathname.startsWith(item.href)
+    return pathname === item.href || pathname.startsWith(item.href + '/')
   }
 
   return (

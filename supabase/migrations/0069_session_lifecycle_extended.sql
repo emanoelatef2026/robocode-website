@@ -48,3 +48,6 @@ CREATE INDEX IF NOT EXISTS idx_schedules_original_session
 CREATE INDEX IF NOT EXISTS idx_schedules_cancelled_at
   ON public.schedules(cancelled_at)
   WHERE cancelled_at IS NOT NULL;
+
+-- Refresh PostgREST schema cache so new columns are immediately visible.
+NOTIFY pgrst, 'reload schema';

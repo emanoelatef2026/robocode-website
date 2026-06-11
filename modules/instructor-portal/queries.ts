@@ -530,17 +530,17 @@ export async function getSessionDetail(
   let postponed_reason:    string | null = null
   let original_session_id: string | null = null
 
+  // Query A: pre-0069 columns — always present after Sprint 38 migrations.
   const { data: enrichRow, error: enrichErr } = await db
     .from('schedules')
-    .select('topic, notes, started_at, ended_at, resources_links, cancellation_reason, cancelled_at, postponed_reason, original_session_id')
+    .select('topic, notes, started_at, ended_at, resources_links, cancellation_reason')
     .eq('id', sessionId)
     .maybeSingle()
 
   if (enrichErr) {
-    console.error('[getSessionDetail] enrichment columns missing (pending migration?)', {
+    console.error('[getSessionDetail] enrichment-A columns missing (pending migration?)', {
       sessionId, error: enrichErr.message, code: enrichErr.code,
     })
-    // Non-fatal — continue with empty defaults
   } else if (enrichRow) {
     const e     = enrichRow as any
     topic               = e.topic               ?? null
@@ -548,11 +548,22 @@ export async function getSessionDetail(
     started_at          = e.started_at          ?? null
     ended_at            = e.ended_at            ?? null
     cancellation_reason = e.cancellation_reason ?? null
-    cancelled_at        = e.cancelled_at        ?? null
-    postponed_reason    = e.postponed_reason    ?? null
-    original_session_id = e.original_session_id ?? null
     const raw           = e.resources_links
     resources_links = Array.isArray(raw) ? raw : []
+  }
+
+  // Query B: post-0069 columns — safe-fail; silently skip if migration not yet applied.
+  const { data: enrichRow2, error: enrichErr2 } = await db
+    .from('schedules')
+    .select('cancelled_at, postponed_reason, original_session_id')
+    .eq('id', sessionId)
+    .maybeSingle()
+
+  if (!enrichErr2 && enrichRow2) {
+    const e2            = enrichRow2 as any
+    cancelled_at        = e2.cancelled_at        ?? null
+    postponed_reason    = e2.postponed_reason    ?? null
+    original_session_id = e2.original_session_id ?? null
   }
 
   // ── Step 2: group_courses row (RBAC + metadata). ───────────────────────────
@@ -904,7 +915,7 @@ export async function getTodayActions(instructorId: string): Promise<TodayAction
     .in('group_course_id', gcIds)
     .gte('scheduled_at', start.toISOString())
     .lte('scheduled_at', end.toISOString())
-    .neq('status', 'cancelled')
+    .not('status', 'in', '("cancelled","cancelled_with_makeup","postponed")')
 
   const completedIds = (todaySess ?? [])
     .filter((s: any) => s.status === 'completed')
@@ -1197,7 +1208,7 @@ export async function getUpcomingSessionsForInstructor(
     .select('id, group_course_id, scheduled_at, duration_minutes, type, delivery, status, topic')
     .in('group_course_id', gcIds)
     .gte('scheduled_at', now)
-    .neq('status', 'cancelled')
+    .not('status', 'in', '("cancelled","cancelled_with_makeup","postponed")')
     .order('scheduled_at', { ascending: true })
     .limit(limit)
 
@@ -1298,7 +1309,7 @@ export async function listSessionHistory(
   }
   const sessionNumMap = new Map<string, number>()
   const sessionTotalMap = new Map<string, number>()
-  for (const [gcId, ids] of sessionsByGc.entries()) {
+  for (const [, ids] of sessionsByGc.entries()) {
     const total = ids.length
     ids.forEach((id, idx) => {
       sessionNumMap.set(id, idx + 1)
