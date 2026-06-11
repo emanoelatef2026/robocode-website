@@ -56,54 +56,23 @@ async function applyStudentChanges(
 ) {
   const now = new Date().toISOString()
 
-  // Remove
+  // Remove from group — does NOT affect the student's session contract
   for (const studentId of toRemove) {
     await db.from('group_students')
       .update({ status: 'dropped', left_at: now })
       .eq('group_id', groupId)
       .eq('student_id', studentId)
-    try {
-      await db.from('student_enrollments')
-        .update({ status: 'DROPPED', end_date: now.slice(0, 10) })
-        .eq('student_id', studentId)
-        .eq('group_id', groupId)
-        .eq('status', 'ACTIVE')
-    } catch { /* non-fatal */ }
   }
 
-  // Add (skip duplicates via upsert conflict)
-  const { data: gcRow } = await db
-    .from('group_courses')
-    .select('id, instructor_id')
-    .eq('group_id', groupId)
-    .eq('status', 'active')
-    .maybeSingle()
-
+  // Add — group_students only. Enrollment/contract is created via the Payment wizard.
   for (const studentId of toAdd) {
-    const { data: gsRow, error } = await db.from('group_students').insert({
+    await db.from('group_students').upsert({
       group_id:        groupId,
       student_id:      studentId,
       enrollment_type: 'primary',
       status:          'active',
       joined_at:       now,
-    }).select('id').single()
-
-    if (!error && gsRow) {
-      try {
-        await db.from('student_enrollments').insert({
-          student_id:      studentId,
-          branch_id:       branchId,
-          group_id:        groupId,
-          group_course_id: (gcRow as any)?.id          ?? null,
-          instructor_id:   (gcRow as any)?.instructor_id ?? null,
-          group_student_id: (gsRow as any).id,
-          start_date:      now.slice(0, 10),
-          status:          'ACTIVE',
-          enrollment_type: 'primary',
-          created_by:      userId,
-        })
-      } catch { /* non-fatal */ }
-    }
+    }, { onConflict: 'group_id,student_id' })
   }
 }
 
@@ -498,8 +467,9 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       ? db.from('student_enrollments')
           .select('id, student_id, remaining_sessions, consumed_sessions, enrolled_sessions')
           .in('student_id', studentIds)
-          .eq('group_id', groupId)
           .eq('status', 'ACTIVE')
+          .order('start_date', { ascending: true, nullsFirst: false })
+          .order('created_at', { ascending: true })
       : Promise.resolve({ data: [] }),
     studentIds.length
       ? db.from('student_parent_contacts')
@@ -520,8 +490,11 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
   const financeMap  = new Map<string, { paid: number; balance: number; status: string | null; account_id: string | null }>()
 
   for (const p of (progRes.data ?? []) as any[])    progMap.set(p.student_id, p.attendance_score ?? 0)
+  // Take the oldest active enrollment per student (FIFO: oldest contract consumes first)
   for (const e of (enrollRes.data ?? []) as any[]) {
-    sessMap.set(e.student_id as string, {
+    const sid = e.student_id as string
+    if (sessMap.has(sid)) continue
+    sessMap.set(sid, {
       remaining:     e.remaining_sessions ?? 0,
       used:          e.consumed_sessions  != null ? Number(e.consumed_sessions)  : null,
       total:         e.enrolled_sessions  != null ? Number(e.enrolled_sessions)  : null,

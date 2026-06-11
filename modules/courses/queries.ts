@@ -71,7 +71,8 @@ export async function getCourse(id: string): Promise<Course | null> {
 
   const db = createServiceClient()
 
-  // Query 1: core columns guaranteed by migration 0006 — never fails on schema issues
+  // ── Query 1: core columns guaranteed by migration 0006 ────────────────────
+  // This query MUST succeed for the page to render. If it fails, return null.
   const { data: core, error: coreErr } = await db
     .from('courses')
     .select(`
@@ -84,9 +85,11 @@ export async function getCourse(id: string): Promise<Course | null> {
 
   if (coreErr || !core) return null
 
-  // Query 2: extended columns added by migrations 0049 + 0058.
-  // If these migrations haven't run yet the query returns an error — tolerated.
-  const { data: ext } = await db
+  // ── Query 2: extended columns (0049 + 0058) ───────────────────────────────
+  // These columns were added by later migrations. If schema cache hasn't been
+  // refreshed yet (pre-migration-0077), this query silently returns empty and
+  // all extended fields default to null. Core page rendering is unaffected.
+  const { data: ext, error: extErr } = await db
     .from('courses')
     .select(`
       drive_url, curriculum_folder, instructor_notes, resource_links, session_plans,
@@ -96,6 +99,16 @@ export async function getCourse(id: string): Promise<Course | null> {
     `)
     .eq('id', id)
     .single()
+
+  if (extErr) {
+    // Schema cache is stale or columns missing — extended data unavailable.
+    // Log once for diagnostics; core course still loads normally.
+    console.warn(
+      `[getCourse] Extended columns unavailable for course ${id}:`,
+      extErr.message,
+      '— Run migration 0077 to fix.'
+    )
+  }
 
   const e = (ext ?? {}) as any
   return {

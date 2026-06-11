@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import GroupFormModal from './GroupFormModal'
 import EnrollmentWizard from '../finance/EnrollmentWizard'
-import type { StudentResult } from '../finance/EnrollmentWizard'
+import type { StudentResult, GroupContext } from '../finance/EnrollmentWizard'
 import StudentOpsDrawer from '../finance/StudentOpsDrawer'
 import type { StudentOperationsRow } from '@/modules/finance/types'
 import {
@@ -480,16 +480,16 @@ function StudentSelectionToolbar({
         </Link>
       )}
 
-      {/* Add Payment — single + TL only */}
+      {/* Payment — single + TL only */}
       {single && isTL && (
         <button
           onClick={() => onAddPayment(single)}
           className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-[#FF8A1F] hover:bg-white transition"
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5 shrink-0">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
           </svg>
-          Add Payment
+          Payment
         </button>
       )}
 
@@ -609,7 +609,7 @@ function GroupStudentsTable({
             <th className="px-2 py-2 text-center text-[11px] font-semibold text-[#64748B]">Left</th>
             <th className="px-3 py-2 text-right text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Subscription</th>
             <th className="px-3 py-2 text-right text-[11px] font-semibold text-[#64748B]">Paid</th>
-            <th className="px-3 py-2 text-right text-[11px] font-semibold text-[#64748B]">Balance</th>
+            <th className="px-3 py-2 text-right text-[11px] font-semibold text-[#64748B]">Amount Due</th>
             <th className="px-3 py-2 text-center text-[11px] font-semibold text-[#64748B]">Risk</th>
             <th className="px-3 py-2 text-center text-[11px] font-semibold text-[#64748B]">Joined</th>
           </tr>
@@ -868,7 +868,7 @@ function GroupFinanceTab({ students, loading }: { students: GroupDetailStudent[]
                     <span className="text-[11px] text-green-600">Paid: {fmtCurrency(s.paid_amount)}</span>
                   )}
                   {s.remaining_balance > 0 && (
-                    <span className="text-[11px] text-red-600 font-medium">Balance: {fmtCurrency(s.remaining_balance)}</span>
+                    <span className="text-[11px] text-red-600 font-medium">Due: {fmtCurrency(s.remaining_balance)}</span>
                   )}
                 </div>
               </div>
@@ -1572,11 +1572,19 @@ function GroupWorkspace({
         />
       )}
 
-      {/* EnrollmentWizard — student has no contract yet */}
+      {/* EnrollmentWizard — student has no contract yet; group context pre-fills course/instructor/group */}
       {paymentStudent && isTL && (
         <EnrollmentWizard
           branchIds={[group.branch_id]}
           preselectedStudent={buildStudentResult(paymentStudent, group)}
+          groupContext={{
+            group_id:        group.group_id,
+            group_name:      group.name,
+            course_id:       group.course_id   ?? null,
+            course_name:     group.course_name ?? null,
+            instructor_id:   group.lead_instructor_id   ?? null,
+            instructor_name: group.lead_instructor_name ?? null,
+          } satisfies GroupContext}
           onClose={() => setPaymentStudent(null)}
           onSuccess={() => {
             setPaymentStudent(null)

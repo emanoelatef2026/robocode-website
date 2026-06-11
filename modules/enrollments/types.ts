@@ -7,6 +7,7 @@ export type EnrollmentStatus =
   | 'TRANSFERRED'
   | 'COMPLETED'
   | 'DROPPED'
+  | 'CANCELLED'
 
 // Sprint 44: enrollment-level financial status (separate from SFA account status)
 export type EnrollmentFinancialStatus =
@@ -138,6 +139,7 @@ export const ENROLLMENT_STATUS_LABELS: Record<EnrollmentStatus, string> = {
   TRANSFERRED: 'Transferred',
   COMPLETED:   'Completed',
   DROPPED:     'Dropped',
+  CANCELLED:   'Cancelled',
 }
 
 export const ENROLLMENT_STATUS_COLORS: Record<EnrollmentStatus, string> = {
@@ -146,4 +148,17 @@ export const ENROLLMENT_STATUS_COLORS: Record<EnrollmentStatus, string> = {
   TRANSFERRED: 'bg-blue-50 text-blue-700 border-blue-200',
   COMPLETED:   'bg-slate-50 text-slate-600 border-slate-200',
   DROPPED:     'bg-red-50 text-red-600 border-red-200',
+  CANCELLED:   'bg-rose-50 text-rose-700 border-rose-200',
 }
+
+// ── Canonical status groups ────────────────────────────────────────────────────
+
+export const ACTIVE_ENROLLMENT_STATUSES: EnrollmentStatus[] = ['ACTIVE']
+
+export const INACTIVE_ENROLLMENT_STATUSES: EnrollmentStatus[] = [
+  'PAUSED', 'TRANSFERRED', 'COMPLETED', 'DROPPED', 'CANCELLED',
+]
+
+export const HISTORY_ENROLLMENT_STATUSES: EnrollmentStatus[] = [
+  'ACTIVE', 'PAUSED', 'TRANSFERRED', 'COMPLETED', 'DROPPED', 'CANCELLED',
+]

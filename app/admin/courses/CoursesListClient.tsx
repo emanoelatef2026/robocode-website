@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import CreateCourseModal from './CreateCourseModal'
+import CourseModal from './CourseModal'
 import type { CourseListItem } from '@/modules/courses/types'
 
 interface Props {
@@ -21,7 +21,12 @@ const LEVEL_LABELS: Record<string, string> = {
 }
 
 export default function CoursesListClient({ courses, total, page, totalPages, search }: Props) {
-  const [modalOpen, setModalOpen] = useState(false)
+  const [editCourseId, setEditCourseId] = useState<string | null>(null)
+  const [createOpen,   setCreateOpen]   = useState(false)
+
+  const openCreate = () => setCreateOpen(true)
+  const openEdit   = (id: string) => setEditCourseId(id)
+  const closeModal = () => { setCreateOpen(false); setEditCourseId(null) }
 
   const buildUrl = (p: number, q?: string) => {
     const s = q !== undefined ? q : search
@@ -43,7 +48,7 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
         </div>
         <button
           type="button"
-          onClick={() => setModalOpen(true)}
+          onClick={openCreate}
           className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -95,7 +100,7 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
             {!search && (
               <button
                 type="button"
-                onClick={() => setModalOpen(true)}
+                onClick={openCreate}
                 className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18]"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -149,12 +154,13 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Link
-                          href={`/admin/courses/${course.id}`}
+                        <button
+                          type="button"
+                          onClick={() => openEdit(course.id)}
                           className="text-xs font-medium text-[#FF8A1F] hover:underline"
                         >
                           Edit
-                        </Link>
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -192,7 +198,13 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
         )}
       </div>
 
-      <CreateCourseModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      {/* Modals — conditionally mounted to reset state on each open */}
+      {createOpen && (
+        <CourseModal mode="create" onClose={closeModal} />
+      )}
+      {editCourseId && (
+        <CourseModal mode="edit" courseId={editCourseId} onClose={closeModal} />
+      )}
     </>
   )
 }

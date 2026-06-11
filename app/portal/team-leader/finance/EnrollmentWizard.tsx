@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { enrollStudentFull, cancelContract } from '@/modules/enrollments/actions'
 import type { CancellationReport } from '@/modules/enrollments/actions'
 import { addPayment } from '@/modules/finance/actions'
@@ -48,20 +48,9 @@ export interface PreselectedPackage {
   remaining_amount:   number
 }
 
-interface CourseResult   { id: string; title: string; level: string | null }
-interface InstructorResult { id: string; name: string }
-interface GroupResult {
-  id: string; name: string
-  course_id: string | null; course_title: string | null
-  instructor_id: string | null; instructor_name: string | null
-}
-
 interface WizardState {
   step:             1 | 2 | 3
   student:          StudentResult | null
-  course:           CourseResult | null
-  instructor:       InstructorResult | null
-  group:            GroupResult | null
   startDate:        string
   enrollmentType:   'primary' | 'secondary'
   enrolledSessions: string
@@ -183,17 +172,28 @@ const FIN_LABEL: Record<string, string> = {
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
+export interface GroupContext {
+  group_id:       string
+  group_name:     string
+  course_id:      string | null
+  course_name:    string | null
+  instructor_id:  string | null
+  instructor_name: string | null
+}
+
 interface Props {
   branchIds:            string[]
   onClose:              () => void
   onSuccess:            () => void
   preselectedStudent?:  StudentResult
   preselectedPackages?: PreselectedPackage[]
+  groupContext?:        GroupContext
 }
 
-export default function EnrollmentWizard({ branchIds, onClose, onSuccess, preselectedStudent, preselectedPackages }: Props) {
+export default function EnrollmentWizard({ branchIds, onClose, onSuccess, preselectedStudent, preselectedPackages, groupContext }: Props) {
   const [state, setState] = useState<WizardState>({
-    step: preselectedStudent ? 2 : 1, student: preselectedStudent ?? null, course: null, instructor: null, group: null,
+    step: preselectedStudent ? 2 : 1,
+    student:     preselectedStudent ?? null,
     startDate: new Date().toISOString().slice(0, 10),
     enrollmentType: 'primary',
     enrolledSessions: '',
@@ -207,15 +207,11 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
 
   const [search,              setSearch]              = useState('')
   const [results,             setResults]             = useState<StudentResult[]>([])
-  const [courses,             setCourses]             = useState<CourseResult[]>([])
-  const [instructors,         setInstructors]         = useState<InstructorResult[]>([])
-  const [groups,              setGroups]              = useState<GroupResult[]>([])
   const [searching,           setSearching]           = useState(false)
   const [submitting,          setSubmitting]          = useState(false)
   const [error,               setError]               = useState<string | null>(null)
   const [selectedIndex,       setSelectedIndex]       = useState(-1)
   const [warnings,            setWarnings]            = useState<string[]>([])
-  const [courseConflict,      setCourseConflict]      = useState<string | null>(null)
 
   // Existing package quick-pay mode (used when opened from drawer with packages)
   const [payMode,        setPayMode]        = useState<'new' | 'existing'>(() => (preselectedPackages?.length ?? 0) > 0 ? 'existing' : 'new')
@@ -272,42 +268,16 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
     if (selectedIndex >= 0) resultRefs.current[selectedIndex]?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [selectedIndex])
 
-  const loadEnrollmentData = useCallback(async (branchId: string) => {
-    const [cRes, iRes, gRes] = await Promise.all([
-      fetch('/api/courses'),
-      fetch(`/api/instructors?branchIds=${branchId}`),
-      fetch(`/api/groups/by-branch?branchId=${branchId}`),
-    ])
-    if (cRes.ok) setCourses(await cRes.json())
-    if (iRes.ok) setInstructors(await iRes.json())
-    if (gRes.ok) setGroups(await gRes.json())
-  }, [])
-
-  // When opened with a pre-selected student, skip straight to step 2
+  // When opened with a pre-selected student, compute warnings immediately
   useEffect(() => {
-    if (preselectedStudent) {
-      setWarnings(computeWarnings(preselectedStudent))
-      loadEnrollmentData(preselectedStudent.branch_id)
-    }
+    if (preselectedStudent) setWarnings(computeWarnings(preselectedStudent))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function selectStudent(s: StudentResult) {
-    setState(prev => ({ ...prev, student: s, step: 2, course: null, instructor: null, group: null }))
+    setState(prev => ({ ...prev, student: s, step: 2 }))
     setSearch(''); setResults([]); setSelectedIndex(-1)
-    setWarnings(computeWarnings(s)); setCourseConflict(null)
-    loadEnrollmentData(s.branch_id)
-  }
-
-  function handleCourseChange(courseId: string) {
-    const c = courses.find(c => c.id === courseId) ?? null
-    setState(prev => ({ ...prev, course: c }))
-    if (courseId && state.student?.active_course_ids.includes(courseId)) {
-      const title = c?.title ?? 'this course'
-      setCourseConflict(`Already enrolled in ${title}. Verify before creating a second contract.`)
-    } else {
-      setCourseConflict(null)
-    }
+    setWarnings(computeWarnings(s))
   }
 
   function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -315,21 +285,6 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
     if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIndex(prev => Math.min(prev + 1, displayResults.length - 1)) }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIndex(prev => Math.max(prev - 1, 0)) }
     else if (e.key === 'Enter' && selectedIndex >= 0 && selectedIndex < displayResults.length) { e.preventDefault(); selectStudent(displayResults[selectedIndex]) }
-  }
-
-  function selectGroup(g: GroupResult | null) {
-    setState(prev => {
-      const next = { ...prev, group: g }
-      if (g && !prev.course && g.course_id) {
-        const c = courses.find(c => c.id === g.course_id)
-        if (c) next.course = c
-      }
-      if (g && !prev.instructor && g.instructor_id) {
-        const i = instructors.find(i => i.id === g.instructor_id)
-        if (i) next.instructor = i
-      }
-      return next
-    })
   }
 
   // Apply modal filters to search results
@@ -352,7 +307,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
   const instAmtTooSmall = instCount > 0 && net > 0 && perInstAmt < 1
 
   async function handleSubmit() {
-    if (!state.student || !state.course) { setError('Please select a student and course'); return }
+    if (!state.student) { setError('Please select a student'); return }
     if (!state.totalAmount || net <= 0)  { setError('Please enter a valid total amount'); return }
     if (instAmtTooSmall) {
       setError(
@@ -366,9 +321,6 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
     const result = await enrollStudentFull({
       student_id:               state.student.id,
       branch_id:                state.student.branch_id,
-      group_id:                 state.group?.id ?? null,
-      course_id:                state.course.id,
-      instructor_id:            state.instructor?.id ?? null,
       start_date:               state.startDate,
       enrollment_type:          state.enrollmentType,
       enrolled_sessions:        parseInt(state.enrolledSessions) || 0,
@@ -691,12 +643,14 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                   {state.student.phone && <span className="ml-1">· {state.student.phone}</span>}
                 </p>
               </div>
-              <button
-                onClick={() => { setState(prev => ({ ...prev, step: 1, student: null, course: null })); setSearch(''); setWarnings([]); setCourseConflict(null) }}
-                className="shrink-0 text-xs text-[#FF8A1F] hover:underline"
-              >
-                Change
-              </button>
+              {!groupContext && (
+                <button
+                  onClick={() => { setState(prev => ({ ...prev, step: 1, student: null })); setSearch(''); setWarnings([]) }}
+                  className="shrink-0 text-xs text-[#FF8A1F] hover:underline"
+                >
+                  Change
+                </button>
+              )}
             </div>
 
             {warnings.length > 0 && (
@@ -1008,103 +962,55 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
               </div>
             )}
 
-            {/* Course */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-[#64748B]">
-                Course <span className="text-red-400">*</span>
-              </label>
-              <select
-                value={state.course?.id ?? ''}
-                onChange={e => handleCourseChange(e.target.value)}
-                className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
-              >
-                <option value="">Select a course…</option>
-                {courses.map(c => <option key={c.id} value={c.id}>{c.title}{c.level ? ` (${c.level})` : ''}</option>)}
-              </select>
-              {courseConflict && <p className="mt-1 text-[11px] font-medium text-amber-600">⚠ {courseConflict}</p>}
-            </div>
-
-            {/* Instructor */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-[#64748B]">
-                Instructor <span className="text-[11px] font-normal text-[#94A3B8]">(optional)</span>
-              </label>
-              <select
-                value={state.instructor?.id ?? ''}
-                onChange={e => { const i = instructors.find(i => i.id === e.target.value) ?? null; setState(prev => ({ ...prev, instructor: i })) }}
-                className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
-              >
-                <option value="">No instructor assigned</option>
-                {instructors.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
-              </select>
-            </div>
-
-            {/* Group */}
-            <div>
-              <label className="mb-1.5 block text-xs font-medium text-[#64748B]">
-                Group <span className="text-[11px] font-normal text-[#94A3B8]">(optional)</span>
-              </label>
-              {groups.length === 0 ? (
-                <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-center text-sm text-[#94A3B8]">
-                  No active groups in this branch.
-                </div>
-              ) : (
-                <div className="max-h-40 divide-y divide-[#F1F5F9] overflow-y-auto rounded-xl border border-[#E2E8F0]">
-                  <button
-                    onClick={() => selectGroup(null)}
-                    className={`w-full flex items-center px-4 py-2.5 text-left text-sm hover:bg-[#F8FAFC] ${!state.group ? 'bg-orange-50 font-medium text-[#FF8A1F]' : 'text-[#64748B]'}`}
-                  >
-                    No group (standalone)
-                  </button>
-                  {groups.map(g => (
-                    <button
-                      key={g.id}
-                      onClick={() => selectGroup(g)}
-                      className={`w-full flex items-start justify-between px-4 py-2.5 text-left hover:bg-[#F8FAFC] ${state.group?.id === g.id ? 'bg-orange-50' : ''}`}
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-[#0B1F3A] truncate">{g.name}</p>
-                        <p className="text-xs text-[#64748B]">
-                          {g.course_title ?? 'No course'}{g.instructor_name && ` · ${g.instructor_name}`}
-                        </p>
-                      </div>
-                      {state.group?.id === g.id && (
-                        <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-[#FF8A1F]">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            {/* Group context badge — display only, contract does not own group */}
+            {groupContext && (
+              <div className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-xs">
+                <span className="text-[#94A3B8]">Group:</span>
+                <span className="font-medium text-[#0B1F3A]">{groupContext.group_name}</span>
+                {groupContext.instructor_name && (
+                  <span className="text-[#94A3B8]">· {groupContext.instructor_name}</span>
+                )}
+              </div>
+            )}
 
             {/* Session Package */}
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-[#64748B]">Session Package</label>
-              <div className="mb-2 flex gap-1.5">
-                {[12, 24, 36, 48].map(n => (
-                  <button key={n} type="button"
-                    onClick={() => setState(prev => ({ ...prev, enrolledSessions: String(n) }))}
-                    className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
-                      state.enrolledSessions === String(n) ? 'border-[#FF8A1F] bg-orange-50 text-[#FF8A1F]' : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
-                    }`}>
-                    {n}
-                  </button>
-                ))}
-                <button type="button"
-                  onClick={() => setState(prev => ({ ...prev, enrolledSessions: '0' }))}
-                  className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
-                    state.enrolledSessions === '0' ? 'border-[#FF8A1F] bg-orange-50 text-[#FF8A1F]' : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
-                  }`}>
-                  ∞
-                </button>
+              <label className="mb-2 block text-xs font-medium text-[#64748B]">
+                Session Package <span className="text-red-400">*</span>
+              </label>
+              <div className="mb-2 grid grid-cols-5 gap-1.5">
+                {[12, 24, 36, 48].map(n => {
+                  const active = state.enrolledSessions === String(n)
+                  return (
+                    <button key={n} type="button"
+                      onClick={() => setState(prev => ({ ...prev, enrolledSessions: String(n) }))}
+                      className={`rounded-xl border-2 py-3 text-center transition-all ${
+                        active ? 'border-[#FF8A1F] bg-orange-50 shadow-sm' : 'border-[#E2E8F0] hover:border-[#CBD5E1]'
+                      }`}>
+                      <span className={`block text-xl font-bold leading-tight ${active ? 'text-[#FF8A1F]' : 'text-[#0B1F3A]'}`}>{n}</span>
+                      <span className="text-[10px] text-[#94A3B8]">sessions</span>
+                    </button>
+                  )
+                })}
+                {(() => {
+                  const active = state.enrolledSessions === '0'
+                  return (
+                    <button type="button"
+                      onClick={() => setState(prev => ({ ...prev, enrolledSessions: '0' }))}
+                      className={`rounded-xl border-2 py-3 text-center transition-all ${
+                        active ? 'border-[#FF8A1F] bg-orange-50 shadow-sm' : 'border-[#E2E8F0] hover:border-[#CBD5E1]'
+                      }`}>
+                      <span className={`block text-xl font-bold leading-tight ${active ? 'text-[#FF8A1F]' : 'text-[#0B1F3A]'}`}>∞</span>
+                      <span className="text-[10px] text-[#94A3B8]">unlimited</span>
+                    </button>
+                  )
+                })()}
               </div>
               <input
                 type="number" min="0" max="500" step="1"
                 value={state.enrolledSessions}
                 onChange={e => { const v = e.target.value; if (v === '' || parseInt(v) >= 0) setState(prev => ({ ...prev, enrolledSessions: v })) }}
-                placeholder="Or enter custom (0 = unlimited)"
+                placeholder="Or enter a custom number (0 = unlimited)"
                 className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
               />
             </div>
@@ -1135,36 +1041,47 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
             )}
 
             {payMode !== 'existing' && (
-              <div className="flex gap-3 border-t border-[#E2E8F0] pt-4">
-                <button onClick={() => setState(prev => ({ ...prev, step: 1 }))}
-                  className="flex-1 rounded-xl border border-[#E2E8F0] py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]">
-                  Back
-                </button>
-                <button
-                  disabled={!state.course}
-                  onClick={() => setState(prev => ({ ...prev, step: 3 }))}
-                  className="flex-1 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40"
-                >
-                  Next: Finance →
-                </button>
+              <div className="space-y-2 border-t border-[#E2E8F0] pt-4">
+                <div className="flex gap-3">
+                  {groupContext ? (
+                    <button
+                      onClick={onClose}
+                      className="flex-1 rounded-xl border border-[#E2E8F0] py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]"
+                    >
+                      Cancel
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setState(prev => ({ ...prev, step: 1 }))}
+                      className="flex-1 rounded-xl border border-[#E2E8F0] py-2.5 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]"
+                    >
+                      Back
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setState(prev => ({ ...prev, step: 3 }))}
+                    className="flex-1 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18]"
+                  >
+                    Next: Finance →
+                  </button>
+                </div>
               </div>
             )}
           </div>
         )}
 
         {/* ── STEP 3: Finance Setup ────────────────────────────────────────── */}
-        {state.step === 3 && state.student && state.course && (
+        {state.step === 3 && state.student && (
           <div className="p-6 space-y-5">
 
             {/* Summary */}
             <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-xs space-y-1">
               <p><span className="text-[#94A3B8]">Student:</span> <span className="font-medium text-[#0B1F3A]">{state.student.name}</span></p>
-              <p><span className="text-[#94A3B8]">Course:</span> <span className="font-medium text-[#0B1F3A]">{state.course.title}</span></p>
-              {state.instructor && <p><span className="text-[#94A3B8]">Instructor:</span> <span className="text-[#64748B]">{state.instructor.name}</span></p>}
-              {state.group && <p><span className="text-[#94A3B8]">Group:</span> <span className="text-[#64748B]">{state.group.name}</span></p>}
+              {groupContext && <p><span className="text-[#94A3B8]">Via group:</span> <span className="text-[#64748B]">{groupContext.group_name}</span></p>}
               {state.enrolledSessions && parseInt(state.enrolledSessions) > 0 && (
-                <p><span className="text-[#94A3B8]">Sessions:</span> <span className="text-[#64748B]">{state.enrolledSessions}</span></p>
+                <p><span className="text-[#94A3B8]">Package:</span> <span className="text-[#64748B]">{state.enrolledSessions} sessions</span></p>
               )}
+              <p><span className="text-[#94A3B8]">Start date:</span> <span className="text-[#64748B]">{state.startDate}</span></p>
             </div>
 
             {/* Amounts */}
