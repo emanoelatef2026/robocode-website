@@ -1,16 +1,26 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { createCourse } from '@/modules/courses/actions'
 import SubmitButton from '@/components/admin/SubmitButton'
 import Link from 'next/link'
 import type { ActionResult } from '@/types/app'
 
 export default function NewCourseForm() {
+  const router = useRouter()
+
   const [state, action] = useActionState<ActionResult<{ id: string }> | null, FormData>(
     createCourse,
     null
   )
+
+  // Navigate to the new course detail on success
+  useEffect(() => {
+    if (state?.success && state.data?.id) {
+      router.push(`/admin/courses/${state.data.id}`)
+    }
+  }, [state, router])
 
   return (
     <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
@@ -21,6 +31,8 @@ export default function NewCourseForm() {
       )}
 
       <form action={action} className="space-y-4">
+        <input type="hidden" name="scope" value="global" />
+
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
             Title <span className="text-red-500">*</span>
@@ -38,6 +50,16 @@ export default function NewCourseForm() {
           <textarea
             name="description"
             rows={3}
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Main Content Link</label>
+          <input
+            name="resources_url"
+            type="url"
+            placeholder="https://drive.google.com/… or Notion URL"
             className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
           />
         </div>
@@ -74,8 +96,6 @@ export default function NewCourseForm() {
             />
           </div>
         </div>
-
-        <input type="hidden" name="scope" value="global" />
 
         <div className="flex items-center gap-2">
           <input

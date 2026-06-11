@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
 import { createCourseSchema, updateCourseSchema } from './schemas'
@@ -19,6 +18,8 @@ export async function createCourse(
   const raw = {
     title:           formData.get('title'),
     description:     formData.get('description') || undefined,
+    thumbnail_url:   formData.get('thumbnail_url') || undefined,
+    resources_url:   formData.get('resources_url') || undefined,
     category:        formData.get('category') || undefined,
     level:           formData.get('level') || undefined,
     estimated_hours: formData.get('estimated_hours') || undefined,
@@ -37,9 +38,11 @@ export async function createCourse(
     .from('courses')
     .insert({
       title:           d.title,
-      description:     d.description || null,
-      category:        d.category || null,
-      level:           (d.level || null) as string | null,
+      description:     d.description   || null,
+      thumbnail_url:   d.thumbnail_url || null,
+      resources_url:   d.resources_url || null,
+      category:        d.category      || null,
+      level:           (d.level        || null) as string | null,
       estimated_hours: d.estimated_hours ?? null,
       scope:           d.scope,
       is_published:    d.is_published,
@@ -49,6 +52,7 @@ export async function createCourse(
     .single()
 
   if (error || !course) {
+    console.error('[createCourse] DB error:', error?.message)
     return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to create course.' } }
   }
 
@@ -61,7 +65,9 @@ export async function createCourse(
   })
 
   revalidatePath('/admin/courses')
-  redirect(`/admin/courses/${course.id}`)
+  revalidatePath('/portal/team-leader/courses')
+
+  return { success: true, data: { id: course.id } }
 }
 
 export async function updateCourse(
@@ -75,6 +81,8 @@ export async function updateCourse(
     id:              formData.get('id'),
     title:           formData.get('title'),
     description:     formData.get('description') || undefined,
+    thumbnail_url:   formData.get('thumbnail_url') || undefined,
+    resources_url:   formData.get('resources_url') || undefined,
     category:        formData.get('category') || undefined,
     level:           formData.get('level') || undefined,
     estimated_hours: formData.get('estimated_hours') || undefined,
@@ -89,32 +97,43 @@ export async function updateCourse(
 
   const d = parsed.data
 
-  // Resource center fields (not in Zod schema — read directly)
-  const drive_url          = (formData.get('drive_url')          as string | null)?.trim() || null
-  const curriculum_folder  = (formData.get('curriculum_folder')  as string | null)?.trim() || null
-  const instructor_notes   = (formData.get('instructor_notes')   as string | null)?.trim() || null
-  const session_plans      = (formData.get('session_plans')      as string | null)?.trim() || null
-  const teaching_guide     = (formData.get('teaching_guide')     as string | null)?.trim() || null
-  const expected_outcomes  = (formData.get('expected_outcomes')  as string | null)?.trim() || null
-  const skills_covered     = (formData.get('skills_covered')     as string | null)?.trim() || null
-  const prerequisites      = (formData.get('prerequisites')      as string | null)?.trim() || null
-  const course_roadmap     = (formData.get('course_roadmap')     as string | null)?.trim() || null
-  const resource_links_raw = (formData.get('resource_links')     as string | null)?.trim() || null
+  // Resource center fields (not in Zod schema — read directly from FormData)
+  const str = (key: string): string | null =>
+    (formData.get(key) as string | null)?.trim() || null
+
+  const drive_url         = str('drive_url')
+  const curriculum_folder = str('curriculum_folder')
+  const instructor_notes  = str('instructor_notes')
+  const session_plans     = str('session_plans')
+  const teaching_guide    = str('teaching_guide')
+  const expected_outcomes = str('expected_outcomes')
+  const skills_covered    = str('skills_covered')
+  const prerequisites     = str('prerequisites')
+  const course_roadmap    = str('course_roadmap')
+
+  const resource_links_raw = str('resource_links')
   let resource_links: Array<{ label: string; url: string }> | null = null
   if (resource_links_raw) {
     try { resource_links = JSON.parse(resource_links_raw) } catch { resource_links = null }
   }
 
-  const { data: existing } = await db.from('courses').select('id').eq('id', d.id).is('deleted_at', null).single()
+  const { data: existing } = await db
+    .from('courses')
+    .select('id')
+    .eq('id', d.id)
+    .is('deleted_at', null)
+    .single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Course not found.' } }
 
   const { error } = await db
     .from('courses')
     .update({
       title:              d.title,
-      description:        d.description || null,
-      category:           d.category || null,
-      level:              (d.level || null) as string | null,
+      description:        d.description    || null,
+      thumbnail_url:      d.thumbnail_url  || null,
+      resources_url:      d.resources_url  || null,
+      category:           d.category       || null,
+      level:              (d.level         || null) as string | null,
       estimated_hours:    d.estimated_hours ?? null,
       scope:              d.scope,
       is_published:       d.is_published,
@@ -132,6 +151,7 @@ export async function updateCourse(
     .eq('id', d.id)
 
   if (error) {
+    console.error('[updateCourse] DB error:', error.message)
     return { success: false, error: { code: 'DB_ERROR', message: error.message } }
   }
 
@@ -145,6 +165,8 @@ export async function updateCourse(
 
   revalidatePath('/admin/courses')
   revalidatePath(`/admin/courses/${d.id}`)
+  revalidatePath('/portal/team-leader/courses')
+  revalidatePath(`/portal/team-leader/courses/${d.id}`)
   return { success: true, data: undefined }
 }
 
@@ -152,7 +174,11 @@ export async function deleteCourse(id: string): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_courses')
   const db   = createServiceClient()
 
-  const { data: existing } = await db.from('courses').select('id').eq('id', id).single()
+  const { data: existing } = await db
+    .from('courses')
+    .select('id')
+    .eq('id', id)
+    .single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Course not found.' } }
 
   const { error } = await db
@@ -172,5 +198,6 @@ export async function deleteCourse(id: string): Promise<ActionResult<void>> {
   })
 
   revalidatePath('/admin/courses')
+  revalidatePath('/portal/team-leader/courses')
   return { success: true, data: undefined }
 }

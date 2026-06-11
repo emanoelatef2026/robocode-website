@@ -2,6 +2,7 @@ import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { listCourses }                          from '@/modules/courses/queries'
 import { createServiceClient }                  from '@/lib/supabase/service'
 import Link                                     from 'next/link'
+import NewCourseButton                          from './NewCourseButton'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
@@ -41,17 +42,19 @@ export default async function TLCoursesPage({ searchParams }: Props) {
   const db = createServiceClient()
   const courseIds = result.data.map(c => c.id)
 
-  let metricsMap = new Map<string, { active: number; revenue: number; dropout: number; retention: number }>()
+  const metricsMap = new Map<string, { active: number; revenue: number; dropout: number; retention: number }>()
 
   if (courseIds.length > 0) {
     // Try v_course_metrics view first (available after migration 0050)
-    const { data: metricsData, error: metricsErr } = await db
-      .from('v_course_metrics' as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: metricsData, error: metricsErr } = await (db as any)
+      .from('v_course_metrics')
       .select('course_id, active_enrollments, total_revenue, dropout_pct, retention_pct')
       .in('course_id', courseIds)
 
     if (!metricsErr && metricsData) {
-      for (const r of (metricsData ?? []) as any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for (const r of (metricsData as any[])) {
         metricsMap.set(r.course_id, {
           active:    Number(r.active_enrollments ?? 0),
           revenue:   Number(r.total_revenue      ?? 0),
@@ -71,15 +74,7 @@ export default async function TLCoursesPage({ searchParams }: Props) {
           <h1 className="text-xl font-semibold text-[#0B1F3A]">Courses</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">{result.total} course{result.total !== 1 ? 's' : ''} — business performance view</p>
         </div>
-        <Link
-          href="/portal/team-leader/courses/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          New Course
-        </Link>
+        <NewCourseButton />
       </div>
 
       {/* Table */}

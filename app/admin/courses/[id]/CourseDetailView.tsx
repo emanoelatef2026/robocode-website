@@ -99,6 +99,28 @@ export default function CourseDetailView({ course }: Props) {
 
             <div className="space-y-3">
               <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Thumbnail URL</label>
+                <input
+                  name="thumbnail_url"
+                  type="url"
+                  defaultValue={course.thumbnail_url ?? ''}
+                  placeholder="https://…"
+                  className={cls}
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Main Content Link</label>
+                <input
+                  name="resources_url"
+                  type="url"
+                  defaultValue={course.resources_url ?? ''}
+                  placeholder="https://drive.google.com/… or Notion URL"
+                  className={cls}
+                />
+              </div>
+
+              <div>
                 <label className="mb-1 block text-xs font-medium text-[#64748B]">Google Drive Folder URL</label>
                 <input
                   name="drive_url"
