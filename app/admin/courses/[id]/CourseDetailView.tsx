@@ -1,22 +1,34 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { updateCourse, deleteCourse } from '@/modules/courses/actions'
 import SubmitButton from '@/components/admin/SubmitButton'
 import type { Course } from '@/modules/courses/types'
 import type { ActionResult } from '@/types/app'
 
 interface Props {
-  course: Course
+  course:      Course
+  returnPath?: string
 }
 
-export default function CourseDetailView({ course }: Props) {
+export default function CourseDetailView({ course, returnPath = '/admin/courses' }: Props) {
+  const router = useRouter()
   const [editState, editAction] = useActionState<ActionResult<void> | null, FormData>(updateCourse, null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [deleting, setDeleting]       = useState(false)
 
   const handleDelete = async () => {
     if (!confirm('Delete this course? This action cannot be undone.')) return
-    await deleteCourse(course.id)
-    window.location.href = '/admin/courses'
+    setDeleting(true)
+    setDeleteError(null)
+    const result = await deleteCourse(course.id)
+    if (!result.success) {
+      setDeleteError(result.error.message)
+      setDeleting(false)
+      return
+    }
+    router.push(returnPath)
   }
 
   const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
@@ -181,6 +193,48 @@ export default function CourseDetailView({ course }: Props) {
             </div>
           </div>
 
+          {/* ── Academic Assets ──────────────────────────────────────── */}
+          <div className="border-t border-[#E2E8F0] pt-4 mt-2">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Academic Assets</p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Syllabus URL</label>
+                <input name="syllabus_url" type="url" defaultValue={course.syllabus_url ?? ''} placeholder="https://…" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Curriculum URL</label>
+                <input name="curriculum_url" type="url" defaultValue={course.curriculum_url ?? ''} placeholder="https://…" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Homework Drive URL</label>
+                <input name="homework_drive_url" type="url" defaultValue={course.homework_drive_url ?? ''} placeholder="https://drive.google.com/…" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Meeting URL</label>
+                <input name="meeting_url" type="url" defaultValue={course.meeting_url ?? ''} placeholder="https://meet.google.com/…" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Preparation Notes</label>
+                <textarea name="preparation_notes" rows={2} defaultValue={course.preparation_notes ?? ''} placeholder="What to prepare before sessions…" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">AI Tools Used</label>
+                <input name="ai_tools_used" defaultValue={course.ai_tools_used ?? ''} placeholder="e.g. ChatGPT, Copilot, Pictoblox AI" className={cls} />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-[#64748B]">Recommended Age</label>
+                <input name="recommended_age" defaultValue={course.recommended_age ?? ''} placeholder="e.g. 8–12 years" className={cls} />
+              </div>
+            </div>
+          </div>
+
           <div className="flex justify-end">
             <SubmitButton label="Save Changes" />
           </div>
@@ -190,11 +244,17 @@ export default function CourseDetailView({ course }: Props) {
       <div className="rounded-xl border border-red-100 bg-red-50 p-5">
         <h2 className="mb-1 text-sm font-medium text-red-700">Danger zone</h2>
         <p className="mb-3 text-xs text-red-600">Soft-deletes the course and hides it from all views.</p>
+        {deleteError && (
+          <div className="mb-3 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-red-700">
+            {deleteError}
+          </div>
+        )}
         <button
           onClick={handleDelete}
-          className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+          disabled={deleting}
+          className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
         >
-          Delete course
+          {deleting ? 'Deleting…' : 'Delete course'}
         </button>
       </div>
     </div>

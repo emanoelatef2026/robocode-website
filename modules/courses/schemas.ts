@@ -16,6 +16,7 @@ const optUrl = z.string().url('Enter a valid URL').optional().or(z.literal(''))
 
 export const createCourseSchema = z.object({
   title:           z.string().min(1, 'Title is required').max(200),
+  code:            z.string().max(50).optional().or(z.literal('')),
   description:     z.string().max(2000).optional().or(z.literal('')),
   thumbnail_url:   optUrl,
   resources_url:   optUrl,
@@ -29,6 +30,7 @@ export const createCourseSchema = z.object({
 export const updateCourseSchema = z.object({
   id:              z.string().uuid(),
   title:           z.string().min(1, 'Title is required').max(200),
+  code:            z.string().max(50).optional().or(z.literal('')),
   description:     z.string().max(2000).optional().or(z.literal('')),
   thumbnail_url:   optUrl,
   resources_url:   optUrl,

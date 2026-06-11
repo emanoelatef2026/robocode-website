@@ -1,8 +1,10 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId, getGroupForInstructor, getGroupAttendanceAnalytics } from '@/modules/instructor-portal/queries'
+import { getCourse } from '@/modules/courses/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import StartGroupSessionButton from './StartGroupSessionButton'
+import InstructorCoursePanel from './InstructorCoursePanel'
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -28,7 +30,10 @@ export default async function GroupDetailPage({ params }: Props) {
   const group = await getGroupForInstructor(id, instructor.id)
   if (!group) notFound()
 
-  const analytics = await getGroupAttendanceAnalytics(id, instructor.id)
+  const [analytics, course] = await Promise.all([
+    getGroupAttendanceAnalytics(id, instructor.id),
+    group.course_id ? getCourse(group.course_id) : Promise.resolve(null),
+  ])
 
   const hasCourse = !!group.group_course_id
   const isActive  = hasCourse
@@ -110,6 +115,11 @@ export default async function GroupDetailPage({ params }: Props) {
           )}
         </div>
       </div>
+
+      {/* Course Content Panel — read-only, collapsible */}
+      {isActive && course && (
+        <InstructorCoursePanel course={course} />
+      )}
 
       {/* Session progress */}
       {isActive && group.total_sessions > 0 && (

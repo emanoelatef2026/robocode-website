@@ -10,14 +10,13 @@ import type { LessonListItem } from '@/modules/courses/lessons/types'
 import type { ActionResult } from '@/types/app'
 
 interface Props {
-  courseId: string
   mod: CourseModule
   lessons: LessonListItem[]
 }
 
 const LESSON_TYPES = ['text', 'video', 'live', 'quiz', 'mixed'] as const
 
-export default function ModuleDetailView({ courseId, mod, lessons }: Props) {
+export default function ModuleDetailView({ mod, lessons }: Props) {
   const [editState, editAction]       = useActionState<ActionResult<void> | null, FormData>(updateModule, null)
   const [addLsnState, addLsnAction]   = useActionState<ActionResult<{ id: string }> | null, FormData>(createLesson, null)
 

@@ -243,6 +243,7 @@ export interface InboxSubmissionItem {
 export interface GroupForInstructor {
   group_id:           string
   group_course_id:    string
+  course_id:          string
   group_name:         string
   course_title:       string
   branch_id:          string

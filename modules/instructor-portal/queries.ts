@@ -407,6 +407,7 @@ export async function getGroupForInstructor(
     return {
       group_id:           groupId,
       group_course_id:    gc.id,
+      course_id:          gc.course_id               ?? '',
       group_name:         gc.groups?.name            ?? '',
       course_title:       gc.courses?.title          ?? '',
       branch_id:          branchId,
@@ -469,6 +470,7 @@ export async function getGroupForInstructor(
   return {
     group_id:           groupId,
     group_course_id:    '',
+    course_id:          '',
     group_name:         g.name              ?? '',
     course_title:       '',
     branch_id:          g.branch_id         ?? '',

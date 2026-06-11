@@ -22,12 +22,13 @@ export default function CourseCreateModal({ onClose }: Props) {
     null
   )
 
-  // Navigate to the new course detail page on success
+  // Stay on the list; refresh server data so the new course appears immediately
   useEffect(() => {
-    if (state?.success && state.data?.id) {
-      router.push(`/portal/team-leader/courses/${state.data.id}`)
+    if (state?.success) {
+      router.refresh()
+      onClose()
     }
-  }, [state, router])
+  }, [state, router, onClose])
 
   // Close on Escape key
   useEffect(() => {
@@ -85,6 +86,19 @@ export default function CourseCreateModal({ onClose }: Props) {
               required
               autoFocus
               placeholder="e.g. Pictoblox Level 1"
+              className={cls}
+            />
+          </div>
+
+          {/* Course Code */}
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-[#0B1F3A]">
+              Code{' '}
+              <span className="text-[#94A3B8] font-normal text-xs">(optional)</span>
+            </label>
+            <input
+              name="code"
+              placeholder="e.g. PB1, RBC-ADV"
               className={cls}
             />
           </div>

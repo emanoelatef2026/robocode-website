@@ -37,7 +37,7 @@ export default async function ModuleDetailPage({ params }: Props) {
           </Link>
         }
       />
-      <ModuleDetailView courseId={id} mod={mod} lessons={lessons} />
+      <ModuleDetailView mod={mod} lessons={lessons} />
     </div>
   )
 }

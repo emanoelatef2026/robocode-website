@@ -31,7 +31,7 @@ export default async function TLCourseDetailPage({ params }: Props) {
           </Link>
         }
       />
-      <CourseDetailView course={course} />
+      <CourseDetailView course={course} returnPath="/portal/team-leader/courses" />
     </div>
   )
 }

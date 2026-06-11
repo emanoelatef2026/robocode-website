@@ -34,6 +34,11 @@ export async function listCourses({
 
   if (scope) query = query.eq('scope', scope)
 
+  if (search) {
+    const s = `%${search}%`
+    query = query.or(`title.ilike.${s},code.ilike.${s},category.ilike.${s}`)
+  }
+
   const { data, count, error } = await query
   if (error) throw new Error(error.message)
 
@@ -51,14 +56,8 @@ export async function listCourses({
     created_at:      row.created_at,
   }))
 
-  const filtered = search
-    ? items.filter((c) =>
-        `${c.title} ${c.code ?? ''} ${c.category ?? ''}`.toLowerCase().includes(search.toLowerCase())
-      )
-    : items
-
   return {
-    data:       filtered,
+    data:       items,
     total:      count ?? 0,
     page,
     perPage,
@@ -71,45 +70,55 @@ export async function getCourse(id: string): Promise<Course | null> {
   if (!user) return null
 
   const db = createServiceClient()
-  const { data, error } = await db
+
+  // Query 1: core columns guaranteed by migration 0006 — never fails on schema issues
+  const { data: core, error: coreErr } = await db
     .from('courses')
     .select(`
       id, branch_id, title, description, code, category, level, estimated_hours,
-      thumbnail_url, scope, is_published, created_by, deleted_at, created_at, updated_at,
+      thumbnail_url, scope, is_published, created_by, deleted_at, created_at, updated_at
+    `)
+    .eq('id', id)
+    .is('deleted_at', null)
+    .single()
+
+  if (coreErr || !core) return null
+
+  // Query 2: extended columns added by migrations 0049 + 0058.
+  // If these migrations haven't run yet the query returns an error — tolerated.
+  const { data: ext } = await db
+    .from('courses')
+    .select(`
       drive_url, curriculum_folder, instructor_notes, resource_links, session_plans,
       teaching_guide, expected_outcomes, skills_covered, prerequisites, course_roadmap,
       syllabus_url, curriculum_url, homework_drive_url, resources_url, meeting_url,
       preparation_notes, ai_tools_used, recommended_age, prerequisite_course_id
     `)
     .eq('id', id)
-    .is('deleted_at', null)
     .single()
 
-  if (error || !data) return null
-
-  const d = data as any
+  const e = (ext ?? {}) as any
   return {
-    ...d,
+    ...(core as any),
     branch_name:            null,
-    drive_url:              d.drive_url              ?? null,
-    curriculum_folder:      d.curriculum_folder      ?? null,
-    instructor_notes:       d.instructor_notes       ?? null,
-    resource_links:         d.resource_links         ?? null,
-    session_plans:          d.session_plans          ?? null,
-    teaching_guide:         d.teaching_guide         ?? null,
-    expected_outcomes:      d.expected_outcomes      ?? null,
-    skills_covered:         d.skills_covered         ?? null,
-    prerequisites:          d.prerequisites          ?? null,
-    course_roadmap:         d.course_roadmap         ?? null,
-    // Sprint 48 academic asset fields
-    syllabus_url:           d.syllabus_url           ?? null,
-    curriculum_url:         d.curriculum_url         ?? null,
-    homework_drive_url:     d.homework_drive_url     ?? null,
-    resources_url:          d.resources_url          ?? null,
-    meeting_url:            d.meeting_url            ?? null,
-    preparation_notes:      d.preparation_notes      ?? null,
-    ai_tools_used:          d.ai_tools_used          ?? null,
-    recommended_age:        d.recommended_age        ?? null,
-    prerequisite_course_id: d.prerequisite_course_id ?? null,
+    drive_url:              e.drive_url              ?? null,
+    curriculum_folder:      e.curriculum_folder      ?? null,
+    instructor_notes:       e.instructor_notes       ?? null,
+    resource_links:         e.resource_links         ?? null,
+    session_plans:          e.session_plans          ?? null,
+    teaching_guide:         e.teaching_guide         ?? null,
+    expected_outcomes:      e.expected_outcomes      ?? null,
+    skills_covered:         e.skills_covered         ?? null,
+    prerequisites:          e.prerequisites          ?? null,
+    course_roadmap:         e.course_roadmap         ?? null,
+    syllabus_url:           e.syllabus_url           ?? null,
+    curriculum_url:         e.curriculum_url         ?? null,
+    homework_drive_url:     e.homework_drive_url     ?? null,
+    resources_url:          e.resources_url          ?? null,
+    meeting_url:            e.meeting_url            ?? null,
+    preparation_notes:      e.preparation_notes      ?? null,
+    ai_tools_used:          e.ai_tools_used          ?? null,
+    recommended_age:        e.recommended_age        ?? null,
+    prerequisite_course_id: e.prerequisite_course_id ?? null,
   } as Course
 }
