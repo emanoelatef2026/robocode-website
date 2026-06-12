@@ -4,6 +4,7 @@ import { listStudents } from '@/modules/students/queries'
 import { listCourses } from '@/modules/courses/queries'
 import { listInstructors } from '@/modules/instructors/queries'
 import { listSchedules } from '@/modules/schedule/queries'
+import { createServiceClient } from '@/lib/supabase/service'
 import { notFound } from 'next/navigation'
 import StatusBadge from '@/components/admin/StatusBadge'
 import PageHeader from '@/components/admin/PageHeader'
@@ -13,6 +14,107 @@ import Link from 'next/link'
 
 interface Props { params: Promise<{ id: string }> }
 
+// ─── Status pill ──────────────────────────────────────────────────────────────
+
+function AssignmentStatusPill({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    active:   'bg-emerald-50 text-emerald-700',
+    inactive: 'bg-slate-100 text-slate-500',
+    cancelled: 'bg-slate-100 text-slate-500',
+    completed: 'bg-blue-50 text-blue-600',
+  }
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${map[status] ?? 'bg-slate-100 text-slate-500'}`}>
+      {status}
+    </span>
+  )
+}
+
+// ─── Assignment history panel ─────────────────────────────────────────────────
+
+type HistoryRow = {
+  id:            string
+  status:        string
+  started_at:    string | null
+  ended_at:      string | null
+  course_name:   string | null
+  instructor_name: string | null
+}
+
+async function AssignmentHistory({ groupId }: { groupId: string }) {
+  const db = createServiceClient()
+
+  const { data } = await db
+    .from('group_courses')
+    .select(`
+      id, status, started_at, ended_at,
+      courses ( title ),
+      instructors ( first_name, last_name )
+    `)
+    .eq('group_id', groupId)
+    .order('started_at', { ascending: false })
+
+  if (!data || data.length === 0) return null
+
+  const rows: HistoryRow[] = (data as any[]).map(r => ({
+    id:           r.id,
+    status:       r.status,
+    started_at:   r.started_at,
+    ended_at:     r.ended_at,
+    course_name:  r.courses?.title ?? null,
+    instructor_name: r.instructors
+      ? [r.instructors.first_name, r.instructors.last_name].filter(Boolean).join(' ') || null
+      : null,
+  }))
+
+  function fmtDate(iso: string | null) {
+    if (!iso) return '—'
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
+  }
+
+  function duration(start: string | null, end: string | null) {
+    if (!start) return null
+    const endMs = end ? new Date(end).getTime() : Date.now()
+    const days  = Math.floor((endMs - new Date(start).getTime()) / 86_400_000)
+    if (days < 1)   return 'Today'
+    if (days === 1) return '1 day'
+    if (days < 30)  return `${days}d`
+    return `${Math.floor(days / 30)}mo`
+  }
+
+  return (
+    <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="border-b border-[#E2E8F0] px-5 py-3">
+        <h2 className="text-sm font-semibold text-[#0B1F3A]">Assignment History</h2>
+      </div>
+      <div className="divide-y divide-[#F1F5F9]">
+        {rows.map(row => (
+          <div key={row.id} className="flex items-center justify-between gap-3 px-5 py-3">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-[#0B1F3A]">
+                {row.course_name ?? <span className="text-[#94A3B8]">Unknown course</span>}
+              </p>
+              {row.instructor_name && (
+                <p className="mt-0.5 text-xs text-[#64748B]">{row.instructor_name}</p>
+              )}
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1">
+              <AssignmentStatusPill status={row.status} />
+              <p className="text-[10px] text-[#94A3B8]">
+                {fmtDate(row.started_at)}
+                {row.ended_at ? ` → ${fmtDate(row.ended_at)}` : row.status === 'active' ? ' → now' : ''}
+                {duration(row.started_at, row.ended_at) ? ` · ${duration(row.started_at, row.ended_at)}` : ''}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default async function TLGroupDetailPage({ params }: Props) {
   const user = await requirePortalRole('team_leader')
   await requirePermission('manage_groups')
@@ -21,15 +123,15 @@ export default async function TLGroupDetailPage({ params }: Props) {
   const group = await getGroupDetail(id)
   if (!group) notFound()
 
-  // Guard: TL must have access to this group's branch
   if (user.globalRole !== 'super_admin' && !user.branchIds.includes(group.branch_id)) {
     notFound()
   }
 
-  const [allStudents, courses, instructors, upcomingSessions, pastSessions] = await Promise.all([
+  const db = createServiceClient()
+
+  const [allStudents, courses, instructors, upcomingSessions, pastSessions, activeMeta] = await Promise.all([
     listStudents({ branchId: group.branch_id, perPage: 200 }),
     listCourses({ perPage: 100 }),
-    // Include cross-branch instructors so TLs can assign visiting instructors
     listInstructors({ branchId: user.branchIds, includeCrossBranch: true, perPage: 200 }),
     group.group_course_id
       ? listSchedules({ groupCourseId: group.group_course_id, upcoming: true, limit: 5 })
@@ -37,8 +139,12 @@ export default async function TLGroupDetailPage({ params }: Props) {
     group.group_course_id
       ? listSchedules({ groupCourseId: group.group_course_id, limit: 5 })
       : Promise.resolve([]),
+    group.group_course_id
+      ? db.from('group_courses').select('started_at').eq('id', group.group_course_id).maybeSingle()
+      : Promise.resolve({ data: null }),
   ])
 
+  const currentStartedAt = (activeMeta as { data: { started_at: string } | null }).data?.started_at ?? null
   const enrolledIds = group.students.map((s) => s.id)
 
   return (
@@ -65,7 +171,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
       />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left: info + course assignment */}
+        {/* Left: info + course assignment + history */}
         <div className="space-y-6 lg:col-span-1">
           {/* Group info */}
           <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
@@ -109,8 +215,12 @@ export default async function TLGroupDetailPage({ params }: Props) {
               instructors={instructors.data}
               currentCourseId={group.course_id}
               currentInstructorId={group.instructor_id}
+              currentStartedAt={currentStartedAt}
             />
           </div>
+
+          {/* Assignment history */}
+          <AssignmentHistory groupId={id} />
         </div>
 
         {/* Right: students + sessions */}

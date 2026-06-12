@@ -9,6 +9,7 @@ import { createGroupSchema, updateGroupSchema, enrollStudentSchema } from './sch
 import { resolveGroupProgressContext } from '@/modules/progress/resolve'
 import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/safe-recalc'
 import { syncGroupStatus } from './lifecycle'
+import { assignGroupCourseService } from './assignment-service'
 import type { ActionResult } from '@/types/app'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
@@ -476,61 +477,8 @@ export async function saveGroupAcademicConfig(
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
 
-  // 1. Course assignment — upsert on (group_id, course_id)
-  if (courseId) {
-    await db.from('group_courses')
-      .update({ status: 'cancelled' })
-      .eq('group_id', groupId)
-      .eq('status', 'active')
-      .neq('course_id', courseId)
-
-    // Try upsert with total_sessions; if column missing, fall back without it
-    const { error: gcErr } = await db.from('group_courses')
-      .upsert(
-        {
-          group_id:       groupId,
-          course_id:      courseId,
-          instructor_id:  instructorId || null,
-          total_sessions: totalSessions,
-          status:         'active',
-        },
-        { onConflict: 'group_id,course_id' }
-      )
-    if (gcErr) {
-      // Retry without total_sessions (column may not exist yet — migration pending)
-      const { error: gcErr2 } = await db.from('group_courses')
-        .upsert(
-          {
-            group_id:      groupId,
-            course_id:     courseId,
-            instructor_id: instructorId || null,
-            status:        'active',
-          },
-          { onConflict: 'group_id,course_id' }
-        )
-      if (gcErr2) {
-        return { success: false, error: { code: 'DB_ERROR', message: gcErr2.message } }
-      }
-    }
-
-    // Sync instructor_id (and total_sessions if column exists)
-    const { error: updateErr } = await db.from('group_courses')
-      .update({ instructor_id: instructorId || null, total_sessions: totalSessions })
-      .eq('group_id', groupId)
-      .eq('status', 'active')
-    if (updateErr) {
-      // Retry without total_sessions
-      await db.from('group_courses')
-        .update({ instructor_id: instructorId || null })
-        .eq('group_id', groupId)
-        .eq('status', 'active')
-    }
-  } else {
-    await db.from('group_courses')
-      .update({ status: 'cancelled' })
-      .eq('group_id', groupId)
-      .eq('status', 'active')
-  }
+  // 1. Course assignment — lifecycle-safe via canonical service
+  await assignGroupCourseService(groupId, courseId, instructorId || null, user.id, db)
 
   // 2. Lead instructor — upsert group_instructors with role='lead'
   if (instructorId) {
@@ -732,8 +680,8 @@ export async function deleteGroupSchedule(
 }
 
 export async function assignGroupCourse(
-  groupId: string,
-  courseId: string,
+  groupId:      string,
+  courseId:     string,
   instructorId: string | null
 ): Promise<ActionResult<{ id: string }>> {
   const user = await requirePermission('manage_groups')
@@ -745,26 +693,15 @@ export async function assignGroupCourse(
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
 
-  await db.from('group_courses')
-    .update({ status: 'cancelled' })
-    .eq('group_id', groupId)
-    .eq('status', 'active')
+  try {
+    const result = await assignGroupCourseService(groupId, courseId, instructorId, user.id, db)
+    const id = result.action !== 'deactivated' ? result.row.id : groupId
 
-  const { data, error } = await db.from('group_courses')
-    .insert({
-      group_id:      groupId,
-      course_id:     courseId,
-      instructor_id: instructorId || null,
-      status:        'active',
-    })
-    .select('id')
-    .single()
-
-  if (error) {
-    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+    revalidatePath(`/admin/groups/${groupId}`)
+    revalidatePath(`/portal/team-leader/groups/${groupId}`)
+    return { success: true, data: { id } }
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Assignment failed.'
+    return { success: false, error: { code: 'DB_ERROR', message: msg } }
   }
-
-  revalidatePath(`/admin/groups/${groupId}`)
-  revalidatePath(`/portal/team-leader/groups/${groupId}`)
-  return { success: true, data: { id: data.id } }
 }

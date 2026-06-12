@@ -156,3 +156,7 @@ body.font-cairo {
 .blog-content ol { list-style-type: decimal; }
 .blog-content img { width: 100%; border-radius: 0.75rem; margin: 1.5rem 0; }
 .blog-content blockquote { border-inline-start: 3px solid #38BDF8; padding-inline-start: 1rem; color: #64748B; font-style: italic; margin: 1.5rem 0; }
+
+/* ── Dashboard utilities ─────────────────────────────────────────────────────── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
