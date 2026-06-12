@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { getInstructorDetailData, getInstructorFormOptions, listInstructorsOperational } from './operational'
+import { computeNextAllocationStart } from '@/modules/academic/session-ownership'
 import type {
   InstructorDetailData,
   InstructorFormOptions,
@@ -315,6 +316,8 @@ export async function assignGroupModalAction(
   instructorId: string,
   groupId: string,
   role: 'lead' | 'assistant',
+  fromSession?: number,
+  allocatedSessions?: number,
 ): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_instructors')
   const db   = createServiceClient()
@@ -328,8 +331,30 @@ export async function assignGroupModalAction(
     return { success: false, error: { code: 'FORBIDDEN', message: 'No access to this branch.' } }
   }
 
+  // Always use the canonical from_session computed from existing allocation ranges.
+  // This is immune to cancelled/deleted schedules and guarantees no gaps or overlaps.
+  const canonicalFrom = await computeNextAllocationStart(groupId, db)
+
+  const payload: Record<string, unknown> = {
+    group_id:      groupId,
+    instructor_id: instructorId,
+    role,
+    from_session:       canonicalFrom,
+    allocation_status:  'active',
+    assigned_at:        new Date().toISOString(),
+    released_at:        null,
+  }
+
+  if (allocatedSessions != null) {
+    payload.allocated_sessions = allocatedSessions
+    payload.to_session         = canonicalFrom + allocatedSessions - 1
+  } else {
+    payload.allocated_sessions = null
+    payload.to_session         = null
+  }
+
   const { error } = await db.from('group_instructors').upsert(
-    { group_id: groupId, instructor_id: instructorId, role },
+    payload,
     { onConflict: 'group_id,instructor_id', ignoreDuplicates: false }
   )
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
@@ -353,7 +378,7 @@ export async function assignGroupModalAction(
   await db.rpc('write_audit_log', {
     p_performed_by: user.id, p_action: 'assign_group',
     p_entity_type: 'instructor', p_entity_id: instructorId,
-    p_new_values: { group_id: groupId, role },
+    p_new_values: { group_id: groupId, role, from_session: canonicalFrom, allocated_sessions: allocatedSessions ?? null, to_session: payload.to_session },
   })
 
   revalidatePath('/portal/team-leader/instructors')

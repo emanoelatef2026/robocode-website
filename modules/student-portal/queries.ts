@@ -101,9 +101,10 @@ export async function getStudentDashboardData(
     if (ip) instructorName = [ip.first_name, ip.last_name].filter(Boolean).join(' ') || null
   }
 
-  // Sessions + attendance in parallel
-  let scheduleIds:      string[] = []
-  let completedSessions          = 0
+  // Sessions — two sets: completed-only (attendance stats) vs non-cancelled (assignments)
+  let scheduleIds:          string[] = []   // non-cancelled, for assignment queries
+  let completedScheduleIds: string[] = []   // completed only, for attendance stats
+  let completedSessions              = 0
 
   if (gcId) {
     const { data: schedRows } = await db
@@ -111,18 +112,21 @@ export async function getStudentDashboardData(
       .select('id, status')
       .eq('group_course_id', gcId)
       .neq('status', 'cancelled')
-    scheduleIds      = (schedRows ?? []).map((s: any) => s.id as string)
-    completedSessions = (schedRows ?? []).filter((s: any) => s.status === 'completed').length
+    const rows = schedRows ?? []
+    scheduleIds          = rows.map((s: any) => s.id as string)
+    completedScheduleIds = rows.filter((s: any) => s.status === 'completed').map((s: any) => s.id as string)
+    completedSessions    = completedScheduleIds.length
   }
 
-  // Attendance for this student in this group's sessions
+  // Attendance — only academically consuming (completed) sessions count.
+  // Cancelled, postponed, ongoing sessions are invisible to students.
   let attPresent = 0, attAbsent = 0, attLate = 0, attTotal = 0
-  if (scheduleIds.length > 0) {
+  if (completedScheduleIds.length > 0) {
     const { data: attRows } = await db
       .from('attendance_records')
       .select('status')
       .eq('student_id', studentId)
-      .in('schedule_id', scheduleIds)
+      .in('schedule_id', completedScheduleIds)
     for (const a of attRows ?? []) {
       attTotal++
       const st = (a as any).status as string
@@ -452,13 +456,15 @@ export async function getStudentTimeline(userId: string): Promise<TimelineEvent[
     const gcId = (gcRow as any)?.id ?? null
 
     if (gcId) {
+      // Only completed sessions appear in the student-visible timeline.
       const { data: schedRows } = await db
         .from('schedules')
-        .select('id, scheduled_at')
+        .select('id, scheduled_at, session_number')
         .eq('group_course_id', gcId)
+        .eq('status', 'completed')
         .order('scheduled_at', { ascending: true })
       ;(schedRows ?? []).forEach((s: any, idx: number) => {
-        schedNumMap.set(s.id, idx + 1)
+        schedNumMap.set(s.id, (s as any).session_number ?? (idx + 1))
       })
 
       // Safe topic enrichment
@@ -471,7 +477,8 @@ export async function getStudentTimeline(userId: string): Promise<TimelineEvent[
     }
   }
 
-  // Attendance events
+  // Attendance events — only sessions in schedNumMap (completed sessions).
+  // Records on cancelled/postponed sessions are silently skipped.
   const { data: attRows } = await db
     .from('attendance_records')
     .select('id, schedule_id, status, recorded_at')
@@ -480,6 +487,7 @@ export async function getStudentTimeline(userId: string): Promise<TimelineEvent[
     .limit(15)
 
   for (const a of (attRows ?? []) as any[]) {
+    if (!schedNumMap.has(a.schedule_id)) continue  // skip non-completed sessions
     const num   = schedNumMap.get(a.schedule_id) ?? null
     const topic = topicMap.get(a.schedule_id) ?? null
     const label = num ? `Session ${num}` : 'Session'
@@ -573,17 +581,26 @@ export async function getStudentAttendanceHistory(userId: string): Promise<Stude
   const gcId = (gcRow as any)?.id ?? null
   if (!gcId) return []
 
-  // Fetch all sessions ordered chronologically to assign session numbers
+  // Only completed sessions are academically visible to students.
+  // Cancelled / postponed / scheduled sessions do not appear.
+  // session_number is the canonical immutable number from the DB (migration 0085).
   const { data: schedRows } = await db
     .from('schedules')
-    .select('id, scheduled_at')
+    .select('id, scheduled_at, session_number')
     .eq('group_course_id', gcId)
+    .eq('status', 'completed')
     .order('scheduled_at', { ascending: true })
 
   if (!schedRows || schedRows.length === 0) return []
 
   const schedIds = schedRows.map((s: any) => s.id as string)
-  const dateMap  = new Map((schedRows as any[]).map((s, idx) => [s.id as string, { num: idx + 1, date: s.scheduled_at }]))
+  const dateMap  = new Map((schedRows as any[]).map((s, idx) => [
+    s.id as string,
+    {
+      num:  (s as any).session_number ?? (idx + 1),
+      date: s.scheduled_at,
+    },
+  ]))
 
   // Safe topic enrichment
   const topicMap = new Map<string, string | null>()

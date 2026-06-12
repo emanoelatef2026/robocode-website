@@ -92,11 +92,14 @@ export default function NewSessionForm({ groupId, groupCourseId, branchId }: Pro
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#0B1F3A]">Topic (optional)</label>
+        <label className="block text-sm font-medium text-[#0B1F3A]">
+          Topic <span className="text-red-500">*</span>
+        </label>
         <input
           type="text"
           name="topic"
-          placeholder="e.g. Introduction to Variables"
+          required
+          placeholder="e.g. Variables &amp; Loops"
           className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
         />
       </div>

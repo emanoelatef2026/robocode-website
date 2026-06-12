@@ -19,6 +19,8 @@ export interface InstructorGroup {
   next_session_at:    string | null
   completed_sessions: number
   total_sessions:     number
+  from_session:       number
+  allocated_sessions: number | null
 }
 
 export interface InstructorSession {

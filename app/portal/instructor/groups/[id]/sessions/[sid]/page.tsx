@@ -215,7 +215,7 @@ export default async function SessionDetailPage({ params }: Props) {
           )}
 
           {isActionable || session.status === 'completed' ? (
-            <AttendanceForm sessionId={session.id} groupId={session.group_id} rows={session.attendance} />
+            <AttendanceForm sessionId={session.id} groupId={session.group_id} rows={session.attendance} currentTopic={session.topic} />
           ) : (
             isCancelled && (
               <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-5 text-center text-sm text-[#94A3B8]">

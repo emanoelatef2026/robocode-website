@@ -53,19 +53,26 @@ export async function assignCourseAndInstructor(
     db,
   )
 
-  // Maintain group_instructors for both roles
+  // Maintain group_instructors — only insert if no existing allocation exists.
+  // Phase 18: include allocation fields so ownership tracking works correctly.
   if (instructorId) {
-    await db.from('group_instructors').upsert(
-      { group_id: groupId, instructor_id: instructorId, role: 'lead' },
-      { onConflict: 'group_id,instructor_id' },
-    )
-  }
+    const { data: existingAlloc } = await db
+      .from('group_instructors')
+      .select('instructor_id')
+      .eq('group_id', groupId)
+      .eq('instructor_id', instructorId)
+      .maybeSingle()
 
-  if (asstInstructorId) {
-    await db.from('group_instructors').upsert(
-      { group_id: groupId, instructor_id: asstInstructorId, role: 'additional' },
-      { onConflict: 'group_id,instructor_id' },
-    )
+    if (!existingAlloc) {
+      await db.from('group_instructors').insert({
+        group_id:          groupId,
+        instructor_id:     instructorId,
+        role:              'lead',
+        from_session:      1,
+        allocation_status: 'active',
+        assigned_at:       new Date().toISOString(),
+      })
+    }
   }
 
   await syncGroupStatus(groupId, db)

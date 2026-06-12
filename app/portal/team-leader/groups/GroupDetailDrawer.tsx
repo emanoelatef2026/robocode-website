@@ -35,27 +35,6 @@ function parseLocalDate(iso: string): Date {
   return new Date(y, m - 1, d)
 }
 
-function estimateElapsedSessions(
-  startDate: string | null,
-  dayOfWeek: string | null,
-  endDate:   string | null | undefined,
-): number {
-  if (!startDate) return 0
-  const start   = parseLocalDate(startDate)
-  const ceiling = endDate
-    ? new Date(Math.min(Date.now(), parseLocalDate(endDate).getTime()))
-    : new Date()
-  if (start > ceiling) return 0
-  if (dayOfWeek && DAY_INDEX[dayOfWeek] !== undefined) {
-    const target      = DAY_INDEX[dayOfWeek]
-    const daysToFirst = (target - start.getDay() + 7) % 7
-    const first       = new Date(start.getTime() + daysToFirst * 86_400_000)
-    if (first > ceiling) return 0
-    return Math.floor((ceiling.getTime() - first.getTime()) / (7 * 86_400_000)) + 1
-  }
-  return Math.floor((ceiling.getTime() - start.getTime()) / (7 * 86_400_000))
-}
-
 function estimateTotalSessions(
   startDate: string | null,
   dayOfWeek: string | null,
@@ -125,7 +104,7 @@ function StatCard({ label, value, sub }: { label: string; value: React.ReactNode
 function OverviewTab({ group }: { group: GroupOperationalRow }) {
   const schedule    = [group.day_of_week ? DAYS_FULL[group.day_of_week] : null, fmt12(group.start_time)]
     .filter(Boolean).join(' · ')
-  const elapsed     = estimateElapsedSessions(group.start_date, group.day_of_week, group.end_date)
+  const elapsed     = group.completed_sessions
   const total       = estimateTotalSessions(group.start_date, group.day_of_week, group.end_date)
   const progressPct = total ? Math.min(100, Math.round((elapsed / total) * 100)) : null
 
@@ -145,8 +124,16 @@ function OverviewTab({ group }: { group: GroupOperationalRow }) {
       <div className="space-y-2.5 rounded-xl border border-[#E2E8F0] bg-white p-4">
         <Row label="Branch"      value={group.branch_name} />
         <Row label="Course"      value={group.course_name ?? '—'} />
-        <Row label="Instructor"  value={group.lead_instructor_name ?? '—'} />
-        {group.asst_instructor_name && <Row label="Assistant" value={group.asst_instructor_name} />}
+        <Row
+          label="Instructor"
+          value={
+            group.active_allocation
+              ? `${group.active_allocation.instructor_name} (Sessions ${group.active_allocation.from_session}–${group.active_allocation.to_session ?? '∞'})`
+              : group.status === 'handoff_pending'
+                ? 'Awaiting Instructor Handoff'
+                : (group.lead_instructor_name ?? '—')
+          }
+        />
         <Row label="Schedule"    value={schedule || '—'} />
         {group.duration_minutes && <Row label="Duration" value={`${group.duration_minutes} min`} />}
         <Row label="Start Date"  value={fmtDate(group.start_date)} />

@@ -5,9 +5,10 @@ import { saveAttendance } from '@/modules/instructor-portal/actions'
 import type { SessionAttendanceRow } from '@/modules/instructor-portal/types'
 
 interface Props {
-  sessionId: string
-  groupId:   string
-  rows:      SessionAttendanceRow[]
+  sessionId:    string
+  groupId:      string
+  rows:         SessionAttendanceRow[]
+  currentTopic: string | null
 }
 
 type AttStatus = 'present' | 'absent' | 'late' | 'excused' | 'makeup'
@@ -35,8 +36,11 @@ function initStatus(r: SessionAttendanceRow): AttStatus {
   return 'present'
 }
 
-export default function AttendanceForm({ sessionId, groupId, rows }: Props) {
+export default function AttendanceForm({ sessionId, groupId, rows, currentTopic }: Props) {
   const [state, action, pending] = useActionState(saveAttendance, null)
+
+  const [topic, setTopic]     = useState(currentTopic ?? '')
+  const [topicTouched, setTopicTouched] = useState(false)
 
   const [statuses, setStatuses] = useState<Record<string, AttStatus>>(() =>
     Object.fromEntries(rows.map((r) => [r.student_id, initStatus(r)]))
@@ -62,6 +66,9 @@ export default function AttendanceForm({ sessionId, groupId, rows }: Props) {
     setStatuses(Object.fromEntries(rows.map((r) => [r.student_id, st])))
   }
 
+  const trimmedTopic = topic.trim()
+  const topicValid   = trimmedTopic.length > 0 && trimmedTopic.toLowerCase() !== 'no topic'
+
   const presentCount = rows.filter((r) => statuses[r.student_id] === 'present').length
   const absentCount  = rows.filter((r) => statuses[r.student_id] === 'absent').length
   const lateCount    = rows.filter((r) => statuses[r.student_id] === 'late').length
@@ -84,6 +91,29 @@ export default function AttendanceForm({ sessionId, groupId, rows }: Props) {
       {rows.map((r) => (
         <input key={`nt_${r.student_id}`} type="hidden" name={`notes_${r.student_id}`}  value={notes[r.student_id] ?? ''} />
       ))}
+
+      {/* ── Topic (required) ─────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3.5">
+        <label className="block text-xs font-semibold uppercase tracking-wide text-[#94A3B8] mb-1.5">
+          Session Topic <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          name="topic"
+          value={topic}
+          onChange={e => { setTopic(e.target.value); setTopicTouched(false) }}
+          onBlur={() => setTopicTouched(true)}
+          placeholder="Variables &amp; Loops"
+          className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${
+            topicTouched && !topicValid
+              ? 'border-red-300 focus:border-red-400 bg-red-50'
+              : 'border-[#E2E8F0] focus:border-[#FF8A1F]'
+          }`}
+        />
+        {topicTouched && !topicValid && (
+          <p className="mt-1 text-xs text-red-600">Topic is required before saving attendance.</p>
+        )}
+      </div>
 
       {state && !state.success && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
@@ -208,7 +238,7 @@ export default function AttendanceForm({ sessionId, groupId, rows }: Props) {
       {rows.length > 0 && (
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || !topicValid}
           className="w-full rounded-lg bg-[#FF8A1F] py-2.5 text-sm font-semibold text-white transition hover:bg-[#e07818] disabled:opacity-60"
         >
           {pending ? 'Saving…' : 'Save Attendance'}

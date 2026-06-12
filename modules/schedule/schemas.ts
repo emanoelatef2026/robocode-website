@@ -9,7 +9,11 @@ export const createScheduleSchema = z.object({
   delivery:         z.enum(['online', 'offline', 'hybrid']).optional().nullable(),
   meeting_url:      z.string().url().optional().nullable().or(z.literal('')),
   room:             z.string().max(100).optional().nullable(),
-  topic:            z.string().max(500).optional().nullable(),
+  topic:            z.string()
+    .min(1, 'Topic is required for this session')
+    .max(500)
+    .refine(t => t.trim().length > 0, { message: 'Topic cannot be blank' })
+    .refine(t => t.trim().toLowerCase() !== 'no topic', { message: '"No topic" is not a valid topic' }),
 })
 
 export const updateScheduleSchema = z.object({

@@ -5,6 +5,13 @@ import { getInstructorFilterOptions } from '@/modules/query-standards'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
+export interface ActiveAllocation {
+  instructor_id:   string
+  instructor_name: string
+  from_session:    number
+  to_session:      number | null
+}
+
 export interface GroupOperationalRow {
   group_id:              string
   branch_id:             string
@@ -29,6 +36,7 @@ export interface GroupOperationalRow {
   lead_instructor_name:  string | null
   asst_instructor_id:    string | null
   asst_instructor_name:  string | null
+  active_allocation:     ActiveAllocation | null
   has_instructor:        boolean
   has_course:            boolean
   attendance_avg:        number
@@ -40,6 +48,10 @@ export interface GroupOperationalRow {
   is_overloaded:         boolean
   starts_soon:           boolean
   enrolled_students:     EnrolledStudentBasic[]
+  // Academically-consuming sessions delivered for this group (status='completed' only;
+  // cancelled/postponed sessions are excluded). Backed by groups.completed_sessions
+  // which is maintained by trigger manage_group_completed_sessions (migration 0034).
+  completed_sessions:    number
 }
 
 export interface EnrolledStudentBasic {
@@ -79,10 +91,10 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
     .from('groups')
     .select(`
       id, branch_id, name, code, type, capacity, status,
-      start_date, day_of_week, time, notes,
+      start_date, day_of_week, time, notes, completed_sessions,
       branches!groups_branch_id_fkey(name),
       group_instructors!group_instructors_group_id_fkey(
-        instructor_id, role,
+        instructor_id, role, from_session, to_session, allocation_status,
         instructors!group_instructors_instructor_id_fkey(
           users!instructors_user_id_fkey(
             profiles!profiles_user_id_fkey(first_name, last_name)
@@ -166,6 +178,21 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
     const leadName = leadProf ? [leadProf.first_name, leadProf.last_name].filter(Boolean).join(' ') || null : null
     const asstName = asstProf ? [asstProf.first_name, asstProf.last_name].filter(Boolean).join(' ') || null : null
 
+    // Active allocation: the first allocation with allocation_status='active' (lowest from_session)
+    const activeGi = gis
+      .filter((gi: any) => gi.allocation_status === 'active')
+      .sort((a: any, b: any) => (a.from_session ?? 0) - (b.from_session ?? 0))[0] ?? null
+    const activeAllocProf = activeGi?.instructors?.users?.profiles
+    const activeAllocName = activeAllocProf
+      ? [activeAllocProf.first_name, activeAllocProf.last_name].filter(Boolean).join(' ') || null
+      : null
+    const activeAllocation = activeGi && activeAllocName ? {
+      instructor_id:   activeGi.instructor_id as string,
+      instructor_name: activeAllocName,
+      from_session:    activeGi.from_session as number,
+      to_session:      activeGi.to_session as number | null,
+    } : null
+
     const courseInfo   = courseMap.get(g.id)
     const studentCount = studentCountMap.get(g.id) ?? 0
     const capacityPct  = g.capacity ? Math.round((studentCount / g.capacity) * 100) : null
@@ -202,7 +229,8 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
       lead_instructor_name: leadName,
       asst_instructor_id:   asst?.instructor_id ?? null,
       asst_instructor_name: asstName,
-      has_instructor:       !!leadName,
+      active_allocation:    activeAllocation,
+      has_instructor:       !!(activeAllocation ?? leadName),
       has_course:           !!courseInfo,
       attendance_avg:       metrics?.attendance_avg ?? 0,
       assignment_avg:       metrics?.assignment_avg ?? 0,
@@ -213,6 +241,7 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
       is_overloaded:        capacityPct !== null && capacityPct >= 90,
       starts_soon:          startsSoon,
       enrolled_students:    enrolledMap.get(g.id) ?? [],
+      completed_sessions:   (g.completed_sessions as number) ?? 0,
     }
   })
 }

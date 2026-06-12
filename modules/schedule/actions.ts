@@ -26,7 +26,7 @@ export async function createSchedule(
     delivery:         formData.get('delivery') || undefined,
     meeting_url:      formData.get('meeting_url') || undefined,
     room:             formData.get('room') || undefined,
-    topic:            formData.get('topic') || undefined,
+    topic:            formData.get('topic'),
   }
 
   const parsed = createScheduleSchema.safeParse(raw)
@@ -50,7 +50,7 @@ export async function createSchedule(
       delivery:    delivery || null,
       meeting_url: meeting_url || null,
       room:        room || null,
-      topic:       topic || null,
+      topic:       topic.trim(),
       status:      'scheduled',
       created_by:  user.id,
     })

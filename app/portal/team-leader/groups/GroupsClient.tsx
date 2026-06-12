@@ -46,29 +46,6 @@ function fmtDateShort(iso: string | null): string | null {
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-// Count how many times dayOfWeek has occurred between startDate and ceiling (inclusive).
-function estimateElapsedSessions(
-  startDate: string | null,
-  dayOfWeek: string | null,
-  endDate:   string | null | undefined,
-): number {
-  if (!startDate) return 0
-  const start   = parseLocalDate(startDate)
-  const ceiling = endDate
-    ? new Date(Math.min(Date.now(), parseLocalDate(endDate).getTime()))
-    : new Date()
-  if (start > ceiling) return 0
-
-  if (dayOfWeek && DAY_INDEX[dayOfWeek] !== undefined) {
-    const target     = DAY_INDEX[dayOfWeek]
-    const daysToFirst = (target - start.getDay() + 7) % 7
-    const first      = new Date(start.getTime() + daysToFirst * 86_400_000)
-    if (first > ceiling) return 0
-    return Math.floor((ceiling.getTime() - first.getTime()) / (7 * 86_400_000)) + 1
-  }
-  // No recurring day set — estimate as weeks elapsed
-  return Math.floor((ceiling.getTime() - start.getTime()) / (7 * 86_400_000))
-}
 
 function estimateTotalSessions(
   startDate: string | null,
@@ -117,18 +94,17 @@ function StartDateCell({ g }: { g: GroupOperationalRow }) {
 }
 
 function SessionsCell({ g }: { g: GroupOperationalRow }) {
-  if (!g.start_date) return <span className="text-xs text-[#94A3B8]">—</span>
-  const elapsed = estimateElapsedSessions(g.start_date, g.day_of_week, g.end_date)
-  const total   = estimateTotalSessions(g.start_date, g.day_of_week, g.end_date)
-  const ratio   = total ? elapsed / total : null
-  const color   = ratio == null
+  const done  = g.completed_sessions
+  const total = estimateTotalSessions(g.start_date, g.day_of_week, g.end_date)
+  const ratio = total ? done / total : null
+  const color = ratio == null
     ? 'text-[#64748B]'
     : ratio > 1    ? 'text-red-600'
     : ratio >= 0.7 ? 'text-amber-600'
     : ratio >= 0.3 ? 'text-[#64748B]'
-    : elapsed === 0 ? 'text-[#94A3B8]'
+    : done === 0   ? 'text-[#94A3B8]'
     : 'text-blue-600'
-  const label = total != null ? `${elapsed} / ${total}` : elapsed === 0 ? '0 sess.' : `${elapsed} sess.`
+  const label = total != null ? `${done} / ${total}` : done === 0 ? '0 sess.' : `${done} sess.`
   return <span className={`text-xs font-semibold ${color}`}>{label}</span>
 }
 
@@ -441,7 +417,7 @@ export default function GroupsClient({ groups, options, studentOptions, defaultB
                     {/* Start date + session progress row */}
                     {g.start_date && (() => {
                       const label    = fmtDateShort(g.start_date)!
-                      const elapsed  = estimateElapsedSessions(g.start_date, g.day_of_week, g.end_date)
+                      const done     = g.completed_sessions
                       const total    = estimateTotalSessions(g.start_date, g.day_of_week, g.end_date)
                       const today    = new Date()
                       const overdue  = g.status === 'forming' && parseLocalDate(g.start_date) < today
@@ -450,9 +426,9 @@ export default function GroupsClient({ groups, options, studentOptions, defaultB
                           <span className={overdue ? 'text-amber-600 font-medium' : 'text-[#64748B]'}>
                             {overdue ? '⚠ ' : ''}Starts: {label}
                           </span>
-                          {(elapsed > 0 || total != null) && (
+                          {(done > 0 || total != null) && (
                             <span className="text-[#94A3B8]">
-                              {total != null ? `${elapsed} / ${total} sess.` : `${elapsed} sess.`}
+                              {total != null ? `${done} / ${total} sess.` : `${done} sess.`}
                             </span>
                           )}
                         </div>

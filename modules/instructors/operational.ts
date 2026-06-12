@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { ACADEMICALLY_CONSUMING_SESSION_STATUSES } from '@/modules/academic/constants'
 import type {
   InstructorOperationalRow,
   FullInstructor,
@@ -484,12 +485,15 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
 
   const sessionsByGroup: Record<string, { total: number; completed: number }> = {}
   const sessionData = (sessionRes as { data: RawSchedRow[] | null }).data ?? []
+  // Statuses that were never academically delivered — exclude from all counts.
+  const CANCELLED_STATUSES = new Set(['cancelled', 'cancelled_with_makeup', 'postponed'])
   for (const s of sessionData) {
     const gid = gcToGroup[s.group_course_id]
     if (!gid) continue
+    if (CANCELLED_STATUSES.has(s.status)) continue  // cancelled sessions don't exist academically
     if (!sessionsByGroup[gid]) sessionsByGroup[gid] = { total: 0, completed: 0 }
     sessionsByGroup[gid].total++
-    if (s.status === 'completed') sessionsByGroup[gid].completed++
+    if (ACADEMICALLY_CONSUMING_SESSION_STATUSES.has(s.status as any)) sessionsByGroup[gid].completed++
   }
 
   // 6. Attendance records for completed sessions
@@ -700,25 +704,71 @@ export async function getInstructorFormOptions(branchIds: string[]): Promise<Ins
   const groupFormRows = (groupRes.data ?? []) as unknown as RawGroupFormRow[]
   const groupFormIds  = groupFormRows.map(g => g.id)
 
-  const { data: gsData } = groupFormIds.length > 0
-    ? await db.from('group_students').select('group_id').in('group_id', groupFormIds).eq('status', 'active')
-    : { data: [] as RawGsIdRow[] }
+  const [gsRes, gcRes] = await Promise.all([
+    groupFormIds.length > 0
+      ? db.from('group_students').select('group_id').in('group_id', groupFormIds).eq('status', 'active')
+      : Promise.resolve({ data: [] as RawGsIdRow[] }),
+    groupFormIds.length > 0
+      ? db.from('group_courses').select('id, group_id, total_sessions').in('group_id', groupFormIds).eq('status', 'active')
+      : Promise.resolve({ data: [] as Array<{ id: string; group_id: string; total_sessions: number | null }> }),
+  ])
 
   const studentCountByGroup: Record<string, number> = {}
-  for (const r of (gsData ?? []) as unknown as RawGsIdRow[]) {
+  for (const r of (gsRes.data ?? []) as unknown as RawGsIdRow[]) {
     studentCountByGroup[r.group_id] = (studentCountByGroup[r.group_id] ?? 0) + 1
   }
 
-  const groups = groupFormRows.map(g => ({
-    id:             g.id,
-    name:           g.name,
-    code:           g.code ?? null,
-    branch_id:      g.branch_id,
-    branch_name:    g.branches?.name ?? '',
-    status:         g.status,
-    student_count:  studentCountByGroup[g.id] ?? 0,
-    has_instructor: (g.group_instructors?.length ?? 0) > 0,
-  }))
+  // Map active group_course per group (take first active one)
+  const activeGcByGroup: Record<string, { id: string; total_sessions: number }> = {}
+  for (const gc of (gcRes.data ?? []) as Array<{ id: string; group_id: string; total_sessions: number | null }>) {
+    if (!activeGcByGroup[gc.group_id]) {
+      activeGcByGroup[gc.group_id] = { id: gc.id, total_sessions: gc.total_sessions ?? 24 }
+    }
+  }
+
+  // Fetch completed sessions per active group_course
+  const activeGcIds = Object.values(activeGcByGroup).map(gc => gc.id)
+  const { data: completedData } = activeGcIds.length > 0
+    ? await db.from('schedules').select('group_course_id').in('group_course_id', activeGcIds).eq('status', 'completed')
+    : { data: [] as Array<{ group_course_id: string }> }
+
+  const completedByGc: Record<string, number> = {}
+  for (const s of (completedData ?? []) as Array<{ group_course_id: string }>) {
+    completedByGc[s.group_course_id] = (completedByGc[s.group_course_id] ?? 0) + 1
+  }
+
+  // Canonical next from_session: MAX(to_session) + 1 across all existing allocations per group.
+  // Immune to cancelled/deleted schedules — used to determine safe handoff point.
+  const { data: allocData } = groupFormIds.length > 0
+    ? await db.from('group_instructors')
+        .select('group_id, to_session')
+        .in('group_id', groupFormIds)
+        .not('to_session', 'is', null)
+    : { data: [] as Array<{ group_id: string; to_session: number }> }
+
+  const maxToByGroup: Record<string, number> = {}
+  for (const a of (allocData ?? []) as Array<{ group_id: string; to_session: number }>) {
+    if ((a.to_session ?? 0) > (maxToByGroup[a.group_id] ?? 0)) {
+      maxToByGroup[a.group_id] = a.to_session
+    }
+  }
+
+  const groups = groupFormRows.map(g => {
+    const gc = activeGcByGroup[g.id]
+    return {
+      id:                 g.id,
+      name:               g.name,
+      code:               g.code ?? null,
+      branch_id:          g.branch_id,
+      branch_name:        g.branches?.name ?? '',
+      status:             g.status,
+      student_count:      studentCountByGroup[g.id] ?? 0,
+      has_instructor:     (g.group_instructors?.length ?? 0) > 0,
+      completed_sessions: gc ? (completedByGc[gc.id] ?? 0) : 0,
+      total_sessions:     gc?.total_sessions ?? 24,
+      next_from_session:  maxToByGroup[g.id] != null ? maxToByGroup[g.id] + 1 : 1,
+    }
+  })
 
   return { branches, groups }
 }

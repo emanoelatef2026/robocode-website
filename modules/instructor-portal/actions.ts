@@ -8,11 +8,18 @@ import { requirePermission, requireAuth } from '@/modules/rbac/guards'
 import { getInstructorByUserId } from './queries'
 import { resolveGroupProgressContext } from '@/modules/progress/resolve'
 import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/safe-recalc'
+import {
+  validateSessionOwnership,
+  canInstructorCreateNextSession,
+  completeInstructorAllocation,
+} from '@/modules/academic/session-ownership'
+import { validateAcademicTopic } from '@/modules/academic/constants'
 import type { ActionResult } from '@/types/app'
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
-// Returns true if instructor is directly assigned to the group_course OR is in group_instructors for the group.
+// Returns true if instructor is directly assigned to the group_course OR is in group_instructors
+// AND their allocation is still active AND the next session falls within their range.
 async function hasGroupCourseAccess(
   groupCourseId: string,
   instructorId:  string,
@@ -26,45 +33,46 @@ async function hasGroupCourseAccess(
     .maybeSingle()
 
   if (!gcRow) return false
-  if ((gcRow as any).instructor_id === instructorId) return true
+  const groupId = (gcRow as any).group_id as string
 
-  const { data: giRow } = await db
-    .from('group_instructors')
-    .select('group_id')
-    .eq('group_id', (gcRow as any).group_id)
-    .eq('instructor_id', instructorId)
-    .maybeSingle()
+  const isPrimary = (gcRow as any).instructor_id === instructorId
+  if (!isPrimary) {
+    const { data: giRow } = await db
+      .from('group_instructors')
+      .select('group_id')
+      .eq('group_id', groupId)
+      .eq('instructor_id', instructorId)
+      .maybeSingle()
+    if (!giRow) return false
+  }
 
-  return !!giRow
+  return true
 }
 
-// Returns group context if instructor has session access, null otherwise.
+// Returns group + branch context if the instructor can operate on the given session,
+// applying both group-membership AND immutable allocation-range enforcement.
 async function getSessionAccessContext(
   sessionId:    string,
   instructorId: string,
   db:           ReturnType<typeof createServiceClient>
 ): Promise<{ groupId: string; branchId: string } | null> {
+  // Fetch branch_id in the same query (needed for audit logs)
   const { data: sessRow } = await db
     .from('schedules')
-    .select('id, branch_id, group_courses!schedules_group_course_id_fkey(group_id, instructor_id)')
+    .select('branch_id, group_courses!schedules_group_course_id_fkey(group_id)')
     .eq('id', sessionId)
     .maybeSingle()
 
   if (!sessRow) return null
-  const gc      = (sessRow as any).group_courses
-  const groupId = gc?.group_id  as string
-  const branchId= (sessRow as any).branch_id as string
+  const branchId = (sessRow as any).branch_id as string
+  const groupId  = (sessRow as any).group_courses?.group_id as string | undefined
+  if (!groupId) return null
 
-  if (gc?.instructor_id === instructorId) return { groupId, branchId }
+  // Ownership check (membership + allocation range + allocation_status)
+  const check = await validateSessionOwnership(instructorId, sessionId, db)
+  if (!check.allowed) return null
 
-  const { data: giRow } = await db
-    .from('group_instructors')
-    .select('group_id')
-    .eq('group_id', groupId ?? '')
-    .eq('instructor_id', instructorId)
-    .maybeSingle()
-
-  return giRow ? { groupId, branchId } : null
+  return { groupId, branchId }
 }
 
 // ── Session CRUD ──────────────────────────────────────────────────────────────
@@ -79,7 +87,10 @@ const sessionSchema = z.object({
   delivery:         z.enum(['online', 'offline', 'hybrid']).optional().or(z.literal('')),
   meeting_url:      z.string().optional().or(z.literal('')),
   room:             z.string().optional().or(z.literal('')),
-  topic:            z.string().optional().or(z.literal('')),
+  topic:            z.string()
+    .min(1, 'Topic is required for academic sessions')
+    .refine(t => t.trim().length > 0, { message: 'Topic cannot be blank' })
+    .refine(t => t.trim().toLowerCase() !== 'no topic', { message: '"No topic" is not a valid topic' }),
 })
 
 export async function createSession(
@@ -102,7 +113,7 @@ export async function createSession(
     delivery:         formData.get('delivery') || undefined,
     meeting_url:      formData.get('meeting_url') || undefined,
     room:             formData.get('room') || undefined,
-    topic:            formData.get('topic') || undefined,
+    topic:            formData.get('topic'),
   }
 
   const parsed = sessionSchema.safeParse(raw)
@@ -118,6 +129,11 @@ export async function createSession(
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
   }
 
+  const rangeCheck = await canInstructorCreateNextSession(instructor.id, d.group_course_id, db)
+  if (!rangeCheck.allowed) {
+    return { success: false, error: { code: 'FORBIDDEN', message: rangeCheck.reason ?? 'Outside your allocated session range.' } }
+  }
+
   const { data: schedule, error: schedErr } = await db
     .from('schedules')
     .insert({
@@ -129,7 +145,7 @@ export async function createSession(
       delivery:         d.delivery   || null,
       meeting_url:      d.meeting_url || null,
       room:             d.room        || null,
-      topic:            d.topic       || null,
+      topic:            d.topic.trim(),
       status:           'scheduled',
       created_by:       user.id,
     })
@@ -159,8 +175,14 @@ export async function createSession(
 export async function startGroupSession(
   groupCourseId: string,
   groupId:       string,
-  branchId:      string
+  branchId:      string,
+  topic:         string
 ): Promise<ActionResult<{ sessionId: string }>> {
+  const validTopic = validateAcademicTopic(topic)
+  if (!validTopic) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Topic is required to start a session.' } }
+  }
+
   const user       = await requirePermission('manage_attendance')
   const instructor = await getInstructorByUserId(user.id)
   if (!instructor) {
@@ -174,6 +196,12 @@ export async function startGroupSession(
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
   }
 
+  // Range guard: is the instructor allowed to create the next session?
+  const rangeCheck = await canInstructorCreateNextSession(instructor.id, groupCourseId, db)
+  if (!rangeCheck.allowed) {
+    return { success: false, error: { code: 'FORBIDDEN', message: rangeCheck.reason ?? 'Outside your allocated session range.' } }
+  }
+
   const now = new Date().toISOString()
 
   const { data: schedule, error } = await db
@@ -185,6 +213,7 @@ export async function startGroupSession(
       started_at:       now,
       duration_minutes: 90,
       type:             'regular',
+      topic:            validTopic,
       status:           'ongoing',
       created_by:       user.id,
     })
@@ -367,25 +396,27 @@ export async function endSession(
     const totalStudents  = studRes.count ?? 0
     const markedStudents = attRes.count  ?? 0
     const attendanceMissing = totalStudents - markedStudents
-    const notesRequired = !(sessRow as any).topic && !(sessRow as any).notes
+    const topicMissing = !validateAcademicTopic((sessRow as any).topic as string | null)
 
-    if (attendanceMissing > 0 || notesRequired) {
+    if (attendanceMissing > 0 || topicMissing) {
       return {
         success: false,
         error: {
           code:    'VALIDATION',
           message: [
             attendanceMissing > 0 ? `${attendanceMissing} student${attendanceMissing > 1 ? 's' : ''} without attendance.` : '',
-            notesRequired ? 'Session notes or topic required.' : '',
+            topicMissing ? 'Session topic is required before ending the session.' : '',
           ].filter(Boolean).join(' '),
         },
       }
     }
   }
 
+  const now = new Date().toISOString()
+
   const { error } = await db
     .from('schedules')
-    .update({ status: 'completed', ended_at: new Date().toISOString() })
+    .update({ status: 'completed', ended_at: now })
     .eq('id', sessionId)
 
   if (error) {
@@ -397,9 +428,32 @@ export async function endSession(
     p_action:       'session.end',
     p_entity_type:  'schedule',
     p_entity_id:    sessionId,
-    p_new_values:   { ended_at: new Date().toISOString(), force },
+    p_new_values:   { ended_at: now, force },
     p_branch_id:    ctx.branchId,
   })
+
+  // Auto-complete instructor allocation if this was their last assigned session.
+  const { data: completedSess } = await db
+    .from('schedules')
+    .select('session_number')
+    .eq('id', sessionId)
+    .maybeSingle()
+
+  const sessionNumber = (completedSess as any)?.session_number as number | null
+
+  if (sessionNumber != null) {
+    const { data: allocRow } = await db
+      .from('group_instructors')
+      .select('to_session')
+      .eq('group_id', ctx.groupId)
+      .eq('instructor_id', instructor.id)
+      .eq('allocation_status', 'active')
+      .maybeSingle()
+
+    if (allocRow && (allocRow as any).to_session === sessionNumber) {
+      await completeInstructorAllocation(instructor.id, ctx.groupId, db)
+    }
+  }
 
   revalidatePath(`/portal/instructor/groups/${groupId}`)
   revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
@@ -430,6 +484,40 @@ export async function saveAttendance(
   const ctx = await getSessionAccessContext(sessionId, instructor.id, db)
   if (!ctx) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
+  }
+
+  // Server-side guard: fetch session status + topic together.
+  const { data: sessStatusRow } = await db
+    .from('schedules')
+    .select('status, topic')
+    .eq('id', sessionId)
+    .maybeSingle()
+
+  if (sessStatusRow) {
+    const st = (sessStatusRow as any).status as string
+    if (st === 'cancelled' || st === 'cancelled_with_makeup') {
+      return {
+        success: false,
+        error: { code: 'VALIDATION', message: 'Cannot record attendance for a cancelled session. Cancelled sessions are not academically counted.' },
+      }
+    }
+  }
+
+  // Topic integrity: every academically consuming session must have a valid topic.
+  // The instructor can provide / correct the topic in the attendance form.
+  const topicFromForm  = validateAcademicTopic(formData.get('topic') as string | null)
+  const existingTopic  = validateAcademicTopic((sessStatusRow as any)?.topic as string | null)
+
+  if (!existingTopic && !topicFromForm) {
+    return {
+      success: false,
+      error: { code: 'VALIDATION', message: 'Topic is required before saving attendance. Please enter the session topic.' },
+    }
+  }
+
+  // Persist a new or corrected topic if supplied in this submission.
+  if (topicFromForm && topicFromForm !== existingTopic) {
+    await db.from('schedules').update({ topic: topicFromForm }).eq('id', sessionId)
   }
 
   const { data: validMembers } = await db
@@ -748,7 +836,7 @@ export async function cancelSession(
 
   const { data: sessRow } = await db
     .from('schedules')
-    .select('id, status, group_course_id, scheduled_at, duration_minutes, type, delivery, meeting_url, room')
+    .select('id, status, session_number, group_course_id, scheduled_at, duration_minutes, type, delivery, meeting_url, room')
     .eq('id', d.session_id)
     .single()
 
@@ -776,17 +864,18 @@ export async function cancelSession(
     const { data: makeup, error: makeupErr } = await db
       .from('schedules')
       .insert({
-        group_course_id:     (sessRow as any).group_course_id,
-        branch_id:           ctx.branchId,
-        scheduled_at:        makeupDate,
-        duration_minutes:    (sessRow as any).duration_minutes,
-        type:                'makeup',
-        delivery:            (sessRow as any).delivery ?? null,
-        meeting_url:         (sessRow as any).meeting_url ?? null,
-        room:                (sessRow as any).room ?? null,
-        status:              'scheduled',
-        original_session_id: d.session_id,
-        created_by:          user.id,
+        group_course_id:      (sessRow as any).group_course_id,
+        branch_id:            ctx.branchId,
+        scheduled_at:         makeupDate,
+        duration_minutes:     (sessRow as any).duration_minutes,
+        type:                 'makeup',
+        delivery:             (sessRow as any).delivery ?? null,
+        meeting_url:          (sessRow as any).meeting_url ?? null,
+        room:                 (sessRow as any).room ?? null,
+        status:               'scheduled',
+        original_session_id:  d.session_id,
+        makeup_of_session_nr: (sessRow as any).session_number ?? null,
+        created_by:           user.id,
       })
       .select('id')
       .single()

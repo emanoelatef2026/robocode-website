@@ -177,8 +177,15 @@ export default async function InstructorDashboardPage() {
           <SectionHeading>My Active Groups</SectionHeading>
           <div className="grid gap-4 sm:grid-cols-2">
             {activeGroups.map((g) => {
-              const sessionPct = g.total_sessions > 0
-                ? Math.round((g.completed_sessions / g.total_sessions) * 100)
+              // Progress scoped to the instructor's allocation range.
+              const myDone  = g.completed_sessions  // already scoped in listInstructorGroups
+              const myTotal = g.allocated_sessions ?? g.total_sessions
+              const toSess  = g.allocated_sessions != null
+                ? g.from_session + g.allocated_sessions - 1
+                : null
+              const nextSess = g.from_session + myDone  // next session_number to teach
+              const sessionPct = myTotal > 0
+                ? Math.min(100, Math.round((myDone / myTotal) * 100))
                 : null
 
               return (
@@ -196,10 +203,10 @@ export default async function InstructorDashboardPage() {
 
                   <p className="mt-1 text-xs text-[#64748B]">{g.course_title}</p>
 
-                  {g.total_sessions > 0 ? (
+                  {myTotal > 0 ? (
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-xs text-[#64748B]">
-                        <span>Session {g.completed_sessions} / {g.total_sessions}</span>
+                        <span>Session {myDone} / {myTotal}</span>
                         {sessionPct !== null && <span>{sessionPct}%</span>}
                       </div>
                       <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
@@ -208,6 +215,16 @@ export default async function InstructorDashboardPage() {
                           style={{ width: `${sessionPct ?? 0}%` }}
                         />
                       </div>
+                      {g.allocated_sessions != null ? (
+                        <div className="mt-1 flex items-center justify-between text-[10px] text-[#94A3B8]">
+                          <span>Allocation: sessions {g.from_session}–{toSess}</span>
+                          <span>Next: #{nextSess}</span>
+                        </div>
+                      ) : (
+                        <p className="mt-0.5 text-[10px] text-[#94A3B8]">
+                          Group: session {g.from_session} of {g.total_sessions}
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <p className="mt-2 text-xs text-[#94A3B8]">No sessions yet</p>

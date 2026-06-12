@@ -1260,11 +1260,17 @@ function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onA
   onClose:         () => void
   onAssigned:      () => void
 }) {
-  const [groupId, setGroupId]        = useState('')
-  const [role, setRole]              = useState<'lead' | 'assistant'>('lead')
-  const [q, setQ]                    = useState('')
-  const [isPending, startTransition] = useTransition()
-  const [error, setError]            = useState<string | null>(null)
+  const [groupId, setGroupId]              = useState('')
+  const [role, setRole]                    = useState<'lead' | 'assistant'>('lead')
+  const [q, setQ]                          = useState('')
+  const [allocatedSessions, setAllocated]  = useState<string>('')
+  const [isPending, startTransition]       = useTransition()
+  const [error, setError]                  = useState<string | null>(null)
+
+  const selectedGroup = options.groups.find(g => g.id === groupId) ?? null
+  // Use canonical allocation-range-based handoff point (immune to cancelled/deleted schedules).
+  const fromSession   = selectedGroup ? selectedGroup.next_from_session : 1
+  const remaining     = selectedGroup ? Math.max(0, selectedGroup.total_sessions - fromSession + 1) : 0
 
   // options.groups is already scoped to the TL's branches at page-load time.
   // Filtering further by the instructor's home branch would wrongly exclude
@@ -1308,7 +1314,7 @@ function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onA
                 </p>
               ) : (
                 eligible.map(g => (
-                  <button key={g.id} type="button" onClick={() => setGroupId(g.id)}
+                  <button key={g.id} type="button" onClick={() => { setGroupId(g.id); setAllocated('') }}
                     className={`flex w-full items-center justify-between px-4 py-3 text-left border-b border-[#F1F5F9] last:border-0 transition ${groupId === g.id ? 'bg-[#FFF7ED]' : 'hover:bg-[#F8FAFC]'}`}>
                     <div>
                       <p className="text-[13px] font-semibold text-[#0B1F3A]">{g.name}</p>
@@ -1324,14 +1330,55 @@ function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onA
               )}
             </div>
           </div>
+          {/* Session allocation — only shown after a group is selected */}
+          {selectedGroup && (
+            remaining <= 0 ? (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+                All {selectedGroup.total_sessions} sessions are already allocated to other instructors. Assigning this instructor will give them an open-ended range.
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">From Session</label>
+                  <div className="flex h-9 items-center rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-[13px] text-[#64748B]">
+                    {fromSession}
+                    <span className="ml-1 text-[11px] text-[#94A3B8]">of {selectedGroup.total_sessions}</span>
+                  </div>
+                  <p className="mt-0.5 text-[10px] text-[#94A3B8]">Computed from existing allocations</p>
+                </div>
+                <div className="flex-1">
+                  <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">
+                    Sessions to Teach
+                    <span className="ml-1 text-[11px] font-normal text-[#94A3B8]">({remaining} left)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={remaining}
+                    placeholder={String(remaining)}
+                    value={allocatedSessions}
+                    onChange={e => setAllocated(e.target.value)}
+                    className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F]"
+                  />
+                  {allocatedSessions !== '' && Number(allocatedSessions) > 0 && (
+                    <p className="mt-0.5 text-[10px] text-[#64748B]">
+                      Will teach sessions {fromSession}–{fromSession + Number(allocatedSessions) - 1}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )
+          )}
           {error && <p className="text-[12px] text-red-500">{error}</p>}
           <div className="flex gap-2 pt-1">
             <button onClick={onClose} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition">Cancel</button>
             <button
               onClick={() => {
                 if (!groupId) { setError('Select a group.'); return }
+                const parsed = allocatedSessions !== '' ? parseInt(allocatedSessions, 10) : undefined
+                if (parsed !== undefined && (isNaN(parsed) || parsed < 1)) { setError('Sessions to teach must be a positive number.'); return }
                 startTransition(async () => {
-                  const res = await assignGroupModalAction(instructorId, groupId, role)
+                  const res = await assignGroupModalAction(instructorId, groupId, role, fromSession, parsed)
                   if (res.success) onAssigned()
                   else setError(res.error?.message ?? 'Failed.')
                 })

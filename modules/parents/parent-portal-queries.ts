@@ -238,7 +238,7 @@ export async function getChildAttendance(
     .select(`
       id, status, notes, recorded_at,
       schedules!attendance_records_schedule_id_fkey(
-        scheduled_at,
+        scheduled_at, status,
         group_courses!schedules_group_course_id_fkey(
           courses!group_courses_course_id_fkey(title)
         )
@@ -247,7 +247,9 @@ export async function getChildAttendance(
     .eq('student_id', studentId)
     .order('recorded_at', { ascending: false })
 
-  const rows = (data ?? []) as any[]
+  // Only show attendance from academically consuming (completed) sessions.
+  // Cancelled / postponed sessions are invisible to parents.
+  const rows = ((data ?? []) as any[]).filter(r => r.schedules?.status === 'completed')
 
   const attendedStatuses = ['present', 'late', 'makeup']
   const attended = rows.filter(r => attendedStatuses.includes(r.status)).length
@@ -551,9 +553,10 @@ export async function getChildDashboardData(
     if (ip) instructorName = [ip.first_name, ip.last_name].filter(Boolean).join(' ') || null
   }
 
-  // Sessions (completed count + next upcoming)
+  // Sessions (completed count + next upcoming + completed IDs for attendance query)
   let completedSessions = 0
   let nextSessionAt: string | null = null
+  let completedSchedIds: string[] = []
   if (gcId) {
     const { data: schedRows } = await db
       .from('schedules')
@@ -561,7 +564,10 @@ export async function getChildDashboardData(
       .eq('group_course_id', gcId)
       .order('scheduled_at', { ascending: true })
     for (const s of schedRows ?? []) {
-      if ((s as any).status === 'completed') completedSessions++
+      if ((s as any).status === 'completed') {
+        completedSessions++
+        completedSchedIds.push((s as any).id as string)
+      }
       if (!nextSessionAt && (s as any).status === 'scheduled' && new Date((s as any).scheduled_at) > new Date()) {
         nextSessionAt = (s as any).scheduled_at
       }
@@ -600,16 +606,19 @@ export async function getChildDashboardData(
   // Recent activity (latest 10 events across types)
   const activity: ActivityEvent[] = []
 
-  // Attendance (last 5)
-  const { data: attRows } = await db
-    .from('attendance_records')
-    .select('id, status, recorded_at')
-    .eq('student_id', studentId)
-    .order('recorded_at', { ascending: false })
-    .limit(5)
-  for (const a of (attRows ?? []) as any[]) {
-    const label = a.status === 'present' ? 'Attended' : a.status === 'late' ? 'Late' : a.status === 'makeup' ? 'Makeup' : 'Absent'
-    activity.push({ id: `att-${a.id}`, event_type: 'attendance_marked', title: 'Attendance marked', subtitle: label, date: a.recorded_at })
+  // Attendance — only from completed sessions (invisible to parents otherwise).
+  if (completedSchedIds.length > 0) {
+    const { data: attRows } = await db
+      .from('attendance_records')
+      .select('id, status, recorded_at')
+      .eq('student_id', studentId)
+      .in('schedule_id', completedSchedIds)
+      .order('recorded_at', { ascending: false })
+      .limit(5)
+    for (const a of (attRows ?? []) as any[]) {
+      const label = a.status === 'present' ? 'Attended' : a.status === 'late' ? 'Late' : a.status === 'makeup' ? 'Makeup' : 'Absent'
+      activity.push({ id: `att-${a.id}`, event_type: 'attendance_marked', title: 'Attendance marked', subtitle: label, date: a.recorded_at })
+    }
   }
 
   // Homework submitted + graded (last 5)
@@ -706,14 +715,16 @@ export async function getChildHistoryTimeline(
   const toMonthKey = (d: string) =>
     new Date(d).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
 
-  // Attendance
+  // Attendance — only completed sessions are visible to parents.
+  // Select schedule status so we can filter out cancelled/postponed entries.
   const { data: attRows } = await db
     .from('attendance_records')
-    .select('id, status, recorded_at, schedules!attendance_records_schedule_id_fkey(scheduled_at)')
+    .select('id, status, recorded_at, schedules!attendance_records_schedule_id_fkey(scheduled_at, status)')
     .eq('student_id', studentId)
     .order('recorded_at', { ascending: false })
     .limit(50)
   for (const a of (attRows ?? []) as any[]) {
+    if (a.schedules?.status !== 'completed') continue  // skip non-completed sessions
     const date = a.schedules?.scheduled_at ?? a.recorded_at
     const statusLabel = a.status === 'present' ? 'Present' : a.status === 'late' ? 'Late' : a.status === 'makeup' ? 'Makeup' : 'Absent'
     events.push({

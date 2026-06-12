@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { ACADEMICALLY_CONSUMING_SESSION_STATUSES } from '@/modules/academic/constants'
 import type {
   InstructorRecord,
   InstructorGroup,
@@ -193,15 +194,20 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
       const gcGroupIds = (gcRows as any[]).map((r) => r.group_id as string)
       const gcFullIds  = (gcRows as any[]).map((r) => r.id        as string)
 
-      const [gsRes, completedRes] = await Promise.all([
+      const [gsRes, completedRes, giRes] = await Promise.all([
         db.from('group_students').select('group_id').in('group_id', gcGroupIds).eq('status', 'active'),
+        // Fetch session_number + group_course_id so we can scope completions to the instructor's allocation range
         db.from('schedules')
-          .select('group_course_id')
+          .select('group_course_id, session_number')
           .in('group_course_id', gcFullIds)
           .eq('status', 'completed'),
+        db.from('group_instructors')
+          .select('group_id, from_session, to_session, allocated_sessions, allocation_status')
+          .in('group_id', gcGroupIds)
+          .eq('instructor_id', instructorId),
       ])
 
-      // Safe fetch of total_sessions — column may not exist yet (migration pending)
+      // Safe fetch of total_sessions
       const totalSessionsMap: Record<string, number> = {}
       const { data: tsRows, error: tsErr } = await db
         .from('group_courses')
@@ -213,8 +219,15 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
         }
       }
 
-      const studentMap:   Record<string, number> = {}
-      const completedMap: Record<string, number> = {}
+      // group_id → group_course_id mapping (for completed-session scoping)
+      const gcIdByGroupId: Record<string, string> = {}
+      for (const row of gcRows as any[]) {
+        gcIdByGroupId[row.group_id] = row.id
+      }
+
+      const studentMap:        Record<string, number> = {}
+      const allCompletedByGc:  Record<string, Array<{ session_number: number | null }>> = {}
+      const allocationByGroup: Record<string, { from_session: number; to_session: number | null; allocated_sessions: number | null; allocation_status: string }> = {}
 
       for (const gs of gsRes.data ?? []) {
         const gid = (gs as any).group_id as string
@@ -222,10 +235,32 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
       }
       for (const s of completedRes.data ?? []) {
         const gcId = (s as any).group_course_id as string
-        completedMap[gcId] = (completedMap[gcId] ?? 0) + 1
+        if (!allCompletedByGc[gcId]) allCompletedByGc[gcId] = []
+        allCompletedByGc[gcId].push({ session_number: (s as any).session_number ?? null })
+      }
+      for (const gi of (giRes.data ?? []) as Array<{ group_id: string; from_session: number; to_session: number | null; allocated_sessions: number | null; allocation_status: string }>) {
+        allocationByGroup[gi.group_id] = {
+          from_session:       gi.from_session       ?? 1,
+          to_session:         gi.to_session          ?? null,
+          allocated_sessions: gi.allocated_sessions  ?? null,
+          allocation_status:  gi.allocation_status   ?? 'active',
+        }
       }
 
       for (const row of gcRows as any[]) {
+        const alloc    = allocationByGroup[row.group_id]
+        const gcId     = row.id as string
+        const sessions = allCompletedByGc[gcId] ?? []
+
+        // Count only sessions within this instructor's allocation range.
+        const completedInRange = alloc
+          ? sessions.filter(s =>
+              s.session_number != null &&
+              s.session_number >= alloc.from_session &&
+              (alloc.to_session == null || s.session_number <= alloc.to_session)
+            ).length
+          : sessions.length  // No allocation record — count all (backward-compat)
+
         results.push({
           group_id:           row.group_id,
           group_name:         row.groups?.name              ?? '',
@@ -236,8 +271,10 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
           branch_name:        row.groups?.branches?.name    ?? '',
           student_count:      studentMap[row.group_id]      ?? 0,
           next_session_at:    calcNextOccurrence(row.groups?.day_of_week, row.groups?.time),
-          completed_sessions: completedMap[row.id]          ?? 0,
+          completed_sessions: completedInRange,
           total_sessions:     totalSessionsMap[row.id]      ?? 24,
+          from_session:       alloc?.from_session            ?? 1,
+          allocated_sessions: alloc?.allocated_sessions      ?? null,
         })
       }
     }
@@ -266,7 +303,19 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
       studentMap[gid] = (studentMap[gid] ?? 0) + 1
     }
 
+    const { data: giPathBRows } = await db
+      .from('group_instructors')
+      .select('group_id, from_session, allocated_sessions')
+      .in('group_id', uncoveredIds)
+      .eq('instructor_id', instructorId)
+
+    const allocPathB: Record<string, { from_session: number; allocated_sessions: number | null }> = {}
+    for (const gi of (giPathBRows ?? []) as Array<{ group_id: string; from_session: number; allocated_sessions: number | null }>) {
+      allocPathB[gi.group_id] = { from_session: gi.from_session ?? 1, allocated_sessions: gi.allocated_sessions ?? null }
+    }
+
     for (const g of groupRows ?? []) {
+      const alloc = allocPathB[(g as any).id]
       results.push({
         group_id:           (g as any).id,
         group_name:         (g as any).name               ?? '',
@@ -279,6 +328,8 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
         next_session_at:    calcNextOccurrence((g as any).day_of_week, (g as any).time),
         completed_sessions: 0,
         total_sessions:     0,
+        from_session:       alloc?.from_session            ?? 1,
+        allocated_sessions: alloc?.allocated_sessions      ?? null,
       })
     }
   }
@@ -1099,6 +1150,7 @@ export async function getStudentProfileForInstructor(
     db.from('groups').select('name').eq('id', groupId).single(),
     gcId
       ? db.from('schedules').select('id').eq('group_course_id', gcId)
+          .in('status', [...ACADEMICALLY_CONSUMING_SESSION_STATUSES])
       : Promise.resolve({ data: [], error: null }),
     // Fetch all non-private notes + current user's private notes for this student
     db.from('student_notes')

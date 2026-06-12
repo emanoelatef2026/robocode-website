@@ -60,26 +60,6 @@ function fmtCurrency(n: number): string {
   return n.toLocaleString('en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 })
 }
 
-function estimateElapsedSessions(
-  startDate: string | null,
-  dayOfWeek: string | null,
-  endDate: string | null | undefined,
-): number {
-  if (!startDate) return 0
-  const start   = parseLocalDate(startDate)
-  const ceiling = endDate
-    ? new Date(Math.min(Date.now(), parseLocalDate(endDate).getTime()))
-    : new Date()
-  if (start > ceiling) return 0
-  if (dayOfWeek && DAY_INDEX[dayOfWeek] !== undefined) {
-    const target      = DAY_INDEX[dayOfWeek]
-    const daysToFirst = (target - start.getDay() + 7) % 7
-    const first       = new Date(start.getTime() + daysToFirst * 86_400_000)
-    if (first > ceiling) return 0
-    return Math.floor((ceiling.getTime() - first.getTime()) / (7 * 86_400_000)) + 1
-  }
-  return Math.floor((ceiling.getTime() - start.getTime()) / (7 * 86_400_000))
-}
 
 // ════════════════════════════════════════════════════════════════════
 //  FILTER TYPES
@@ -427,17 +407,24 @@ function GroupSummaryBar({
 
   const attPct = group.attendance_avg || 0
 
+  // Instructor display — uses active allocation if available, falls back to legacy name.
+  const activeAlloc = group.active_allocation
+  const instrDisplay = activeAlloc
+    ? `${activeAlloc.instructor_name} (Sessions ${activeAlloc.from_session}–${activeAlloc.to_session ?? '∞'})`
+    : group.status === 'handoff_pending'
+      ? 'Awaiting Instructor Handoff'
+      : (group.lead_instructor_name ?? '—')
+
   const infoItems: { label: string; value: string }[] = [
-    { label: 'Course',     value: group.course_name ?? '—'          },
-    { label: 'Instructor', value: group.lead_instructor_name ?? '—' },
-    ...(group.asst_instructor_name ? [{ label: 'Asst.', value: group.asst_instructor_name }] : []),
-    { label: 'Branch',     value: group.branch_name                 },
-    { label: 'Schedule',   value: sched || '—'                      },
-    { label: 'Start',      value: fmtDate(group.start_date)         },
+    { label: 'Course',     value: group.course_name ?? '—'  },
+    { label: 'Instructor', value: instrDisplay              },
+    { label: 'Branch',     value: group.branch_name         },
+    { label: 'Schedule',   value: sched || '—'              },
+    { label: 'Start',      value: fmtDate(group.start_date) },
     ...(group.end_date ? [{ label: 'End', value: fmtDate(group.end_date) }] : []),
     { label: 'Capacity',   value: group.capacity ? `${group.student_count} / ${group.capacity}` : `${group.student_count}` },
-    { label: 'Sessions',   value: `${sessionsCompleted} done`        },
-    { label: 'Avg Att.',   value: attPct > 0 ? `${attPct}%` : '—'  },
+    { label: 'Sessions',   value: `${sessionsCompleted} done` },
+    { label: 'Avg Att.',   value: attPct > 0 ? `${attPct}%` : '—' },
   ]
 
   return (
@@ -861,7 +848,7 @@ function GroupAttendanceTab({
           { label: 'Avg Attendance', value: group.attendance_avg > 0 ? `${group.attendance_avg}%` : '—',
             color: group.attendance_avg >= 75 ? 'text-green-600' : group.attendance_avg >= 60 ? 'text-amber-600' : group.attendance_avg > 0 ? 'text-red-600' : 'text-[#0B1F3A]' },
           { label: 'Students', value: String(group.student_count), color: 'text-[#0B1F3A]' },
-          { label: 'Sessions Done', value: String(estimateElapsedSessions(group.start_date, group.day_of_week, group.end_date)), color: 'text-[#0B1F3A]' },
+          { label: 'Sessions Done', value: String(group.completed_sessions), color: 'text-[#0B1F3A]' },
         ].map(card => (
           <div key={card.label} className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
             <p className="text-[10px] text-[#94A3B8] uppercase tracking-wide">{card.label}</p>
@@ -1563,7 +1550,7 @@ function GroupWorkspace({
   }
 
   const currentStudentIds = (detailData?.students ?? []).map(s => s.student_id)
-  const sessionsCompleted = estimateElapsedSessions(group.start_date, group.day_of_week, group.end_date)
+  const sessionsCompleted = group.completed_sessions
 
   const TABS: { key: WorkspaceTab; label: string }[] = [
     { key: 'students',    label: `Students (${group.student_count})` },
@@ -1621,17 +1608,6 @@ function GroupWorkspace({
                 onView={s => setQuickViewStudent(s)}
                 onClear={() => setSelectedIds(new Set())}
               />
-            )}
-            {isTL && (
-              <button
-                onClick={() => setQuickAddOpen(true)}
-                className="flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#e87c18] transition"
-              >
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                Add Student
-              </button>
             )}
           </div>
         </div>
@@ -1728,7 +1704,7 @@ function GroupWorkspace({
                 <span className="font-semibold text-[#0B1F3A]">{group.student_count}</span>
               </div>
               <div className="flex items-center justify-between text-[12px]">
-                <span className="text-[#64748B]">Sessions completed (est.)</span>
+                <span className="text-[#64748B]">Sessions completed</span>
                 <span className="font-semibold text-[#0B1F3A]">{sessionsCompleted}</span>
               </div>
               {(detailData?.students ?? []).some(s => s.paid_amount > 0) && (
