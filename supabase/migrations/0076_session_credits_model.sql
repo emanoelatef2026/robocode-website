@@ -23,10 +23,9 @@ CREATE OR REPLACE FUNCTION increment_consumed_sessions_batch(p_enrollment_ids UU
 RETURNS VOID
 LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
+  -- remaining_sessions is a GENERATED column — only update consumed_sessions
   UPDATE public.student_enrollments
-  SET
-    consumed_sessions  = consumed_sessions + 1,
-    remaining_sessions = GREATEST(0, remaining_sessions - 1)
+  SET consumed_sessions = consumed_sessions + 1
   WHERE id = ANY(p_enrollment_ids)
     AND status = 'ACTIVE';
 END; $$;
@@ -93,9 +92,7 @@ BEGIN
   ),
   updated AS (
     UPDATE student_enrollments se
-    SET
-      consumed_sessions  = f.new_consumed,
-      remaining_sessions = GREATEST(0, se.enrolled_sessions - f.new_consumed)
+    SET consumed_sessions = f.new_consumed
     FROM fifo f
     WHERE se.id = f.id
       AND ABS(se.consumed_sessions - f.new_consumed) > 0

@@ -63,9 +63,7 @@ BEGIN
   -- Update drifted enrollments
   updated AS (
     UPDATE student_enrollments se
-    SET
-      consumed_sessions  = ac.actual_attended,
-      remaining_sessions = GREATEST(0, se.enrolled_sessions - ac.actual_attended)
+    SET consumed_sessions = ac.actual_attended
     FROM attendance_counts ac
     WHERE se.id = ac.enrollment_id
       AND ABS(se.consumed_sessions - ac.actual_attended) > 0

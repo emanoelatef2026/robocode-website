@@ -86,10 +86,9 @@ BEGIN
 
     -- Only update the counter when the INSERT actually happened
     IF FOUND THEN
+      -- remaining_sessions is a GENERATED column — only update consumed_sessions
       UPDATE public.student_enrollments
-      SET
-        consumed_sessions  = consumed_sessions  + 1,
-        remaining_sessions = GREATEST(0, remaining_sessions - 1)
+      SET consumed_sessions = consumed_sessions + 1
       WHERE id = p_enrollment_ids[i]
         AND status = 'ACTIVE';
     END IF;
@@ -133,9 +132,7 @@ BEGIN
   ),
   updated AS (
     UPDATE public.student_enrollments se
-    SET
-      consumed_sessions  = es.new_val,
-      remaining_sessions = GREATEST(0, se.enrolled_sessions - es.new_val)
+    SET consumed_sessions = es.new_val
     FROM enrollment_state es
     WHERE se.id = es.id
       AND es.old_val <> es.new_val
