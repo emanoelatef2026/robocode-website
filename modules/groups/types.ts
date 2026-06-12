@@ -109,7 +109,7 @@ export interface GroupAcademicConfig {
   group_course_id:       string | null
   course_id:             string | null
   course_title:          string | null
-  total_sessions:        number
+  total_sessions:        number | null
   instructor_id:         string | null
   instructor_name:       string | null
   additional_instructors: Array<{ id: string; name: string }>

@@ -38,7 +38,7 @@ export default async function GroupDetailPage({ params }: Props) {
   const hasCourse = !!group.group_course_id
   const isActive  = hasCourse
 
-  const totalPct = group.total_sessions > 0
+  const totalPct = group.total_sessions != null && group.total_sessions > 0
     ? Math.round((group.completed_sessions / group.total_sessions) * 100)
     : null
 
@@ -107,7 +107,7 @@ export default async function GroupDetailPage({ params }: Props) {
               <p className="mt-0.5 font-medium text-[#0B1F3A]">{group.course_title}</p>
             </div>
           )}
-          {group.total_sessions > 0 && (
+          {group.total_sessions != null && group.total_sessions > 0 && (
             <div>
               <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8]">Total Sessions</p>
               <p className="mt-0.5 font-medium text-[#0B1F3A]">{group.total_sessions}</p>
@@ -122,7 +122,7 @@ export default async function GroupDetailPage({ params }: Props) {
       )}
 
       {/* Session progress */}
-      {isActive && group.total_sessions > 0 && (
+      {isActive && group.total_sessions != null && group.total_sessions > 0 && (
         <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-4">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-[#0B1F3A]">Progress</p>

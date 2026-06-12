@@ -390,7 +390,7 @@ function AllocationRowCard({
           )}
           {rangeOverTotal && totalSessions !== null && (
             <p className="text-[11px] text-red-600">
-              Exceeds group total ({totalSessions} sessions).
+              Exceeds group planned sessions ({totalSessions}).
             </p>
           )}
           {error && <p className="text-[11px] text-red-600">{error}</p>}
@@ -488,8 +488,8 @@ function AddAllocationForm({
   const fromSession  = ctx.next_from_session
   const sessNum      = parseInt(sessions, 10)
   const toSession    = sessions && !isNaN(sessNum) && sessNum > 0 ? fromSession + sessNum - 1 : null
-  const remaining    = ctx.total_sessions != null ? ctx.total_sessions - fromSession + 1 : null
-  const overLimit    = remaining != null && toSession != null && toSession > (ctx.total_sessions ?? Infinity)
+  const remaining    = !ctx.open_ended && ctx.total_sessions != null ? ctx.total_sessions - fromSession + 1 : null
+  const overLimit    = !ctx.open_ended && remaining != null && toSession != null && toSession > (ctx.total_sessions ?? Infinity)
 
   function handleAdd() {
     if (!instrId) { setError('Select an instructor.'); return }
@@ -539,6 +539,9 @@ function AddAllocationForm({
             {remaining != null && (
               <span className="ml-1 text-[#94A3B8]">(max {remaining})</span>
             )}
+            {ctx.open_ended && (
+              <span className="ml-1 text-[#94A3B8]">(open-ended group)</span>
+            )}
           </label>
           <input
             type="number"
@@ -546,7 +549,7 @@ function AddAllocationForm({
             max={remaining ?? undefined}
             value={sessions}
             onChange={e => setSessions(e.target.value)}
-            placeholder="Leave blank for unlimited"
+            placeholder={ctx.open_ended ? 'Leave blank for unlimited' : (ctx.total_sessions != null ? `Max ${remaining}` : 'Leave blank for unlimited')}
             className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
           />
         </div>
@@ -555,7 +558,7 @@ function AddAllocationForm({
       {toSession != null && (
         <p className={`text-[11px] font-medium ${overLimit ? 'text-red-500' : 'text-[#FF8A1F]'}`}>
           {overLimit
-            ? `Exceeds total sessions (${ctx.total_sessions}). Max ${remaining} session${remaining !== 1 ? 's' : ''}.`
+            ? `Exceeds planned sessions (${ctx.total_sessions}). Max ${remaining} session${remaining !== 1 ? 's' : ''}.`
             : `Will teach sessions ${fromSession}–${toSession}`
           }
         </p>
@@ -683,6 +686,9 @@ export default function GroupFormModal({
   const [state, dispatch, pending] = useActionState<ActionResult<{ id: string }> | null, FormData>(action as any, null)
 
   const [selectedBranchId, setSelectedBranchId] = useState('')
+  const [selectedCourseId, setSelectedCourseId] = useState('')
+  const [plannedSessions, setPlannedSessions]   = useState('')
+  const [openEnded, setOpenEnded]               = useState(false)
 
   // Create-mode only: initial instructor (for first allocation)
   const [initInstrId, setInitInstrId] = useState('')
@@ -701,6 +707,9 @@ export default function GroupFormModal({
   useEffect(() => {
     if (!isOpen) return
     setSelectedBranchId(group?.branch_id ?? defaultBranchId ?? options.branches[0]?.id ?? '')
+    setSelectedCourseId(group?.course_id ?? '')
+    setPlannedSessions(group?.planned_sessions != null ? String(group.planned_sessions) : '')
+    setOpenEnded(group?.open_ended ?? false)
     setInitInstrId(group?.lead_instructor_id ?? '')
 
     if (mode === 'edit' && group) {
@@ -800,7 +809,6 @@ export default function GroupFormModal({
   const type        = group?.type             ?? 'class'
   const status      = group?.status           ?? 'forming'
   const capacity    = group?.capacity         ?? ''
-  const courseId    = group?.course_id        ?? ''
   const dayOfWeek   = group?.day_of_week      ?? ''
   const startTime   = group?.start_time       ?? ''
   const durationMin = group?.duration_minutes ?? ''
@@ -808,6 +816,9 @@ export default function GroupFormModal({
   const endDate     = group?.end_date         ?? ''
   const meetingLink = group?.meeting_link     ?? ''
   const notes       = group?.notes            ?? ''
+
+  const selectedCourse       = options.courses.find(c => c.id === selectedCourseId)
+  const courseRecommendation = selectedCourse?.recommended_sessions ?? null
 
   const title = mode === 'create' ? 'New Group' : `Edit: ${group?.name}`
 
@@ -907,8 +918,12 @@ export default function GroupFormModal({
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className={mode === 'edit' ? 'sm:col-span-2' : ''}>
                 <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Course</label>
-                <select name="course_id" defaultValue={courseId}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20">
+                <select
+                  name="course_id"
+                  value={selectedCourseId}
+                  onChange={e => setSelectedCourseId(e.target.value)}
+                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                >
                   <option value="">— No course —</option>
                   {options.courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
@@ -931,6 +946,82 @@ export default function GroupFormModal({
                 </div>
               )}
             </div>
+          </section>
+
+          {/* ── Academic Plan ──────────────────────────────────────────────── */}
+          <section className="border-t border-[#F1F5F9] pt-5">
+            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Academic Plan</h3>
+
+            {/* Open-ended toggle */}
+            <div className="mb-4 flex items-start gap-3">
+              <button
+                type="button"
+                role="switch"
+                aria-checked={openEnded}
+                onClick={() => {
+                  setOpenEnded(prev => !prev)
+                  if (!openEnded) setPlannedSessions('')
+                }}
+                className={[
+                  'relative mt-0.5 inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200',
+                  openEnded ? 'bg-[#FF8A1F]' : 'bg-[#CBD5E1]',
+                ].join(' ')}
+              >
+                <span
+                  className={[
+                    'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow transition duration-200',
+                    openEnded ? 'translate-x-4' : 'translate-x-0',
+                  ].join(' ')}
+                />
+              </button>
+              <div>
+                <p className="text-[13px] font-medium text-[#374151]">Open-ended Group</p>
+                <p className="text-[11px] text-[#94A3B8]">No fixed session count — for clubs, mentorship, or subscription groups. Allocations can extend freely.</p>
+              </div>
+            </div>
+
+            {/* Planned sessions — hidden when open-ended */}
+            {!openEnded && (
+              <div>
+                <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">
+                  Planned Sessions
+                  {courseRecommendation != null && (
+                    <span className="ml-2 text-[11px] font-normal text-[#94A3B8]">
+                      · Course recommends {courseRecommendation}
+                    </span>
+                  )}
+                </label>
+                <input
+                  name="planned_sessions"
+                  type="number"
+                  min={1}
+                  max={9999}
+                  value={plannedSessions}
+                  onChange={e => setPlannedSessions(e.target.value)}
+                  placeholder={courseRecommendation != null ? `e.g. ${courseRecommendation}` : 'e.g. 12 for bootcamp, 24 for standard'}
+                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                />
+                <p className="mt-1 text-[11px] text-[#94A3B8]">
+                  Leave blank to set later. Instructor allocations cannot exceed this count.
+                </p>
+                {courseRecommendation != null && plannedSessions && parseInt(plannedSessions, 10) !== courseRecommendation && (
+                  <p className="mt-1 text-[11px] text-amber-600">
+                    {parseInt(plannedSessions, 10) < courseRecommendation
+                      ? `${courseRecommendation - parseInt(plannedSessions, 10)} fewer than the course recommendation — this group is a compressed track.`
+                      : `${parseInt(plannedSessions, 10) - courseRecommendation} more than the course recommendation — extended track.`
+                    }
+                  </p>
+                )}
+              </div>
+            )}
+
+            {openEnded && (
+              <p className="rounded-lg bg-[#FFF7ED] px-3 py-2 text-[12px] text-[#FF8A1F]">
+                Open-ended mode — allocations will extend dynamically with no session ceiling.
+              </p>
+            )}
+
+            <input type="hidden" name="open_ended" value={openEnded ? 'true' : 'false'} />
           </section>
 
           {/* ── Instructor Allocations (edit mode only) ────────────────────── */}

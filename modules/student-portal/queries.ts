@@ -57,7 +57,7 @@ export async function getStudentDashboardData(
   const empty: Omit<StudentDashboardData, 'student_id' | 'student_name'> = {
     group_id: null, group_name: null, course_title: null, instructor_name: null,
     day_of_week: null, group_time: null,
-    completed_sessions: 0, total_sessions: 0,
+    enrollment_id: null, enrolled_sessions: 0, consumed_sessions: 0, remaining_sessions: 0,
     att_present: 0, att_absent: 0, att_late: 0, att_total: 0, att_pct: 0,
     assignments_total: 0, assignments_submitted: 0, assignments_graded: 0, assignments_avg_score: null,
     portfolio_projects: 0, portfolio_reviewed: 0, overall_pct: null,
@@ -81,12 +81,53 @@ export async function getStudentDashboardData(
   const courseTitle = gc?.courses?.title  ?? null
   const instrId     = gc?.instructor_id   ?? null
 
-  // Safe fetch of total_sessions (migration 0042 may not be applied in all envs)
-  let totalSessions = 24
-  if (gcId) {
-    const { data: tsRow } = await db
-      .from('group_courses').select('total_sessions').eq('id', gcId).maybeSingle()
-    if (tsRow) totalSessions = (tsRow as any).total_sessions ?? 24
+  // ── Enrollment-scoped session progress ───────────────────────────────────────
+  // Use the student's purchased enrollment, NOT group.total_sessions.
+  // Prefer enrollment linked to this group; fall back to any ACTIVE enrollment (FIFO).
+  let enrollmentId:        string | null = null
+  let enrolledSessions     = 0
+  let consumedSessions     = 0
+  let remainingSessions    = 0
+  let enrollmentStartDate: string | null = null
+
+  {
+    const { data: enrRow } = await db
+      .from('student_enrollments')
+      .select('id, enrolled_sessions, consumed_sessions, remaining_sessions, start_date')
+      .eq('student_id', studentId)
+      .eq('group_id', groupId)
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    const e = (enrRow as any) ?? null
+    if (e) {
+      enrollmentId         = e.id
+      enrolledSessions     = Number(e.enrolled_sessions  ?? 0)
+      consumedSessions     = Number(e.consumed_sessions  ?? 0)
+      remainingSessions    = Number(e.remaining_sessions ?? 0)
+      enrollmentStartDate  = e.start_date ?? null
+    } else {
+      // Fallback: any ACTIVE enrollment for this student
+      const { data: fallbackRow } = await db
+        .from('student_enrollments')
+        .select('id, enrolled_sessions, consumed_sessions, remaining_sessions, start_date')
+        .eq('student_id', studentId)
+        .eq('status', 'ACTIVE')
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+
+      const f = (fallbackRow as any) ?? null
+      if (f) {
+        enrollmentId         = f.id
+        enrolledSessions     = Number(f.enrolled_sessions  ?? 0)
+        consumedSessions     = Number(f.consumed_sessions  ?? 0)
+        remainingSessions    = Number(f.remaining_sessions ?? 0)
+        enrollmentStartDate  = f.start_date ?? null
+      }
+    }
   }
 
   // Instructor name
@@ -101,25 +142,33 @@ export async function getStudentDashboardData(
     if (ip) instructorName = [ip.first_name, ip.last_name].filter(Boolean).join(' ') || null
   }
 
-  // Sessions — two sets: completed-only (attendance stats) vs non-cancelled (assignments)
-  let scheduleIds:          string[] = []   // non-cancelled, for assignment queries
-  let completedScheduleIds: string[] = []   // completed only, for attendance stats
-  let completedSessions              = 0
+  // Sessions — scoped to the student's enrollment window.
+  // scheduleIds:          non-cancelled sessions (for assignment queries)
+  // completedScheduleIds: completed sessions only (for attendance stats)
+  // Both are filtered to sessions on/after enrollmentStartDate so we never count
+  // sessions from before the student's package started.
+  let scheduleIds:          string[] = []
+  let completedScheduleIds: string[] = []
 
   if (gcId) {
-    const { data: schedRows } = await db
+    let schedQuery = db
       .from('schedules')
-      .select('id, status')
+      .select('id, status, scheduled_at')
       .eq('group_course_id', gcId)
       .neq('status', 'cancelled')
+
+    if (enrollmentStartDate) {
+      schedQuery = schedQuery.gte('scheduled_at', enrollmentStartDate)
+    }
+
+    const { data: schedRows } = await schedQuery
     const rows = schedRows ?? []
     scheduleIds          = rows.map((s: any) => s.id as string)
     completedScheduleIds = rows.filter((s: any) => s.status === 'completed').map((s: any) => s.id as string)
-    completedSessions    = completedScheduleIds.length
   }
 
-  // Attendance — only academically consuming (completed) sessions count.
-  // Cancelled, postponed, ongoing sessions are invisible to students.
+  // Attendance — only completed sessions in the enrollment window.
+  // Invalidated records (cancelled session backfill) are excluded.
   let attPresent = 0, attAbsent = 0, attLate = 0, attTotal = 0
   if (completedScheduleIds.length > 0) {
     const { data: attRows } = await db
@@ -127,6 +176,7 @@ export async function getStudentDashboardData(
       .select('status')
       .eq('student_id', studentId)
       .in('schedule_id', completedScheduleIds)
+      .is('invalidated_at', null)
     for (const a of attRows ?? []) {
       attTotal++
       const st = (a as any).status as string
@@ -275,8 +325,10 @@ export async function getStudentDashboardData(
     instructor_name:    instructorName,
     day_of_week:        gRow?.day_of_week ?? null,
     group_time:         gRow?.time        ?? null,
-    completed_sessions: completedSessions,
-    total_sessions:     totalSessions,
+    enrollment_id:      enrollmentId,
+    enrolled_sessions:  enrolledSessions,
+    consumed_sessions:  consumedSessions,
+    remaining_sessions: remainingSessions,
     att_present:        attPresent,
     att_absent:         attAbsent,
     att_late:           attLate,
@@ -582,14 +634,32 @@ export async function getStudentAttendanceHistory(userId: string): Promise<Stude
   if (!gcId) return []
 
   // Only completed sessions are academically visible to students.
-  // Cancelled / postponed / scheduled sessions do not appear.
+  // Filtered to the student's enrollment window (sessions on/after the earliest
+  // enrollment start_date) so pre-enrollment sessions are excluded.
   // session_number is the canonical immutable number from the DB (migration 0085).
-  const { data: schedRows } = await db
+
+  const { data: enrollRow } = await db
+    .from('student_enrollments')
+    .select('start_date')
+    .eq('student_id', studentId)
+    .in('status', ['ACTIVE', 'COMPLETED', 'DROPPED', 'TRANSFERRED', 'PAUSED', 'CANCELLED'])
+    .order('start_date', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  const enrollmentStartDate = (enrollRow as any)?.start_date ?? null
+
+  let schedQuery = db
     .from('schedules')
     .select('id, scheduled_at, session_number')
     .eq('group_course_id', gcId)
     .eq('status', 'completed')
     .order('scheduled_at', { ascending: true })
+
+  if (enrollmentStartDate) {
+    schedQuery = schedQuery.gte('scheduled_at', enrollmentStartDate)
+  }
+
+  const { data: schedRows } = await schedQuery
 
   if (!schedRows || schedRows.length === 0) return []
 
@@ -608,12 +678,13 @@ export async function getStudentAttendanceHistory(userId: string): Promise<Stude
     .from('schedules').select('id, topic').in('id', schedIds)
   for (const r of enrichRows ?? []) topicMap.set((r as any).id, (r as any).topic ?? null)
 
-  // Attendance records for student in these sessions
+  // Attendance records — exclude invalidated (cancelled session backfill)
   const { data: attRows } = await db
     .from('attendance_records')
     .select('schedule_id, status')
     .eq('student_id', studentId)
     .in('schedule_id', schedIds)
+    .is('invalidated_at', null)
   const attStatusMap = new Map((attRows ?? []).map((a: any) => [a.schedule_id as string, a.status as string]))
 
   return schedRows.map((s: any) => ({
@@ -652,32 +723,52 @@ export async function getCertificateEligibility(userId: string): Promise<Certifi
       .maybeSingle(),
   ])
 
-  const gcId = (gcRes.data as any)?.id ?? null
+  // Active enrollment — prefer group-linked, fallback to any ACTIVE (FIFO)
+  let enrolledSessions  = 0
+  let consumedSessions  = 0
+  let remainingSessions = 0
 
-  let totalSessions = 24
-  if (gcId) {
-    const { data: tsRow } = await db
-      .from('group_courses').select('total_sessions').eq('id', gcId).maybeSingle()
-    if (tsRow) totalSessions = (tsRow as any).total_sessions ?? 24
+  {
+    const { data: enrRow } = await db
+      .from('student_enrollments')
+      .select('enrolled_sessions, consumed_sessions, remaining_sessions')
+      .eq('student_id', studentId)
+      .eq('group_id', groupId)
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    const e = (enrRow as any) ?? null
+    if (e) {
+      enrolledSessions  = Number(e.enrolled_sessions  ?? 0)
+      consumedSessions  = Number(e.consumed_sessions  ?? 0)
+      remainingSessions = Number(e.remaining_sessions ?? 0)
+    } else {
+      const { data: fallbackRow } = await db
+        .from('student_enrollments')
+        .select('enrolled_sessions, consumed_sessions, remaining_sessions')
+        .eq('student_id', studentId)
+        .eq('status', 'ACTIVE')
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle()
+      const f = (fallbackRow as any) ?? null
+      if (f) {
+        enrolledSessions  = Number(f.enrolled_sessions  ?? 0)
+        consumedSessions  = Number(f.consumed_sessions  ?? 0)
+        remainingSessions = Number(f.remaining_sessions ?? 0)
+      }
+    }
   }
 
-  let completedSessions = 0
-  if (gcId) {
-    const { count } = await db
-      .from('schedules')
-      .select('id', { count: 'exact', head: true })
-      .eq('group_course_id', gcId)
-      .eq('status', 'completed')
-    completedSessions = count ?? 0
-  }
-
-  const isEligible = completedSessions >= totalSessions
+  const isEligible = enrolledSessions > 0 && consumedSessions >= enrolledSessions
 
   return {
     is_eligible:        isEligible,
-    completed_sessions: completedSessions,
-    total_sessions:     totalSessions,
-    sessions_remaining: Math.max(0, totalSessions - completedSessions),
+    consumed_sessions:  consumedSessions,
+    enrolled_sessions:  enrolledSessions,
+    sessions_remaining: remainingSessions,
     group_name:         (groupRes.data as any)?.name ?? null,
     course_title:       (gcRes.data as any)?.courses?.title ?? null,
   }

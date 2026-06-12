@@ -35,14 +35,14 @@ export default async function StudentCertificatesPage() {
                 <>
                   <p className="mt-1 text-lg font-bold text-emerald-700">✓ Eligible for Certificate</p>
                   <p className="mt-0.5 text-sm text-emerald-600">
-                    {eligibility.completed_sessions} / {eligibility.total_sessions} sessions completed
+                    {eligibility.consumed_sessions} / {eligibility.enrolled_sessions} sessions consumed
                   </p>
                 </>
               ) : (
                 <>
                   <p className="mt-1 text-base font-semibold text-[#0B1F3A]">Not Yet Eligible</p>
                   <p className="mt-0.5 text-sm text-[#64748B]">
-                    {eligibility.completed_sessions} / {eligibility.total_sessions} sessions completed
+                    {eligibility.consumed_sessions} / {eligibility.enrolled_sessions} sessions consumed
                     {eligibility.sessions_remaining > 0 && (
                       <> · <span className="font-medium">{eligibility.sessions_remaining} more session{eligibility.sessions_remaining !== 1 ? 's' : ''} needed</span></>
                     )}
@@ -52,8 +52,8 @@ export default async function StudentCertificatesPage() {
             </div>
             <div className="shrink-0 text-right">
               <p className="text-2xl font-bold text-[#0B1F3A]">
-                {eligibility.total_sessions > 0
-                  ? `${Math.round((eligibility.completed_sessions / eligibility.total_sessions) * 100)}%`
+                {eligibility.enrolled_sessions > 0
+                  ? `${Math.round((eligibility.consumed_sessions / eligibility.enrolled_sessions) * 100)}%`
                   : '—'}
               </p>
               <p className="text-xs text-[#94A3B8]">progress</p>
@@ -61,12 +61,12 @@ export default async function StudentCertificatesPage() {
           </div>
 
           {/* Progress bar */}
-          {eligibility.total_sessions > 0 && (
+          {eligibility.enrolled_sessions > 0 && (
             <div className="mt-4">
               <div className="h-2.5 overflow-hidden rounded-full bg-white/60">
                 <div
                   className={`h-full rounded-full transition-all ${eligibility.is_eligible ? 'bg-emerald-500' : 'bg-[#FF8A1F]'}`}
-                  style={{ width: `${Math.min(100, Math.round((eligibility.completed_sessions / eligibility.total_sessions) * 100))}%` }}
+                  style={{ width: `${Math.min(100, Math.round((eligibility.consumed_sessions / eligibility.enrolled_sessions) * 100))}%` }}
                 />
               </div>
             </div>

@@ -25,7 +25,7 @@ interface GroupStudentRow {
 }
 
 interface ProgressRow   { student_id: string; attendance_score?: number | null }
-interface EnrollmentRow { id: string; student_id: string; remaining_sessions?: number | null; consumed_sessions?: number | null; enrolled_sessions?: number | null }
+interface EnrollmentRow { id: string; student_id: string; remaining_sessions?: number | null; consumed_sessions?: number | null; enrolled_sessions?: number | null; start_date?: string | null }
 interface GuardianRow   { student_id: string; phone1?: string | null }
 interface FinanceRow    { id: string; student_id: string; paid_amount?: number | null; remaining_amount?: number | null; status?: string | null }
 
@@ -67,7 +67,7 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       : none,
     studentIds.length
       ? db.from('student_enrollments')
-          .select('id, student_id, remaining_sessions, consumed_sessions, enrolled_sessions')
+          .select('id, student_id, remaining_sessions, consumed_sessions, enrolled_sessions, start_date')
           .in('student_id', studentIds)
           .eq('status', 'ACTIVE')
           .order('start_date', { ascending: true, nullsFirst: false })
@@ -88,7 +88,7 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
 
   // Build lookup maps — O(n) pass over each result set
   const progMap     = new Map<string, number>()
-  const sessMap     = new Map<string, { remaining: number; used: number | null; total: number | null; enrollment_id: string | null }>()
+  const sessMap     = new Map<string, { remaining: number; used: number | null; total: number | null; enrollment_id: string | null; start_date: string | null }>()
   const guardianMap = new Map<string, string>()
   const financeMap  = new Map<string, { paid: number; balance: number; status: string | null; account_id: string | null }>()
 
@@ -103,6 +103,7 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
         used:          e.consumed_sessions  != null ? Number(e.consumed_sessions)  : null,
         total:         e.enrolled_sessions  != null ? Number(e.enrolled_sessions)  : null,
         enrollment_id: e.id ?? null,
+        start_date:    e.start_date ?? null,
       })
     }
   }
@@ -163,8 +164,9 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       sessions_used:       sessInfo?.used   ?? null,
       sessions_total:      sessInfo?.total  ?? null,
       subscription_amount: ((finInfo?.paid ?? 0) + (finInfo?.balance ?? 0)) || null,
-      account_id:          finInfo?.account_id    ?? null,
-      enrollment_id:       sessInfo?.enrollment_id ?? null,
+      account_id:            finInfo?.account_id    ?? null,
+      enrollment_id:         sessInfo?.enrollment_id ?? null,
+      enrollment_start_date: sessInfo?.start_date    ?? null,
     }
   })
 

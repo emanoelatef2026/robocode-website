@@ -6,7 +6,7 @@ import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import type { ActionResult }    from '@/types/app'
 import { createSchema, updateSchema } from './validators'
 import { parseStudentIds, buildGroupInsert, buildGroupUpdate, stripUndefined } from './helpers'
-import { applyStudentChanges, assignCourseAndInstructor } from './db-ops'
+import { applyStudentChanges, assignCourseAndInstructor, updateGroupCoursePlan } from './db-ops'
 
 const GROUPS_PATH = '/portal/team-leader/groups'
 
@@ -17,7 +17,7 @@ export async function createGroupModal(
   const raw = Object.fromEntries(
     ['branch_id','name','type','capacity','day_of_week','start_time','duration_minutes',
      'start_date','end_date','meeting_link','notes','course_id','instructor_id',
-     'asst_instructor_id','students_to_add_json']
+     'asst_instructor_id','students_to_add_json','planned_sessions','open_ended']
       .map(k => [k, formData.get(k) ?? '']),
   )
 
@@ -26,7 +26,7 @@ export async function createGroupModal(
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { course_id, instructor_id, asst_instructor_id, students_to_add_json, ...rest } = parsed.data
+  const { course_id, instructor_id, asst_instructor_id, students_to_add_json, planned_sessions, open_ended, ...rest } = parsed.data
 
   if (instructor_id && asst_instructor_id && instructor_id === asst_instructor_id) {
     return { success: false, error: { code: 'VALIDATION', message: 'Lead and assistant instructor must be different.' } }
@@ -40,6 +40,7 @@ export async function createGroupModal(
 
   const processGroup = async (gid: string) => {
     await assignCourseAndInstructor(db, gid, course_id, instructor_id, asst_instructor_id, user.id)
+    if (course_id) await updateGroupCoursePlan(db, gid, planned_sessions, open_ended ?? false)
     const toAdd = parseStudentIds(students_to_add_json)
     if (toAdd.length) await applyStudentChanges(db, user.id, gid, rest.branch_id, toAdd, [])
     await db.rpc('write_audit_log', {
@@ -75,7 +76,8 @@ export async function updateGroupModal(
   const raw = Object.fromEntries(
     ['id','branch_id','name','type','status','capacity','day_of_week','start_time',
      'duration_minutes','start_date','end_date','meeting_link','notes','course_id',
-     'instructor_id','asst_instructor_id','students_to_add_json','students_to_remove_json']
+     'instructor_id','asst_instructor_id','students_to_add_json','students_to_remove_json',
+     'planned_sessions','open_ended']
       .map(k => [k, formData.get(k) ?? '']),
   )
 
@@ -84,7 +86,7 @@ export async function updateGroupModal(
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { id, course_id, instructor_id, asst_instructor_id, students_to_add_json, students_to_remove_json, ...rest } = parsed.data
+  const { id, course_id, instructor_id, asst_instructor_id, students_to_add_json, students_to_remove_json, planned_sessions, open_ended, ...rest } = parsed.data
 
   if (instructor_id && asst_instructor_id && instructor_id === asst_instructor_id) {
     return { success: false, error: { code: 'VALIDATION', message: 'Lead and assistant instructor must be different.' } }
@@ -110,6 +112,7 @@ export async function updateGroupModal(
   }
 
   await assignCourseAndInstructor(db, id, course_id, instructor_id, asst_instructor_id, user.id)
+  await updateGroupCoursePlan(db, id, planned_sessions, open_ended ?? false)
 
   const toAdd    = parseStudentIds(students_to_add_json)
   const toRemove = parseStudentIds(students_to_remove_json)

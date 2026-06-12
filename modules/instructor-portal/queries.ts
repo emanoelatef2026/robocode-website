@@ -207,15 +207,15 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
           .eq('instructor_id', instructorId),
       ])
 
-      // Safe fetch of total_sessions
-      const totalSessionsMap: Record<string, number> = {}
+      // Safe fetch of total_sessions (null = open-ended group)
+      const totalSessionsMap: Record<string, number | null> = {}
       const { data: tsRows, error: tsErr } = await db
         .from('group_courses')
         .select('id, total_sessions')
         .in('id', gcFullIds)
       if (!tsErr && tsRows) {
         for (const r of tsRows) {
-          totalSessionsMap[(r as any).id] = (r as any).total_sessions ?? 24
+          totalSessionsMap[(r as any).id] = (r as any).total_sessions ?? null
         }
       }
 
@@ -272,7 +272,7 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
           student_count:      studentMap[row.group_id]      ?? 0,
           next_session_at:    calcNextOccurrence(row.groups?.day_of_week, row.groups?.time),
           completed_sessions: completedInRange,
-          total_sessions:     totalSessionsMap[row.id]      ?? 24,
+          total_sessions:     totalSessionsMap[row.id]      ?? null,
           from_session:       alloc?.from_session            ?? 1,
           allocated_sessions: alloc?.allocated_sessions      ?? null,
         })
@@ -382,15 +382,15 @@ export async function getGroupForInstructor(
 
     const branchId = gc.groups?.branch_id ?? ''
 
-    // Safe fetch of total_sessions (separate query to handle missing column gracefully)
-    let totalSessions = 24
+    // Safe fetch of total_sessions (null = open-ended group)
+    let totalSessions: number | null = null
     const { data: tsData, error: tsErr } = await db
       .from('group_courses')
       .select('total_sessions')
       .eq('id', gc.id)
       .maybeSingle()
     if (!tsErr && tsData) {
-      totalSessions = (tsData as any).total_sessions ?? 24
+      totalSessions = (tsData as any).total_sessions ?? null
     }
 
     const [studentRes, sessRes] = await Promise.all([

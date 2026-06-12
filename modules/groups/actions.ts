@@ -10,6 +10,7 @@ import { resolveGroupProgressContext } from '@/modules/progress/resolve'
 import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/safe-recalc'
 import { syncGroupStatus } from './lifecycle'
 import { assignGroupCourseService } from './assignment-service'
+import { updateGroupCoursePlan } from './actions/db-ops'
 import type { ActionResult } from '@/types/app'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
@@ -462,10 +463,13 @@ export async function saveGroupAcademicConfig(
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
 
-  const groupId      = formData.get('group_id')      as string | null
-  const courseId     = formData.get('course_id')     as string | null
-  const instructorId = formData.get('instructor_id') as string | null
-  const totalSessions = parseInt(formData.get('total_sessions') as string || '24', 10) || 24
+  const groupId        = formData.get('group_id')        as string | null
+  const courseId       = formData.get('course_id')       as string | null
+  const instructorId   = formData.get('instructor_id')   as string | null
+  const rawSessions    = formData.get('planned_sessions') as string | null
+  const rawOpenEnded   = formData.get('open_ended')      as string | null
+  const plannedSessions = rawSessions ? (parseInt(rawSessions, 10) || undefined) : undefined
+  const openEnded       = rawOpenEnded === 'true' || rawOpenEnded === 'on'
 
   if (!groupId) {
     return { success: false, error: { code: 'VALIDATION', message: 'Group ID missing.' } }
@@ -480,7 +484,10 @@ export async function saveGroupAcademicConfig(
   // 1. Course assignment — lifecycle-safe via canonical service
   await assignGroupCourseService(groupId, courseId, instructorId || null, user.id, db)
 
-  // 2. Lead instructor — upsert group_instructors with role='lead'
+  // 2. Academic plan — explicit TL-defined session count (no hidden defaults)
+  if (courseId) await updateGroupCoursePlan(db, groupId, plannedSessions, openEnded)
+
+  // 3. Lead instructor — upsert group_instructors with role='lead'
   if (instructorId) {
     await db.from('group_instructors').upsert(
       { group_id: groupId, instructor_id: instructorId, role: 'lead' },
@@ -488,7 +495,7 @@ export async function saveGroupAcademicConfig(
     )
   }
 
-  // 3. Auto-sync group status (forming ↔ active)
+  // 4. Auto-sync group status (forming ↔ active)
   await syncGroupStatus(groupId, db)
 
   await db.rpc('write_audit_log', {
@@ -496,7 +503,7 @@ export async function saveGroupAcademicConfig(
     p_action:       'save_group_config',
     p_entity_type:  'group',
     p_entity_id:    groupId,
-    p_new_values:   { course_id: courseId, instructor_id: instructorId, total_sessions: totalSessions },
+    p_new_values:   { course_id: courseId, instructor_id: instructorId, planned_sessions: plannedSessions, open_ended: openEnded },
   })
 
   revalidatePath(`/admin/groups/${groupId}`)

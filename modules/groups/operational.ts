@@ -52,6 +52,9 @@ export interface GroupOperationalRow {
   // cancelled/postponed sessions are excluded). Backed by groups.completed_sessions
   // which is maintained by trigger manage_group_completed_sessions (migration 0034).
   completed_sessions:    number
+  // Academic plan — owned by the group, not derived from the course
+  planned_sessions:      number | null
+  open_ended:            boolean
 }
 
 export interface EnrolledStudentBasic {
@@ -77,7 +80,7 @@ export interface GroupStudentOption {
 
 export interface GroupFormOptions {
   branches:    { id: string; name: string }[]
-  courses:     { id: string; title: string }[]
+  courses:     { id: string; title: string; recommended_sessions: number | null }[]
   instructors: { id: string; name: string }[]
 }
 
@@ -113,7 +116,7 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
 
   const [gcResult, enrolledResult, schedResult] = await Promise.all([
     db.from('group_courses')
-      .select(`group_id, course_id, courses!group_courses_course_id_fkey(title)`)
+      .select(`group_id, course_id, total_sessions, open_ended, courses!group_courses_course_id_fkey(title)`)
       .in('group_id', groupIds)
       .eq('status', 'active'),
     db.from('group_students')
@@ -133,9 +136,14 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
       .in('id', groupIds),
   ])
 
-  const courseMap = new Map<string, { course_id: string; course_name: string }>()
+  const courseMap = new Map<string, { course_id: string; course_name: string; planned_sessions: number | null; open_ended: boolean }>()
   for (const gc of (gcResult.data ?? []) as any[]) {
-    courseMap.set(gc.group_id, { course_id: gc.course_id, course_name: gc.courses?.title ?? '' })
+    courseMap.set(gc.group_id, {
+      course_id:       gc.course_id,
+      course_name:     gc.courses?.title ?? '',
+      planned_sessions: gc.total_sessions ?? null,
+      open_ended:       gc.open_ended ?? false,
+    })
   }
 
   const studentCountMap = new Map<string, number>()
@@ -225,6 +233,8 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
       notes:                g.notes ?? null,
       course_id:            courseInfo?.course_id ?? null,
       course_name:          courseInfo?.course_name ?? null,
+      planned_sessions:     courseInfo?.planned_sessions ?? null,
+      open_ended:           courseInfo?.open_ended ?? false,
       lead_instructor_id:   lead?.instructor_id ?? null,
       lead_instructor_name: leadName,
       asst_instructor_id:   asst?.instructor_id ?? null,
@@ -254,13 +264,17 @@ export async function getGroupFormOptions(branchIds: string[]): Promise<GroupFor
 
   const [branchRes, courseRes, instructors] = await Promise.all([
     db.from('branches').select('id, name').in('id', branchIds).order('name'),
-    db.from('courses').select('id, title').order('title'),
+    db.from('courses').select('id, title, recommended_sessions').order('title'),
     getInstructorFilterOptions(branchIds),
   ])
 
   return {
     branches:    (branchRes.data ?? []) as { id: string; name: string }[],
-    courses:     (courseRes.data ?? []).map((c: any) => ({ id: c.id as string, title: c.title as string })),
+    courses:     (courseRes.data ?? []).map((c: any) => ({
+      id:                   c.id as string,
+      title:                c.title as string,
+      recommended_sessions: (c.recommended_sessions as number | null) ?? null,
+    })),
     instructors,
   }
 }

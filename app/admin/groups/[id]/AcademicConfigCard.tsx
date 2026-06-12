@@ -97,7 +97,7 @@ export default function AcademicConfigCard({ groupId, config, courses, instructo
           <input
             type="number"
             name="total_sessions"
-            defaultValue={config.total_sessions}
+            defaultValue={config.total_sessions ?? undefined}
             min={1}
             max={999}
             className={cls}

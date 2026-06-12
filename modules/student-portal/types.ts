@@ -17,9 +17,11 @@ export interface StudentDashboardData {
   // Schedule
   day_of_week:        string | null
   group_time:         string | null
-  // Sessions
-  completed_sessions: number
-  total_sessions:     number
+  // Sessions — enrollment-scoped (NOT group totals)
+  enrollment_id:      string | null
+  enrolled_sessions:  number   // sessions purchased in active enrollment
+  consumed_sessions:  number   // sessions consumed from attendance_consumptions ledger
+  remaining_sessions: number   // enrolled − consumed (mirrors DB GENERATED column)
   // Attendance
   att_present:        number
   att_absent:         number
@@ -83,10 +85,10 @@ export interface StudentAttendanceRecord {
 }
 
 export interface CertificateEligibility {
-  is_eligible:       boolean
-  completed_sessions: number
-  total_sessions:    number
+  is_eligible:        boolean
+  consumed_sessions:  number
+  enrolled_sessions:  number
   sessions_remaining: number
-  group_name:        string | null
-  course_title:      string | null
+  group_name:         string | null
+  course_title:       string | null
 }

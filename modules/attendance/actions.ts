@@ -7,21 +7,46 @@ import { getOrCreateGroupCourse } from './queries'
 import { resolveGroupProgressContext } from '@/modules/progress/resolve'
 import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/safe-recalc'
 import { SLOT_CONSUMING_STATUSES } from './constants'
+import { validateAcademicTopic } from '@/modules/academic/constants'
+import {
+  checkConsumptionEligibility,
+  resolveFifoEnrollment,
+  type EnrollmentForConsumption,
+  type StudentConsumptionResult,
+} from '@/modules/academic/contract-consumption'
 import type { ActionResult } from '@/types/app'
 import type { AttendanceStatus } from '@/types/enums'
 
-export async function recordAttendanceSession(formData: FormData): Promise<ActionResult<{ scheduleId: string }>> {
+// ── Return type ────────────────────────────────────────────────────────────────
+
+export interface SessionAttendanceResult {
+  scheduleId:         string
+  consumptionResults: StudentConsumptionResult[]
+}
+
+// ── Action ─────────────────────────────────────────────────────────────────────
+
+export async function recordAttendanceSession(
+  formData: FormData
+): Promise<ActionResult<SessionAttendanceResult>> {
   const user = await requirePermission('manage_attendance')
   const db   = createServiceClient()
 
-  const group_id         = formData.get('group_id') as string
-  const branch_id        = formData.get('branch_id') as string
-  const session_date     = formData.get('session_date') as string
+  const group_id         = formData.get('group_id')         as string
+  const branch_id        = formData.get('branch_id')        as string
+  const session_date     = formData.get('session_date')     as string
   const duration_minutes = Number(formData.get('duration_minutes') ?? 60)
   const delivery         = (formData.get('delivery') ?? 'offline') as string
+  const topic_raw        = formData.get('topic') as string | null
 
   if (!group_id || !branch_id || !session_date) {
     return { success: false, error: { code: 'VALIDATION', message: 'Group, branch, and session date are required.' } }
+  }
+
+  // Topic is required for every academically recorded session
+  const validatedTopic = validateAcademicTopic(topic_raw)
+  if (!validatedTopic) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Session topic is required. Enter a short description of what was taught.' } }
   }
 
   if (!isBranchAccessible(user, branch_id)) {
@@ -57,15 +82,20 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
     return { success: false, error: { code: 'DB_ERROR', message: 'Failed to initialize course for this group.' } }
   }
 
-  // ── Parallel: FIFO enrollment lookup + session snapshot data ─────────────────
+  const sessionDateISO  = new Date(session_date).toISOString()
+  const sessionDatePart = sessionDateISO.slice(0, 10)  // 'YYYY-MM-DD' for enrollment window
+
+  // ── Parallel: snapshot data + enrollments ─────────────────────────────────────
   const [
     { data: allEnrollRows },
     { data: gcSnap },
     { data: groupSnap },
     { data: branchSnap },
   ] = await Promise.all([
+    // Fetch ALL ACTIVE enrollments — we apply the start_date window in JS
+    // so we can show 'pre_enrollment' reason even for future-starting contracts.
     db.from('student_enrollments')
-      .select('id, student_id, remaining_sessions, allow_overdraft_sessions, enrolled_sessions')
+      .select('id, student_id, remaining_sessions, allow_overdraft_sessions, enrolled_sessions, start_date')
       .eq('status', 'ACTIVE')
       .in('student_id', safeStudentIds)
       .order('start_date', { ascending: true })
@@ -87,7 +117,7 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
     db.from('branches').select('name').eq('id', branch_id).maybeSingle(),
   ])
 
-  // Extract snapshot values (best-effort; null if join unavailable)
+  // Extract snapshot values for attendance_records denormalised columns
   const courseName = (gcSnap as any)?.courses?.title ?? null
   const instrProf  = (gcSnap as any)?.instructors?.users?.profiles
   const instrName  = instrProf
@@ -96,69 +126,87 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
   const groupName  = (groupSnap as any)?.name ?? null
   const branchName = (branchSnap as any)?.name ?? null
 
-  // ── FIFO enrollment map (oldest active enrollment per student) ────────────────
-  const enrollMap   = new Map<string, { id: string; remaining: number; allow: boolean; enrolled: number }>()
-  const fallbackMap = new Map<string, { id: string; remaining: number; allow: boolean; enrolled: number }>()
+  // ── Build per-student enrollment map (FIFO + pre_enrollment support) ──────────
+  // Group all ACTIVE enrollments by student, ordered already by start_date ASC.
+  const allEnrollsByStudent = new Map<string, EnrollmentForConsumption[]>()
 
   for (const e of (allEnrollRows ?? []) as any[]) {
-    const sid   = e.student_id as string
-    const entry = {
-      id:        e.id as string,
-      remaining: Number(e.remaining_sessions ?? 0),
-      allow:     Boolean(e.allow_overdraft_sessions),
-      enrolled:  Number(e.enrolled_sessions ?? 0),
+    const sid     = e.student_id as string
+    const entry: EnrollmentForConsumption = {
+      id:                 e.id,
+      start_date:         e.start_date ?? sessionDatePart,  // fallback to session date if missing
+      enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
+      remaining_sessions: Number(e.remaining_sessions ?? 0),
+      allow_overdraft:    Boolean(e.allow_overdraft_sessions),
     }
-    fallbackMap.set(sid, entry)
-    if (!enrollMap.has(sid) && (entry.enrolled === 0 || entry.remaining > 0)) enrollMap.set(sid, entry)
-  }
-  for (const [sid, fb] of fallbackMap) {
-    if (!enrollMap.has(sid)) enrollMap.set(sid, { ...fb, remaining: 0 })
+    const list = allEnrollsByStudent.get(sid) ?? []
+    list.push(entry)
+    allEnrollsByStudent.set(sid, list)
   }
 
-  // ── Overdraft enforcement ─────────────────────────────────────────────────────
-  const overdraftBlocked: string[] = []
-  const overdraftGranted: string[] = []
-
+  // For each student, resolve the FIFO enrollment applicable to sessionDate
+  const enrollForSession = new Map<string, EnrollmentForConsumption | null>()
   for (const sid of safeStudentIds) {
-    const status = (formData.get(`status_${sid}`) ?? 'present') as string
-    if (!SLOT_CONSUMING_STATUSES.has(status as AttendanceStatus)) continue
-
-    const enroll = enrollMap.get(sid)
-    if (!enroll || enroll.enrolled === 0) continue  // 0 = unlimited, skip check
-    if (enroll.remaining <= 0) {
-      if (enroll.allow) overdraftGranted.push(sid)
-      else              overdraftBlocked.push(sid)
-    }
+    const enrollments = allEnrollsByStudent.get(sid) ?? []
+    enrollForSession.set(sid, resolveFifoEnrollment(enrollments, sessionDateISO))
   }
 
-  // Attendance is academic history — always record regardless of package state.
-  // Overdraft-blocked students get an attendance_record but NO consumption entry
-  // (their session becomes "unfunded" until a contract is added or reconciled).
-  const recordableIds = safeStudentIds
-  const blockedSet    = new Set(overdraftBlocked)
-
-  // ── Create schedule entry ─────────────────────────────────────────────────────
-  const { data: schedule, error: scheduleError } = await db
+  // ── Session upsert: reuse existing schedule at exact same datetime ─────────────
+  // This prevents duplicate schedule rows when TL re-records or corrects attendance.
+  const { data: existingSchedule } = await db
     .from('schedules')
-    .insert({
-      group_course_id:  groupCourseId,
-      branch_id,
-      scheduled_at:     new Date(session_date).toISOString(),
-      duration_minutes,
-      delivery,
-      status:           'completed',
-      created_by:       user.id,
-    })
-    .select('id')
-    .single()
+    .select('id, topic, status')
+    .eq('group_course_id', groupCourseId)
+    .eq('scheduled_at', sessionDateISO)
+    .maybeSingle()
 
-  if (scheduleError || !schedule) {
-    return { success: false, error: { code: 'DB_ERROR', message: scheduleError?.message ?? 'Failed to create schedule.' } }
+  let scheduleId: string
+
+  if (existingSchedule) {
+    scheduleId = (existingSchedule as any).id as string
+    // Ensure status is completed and topic is set (update if needed)
+    const existingTopic = validateAcademicTopic((existingSchedule as any).topic)
+    const needsUpdate   = !existingTopic || (existingSchedule as any).status !== 'completed'
+    if (needsUpdate) {
+      const { error: updateErr } = await db
+        .from('schedules')
+        .update({
+          status:           'completed',
+          topic:            validatedTopic,
+          duration_minutes,
+          delivery,
+        })
+        .eq('id', scheduleId)
+      if (updateErr) {
+        return { success: false, error: { code: 'DB_ERROR', message: updateErr.message } }
+      }
+    }
+  } else {
+    // Create new schedule row
+    const { data: newSchedule, error: scheduleError } = await db
+      .from('schedules')
+      .insert({
+        group_course_id:  groupCourseId,
+        branch_id,
+        scheduled_at:     sessionDateISO,
+        duration_minutes,
+        delivery,
+        status:           'completed',
+        topic:            validatedTopic,
+        created_by:       user.id,
+      })
+      .select('id')
+      .single()
+
+    if (scheduleError || !newSchedule) {
+      return { success: false, error: { code: 'DB_ERROR', message: scheduleError?.message ?? 'Failed to create schedule.' } }
+    }
+    scheduleId = (newSchedule as any).id as string
   }
 
-  // ── Insert attendance records with historical snapshots ───────────────────────
-  const records = recordableIds.map((sid) => ({
-    schedule_id:               schedule.id,
+  // ── Insert attendance records (upsert on schedule_id + student_id) ────────────
+  const records = safeStudentIds.map((sid) => ({
+    schedule_id:               scheduleId,
     student_id:                sid,
     status:                    (formData.get(`status_${sid}`) ?? 'present') as AttendanceStatus,
     notes:                     (formData.get(`notes_${sid}`) as string | null) || null,
@@ -169,34 +217,51 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
     branch_name_snapshot:      branchName,
   }))
 
-  // Select IDs back for ledger attribution
+  // Upsert: if the student already has an attendance record for this schedule, update it
   const { data: insertedRecords, error: insertError } = await db
     .from('attendance_records')
-    .insert(records)
+    .upsert(records, { onConflict: 'schedule_id,student_id', ignoreDuplicates: false })
     .select('id, student_id, status')
 
   if (insertError) {
     return { success: false, error: { code: 'DB_ERROR', message: insertError.message } }
   }
 
-  // ── Idempotent session consumption via ledger ─────────────────────────────────
-  // consume_attendance_sessions_batch: inserts into attendance_consumptions
-  // (UNIQUE on attendance_record_id) then increments consumed_sessions.
-  // Safe to retry: ON CONFLICT DO NOTHING prevents double-counting.
+  // ── Run canonical consumption check per student ───────────────────────────────
   const p_record_ids:     string[] = []
   const p_enrollment_ids: string[] = []
   const p_student_ids:    string[] = []
 
+  // Track which students are being consumed for post-RPC remaining fetch
+  const consumedEnrollmentIds = new Set<string>()
+
+  // Pre-compute per-student checks from inserted records
+  const checkByStudentId = new Map<string, ReturnType<typeof checkConsumptionEligibility>>()
+
   for (const rec of (insertedRecords ?? []) as any[]) {
-    if (!SLOT_CONSUMING_STATUSES.has(rec.status as AttendanceStatus)) continue
-    if (blockedSet.has(rec.student_id as string)) continue  // unfunded — no consumption
-    const enroll = enrollMap.get(rec.student_id as string)
-    if (enroll && enroll.enrolled > 0) {
+    const sid        = rec.student_id as string
+    const enrollment = enrollForSession.get(sid) ?? null
+    const check      = checkConsumptionEligibility(
+      rec.status as string,
+      sessionDateISO,
+      enrollment,
+      SLOT_CONSUMING_STATUSES
+    )
+    checkByStudentId.set(sid, check)
+
+    if (check.shouldConsume && enrollment) {
       p_record_ids.push(rec.id)
-      p_enrollment_ids.push(enroll.id)
-      p_student_ids.push(rec.student_id)
+      p_enrollment_ids.push(enrollment.id)
+      p_student_ids.push(sid)
+      consumedEnrollmentIds.add(enrollment.id)
     }
   }
+
+  // ── Idempotent batch consumption via ledger ───────────────────────────────────
+  // consume_attendance_sessions_batch inserts into attendance_consumptions
+  // (UNIQUE on attendance_record_id) and increments consumed_sessions.
+  // ON CONFLICT DO NOTHING — safe to retry.
+  let updatedRemainingMap = new Map<string, number>()
 
   if (p_record_ids.length > 0) {
     await db.rpc('consume_attendance_sessions_batch', {
@@ -204,13 +269,56 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
       p_enrollment_ids,
       p_student_ids,
     })
+
+    // Fetch post-consumption remaining_sessions for accurate result display
+    const { data: updatedEnrolls } = await db
+      .from('student_enrollments')
+      .select('id, remaining_sessions')
+      .in('id', [...consumedEnrollmentIds])
+
+    updatedRemainingMap = new Map(
+      (updatedEnrolls ?? []).map((e: any) => [e.id as string, Number(e.remaining_sessions ?? 0)])
+    )
   }
 
-  // Log overdraft-granted timeline events (non-fatal)
-  if (overdraftGranted.length > 0) {
-    const overdraftEvents = overdraftGranted.map(sid => ({
+  // ── Build per-student results for UI ─────────────────────────────────────────
+  const consumptionResults: StudentConsumptionResult[] = safeStudentIds.map((sid) => {
+    const check      = checkByStudentId.get(sid)
+    const enrollment = enrollForSession.get(sid) ?? null
+
+    if (!check) {
+      // Student had no attendance record (shouldn't happen in normal flow)
+      return {
+        student_id:            sid,
+        consumed:              false,
+        reason:                enrollment ? 'no_slot_status' : 'no_contract',
+        sessions_remaining:    enrollment?.remaining_sessions ?? null,
+        enrollment_start_date: enrollment?.start_date ?? null,
+      }
+    }
+
+    const remaining = check.shouldConsume && check.enrollmentId
+      ? (updatedRemainingMap.get(check.enrollmentId) ?? check.sessionsRemaining)
+      : check.sessionsRemaining
+
+    return {
+      student_id:            sid,
+      consumed:              check.shouldConsume,
+      reason:                check.reason,
+      sessions_remaining:    remaining,
+      enrollment_start_date: check.enrollmentStartDate,
+    }
+  })
+
+  // ── Overdraft timeline events (non-fatal) ─────────────────────────────────────
+  const overdraftGrantedIds = consumptionResults
+    .filter(r => r.reason === 'overdraft_allowed')
+    .map(r => r.student_id)
+
+  if (overdraftGrantedIds.length > 0) {
+    const overdraftEvents = overdraftGrantedIds.map(sid => ({
       student_id:  sid,
-      schedule_id: schedule.id,
+      schedule_id: scheduleId,
       event_type:  'OVERDRAFT_GRANTED',
       notes:       'Session recorded past package limit (overdraft enabled)',
       created_by:  user.id,
@@ -223,8 +331,8 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
     p_performed_by: user.id,
     p_action:       'record_attendance',
     p_entity_type:  'schedule',
-    p_entity_id:    schedule.id,
-    p_new_values:   { group_id, session_date, student_count: records.length },
+    p_entity_id:    scheduleId,
+    p_new_values:   { group_id, session_date, topic: validatedTopic, student_count: records.length },
     p_branch_id:    branch_id,
   })
 
@@ -241,5 +349,6 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
   revalidatePath('/portal/team-leader/groups')
   revalidatePath('/portal/instructor', 'layout')
   revalidatePath('/portal/student', 'layout')
-  return { success: true, data: { scheduleId: schedule.id } }
+
+  return { success: true, data: { scheduleId, consumptionResults } }
 }

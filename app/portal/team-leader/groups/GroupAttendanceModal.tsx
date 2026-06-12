@@ -1,15 +1,14 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
 import { recordAttendanceSession } from '@/modules/attendance/actions'
 import type { GroupOperationalRow } from '@/modules/groups/operational'
 import type { GroupDetailStudent } from '@/modules/groups/actions/types'
+import type { StudentConsumptionResult } from '@/modules/academic/contract-consumption'
 
-// ── Types ────────────────────────────────────────────────────────────
+// ── Types ──────────────────────────────────────────────────────────────────────
 
 type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused' | 'makeup'
-
-type StudentIndicator = 'no_contract' | 'exhausted' | 'unpaid'
 
 interface Props {
   group:     GroupOperationalRow
@@ -19,29 +18,98 @@ interface Props {
   onSuccess: () => void
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
 
 function nowLocalDatetime(): string {
   const now = new Date()
-  const pad  = (n: number) => String(n).padStart(2, '0')
+  const pad = (n: number) => String(n).padStart(2, '0')
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`
 }
 
-function getIndicators(s: GroupDetailStudent): StudentIndicator[] {
-  const result: StudentIndicator[] = []
-  if (!s.account_id || (s.sessions_total === null || s.sessions_total === 0)) {
-    result.push('no_contract')
+function fmtDate(iso: string): string {
+  try {
+    return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  } catch {
+    return iso.slice(0, 10)
   }
-  if (s.sessions_remaining !== null && s.sessions_remaining <= 0 && s.sessions_total && s.sessions_total > 0) {
-    result.push('exhausted')
-  }
-  if (s.payment_status === 'OVERDUE' || s.payment_status === 'BLOCKED') {
-    result.push('unpaid')
-  }
-  return result
 }
 
-// ── Status chip styles ────────────────────────────────────────────────
+// Per-student indicators derived from enrollment data vs. selected session date
+function getStudentIndicators(s: GroupDetailStudent, sessionDateStr: string) {
+  const noContract   = !s.enrollment_id
+  const sessionsLeft = s.sessions_remaining
+
+  const preEnrollment =
+    !noContract &&
+    s.enrollment_start_date != null &&
+    sessionDateStr.slice(0, 10) < s.enrollment_start_date.slice(0, 10)
+
+  const eligibleFrom = preEnrollment ? s.enrollment_start_date : null
+
+  const exhausted =
+    !noContract &&
+    !preEnrollment &&
+    sessionsLeft !== null &&
+    sessionsLeft <= 0
+
+  const unpaid =
+    s.payment_status === 'OVERDUE' || s.payment_status === 'BLOCKED'
+
+  return { noContract, preEnrollment, eligibleFrom, exhausted, unpaid, sessionsLeft }
+}
+
+// ── Consumption result label ───────────────────────────────────────────────────
+
+function ConsumptionReasonLabel({ r }: { r: StudentConsumptionResult }) {
+  switch (r.reason) {
+    case 'eligible':
+      return (
+        <span className="text-[10px] text-green-700 font-medium">
+          1 session consumed · {r.sessions_remaining ?? 0} remaining
+        </span>
+      )
+    case 'overdraft_allowed':
+      return (
+        <span className="text-[10px] text-amber-700 font-medium">
+          1 session (overdraft) · {r.sessions_remaining ?? 0} remaining
+        </span>
+      )
+    case 'no_slot_status':
+      return (
+        <span className="text-[10px] text-[#94A3B8]">
+          Not slot-consuming — no session deducted
+        </span>
+      )
+    case 'no_contract':
+      return (
+        <span className="text-[10px] text-gray-500">
+          No active contract — attendance recorded only
+        </span>
+      )
+    case 'pre_enrollment':
+      return (
+        <span className="text-[10px] text-blue-600">
+          Pre-contract session — eligible from {r.enrollment_start_date ? fmtDate(r.enrollment_start_date) : '—'}
+        </span>
+      )
+    case 'exhausted':
+      return (
+        <span className="text-[10px] text-orange-600">
+          Package exhausted — no session deducted
+        </span>
+      )
+    case 'open_ended':
+      return (
+        <span className="text-[10px] text-[#94A3B8]">
+          Open-ended group — sessions not tracked
+        </span>
+      )
+    default:
+      return null
+  }
+}
+
+// ── Status chip styles ─────────────────────────────────────────────────────────
 
 const STATUS_STYLES: Record<AttendanceStatus, string> = {
   present: 'bg-green-100 text-green-800 border-green-200 ring-green-400',
@@ -59,20 +127,28 @@ const STATUS_LABELS: Record<AttendanceStatus, string> = {
   makeup:  'Makeup',
 }
 
-// ── Component ────────────────────────────────────────────────────────
+// ── Component ──────────────────────────────────────────────────────────────────
 
 export default function GroupAttendanceModal({ group, students, isOpen, onClose, onSuccess }: Props) {
-  const [statuses, setStatuses]  = useState<Record<string, AttendanceStatus>>({})
-  const [isPending, start]       = useTransition()
-  const [error, setError]        = useState<string | null>(null)
+  const [statuses,    setStatuses]    = useState<Record<string, AttendanceStatus>>({})
+  const [topic,       setTopic]       = useState('')
+  const [sessionDate, setSessionDate] = useState(nowLocalDatetime())
+  const [isPending,   start]          = useTransition()
+  const [error,       setError]       = useState<string | null>(null)
+  const [results,     setResults]     = useState<StudentConsumptionResult[] | null>(null)
+  const durationRef = useRef<HTMLInputElement>(null)
+  const deliveryRef = useRef<HTMLSelectElement>(null)
 
-  // Re-initialise statuses when modal opens or student list changes
+  // Re-initialise when modal opens or student list changes
   useEffect(() => {
     if (!isOpen) return
     const init: Record<string, AttendanceStatus> = {}
     for (const s of students) init[s.student_id] = 'present'
     setStatuses(init)
+    setTopic('')
+    setSessionDate(nowLocalDatetime())
     setError(null)
+    setResults(null)
   }, [isOpen, students])
 
   if (!isOpen) return null
@@ -83,21 +159,21 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
     setStatuses(next)
   }
 
-  function setOneStatus(studentId: string, status: AttendanceStatus) {
-    setStatuses(prev => ({ ...prev, [studentId]: status }))
+  function setOneStatus(sid: string, status: AttendanceStatus) {
+    setStatuses(prev => ({ ...prev, [sid]: status }))
   }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
-    const raw  = new FormData(e.currentTarget)
-    const data = new FormData()
 
+    const data = new FormData()
     data.set('group_id',         group.group_id)
     data.set('branch_id',        group.branch_id)
-    data.set('session_date',     raw.get('session_date') as string)
-    data.set('duration_minutes', raw.get('duration_minutes') as string)
-    data.set('delivery',         raw.get('delivery') as string)
+    data.set('session_date',     sessionDate)
+    data.set('duration_minutes', durationRef.current?.value ?? '60')
+    data.set('delivery',         deliveryRef.current?.value ?? 'offline')
+    data.set('topic',            topic.trim())
 
     for (const s of students) {
       data.append('student_ids[]', s.student_id)
@@ -107,13 +183,111 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
     start(async () => {
       const result = await recordAttendanceSession(data)
       if (result.success) {
-        onSuccess()
-        onClose()
+        setResults(result.data.consumptionResults)
       } else {
         setError(result.error?.message ?? 'Failed to record attendance.')
       }
     })
   }
+
+  function handleDone() {
+    onSuccess()
+    onClose()
+  }
+
+  // ── Results screen ─────────────────────────────────────────────────────────
+
+  if (results !== null) {
+    const consumedCount    = results.filter(r => r.consumed).length
+    const noContractCount  = results.filter(r => r.reason === 'no_contract').length
+    const preEnrollCount   = results.filter(r => r.reason === 'pre_enrollment').length
+    const exhaustedCount   = results.filter(r => r.reason === 'exhausted').length
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
+        <div className="flex w-full sm:max-w-2xl flex-col rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl max-h-[92vh]">
+
+          {/* Header */}
+          <div className="flex items-start justify-between border-b border-[#E2E8F0] px-5 py-4 shrink-0">
+            <div>
+              <h3 className="text-[15px] font-bold text-[#0B1F3A]">Session Saved</h3>
+              <p className="mt-0.5 text-[12px] text-[#64748B]">
+                {group.name}
+                {topic ? ` — ${topic}` : ''}
+              </p>
+            </div>
+            <button
+              onClick={handleDone}
+              className="rounded-lg p-1.5 text-[#94A3B8] hover:bg-[#F1F5F9] hover:text-[#374151] transition"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Summary strip */}
+          <div className="shrink-0 border-b border-green-100 bg-green-50 px-5 py-2.5 flex flex-wrap gap-x-4 gap-y-1">
+            <span className="text-[12px] text-green-700 font-semibold">
+              {consumedCount} session{consumedCount !== 1 ? 's' : ''} consumed
+            </span>
+            {noContractCount > 0 && (
+              <span className="text-[12px] text-gray-500">{noContractCount} no contract</span>
+            )}
+            {preEnrollCount > 0 && (
+              <span className="text-[12px] text-blue-600">{preEnrollCount} pre-contract</span>
+            )}
+            {exhaustedCount > 0 && (
+              <span className="text-[12px] text-orange-600">{exhaustedCount} exhausted</span>
+            )}
+          </div>
+
+          {/* Per-student results */}
+          <div className="flex-1 overflow-y-auto">
+            <ul className="divide-y divide-[#F1F5F9]">
+              {results.map(r => {
+                const student = students.find(s => s.student_id === r.student_id)
+                const isConsumed = r.consumed
+                return (
+                  <li key={r.student_id} className="flex items-center justify-between px-5 py-3 gap-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div
+                        className={[
+                          'h-2 w-2 rounded-full shrink-0',
+                          isConsumed        ? 'bg-green-500' :
+                          r.reason === 'pre_enrollment' ? 'bg-blue-400' :
+                          r.reason === 'exhausted'      ? 'bg-orange-400' :
+                          'bg-gray-300',
+                        ].join(' ')}
+                      />
+                      <span className="text-[13px] font-medium text-[#0B1F3A] truncate">
+                        {student?.student_name ?? r.student_id}
+                      </span>
+                    </div>
+                    <div className="shrink-0">
+                      <ConsumptionReasonLabel r={r} />
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+
+          {/* Done */}
+          <div className="shrink-0 border-t border-[#E2E8F0] px-5 py-4">
+            <button
+              onClick={handleDone}
+              className="w-full rounded-lg bg-[#FF8A1F] py-2.5 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Main form screen ───────────────────────────────────────────────────────
 
   const presentCount = Object.values(statuses).filter(s => s === 'present').length
   const absentCount  = Object.values(statuses).filter(s => s === 'absent').length
@@ -122,7 +296,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4">
       <div className="flex w-full sm:max-w-2xl flex-col rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl max-h-[92vh]">
 
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="flex items-start justify-between border-b border-[#E2E8F0] px-5 py-4 shrink-0">
           <div>
             <h3 className="text-[15px] font-bold text-[#0B1F3A]">Record Session</h3>
@@ -153,7 +327,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
           </button>
         </div>
 
-        {/* ── Warning banner ── */}
+        {/* Warning banner */}
         <div className="shrink-0 border-b border-amber-100 bg-amber-50 px-5 py-2.5">
           <p className="text-[11px] text-amber-700">
             Attendance is permanent academic history. Record accurately — edits require admin intervention.
@@ -162,24 +336,29 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
 
-          {/* ── Session fields ── */}
-          <div className="shrink-0 border-b border-[#E2E8F0] px-5 py-3">
+          {/* Session fields */}
+          <div className="shrink-0 border-b border-[#E2E8F0] px-5 py-3 space-y-3">
+            {/* Row 1: date / duration / delivery */}
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#374151]">Session Date & Time</label>
+                <label className="mb-1 block text-[11px] font-medium text-[#374151]">
+                  Session Date & Time
+                </label>
                 <input
                   type="datetime-local"
-                  name="session_date"
-                  defaultValue={nowLocalDatetime()}
+                  value={sessionDate}
+                  onChange={e => setSessionDate(e.target.value)}
                   required
                   className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none focus:ring-1 focus:ring-[#FF8A1F]"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#374151]">Duration (min)</label>
+                <label className="mb-1 block text-[11px] font-medium text-[#374151]">
+                  Duration (min)
+                </label>
                 <input
+                  ref={durationRef}
                   type="number"
-                  name="duration_minutes"
                   min={15}
                   max={360}
                   defaultValue={group.duration_minutes ?? 60}
@@ -188,9 +367,11 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#374151]">Delivery</label>
+                <label className="mb-1 block text-[11px] font-medium text-[#374151]">
+                  Delivery
+                </label>
                 <select
-                  name="delivery"
+                  ref={deliveryRef}
                   defaultValue="offline"
                   className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none focus:ring-1 focus:ring-[#FF8A1F]"
                 >
@@ -200,9 +381,25 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
                 </select>
               </div>
             </div>
+
+            {/* Row 2: Topic — required, full width */}
+            <div>
+              <label className="mb-1 block text-[11px] font-medium text-[#374151]">
+                Session Topic <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={topic}
+                onChange={e => setTopic(e.target.value)}
+                placeholder="e.g. Introduction to loops, Algebra chapter 3, Variables and data types…"
+                required
+                maxLength={200}
+                className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] placeholder-[#CBD5E1] focus:border-[#FF8A1F] focus:outline-none focus:ring-1 focus:ring-[#FF8A1F]"
+              />
+            </div>
           </div>
 
-          {/* ── Bulk actions + student list ── */}
+          {/* Bulk actions + student list */}
           <div className="flex-1 overflow-y-auto">
 
             {/* Bulk actions bar */}
@@ -236,32 +433,40 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
             ) : (
               <ul className="divide-y divide-[#F1F5F9]">
                 {students.map(s => {
-                  const indicators = getIndicators(s)
+                  const ind           = getStudentIndicators(s, sessionDate)
                   const currentStatus = statuses[s.student_id] ?? 'present'
                   return (
                     <li key={s.student_id} className="flex items-center gap-3 px-5 py-2.5">
-                      {/* Student name + indicators */}
+
+                      {/* Name + indicators */}
                       <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-                        <span className="text-[13px] font-medium text-[#0B1F3A] truncate">{s.student_name}</span>
+                        <span className="text-[13px] font-medium text-[#0B1F3A] truncate">
+                          {s.student_name}
+                        </span>
                         <div className="flex flex-wrap gap-1">
-                          {indicators.includes('no_contract') && (
+                          {ind.noContract && (
                             <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-500 border border-gray-200">
                               No Contract
                             </span>
                           )}
-                          {indicators.includes('exhausted') && (
+                          {ind.preEnrollment && ind.eligibleFrom && (
+                            <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-blue-50 text-blue-600 border border-blue-200">
+                              Eligible from {fmtDate(ind.eligibleFrom)}
+                            </span>
+                          )}
+                          {ind.exhausted && (
                             <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 border border-orange-200">
                               Exhausted
                             </span>
                           )}
-                          {indicators.includes('unpaid') && (
+                          {ind.unpaid && (
                             <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-red-100 text-red-600 border border-red-200">
                               Unpaid
                             </span>
                           )}
-                          {!indicators.includes('no_contract') && s.sessions_remaining !== null && s.sessions_remaining > 0 && (
+                          {!ind.noContract && !ind.preEnrollment && !ind.exhausted && ind.sessionsLeft !== null && ind.sessionsLeft > 0 && (
                             <span className="rounded px-1.5 py-0.5 text-[10px] text-[#94A3B8]">
-                              {s.sessions_remaining} left
+                              {ind.sessionsLeft} left
                             </span>
                           )}
                         </div>
@@ -293,7 +498,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
             )}
           </div>
 
-          {/* ── Footer ── */}
+          {/* Footer */}
           <div className="shrink-0 border-t border-[#E2E8F0] px-5 py-4">
             {error && (
               <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-[12px] text-red-600">{error}</p>
@@ -308,7 +513,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
               </button>
               <button
                 type="submit"
-                disabled={isPending || students.length === 0}
+                disabled={isPending || students.length === 0 || !topic.trim()}
                 className="flex-1 rounded-lg bg-[#FF8A1F] py-2.5 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition disabled:opacity-50"
               >
                 {isPending ? 'Saving…' : `Save Attendance (${students.length})`}

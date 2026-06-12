@@ -50,7 +50,7 @@ function deriveNextActions(data: StudentDashboardData): Array<{ label: string; h
   }
 
   // No attendance at all → prompt to attend
-  if (data.att_total === 0 && data.completed_sessions > 0) {
+  if (data.att_total === 0 && data.consumed_sessions > 0) {
     actions.push({ label: 'Attend your next session', href: '/portal/student/attendance', kind: 'session' })
   }
 
@@ -60,7 +60,7 @@ function deriveNextActions(data: StudentDashboardData): Array<{ label: string; h
   }
 
   // Eligible for certificate
-  if (data.total_sessions > 0 && data.completed_sessions >= data.total_sessions) {
+  if (data.enrolled_sessions > 0 && data.consumed_sessions >= data.enrolled_sessions) {
     actions.push({ label: 'Download your certificate', href: '/portal/student/certificates', kind: 'certificate' })
   }
 
@@ -161,10 +161,10 @@ export default async function StudentDashboardPage() {
     )
   }
 
-  const sessionPct   = data.total_sessions > 0
-    ? Math.round((data.completed_sessions / data.total_sessions) * 100)
+  const sessionPct   = data.enrolled_sessions > 0
+    ? Math.round((data.consumed_sessions / data.enrolled_sessions) * 100)
     : 0
-  const remaining    = Math.max(0, data.total_sessions - data.completed_sessions)
+  const remaining    = data.remaining_sessions
   const notEnrolled  = !data.group_id
   const nextActions  = deriveNextActions(data)
 
@@ -215,11 +215,14 @@ export default async function StudentDashboardPage() {
             </div>
             <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
               <p className="text-2xl font-bold text-[#0B1F3A]">
-                {data.completed_sessions}
-                <span className="ml-1 text-base font-normal text-[#64748B]">/ {data.total_sessions} completed</span>
+                {data.consumed_sessions}
+                <span className="ml-1 text-base font-normal text-[#64748B]">/ {data.enrolled_sessions} consumed</span>
               </p>
               {remaining > 0 && (
-                <p className="text-sm text-[#94A3B8]">{remaining} remaining</p>
+                <p className="text-sm text-[#94A3B8]">{remaining} remaining from current package</p>
+              )}
+              {data.enrolled_sessions === 0 && (
+                <p className="text-sm text-[#94A3B8]">No active package</p>
               )}
             </div>
             <div className="mt-3">

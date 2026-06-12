@@ -228,8 +228,8 @@ export async function getGroupAcademicConfig(groupId: string): Promise<GroupAcad
   const leadGi         = leadGiRes.data  as any
   const additionalGis  = (additionalGiRes.data ?? []) as any[]
 
-  // Safe fetch of total_sessions (column may not exist if migration is pending)
-  let totalSessions = 24
+  // Fetch total_sessions (NULL = not set yet or open-ended group)
+  let totalSessions: number | null = null
   if (gc?.id) {
     const { data: tsData, error: tsErr } = await db
       .from('group_courses')
@@ -237,7 +237,7 @@ export async function getGroupAcademicConfig(groupId: string): Promise<GroupAcad
       .eq('id', gc.id)
       .maybeSingle()
     if (!tsErr && tsData) {
-      totalSessions = (tsData as any).total_sessions ?? 24
+      totalSessions = (tsData as any).total_sessions ?? null
     }
   }
 

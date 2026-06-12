@@ -5,6 +5,24 @@ import { assignGroupCourseService } from '../assignment-service'
 
 type DB = ReturnType<typeof createServiceClient>
 
+// Updates the group's academic plan on its active group_courses row.
+// Call this after assignCourseAndInstructor to persist TL-defined session count.
+export async function updateGroupCoursePlan(
+  db:              DB,
+  groupId:         string,
+  plannedSessions: number | undefined,
+  openEnded:       boolean,
+): Promise<void> {
+  await db
+    .from('group_courses')
+    .update({
+      total_sessions: openEnded ? null : (plannedSessions ?? null),
+      open_ended:     openEnded,
+    })
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+}
+
 // Applies student membership changes to a group.
 // Remove: marks status='dropped', preserves enrollment contract.
 // Add:    upserts group_students only (contract created separately via Payment wizard).

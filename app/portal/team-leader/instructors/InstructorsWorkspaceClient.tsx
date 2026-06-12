@@ -1270,7 +1270,7 @@ function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onA
   const selectedGroup = options.groups.find(g => g.id === groupId) ?? null
   // Use canonical allocation-range-based handoff point (immune to cancelled/deleted schedules).
   const fromSession   = selectedGroup ? selectedGroup.next_from_session : 1
-  const remaining     = selectedGroup ? Math.max(0, selectedGroup.total_sessions - fromSession + 1) : 0
+  const remaining     = selectedGroup ? Math.max(0, (selectedGroup.total_sessions ?? 0) - fromSession + 1) : 0
 
   // options.groups is already scoped to the TL's branches at page-load time.
   // Filtering further by the instructor's home branch would wrongly exclude
@@ -1334,7 +1334,7 @@ function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onA
           {selectedGroup && (
             remaining <= 0 ? (
               <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
-                All {selectedGroup.total_sessions} sessions are already allocated to other instructors. Assigning this instructor will give them an open-ended range.
+                All {selectedGroup.total_sessions ?? '?'} sessions are already allocated to other instructors. Assigning this instructor will give them an open-ended range.
               </div>
             ) : (
               <div className="flex gap-3">
@@ -1342,7 +1342,7 @@ function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onA
                   <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">From Session</label>
                   <div className="flex h-9 items-center rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 text-[13px] text-[#64748B]">
                     {fromSession}
-                    <span className="ml-1 text-[11px] text-[#94A3B8]">of {selectedGroup.total_sessions}</span>
+                    <span className="ml-1 text-[11px] text-[#94A3B8]">of {selectedGroup.total_sessions ?? '∞'}</span>
                   </div>
                   <p className="mt-0.5 text-[10px] text-[#94A3B8]">Computed from existing allocations</p>
                 </div>

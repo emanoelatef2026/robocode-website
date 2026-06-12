@@ -244,7 +244,7 @@ export interface InstructorFormOptions {
     student_count: number
     has_instructor: boolean
     completed_sessions: number
-    total_sessions: number
+    total_sessions: number | null
     next_from_session: number   // canonical start for the next instructor assignment (MAX to_session + 1)
   }>
 }

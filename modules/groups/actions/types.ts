@@ -34,8 +34,9 @@ export interface GroupDetailStudent {
   sessions_used:       number | null
   sessions_total:      number | null
   subscription_amount: number | null
-  account_id:          string | null
-  enrollment_id:       string | null
+  account_id:           string | null
+  enrollment_id:        string | null
+  enrollment_start_date: string | null   // start_date of the active enrollment (for eligibility display)
 }
 
 export interface StudentAttendanceHistoryRecord {

@@ -73,7 +73,7 @@ export default async function InstructorGroupsPage() {
                 )}
 
                 {/* Session progress */}
-                {isActive && g.total_sessions > 0 && (
+                {isActive && g.total_sessions != null && g.total_sessions > 0 && (
                   <div className="mt-2">
                     <div className="flex items-center justify-between text-xs text-[#94A3B8]">
                       <span>Session {g.completed_sessions} / {g.total_sessions}</span>

@@ -2,79 +2,52 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { INSTRUCTOR_NAV } from "@/modules/instructor-portal/navigation"
 
-const NAV = [
-  {
-    label: "Home",
-    href: "/portal/instructor",
-    exact: true,
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-        <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
-        <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Groups",
-    href: "/portal/instructor/groups",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-        <path fillRule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clipRule="evenodd" />
-        <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Students",
-    href: "/portal/instructor/students",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-        <path d="M11.7 2.805a.75.75 0 0 1 .6 0A60.65 60.65 0 0 1 22.83 8.72a.75.75 0 0 1-.231 1.337 49.948 49.948 0 0 0-9.902 3.912l-.003.002c-.114.06-.227.119-.34.18a.75.75 0 0 1-.707 0A50.88 50.88 0 0 0 7.5 12.173v-.224c0-.131.023-.256.064-.373a8.98 8.98 0 0 1 1.7-.442c.03-.005.058-.011.087-.016.36-.055.72-.107 1.082-.154.312-.041.624-.079.937-.113a49.78 49.78 0 0 1 4.07-.275 49.77 49.77 0 0 0-4.07.275c-.312.034-.625.072-.937.113-.362.047-.722.099-1.082.154a8.98 8.98 0 0 0-1.7.442.752.752 0 0 0-.064.373v.224a50.455 50.455 0 0 0-4.423 1.827.75.75 0 0 1-.231-1.337A60.653 60.653 0 0 1 11.7 2.805Z" />
-        <path d="M13.06 15.473a48.45 48.45 0 0 1 7.666-3.282c.134 1.414.22 2.843.255 4.284a.75.75 0 0 1-.46.71 47.87 47.87 0 0 0-8.105 4.342.75.75 0 0 1-.832 0 47.87 47.87 0 0 0-8.104-4.342.75.75 0 0 1-.461-.71c.035-1.44.121-2.87.255-4.284A48.455 48.455 0 0 1 13.06 15.473Z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Homework",
-    href: "/portal/instructor/homework",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-        <path fillRule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-6.75a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clipRule="evenodd" />
-        <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
-      </svg>
-    ),
-  },
-  {
-    label: "History",
-    href: "/portal/instructor/history",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-        <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
-      </svg>
-    ),
-  },
-]
+// Icons keyed by nav key (24 px, fill="currentColor")
+const ICONS: Record<string, React.ReactNode> = {
+  dashboard: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path d="M11.47 3.841a.75.75 0 0 1 1.06 0l8.69 8.69a.75.75 0 1 0 1.06-1.061l-8.689-8.69a2.25 2.25 0 0 0-3.182 0l-8.69 8.69a.75.75 0 1 0 1.061 1.06l8.69-8.689Z" />
+      <path d="m12 5.432 8.159 8.159c.03.03.06.058.091.086v6.198c0 1.035-.84 1.875-1.875 1.875H15a.75.75 0 0 1-.75-.75v-4.5a.75.75 0 0 0-.75-.75h-3a.75.75 0 0 0-.75.75V21a.75.75 0 0 1-.75.75H5.625a1.875 1.875 0 0 1-1.875-1.875v-6.198a2.29 2.29 0 0 0 .091-.086L12 5.432Z" />
+    </svg>
+  ),
+  groups: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clipRule="evenodd" />
+      <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
+    </svg>
+  ),
+  homework: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-6.75a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clipRule="evenodd" />
+      <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
+    </svg>
+  ),
+  history: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
+    </svg>
+  ),
+}
 
 export default function InstructorBottomNav() {
   const pathname = usePathname()
 
-  const isActive = (item: (typeof NAV)[number]) => {
-    if (item.exact) return pathname === item.href
-    return pathname === item.href || pathname.startsWith(item.href + '/')
-  }
+  const isActive = (href: string, exact?: boolean) =>
+    exact ? pathname === href : pathname === href || pathname.startsWith(href + "/")
 
   return (
     <nav
       className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white border-t border-[#E2E8F0] bottom-nav-safe"
       aria-label="Mobile navigation"
     >
-      <div className="grid grid-cols-5">
-        {NAV.map((item) => {
-          const active = isActive(item)
+      <div className="grid grid-cols-4">
+        {INSTRUCTOR_NAV.map((item) => {
+          const active = isActive(item.href, item.exact)
           return (
             <Link
-              key={item.href}
+              key={item.key}
               href={item.href}
               className={[
                 "relative flex flex-col items-center justify-center gap-1 py-2 min-h-[60px] transition-colors",
@@ -85,9 +58,9 @@ export default function InstructorBottomNav() {
               {active && (
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[#FF8A1F]" />
               )}
-              {item.icon}
+              {ICONS[item.key]}
               <span className={`text-[10px] font-semibold leading-none ${active ? "text-[#FF8A1F]" : "text-[#94A3B8]"}`}>
-                {item.label}
+                {item.key === "dashboard" ? "Home" : item.key === "history" ? "History" : item.label}
               </span>
             </Link>
           )

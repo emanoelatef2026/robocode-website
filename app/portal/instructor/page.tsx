@@ -184,7 +184,7 @@ export default async function InstructorDashboardPage() {
                 ? g.from_session + g.allocated_sessions - 1
                 : null
               const nextSess = g.from_session + myDone  // next session_number to teach
-              const sessionPct = myTotal > 0
+              const sessionPct = myTotal != null && myTotal > 0
                 ? Math.min(100, Math.round((myDone / myTotal) * 100))
                 : null
 
@@ -203,7 +203,7 @@ export default async function InstructorDashboardPage() {
 
                   <p className="mt-1 text-xs text-[#64748B]">{g.course_title}</p>
 
-                  {myTotal > 0 ? (
+                  {myTotal != null && myTotal > 0 ? (
                     <div className="mt-3">
                       <div className="flex items-center justify-between text-xs text-[#64748B]">
                         <span>Session {myDone} / {myTotal}</span>
@@ -222,7 +222,7 @@ export default async function InstructorDashboardPage() {
                         </div>
                       ) : (
                         <p className="mt-0.5 text-[10px] text-[#94A3B8]">
-                          Group: session {g.from_session} of {g.total_sessions}
+                          Group: session {g.from_session} of {g.total_sessions ?? '∞'}
                         </p>
                       )}
                     </div>

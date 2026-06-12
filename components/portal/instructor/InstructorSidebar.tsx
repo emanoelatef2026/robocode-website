@@ -4,10 +4,11 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
+import { INSTRUCTOR_NAV, INSTRUCTOR_NAV_SECTIONS } from "@/modules/instructor-portal/navigation"
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
+// ── Icons (16 px, fill="currentColor") ────────────────────────────────────────
 
-const I = {
+const ICONS: Record<string, React.ReactNode> = {
   dashboard: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
@@ -24,16 +25,14 @@ const I = {
       <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
     </svg>
   ),
-  portfolio: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
-    </svg>
-  ),
   history: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
     </svg>
   ),
+}
+
+const I = {
   password: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
@@ -45,36 +44,6 @@ const I = {
     </svg>
   ),
 }
-
-// ── Nav config ────────────────────────────────────────────────────────────────
-
-interface NavItem {
-  label: string
-  href: string
-  icon: React.ReactNode
-  exact?: boolean
-}
-
-interface NavSection {
-  title?: string
-  items: NavItem[]
-}
-
-const NAV_SECTIONS: NavSection[] = [
-  {
-    items: [
-      { label: "Dashboard", href: "/portal/instructor", icon: I.dashboard, exact: true },
-    ],
-  },
-  {
-    title: "Teaching",
-    items: [
-      { label: "My Groups",       href: "/portal/instructor/groups",   icon: I.groups },
-      { label: "Homework",        href: "/portal/instructor/homework", icon: I.homework },
-      { label: "Session History", href: "/portal/instructor/history",  icon: I.history },
-    ],
-  },
-]
 
 // ── NavLink ───────────────────────────────────────────────────────────────────
 
@@ -116,6 +85,9 @@ function NavContent({ onClose }: { onClose?: () => void }) {
     router.refresh()
   }
 
+  // Build a lookup for quick access
+  const navByKey = Object.fromEntries(INSTRUCTOR_NAV.map((n) => [n.key, n]))
+
   return (
     <div className="flex h-full flex-col">
       {/* Logo */}
@@ -128,9 +100,9 @@ function NavContent({ onClose }: { onClose?: () => void }) {
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/25">Instructor</p>
       </div>
 
-      {/* Grouped nav */}
+      {/* Grouped nav — derived from canonical config */}
       <nav className="flex-1 overflow-y-auto px-3 pb-2">
-        {NAV_SECTIONS.map((section, idx) => (
+        {INSTRUCTOR_NAV_SECTIONS.map((section, idx) => (
           <div key={section.title ?? "__top"} className={idx === 0 ? "mb-1" : "mt-5"}>
             {section.title && (
               <p className="mb-1.5 px-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/25">
@@ -138,16 +110,20 @@ function NavContent({ onClose }: { onClose?: () => void }) {
               </p>
             )}
             <div className="space-y-0.5">
-              {section.items.map(({ label, href, icon, exact }) => (
-                <NavLink
-                  key={href}
-                  href={href}
-                  label={label}
-                  icon={icon}
-                  active={isActive(href, exact)}
-                  onClose={onClose}
-                />
-              ))}
+              {section.keys.map((key) => {
+                const item = navByKey[key]
+                if (!item) return null
+                return (
+                  <NavLink
+                    key={key}
+                    href={item.href}
+                    label={item.label}
+                    icon={ICONS[key]}
+                    active={isActive(item.href, item.exact)}
+                    onClose={onClose}
+                  />
+                )
+              })}
             </div>
           </div>
         ))}

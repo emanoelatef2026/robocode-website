@@ -83,7 +83,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
 
   const childHref  = (path: string) => `${path}?child=${selected.student_id}`
   const completedS = sessions?.completed_sessions ?? 0
-  const totalS     = sessions?.total_sessions     ?? 24
+  const totalS     = sessions?.total_sessions     ?? 0
   const courseProgress = totalS > 0 ? Math.round((completedS / totalS) * 100) : 0
 
   return (
@@ -293,7 +293,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
           color={courseProgress >= 75 ? 'bg-green-500' : courseProgress >= 50 ? 'bg-yellow-500' : 'bg-[#FF8A1F]'}
         />
         <p className="mt-2 text-[12px] text-[#94A3B8]">
-          {completedS} completed · {Math.max(0, totalS - completedS)} remaining · {totalS} total sessions
+          {completedS} consumed · {Math.max(0, totalS - completedS)} remaining · {totalS} enrolled sessions
         </p>
       </div>
 

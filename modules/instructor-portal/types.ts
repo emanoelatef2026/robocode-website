@@ -18,7 +18,7 @@ export interface InstructorGroup {
   student_count:      number
   next_session_at:    string | null
   completed_sessions: number
-  total_sessions:     number
+  total_sessions:     number | null
   from_session:       number
   allocated_sessions: number | null
 }
@@ -253,7 +253,7 @@ export interface GroupForInstructor {
   day_of_week:        string | null
   time:               string | null
   completed_sessions: number
-  total_sessions:     number
+  total_sessions:     number | null
   students: Array<{
     student_id:      string
     first_name:      string | null

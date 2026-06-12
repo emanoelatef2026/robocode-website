@@ -40,10 +40,10 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
   ])
 
   const completedS    = sessions?.completed_sessions ?? 0
-  const totalS        = sessions?.total_sessions     ?? 24
+  const totalS        = sessions?.total_sessions     ?? 0
   const progressPct   = totalS > 0 ? Math.round((completedS / totalS) * 100) : 0
   const hasCerts      = certificates.length > 0
-  const isEligible    = completedS >= totalS
+  const isEligible    = totalS > 0 && completedS >= totalS
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

@@ -719,10 +719,10 @@ export async function getInstructorFormOptions(branchIds: string[]): Promise<Ins
   }
 
   // Map active group_course per group (take first active one)
-  const activeGcByGroup: Record<string, { id: string; total_sessions: number }> = {}
+  const activeGcByGroup: Record<string, { id: string; total_sessions: number | null }> = {}
   for (const gc of (gcRes.data ?? []) as Array<{ id: string; group_id: string; total_sessions: number | null }>) {
     if (!activeGcByGroup[gc.group_id]) {
-      activeGcByGroup[gc.group_id] = { id: gc.id, total_sessions: gc.total_sessions ?? 24 }
+      activeGcByGroup[gc.group_id] = { id: gc.id, total_sessions: gc.total_sessions ?? null }
     }
   }
 
@@ -765,7 +765,7 @@ export async function getInstructorFormOptions(branchIds: string[]): Promise<Ins
       student_count:      studentCountByGroup[g.id] ?? 0,
       has_instructor:     (g.group_instructors?.length ?? 0) > 0,
       completed_sessions: gc ? (completedByGc[gc.id] ?? 0) : 0,
-      total_sessions:     gc?.total_sessions ?? 24,
+      total_sessions:     gc?.total_sessions ?? null,
       next_from_session:  maxToByGroup[g.id] != null ? maxToByGroup[g.id] + 1 : 1,
     }
   })

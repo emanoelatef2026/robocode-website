@@ -27,6 +27,9 @@ const baseFields = {
   asst_instructor_id:  z.string().uuid().optional().or(emptyStr).transform(v => v === '' ? undefined : v as string | undefined),
   students_to_add_json:    z.string().optional(),
   students_to_remove_json: z.string().optional(),
+  // Academic plan — stored on group_courses, not groups
+  planned_sessions: z.coerce.number().int().positive().max(9999).optional().or(emptyStr).transform(v => v === '' ? undefined : v as number | undefined),
+  open_ended:       z.string().optional().transform(v => v === 'true' || v === 'on'),
 }
 
 export const createSchema = z.object(baseFields)
@@ -40,13 +43,13 @@ export const updateSchema = z.object({
 export type CreateGroupInput = z.infer<typeof createSchema>
 export type UpdateGroupInput = z.infer<typeof updateSchema>
 
-// The "rest" after stripping course/instructor/student fields
+// The "rest" after stripping course/instructor/student/academic-plan fields
 export type GroupCoreInput = Omit<
   CreateGroupInput,
-  'course_id' | 'instructor_id' | 'asst_instructor_id' | 'students_to_add_json' | 'students_to_remove_json'
+  'course_id' | 'instructor_id' | 'asst_instructor_id' | 'students_to_add_json' | 'students_to_remove_json' | 'planned_sessions' | 'open_ended'
 >
 
 export type GroupUpdateCore = Omit<
   UpdateGroupInput,
-  'id' | 'course_id' | 'instructor_id' | 'asst_instructor_id' | 'students_to_add_json' | 'students_to_remove_json'
+  'id' | 'course_id' | 'instructor_id' | 'asst_instructor_id' | 'students_to_add_json' | 'students_to_remove_json' | 'planned_sessions' | 'open_ended'
 >

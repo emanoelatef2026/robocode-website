@@ -117,6 +117,8 @@ export async function assignGroupCourseService(
   }
 
   // Case A: no prior row for this course → fresh INSERT
+  // total_sessions and open_ended are NOT set here — the caller sets them
+  // explicitly via updateGroupCoursePlan after the course assignment completes.
   const insertPayload: Record<string, unknown> = {
     group_id:      groupId,
     course_id:     courseId,
@@ -124,7 +126,6 @@ export async function assignGroupCourseService(
     status:        'active',
     started_at:    now,
     assigned_by:   assignedBy,
-    total_sessions: 24,
   }
 
   const { data: inserted, error: insertErr } = await client
@@ -134,11 +135,9 @@ export async function assignGroupCourseService(
     .single()
 
   if (insertErr) {
-    // Fallback: retry without total_sessions (column may not exist on older DBs)
-    const { total_sessions: _ts, ...withoutSessions } = insertPayload
     const { data: inserted2, error: err2 } = await client
       .from('group_courses')
-      .insert(withoutSessions)
+      .insert(insertPayload)
       .select('id, group_id, course_id, instructor_id, status, started_at')
       .single()
     if (err2) throw new Error(err2.message)

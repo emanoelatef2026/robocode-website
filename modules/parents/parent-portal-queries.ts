@@ -518,7 +518,7 @@ export async function getChildDashboardData(
     group_name: null, course_title: null, instructor_name: null,
     attendance_pct: null, assignment_pct: null,
     portfolio_count: 0, certificate_count: 0,
-    completed_sessions: 0, total_sessions: 24,
+    completed_sessions: 0, total_sessions: 0,
     upcoming_class: null, recent_activity: [],
   }
 
@@ -539,7 +539,6 @@ export async function getChildDashboardData(
   const gcId         = gc?.id              ?? null
   const courseTitle  = gc?.courses?.title  ?? null
   const instrId      = gc?.instructor_id   ?? null
-  const totalSessions = gc?.total_sessions ?? 24
   const gRow         = groupRes.data as any
 
   let instructorName: string | null = null
@@ -681,7 +680,7 @@ export async function getChildDashboardData(
     portfolio_count:    portfolioCount,
     certificate_count:  certificateCount,
     completed_sessions: completedSessions,
-    total_sessions:     totalSessions,
+    total_sessions:     gc?.total_sessions ?? 0,
     upcoming_class: gcId ? {
       day_of_week:     gRow?.day_of_week ?? null,
       time:            gRow?.time        ?? null,
@@ -790,7 +789,9 @@ export async function getChildHistoryTimeline(
   return events
 }
 
-// ── Sessions progress (for certificate eligibility) ───────────────────────────
+// ── Sessions progress (enrollment-scoped, for certificate eligibility) ─────────
+// Returns consumed sessions from the student's active enrollment ledger.
+// Field names kept for backward compat: completed_sessions = consumed, total_sessions = enrolled.
 
 export async function getChildSessionsProgress(
   parentUserId: string,
@@ -800,6 +801,7 @@ export async function getChildSessionsProgress(
 
   const db = createServiceClient()
 
+  // Prefer group-linked ACTIVE enrollment; FIFO fallback to any ACTIVE enrollment.
   const { data: gsRow } = await db
     .from('group_students')
     .select('group_id')
@@ -809,29 +811,40 @@ export async function getChildSessionsProgress(
     .limit(1)
     .maybeSingle()
   const groupId = (gsRow as any)?.group_id ?? null
-  if (!groupId) return { completed_sessions: 0, total_sessions: 24 }
 
-  const { data: gcRow } = await db
-    .from('group_courses')
-    .select('id, total_sessions')
-    .eq('group_id', groupId)
-    .eq('status', 'active')
-    .limit(1)
-    .maybeSingle()
-  const gcId         = (gcRow as any)?.id              ?? null
-  const totalSessions = (gcRow as any)?.total_sessions ?? 24
+  let enrollmentRow: any = null
 
-  let completedSessions = 0
-  if (gcId) {
-    const { count } = await db
-      .from('schedules')
-      .select('id', { count: 'exact', head: true })
-      .eq('group_course_id', gcId)
-      .eq('status', 'completed')
-    completedSessions = count ?? 0
+  if (groupId) {
+    const { data } = await db
+      .from('student_enrollments')
+      .select('enrolled_sessions, consumed_sessions')
+      .eq('student_id', studentId)
+      .eq('group_id', groupId)
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    enrollmentRow = data
   }
 
-  return { completed_sessions: completedSessions, total_sessions: totalSessions }
+  if (!enrollmentRow) {
+    const { data } = await db
+      .from('student_enrollments')
+      .select('enrolled_sessions, consumed_sessions')
+      .eq('student_id', studentId)
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+    enrollmentRow = data
+  }
+
+  if (!enrollmentRow) return { completed_sessions: 0, total_sessions: 0 }
+
+  return {
+    completed_sessions: enrollmentRow.consumed_sessions  ?? 0,
+    total_sessions:     enrollmentRow.enrolled_sessions  ?? 0,
+  }
 }
 
 // ── Contract-centric view for parent portal ───────────────────────────────────

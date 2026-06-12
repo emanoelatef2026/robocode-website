@@ -2,6 +2,49 @@
 -- All views are safe CREATE OR REPLACE — no destructive changes.
 
 -- ─────────────────────────────────────────────────────────────────────────────
+-- Safety guard: ensure student_parent_contacts exists.
+-- Migration 0055 creates student_guardians; migration 0068 renames it.
+-- If either failed silently (tracked as applied but rolled back), the table
+-- may be absent. This idempotent block recreates it with the correct schema.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.student_parent_contacts (
+  id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id         uuid NOT NULL REFERENCES public.students(id) ON DELETE CASCADE,
+  name               text NOT NULL DEFAULT '',
+  relation           text NOT NULL DEFAULT 'guardian'
+                     CHECK (relation IN ('father','mother','guardian','other')),
+  phone1             text,
+  phone2             text,
+  whatsapp_preferred boolean NOT NULL DEFAULT false,
+  is_primary         boolean NOT NULL DEFAULT false,
+  is_emergency       boolean NOT NULL DEFAULT true,
+  notes              text,
+  created_at         timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_student_parent_contacts_student_id
+  ON public.student_parent_contacts(student_id);
+CREATE INDEX IF NOT EXISTS idx_student_parent_contacts_phone1
+  ON public.student_parent_contacts(phone1) WHERE phone1 IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_student_parent_contacts_phone2
+  ON public.student_parent_contacts(phone2) WHERE phone2 IS NOT NULL;
+ALTER TABLE public.student_parent_contacts ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename  = 'student_parent_contacts'
+      AND policyname = 'service_full_access'
+  ) THEN
+    EXECUTE $pol$
+      CREATE POLICY "service_full_access"
+        ON public.student_parent_contacts
+        USING (true)
+        WITH CHECK (true)
+    $pol$;
+  END IF;
+END $$;
+
+-- ─────────────────────────────────────────────────────────────────────────────
 -- v_group_health
 -- One row per active/forming group. Shows operational health metrics.
 -- ─────────────────────────────────────────────────────────────────────────────

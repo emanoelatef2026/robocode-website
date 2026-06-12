@@ -30,6 +30,7 @@ export interface AllocationRow {
 export interface GroupAllocationContext {
   group_id:          string
   total_sessions:    number | null
+  open_ended:        boolean
   next_from_session: number
   allocations:       AllocationRow[]
 }
@@ -56,14 +57,16 @@ export async function getGroupAllocationsAction(
       .eq('group_id', groupId)
       .order('from_session', { ascending: true }),
     db.from('group_courses')
-      .select('total_sessions')
+      .select('total_sessions, open_ended')
       .eq('group_id', groupId)
       .eq('status', 'active')
       .maybeSingle(),
   ])
 
   const rows          = (giRes.data ?? []) as any[]
-  const totalSessions = (gcRes.data as any)?.total_sessions as number | null ?? null
+  const gcRow         = gcRes.data as any
+  const totalSessions = gcRow?.total_sessions as number | null ?? null
+  const openEnded     = (gcRow?.open_ended as boolean) ?? false
 
   // Load allocation summary view once — avoids N+1
   const { data: summaryRows } = await db
@@ -121,6 +124,7 @@ export async function getGroupAllocationsAction(
     data: {
       group_id:          groupId,
       total_sessions:    totalSessions,
+      open_ended:        openEnded,
       next_from_session: nextFromSession,
       allocations,
     },
@@ -318,21 +322,22 @@ export async function editGroupAllocationRangeAction(
     }
   }
 
-  // Cannot exceed group total_sessions
+  // Cannot exceed group total_sessions (skipped for open-ended groups)
   const { data: gcRow } = await db
     .from('group_courses')
-    .select('total_sessions')
+    .select('total_sessions, open_ended')
     .eq('group_id', groupId)
     .eq('status', 'active')
     .maybeSingle()
 
   const totalSessions = (gcRow as any)?.total_sessions as number | null ?? null
-  if (totalSessions !== null && newToSession > totalSessions) {
+  const isOpenEnded   = (gcRow as any)?.open_ended as boolean ?? false
+  if (!isOpenEnded && totalSessions !== null && newToSession > totalSessions) {
     return {
       success: false,
       error: {
         code:    'EXCEEDS_TOTAL',
-        message: `New range (1–${newToSession}) exceeds the group's total sessions (${totalSessions}).`,
+        message: `New range (1–${newToSession}) exceeds the group's planned sessions (${totalSessions}).`,
       },
     }
   }
