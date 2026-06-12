@@ -335,6 +335,9 @@ export async function setStudentPassword(
   const { error } = await db.auth.admin.updateUserById(student.user_id, { password: newPassword })
   if (error) return { success: false, error: { code: 'AUTH_ERROR', message: error.message } }
 
+  // Store plain text for internal ops visibility (intentional — internal system)
+  await db.from('students').update({ portal_password: newPassword }).eq('id', studentId)
+
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,
     p_action:       'set_password',

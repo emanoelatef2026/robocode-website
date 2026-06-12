@@ -100,6 +100,153 @@ export async function getGroupStudentsForSession(groupId: string): Promise<Sessi
   }))
 }
 
+// ── Reconciliation status for the TL attendance landing page ──────────────────
+
+export interface AttendanceReconciliationStatus {
+  /** attendance_records that have NO consumption entry (unfunded/unlinked) */
+  unmatched_count:              number
+  /** distinct students with ≥1 unmatched record */
+  students_with_unmatched:      number
+  /** students with attendance but ZERO active enrollments */
+  students_without_contracts:   number
+  /** enrollments where remaining_sessions > 0 (available capacity) */
+  contracts_with_unused:        number
+  /** v_enrollment_integrity drift count */
+  drift_count:                  number
+}
+
+export async function getAttendanceReconciliationStatus(
+  branchIds: string[]
+): Promise<AttendanceReconciliationStatus> {
+  const db = createServiceClient()
+
+  // Branch-scoped schedule IDs so we can filter attendance_records
+  const { data: schedRows } = await db
+    .from('schedules')
+    .select('id')
+    .in('branch_id', branchIds)
+  const schedIds = (schedRows ?? []).map((r: any) => r.id as string)
+
+  if (schedIds.length === 0) {
+    return {
+      unmatched_count: 0,
+      students_with_unmatched: 0,
+      students_without_contracts: 0,
+      contracts_with_unused: 0,
+      drift_count: 0,
+    }
+  }
+
+  const [
+    unmatchedRes,
+    driftRes,
+    contractsRes,
+  ] = await Promise.all([
+    // Attendance records with no consumption entry (unlinked)
+    db.from('attendance_records')
+      .select('id, student_id', { count: 'exact', head: false })
+      .in('schedule_id', schedIds)
+      .not('id', 'in',
+        `(SELECT attendance_record_id FROM attendance_consumptions)`
+      ),
+
+    // Drift: enrollments where stored consumed ≠ ledger count
+    db.from('v_enrollment_integrity')
+      .select('enrollment_id', { count: 'exact', head: true }),
+
+    // Enrollments with remaining capacity
+    db.from('student_enrollments')
+      .select('id', { count: 'exact', head: true })
+      .gt('enrolled_sessions', 0)
+      .gt('remaining_sessions', 0)
+      .eq('status', 'ACTIVE'),
+  ])
+
+  const unmatchedRows = (unmatchedRes.data ?? []) as any[]
+  const unmatchedCount = unmatchedRes.count ?? 0
+  const studentsWithUnmatched = new Set(unmatchedRows.map((r) => r.student_id as string)).size
+
+  // Students with unmatched attendance but no active enrollment at all
+  const unmatchedStudentIds = [...new Set(unmatchedRows.map((r) => r.student_id as string))]
+  let studentsWithoutContracts = 0
+  if (unmatchedStudentIds.length > 0) {
+    const { count } = await db
+      .from('student_enrollments')
+      .select('student_id', { count: 'exact', head: true })
+      .in('student_id', unmatchedStudentIds.slice(0, 500))
+      .eq('status', 'ACTIVE')
+    // Students who appear in unmatched but NOT in any active enrollment
+    studentsWithoutContracts = Math.max(0, unmatchedStudentIds.length - (count ?? 0))
+  }
+
+  return {
+    unmatched_count:            unmatchedCount,
+    students_with_unmatched:    studentsWithUnmatched,
+    students_without_contracts: studentsWithoutContracts,
+    contracts_with_unused:      contractsRes.count ?? 0,
+    drift_count:                driftRes.count ?? 0,
+  }
+}
+
+// ── Recent attendance timeline for TL landing page ────────────────────────────
+
+export interface RecentAttendanceItem {
+  id:            string
+  student_name:  string
+  group_name:    string
+  status:        string
+  session_date:  string
+  branch_name:   string
+}
+
+export async function getRecentAttendance(
+  branchIds: string[],
+  limit = 12
+): Promise<RecentAttendanceItem[]> {
+  const db = createServiceClient()
+
+  const { data: schedRows } = await db
+    .from('schedules')
+    .select('id')
+    .in('branch_id', branchIds)
+  const schedIds = (schedRows ?? []).map((r: any) => r.id as string)
+  if (schedIds.length === 0) return []
+
+  const { data, error } = await db
+    .from('attendance_records')
+    .select(`
+      id, status, recorded_at,
+      group_name_snapshot,
+      branch_name_snapshot,
+      schedules!attendance_records_schedule_id_fkey(scheduled_at),
+      students!attendance_records_student_id_fkey(
+        users!students_user_id_fkey(
+          profiles!profiles_user_id_fkey(first_name, last_name)
+        )
+      )
+    `)
+    .in('schedule_id', schedIds)
+    .order('recorded_at', { ascending: false })
+    .limit(limit)
+
+  if (error || !data) return []
+
+  return (data as any[]).map((r) => {
+    const prof = r.students?.users?.profiles
+    const name = prof
+      ? [prof.first_name, prof.last_name].filter(Boolean).join(' ')
+      : 'Unknown Student'
+    return {
+      id:           r.id as string,
+      student_name: name,
+      group_name:   (r.group_name_snapshot as string | null) ?? '—',
+      status:       r.status as string,
+      session_date: (r.schedules?.scheduled_at as string | null) ?? (r.recorded_at as string),
+      branch_name:  (r.branch_name_snapshot as string | null) ?? '',
+    }
+  })
+}
+
 export async function getOrCreateGroupCourse(groupId: string, branchId: string): Promise<string | null> {
   const db = createServiceClient()
 

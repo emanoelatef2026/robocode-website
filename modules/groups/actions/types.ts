@@ -45,4 +45,22 @@ export interface StudentAttendanceHistoryRecord {
   group_name:      string | null
   instructor_name: string | null
   status:          string
+  is_consumed:     boolean
+}
+
+export interface StudentAuthData {
+  email:           string | null
+  portal_password: string | null
+}
+
+export interface StudentAttendanceSummary {
+  present_count:   number
+  absent_count:    number
+  late_count:      number
+  excused_count:   number
+  makeup_count:    number
+  cancelled_count: number
+  consumed_count:  number
+  total_records:   number
+  attendance_pct:  number
 }

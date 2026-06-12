@@ -5,6 +5,7 @@ import {
   listInstructorGroups,
 } from '@/modules/instructor-portal/queries'
 import Link from 'next/link'
+import { HomeworkGroupSelect } from './_components/HomeworkGroupSelect'
 
 interface Props {
   searchParams: Promise<Record<string, string | undefined>>
@@ -76,25 +77,11 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
 
         {/* Group filter */}
         {activeGroups.length > 1 && (
-          <form method="GET">
-            <input type="hidden" name="filter" value={filter} />
-            <select
-              name="groupId"
-              defaultValue={groupId ?? ''}
-              onChange={(e) => {
-                // JS-based immediate submit — form action handles it on server
-              }}
-              className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
-            >
-              <option value="">All groups</option>
-              {activeGroups.map((g) => (
-                <option key={g.group_id} value={g.group_id}>{g.group_name}</option>
-              ))}
-            </select>
-            <button type="submit" className="ml-1 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#64748B] hover:border-[#FF8A1F] transition">
-              Go
-            </button>
-          </form>
+          <HomeworkGroupSelect
+            groups={activeGroups}
+            currentFilter={filter}
+            currentGroupId={groupId}
+          />
         )}
       </div>
 

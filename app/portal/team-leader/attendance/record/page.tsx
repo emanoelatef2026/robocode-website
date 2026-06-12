@@ -1,7 +1,7 @@
 import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { listGroups }                           from '@/modules/groups/queries'
 import { getGroupStudentsForSession }           from '@/modules/attendance/queries'
-import AttendanceRecordForm                     from '@/app/admin/attendance/record/AttendanceRecordForm'
+import TLAttendanceRecordForm                   from './TLAttendanceRecordForm'
 import Link                                     from 'next/link'
 
 interface Props {
@@ -34,7 +34,7 @@ export default async function TLRecordAttendancePage({ searchParams }: Props) {
         <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Record Session</h1>
       </div>
 
-      <AttendanceRecordForm
+      <TLAttendanceRecordForm
         groups={groupsResult.data}
         selectedGroupId={groupId}
         selectedGroup={selectedGroup}

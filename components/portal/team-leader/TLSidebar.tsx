@@ -57,6 +57,11 @@ const I = {
       <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
     </svg>
   ),
+  attendance: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+    </svg>
+  ),
   analytics: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
@@ -109,6 +114,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: "Academy",
     items: [
       { label: "Groups",       href: "/portal/team-leader/groups",                       icon: I.groups },
+      { label: "Attendance",   href: "/portal/team-leader/attendance",                   icon: I.attendance },
       { label: "Courses",      href: "/portal/team-leader/courses",                      icon: I.courses },
       { label: "Certificates", href: "/portal/team-leader/certificates",                 icon: I.certificates },
       {

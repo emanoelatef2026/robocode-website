@@ -131,11 +131,11 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
     }
   }
 
-  const recordableIds = safeStudentIds.filter(sid => !overdraftBlocked.includes(sid))
-
-  if (recordableIds.length === 0) {
-    return { success: false, error: { code: 'OVERDRAFT_BLOCKED', message: 'All students have exhausted their session packages. Enable overdraft or renew packages.' } }
-  }
+  // Attendance is academic history — always record regardless of package state.
+  // Overdraft-blocked students get an attendance_record but NO consumption entry
+  // (their session becomes "unfunded" until a contract is added or reconciled).
+  const recordableIds = safeStudentIds
+  const blockedSet    = new Set(overdraftBlocked)
 
   // ── Create schedule entry ─────────────────────────────────────────────────────
   const { data: schedule, error: scheduleError } = await db
@@ -189,6 +189,7 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
 
   for (const rec of (insertedRecords ?? []) as any[]) {
     if (!SLOT_CONSUMING_STATUSES.has(rec.status as AttendanceStatus)) continue
+    if (blockedSet.has(rec.student_id as string)) continue  // unfunded — no consumption
     const enroll = enrollMap.get(rec.student_id as string)
     if (enroll && enroll.enrolled > 0) {
       p_record_ids.push(rec.id)
@@ -236,5 +237,9 @@ export async function recordAttendanceSession(formData: FormData): Promise<Actio
   }
 
   revalidatePath('/admin/attendance')
+  revalidatePath('/portal/team-leader/attendance')
+  revalidatePath('/portal/team-leader/groups')
+  revalidatePath('/portal/instructor', 'layout')
+  revalidatePath('/portal/student', 'layout')
   return { success: true, data: { scheduleId: schedule.id } }
 }

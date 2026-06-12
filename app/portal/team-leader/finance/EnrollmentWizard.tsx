@@ -188,9 +188,10 @@ interface Props {
   preselectedStudent?:  StudentResult
   preselectedPackages?: PreselectedPackage[]
   groupContext?:        GroupContext
+  overlayClassName?:    string
 }
 
-export default function EnrollmentWizard({ branchIds, onClose, onSuccess, preselectedStudent, preselectedPackages, groupContext }: Props) {
+export default function EnrollmentWizard({ branchIds, onClose, onSuccess, preselectedStudent, preselectedPackages, groupContext, overlayClassName }: Props) {
   const [state, setState] = useState<WizardState>({
     step: preselectedStudent ? 2 : 1,
     student:     preselectedStudent ?? null,
@@ -376,7 +377,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
   const hasModalFilter = !!(mFilterFinStatus || mFilterExhausted || mFilterNoPackage)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8">
+    <div className={overlayClassName ?? "fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-8"}>
       <div className="relative w-full max-w-lg rounded-2xl border border-[#E2E8F0] bg-white shadow-2xl">
 
         {/* ── Header ──────────────────────────────────────────────────────────── */}

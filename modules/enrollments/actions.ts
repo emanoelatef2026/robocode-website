@@ -4,6 +4,7 @@ import { createServiceClient }     from '@/lib/supabase/service'
 import { requirePermission }        from '@/modules/rbac/guards'
 import { revalidatePath }           from 'next/cache'
 import { logTimelineEvent }         from '@/lib/timeline'
+import { _internalReconcileEnrollment } from '@/modules/attendance/reconciliation'
 import type {
   CreateEnrollmentInput,
   TransferEnrollmentInput,
@@ -307,6 +308,14 @@ async function _finishEnrollment(
   revalidatePath('/portal/team-leader/finance')
   revalidatePath('/admin/finance')
   revalidatePath('/portal/parent/finance')
+
+  // Retroactive reconciliation: link historical attendance to the new enrollment.
+  // Non-fatal — enrollment creation must not fail if reconciliation has an error.
+  try {
+    await _internalReconcileEnrollment(db, enrollmentId)
+  } catch {
+    // swallow — enrollment already committed, reconciliation can be re-run manually
+  }
 
   return { ok: true, enrollmentId }
 }

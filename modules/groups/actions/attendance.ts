@@ -23,30 +23,41 @@ export async function getStudentAttendanceHistoryAction(
 ): Promise<StudentAttendanceHistoryRecord[]> {
   const db = createServiceClient()
 
-  const { data } = await db
-    .from('attendance_records')
-    .select(`
-      id, status,
-      schedules!attendance_records_schedule_id_fkey(
-        scheduled_at, topic,
-        group_courses!schedules_group_course_id_fkey(
-          groups!group_courses_group_id_fkey(name),
-          instructors!group_courses_instructor_id_fkey(
-            profiles!instructors_user_id_fkey(first_name, last_name)
+  const [attRes, consRes] = await Promise.all([
+    db
+      .from('attendance_records')
+      .select(`
+        id, status,
+        schedules!attendance_records_schedule_id_fkey(
+          scheduled_at, topic,
+          group_courses!schedules_group_course_id_fkey(
+            groups!group_courses_group_id_fkey(name),
+            instructors!group_courses_instructor_id_fkey(
+              profiles!instructors_user_id_fkey(first_name, last_name)
+            )
           )
         )
-      )
-    `)
-    .eq('student_id', studentId)
-    .order('id', { ascending: false })
-    .limit(5)
+      `)
+      .eq('student_id', studentId)
+      .order('id', { ascending: false })
+      .limit(10),
+    db
+      .from('attendance_consumptions')
+      .select('attendance_record_id')
+      .eq('student_id', studentId),
+  ])
 
-  if (!data) return []
+  if (!attRes.data) return []
 
-  return (data as AttendanceRow[]).map(r => {
-    const sched = r.schedules ?? {}
-    const gc    = sched.group_courses ?? {}
-    const prof  = gc.instructors?.profiles ?? {}
+  const consumedIds = new Set(
+    ((consRes.data ?? []) as Array<{ attendance_record_id: string }>)
+      .map(r => r.attendance_record_id)
+  )
+
+  return (attRes.data as AttendanceRow[]).map(r => {
+    const sched    = r.schedules ?? {}
+    const gc       = sched.group_courses ?? {}
+    const prof     = gc.instructors?.profiles ?? {}
     const instrName = prof.first_name
       ? [prof.first_name, prof.last_name].filter(Boolean).join(' ')
       : null
@@ -58,6 +69,7 @@ export async function getStudentAttendanceHistoryAction(
       group_name:      gc.groups?.name    ?? null,
       instructor_name: instrName,
       status:          r.status,
+      is_consumed:     consumedIds.has(r.id),
     }
   })
 }

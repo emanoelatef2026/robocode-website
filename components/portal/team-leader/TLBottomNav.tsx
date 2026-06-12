@@ -48,6 +48,7 @@ const NAV = [
     href: "/portal/team-leader/groups",
     moreRoutes: [
       "/portal/team-leader/groups",
+      "/portal/team-leader/attendance",
       "/portal/team-leader/instructors",
       "/portal/team-leader/parents",
       "/portal/team-leader/certificates",
