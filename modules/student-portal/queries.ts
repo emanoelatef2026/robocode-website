@@ -66,20 +66,27 @@ export async function getStudentDashboardData(
   if (!groupId) return { student_id: studentId, student_name: studentName, ...empty }
 
   // Group + course info
-  const [groupRes, gcRes] = await Promise.all([
+  // Fetch ALL group_courses (active AND inactive) — mirrors getGroupSchedules which
+  // deliberately has no status filter so sessions from replaced/inactive courses are
+  // visible.  We still prefer an active non-placeholder course for display purposes.
+  const [groupRes, gcListRes] = await Promise.all([
     db.from('groups').select('name, day_of_week, time').eq('id', groupId).maybeSingle(),
     db.from('group_courses')
-      .select('id, instructor_id, course_id, courses!group_courses_course_id_fkey(title)')
+      .select('id, status, instructor_id, course_id, courses!group_courses_course_id_fkey(title)')
       .eq('group_id', groupId)
-      .eq('status', 'active')
-      .limit(1)
-      .maybeSingle(),
+      .order('created_at', { ascending: false }),
   ])
 
-  const gc          = gcRes.data  as any
-  const gcId        = gc?.id              ?? null
-  const courseTitle = gc?.courses?.title  ?? null
-  const instrId     = gc?.instructor_id   ?? null
+  const gcList   = (gcListRes.data ?? []) as any[]
+  const allGcIds = gcList.map((gc: any) => gc.id as string)
+  // For display: prefer active + real course, then active placeholder, then any real, then any
+  const primaryGc =
+    gcList.find((gc: any) => gc.status === 'active' && gc.courses?.title && gc.courses.title !== 'General Sessions') ??
+    gcList.find((gc: any) => gc.status === 'active') ??
+    gcList.find((gc: any) => gc.courses?.title && gc.courses.title !== 'General Sessions') ??
+    gcList[0] ?? null
+  const courseTitle  = primaryGc?.courses?.title ?? null
+  const instrId      = primaryGc?.instructor_id  ?? null
 
   // ── Enrollment-scoped session progress ───────────────────────────────────────
   // Use the student's purchased enrollment, NOT group.total_sessions.
@@ -130,7 +137,7 @@ export async function getStudentDashboardData(
     }
   }
 
-  // Instructor name
+  // Instructor name — try group_courses.instructor_id first, then group_instructors
   let instructorName: string | null = null
   if (instrId) {
     const { data: ir } = await db
@@ -139,6 +146,17 @@ export async function getStudentDashboardData(
       .eq('id', instrId)
       .maybeSingle()
     const ip = (ir as any)?.users?.profiles
+    if (ip) instructorName = [ip.first_name, ip.last_name].filter(Boolean).join(' ') || null
+  }
+  // Fallback: group_instructors table (TL assigns instructor at the group level)
+  if (!instructorName) {
+    const { data: giRows } = await db
+      .from('group_instructors')
+      .select('role, instructors!group_instructors_instructor_id_fkey(users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name)))')
+      .eq('group_id', groupId)
+    const gis = (giRows ?? []) as any[]
+    const gi  = gis.find((r: any) => r.role === 'lead') ?? gis[0] ?? null
+    const ip  = gi?.instructors?.users?.profiles
     if (ip) instructorName = [ip.first_name, ip.last_name].filter(Boolean).join(' ') || null
   }
 
@@ -150,11 +168,11 @@ export async function getStudentDashboardData(
   let scheduleIds:          string[] = []
   let completedScheduleIds: string[] = []
 
-  if (gcId) {
+  if (allGcIds.length > 0) {
     let schedQuery = db
       .from('schedules')
       .select('id, status, scheduled_at')
-      .eq('group_course_id', gcId)
+      .in('group_course_id', allGcIds)
       .neq('status', 'cancelled')
 
     if (enrollmentStartDate) {
@@ -200,7 +218,7 @@ export async function getStudentDashboardData(
 
   // Path A: module-linked (for legacy groups with course_modules)
   // gc is already declared above from gcRes.data
-  const dashCourseId = (gcRes.data as any)?.course_id as string | undefined
+  const dashCourseId = primaryGc?.course_id as string | undefined
   if (dashCourseId) {
     const { data: modRows } = await db
       .from('course_modules').select('id').eq('course_id', dashCourseId).is('deleted_at', null)
@@ -390,7 +408,7 @@ export async function getStudentEnrollment(userId: string): Promise<StudentEnrol
   const gc           = gcRow as any
   const instructorId = gc?.instructor_id ?? null
 
-  // Instructor name (separate query to avoid nested-FK failures)
+  // Instructor name — try group_courses.instructor_id first, then group_instructors
   let instructorName: string | null = null
   if (instructorId) {
     const { data: instrRow } = await db
@@ -400,6 +418,16 @@ export async function getStudentEnrollment(userId: string): Promise<StudentEnrol
       .maybeSingle()
     const prof = (instrRow as any)?.users?.profiles
     if (prof) instructorName = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || null
+  }
+  if (!instructorName) {
+    const { data: giRows } = await db
+      .from('group_instructors')
+      .select('role, instructors!group_instructors_instructor_id_fkey(users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name)))')
+      .eq('group_id', groupId)
+    const gis = (giRows ?? []) as any[]
+    const gi  = gis.find((r: any) => r.role === 'lead') ?? gis[0] ?? null
+    const ip  = gi?.instructors?.users?.profiles
+    if (ip) instructorName = [ip.first_name, ip.last_name].filter(Boolean).join(' ') || null
   }
 
   return {
@@ -498,21 +526,20 @@ export async function getStudentTimeline(userId: string): Promise<TimelineEvent[
   let topicMap    = new Map<string, string | null>()
 
   if (groupId) {
-    const { data: gcRow } = await db
+    // Use ALL group_courses (active AND inactive) so sessions from replaced/inactive
+    // courses appear in the timeline — mirrors getGroupSchedules behavior.
+    const { data: gcRows } = await db
       .from('group_courses')
       .select('id')
       .eq('group_id', groupId)
-      .eq('status', 'active')
-      .limit(1)
-      .maybeSingle()
-    const gcId = (gcRow as any)?.id ?? null
+    const allGcIds = (gcRows ?? []).map((r: any) => r.id as string)
 
-    if (gcId) {
+    if (allGcIds.length > 0) {
       // Only completed sessions appear in the student-visible timeline.
       const { data: schedRows } = await db
         .from('schedules')
         .select('id, scheduled_at, session_number')
-        .eq('group_course_id', gcId)
+        .in('group_course_id', allGcIds)
         .eq('status', 'completed')
         .order('scheduled_at', { ascending: true })
       ;(schedRows ?? []).forEach((s: any, idx: number) => {
@@ -623,15 +650,14 @@ export async function getStudentAttendanceHistory(userId: string): Promise<Stude
   const groupId = (gsRow as any)?.group_id ?? null
   if (!groupId) return []
 
-  const { data: gcRow } = await db
+  // Fetch ALL group_courses (active AND inactive) — matches getGroupSchedules so
+  // sessions recorded under a replaced/inactive course are included.
+  const { data: gcRows } = await db
     .from('group_courses')
     .select('id')
     .eq('group_id', groupId)
-    .eq('status', 'active')
-    .limit(1)
-    .maybeSingle()
-  const gcId = (gcRow as any)?.id ?? null
-  if (!gcId) return []
+  const allGcIds = (gcRows ?? []).map((r: any) => r.id as string)
+  if (allGcIds.length === 0) return []
 
   // Only completed sessions are academically visible to students.
   // Filtered to the student's enrollment window (sessions on/after the earliest
@@ -651,7 +677,7 @@ export async function getStudentAttendanceHistory(userId: string): Promise<Stude
   let schedQuery = db
     .from('schedules')
     .select('id, scheduled_at, session_number')
-    .eq('group_course_id', gcId)
+    .in('group_course_id', allGcIds)
     .eq('status', 'completed')
     .order('scheduled_at', { ascending: true })
 

@@ -3,7 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { getGroupSchedules }   from '../queries'
 import type { RiskLevel }      from '@/modules/operational-engine'
-import type { GroupDetailData, GroupDetailSession, GroupDetailStudent } from './types'
+import type { GroupDetailData, GroupDetailSession, GroupDetailStudent, SessionAttendanceRecord } from './types'
 
 // ── Row shapes (Supabase query return types) ───────────────────────────────────
 
@@ -59,10 +59,10 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
   const [attCountRes, gcCourseRes] = await Promise.all([
     sessionIds.length
       ? db.from('attendance_records')
-          .select('schedule_id, status')
+          .select('id, schedule_id, student_id, status')
           .in('schedule_id', sessionIds)
           .is('invalidated_at', null)
-      : Promise.resolve({ data: [] as { schedule_id: string; status: string }[] }),
+      : Promise.resolve({ data: [] as { id: string; schedule_id: string; student_id: string; status: string }[] }),
     gcIds.length
       ? db.from('group_courses')
           .select('id, courses(title)')
@@ -70,11 +70,12 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       : Promise.resolve({ data: [] as { id: string; courses: { title: string } | null }[] }),
   ])
 
-  const attBySession = new Map<string, { present: number; absent: number }>()
-  for (const r of (attCountRes.data ?? []) as { schedule_id: string; status: string }[]) {
-    const s = attBySession.get(r.schedule_id) ?? { present: 0, absent: 0 }
+  const attBySession = new Map<string, { present: number; absent: number; records: SessionAttendanceRecord[] }>()
+  for (const r of (attCountRes.data ?? []) as { id: string; schedule_id: string; student_id: string; status: string }[]) {
+    const s = attBySession.get(r.schedule_id) ?? { present: 0, absent: 0, records: [] }
     if (['present', 'late', 'makeup'].includes(r.status)) s.present++
     else if (r.status === 'absent') s.absent++
+    s.records.push({ id: r.id, student_id: r.student_id, status: r.status })
     attBySession.set(r.schedule_id, s)
   }
 
@@ -201,18 +202,20 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
     }
   })
 
-  const sessions: GroupDetailSession[] = schedules.slice(0, 30).map(s => ({
-    id:               s.id,
-    scheduled_at:     s.scheduled_at,
-    duration_minutes: s.duration_minutes,
-    type:             s.type,
-    status:           s.status,
-    topic:            s.topic,
-    meeting_url:      s.meeting_url,
-    session_number:   s.session_number ?? null,
-    present_count:    attBySession.get(s.id)?.present ?? 0,
-    absent_count:     attBySession.get(s.id)?.absent  ?? 0,
-    course_name:      courseByGc.get(s.group_course_id) ?? null,
+  const sessions: GroupDetailSession[] = schedules.map(s => ({
+    id:                 s.id,
+    scheduled_at:       s.scheduled_at,
+    duration_minutes:   s.duration_minutes,
+    type:               s.type,
+    status:             s.status,
+    topic:              s.topic,
+    meeting_url:        s.meeting_url,
+    session_number:     s.session_number ?? null,
+    present_count:      attBySession.get(s.id)?.present ?? 0,
+    absent_count:       attBySession.get(s.id)?.absent  ?? 0,
+    course_name:        courseByGc.get(s.group_course_id) ?? null,
+    delivery:           s.delivery ?? null,
+    student_attendance: attBySession.get(s.id)?.records ?? [],
   }))
 
   return { sessions, students }

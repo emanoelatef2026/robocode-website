@@ -28,8 +28,9 @@ import type {
 // ── Shared helper: resolve all group_courses the instructor is linked to ───────
 
 interface GcContext {
-  gcIds:    string[]
-  groupIds: string[]
+  gcIds:       string[]
+  groupIds:    string[]
+  gcToGroupId: Map<string, string>
 }
 
 async function resolveGcContext(
@@ -38,7 +39,7 @@ async function resolveGcContext(
 ): Promise<GcContext> {
   const [{ data: giRows }, { data: gcDirect }] = await Promise.all([
     db.from('group_instructors').select('group_id').eq('instructor_id', instructorId),
-    db.from('group_courses').select('id, group_id').eq('instructor_id', instructorId).eq('status', 'active'),
+    db.from('group_courses').select('id, group_id').eq('instructor_id', instructorId),
   ])
 
   const giGroupIds = (giRows ?? []).map((r: any) => r.group_id as string)
@@ -49,7 +50,6 @@ async function resolveGcContext(
       .from('group_courses')
       .select('id, group_id')
       .in('group_id', giGroupIds)
-      .eq('status', 'active')
     gcByGroup = (data ?? []) as any[]
   }
 
@@ -60,8 +60,9 @@ async function resolveGcContext(
   const groupIdSet = new Set([...gcMap.values(), ...giGroupIds])
 
   return {
-    gcIds:    [...gcMap.keys()],
-    groupIds: [...groupIdSet],
+    gcIds:       [...gcMap.keys()],
+    groupIds:    [...groupIdSet],
+    gcToGroupId: gcMap,
   }
 }
 
@@ -169,7 +170,7 @@ export async function getInstructorDashboardStats(
 
 export async function listInstructorGroups(instructorId: string): Promise<InstructorGroup[]> {
   const db = createServiceClient()
-  const { gcIds, groupIds } = await resolveGcContext(instructorId, db)
+  const { gcIds, groupIds, gcToGroupId } = await resolveGcContext(instructorId, db)
 
   if (groupIds.length === 0) return []
 
@@ -196,10 +197,10 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
 
       const [gsRes, completedRes, giRes] = await Promise.all([
         db.from('group_students').select('group_id').in('group_id', gcGroupIds).eq('status', 'active'),
-        // Fetch session_number + group_course_id so we can scope completions to the instructor's allocation range
+        // Use ALL gcIds (active + inactive) — sessions may be under a replaced group_course
         db.from('schedules')
           .select('group_course_id, session_number')
-          .in('group_course_id', gcFullIds)
+          .in('group_course_id', gcIds)
           .eq('status', 'completed'),
         db.from('group_instructors')
           .select('group_id, from_session, to_session, allocated_sessions, allocation_status')
@@ -219,24 +220,20 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
         }
       }
 
-      // group_id → group_course_id mapping (for completed-session scoping)
-      const gcIdByGroupId: Record<string, string> = {}
-      for (const row of gcRows as any[]) {
-        gcIdByGroupId[row.group_id] = row.id
-      }
-
-      const studentMap:        Record<string, number> = {}
-      const allCompletedByGc:  Record<string, Array<{ session_number: number | null }>> = {}
-      const allocationByGroup: Record<string, { from_session: number; to_session: number | null; allocated_sessions: number | null; allocation_status: string }> = {}
+      const studentMap:         Record<string, number> = {}
+      const allCompletedByGroup: Record<string, Array<{ session_number: number | null }>> = {}
+      const allocationByGroup:  Record<string, { from_session: number; to_session: number | null; allocated_sessions: number | null; allocation_status: string }> = {}
 
       for (const gs of gsRes.data ?? []) {
         const gid = (gs as any).group_id as string
         studentMap[gid] = (studentMap[gid] ?? 0) + 1
       }
       for (const s of completedRes.data ?? []) {
-        const gcId = (s as any).group_course_id as string
-        if (!allCompletedByGc[gcId]) allCompletedByGc[gcId] = []
-        allCompletedByGc[gcId].push({ session_number: (s as any).session_number ?? null })
+        const gcId  = (s as any).group_course_id as string
+        const grpId = gcToGroupId.get(gcId)
+        if (!grpId) continue
+        if (!allCompletedByGroup[grpId]) allCompletedByGroup[grpId] = []
+        allCompletedByGroup[grpId].push({ session_number: (s as any).session_number ?? null })
       }
       for (const gi of (giRes.data ?? []) as Array<{ group_id: string; from_session: number; to_session: number | null; allocated_sessions: number | null; allocation_status: string }>) {
         allocationByGroup[gi.group_id] = {
@@ -249,8 +246,7 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
 
       for (const row of gcRows as any[]) {
         const alloc    = allocationByGroup[row.group_id]
-        const gcId     = row.id as string
-        const sessions = allCompletedByGc[gcId] ?? []
+        const sessions = allCompletedByGroup[row.group_id] ?? []
 
         // Count only sessions within this instructor's allocation range.
         const completedInRange = alloc
@@ -345,12 +341,13 @@ export async function getGroupForInstructor(
 ): Promise<GroupForInstructor | null> {
   const db = createServiceClient()
 
-  // Get the active group_course for this group (no instructor filter — check access separately).
-  // total_sessions is fetched in a separate safe query (column may be missing if migration is pending).
-  const { data: gcRow } = await db
+  // Fetch ALL group_courses for this group — sessions may be under an inactive/replaced row.
+  // Prefer the active one for display metadata; use all IDs for session queries.
+  // (No .maybeSingle() — multiple active rows possible; picks best deterministically.)
+  const { data: gcList } = await db
     .from('group_courses')
     .select(
-      `id, course_id, instructor_id,
+      `id, course_id, instructor_id, status,
        groups!group_courses_group_id_fkey(
          name, branch_id, day_of_week, time,
          branches!groups_branch_id_fkey(name)
@@ -358,8 +355,12 @@ export async function getGroupForInstructor(
        courses!group_courses_course_id_fkey(title)`
     )
     .eq('group_id', groupId)
-    .eq('status', 'active')
-    .maybeSingle()
+    .order('created_at', { ascending: false })
+
+  const allGroupCourseIds = (gcList ?? []).map((r: any) => r.id as string)
+  const gcRow = ((gcList ?? []) as any[]).find((r: any) => r.status === 'active')
+    ?? ((gcList ?? []) as any[])[0]
+    ?? null
 
   if (gcRow) {
     const gc = gcRow as any
@@ -408,7 +409,7 @@ export async function getGroupForInstructor(
         .eq('status', 'active'),
       db.from('schedules')
         .select('id, group_course_id, scheduled_at, duration_minutes, type, delivery, status, topic, notes')
-        .eq('group_course_id', gc.id)
+        .in('group_course_id', allGroupCourseIds.length > 0 ? allGroupCourseIds : [gc.id])
         .order('scheduled_at', { ascending: false })
         .limit(50),
     ])

@@ -289,7 +289,7 @@ export async function getGroupSchedules(groupId: string): Promise<GroupScheduleI
     .in('group_course_id', gcIds)
     .neq('status', 'cancelled')
     .order('scheduled_at', { ascending: false })
-    .limit(50)
+    .limit(200)
 
   if (error) return []
 

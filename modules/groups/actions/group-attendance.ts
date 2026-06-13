@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission }   from '@/modules/rbac/guards'
 import { recordAttendanceSession } from '@/modules/attendance/actions'
@@ -40,30 +41,77 @@ export async function addGroupSessionAction(params: {
   return { success: true, scheduleId: (result.data as { scheduleId: string }).scheduleId }
 }
 
-// ── Edit session metadata (topic / duration) ──────────────────────────────────
-// Updates topic and duration for a completed session.
-// Does NOT change attendance statuses or the session date (use add+delete for
-// date changes — they require full reconciliation).
+// ── Edit session — full canonical update ─────────────────────────────────────
+// Handles any combination of:
+//   • topic / duration_minutes / delivery — metadata-only changes
+//   • scheduled_at — date/time change; triggers per-student enrollment re-evaluation
+//   • student_statuses — per-student attendance status changes
+//
+// After any change the function calls recompute_schedule_consumptions() which:
+//   1. Re-evaluates each student's enrollment window against the session date
+//   2. Adds or removes attendance_consumptions entries accordingly
+//   3. Recomputes consumed_sessions for all affected enrollments
+//
+// This ensures instructor history, student attendance, package consumption,
+// remaining sessions, progress bars and analytics all reflect the edit without
+// any stale data.
 
 export async function editGroupSessionAction(
   scheduleId: string,
-  patch: { topic?: string; duration_minutes?: number },
+  patch: {
+    topic?:            string
+    duration_minutes?: number
+    scheduled_at?:     string   // ISO datetime string; re-evaluates consumption windows
+    delivery?:         'online' | 'offline'
+    student_statuses?: { student_id: string; status: string }[]
+  },
 ): Promise<{ success: boolean; error?: string }> {
   await requirePermission('manage_attendance')
   const db = createServiceClient()
 
-  const update: Record<string, unknown> = {}
-  if (patch.topic           != null) update.topic            = patch.topic
-  if (patch.duration_minutes != null) update.duration_minutes = patch.duration_minutes
+  // ── 1. Update schedule metadata ───────────────────────────────────────────
+  const schedUpdate: Record<string, unknown> = {}
+  if (patch.topic            != null) schedUpdate.topic            = patch.topic
+  if (patch.duration_minutes != null) schedUpdate.duration_minutes = patch.duration_minutes
+  if (patch.delivery         != null) schedUpdate.delivery         = patch.delivery
+  if (patch.scheduled_at     != null) schedUpdate.scheduled_at     = new Date(patch.scheduled_at).toISOString()
 
-  if (Object.keys(update).length === 0) return { success: true }
+  if (Object.keys(schedUpdate).length > 0) {
+    const { error } = await db
+      .from('schedules')
+      .update(schedUpdate)
+      .eq('id', scheduleId)
+    if (error) return { success: false, error: error.message }
+  }
 
-  const { error } = await db
-    .from('schedules')
-    .update(update)
-    .eq('id', scheduleId)
+  // ── 2. Update per-student attendance statuses ─────────────────────────────
+  if (patch.student_statuses && patch.student_statuses.length > 0) {
+    for (const s of patch.student_statuses) {
+      const { error } = await db
+        .from('attendance_records')
+        .update({ status: s.status })
+        .eq('schedule_id', scheduleId)
+        .eq('student_id', s.student_id)
+        .is('invalidated_at', null)
+      if (error) return { success: false, error: error.message }
+    }
+  }
 
-  if (error) return { success: false, error: error.message }
+  // ── 3. Re-evaluate consumption for every student in this session ──────────
+  // recompute_schedule_consumptions() is idempotent — safe to call even when
+  // only topic/duration changed (no-ops in that case).
+  const { error: rpcErr } = await db.rpc('recompute_schedule_consumptions', {
+    p_schedule_id: scheduleId,
+  })
+  if (rpcErr) return { success: false, error: rpcErr.message }
+
+  // ── 4. Revalidate all affected portal paths ───────────────────────────────
+  revalidatePath('/admin/attendance')
+  revalidatePath('/portal/team-leader/attendance')
+  revalidatePath('/portal/team-leader/groups')
+  revalidatePath('/portal/instructor', 'layout')
+  revalidatePath('/portal/student', 'layout')
+
   return { success: true }
 }
 
@@ -89,6 +137,14 @@ export async function deleteGroupSessionAction(
   })
 
   if (error) throw new Error(error.message)
+
+  // Revalidate all portals so instructor history, student attendance, and
+  // package consumption reflect the deletion immediately.
+  revalidatePath('/admin/attendance')
+  revalidatePath('/portal/team-leader/attendance')
+  revalidatePath('/portal/team-leader/groups')
+  revalidatePath('/portal/instructor', 'layout')
+  revalidatePath('/portal/student', 'layout')
 
   return data as {
     invalidated_records:    number
@@ -127,6 +183,11 @@ export async function rebuildGroupAttendanceAction(
 
   const enrollIds = new Set(((enrollRows ?? []) as { id: string }[]).map(r => r.id))
   const fixed = allResults.filter(r => r.fixed && enrollIds.has(r.enrollment_id)).length
+
+  revalidatePath('/admin/attendance')
+  revalidatePath('/portal/team-leader/groups')
+  revalidatePath('/portal/instructor', 'layout')
+  revalidatePath('/portal/student', 'layout')
 
   return { fixed_enrollments: fixed }
 }

@@ -23,6 +23,7 @@ export type {
   GroupDetailData,
   GroupDetailSession,
   GroupDetailStudent,
+  SessionAttendanceRecord,
   StudentAttendanceHistoryRecord,
   StudentAuthData,
   StudentAttendanceSummary,

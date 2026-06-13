@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { buildWhatsAppUrl, buildTelUrl } from '@/lib/phone'
 import EnrollmentWizard from '../finance/EnrollmentWizard'
 import type { StudentResult } from '../finance/EnrollmentWizard'
-import CollectPaymentModal from './CollectPaymentModal'
 import {
   getStudentAttendanceHistoryAction,
   getStudentAuthDataAction,
@@ -753,13 +752,14 @@ function buildWizardStudent(s: GroupDetailStudent, group: GroupOperationalRow): 
 // ─── Main modal ───────────────────────────────────────────────────────────────
 
 interface Props {
-  student:           GroupDetailStudent
-  group:             GroupOperationalRow
-  onClose:           () => void
-  onStudentUpdated?: () => void
+  student:              GroupDetailStudent
+  group:                GroupOperationalRow
+  onClose:              () => void
+  onStudentUpdated?:    () => void
+  onOpenFullFinance?:   () => void
 }
 
-export default function StudentQuickViewModal({ student: s, group, onClose, onStudentUpdated }: Props) {
+export default function StudentQuickViewModal({ student: s, group, onClose, onStudentUpdated, onOpenFullFinance }: Props) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
@@ -783,17 +783,16 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   const [timelineDirty, setTimelineDirty] = useState(false)
 
   // Overlay modals
-  const [wizardOpen,      setWizardOpen]      = useState(false)
-  const [collectPayOpen,  setCollectPayOpen]   = useState(false)
+  const [wizardOpen, setWizardOpen] = useState(false)
 
-  // ESC to close (but not if an overlay is open)
+  // ESC to close (but not if the enrollment wizard is open)
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !wizardOpen && !collectPayOpen) onClose()
+      if (e.key === 'Escape' && !wizardOpen) onClose()
     }
     window.addEventListener('keydown', fn)
     return () => window.removeEventListener('keydown', fn)
-  }, [onClose, wizardOpen, collectPayOpen])
+  }, [onClose, wizardOpen])
 
   // Eager-load data needed for Overview + Attendance tabs
   useEffect(() => {
@@ -895,11 +894,6 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     onStudentUpdated?.()
   }
 
-  function handleCollectPaymentSuccess() {
-    setCollectPayOpen(false)
-    router.refresh()
-    onStudentUpdated?.()
-  }
 
   const waUrl  = buildWhatsAppUrl(s.parent_phone, s.phone)
   const telUrl = buildTelUrl(s.parent_phone, s.phone)
@@ -909,7 +903,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 : s.risk_level === 'MEDIUM' ? 'bg-amber-100 text-amber-700'
                 :                             'bg-emerald-100 text-emerald-700'
 
-  const anyOverlayOpen = wizardOpen || collectPayOpen
+  const anyOverlayOpen = wizardOpen
 
   return (
     <>
@@ -1013,7 +1007,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
             {activeTab === 'finance' && (
               <FinanceTab
                 s={s}
-                onCollectPayment={() => setCollectPayOpen(true)}
+                onCollectPayment={() => onOpenFullFinance?.()}
                 onCreateContract={() => setWizardOpen(true)}
               />
             )}
@@ -1043,15 +1037,6 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
           </div>
         </div>
       </div>
-
-      {/* ── Collect Payment modal (z-[85]/z-[90]) ─────────────────── */}
-      {collectPayOpen && (
-        <CollectPaymentModal
-          student={s}
-          onClose={() => setCollectPayOpen(false)}
-          onSuccess={handleCollectPaymentSuccess}
-        />
-      )}
 
       {/* ── Enrollment Wizard (z-[80]) ─────────────────────────────── */}
       {wizardOpen && (

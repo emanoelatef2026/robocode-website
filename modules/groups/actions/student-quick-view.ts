@@ -22,6 +22,7 @@ export async function getStudentAttendanceSummaryAction(
     .from('attendance_records')
     .select('status')
     .eq('student_id', studentId)
+    .is('invalidated_at', null)
 
   const rows = (data ?? []) as Array<{ status: string }>
 

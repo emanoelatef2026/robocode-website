@@ -429,12 +429,12 @@ export async function createReversal(input: CreateReversalInput) {
 
   const branchId = await getAccountBranchId(db, o.account_id)
   if (!branchId) return { error: 'Account not found' }
-  assertBranchAccess(user, branchId)
+  try { assertBranchAccess(user, branchId) } catch { return { error: 'Not authorized for this branch' } }
 
   const amount = Math.min(input.amount, Number(o.amount))
   if (amount <= 0) return { error: 'Reversal amount must be positive and <= original amount' }
 
-  // Insert reversal record
+  // Record the reversal in the audit table
   const { error: revErr } = await db.from('finance_payment_reversals').insert({
     original_payment_id: input.original_payment_id,
     enrollment_id:       o.enrollment_id ?? null,
@@ -445,24 +445,29 @@ export async function createReversal(input: CreateReversalInput) {
     reason:              input.reason ?? null,
     created_by:          user.id,
   })
-
   if (revErr) return { error: revErr.message }
 
-  // Debit the account balance by inserting a negative payment entry
-  await db.from('finance_payments').insert({
-    student_id:    o.student_id,
-    account_id:    o.account_id,
-    enrollment_id: o.enrollment_id ?? null,
-    amount:        -amount,
-    payment_date:  new Date().toISOString().slice(0, 10),
+  // Insert a negative ledger entry to debit the balance
+  // Requires migration 0102 which drops the CHECK (amount > 0) constraint.
+  const { error: payErr } = await db.from('finance_payments').insert({
+    student_id:     o.student_id,
+    account_id:     o.account_id,
+    enrollment_id:  o.enrollment_id ?? null,
+    amount:         -amount,
+    payment_date:   new Date().toISOString().slice(0, 10),
     payment_method: 'cash',
-    notes:         `${input.reversal_type ?? 'REVERSAL'}: ${input.reason ?? 'No reason provided'} (original payment ${input.original_payment_id})`,
-    created_by:    user.id,
+    notes:          `${input.reversal_type ?? 'REVERSAL'}: ${input.reason ?? 'No reason provided'} (original payment ${input.original_payment_id})`,
+    created_by:     user.id,
   })
+  if (payErr) return { error: `Failed to debit balance: ${payErr.message}` }
+
+  // Recompute the account balance so totals are immediately consistent
+  await db.rpc('recompute_account_balance' as any, { p_account_id: o.account_id })
 
   revalidatePath('/portal/team-leader/finance')
   revalidatePath('/admin/finance')
   revalidatePath('/portal/parent/finance')
+  revalidatePath('/portal/team-leader/groups')
 
   return { ok: true }
 }

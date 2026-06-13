@@ -6,6 +6,12 @@ export interface GroupDetailData {
   students: GroupDetailStudent[]
 }
 
+export interface SessionAttendanceRecord {
+  id:         string
+  student_id: string
+  status:     string
+}
+
 export interface GroupDetailSession {
   id:               string
   scheduled_at:     string
@@ -18,6 +24,9 @@ export interface GroupDetailSession {
   present_count:    number          // present/late/makeup attendance records
   absent_count:     number          // absent attendance records
   course_name:      string | null   // which course this session belongs to
+  delivery:         string | null   // online / offline / hybrid
+  // Per-student attendance records — populated for edit pre-fill
+  student_attendance: SessionAttendanceRecord[]
 }
 
 export interface GroupDetailStudent {

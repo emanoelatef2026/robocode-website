@@ -174,10 +174,11 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
 
   // Reversal state
-  const [reversing,      setReversing]      = useState<string | null>(null)
-  const [reversalType,   setReversalType]   = useState<'REVERSAL'|'REFUND'|'CORRECTION'>('REVERSAL')
-  const [reversalReason, setReversalReason] = useState('')
-  const [reversalErr,    setReversalErr]    = useState<string | null>(null)
+  const [reversing,        setReversing]        = useState<string | null>(null)
+  const [reversalType,     setReversalType]     = useState<'REVERSAL'|'REFUND'|'CORRECTION'>('REVERSAL')
+  const [reversalReason,   setReversalReason]   = useState('')
+  const [reversalErr,      setReversalErr]      = useState<string | null>(null)
+  const [reversalLoading,  setReversalLoading]  = useState(false)
 
   // Collection actions
   const [noteText,    setNoteText]    = useState('')
@@ -321,7 +322,8 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
   async function handleReversalSubmit(paymentId: string, paymentAmount: number) {
     if (!reversalReason.trim()) { setReversalErr('Reason is required'); return }
     setReversalErr(null)
-    startTransition(async () => {
+    setReversalLoading(true)
+    try {
       const res = await createReversal({
         original_payment_id: paymentId,
         amount:              paymentAmount,
@@ -331,10 +333,15 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
       if (res && 'error' in res) {
         setReversalErr((res as any).error)
       } else {
-        setReversing(null); setReversalReason('')
+        setReversing(null)
+        setReversalReason('')
         refreshAll()
       }
-    })
+    } catch (e: any) {
+      setReversalErr(e?.message ?? 'Unexpected error — please try again')
+    } finally {
+      setReversalLoading(false)
+    }
   }
 
   // ── Collection actions (all pass enrollment_id) ───────────────────────────
@@ -433,11 +440,13 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/30" onClick={onClose} aria-hidden="true" />
+      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" aria-hidden="true" />
 
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-white shadow-2xl sm:max-w-130 animate-slide-right"
+        className="relative flex w-full max-w-2xl max-h-[90vh] flex-col bg-white shadow-2xl rounded-2xl overflow-hidden"
         role="dialog" aria-modal="true"
+        onClick={e => e.stopPropagation()}
       >
 
         {/* ── HEADER ──────────────────────────────────────────────────────── */}
@@ -956,10 +965,13 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                                     className="w-full rounded border border-[#E2E8F0] px-2 py-1 text-xs focus:border-[#FF8A1F] focus:outline-none" />
                                   {reversalErr && <p className="text-[10px] text-red-600">{reversalErr}</p>}
                                   <div className="flex gap-1">
-                                    <button onClick={() => handleReversalSubmit(p.id, p.amount)} disabled={isPending}
-                                      className="flex-1 rounded bg-red-600 py-1 text-[10px] font-semibold text-white disabled:opacity-40">Confirm</button>
-                                    <button onClick={() => { setReversing(null); setReversalReason(''); setReversalErr(null) }}
-                                      className="flex-1 rounded border border-[#E2E8F0] py-1 text-[10px] text-[#64748B]">Cancel</button>
+                                    <button onClick={() => handleReversalSubmit(p.id, p.amount)} disabled={reversalLoading}
+                                      className="flex-1 rounded bg-red-600 py-1 text-[10px] font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-1">
+                                      {reversalLoading && <span className="h-2.5 w-2.5 animate-spin rounded-full border border-white border-t-transparent" />}
+                                      Confirm
+                                    </button>
+                                    <button onClick={() => { setReversing(null); setReversalReason(''); setReversalErr(null) }} disabled={reversalLoading}
+                                      className="flex-1 rounded border border-[#E2E8F0] py-1 text-[10px] text-[#64748B] disabled:opacity-40">Cancel</button>
                                   </div>
                                 </div>
                               ) : (
@@ -1103,6 +1115,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
             </div>
           )}
         </div>
+      </div>
       </div>
 
       {/* ── Add Payment Wizard (pre-fills student, opens on step 2) ───────── */}

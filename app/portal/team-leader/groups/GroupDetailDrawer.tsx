@@ -9,7 +9,7 @@ import {
   deleteGroupSessionAction,
   rebuildGroupAttendanceAction,
 } from '@/modules/groups/modal-actions'
-import type { GroupDetailData, GroupDetailStudent, GroupDetailSession }
+import type { GroupDetailData, GroupDetailStudent, GroupDetailSession, SessionAttendanceRecord }
   from '@/modules/groups/modal-actions'
 import type { GroupOperationalRow } from '@/modules/groups/operational'
 
@@ -444,11 +444,9 @@ function AttendanceTab({
   const [deletingId,   setDeletingId]   = useState<string | null>(null)
   const [confirmId,    setConfirmId]    = useState<string | null>(null)
   const [editingId,    setEditingId]    = useState<string | null>(null)
-  const [editTopic,    setEditTopic]    = useState('')
-  const [editSaving,   setEditSaving]   = useState(false)
   const [rebuilding,   setRebuilding]   = useState(false)
   const [rebuildMsg,   setRebuildMsg]   = useState<string | null>(null)
-  const [deleteErr,    setDeleteErr]    = useState<string | null>(null)
+  const [toast,        setToast]        = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
   const [showRecord,   setShowRecord]   = useState(false)
 
   if (loading) return <LoadingState />
@@ -456,28 +454,34 @@ function AttendanceTab({
   const upcoming = sessions.filter(s => new Date(s.scheduled_at) >= new Date())
   const past     = sessions.filter(s => new Date(s.scheduled_at) < new Date())
 
+  function showToast(type: 'success' | 'error', msg: string) {
+    setToast({ type, msg })
+    setTimeout(() => setToast(null), 4000)
+  }
+
   async function handleDelete(scheduleId: string) {
     setDeletingId(scheduleId)
-    setDeleteErr(null)
     try {
       await deleteGroupSessionAction(scheduleId)
       setConfirmId(null)
+      showToast('success', 'Session deleted — package consumption reversed')
       onSessionDeleted()
     } catch (e: unknown) {
-      setDeleteErr(e instanceof Error ? e.message : 'Delete failed')
+      showToast('error', e instanceof Error ? e.message : 'Delete failed')
     } finally {
       setDeletingId(null)
     }
   }
 
-  async function handleEditSave(scheduleId: string) {
-    setEditSaving(true)
-    try {
-      const res = await editGroupSessionAction(scheduleId, { topic: editTopic })
-      if (res.success) { setEditingId(null); onSessionAdded() }
-    } finally {
-      setEditSaving(false)
-    }
+  async function handleEditSave(
+    scheduleId: string,
+    patch: Parameters<typeof editGroupSessionAction>[1],
+  ) {
+    const res = await editGroupSessionAction(scheduleId, patch)
+    if (!res.success) throw new Error(res.error ?? 'Save failed')
+    setEditingId(null)
+    showToast('success', 'Session updated — consumption recalculated')
+    onSessionAdded()
   }
 
   async function handleRebuild() {
@@ -496,28 +500,43 @@ function AttendanceTab({
 
   return (
     <div className="space-y-4">
+      {/* Toast notifications */}
+      {toast && (
+        <div className={`rounded-lg border px-3 py-2 text-[11px] font-medium ${
+          toast.type === 'success'
+            ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+            : 'bg-red-50 border-red-100 text-red-700'
+        }`}>
+          {toast.msg}
+        </div>
+      )}
+
       {/* Top bar: session count + actions */}
       <div className="flex items-center justify-between gap-2">
         <p className="text-[11px] text-[#94A3B8]">
           {sessions.length} session{sessions.length !== 1 ? 's' : ''}
+          {past.length > 0 && (
+            <span className="ml-1 text-emerald-600">· {past.length} recorded</span>
+          )}
         </p>
         <div className="flex gap-2">
           <button
             onClick={handleRebuild}
             disabled={rebuilding}
+            title="Rebuild consumption for all students in this group"
             className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#374151] hover:bg-[#F8FAFC] transition disabled:opacity-50"
           >
             {rebuilding ? 'Rebuilding…' : 'Rebuild'}
           </button>
           <button
-            onClick={() => { setShowRecord(r => !r); setDeleteErr(null) }}
+            onClick={() => { setShowRecord(r => !r); setEditingId(null) }}
             className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold transition ${
               showRecord
                 ? 'bg-[#FF8A1F]/10 border border-[#FF8A1F]/30 text-[#FF8A1F]'
                 : 'bg-[#FF8A1F] text-white hover:bg-[#e87c18]'
             }`}
           >
-            {showRecord ? '✕ Cancel' : '+ Record Session'}
+            {showRecord ? '✕ Cancel' : '+ Add Session'}
           </button>
         </div>
       </div>
@@ -525,11 +544,6 @@ function AttendanceTab({
       {rebuildMsg && (
         <p className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 text-[11px] text-emerald-700">
           {rebuildMsg}
-        </p>
-      )}
-      {deleteErr && (
-        <p className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-[11px] text-red-700">
-          {deleteErr}
         </p>
       )}
 
@@ -551,17 +565,15 @@ function AttendanceTab({
               <SessionRow
                 key={s.id}
                 session={s}
+                students={students}
                 confirmId={confirmId}
                 deletingId={deletingId}
                 editingId={editingId}
-                editTopic={editTopic}
-                editSaving={editSaving}
-                onConfirmOpen={id => { setConfirmId(id); setDeleteErr(null) }}
+                onConfirmOpen={id => { setConfirmId(id) }}
                 onConfirmClose={() => setConfirmId(null)}
                 onDelete={handleDelete}
-                onEditOpen={s => { setEditingId(s.id); setEditTopic(s.topic ?? '') }}
+                onEditOpen={id => { setEditingId(id); setShowRecord(false) }}
                 onEditClose={() => setEditingId(null)}
-                onEditTopicChange={setEditTopic}
                 onEditSave={handleEditSave}
               />
             ))}
@@ -577,17 +589,15 @@ function AttendanceTab({
               <SessionRow
                 key={s.id}
                 session={s}
+                students={students}
                 confirmId={confirmId}
                 deletingId={deletingId}
                 editingId={editingId}
-                editTopic={editTopic}
-                editSaving={editSaving}
-                onConfirmOpen={id => { setConfirmId(id); setDeleteErr(null) }}
+                onConfirmOpen={id => { setConfirmId(id) }}
                 onConfirmClose={() => setConfirmId(null)}
                 onDelete={handleDelete}
-                onEditOpen={s => { setEditingId(s.id); setEditTopic(s.topic ?? '') }}
+                onEditOpen={id => { setEditingId(id); setShowRecord(false) }}
                 onEditClose={() => setEditingId(null)}
-                onEditTopicChange={setEditTopic}
                 onEditSave={handleEditSave}
               />
             ))}
@@ -596,30 +606,230 @@ function AttendanceTab({
       )}
 
       {!upcoming.length && !past.length && !showRecord && (
-        <p className="py-8 text-center text-sm text-[#94A3B8]">No sessions yet. Use "+ Record Session" to add one.</p>
+        <p className="py-8 text-center text-sm text-[#94A3B8]">
+          No sessions yet. Use &quot;+ Add Session&quot; to record one.
+        </p>
       )}
     </div>
   )
 }
 
-function SessionRow({
-  session, confirmId, deletingId, editingId, editTopic, editSaving,
-  onConfirmOpen, onConfirmClose, onDelete,
-  onEditOpen, onEditClose, onEditTopicChange, onEditSave,
+// ── Full inline edit form for a completed session ─────────────────────────────
+
+function SessionEditForm({
+  session,
+  students,
+  onSave,
+  onCancel,
 }: {
-  session:            GroupDetailSession
-  confirmId:          string | null
-  deletingId:         string | null
-  editingId:          string | null
-  editTopic:          string
-  editSaving:         boolean
-  onConfirmOpen:      (id: string) => void
-  onConfirmClose:     () => void
-  onDelete:           (id: string) => void
-  onEditOpen:         (s: GroupDetailSession) => void
-  onEditClose:        () => void
-  onEditTopicChange:  (v: string) => void
-  onEditSave:         (id: string) => void
+  session:  GroupDetailSession
+  students: GroupDetailStudent[]
+  onSave:   (patch: {
+    topic?:            string
+    duration_minutes?: number
+    scheduled_at?:     string
+    delivery?:         'online' | 'offline'
+    student_statuses?: { student_id: string; status: string }[]
+  }) => Promise<void>
+  onCancel: () => void
+}) {
+  const localISO = (iso: string) => {
+    const d = new Date(iso)
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+  }
+
+  const [datetime,  setDatetime]  = useState(localISO(session.scheduled_at))
+  const [topic,     setTopic]     = useState(session.topic ?? '')
+  const [duration,  setDuration]  = useState(String(session.duration_minutes || 60))
+  const [delivery,  setDelivery]  = useState<'online' | 'offline'>(
+    (session.delivery === 'offline' ? 'offline' : 'online') as 'online' | 'offline'
+  )
+  const [statuses,  setStatuses]  = useState<Record<string, AttStatus>>(() => {
+    const map: Record<string, AttStatus> = {}
+    for (const s of students) {
+      const rec = session.student_attendance.find(r => r.student_id === s.student_id)
+      map[s.student_id] = (rec?.status ?? 'present') as AttStatus
+    }
+    return map
+  })
+  const [saving, setSaving] = useState(false)
+  const [error,  setError]  = useState<string | null>(null)
+
+  const originalDatetime = localISO(session.scheduled_at)
+
+  async function handleSave() {
+    setSaving(true)
+    setError(null)
+    try {
+      const patch: Parameters<typeof onSave>[0] = {}
+
+      if (topic.trim() !== (session.topic ?? '').trim()) patch.topic = topic.trim()
+      const dur = Number(duration) || 60
+      if (dur !== session.duration_minutes) patch.duration_minutes = dur
+      if (delivery !== (session.delivery === 'offline' ? 'offline' : 'online')) patch.delivery = delivery
+      if (datetime !== originalDatetime) patch.scheduled_at = new Date(datetime).toISOString()
+
+      // Always send student statuses so the RPC can re-evaluate consumption
+      patch.student_statuses = students.map(s => ({
+        student_id: s.student_id,
+        status:     statuses[s.student_id] ?? 'present',
+      }))
+
+      await onSave(patch)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Save failed')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="mt-2 rounded-xl border border-[#FF8A1F]/30 bg-orange-50/30 p-3 space-y-3">
+      <p className="text-[11px] font-semibold text-[#0B1F3A]">Edit Session</p>
+
+      {/* Date/time + duration */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Date & Time</label>
+          <input
+            type="datetime-local"
+            value={datetime}
+            onChange={e => setDatetime(e.target.value)}
+            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2 py-1.5 text-[11px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+          />
+          {datetime !== originalDatetime && (
+            <p className="mt-0.5 text-[9px] text-amber-600">
+              ⚠ Date change will re-evaluate package eligibility
+            </p>
+          )}
+        </div>
+        <div>
+          <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Duration (min)</label>
+          <input
+            type="number"
+            value={duration}
+            onChange={e => setDuration(e.target.value)}
+            min={15} max={240} step={15}
+            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2 py-1.5 text-[11px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+          />
+        </div>
+      </div>
+
+      {/* Topic */}
+      <div>
+        <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Topic</label>
+        <input
+          type="text"
+          value={topic}
+          onChange={e => setTopic(e.target.value)}
+          placeholder="e.g. CSS Selectors, Variables…"
+          className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2 py-1.5 text-[11px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+        />
+      </div>
+
+      {/* Delivery */}
+      <div>
+        <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Delivery</label>
+        <div className="flex gap-2">
+          {(['online', 'offline'] as const).map(d => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDelivery(d)}
+              className={`rounded-lg px-3 py-1 text-[10px] font-medium border transition ${
+                delivery === d
+                  ? 'border-[#FF8A1F] bg-[#FF8A1F] text-white'
+                  : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#FF8A1F]'
+              }`}
+            >
+              {d.charAt(0).toUpperCase() + d.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Per-student attendance statuses */}
+      {students.length > 0 && (
+        <div>
+          <label className="block text-[10px] font-medium text-[#94A3B8] mb-1.5">
+            Attendance Statuses
+          </label>
+          <div className="space-y-1">
+            {students.map(s => (
+              <div key={s.student_id} className="flex items-center justify-between gap-2 rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5">
+                <span className="text-[11px] font-medium text-[#0B1F3A] truncate flex-1 min-w-0">
+                  {s.student_name}
+                </span>
+                <div className="flex gap-1 shrink-0">
+                  {ATT_STATUSES.map(st => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setStatuses(prev => ({ ...prev, [s.student_id]: st }))}
+                      className={`rounded px-1.5 py-0.5 text-[9px] font-semibold capitalize transition ${
+                        statuses[s.student_id] === st
+                          ? attStatusCls(st)
+                          : 'bg-[#F1F5F9] text-[#94A3B8] hover:bg-[#E2E8F0]'
+                      }`}
+                    >
+                      {st === 'makeup' ? 'mkp' : st.slice(0, 3)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <p className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-[10px] text-red-700">{error}</p>
+      )}
+
+      <div className="flex gap-2 pt-0.5">
+        <button
+          onClick={onCancel}
+          disabled={saving}
+          className="flex-1 rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition disabled:opacity-50"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex-1 rounded-lg bg-[#FF8A1F] px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[#e87c18] transition disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Save & Recalculate'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function SessionRow({
+  session,
+  students,
+  confirmId,
+  deletingId,
+  editingId,
+  onConfirmOpen,
+  onConfirmClose,
+  onDelete,
+  onEditOpen,
+  onEditClose,
+  onEditSave,
+}: {
+  session:       GroupDetailSession
+  students:      GroupDetailStudent[]
+  confirmId:     string | null
+  deletingId:    string | null
+  editingId:     string | null
+  onConfirmOpen: (id: string) => void
+  onConfirmClose: () => void
+  onDelete:      (id: string) => void
+  onEditOpen:    (id: string) => void
+  onEditClose:   () => void
+  onEditSave:    (id: string, patch: Parameters<typeof editGroupSessionAction>[1]) => Promise<void>
 }) {
   const isPast    = new Date(session.scheduled_at) < new Date()
   const statusCls = session.status === 'completed' ? 'bg-green-100 text-green-700' :
@@ -643,6 +853,15 @@ function SessionRow({
             <p className={`text-[13px] font-medium ${isPast ? 'text-[#0B1F3A]' : 'text-[#374151]'}`}>
               {fmtDateTime(session.scheduled_at)}
             </p>
+            {session.delivery && (
+              <span className={`text-[9px] font-medium rounded px-1.5 py-0.5 ${
+                session.delivery === 'online'
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'bg-slate-100 text-slate-500'
+              }`}>
+                {session.delivery}
+              </span>
+            )}
           </div>
           {/* Topic + course */}
           <p className="mt-0.5 text-[11px] text-[#64748B] truncate">
@@ -668,7 +887,7 @@ function SessionRow({
           )}
         </div>
 
-        {/* Right: status + actions */}
+        {/* Right: status badge + duration + Edit/Delete */}
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusCls}`}>
             {session.status}
@@ -676,11 +895,10 @@ function SessionRow({
           {session.duration_minutes > 0 && (
             <span className="text-[10px] text-[#94A3B8]">{session.duration_minutes}min</span>
           )}
-          {/* Edit / Delete triggers */}
           {session.status === 'completed' && !isConfirming && !isEditing && (
             <div className="flex gap-2">
               <button
-                onClick={() => onEditOpen(session)}
+                onClick={() => onEditOpen(session.id)}
                 className="text-[10px] text-[#64748B] hover:text-[#0B1F3A] transition"
               >
                 Edit
@@ -696,37 +914,21 @@ function SessionRow({
         </div>
       </div>
 
-      {/* Inline edit form */}
+      {/* Full edit form */}
       {isEditing && (
-        <div className="mt-2 flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2">
-          <input
-            type="text"
-            value={editTopic}
-            onChange={e => onEditTopicChange(e.target.value)}
-            placeholder="Topic…"
-            className="flex-1 rounded border border-[#E2E8F0] bg-white px-2 py-1 text-[11px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
-          />
-          <button
-            onClick={onEditClose}
-            className="rounded border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-medium text-[#64748B] hover:bg-[#F1F5F9] transition"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => onEditSave(session.id)}
-            disabled={editSaving}
-            className="rounded bg-[#FF8A1F] px-2 py-1 text-[10px] font-medium text-white hover:bg-[#e87c18] transition disabled:opacity-50"
-          >
-            {editSaving ? '…' : 'Save'}
-          </button>
-        </div>
+        <SessionEditForm
+          session={session}
+          students={students}
+          onSave={patch => onEditSave(session.id, patch)}
+          onCancel={onEditClose}
+        />
       )}
 
-      {/* Inline delete confirmation */}
+      {/* Delete confirmation */}
       {isConfirming && (
         <div className="mt-2 flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2">
           <span className="flex-1 text-[11px] text-red-700">
-            Delete session? This will reverse all package consumptions.
+            Delete session? This reverses all package consumptions.
           </span>
           <button
             onClick={onConfirmClose}

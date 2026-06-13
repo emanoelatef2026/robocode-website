@@ -250,14 +250,23 @@ export async function getRecentAttendance(
 export async function getOrCreateGroupCourse(groupId: string, branchId: string): Promise<string | null> {
   const db = createServiceClient()
 
-  const { data: existing } = await db
+  // Fetch ALL active group_courses to avoid a silent error when multiple rows exist
+  // (.maybeSingle() without .limit(1) throws PGRST116 on 2+ rows, returning null,
+  //  which then incorrectly triggers creation of another "General Sessions" row).
+  // Prefer a real course over the "General Sessions" placeholder so new sessions
+  // are linked to the canonical course when the TL has already set one.
+  const { data: gcList } = await db
     .from('group_courses')
-    .select('id')
+    .select('id, courses!group_courses_course_id_fkey(title)')
     .eq('group_id', groupId)
     .eq('status', 'active')
-    .maybeSingle()
+    .order('created_at', { ascending: false })
 
-  if (existing) return existing.id
+  const gcRows = (gcList ?? []) as any[]
+  if (gcRows.length > 0) {
+    const real = gcRows.find((gc: any) => gc.courses?.title && gc.courses.title !== 'General Sessions')
+    return ((real ?? gcRows[0]) as any).id as string
+  }
 
   let courseId: string
   const { data: existingCourse } = await db
