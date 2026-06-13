@@ -14,6 +14,10 @@ export interface GroupDetailSession {
   status:           string
   topic:            string | null
   meeting_url:      string | null
+  session_number:   number | null   // canonical from schedules.session_number
+  present_count:    number          // present/late/makeup attendance records
+  absent_count:     number          // absent attendance records
+  course_name:      string | null   // which course this session belongs to
 }
 
 export interface GroupDetailStudent {
@@ -64,4 +68,55 @@ export interface StudentAttendanceSummary {
   consumed_count:  number
   total_records:   number
   attendance_pct:  number
+}
+
+// ── Package Ledger (v_student_package_ledger) ─────────────────────────────────
+
+export interface PackageLedgerRecord {
+  consumption_id:       string
+  student_id:           string
+  attendance_record_id: string
+  enrollment_id:        string
+  consumed_at:          string
+  attendance_status:    string
+  invalidated_at:       string | null
+  schedule_id:          string
+  session_date:         string
+  topic:                string | null
+  session_status:       string
+  group_id:             string
+  group_name:           string
+  course_id:            string | null
+  course_name:          string | null
+  instructor_name:      string | null
+  enrolled_sessions:    number
+  enrollment_start:     string
+  enrollment_status:    string
+}
+
+// ── Course History (v_student_course_history) ─────────────────────────────────
+// Attendance-first: derives group/course from attendance_records → schedules →
+// group_courses → groups/courses. Does NOT rely on student_enrollments.group_id.
+
+export interface StudentCourseTimelineEntry {
+  student_id:         string
+  group_id:           string
+  group_name:         string
+  course_id:          string | null
+  course_name:        string | null
+  instructor_name:    string | null
+  enrollment_id:      string | null
+  enrolled_sessions:  number | null
+  consumed_sessions:  number | null
+  remaining_sessions: number | null
+  enrollment_status:  string | null
+  enrollment_start:   string | null
+  first_session_date: string | null
+  last_session_date:  string | null
+  total_present:      number
+  total_absent:       number
+  total_late:         number
+  total_excused:      number
+  total_makeup:       number
+  attendance_rate:    number | null
 }

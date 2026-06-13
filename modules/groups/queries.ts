@@ -271,19 +271,22 @@ export async function getGroupAcademicConfig(groupId: string): Promise<GroupAcad
 export async function getGroupSchedules(groupId: string): Promise<GroupScheduleItem[]> {
   const db = createServiceClient()
 
-  const { data: gcRow } = await db
+  // Fetch ALL group_courses for this group — active AND inactive.
+  // Previously used .maybeSingle() + .eq('status','active') which silently
+  // dropped sessions from historical/inactive courses (e.g. a course that was
+  // replaced). This caused "3 sessions" when 5 existed across two courses.
+  const { data: gcRows } = await db
     .from('group_courses')
     .select('id')
     .eq('group_id', groupId)
-    .eq('status', 'active')
-    .maybeSingle()
 
-  if (!gcRow) return []
+  const gcIds = ((gcRows ?? []) as { id: string }[]).map(r => r.id)
+  if (gcIds.length === 0) return []
 
   const { data, error } = await db
     .from('schedules')
-    .select('id, group_course_id, scheduled_at, duration_minutes, type, delivery, status, topic, meeting_url, room')
-    .eq('group_course_id', (gcRow as any).id)
+    .select('id, group_course_id, scheduled_at, duration_minutes, type, delivery, status, topic, meeting_url, room, session_number')
+    .in('group_course_id', gcIds)
     .neq('status', 'cancelled')
     .order('scheduled_at', { ascending: false })
     .limit(50)
@@ -296,10 +299,11 @@ export async function getGroupSchedules(groupId: string): Promise<GroupScheduleI
     scheduled_at:     row.scheduled_at,
     duration_minutes: row.duration_minutes,
     type:             row.type,
-    delivery:         row.delivery    ?? null,
+    delivery:         row.delivery      ?? null,
     status:           row.status,
-    topic:            row.topic       ?? null,
-    meeting_url:      row.meeting_url ?? null,
-    room:             row.room        ?? null,
+    topic:            row.topic         ?? null,
+    meeting_url:      row.meeting_url   ?? null,
+    room:             row.room          ?? null,
+    session_number:   row.session_number ?? null,
   })) as GroupScheduleItem[]
 }

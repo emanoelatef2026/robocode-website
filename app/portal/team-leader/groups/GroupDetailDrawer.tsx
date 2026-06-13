@@ -1,8 +1,14 @@
 'use client'
 
-import { useEffect, useState, useTransition } from 'react'
-import { getGroupDetailDataAction, archiveGroupAction }
-  from '@/modules/groups/modal-actions'
+import { useEffect, useState, useTransition, useCallback } from 'react'
+import {
+  getGroupDetailDataAction,
+  archiveGroupAction,
+  addGroupSessionAction,
+  editGroupSessionAction,
+  deleteGroupSessionAction,
+  rebuildGroupAttendanceAction,
+} from '@/modules/groups/modal-actions'
 import type { GroupDetailData, GroupDetailStudent, GroupDetailSession }
   from '@/modules/groups/modal-actions'
 import type { GroupOperationalRow } from '@/modules/groups/operational'
@@ -241,22 +247,323 @@ function StudentsTab({ students, loading }: { students: GroupDetailStudent[]; lo
   )
 }
 
+// ── Attendance status helpers ─────────────────────────────────────────────────
+
+const ATT_STATUSES = ['present', 'absent', 'late', 'excused', 'makeup'] as const
+type AttStatus = typeof ATT_STATUSES[number]
+
+function attStatusCls(s: AttStatus | string): string {
+  if (s === 'present') return 'bg-emerald-100 text-emerald-700'
+  if (s === 'late')    return 'bg-amber-100 text-amber-700'
+  if (s === 'absent')  return 'bg-red-100 text-red-700'
+  if (s === 'excused') return 'bg-blue-100 text-blue-700'
+  if (s === 'makeup')  return 'bg-purple-100 text-purple-700'
+  return 'bg-slate-100 text-slate-500'
+}
+
+// ── Record Session inline panel ───────────────────────────────────────────────
+
+function RecordSessionPanel({
+  group,
+  students,
+  onSuccess,
+  onCancel,
+}: {
+  group:     GroupOperationalRow
+  students:  GroupDetailStudent[]
+  onSuccess: () => void
+  onCancel:  () => void
+}) {
+  const now = new Date()
+  const localISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+    .toISOString().slice(0, 16)
+
+  const [datetime,  setDatetime]  = useState(localISO)
+  const [topic,     setTopic]     = useState('')
+  const [duration,  setDuration]  = useState('60')
+  const [delivery,  setDelivery]  = useState<'online' | 'offline'>('online')
+  const [statuses,  setStatuses]  = useState<Record<string, AttStatus>>(() =>
+    Object.fromEntries(students.map(s => [s.student_id, 'present' as AttStatus]))
+  )
+  const [saving,    setSaving]    = useState(false)
+  const [error,     setError]     = useState<string | null>(null)
+
+  async function handleSave() {
+    if (!topic.trim()) { setError('Topic is required'); return }
+    if (!datetime)     { setError('Session date is required'); return }
+    setSaving(true)
+    setError(null)
+    try {
+      const result = await addGroupSessionAction({
+        groupId:         group.group_id,
+        branchId:        group.branch_id,
+        sessionDatetime: datetime,
+        topic:           topic.trim(),
+        durationMinutes: Number(duration) || 60,
+        delivery,
+        students: students.map(s => ({
+          student_id: s.student_id,
+          status:     statuses[s.student_id] ?? 'present',
+        })),
+      })
+      if (!result.success) { setError(result.error ?? 'Failed to save'); return }
+      onSuccess()
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Unexpected error')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-[#FF8A1F]/30 bg-orange-50/40 p-4 space-y-3">
+      <p className="text-[12px] font-semibold text-[#0B1F3A]">Record Session</p>
+
+      {/* Date / time + topic */}
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Date & Time</label>
+          <input
+            type="datetime-local"
+            value={datetime}
+            onChange={e => setDatetime(e.target.value)}
+            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Duration (min)</label>
+          <input
+            type="number"
+            value={duration}
+            onChange={e => setDuration(e.target.value)}
+            min={15} max={240} step={15}
+            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Topic <span className="text-red-400">*</span></label>
+        <input
+          type="text"
+          value={topic}
+          onChange={e => setTopic(e.target.value)}
+          placeholder="e.g. CSS Selectors, Variables…"
+          className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+        />
+      </div>
+
+      <div>
+        <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Delivery</label>
+        <div className="flex gap-2">
+          {(['online', 'offline'] as const).map(d => (
+            <button
+              key={d}
+              type="button"
+              onClick={() => setDelivery(d)}
+              className={`rounded-lg px-3 py-1 text-[11px] font-medium border transition ${
+                delivery === d
+                  ? 'border-[#FF8A1F] bg-[#FF8A1F] text-white'
+                  : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#FF8A1F]'
+              }`}
+            >
+              {d.charAt(0).toUpperCase() + d.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Per-student attendance */}
+      {students.length > 0 && (
+        <div>
+          <label className="block text-[10px] font-medium text-[#94A3B8] mb-1.5">
+            Attendance ({students.length} student{students.length !== 1 ? 's' : ''})
+          </label>
+          <div className="space-y-1.5">
+            {students.map(s => (
+              <div key={s.student_id} className="flex items-center justify-between gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2">
+                <span className="text-[12px] font-medium text-[#0B1F3A] truncate flex-1">{s.student_name}</span>
+                <div className="flex gap-1 shrink-0">
+                  {ATT_STATUSES.map(st => (
+                    <button
+                      key={st}
+                      type="button"
+                      onClick={() => setStatuses(prev => ({ ...prev, [s.student_id]: st }))}
+                      className={`rounded px-1.5 py-0.5 text-[9px] font-semibold capitalize transition ${
+                        statuses[s.student_id] === st
+                          ? attStatusCls(st)
+                          : 'bg-[#F1F5F9] text-[#94A3B8] hover:bg-[#E2E8F0]'
+                      }`}
+                    >
+                      {st === 'makeup' ? 'mkp' : st.slice(0, 3)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <p className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-[11px] text-red-700">{error}</p>
+      )}
+
+      <div className="flex gap-2 pt-1">
+        <button
+          onClick={onCancel}
+          className="flex-1 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex-1 rounded-lg bg-[#FF8A1F] px-3 py-2 text-[12px] font-semibold text-white hover:bg-[#e87c18] transition disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Save Session'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Tab: Attendance ────────────────────────────────────────────────────────────
 
-function AttendanceTab({ sessions, loading }: { sessions: GroupDetailSession[]; loading: boolean }) {
+function AttendanceTab({
+  sessions, students, loading, group, onSessionDeleted, onRebuilt, onSessionAdded,
+}: {
+  sessions:         GroupDetailSession[]
+  students:         GroupDetailStudent[]
+  loading:          boolean
+  group:            GroupOperationalRow
+  onSessionDeleted: () => void
+  onRebuilt:        () => void
+  onSessionAdded:   () => void
+}) {
+  const [deletingId,   setDeletingId]   = useState<string | null>(null)
+  const [confirmId,    setConfirmId]    = useState<string | null>(null)
+  const [editingId,    setEditingId]    = useState<string | null>(null)
+  const [editTopic,    setEditTopic]    = useState('')
+  const [editSaving,   setEditSaving]   = useState(false)
+  const [rebuilding,   setRebuilding]   = useState(false)
+  const [rebuildMsg,   setRebuildMsg]   = useState<string | null>(null)
+  const [deleteErr,    setDeleteErr]    = useState<string | null>(null)
+  const [showRecord,   setShowRecord]   = useState(false)
+
   if (loading) return <LoadingState />
 
   const upcoming = sessions.filter(s => new Date(s.scheduled_at) >= new Date())
   const past     = sessions.filter(s => new Date(s.scheduled_at) < new Date())
 
+  async function handleDelete(scheduleId: string) {
+    setDeletingId(scheduleId)
+    setDeleteErr(null)
+    try {
+      await deleteGroupSessionAction(scheduleId)
+      setConfirmId(null)
+      onSessionDeleted()
+    } catch (e: unknown) {
+      setDeleteErr(e instanceof Error ? e.message : 'Delete failed')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  async function handleEditSave(scheduleId: string) {
+    setEditSaving(true)
+    try {
+      const res = await editGroupSessionAction(scheduleId, { topic: editTopic })
+      if (res.success) { setEditingId(null); onSessionAdded() }
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
+  async function handleRebuild() {
+    setRebuilding(true)
+    setRebuildMsg(null)
+    try {
+      const res = await rebuildGroupAttendanceAction(group.group_id)
+      setRebuildMsg(`Rebuilt — ${res.fixed_enrollments} enrollment(s) corrected`)
+      onRebuilt()
+    } catch {
+      setRebuildMsg('Rebuild failed')
+    } finally {
+      setRebuilding(false)
+    }
+  }
+
   return (
     <div className="space-y-4">
+      {/* Top bar: session count + actions */}
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] text-[#94A3B8]">
+          {sessions.length} session{sessions.length !== 1 ? 's' : ''}
+        </p>
+        <div className="flex gap-2">
+          <button
+            onClick={handleRebuild}
+            disabled={rebuilding}
+            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#374151] hover:bg-[#F8FAFC] transition disabled:opacity-50"
+          >
+            {rebuilding ? 'Rebuilding…' : 'Rebuild'}
+          </button>
+          <button
+            onClick={() => { setShowRecord(r => !r); setDeleteErr(null) }}
+            className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold transition ${
+              showRecord
+                ? 'bg-[#FF8A1F]/10 border border-[#FF8A1F]/30 text-[#FF8A1F]'
+                : 'bg-[#FF8A1F] text-white hover:bg-[#e87c18]'
+            }`}
+          >
+            {showRecord ? '✕ Cancel' : '+ Record Session'}
+          </button>
+        </div>
+      </div>
+
+      {rebuildMsg && (
+        <p className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 text-[11px] text-emerald-700">
+          {rebuildMsg}
+        </p>
+      )}
+      {deleteErr && (
+        <p className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-[11px] text-red-700">
+          {deleteErr}
+        </p>
+      )}
+
+      {/* Inline record session form */}
+      {showRecord && (
+        <RecordSessionPanel
+          group={group}
+          students={students}
+          onSuccess={() => { setShowRecord(false); onSessionAdded() }}
+          onCancel={() => setShowRecord(false)}
+        />
+      )}
+
       {upcoming.length > 0 && (
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Upcoming</p>
           <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0] bg-white">
             {upcoming.slice(0, 5).map(s => (
-              <SessionRow key={s.id} session={s} />
+              <SessionRow
+                key={s.id}
+                session={s}
+                confirmId={confirmId}
+                deletingId={deletingId}
+                editingId={editingId}
+                editTopic={editTopic}
+                editSaving={editSaving}
+                onConfirmOpen={id => { setConfirmId(id); setDeleteErr(null) }}
+                onConfirmClose={() => setConfirmId(null)}
+                onDelete={handleDelete}
+                onEditOpen={s => { setEditingId(s.id); setEditTopic(s.topic ?? '') }}
+                onEditClose={() => setEditingId(null)}
+                onEditTopicChange={setEditTopic}
+                onEditSave={handleEditSave}
+              />
             ))}
           </div>
         </div>
@@ -264,43 +571,178 @@ function AttendanceTab({ sessions, loading }: { sessions: GroupDetailSession[]; 
 
       {past.length > 0 && (
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Recent Sessions</p>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Recorded Sessions</p>
           <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0] bg-white">
-            {past.slice(0, 10).map(s => (
-              <SessionRow key={s.id} session={s} />
+            {past.map(s => (
+              <SessionRow
+                key={s.id}
+                session={s}
+                confirmId={confirmId}
+                deletingId={deletingId}
+                editingId={editingId}
+                editTopic={editTopic}
+                editSaving={editSaving}
+                onConfirmOpen={id => { setConfirmId(id); setDeleteErr(null) }}
+                onConfirmClose={() => setConfirmId(null)}
+                onDelete={handleDelete}
+                onEditOpen={s => { setEditingId(s.id); setEditTopic(s.topic ?? '') }}
+                onEditClose={() => setEditingId(null)}
+                onEditTopicChange={setEditTopic}
+                onEditSave={handleEditSave}
+              />
             ))}
           </div>
         </div>
       )}
 
-      {!upcoming.length && !past.length && (
-        <p className="py-8 text-center text-sm text-[#94A3B8]">No sessions found.</p>
+      {!upcoming.length && !past.length && !showRecord && (
+        <p className="py-8 text-center text-sm text-[#94A3B8]">No sessions yet. Use "+ Record Session" to add one.</p>
       )}
     </div>
   )
 }
 
-function SessionRow({ session }: { session: GroupDetailSession }) {
+function SessionRow({
+  session, confirmId, deletingId, editingId, editTopic, editSaving,
+  onConfirmOpen, onConfirmClose, onDelete,
+  onEditOpen, onEditClose, onEditTopicChange, onEditSave,
+}: {
+  session:            GroupDetailSession
+  confirmId:          string | null
+  deletingId:         string | null
+  editingId:          string | null
+  editTopic:          string
+  editSaving:         boolean
+  onConfirmOpen:      (id: string) => void
+  onConfirmClose:     () => void
+  onDelete:           (id: string) => void
+  onEditOpen:         (s: GroupDetailSession) => void
+  onEditClose:        () => void
+  onEditTopicChange:  (v: string) => void
+  onEditSave:         (id: string) => void
+}) {
   const isPast    = new Date(session.scheduled_at) < new Date()
   const statusCls = session.status === 'completed' ? 'bg-green-100 text-green-700' :
                     session.status === 'scheduled'  ? 'bg-blue-100 text-blue-700'  :
                                                       'bg-[#F1F5F9] text-[#64748B]'
+  const isConfirming = confirmId === session.id
+  const isDeleting   = deletingId === session.id
+  const isEditing    = editingId === session.id
+
   return (
-    <div className="flex items-center justify-between gap-3 px-4 py-3">
-      <div className="min-w-0 flex-1">
-        <p className={`text-[13px] font-medium ${isPast ? 'text-[#0B1F3A]' : 'text-[#374151]'}`}>
-          {fmtDateTime(session.scheduled_at)}
-        </p>
-        {session.topic && <p className="mt-0.5 text-[11px] text-[#64748B] truncate">{session.topic}</p>}
+    <div className="px-4 py-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          {/* Session # + date */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {session.session_number != null && (
+              <span className="text-[10px] font-semibold text-[#94A3B8]">
+                #{session.session_number}
+              </span>
+            )}
+            <p className={`text-[13px] font-medium ${isPast ? 'text-[#0B1F3A]' : 'text-[#374151]'}`}>
+              {fmtDateTime(session.scheduled_at)}
+            </p>
+          </div>
+          {/* Topic + course */}
+          <p className="mt-0.5 text-[11px] text-[#64748B] truncate">
+            {[session.topic, session.course_name].filter(Boolean).join(' · ') || '—'}
+          </p>
+          {/* Attendance summary (completed sessions only) */}
+          {session.status === 'completed' && (
+            <div className="mt-1 flex items-center gap-2">
+              {session.present_count > 0 && (
+                <span className="text-[10px] font-medium text-emerald-600">
+                  ✓ {session.present_count} present
+                </span>
+              )}
+              {session.absent_count > 0 && (
+                <span className="text-[10px] font-medium text-red-500">
+                  ✗ {session.absent_count} absent
+                </span>
+              )}
+              {session.present_count === 0 && session.absent_count === 0 && (
+                <span className="text-[10px] text-[#94A3B8]">No attendance recorded</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Right: status + actions */}
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusCls}`}>
+            {session.status}
+          </span>
+          {session.duration_minutes > 0 && (
+            <span className="text-[10px] text-[#94A3B8]">{session.duration_minutes}min</span>
+          )}
+          {/* Edit / Delete triggers */}
+          {session.status === 'completed' && !isConfirming && !isEditing && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => onEditOpen(session)}
+                className="text-[10px] text-[#64748B] hover:text-[#0B1F3A] transition"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => onConfirmOpen(session.id)}
+                className="text-[10px] text-red-400 hover:text-red-600 transition"
+              >
+                Delete
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-1">
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusCls}`}>
-          {session.status}
-        </span>
-        {session.duration_minutes > 0 && (
-          <span className="text-[11px] text-[#94A3B8]">{session.duration_minutes}min</span>
-        )}
-      </div>
+
+      {/* Inline edit form */}
+      {isEditing && (
+        <div className="mt-2 flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2">
+          <input
+            type="text"
+            value={editTopic}
+            onChange={e => onEditTopicChange(e.target.value)}
+            placeholder="Topic…"
+            className="flex-1 rounded border border-[#E2E8F0] bg-white px-2 py-1 text-[11px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+          />
+          <button
+            onClick={onEditClose}
+            className="rounded border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-medium text-[#64748B] hover:bg-[#F1F5F9] transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onEditSave(session.id)}
+            disabled={editSaving}
+            className="rounded bg-[#FF8A1F] px-2 py-1 text-[10px] font-medium text-white hover:bg-[#e87c18] transition disabled:opacity-50"
+          >
+            {editSaving ? '…' : 'Save'}
+          </button>
+        </div>
+      )}
+
+      {/* Inline delete confirmation */}
+      {isConfirming && (
+        <div className="mt-2 flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2">
+          <span className="flex-1 text-[11px] text-red-700">
+            Delete session? This will reverse all package consumptions.
+          </span>
+          <button
+            onClick={onConfirmClose}
+            className="rounded border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onDelete(session.id)}
+            disabled={isDeleting}
+            className="rounded bg-red-500 px-2 py-1 text-[10px] font-medium text-white hover:bg-red-600 transition disabled:opacity-50"
+          >
+            {isDeleting ? '…' : 'Confirm'}
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -388,10 +830,33 @@ function ScheduleTab({ group, sessions, loading }: { group: GroupOperationalRow;
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Next Sessions</p>
           <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0] bg-white">
-            {upcoming.map(s => <SessionRow key={s.id} session={s} />)}
+            {upcoming.map(s => <ScheduleSessionRow key={s.id} session={s} />)}
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// Read-only session row used by ScheduleTab (no delete controls)
+function ScheduleSessionRow({ session }: { session: GroupDetailSession }) {
+  const statusCls = session.status === 'completed' ? 'bg-green-100 text-green-700' :
+                    session.status === 'scheduled'  ? 'bg-blue-100 text-blue-700'  :
+                                                      'bg-[#F1F5F9] text-[#64748B]'
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-3">
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-medium text-[#374151]">{fmtDateTime(session.scheduled_at)}</p>
+        {session.topic && <p className="mt-0.5 text-[11px] text-[#64748B] truncate">{session.topic}</p>}
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-1">
+        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusCls}`}>
+          {session.status}
+        </span>
+        {session.duration_minutes > 0 && (
+          <span className="text-[11px] text-[#94A3B8]">{session.duration_minutes}min</span>
+        )}
+      </div>
     </div>
   )
 }
@@ -413,19 +878,23 @@ export default function GroupDetailDrawer({ group, isTL, onClose, onEdit, onArch
   const [archiveConfirm, setArchiveConfirm] = useState(false)
   const [, startTransition] = useTransition()
 
-  useEffect(() => {
-    if (!group) { setDetailData(null); return }
-    setTab('overview')
-    setDetailData(null)
+  const loadDetail = useCallback((gId: string) => {
     setDetailLoading(true)
-    setArchiveConfirm(false)
     startTransition(() => {
-      getGroupDetailDataAction(group.group_id).then(data => {
+      getGroupDetailDataAction(gId).then(data => {
         setDetailData(data)
         setDetailLoading(false)
       }).catch(() => setDetailLoading(false))
     })
-  }, [group?.group_id])
+  }, [])
+
+  useEffect(() => {
+    if (!group) { setDetailData(null); return }
+    setTab('overview')
+    setDetailData(null)
+    setArchiveConfirm(false)
+    loadDetail(group.group_id)
+  }, [group?.group_id, loadDetail])
 
   useEffect(() => {
     if (!group) return
@@ -507,7 +976,17 @@ export default function GroupDetailDrawer({ group, isTL, onClose, onEdit, onArch
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {tab === 'overview'    && <OverviewTab    group={group} />}
           {tab === 'students'    && <StudentsTab    students={detailData?.students ?? []} loading={detailLoading} />}
-          {tab === 'attendance'  && <AttendanceTab  sessions={detailData?.sessions ?? []} loading={detailLoading} />}
+          {tab === 'attendance'  && (
+            <AttendanceTab
+              sessions={detailData?.sessions ?? []}
+              students={detailData?.students ?? []}
+              loading={detailLoading}
+              group={group}
+              onSessionDeleted={() => loadDetail(group.group_id)}
+              onRebuilt={() => loadDetail(group.group_id)}
+              onSessionAdded={() => loadDetail(group.group_id)}
+            />
+          )}
           {tab === 'performance' && <PerformanceTab group={group} />}
           {tab === 'schedule'    && <ScheduleTab    group={group} sessions={detailData?.sessions ?? []} loading={detailLoading} />}
         </div>

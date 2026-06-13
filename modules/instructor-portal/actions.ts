@@ -14,6 +14,12 @@ import {
   completeInstructorAllocation,
 } from '@/modules/academic/session-ownership'
 import { validateAcademicTopic } from '@/modules/academic/constants'
+import { SLOT_CONSUMING_STATUSES } from '@/modules/attendance/constants'
+import {
+  checkConsumptionEligibility,
+  resolveFifoEnrollment,
+  type EnrollmentForConsumption,
+} from '@/modules/academic/contract-consumption'
 import type { ActionResult } from '@/types/app'
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
@@ -486,10 +492,10 @@ export async function saveAttendance(
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
   }
 
-  // Server-side guard: fetch session status + topic together.
+  // Server-side guard: fetch session status + topic + scheduled_at together.
   const { data: sessStatusRow } = await db
     .from('schedules')
-    .select('status, topic')
+    .select('status, topic, scheduled_at')
     .eq('id', sessionId)
     .maybeSingle()
 
@@ -553,12 +559,84 @@ export async function saveAttendance(
     recorded_at:  new Date().toISOString(),
   }))
 
-  const { error: upsertErr } = await db
+  const { data: upsertedRows, error: upsertErr } = await db
     .from('attendance_records')
     .upsert(records, { onConflict: 'schedule_id,student_id' })
+    .select('id, student_id, status')
 
   if (upsertErr) {
     return { success: false, error: { code: 'DB_ERROR', message: upsertErr.message } }
+  }
+
+  // ── Canonical consumption ledger update ───────────────────────────────────────
+  // Mirrors the logic in modules/attendance/actions.ts recordAttendanceSession.
+  // Resolves each student's FIFO-eligible enrollment and calls
+  // consume_attendance_sessions_batch so that:
+  //   • attendance_consumptions gets one row per consuming record
+  //   • student_enrollments.consumed_sessions stays in sync
+  //   • student dashboard shows the correct X / enrolled progress
+  {
+    const sessionDateISO = (sessStatusRow as any)?.scheduled_at as string | null
+    if (sessionDateISO && upsertedRows && upsertedRows.length > 0) {
+      const sessionDatePart = sessionDateISO.slice(0, 10)
+
+      // Single batch query: all ACTIVE enrollments for the students in this session
+      const { data: enrollRows } = await db
+        .from('student_enrollments')
+        .select('id, student_id, remaining_sessions, allow_overdraft_sessions, enrolled_sessions, start_date, end_date')
+        .eq('status', 'ACTIVE')
+        .in('student_id', safeStudents)
+        .order('start_date', { ascending: true })
+        .order('created_at', { ascending: true })
+
+      // Build per-student ordered enrollment list (FIFO by start_date)
+      const allEnrollsByStudent = new Map<string, EnrollmentForConsumption[]>()
+      for (const e of (enrollRows ?? []) as any[]) {
+        const sid   = e.student_id as string
+        const entry: EnrollmentForConsumption = {
+          id:                 e.id,
+          start_date:         e.start_date ?? sessionDatePart,
+          end_date:           (e.end_date as string | null) ?? null,
+          enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
+          remaining_sessions: Number(e.remaining_sessions ?? 0),
+          allow_overdraft:    Boolean(e.allow_overdraft_sessions),
+        }
+        const list = allEnrollsByStudent.get(sid) ?? []
+        list.push(entry)
+        allEnrollsByStudent.set(sid, list)
+      }
+
+      const p_record_ids:     string[] = []
+      const p_enrollment_ids: string[] = []
+      const p_student_ids:    string[] = []
+
+      for (const rec of (upsertedRows as any[])) {
+        const sid        = rec.student_id as string
+        const enrollment = resolveFifoEnrollment(
+          allEnrollsByStudent.get(sid) ?? [],
+          sessionDateISO
+        )
+        const check = checkConsumptionEligibility(
+          rec.status as string,
+          sessionDateISO,
+          enrollment,
+          SLOT_CONSUMING_STATUSES
+        )
+        if (check.shouldConsume && enrollment) {
+          p_record_ids.push(rec.id as string)
+          p_enrollment_ids.push(enrollment.id)
+          p_student_ids.push(sid)
+        }
+      }
+
+      if (p_record_ids.length > 0) {
+        await db.rpc('consume_attendance_sessions_batch', {
+          p_record_ids,
+          p_enrollment_ids,
+          p_student_ids,
+        })
+      }
+    }
   }
 
   const contexts = await resolveGroupProgressContext(groupId)

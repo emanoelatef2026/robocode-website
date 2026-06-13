@@ -5,14 +5,21 @@ import { useRouter } from 'next/navigation'
 import { buildWhatsAppUrl, buildTelUrl } from '@/lib/phone'
 import EnrollmentWizard from '../finance/EnrollmentWizard'
 import type { StudentResult } from '../finance/EnrollmentWizard'
+import CollectPaymentModal from './CollectPaymentModal'
 import {
   getStudentAttendanceHistoryAction,
   getStudentAuthDataAction,
   getStudentAttendanceSummaryAction,
+  getStudentPackageLedgerAction,
+  getStudentCourseTimelineAction,
+  removeConsumptionAction,
+  reconcileStudentConsumptionAction,
   type GroupDetailStudent,
   type StudentAttendanceHistoryRecord,
   type StudentPortalCredentials,
   type StudentAttendanceSummary,
+  type PackageLedgerRecord,
+  type StudentCourseTimelineEntry,
 } from '@/modules/groups/modal-actions'
 import type { GroupOperationalRow } from '@/modules/groups/operational'
 
@@ -33,11 +40,11 @@ function initials(name: string): string {
 }
 
 function statusBadgeCls(status: string) {
-  if (status === 'present')  return 'bg-emerald-100 text-emerald-700'
-  if (status === 'late')     return 'bg-amber-100 text-amber-700'
-  if (status === 'absent')   return 'bg-red-100 text-red-700'
-  if (status === 'excused')  return 'bg-blue-100 text-blue-700'
-  if (status === 'makeup')   return 'bg-purple-100 text-purple-700'
+  if (status === 'present')   return 'bg-emerald-100 text-emerald-700'
+  if (status === 'late')      return 'bg-amber-100 text-amber-700'
+  if (status === 'absent')    return 'bg-red-100 text-red-700'
+  if (status === 'excused')   return 'bg-blue-100 text-blue-700'
+  if (status === 'makeup')    return 'bg-purple-100 text-purple-700'
   if (status === 'cancelled') return 'bg-slate-100 text-slate-400'
   return 'bg-slate-100 text-slate-600'
 }
@@ -48,6 +55,13 @@ function paymentStatusCls(s: string | null) {
   if (s === 'PAID')     return 'bg-emerald-100 text-emerald-700'
   if (s === 'BLOCKED')  return 'bg-red-200 text-red-800'
   return 'bg-slate-100 text-slate-600'
+}
+
+function enrollmentStatusCls(status: string) {
+  if (status === 'ACTIVE')    return 'bg-emerald-100 text-emerald-700'
+  if (status === 'COMPLETED') return 'bg-blue-100 text-blue-700'
+  if (status === 'EXPIRED')   return 'bg-slate-100 text-slate-500'
+  return 'bg-slate-100 text-slate-500'
 }
 
 async function copyToClipboard(text: string) {
@@ -121,7 +135,7 @@ function Skeleton({ className }: { className?: string }) {
   return <div className={`animate-pulse rounded bg-[#F1F5F9] ${className ?? 'h-4 w-full'}`} />
 }
 
-// ─── Attendance ring badge ────────────────────────────────────────────────────
+// ─── Attendance ring ──────────────────────────────────────────────────────────
 
 function AttRing({ pct }: { pct: number }) {
   const color = pct >= 85 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#ef4444'
@@ -143,13 +157,14 @@ function AttRing({ pct }: { pct: number }) {
 
 // ─── Tabs ─────────────────────────────────────────────────────────────────────
 
-type Tab = 'overview' | 'finance' | 'attendance' | 'learning'
+type Tab = 'overview' | 'finance' | 'attendance' | 'package-ledger' | 'history'
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: 'overview',   label: 'Overview' },
-  { key: 'finance',    label: 'Finance' },
-  { key: 'attendance', label: 'Attendance' },
-  { key: 'learning',   label: 'Learning' },
+  { key: 'overview',        label: 'Overview' },
+  { key: 'finance',         label: 'Finance' },
+  { key: 'attendance',      label: 'Attendance' },
+  { key: 'package-ledger',  label: 'Package Ledger' },
+  { key: 'history',         label: 'History' },
 ]
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
@@ -179,7 +194,6 @@ function OverviewTab({
 
   return (
     <div className="space-y-4">
-
       {/* Authentication */}
       <div>
         <div className="mb-2 flex items-center justify-between gap-2">
@@ -187,7 +201,6 @@ function OverviewTab({
           {!authLoading && authData && portalStatusBadge(authData.status)}
         </div>
         <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 space-y-0">
-          {/* Email */}
           <div className="flex items-center justify-between gap-2 border-b border-[#F1F5F9] py-1.5">
             <span className="shrink-0 text-[11px] text-[#94A3B8]">Email</span>
             <div className="flex items-center gap-1.5 min-w-0">
@@ -203,7 +216,6 @@ function OverviewTab({
               )}
             </div>
           </div>
-          {/* Password */}
           <div className="flex items-center justify-between gap-2 py-1.5">
             <span className="shrink-0 text-[11px] text-[#94A3B8]">Password</span>
             <div className="flex items-center gap-1.5 min-w-0">
@@ -287,7 +299,6 @@ function OverviewTab({
           </p>
         )}
       </div>
-
     </div>
   )
 }
@@ -305,19 +316,19 @@ function detectFinanceCase(s: GroupDetailStudent): FinanceCase {
 }
 
 function FinanceTab({
-  s, group, onOpenFinance,
+  s,
+  onCollectPayment,
+  onCreateContract,
 }: {
-  s:             GroupDetailStudent
-  group:         GroupOperationalRow
-  onOpenFinance: (mode: 'collect' | 'create') => void
+  s:                GroupDetailStudent
+  onCollectPayment: () => void
+  onCreateContract: () => void
 }) {
   const finCase = detectFinanceCase(s)
   const sub     = s.subscription_amount ?? 0
 
   return (
     <div className="space-y-4">
-
-      {/* Case badge */}
       {finCase === 'no_contract' && (
         <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-5 text-center">
           <div className="mb-2 inline-flex rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-[#64748B]">
@@ -343,7 +354,7 @@ function FinanceTab({
         </div>
       )}
 
-      {/* Contract summary (cases active / exhausted / overdue) */}
+      {/* Contract summary */}
       {finCase !== 'no_contract' && (
         <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2">
           <InfoRow label="Package / Subscription" value={sub > 0 ? fmtCurrency(sub) : '—'} />
@@ -354,8 +365,8 @@ function FinanceTab({
               ? <span className={s.sessions_remaining <= 2 ? 'text-red-600 font-semibold' : ''}>{s.sessions_remaining}</span>
               : '—'
           } />
-          <InfoRow label="Total paid"             value={s.paid_amount > 0 ? fmtCurrency(s.paid_amount) : '—'} />
-          <InfoRow label="Remaining balance"      value={
+          <InfoRow label="Total paid"    value={s.paid_amount > 0 ? fmtCurrency(s.paid_amount) : '—'} />
+          <InfoRow label="Remaining balance" value={
             s.remaining_balance > 0
               ? <span className="font-semibold text-red-600">{fmtCurrency(s.remaining_balance)}</span>
               : <span className="text-emerald-600">Settled</span>
@@ -370,31 +381,32 @@ function FinanceTab({
         </div>
       )}
 
-      {/* Actions */}
+      {/* Actions — each button has a distinct, independent purpose */}
       {finCase === 'no_contract' ? (
         <button
-          onClick={() => onOpenFinance('create')}
+          onClick={onCreateContract}
           className="w-full rounded-xl bg-[#FF8A1F] px-4 py-2.5 text-center text-[13px] font-semibold text-white hover:bg-[#e87c18] transition"
         >
           Create Contract
         </button>
       ) : (
         <div className="flex flex-col gap-2">
+          {/* Collect Payment — opens lightweight payment modal, NOT the enrollment wizard */}
           <button
-            onClick={() => onOpenFinance('collect')}
+            onClick={onCollectPayment}
             className="w-full rounded-xl bg-[#FF8A1F] px-4 py-2.5 text-center text-[13px] font-semibold text-white hover:bg-[#e87c18] transition"
           >
             Collect Payment
           </button>
+          {/* Renew Contract — opens full enrollment wizard to create a new package */}
           <button
-            onClick={() => onOpenFinance('create')}
+            onClick={onCreateContract}
             className="w-full rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-center text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F] transition"
           >
             Renew Contract
           </button>
         </div>
       )}
-
     </div>
   )
 }
@@ -411,7 +423,6 @@ function AttendanceTab({
 }) {
   return (
     <div className="space-y-4">
-      {/* Stats bar */}
       {attSumLoading ? (
         <div className="grid grid-cols-3 gap-2">
           {[1,2,3].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}
@@ -474,111 +485,238 @@ function AttendanceTab({
   )
 }
 
-// ─── Learning Tab ─────────────────────────────────────────────────────────────
+// ─── Package Ledger Tab ───────────────────────────────────────────────────────
 
-function LearningTab({
-  s, group, history, histLoad, attSummary,
+function PackageLedgerTab({
+  ledger,
+  loading,
+  reconciling,
+  onRemove,
+  onReconcile,
 }: {
-  s:          GroupDetailStudent
-  group:      GroupOperationalRow
-  history:    StudentAttendanceHistoryRecord[] | null
-  histLoad:   boolean
-  attSummary: StudentAttendanceSummary | null
+  ledger:      PackageLedgerRecord[] | null
+  loading:     boolean
+  reconciling: boolean
+  onRemove:    (consumptionId: string) => Promise<void>
+  onReconcile: () => Promise<void>
 }) {
-  const pct = s.sessions_used != null && s.sessions_total != null && s.sessions_total > 0
-    ? Math.min(100, Math.round((s.sessions_used / s.sessions_total) * 100))
-    : null
+  const [removingId, setRemovingId] = useState<string | null>(null)
+  const [removeError, setRemoveError] = useState<string | null>(null)
+
+  async function handleRemove(consumptionId: string) {
+    if (!confirm('Remove this consumption entry? This will restore one session slot to the package.')) return
+    setRemovingId(consumptionId)
+    setRemoveError(null)
+    await onRemove(consumptionId)
+    setRemovingId(null)
+  }
 
   return (
     <div className="space-y-4">
-      <div>
-        <SectionLabel>Course & Instructor</SectionLabel>
-        <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2">
-          <InfoRow label="Course"     value={group.course_name ?? <span className="text-[#CBD5E1]">No course</span>} />
-          <InfoRow label="Instructor" value={group.lead_instructor_name ?? <span className="text-[#CBD5E1]">Unassigned</span>} />
-          <InfoRow label="Joined"     value={fmtDate(s.joined_at)} />
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <SectionLabel>Package Ledger</SectionLabel>
+          {ledger && (
+            <p className="-mt-1 text-[11px] text-[#64748B]">
+              {ledger.length} consumption {ledger.length === 1 ? 'record' : 'records'}
+            </p>
+          )}
         </div>
+        <button
+          onClick={onReconcile}
+          disabled={reconciling || loading}
+          className="shrink-0 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F] disabled:opacity-50 transition"
+        >
+          {reconciling ? 'Running…' : 'Reconcile'}
+        </button>
       </div>
 
-      <div>
-        <SectionLabel>Session Progress</SectionLabel>
-        <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2">
-          <InfoRow label="Total sessions attended" value={
-            attSummary ? (
-              <span className="font-semibold text-emerald-600">{attSummary.present_count + attSummary.late_count + attSummary.makeup_count}</span>
-            ) : s.sessions_used != null ? `${s.sessions_used}` : '—'
-          } />
-          <InfoRow label="Total sessions missed" value={
-            attSummary ? (
-              <span className={attSummary.absent_count > 0 ? 'text-red-600 font-semibold' : ''}>{attSummary.absent_count}</span>
-            ) : '—'
-          } />
-          <InfoRow label="Package enrolled"  value={s.sessions_total != null ? `${s.sessions_total}` : '—'} />
-          <InfoRow label="Package consumed"  value={s.sessions_used  != null ? `${s.sessions_used}`  : '—'} />
-          <InfoRow label="Package remaining" value={
-            s.sessions_remaining != null
-              ? <span className={s.sessions_remaining <= 2 ? 'text-red-600 font-semibold' : ''}>{s.sessions_remaining} sessions</span>
-              : '—'
-          } />
-        </div>
-        {pct != null && (
-          <div className="mt-2 px-1">
-            <div className="flex justify-between text-[10px] text-[#94A3B8] mb-1">
-              <span>Package progress</span>
-              <span>{pct}%</span>
-            </div>
-            <div className="h-2 rounded-full bg-[#F1F5F9]">
-              <div
-                className={`h-2 rounded-full transition-all ${pct >= 75 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-[#CBD5E1]'}`}
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+      {removeError && (
+        <p className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-[11px] text-red-600">{removeError}</p>
+      )}
 
-      {/* Latest attendance timeline */}
-      <div>
-        <SectionLabel>Latest Attendance Timeline</SectionLabel>
-        {histLoad ? (
-          <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-10 rounded-xl" />)}</div>
-        ) : !history || history.length === 0 ? (
-          <p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 text-center text-[12px] text-[#94A3B8]">
-            No attendance history yet.
+      {loading ? (
+        <div className="space-y-2">
+          {[1,2,3,4].map(i => <Skeleton key={i} className="h-16 rounded-xl" />)}
+        </div>
+      ) : !ledger || ledger.length === 0 ? (
+        <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-8 text-center">
+          <p className="text-[13px] font-medium text-[#94A3B8]">No consumption records found</p>
+          <p className="mt-1 text-[11px] text-[#CBD5E1]">
+            Sessions appear here after attendance is recorded and linked to a package.
           </p>
-        ) : (
-          <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
-            {history.map(h => (
-              <div key={h.id} className="flex items-center gap-3 border-b border-[#F1F5F9] last:border-0 px-4 py-2">
-                <div className={`h-2 w-2 shrink-0 rounded-full ${
-                  h.status === 'present' ? 'bg-emerald-500'
-                  : h.status === 'late'  ? 'bg-amber-500'
-                  : h.status === 'absent' ? 'bg-red-500'
-                  : h.status === 'excused' ? 'bg-blue-400'
-                  : h.status === 'makeup'  ? 'bg-purple-400'
-                  : 'bg-slate-300'
-                }`} />
+          <button
+            onClick={onReconcile}
+            disabled={reconciling}
+            className="mt-4 rounded-lg bg-[#FF8A1F] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#e87c18] disabled:opacity-50 transition"
+          >
+            {reconciling ? 'Running reconciliation…' : 'Run Reconciliation Now'}
+          </button>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
+          {ledger.map(rec => (
+            <div key={rec.consumption_id} className="border-b border-[#F1F5F9] last:border-0 px-4 py-3">
+              <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium text-[#0B1F3A]">
-                    {h.scheduled_at ? fmtDate(h.scheduled_at) : '—'}
-                    {h.instructor_name && <span className="ml-1.5 text-[10px] text-[#94A3B8]">· {h.instructor_name}</span>}
-                    {h.group_name    && <span className="ml-1.5 text-[10px] text-[#94A3B8]">· {h.group_name}</span>}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[12px] font-semibold text-[#0B1F3A]">{fmtDate(rec.session_date)}</span>
+                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold capitalize ${statusBadgeCls(rec.attendance_status)}`}>
+                      {rec.attendance_status}
+                    </span>
+                    <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">
+                      consumed
+                    </span>
+                  </div>
+                  {rec.topic && (
+                    <p className="mt-0.5 text-[10px] text-[#0B1F3A] font-medium truncate">{rec.topic}</p>
+                  )}
+                  <p className="mt-0.5 text-[10px] text-[#64748B] truncate">
+                    {[rec.course_name, rec.group_name, rec.instructor_name].filter(Boolean).join(' · ')}
+                  </p>
+                  <p className="mt-0.5 text-[9px] text-[#CBD5E1]">
+                    Package: {rec.enrolled_sessions} sessions · From {fmtDate(rec.enrollment_start)}
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {h.is_consumed && (
-                    <span className="text-[9px] text-[#94A3B8]">consumed</span>
-                  )}
-                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold capitalize ${statusBadgeCls(h.status)}`}>
-                    {h.status}
-                  </span>
-                </div>
+                <button
+                  onClick={() => handleRemove(rec.consumption_id)}
+                  disabled={removingId === rec.consumption_id}
+                  className="shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-medium text-red-500 hover:bg-red-50 disabled:opacity-50 transition"
+                >
+                  {removingId === rec.consumption_id ? '…' : 'Remove'}
+                </button>
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── History Tab (academic timeline) ─────────────────────────────────────────
+// Data comes from v_student_course_history, which derives group/course from
+// attendance_records → schedules → group_courses. One card per (group, course).
+
+function HistoryTab({
+  timeline,
+  loading,
+}: {
+  timeline: StudentCourseTimelineEntry[] | null
+  loading:  boolean
+}) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <SectionLabel>Academic History</SectionLabel>
+        <p className="-mt-1 text-[11px] text-[#64748B]">Course attendance · one card per course</p>
       </div>
 
+      {loading ? (
+        <div className="space-y-3">
+          {[1,2,3].map(i => <Skeleton key={i} className="h-40 rounded-xl" />)}
+        </div>
+      ) : !timeline || timeline.length === 0 ? (
+        <p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-6 text-center text-[12px] text-[#94A3B8]">
+          No attendance history yet.
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {timeline.map((entry, idx) => {
+            const enrolled  = entry.enrolled_sessions  ?? 0
+            const consumed  = entry.consumed_sessions  ?? 0
+            const remaining = entry.remaining_sessions ?? 0
+            const pct       = enrolled > 0 ? Math.min(100, Math.round((consumed / enrolled) * 100)) : 0
+            const rate      = Number(entry.attendance_rate ?? 0)
+            const rateCls   = rate >= 85 ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+                            : rate >= 60 ? 'bg-amber-50  border-amber-100  text-amber-700'
+                            :              'bg-red-50    border-red-100    text-red-700'
+            const rateTextCls = rate >= 85 ? 'text-emerald-700' : rate >= 60 ? 'text-amber-700' : 'text-red-700'
+
+            return (
+              <div key={`${entry.group_id}-${entry.course_id ?? 'none'}-${idx}`}
+                   className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+
+                {/* Header: course name + enrollment status */}
+                <div className="flex items-start justify-between gap-2 mb-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-[#0B1F3A] truncate">
+                      {entry.course_name ?? 'General Sessions'}
+                    </p>
+                    <p className="text-[11px] text-[#64748B] truncate mt-0.5">
+                      {[entry.group_name, entry.instructor_name].filter(Boolean).join(' · ')}
+                    </p>
+                  </div>
+                  {entry.enrollment_status && (
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-semibold ${enrollmentStatusCls(entry.enrollment_status)}`}>
+                      {entry.enrollment_status}
+                    </span>
+                  )}
+                </div>
+
+                {/* Date range */}
+                <div className="flex flex-wrap gap-x-4 text-[10px] text-[#94A3B8] mb-3">
+                  <span>First: {fmtDate(entry.first_session_date)}</span>
+                  <span>Last: {fmtDate(entry.last_session_date)}</span>
+                </div>
+
+                {/* Attendance stats: present / absent / late / rate */}
+                <div className="grid grid-cols-4 gap-1.5 mb-3">
+                  <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-2 py-2 text-center">
+                    <p className="text-[15px] font-bold text-emerald-700">{entry.total_present}</p>
+                    <p className="text-[8px] font-semibold text-emerald-600 uppercase tracking-wide">Present</p>
+                  </div>
+                  <div className="rounded-lg bg-red-50 border border-red-100 px-2 py-2 text-center">
+                    <p className="text-[15px] font-bold text-red-700">{entry.total_absent}</p>
+                    <p className="text-[8px] font-semibold text-red-600 uppercase tracking-wide">Absent</p>
+                  </div>
+                  <div className="rounded-lg bg-amber-50 border border-amber-100 px-2 py-2 text-center">
+                    <p className="text-[15px] font-bold text-amber-700">{entry.total_late}</p>
+                    <p className="text-[8px] font-semibold text-amber-600 uppercase tracking-wide">Late</p>
+                  </div>
+                  <div className={`rounded-lg border px-2 py-2 text-center ${rateCls}`}>
+                    <p className={`text-[15px] font-bold ${rateTextCls}`}>{rate}%</p>
+                    <p className={`text-[8px] font-semibold uppercase tracking-wide ${rateTextCls}`}>Rate</p>
+                  </div>
+                </div>
+
+                {/* Package section — only shown when an enrollment is linked */}
+                {enrolled > 0 && (
+                  <div className="border-t border-[#E2E8F0] pt-3">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-[#94A3B8] mb-2">Package</p>
+                    <div className="grid grid-cols-3 gap-1.5 mb-2">
+                      <div className="rounded-lg bg-white border border-[#E2E8F0] px-2 py-1.5 text-center">
+                        <p className="text-[14px] font-bold text-[#0B1F3A]">{enrolled}</p>
+                        <p className="text-[8px] font-medium text-[#94A3B8] uppercase tracking-wide">Enrolled</p>
+                      </div>
+                      <div className="rounded-lg bg-white border border-[#E2E8F0] px-2 py-1.5 text-center">
+                        <p className="text-[14px] font-bold text-[#FF8A1F]">{consumed}</p>
+                        <p className="text-[8px] font-medium text-[#94A3B8] uppercase tracking-wide">Consumed</p>
+                      </div>
+                      <div className="rounded-lg bg-white border border-[#E2E8F0] px-2 py-1.5 text-center">
+                        <p className={`text-[14px] font-bold ${remaining <= 2 ? 'text-red-600' : 'text-emerald-600'}`}>
+                          {remaining}
+                        </p>
+                        <p className="text-[8px] font-medium text-[#94A3B8] uppercase tracking-wide">Remaining</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-between text-[9px] text-[#94A3B8] mb-0.5">
+                      <span>Package progress</span>
+                      <span>{pct}%</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-[#F1F5F9]">
+                      <div
+                        className={`h-1.5 rounded-full transition-all ${pct >= 75 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-[#CBD5E1]'}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
@@ -615,33 +753,49 @@ function buildWizardStudent(s: GroupDetailStudent, group: GroupOperationalRow): 
 // ─── Main modal ───────────────────────────────────────────────────────────────
 
 interface Props {
-  student:          GroupDetailStudent
-  group:            GroupOperationalRow
-  onClose:          () => void
+  student:           GroupDetailStudent
+  group:             GroupOperationalRow
+  onClose:           () => void
   onStudentUpdated?: () => void
 }
 
 export default function StudentQuickViewModal({ student: s, group, onClose, onStudentUpdated }: Props) {
   const router = useRouter()
-  const [activeTab, setActiveTab]       = useState<Tab>('overview')
-  const [history, setHistory]           = useState<StudentAttendanceHistoryRecord[] | null>(null)
-  const [histLoad, setHistLoad]         = useState(true)
-  const [authData, setAuthData]         = useState<StudentPortalCredentials | null>(null)
-  const [authLoading, setAuthLoading]   = useState(true)
-  const [attSummary, setAttSummary]     = useState<StudentAttendanceSummary | null>(null)
-  const [attSumLoading, setAttSumLoading] = useState(true)
-  const [financeOpen, setFinanceOpen]   = useState(false)
+  const [activeTab, setActiveTab] = useState<Tab>('overview')
 
-  // ESC to close (but not if finance wizard is open)
+  // Overview + Attendance data (loaded eagerly)
+  const [history,       setHistory]       = useState<StudentAttendanceHistoryRecord[] | null>(null)
+  const [histLoad,      setHistLoad]       = useState(true)
+  const [authData,      setAuthData]       = useState<StudentPortalCredentials | null>(null)
+  const [authLoading,   setAuthLoading]    = useState(true)
+  const [attSummary,    setAttSummary]     = useState<StudentAttendanceSummary | null>(null)
+  const [attSumLoading, setAttSumLoading]  = useState(true)
+
+  // Package Ledger data (loaded on tab open)
+  const [ledger,       setLedger]      = useState<PackageLedgerRecord[] | null>(null)
+  const [ledgerLoad,   setLedgerLoad]  = useState(false)
+  const [ledgerDirty,  setLedgerDirty] = useState(false)
+  const [reconciling,  setReconciling] = useState(false)
+
+  // History / timeline data (loaded on tab open)
+  const [timeline,     setTimeline]    = useState<StudentCourseTimelineEntry[] | null>(null)
+  const [timelineLoad, setTimelineLoad] = useState(false)
+  const [timelineDirty, setTimelineDirty] = useState(false)
+
+  // Overlay modals
+  const [wizardOpen,      setWizardOpen]      = useState(false)
+  const [collectPayOpen,  setCollectPayOpen]   = useState(false)
+
+  // ESC to close (but not if an overlay is open)
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !financeOpen) onClose()
+      if (e.key === 'Escape' && !wizardOpen && !collectPayOpen) onClose()
     }
     window.addEventListener('keydown', fn)
     return () => window.removeEventListener('keydown', fn)
-  }, [onClose, financeOpen])
+  }, [onClose, wizardOpen, collectPayOpen])
 
-  // Load attendance history
+  // Eager-load data needed for Overview + Attendance tabs
   useEffect(() => {
     let cancelled = false
     setHistLoad(true)
@@ -651,7 +805,6 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     return () => { cancelled = true }
   }, [s.student_id])
 
-  // Load auth data
   useEffect(() => {
     let cancelled = false
     setAuthLoading(true)
@@ -661,7 +814,6 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     return () => { cancelled = true }
   }, [s.student_id])
 
-  // Load attendance summary
   useEffect(() => {
     let cancelled = false
     setAttSumLoading(true)
@@ -671,6 +823,84 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     return () => { cancelled = true }
   }, [s.student_id])
 
+  // Lazy-load Package Ledger when that tab is opened (or when dirty after an action)
+  const loadLedger = useCallback(() => {
+    let cancelled = false
+    setLedgerLoad(true)
+    setLedgerDirty(false)
+    getStudentPackageLedgerAction(s.student_id)
+      .then(d => { if (!cancelled) { setLedger(d); setLedgerLoad(false) } })
+      .catch(() => { if (!cancelled) { setLedger([]); setLedgerLoad(false) } })
+    return () => { cancelled = true }
+  }, [s.student_id])
+
+  useEffect(() => {
+    if (activeTab === 'package-ledger' && (ledger === null || ledgerDirty)) {
+      loadLedger()
+    }
+  }, [activeTab, ledger, ledgerDirty, loadLedger])
+
+  // Lazy-load History/Timeline when that tab is opened
+  const loadTimeline = useCallback(() => {
+    let cancelled = false
+    setTimelineLoad(true)
+    setTimelineDirty(false)
+    getStudentCourseTimelineAction(s.student_id)
+      .then(d => { if (!cancelled) { setTimeline(d); setTimelineLoad(false) } })
+      .catch(() => { if (!cancelled) { setTimeline([]); setTimelineLoad(false) } })
+    return () => { cancelled = true }
+  }, [s.student_id])
+
+  useEffect(() => {
+    if (activeTab === 'history' && (timeline === null || timelineDirty)) {
+      loadTimeline()
+    }
+  }, [activeTab, timeline, timelineDirty, loadTimeline])
+
+  // Package Ledger actions
+  async function handleRemoveConsumption(consumptionId: string) {
+    const result = await removeConsumptionAction(consumptionId, s.student_id)
+    if ('error' in result) {
+      alert(`Failed to remove consumption: ${result.error}`)
+      return
+    }
+    setLedgerDirty(true)
+    setTimelineDirty(true)
+    getStudentAttendanceSummaryAction(s.student_id).then(d => setAttSummary(d)).catch(() => {})
+    router.refresh()
+    onStudentUpdated?.()
+  }
+
+  async function handleReconcile() {
+    setReconciling(true)
+    const result = await reconcileStudentConsumptionAction(s.student_id)
+    setReconciling(false)
+    if ('error' in result) {
+      alert(`Reconciliation failed: ${result.error}`)
+      return
+    }
+    setLedgerDirty(true)
+    setTimelineDirty(true)
+    getStudentAttendanceSummaryAction(s.student_id).then(d => setAttSummary(d)).catch(() => {})
+    router.refresh()
+    onStudentUpdated?.()
+  }
+
+  function handleEnrollmentWizardSuccess() {
+    setWizardOpen(false)
+    getStudentAttendanceSummaryAction(s.student_id).then(d => setAttSummary(d)).catch(() => {})
+    getStudentAttendanceHistoryAction(s.student_id).then(h => setHistory(h)).catch(() => {})
+    setTimelineDirty(true)
+    router.refresh()
+    onStudentUpdated?.()
+  }
+
+  function handleCollectPaymentSuccess() {
+    setCollectPayOpen(false)
+    router.refresh()
+    onStudentUpdated?.()
+  }
+
   const waUrl  = buildWhatsAppUrl(s.parent_phone, s.phone)
   const telUrl = buildTelUrl(s.parent_phone, s.phone)
   const stuTel = buildTelUrl(null, s.phone)
@@ -679,26 +909,21 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 : s.risk_level === 'MEDIUM' ? 'bg-amber-100 text-amber-700'
                 :                             'bg-emerald-100 text-emerald-700'
 
-  function handleOpenFinance(_mode: 'collect' | 'create') {
-    setFinanceOpen(true)
-  }
-
-  function handleFinanceSuccess() {
-    setFinanceOpen(false)
-    // Refresh attendance summary + history to reflect new consumption state
-    getStudentAttendanceSummaryAction(s.student_id).then(d => setAttSummary(d)).catch(() => {})
-    getStudentAttendanceHistoryAction(s.student_id).then(h => setHistory(h)).catch(() => {})
-    router.refresh()
-    onStudentUpdated?.()
-  }
+  const anyOverlayOpen = wizardOpen || collectPayOpen
 
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[1px]" onClick={() => { if (!financeOpen) onClose() }} />
+      <div
+        className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[1px]"
+        onClick={() => { if (!anyOverlayOpen) onClose() }}
+      />
 
       {/* Modal panel */}
-      <div className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center p-0 sm:p-4" onClick={() => { if (!financeOpen) onClose() }}>
+      <div
+        className="fixed inset-0 z-[70] flex items-end justify-center sm:items-center p-0 sm:p-4"
+        onClick={() => { if (!anyOverlayOpen) onClose() }}
+      >
         <div
           className="flex max-h-[92vh] w-full max-w-lg flex-col rounded-t-3xl sm:rounded-2xl bg-white shadow-2xl overflow-hidden"
           onClick={e => e.stopPropagation()}
@@ -756,12 +981,12 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
 
           {/* ── Tab bar ───────────────────────────────────────────────── */}
           <div className="shrink-0 border-b border-[#E2E8F0] bg-white">
-            <div className="flex overflow-x-auto">
+            <div className="flex overflow-x-auto scrollbar-none">
               {TABS.map(tab => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 min-w-[80px] px-3 py-2.5 text-[12px] font-medium transition border-b-2 whitespace-nowrap ${
+                  className={`flex-shrink-0 px-3 py-2.5 text-[11px] font-medium transition border-b-2 whitespace-nowrap ${
                     activeTab === tab.key
                       ? 'border-[#FF8A1F] text-[#FF8A1F]'
                       : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'
@@ -788,8 +1013,8 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
             {activeTab === 'finance' && (
               <FinanceTab
                 s={s}
-                group={group}
-                onOpenFinance={handleOpenFinance}
+                onCollectPayment={() => setCollectPayOpen(true)}
+                onCreateContract={() => setWizardOpen(true)}
               />
             )}
             {activeTab === 'attendance' && (
@@ -800,26 +1025,41 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 attSumLoading={attSumLoading}
               />
             )}
-            {activeTab === 'learning' && (
-              <LearningTab
-                s={s}
-                group={group}
-                history={history}
-                histLoad={histLoad}
-                attSummary={attSummary}
+            {activeTab === 'package-ledger' && (
+              <PackageLedgerTab
+                ledger={ledger}
+                loading={ledgerLoad}
+                reconciling={reconciling}
+                onRemove={handleRemoveConsumption}
+                onReconcile={handleReconcile}
+              />
+            )}
+            {activeTab === 'history' && (
+              <HistoryTab
+                timeline={timeline}
+                loading={timelineLoad}
               />
             )}
           </div>
         </div>
       </div>
 
-      {/* Finance wizard — rendered above student modal */}
-      {financeOpen && (
+      {/* ── Collect Payment modal (z-[85]/z-[90]) ─────────────────── */}
+      {collectPayOpen && (
+        <CollectPaymentModal
+          student={s}
+          onClose={() => setCollectPayOpen(false)}
+          onSuccess={handleCollectPaymentSuccess}
+        />
+      )}
+
+      {/* ── Enrollment Wizard (z-[80]) ─────────────────────────────── */}
+      {wizardOpen && (
         <EnrollmentWizard
           branchIds={[group.branch_id]}
           preselectedStudent={buildWizardStudent(s, group)}
-          onClose={() => setFinanceOpen(false)}
-          onSuccess={handleFinanceSuccess}
+          onClose={() => setWizardOpen(false)}
+          onSuccess={handleEnrollmentWizardSuccess}
           overlayClassName="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-8"
         />
       )}

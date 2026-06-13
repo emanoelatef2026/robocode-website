@@ -95,7 +95,7 @@ export async function recordAttendanceSession(
     // Fetch ALL ACTIVE enrollments — we apply the start_date window in JS
     // so we can show 'pre_enrollment' reason even for future-starting contracts.
     db.from('student_enrollments')
-      .select('id, student_id, remaining_sessions, allow_overdraft_sessions, enrolled_sessions, start_date')
+      .select('id, student_id, remaining_sessions, allow_overdraft_sessions, enrolled_sessions, start_date, end_date')
       .eq('status', 'ACTIVE')
       .in('student_id', safeStudentIds)
       .order('start_date', { ascending: true })
@@ -135,6 +135,7 @@ export async function recordAttendanceSession(
     const entry: EnrollmentForConsumption = {
       id:                 e.id,
       start_date:         e.start_date ?? sessionDatePart,  // fallback to session date if missing
+      end_date:           (e.end_date as string | null) ?? null,
       enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
       remaining_sessions: Number(e.remaining_sessions ?? 0),
       allow_overdraft:    Boolean(e.allow_overdraft_sessions),

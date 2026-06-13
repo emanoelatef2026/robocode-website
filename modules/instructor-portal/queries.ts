@@ -694,9 +694,9 @@ export async function getSessionDetail(
       courseId
         ? db.from('course_modules').select('id, title').eq('course_id', courseId).is('deleted_at', null).order('order_index', { ascending: true }).limit(20)
         : Promise.resolve({ data: [] as any[], error: null }),
-      // Only select guaranteed columns — topic may not exist (migration 0028)
+      // Include session_number for canonical numbering (backfilled in migration 0085)
       db.from('schedules')
-        .select('id, scheduled_at, status')
+        .select('id, scheduled_at, status, session_number')
         .eq('group_course_id', gcId)
         .order('scheduled_at', { ascending: true }),
       db.from('groups').select('name').eq('id', groupId).maybeSingle(),
@@ -749,11 +749,13 @@ export async function getSessionDetail(
     id:           ps.id,
     scheduled_at: ps.scheduled_at,
     status:       ps.status,
-    topic:        null,   // sibling topics omitted — avoids failing on missing column
-    session_num:  idx + 1,
+    topic:        null,
+    session_num:  (ps.session_number as number | null) ?? (idx + 1),
   }))
-  const currentIdx = allSessions.findIndex((ps) => ps.id === sessionId)
-  const currentNum = currentIdx >= 0 ? currentIdx + 1 : progress.length
+  const currentSess = allSessions.find((ps) => ps.id === sessionId)
+  const currentNum  =
+    (currentSess?.session_number as number | null) ??
+    ((allSessions.findIndex((ps) => ps.id === sessionId) + 1) || progress.length)
 
   const groupName   = (groupRes.data  as any)?.name  ?? ''
   const courseTitle = (courseRes.data as any)?.title ?? ''
@@ -1318,10 +1320,10 @@ export async function listSessionHistory(
 
   if (filteredGcIds.length === 0) return []
 
-  // Fetch all sessions — only guaranteed columns + topic (safe fallback)
+  // Fetch all sessions — include session_number for canonical numbering
   let query = db
     .from('schedules')
-    .select('id, group_course_id, scheduled_at, status')
+    .select('id, group_course_id, scheduled_at, status, session_number')
     .in('group_course_id', filteredGcIds)
     .order('scheduled_at', { ascending: true })
 
@@ -1354,21 +1356,31 @@ export async function listSessionHistory(
     })
   }
 
-  // Assign session numbers per group_course_id (chronological rank within each gc)
-  const sessionsByGc = new Map<string, string[]>()
-  for (const s of baseSessions as any[]) {
-    const list = sessionsByGc.get(s.group_course_id) ?? []
-    list.push(s.id)
-    sessionsByGc.set(s.group_course_id, list)
+  // Use canonical session_number from DB (assigned on INSERT, immutable).
+  // total_in_group = max completed session_number per gc = group's canonical progress.
+  // We query ALL completed sessions (not just the filtered subset) so date/status
+  // filters don't shrink the denominator shown in "Session X / Y".
+  const { data: maxNrRows } = await db
+    .from('schedules')
+    .select('group_course_id, session_number')
+    .in('group_course_id', filteredGcIds)
+    .eq('status', 'completed')
+    .not('session_number', 'is', null)
+
+  const maxNrByGc = new Map<string, number>()
+  for (const r of maxNrRows ?? []) {
+    const gcId = (r as any).group_course_id as string
+    const num  = (r as any).session_number  as number
+    if ((maxNrByGc.get(gcId) ?? 0) < num) maxNrByGc.set(gcId, num)
   }
-  const sessionNumMap = new Map<string, number>()
+
+  const sessionNumMap   = new Map<string, number>()
   const sessionTotalMap = new Map<string, number>()
-  for (const [, ids] of sessionsByGc.entries()) {
-    const total = ids.length
-    ids.forEach((id, idx) => {
-      sessionNumMap.set(id, idx + 1)
-      sessionTotalMap.set(id, total)
-    })
+  for (const s of baseSessions as any[]) {
+    const gcId  = (s as any).group_course_id as string
+    const num   = (s as any).session_number  as number | null
+    sessionNumMap.set(s.id   as string, num ?? 0)
+    sessionTotalMap.set(s.id as string, maxNrByGc.get(gcId) ?? (num ?? 0))
   }
 
   // Count attendance per session

@@ -52,6 +52,37 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       .order('joined_at'),
   ])
 
+  // Fetch attendance counts per session and course names per group_course
+  const sessionIds = schedules.map(s => s.id)
+  const gcIds      = [...new Set(schedules.map(s => s.group_course_id))]
+
+  const [attCountRes, gcCourseRes] = await Promise.all([
+    sessionIds.length
+      ? db.from('attendance_records')
+          .select('schedule_id, status')
+          .in('schedule_id', sessionIds)
+          .is('invalidated_at', null)
+      : Promise.resolve({ data: [] as { schedule_id: string; status: string }[] }),
+    gcIds.length
+      ? db.from('group_courses')
+          .select('id, courses(title)')
+          .in('id', gcIds)
+      : Promise.resolve({ data: [] as { id: string; courses: { title: string } | null }[] }),
+  ])
+
+  const attBySession = new Map<string, { present: number; absent: number }>()
+  for (const r of (attCountRes.data ?? []) as { schedule_id: string; status: string }[]) {
+    const s = attBySession.get(r.schedule_id) ?? { present: 0, absent: 0 }
+    if (['present', 'late', 'makeup'].includes(r.status)) s.present++
+    else if (r.status === 'absent') s.absent++
+    attBySession.set(r.schedule_id, s)
+  }
+
+  const courseByGc = new Map<string, string>()
+  for (const gc of (gcCourseRes.data ?? []) as any[]) {
+    if (gc.courses?.title) courseByGc.set(gc.id as string, gc.courses.title as string)
+  }
+
   const gsRows   = (gsRes.data ?? []) as GroupStudentRow[]
   const studentIds = gsRows.map(r => r.student_id)
 
@@ -178,6 +209,10 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
     status:           s.status,
     topic:            s.topic,
     meeting_url:      s.meeting_url,
+    session_number:   s.session_number ?? null,
+    present_count:    attBySession.get(s.id)?.present ?? 0,
+    absent_count:     attBySession.get(s.id)?.absent  ?? 0,
+    course_name:      courseByGc.get(s.group_course_id) ?? null,
   }))
 
   return { sessions, students }

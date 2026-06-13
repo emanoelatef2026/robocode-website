@@ -101,6 +101,7 @@ export interface GroupScheduleItem {
   topic:            string | null
   meeting_url:      string | null
   room:             string | null
+  session_number:   number | null
 }
 
 // Simplified group configuration — no academic period, no course semester

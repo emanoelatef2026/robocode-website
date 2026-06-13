@@ -12,6 +12,7 @@ export type ConsumptionReason =
   | 'no_slot_status'     // attendance status is not slot-consuming (e.g. 'excused')
   | 'no_contract'        // student has no ACTIVE enrollment at all
   | 'pre_enrollment'     // session date is before enrollment.start_date
+  | 'post_enrollment'    // session date is after enrollment.end_date
   | 'exhausted'          // remaining_sessions ≤ 0, overdraft not enabled
   | 'open_ended'         // enrolled_sessions = 0 — unlimited / not tracked
 
@@ -26,6 +27,7 @@ export interface ConsumptionCheck {
 export interface EnrollmentForConsumption {
   id:                 string
   start_date:         string            // 'YYYY-MM-DD' or ISO datetime
+  end_date:           string | null     // null = no expiry; set = package expires on this date
   enrolled_sessions:  number
   remaining_sessions: number
   allow_overdraft:    boolean
@@ -84,7 +86,7 @@ export function checkConsumptionEligibility(
     }
   }
 
-  // Rule 4 — session must be on or after enrollment effective date
+  // Rule 4a — session must be on or after enrollment effective date
   const sessionDay    = sessionDate.slice(0, 10)          // 'YYYY-MM-DD'
   const enrollmentDay = enrollment.start_date.slice(0, 10)
   if (sessionDay < enrollmentDay) {
@@ -94,6 +96,20 @@ export function checkConsumptionEligibility(
       enrollmentId:         enrollment.id,
       enrollmentStartDate:  enrollment.start_date,
       sessionsRemaining:    enrollment.remaining_sessions,
+    }
+  }
+
+  // Rule 4b — session must be on or before enrollment end_date (if set)
+  if (enrollment.end_date) {
+    const endDay = enrollment.end_date.slice(0, 10)
+    if (sessionDay > endDay) {
+      return {
+        shouldConsume:        false,
+        reason:               'post_enrollment',
+        enrollmentId:         enrollment.id,
+        enrollmentStartDate:  enrollment.start_date,
+        sessionsRemaining:    enrollment.remaining_sessions,
+      }
     }
   }
 
@@ -147,20 +163,24 @@ export function resolveFifoEnrollment(
   if (enrollments.length === 0) return null
   const sessionDay = sessionDate.slice(0, 10)
 
-  // Pass 1: eligible (on-or-before session date AND has remaining)
+  // Pass 1: eligible (within window start→end AND has remaining sessions)
   for (const e of enrollments) {
     const startDay = e.start_date.slice(0, 10)
-    if (startDay <= sessionDay && (e.enrolled_sessions === 0 || e.remaining_sessions > 0)) {
+    const endDay   = e.end_date ? e.end_date.slice(0, 10) : null
+    const withinWindow = startDay <= sessionDay && (endDay === null || sessionDay <= endDay)
+    if (withinWindow && (e.enrolled_sessions === 0 || e.remaining_sessions > 0)) {
       return e
     }
   }
   // Pass 2: exhausted but session-eligible (for correct 'exhausted' reason)
   for (const e of enrollments) {
-    if (e.start_date.slice(0, 10) <= sessionDay) {
+    const startDay = e.start_date.slice(0, 10)
+    const endDay   = e.end_date ? e.end_date.slice(0, 10) : null
+    if (startDay <= sessionDay && (endDay === null || sessionDay <= endDay)) {
       return e
     }
   }
-  // Pass 3: future enrollment (shows 'pre_enrollment' reason)
+  // Pass 3: future or expired enrollment (shows 'pre_enrollment'/'post_enrollment' reason)
   return enrollments[0]
 }
 
