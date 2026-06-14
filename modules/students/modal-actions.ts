@@ -16,6 +16,8 @@ const parentContactSchema = z.object({
   whatsapp_preferred: z.boolean().default(false),
   is_primary:         z.boolean().default(false),
   is_emergency:       z.boolean().default(true),
+  email:              z.string().email().optional().or(z.literal('')),
+  password:           z.string().min(6).optional().or(z.literal('')),
 })
 
 const ageSchema = z
@@ -148,20 +150,102 @@ async function syncParentContacts(
   studentId: string,
   contacts: z.infer<typeof parentContactSchema>[]
 ) {
+  // Save existing group UUIDs keyed by phone1 so we preserve stable parent identity
+  const { data: existing } = await db
+    .from('student_parent_contacts')
+    .select('phone1, parent_group_id')
+    .eq('student_id', studentId)
+
+  const existingGroupByPhone = new Map<string, string>()
+  for (const row of (existing ?? []) as { phone1: string | null; parent_group_id: string }[]) {
+    if (row.phone1 && row.parent_group_id) existingGroupByPhone.set(row.phone1, row.parent_group_id)
+  }
+
   await db.from('student_parent_contacts').delete().eq('student_id', studentId)
-  if (contacts.length > 0) {
-    await db.from('student_parent_contacts').insert(
-      contacts.map(c => ({
-        student_id:         studentId,
-        name:               c.name,
-        relation:           c.relation,
-        phone1:             c.phone1 || null,
-        phone2:             c.phone2 || null,
-        whatsapp_preferred: c.whatsapp_preferred,
-        is_primary:         c.is_primary,
-        is_emergency:       c.is_emergency,
-      }))
+
+  if (contacts.length === 0) return
+
+  // Resolve parent_group_id for each contact:
+  //   1. Reuse existing UUID for this student+phone
+  //   2. Look up another student's contact with same phone
+  //   3. Fall back to new UUID
+  const uniqueNewPhones = [...new Set(
+    contacts.map(c => c.phone1?.trim()).filter((p): p is string => !!p && !existingGroupByPhone.has(p))
+  )]
+
+  const dbGroupByPhone = new Map<string, string>()
+  if (uniqueNewPhones.length > 0) {
+    const { data: matches } = await db
+      .from('student_parent_contacts')
+      .select('phone1, parent_group_id')
+      .in('phone1', uniqueNewPhones)
+      .neq('student_id', studentId)
+      .limit(uniqueNewPhones.length * 2)
+    for (const row of (matches ?? []) as { phone1: string | null; parent_group_id: string }[]) {
+      if (row.phone1 && !dbGroupByPhone.has(row.phone1)) dbGroupByPhone.set(row.phone1, row.parent_group_id)
+    }
+  }
+
+  const resolvedContacts = contacts.map(c => {
+    const phone = c.phone1?.trim() || null
+    const parent_group_id =
+      (phone && existingGroupByPhone.get(phone)) ??
+      (phone && dbGroupByPhone.get(phone)) ??
+      crypto.randomUUID()
+    return { ...c, phone, parent_group_id }
+  })
+
+  await db.from('student_parent_contacts').insert(
+    resolvedContacts.map(c => ({
+      student_id:         studentId,
+      parent_group_id:    c.parent_group_id,
+      name:               c.name,
+      relation:           c.relation,
+      phone1:             c.phone,
+      phone2:             c.phone2 || null,
+      whatsapp_preferred: c.whatsapp_preferred,
+      is_primary:         c.is_primary,
+      is_emergency:       c.is_emergency,
+      status:             'active',
+    }))
+  )
+
+  // Create portal accounts for contacts that have email+password
+  for (const c of resolvedContacts) {
+    const email    = c.email?.trim()    || null
+    const password = c.password?.trim() || null
+    if (!email || !password) continue
+
+    // Check if an account already exists for this email
+    const { data: existingUser } = await db
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (existingUser) continue  // account already exists — skip
+
+    const { data: authData, error: authErr } = await db.auth.admin.createUser({
+      email, password, email_confirm: true,
+    })
+    if (authErr || !authData?.user) continue
+
+    const uid       = authData.user.id
+    const nameParts = c.name.trim().split(/\s+/)
+    await db.from('users').upsert({ id: uid, email, phone: c.phone || null }, { onConflict: 'id' })
+    await db.from('profiles').upsert(
+      { user_id: uid, first_name: nameParts[0] ?? '', last_name: nameParts.slice(1).join(' ') || null },
+      { onConflict: 'user_id' }
     )
+    const { data: parentRow } = await db.from('parents').insert({ user_id: uid }).select('id').single()
+    if (parentRow) {
+      await db.from('parent_students').insert({
+        parent_id:    (parentRow as any).id,
+        student_id:   studentId,
+        relationship: c.relation,
+        is_primary:   c.is_primary,
+      })
+    }
   }
 }
 

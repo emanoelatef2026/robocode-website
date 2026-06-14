@@ -1,8 +1,6 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
 import { getOwnPortfolioDetail } from '@/modules/portfolio/queries'
 import { PROJECT_STATUS_CONFIG, BADGE_EMOJIS } from '@/modules/portfolio/types'
-import Link from 'next/link'
-import UploadProjectForm from './UploadProjectForm'
 import ToggleUploadPanel from './ToggleUploadPanel'
 
 const CATEGORY_ICONS: Record<string, string> = {
@@ -16,12 +14,9 @@ export default async function StudentPortfolioPage() {
 
   if (!detail) {
     return (
-      <div className="mx-auto max-w-3xl space-y-6">
-        <div>
-          <h1 className="text-xl font-bold text-[#0B1F3A]">My Portfolio</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">Showcase your best work</p>
-        </div>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-8 text-center">
+      <div className="mx-auto max-w-3xl space-y-4">
+        <h1 className="text-base font-bold text-[#0B1F3A]">My Portfolio</h1>
+        <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 text-center">
           <p className="text-sm text-[#94A3B8]">No student record found. Contact your administrator.</p>
         </div>
       </div>
@@ -38,36 +33,34 @@ export default async function StudentPortfolioPage() {
     : null
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-[#0B1F3A]">My Portfolio</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">Showcase your best work</p>
-        </div>
+    <div className="mx-auto max-w-3xl space-y-3">
+      <div>
+        <h1 className="text-base font-bold text-[#0B1F3A]">My Portfolio</h1>
+        <p className="text-xs text-[#64748B]">Showcase your best work</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-4 gap-2">
         {[
           { label: 'Uploaded',  value: activeProjects.length, color: 'text-[#0B1F3A]' },
           { label: 'Approved',  value: approved,              color: 'text-green-600'  },
           { label: 'Pending',   value: pending,               color: 'text-amber-600'  },
           { label: 'Avg Score', value: avgScore != null ? `${avgScore}` : '—', color: 'text-[#FF8A1F]' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-4 text-center">
-            <p className={`text-2xl font-bold ${color}`}>{value}</p>
-            <p className="mt-0.5 text-xs text-[#94A3B8]">{label}</p>
+          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-3 text-center">
+            <p className={`text-xl font-bold leading-none ${color}`}>{value}</p>
+            <p className="mt-1 text-[10px] text-[#94A3B8]">{label}</p>
           </div>
         ))}
       </div>
 
       {/* Badges */}
       {badges.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">My Badges</p>
+        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5">
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">My Badges</p>
           <div className="flex flex-wrap gap-2">
             {badges.map((b) => (
-              <div key={b.id} className="flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-sm font-medium text-[#0B1F3A]">
+              <div key={b.id} className="flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1 text-xs font-medium text-[#0B1F3A]">
                 <span>{BADGE_EMOJIS[b.badge_name] ?? '🏅'}</span>
                 {b.badge_name}
               </div>
@@ -81,32 +74,34 @@ export default async function StudentPortfolioPage() {
 
       {/* Projects grid */}
       {activeProjects.length === 0 ? (
-        <div className="flex h-48 items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] text-sm text-[#64748B]">
+        <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] text-sm text-[#64748B]">
           No projects yet. Upload your first project above.
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {activeProjects.map((p) => {
-            const statusCfg = p.status ? (PROJECT_STATUS_CONFIG[p.status] ?? PROJECT_STATUS_CONFIG.pending_review) : PROJECT_STATUS_CONFIG.pending_review
+            const statusCfg = p.status
+              ? (PROJECT_STATUS_CONFIG[p.status] ?? PROJECT_STATUS_CONFIG.pending_review)
+              : PROJECT_STATUS_CONFIG.pending_review
             return (
               <div key={p.id} className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
                 {p.thumbnail_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.thumbnail_url} alt={p.title} className="h-36 w-full object-cover" />
+                  <img src={p.thumbnail_url} alt={p.title} className="h-32 w-full object-cover" />
                 ) : (
-                  <div className="flex h-36 items-center justify-center bg-[#F1F5F9] text-4xl">
+                  <div className="flex h-32 items-center justify-center bg-[#F1F5F9] text-3xl">
                     {CATEGORY_ICONS[p.category ?? 'Other'] ?? '📁'}
                   </div>
                 )}
-                <div className="p-4 space-y-2">
+                <div className="p-3.5 space-y-2">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="font-semibold text-[#0B1F3A] leading-tight">{p.title}</h3>
+                    <h3 className="text-sm font-semibold text-[#0B1F3A] leading-tight">{p.title}</h3>
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusCfg.cls}`}>
                       {statusCfg.label}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     {p.category && (
                       <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] text-[#64748B]">
                         {CATEGORY_ICONS[p.category]} {p.category}
@@ -129,7 +124,7 @@ export default async function StudentPortfolioPage() {
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <div className="flex items-center gap-3 flex-wrap pt-0.5">
                     {p.project_url && (
                       <a
                         href={p.project_url}
@@ -151,7 +146,7 @@ export default async function StudentPortfolioPage() {
                         rel="noopener noreferrer"
                         className="flex items-center gap-1 text-xs text-red-500 hover:underline"
                       >
-                        ▶ Demo Video
+                        ▶ Demo
                       </a>
                     )}
                   </div>

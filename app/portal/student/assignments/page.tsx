@@ -14,7 +14,7 @@ function statusBadge(status: string | null) {
   }
   const s = map[status] ?? { label: status, cls: 'bg-gray-100 text-gray-600' }
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${s.cls}`}>
+    <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${s.cls}`}>
       {s.label}
     </span>
   )
@@ -26,7 +26,7 @@ function dueBadge(dueAt: string | null, hasSubmission: boolean) {
   const now = new Date()
   const overdue = !hasSubmission && due < now
   return (
-    <span className={`text-xs ${overdue ? 'font-semibold text-red-500' : 'text-[#94A3B8]'}`}>
+    <span className={`text-[11px] ${overdue ? 'font-semibold text-red-500' : 'text-[#94A3B8]'}`}>
       {overdue ? 'Overdue · ' : ''}Due {due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
     </span>
   )
@@ -40,37 +40,37 @@ export default async function StudentAssignmentsPage() {
   const submitted = assignments.filter(a => a.submission_id)
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 px-4 py-8">
-      <h1 className="text-2xl font-bold text-[#0B132B]">My Assignments</h1>
+    <div className="mx-auto max-w-3xl space-y-5">
+      <h1 className="text-base font-bold text-[#0B1F3A]">My Assignments</h1>
 
       {assignments.length === 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-8 text-center">
-          <p className="text-[#64748B]">No assignments yet. Check back after your instructor publishes work.</p>
+        <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 text-center">
+          <p className="text-sm text-[#64748B]">No assignments yet. Check back after your instructor publishes work.</p>
         </div>
       )}
 
       {pending.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#64748B]">
+          <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
             To Do ({pending.length})
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {pending.map(a => (
               <Link
                 key={a.id}
                 href={`/portal/student/assignments/${a.id}`}
-                className="flex items-center justify-between gap-4 rounded-xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#19C6F4] hover:shadow-sm"
+                className="flex items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 transition hover:border-[#19C6F4] hover:shadow-sm"
               >
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-[#0B132B]">{a.title}</p>
-                  <p className="mt-0.5 text-xs text-[#94A3B8]">
+                  <p className="truncate text-sm font-medium text-[#0B132B]">{a.title}</p>
+                  <p className="mt-0.5 text-[11px] text-[#94A3B8]">
                     {a.course_title && <span>{a.course_title} · </span>}
                     {a.type}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   {dueBadge(a.due_at, false)}
-                  <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-xs text-[#64748B]">
+                  <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] text-[#64748B]">
                     {a.max_score} pts
                   </span>
                 </div>
@@ -82,24 +82,24 @@ export default async function StudentAssignmentsPage() {
 
       {submitted.length > 0 && (
         <section>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#64748B]">
+          <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
             Submitted ({submitted.length})
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {submitted.map(a => (
               <Link
                 key={a.id}
                 href={`/portal/student/assignments/${a.id}`}
-                className="flex items-center justify-between gap-4 rounded-xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#19C6F4] hover:shadow-sm"
+                className="flex items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 transition hover:border-[#19C6F4] hover:shadow-sm"
               >
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-[#0B132B]">{a.title}</p>
-                  <p className="mt-0.5 text-xs text-[#94A3B8]">
+                  <p className="truncate text-sm font-medium text-[#0B132B]">{a.title}</p>
+                  <p className="mt-0.5 text-[11px] text-[#94A3B8]">
                     {a.course_title && <span>{a.course_title} · </span>}
                     {a.type}
                   </p>
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-1.5">
+                <div className="flex shrink-0 flex-col items-end gap-1">
                   {statusBadge(a.submission_status)}
                   {a.submission_score != null && (
                     <span className="text-xs font-semibold text-[#0B132B]">
@@ -107,7 +107,7 @@ export default async function StudentAssignmentsPage() {
                     </span>
                   )}
                   {a.is_late && (
-                    <span className="text-xs text-orange-500">Late</span>
+                    <span className="text-[11px] text-orange-500">Late</span>
                   )}
                 </div>
               </Link>

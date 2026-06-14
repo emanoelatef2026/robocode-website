@@ -21,15 +21,14 @@ export default function StudentShell({ children }: { children: React.ReactNode }
 
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[#E2E8F0] bg-white px-4 md:px-5">
-          {/* Mobile: logo left, hamburger right for "More" access */}
-          <div className="flex items-center gap-3 md:hidden">
-            <Image src="/logo.png" alt="Robocode" width={100} height={44} className="h-7 w-auto" />
+        <header className="flex h-11 shrink-0 items-center border-b border-[#E2E8F0] bg-white px-3 md:h-14 md:px-5">
+          <div className="flex items-center gap-2 md:hidden">
+            <Image src="/logo.png" alt="Robocode" width={80} height={34} className="h-6 w-auto" />
           </div>
           <div className="flex-1" />
           <button
             onClick={() => setSidebarOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-[#64748B] hover:bg-[#F1F5F9] active:bg-[#E2E8F0] md:hidden"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-[#64748B] hover:bg-[#F1F5F9] active:bg-[#E2E8F0] md:hidden"
             aria-label="Open menu"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
@@ -39,7 +38,7 @@ export default function StudentShell({ children }: { children: React.ReactNode }
         </header>
 
         {/* Main content — pad bottom on mobile for bottom nav */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-7 pb-bottom-nav md:pb-7 scroll-smooth-mobile">
+        <main className="flex-1 overflow-y-auto p-3 md:p-7 pb-bottom-nav md:pb-7 scroll-smooth-mobile">
           {children}
         </main>
       </div>

@@ -16,6 +16,8 @@ interface ParentContactBlock {
   whatsapp_preferred: boolean
   is_primary:         boolean
   is_emergency:       boolean
+  email:              string
+  password:           string
 }
 
 interface Props {
@@ -46,6 +48,8 @@ function newContact(isPrimary = false): ParentContactBlock {
     whatsapp_preferred: false,
     is_primary:         isPrimary,
     is_emergency:       true,
+    email:              '',
+    password:           '',
   }
 }
 
@@ -79,6 +83,8 @@ export default function StudentFormModal({
         whatsapp_preferred: c.whatsapp_preferred,
         is_primary:         c.is_primary,
         is_emergency:       c.is_emergency,
+        email:              '',
+        password:           '',
       }))
     : [newContact(true)]
 
@@ -674,6 +680,35 @@ export default function StudentFormModal({
                   />
                   WhatsApp preferred
                 </label>
+
+                {/* Portal access — email + password */}
+                <div className="mt-1 rounded-lg border border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-2.5 space-y-2">
+                  <p className="text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wide">
+                    Portal Access (optional)
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="mb-0.5 block text-xs text-[#64748B]">Email</label>
+                      <input
+                        value={c.email}
+                        onChange={e => updateContact(c._key, 'email', e.target.value)}
+                        placeholder="parent@email.com"
+                        type="email"
+                        className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-0.5 block text-xs text-[#64748B]">Password</label>
+                      <input
+                        value={c.password}
+                        onChange={e => updateContact(c._key, 'password', e.target.value)}
+                        placeholder="Min 6 chars"
+                        type="password"
+                        className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
 

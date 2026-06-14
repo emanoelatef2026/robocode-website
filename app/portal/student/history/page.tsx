@@ -27,46 +27,46 @@ export default async function StudentHistoryPage() {
   const groups = groupByDate(events)
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-3">
       <div>
-        <h1 className="text-xl font-bold text-[#0B1F3A]">Activity History</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">Your journey — newest first</p>
+        <h1 className="text-base font-bold text-[#0B1F3A]">Activity History</h1>
+        <p className="text-xs text-[#64748B]">Your journey — newest first</p>
       </div>
 
       {events.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+        <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-10 text-center">
           <p className="text-sm text-[#94A3B8]">No activity yet. Your history will appear here as you attend sessions and complete assignments.</p>
         </div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-5">
           {[...groups.entries()].map(([dateLabel, dayEvents]) => (
             <section key={dateLabel}>
               {/* Date header */}
-              <div className="mb-3 flex items-center gap-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">{dateLabel}</p>
+              <div className="mb-2 flex items-center gap-3">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">{dateLabel}</p>
                 <div className="flex-1 h-px bg-[#F1F5F9]" />
               </div>
 
               {/* Events for this day */}
-              <div className="relative space-y-3 pl-8">
+              <div className="relative space-y-2 pl-7">
                 {/* Vertical timeline line */}
-                <div className="absolute left-3 top-0 h-full w-px bg-[#E2E8F0]" />
+                <div className="absolute left-2.5 top-0 h-full w-px bg-[#E2E8F0]" />
 
                 {dayEvents.map((event) => {
                   const cfg = EVENT_CONFIG[event.event_type] ?? EVENT_CONFIG.submitted
                   return (
                     <div key={event.id} className="relative">
                       {/* Icon dot */}
-                      <div className={`absolute -left-5 flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold ${cfg.iconCls} border-2 border-white`}>
+                      <div className={`absolute -left-[18px] flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${cfg.iconCls} border-2 border-white`}>
                         {cfg.icon}
                       </div>
 
-                      <div className="rounded-lg border border-[#F1F5F9] bg-white px-4 py-3">
+                      <div className="rounded-lg border border-[#F1F5F9] bg-white px-3.5 py-2.5">
                         <p className="text-sm font-medium text-[#0B1F3A]">{event.title}</p>
                         {event.subtitle && (
                           <p className="mt-0.5 text-xs text-[#64748B]">{event.subtitle}</p>
                         )}
-                        <p className="mt-1 text-[10px] text-[#94A3B8]">
+                        <p className="mt-0.5 text-[10px] text-[#94A3B8]">
                           {new Date(event.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>

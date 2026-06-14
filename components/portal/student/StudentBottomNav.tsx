@@ -2,8 +2,10 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 
-const NAV = [
+const PRIMARY_NAV = [
   {
     label: "Home",
     href: "/portal/student",
@@ -43,58 +45,181 @@ const NAV = [
       </svg>
     ),
   },
+]
+
+const MORE_ROUTES = [
+  "/portal/student/certificates",
+  "/portal/student/history",
+  "/portal/student/semesters",
+]
+
+const MORE_SHEET_LINKS = [
   {
-    label: "More",
+    label: "Certificates",
     href: "/portal/student/certificates",
     icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-        <path fillRule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+      <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
       </svg>
     ),
-    moreRoutes: ["/portal/student/certificates", "/portal/student/history", "/portal/student/semesters"],
+    color: "text-amber-600 bg-amber-50",
+  },
+  {
+    label: "History",
+    href: "/portal/student/history",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+      </svg>
+    ),
+    color: "text-teal-600 bg-teal-50",
   },
 ]
 
 export default function StudentBottomNav() {
   const pathname = usePathname()
+  const [moreOpen, setMoreOpen] = useState(false)
 
-  const isActive = (item: (typeof NAV)[number]) => {
+  const isPrimary = (item: (typeof PRIMARY_NAV)[number]) => {
     if (item.exact) return pathname === item.href
-    if (item.moreRoutes) return item.moreRoutes.some(r => pathname.startsWith(r))
     return pathname.startsWith(item.href)
   }
 
+  const moreActive = MORE_ROUTES.some((r) => pathname.startsWith(r))
+
   return (
-    <nav
-      className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white border-t border-[#E2E8F0] bottom-nav-safe"
-      aria-label="Mobile navigation"
-    >
-      <div className="grid grid-cols-5">
-        {NAV.map((item) => {
-          const active = isActive(item)
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={[
-                "flex flex-col items-center justify-center gap-1 py-2 min-h-[60px] transition-colors",
-                active
-                  ? "text-[#FF8A1F]"
-                  : "text-[#94A3B8] active:text-[#64748B]",
-              ].join(" ")}
-              aria-current={active ? "page" : undefined}
+    <>
+      {/* ── Bottom Nav Bar ───────────────────────────────────────────────── */}
+      <nav
+        className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white border-t border-[#E2E8F0] bottom-nav-safe"
+        aria-label="Mobile navigation"
+      >
+        <div className="grid grid-cols-5">
+          {PRIMARY_NAV.map((item) => {
+            const active = isPrimary(item)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={[
+                  "relative flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] transition-colors",
+                  active ? "text-[#FF8A1F]" : "text-[#94A3B8] active:text-[#64748B]",
+                ].join(" ")}
+                aria-current={active ? "page" : undefined}
+              >
+                {active && (
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[#FF8A1F]" />
+                )}
+                {item.icon}
+                <span className={`text-[10px] font-semibold leading-none ${active ? "text-[#FF8A1F]" : "text-[#94A3B8]"}`}>
+                  {item.label}
+                </span>
+              </Link>
+            )
+          })}
+
+          {/* More button */}
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            className={[
+              "relative flex flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] transition-colors",
+              moreActive || moreOpen ? "text-[#FF8A1F]" : "text-[#94A3B8] active:text-[#64748B]",
+            ].join(" ")}
+            aria-label="More options"
+          >
+            {(moreActive || moreOpen) && (
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[#FF8A1F]" />
+            )}
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+              <path fillRule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+            </svg>
+            <span className={`text-[10px] font-semibold leading-none ${moreActive || moreOpen ? "text-[#FF8A1F]" : "text-[#94A3B8]"}`}>
+              More
+            </span>
+          </button>
+        </div>
+      </nav>
+
+      {/* ── More Sheet ───────────────────────────────────────────────────── */}
+      <AnimatePresence>
+        {moreOpen && (
+          <>
+            <motion.div
+              key="more-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-50 bg-black/40 md:hidden"
+              onClick={() => setMoreOpen(false)}
+            />
+
+            <motion.div
+              key="more-sheet"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed bottom-0 inset-x-0 z-50 md:hidden bg-white rounded-t-2xl shadow-xl overflow-hidden"
             >
-              {item.icon}
-              <span className={`text-[10px] font-semibold leading-none ${active ? "text-[#FF8A1F]" : "text-[#94A3B8]"}`}>
-                {item.label}
-              </span>
-              {active && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[#FF8A1F]" />
-              )}
-            </Link>
-          )
-        })}
-      </div>
-    </nav>
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="h-1 w-10 rounded-full bg-[#E2E8F0]" />
+              </div>
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-3">
+                <p className="text-base font-bold text-[#0B1F3A]">More</p>
+                <button
+                  type="button"
+                  onClick={() => setMoreOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-[#F1F5F9] text-[#64748B] transition hover:bg-[#E2E8F0]"
+                  aria-label="Close"
+                >
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Nav links */}
+              <div className="px-4 pb-2">
+                <p className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Navigate</p>
+                <div className="space-y-1">
+                  {MORE_SHEET_LINKS.map((item) => {
+                    const active = pathname.startsWith(item.href)
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setMoreOpen(false)}
+                        className={[
+                          "flex items-center gap-3 rounded-xl px-3 py-3 transition-colors",
+                          active
+                            ? "bg-[#FF8A1F]/10 text-[#FF8A1F]"
+                            : "text-[#0B1F3A] hover:bg-[#F8FAFC]",
+                        ].join(" ")}
+                      >
+                        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${active ? "bg-[#FF8A1F]/15 text-[#FF8A1F]" : item.color}`}>
+                          {item.icon}
+                        </span>
+                        <span className="font-medium">{item.label}</span>
+                        {active && (
+                          <span className="ml-auto h-2 w-2 rounded-full bg-[#FF8A1F]" />
+                        )}
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Safe-area bottom padding */}
+              <div className="pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]" />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   )
 }

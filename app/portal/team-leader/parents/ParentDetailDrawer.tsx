@@ -80,7 +80,7 @@ export default function ParentDetailDrawer({ parent: p, isTL, onClose, onEdit }:
         <div className="flex overflow-x-auto border-b border-[#E2E8F0] shrink-0">
           {([
             'overview', 'children', 'contracts', 'attendance', 'communication',
-            ...(isTL ? ['account'] : []),
+            ...(isTL && !!p.user_id ? ['account'] : []),
           ] as Tab[]).map(t => (
             <button
               key={t}

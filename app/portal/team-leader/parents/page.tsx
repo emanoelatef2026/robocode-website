@@ -1,10 +1,10 @@
 import { requireAuth }       from '@/modules/rbac/guards'
 import { redirect }          from 'next/navigation'
 import {
-  listParentsOperational,
-  getStudentPickerOptions,
+  listParentContactsOperational,
   getParentBranches,
   getParentFilterOptions,
+  getStudentPickerOptions,
 } from '@/modules/parents/operational'
 import ParentsClient          from './ParentsClient'
 
@@ -25,21 +25,21 @@ export default async function TLParentsPage() {
     )
   }
 
-  const [rows, studentOptions, branches, filterOptions] = await Promise.all([
-    listParentsOperational(branchIds),
-    getStudentPickerOptions(branchIds),
+  const [rows, branches, filterOptions, studentOptions] = await Promise.all([
+    listParentContactsOperational(branchIds),
     getParentBranches(branchIds),
     getParentFilterOptions(branchIds),
+    getStudentPickerOptions(branchIds),
   ])
 
   return (
     <ParentsClient
       rows={rows}
-      studentOptions={studentOptions}
       branches={branches}
       groups={filterOptions.groups}
       courses={filterOptions.courses}
       instructors={filterOptions.instructors}
+      studentOptions={studentOptions}
       isTL={isTL}
     />
   )

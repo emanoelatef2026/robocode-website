@@ -17,53 +17,52 @@ export default async function StudentCertificatesPage() {
   ])
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-3">
       <div>
-        <h1 className="text-xl font-bold text-[#0B1F3A]">Certificates</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">
+        <h1 className="text-base font-bold text-[#0B1F3A]">Certificates</h1>
+        <p className="text-xs text-[#64748B]">
           {certificates.length} certificate{certificates.length !== 1 ? 's' : ''}
         </p>
       </div>
 
       {/* Eligibility card */}
       {eligibility && (
-        <div className={`rounded-xl border p-5 ${eligibility.is_eligible ? 'border-emerald-200 bg-emerald-50' : 'border-[#E2E8F0] bg-white'}`}>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">Certificate Status</p>
+        <div className={`rounded-xl border p-4 ${eligibility.is_eligible ? 'border-emerald-200 bg-emerald-50' : 'border-[#E2E8F0] bg-white'}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Certificate Status</p>
               {eligibility.is_eligible ? (
                 <>
-                  <p className="mt-1 text-lg font-bold text-emerald-700">✓ Eligible for Certificate</p>
-                  <p className="mt-0.5 text-sm text-emerald-600">
+                  <p className="mt-1 text-sm font-bold text-emerald-700">✓ Eligible for Certificate</p>
+                  <p className="mt-0.5 text-xs text-emerald-600">
                     {eligibility.consumed_sessions} / {eligibility.enrolled_sessions} sessions consumed
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="mt-1 text-base font-semibold text-[#0B1F3A]">Not Yet Eligible</p>
-                  <p className="mt-0.5 text-sm text-[#64748B]">
+                  <p className="mt-1 text-sm font-semibold text-[#0B1F3A]">Not Yet Eligible</p>
+                  <p className="mt-0.5 text-xs text-[#64748B]">
                     {eligibility.consumed_sessions} / {eligibility.enrolled_sessions} sessions consumed
                     {eligibility.sessions_remaining > 0 && (
-                      <> · <span className="font-medium">{eligibility.sessions_remaining} more session{eligibility.sessions_remaining !== 1 ? 's' : ''} needed</span></>
+                      <> · <span className="font-medium">{eligibility.sessions_remaining} more needed</span></>
                     )}
                   </p>
                 </>
               )}
             </div>
             <div className="shrink-0 text-right">
-              <p className="text-2xl font-bold text-[#0B1F3A]">
+              <p className="text-xl font-bold text-[#0B1F3A]">
                 {eligibility.enrolled_sessions > 0
                   ? `${Math.round((eligibility.consumed_sessions / eligibility.enrolled_sessions) * 100)}%`
                   : '—'}
               </p>
-              <p className="text-xs text-[#94A3B8]">progress</p>
+              <p className="text-[10px] text-[#94A3B8]">progress</p>
             </div>
           </div>
 
-          {/* Progress bar */}
           {eligibility.enrolled_sessions > 0 && (
-            <div className="mt-4">
-              <div className="h-2.5 overflow-hidden rounded-full bg-white/60">
+            <div className="mt-3">
+              <div className="h-2 overflow-hidden rounded-full bg-white/60">
                 <div
                   className={`h-full rounded-full transition-all ${eligibility.is_eligible ? 'bg-emerald-500' : 'bg-[#FF8A1F]'}`}
                   style={{ width: `${Math.min(100, Math.round((eligibility.consumed_sessions / eligibility.enrolled_sessions) * 100))}%` }}
@@ -73,7 +72,7 @@ export default async function StudentCertificatesPage() {
           )}
 
           {eligibility.course_title && (
-            <p className="mt-2 text-xs text-[#94A3B8]">
+            <p className="mt-2 text-[10px] text-[#94A3B8]">
               {eligibility.course_title}{eligibility.group_name ? ` · ${eligibility.group_name}` : ''}
             </p>
           )}
@@ -82,54 +81,56 @@ export default async function StudentCertificatesPage() {
 
       {/* Certificate list */}
       {certificates.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+        <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-10 text-center">
           <p className="text-sm text-[#64748B]">No certificates yet. Complete your sessions to become eligible.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2.5">
           {certificates.map((c) => (
             <div
               key={c.id}
-              className={`rounded-xl border bg-white p-4 flex items-start justify-between gap-4 ${
+              className={`rounded-xl border bg-white p-4 ${
                 c.status === 'revoked' ? 'border-red-200 opacity-60' : 'border-[#E2E8F0]'
               }`}
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-[#0B1F3A] truncate">{c.title}</h3>
-                  {c.status === 'revoked' && (
-                    <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">Revoked</span>
-                  )}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm font-semibold text-[#0B1F3A] truncate">{c.title}</h3>
+                    {c.status === 'revoked' && (
+                      <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">Revoked</span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-[#64748B]">
+                    {TYPE_LABELS[c.certificate_type] ?? c.certificate_type}
+                    {c.course_title && ` · ${c.course_title}`}
+                  </p>
+                  <p className="mt-1 text-[10px] text-[#94A3B8]">
+                    Issued {new Date(c.issued_at).toLocaleDateString('en-GB')} · <span className="font-mono">{c.certificate_code}</span>
+                  </p>
                 </div>
-                <p className="mt-0.5 text-sm text-[#64748B]">
-                  {TYPE_LABELS[c.certificate_type] ?? c.certificate_type}
-                  {c.course_title && ` · ${c.course_title}`}
-                </p>
-                <p className="mt-1 text-xs text-[#94A3B8]">
-                  Issued {new Date(c.issued_at).toLocaleDateString('en-GB')} · <span className="font-mono">{c.certificate_code}</span>
-                </p>
-              </div>
 
-              {c.status === 'active' && (
-                <div className="flex shrink-0 gap-2">
-                  <a
-                    href={`/verify/${c.certificate_code}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
-                  >
-                    Verify
-                  </a>
-                  <a
-                    href={`/api/certificates/${c.certificate_code}/pdf`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18]"
-                  >
-                    Download PDF
-                  </a>
-                </div>
-              )}
+                {c.status === 'active' && (
+                  <div className="flex shrink-0 flex-col gap-1.5">
+                    <a
+                      href={`/verify/${c.certificate_code}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-medium text-[#0B1F3A] hover:bg-[#F8FAFC] text-center"
+                    >
+                      Verify
+                    </a>
+                    <a
+                      href={`/api/certificates/${c.certificate_code}/pdf`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18] text-center"
+                    >
+                      Download
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>

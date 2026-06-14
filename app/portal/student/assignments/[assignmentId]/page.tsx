@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { requirePortalRole } from '@/modules/rbac/guards'
 import { getStudentAssignmentWithSubmission } from '@/modules/assignments/submissions/queries'
 import SubmitForm from './SubmitForm'
+import Link from 'next/link'
 
 interface Props {
   params: Promise<{ assignmentId: string }>
@@ -19,7 +20,10 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
   const isOverdue = dueDate && new Date() > dueDate && !submission
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 px-4 py-8">
+    <div className="mx-auto max-w-2xl space-y-4">
+      {/* Back link */}
+      <Link href="/portal/student/assignments" className="text-xs text-[#FF8A1F] hover:underline">← Assignments</Link>
+
       {/* Header */}
       <div>
         <div className="mb-1 flex items-center gap-2 text-xs text-[#94A3B8]">
@@ -27,13 +31,13 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
           {detail.course_title && detail.module_title && <span>·</span>}
           {detail.module_title && <span>{detail.module_title}</span>}
         </div>
-        <h1 className="text-2xl font-bold text-[#0B132B]">{detail.title}</h1>
+        <h1 className="text-lg font-bold text-[#0B132B]">{detail.title}</h1>
 
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <span className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs font-medium text-[#64748B] capitalize">
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-[#F1F5F9] px-2.5 py-1 text-xs font-medium text-[#64748B] capitalize">
             {detail.type}
           </span>
-          <span className="rounded-full bg-[#F1F5F9] px-3 py-1 text-xs font-medium text-[#64748B]">
+          <span className="rounded-full bg-[#F1F5F9] px-2.5 py-1 text-xs font-medium text-[#64748B]">
             {detail.max_score} points
           </span>
           {dueDate && (
@@ -47,24 +51,24 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
 
       {/* Description */}
       {detail.description && (
-        <section className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-          <h2 className="mb-2 text-sm font-semibold text-[#0B132B]">Description</h2>
+        <section className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <h2 className="mb-1.5 text-sm font-semibold text-[#0B132B]">Description</h2>
           <p className="whitespace-pre-wrap text-sm text-[#64748B]">{detail.description}</p>
         </section>
       )}
 
       {/* Instructions */}
       {detail.instructions && (
-        <section className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-          <h2 className="mb-2 text-sm font-semibold text-[#0B132B]">Instructions</h2>
+        <section className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <h2 className="mb-1.5 text-sm font-semibold text-[#0B132B]">Instructions</h2>
           <p className="whitespace-pre-wrap text-sm text-[#64748B]">{detail.instructions}</p>
         </section>
       )}
 
       {/* Rubric */}
       {detail.rubric?.length > 0 && (
-        <section className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-          <h2 className="mb-3 text-sm font-semibold text-[#0B132B]">Grading Criteria</h2>
+        <section className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <h2 className="mb-2.5 text-sm font-semibold text-[#0B132B]">Grading Criteria</h2>
           <div className="space-y-2">
             {detail.rubric.map(criterion => (
               <div key={criterion.id} className="flex items-start justify-between gap-4">
@@ -84,8 +88,8 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
       )}
 
       {/* Submission form or status */}
-      <section className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-        <h2 className="mb-4 text-sm font-semibold text-[#0B132B]">
+      <section className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <h2 className="mb-3 text-sm font-semibold text-[#0B132B]">
           {submission ? 'Your Submission' : 'Submit Your Work'}
         </h2>
         <SubmitForm

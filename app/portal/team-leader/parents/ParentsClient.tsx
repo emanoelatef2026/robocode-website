@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import type { ParentOperationalRow, StudentPickerOption } from '@/modules/parents/operational'
-import ParentFormModal    from './ParentFormModal'
 import ParentDetailDrawer from './ParentDetailDrawer'
+import ParentFormModal    from './ParentFormModal'
 
 // Normalize Egyptian phone formats so search matches any variant
 function normalizePhone(p: string): string {
@@ -31,18 +31,18 @@ const HEALTH_CONFIG: Record<string, { label: string; color: string; text: string
 
 interface Props {
   rows:           ParentOperationalRow[]
-  studentOptions: StudentPickerOption[]
   branches:       { id: string; name: string }[]
   groups:         { id: string; name: string }[]
   courses:        { id: string; title: string }[]
   instructors:    { id: string; name: string }[]
+  studentOptions: StudentPickerOption[]
   isTL:           boolean
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export default function ParentsClient({
-  rows, studentOptions, branches, groups, courses, instructors, isTL,
+  rows, branches, groups, courses, instructors, studentOptions, isTL,
 }: Props) {
   const router   = useRouter()
   const pathname = usePathname()
@@ -61,9 +61,9 @@ export default function ParentsClient({
   const [showFilters,     setShowFilters]     = useState(false)
 
   // ── Modal state ─────────────────────────────────────────────────────────────
+  const [drawerParent,  setDrawerParent]  = useState<ParentOperationalRow | null>(null)
   const [createOpen,    setCreateOpen]    = useState(false)
   const [editParent,    setEditParent]    = useState<ParentOperationalRow | null>(null)
-  const [drawerParent,  setDrawerParent]  = useState<ParentOperationalRow | null>(null)
 
   // ── URL persistence ─────────────────────────────────────────────────────────
   const pushFilters = useCallback((overrides: Record<string, string> = {}) => {
@@ -149,10 +149,10 @@ export default function ParentsClient({
         {isTL && (
           <button
             onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
+            className="flex items-center gap-1.5 rounded-xl bg-[#FF8A1F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#e87c18] active:scale-95 transition"
           >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
             </svg>
             Add Parent
           </button>
@@ -338,12 +338,22 @@ export default function ParentsClient({
                           </a>
                         </>
                       )}
-                      <button
-                        onClick={() => setDrawerParent(row)}
-                        className="ml-auto rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F]"
-                      >
-                        View →
-                      </button>
+                      <div className="ml-auto flex items-center gap-1.5">
+                        {isTL && (
+                          <button
+                            onClick={() => setEditParent(row)}
+                            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC]"
+                          >
+                            Edit
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setDrawerParent(row)}
+                          className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F]"
+                        >
+                          View →
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )
@@ -460,11 +470,11 @@ export default function ParentsClient({
 
                         {/* Actions */}
                         <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-3">
                             {isTL && (
                               <button
                                 onClick={() => setEditParent(row)}
-                                className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[11px] font-medium text-[#64748B] hover:border-[#CBD5E1]"
+                                className="text-xs font-medium text-[#64748B] hover:text-[#0B1F3A] hover:underline"
                               >
                                 Edit
                               </button>
@@ -487,32 +497,34 @@ export default function ParentsClient({
         )}
       </div>
 
-      {/* ── Modals ──────────────────────────────────────────────────────────── */}
-      {createOpen && (
-        <ParentFormModal
-          mode="create"
-          studentOptions={studentOptions}
-          existingParents={rows}
-          onClose={() => setCreateOpen(false)}
-          onSuccess={() => { setCreateOpen(false); router.refresh() }}
-        />
-      )}
-      {editParent && (
-        <ParentFormModal
-          mode="edit"
-          parent={editParent}
-          studentOptions={studentOptions}
-          existingParents={rows}
-          onClose={() => setEditParent(null)}
-          onSuccess={() => { setEditParent(null); router.refresh() }}
-        />
-      )}
+      {/* ── Detail Drawer ────────────────────────────────────────────────────── */}
       {drawerParent && (
         <ParentDetailDrawer
           parent={drawerParent}
           isTL={isTL}
           onClose={() => setDrawerParent(null)}
-          onEdit={isTL ? () => { setDrawerParent(null); setEditParent(drawerParent) } : undefined}
+          onEdit={isTL ? () => { setEditParent(drawerParent); setDrawerParent(null) } : undefined}
+        />
+      )}
+
+      {/* ── Add Parent Modal ─────────────────────────────────────────────────── */}
+      {createOpen && (
+        <ParentFormModal
+          mode="create"
+          studentOptions={studentOptions}
+          onClose={() => setCreateOpen(false)}
+          onSuccess={() => { setCreateOpen(false); router.refresh() }}
+        />
+      )}
+
+      {/* ── Edit Parent Modal ────────────────────────────────────────────────── */}
+      {editParent && (
+        <ParentFormModal
+          mode="edit"
+          parent={editParent}
+          studentOptions={studentOptions}
+          onClose={() => setEditParent(null)}
+          onSuccess={() => { setEditParent(null); router.refresh() }}
         />
       )}
     </div>
