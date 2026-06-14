@@ -161,6 +161,16 @@ export interface StudentNote {
   is_own:         boolean
 }
 
+export interface StudentAssignmentItem {
+  assignment_id: string
+  title:         string
+  due_at:        string | null
+  sub_status:    'not_submitted' | 'submitted' | 'resubmitted' | 'graded' | 'returned'
+  score:         number | null
+  is_late:       boolean
+  submitted_at:  string | null
+}
+
 export interface StudentProfileForInstructor {
   student_id:   string
   user_id:      string

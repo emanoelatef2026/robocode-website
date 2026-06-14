@@ -36,21 +36,22 @@ export default function StartGroupSessionButton({ groupId, groupCourseId, branch
   }
 
   return (
-    <div className="flex flex-col gap-2 w-full sm:w-auto">
-      <div className="flex items-center gap-2">
+    <div className="flex w-full flex-col gap-1.5">
+      {/* Input + button — stacked on mobile, side-by-side on sm+ */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <input
           type="text"
           value={topic}
           onChange={e => { setTopic(e.target.value); setTouched(false) }}
           onBlur={() => setTouched(true)}
           placeholder="Session topic (required)"
-          className="flex-1 min-w-0 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+          className="w-full min-w-0 rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleStart() } }}
         />
         <button
           onClick={handleStart}
           disabled={isPending}
-          className="shrink-0 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e07818] disabled:opacity-60 transition"
+          className="w-full rounded-lg bg-[#FF8A1F] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#e07818] disabled:opacity-60 transition sm:w-auto sm:shrink-0 sm:whitespace-nowrap"
         >
           {isPending ? 'Starting…' : 'Start Session'}
         </button>

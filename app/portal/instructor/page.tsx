@@ -81,31 +81,35 @@ export default async function InstructorDashboardPage() {
         </p>
       </div>
 
-      {/* Stats bar */}
-      <div className="grid grid-cols-2 gap-2 md:gap-3 sm:grid-cols-4 lg:grid-cols-5">
+      {/* Stats bar — 2 cols on mobile, 3 on sm, 5 on lg */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3 lg:grid-cols-5">
         {[
-          { label: 'My Groups',          value: String(stats.groupCount) },
-          { label: 'My Students',        value: String(stats.studentCount) },
-          { label: 'Pending Homework',   value: String(pending.length) },
-          { label: 'Sessions Completed', value: String(totalCompleted) },
+          { label: 'My Groups',      value: String(stats.groupCount) },
+          { label: 'My Students',    value: String(stats.studentCount) },
+          { label: 'Pending HW',     value: String(pending.length) },
+          { label: 'Sessions Done',  value: String(totalCompleted) },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-3 md:px-4 md:py-4 text-center">
+          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-3 text-center">
             <p className="text-xl md:text-2xl font-bold text-[#0B1F3A]">{value}</p>
-            <p className="mt-0.5 text-[11px] md:text-xs text-[#64748B]">{label}</p>
+            <p className="mt-0.5 text-[10px] md:text-xs text-[#64748B] leading-tight">{label}</p>
           </div>
         ))}
-        {/* Instructor Rating */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-3 md:px-4 md:py-4 text-center">
+        {/* Rating — spans 2 cols on mobile so it fills its row, 1 col on lg */}
+        <div className="col-span-2 sm:col-span-1 rounded-xl border border-[#E2E8F0] bg-white px-3 py-3 text-center">
           {rating != null ? (
             <>
-              <p className="text-xl md:text-2xl font-bold text-[#FF8A1F]">⭐ {(rating as InstructorRatingSummary).avg_overall.toFixed(1)}</p>
-              <p className="mt-0.5 text-[11px] md:text-xs text-[#64748B]">Avg Rating</p>
-              <p className="text-[10px] text-[#94A3B8]">{(rating as InstructorRatingSummary).total_responses} responses</p>
+              <p className="text-xl md:text-2xl font-bold text-[#FF8A1F]">
+                ⭐ {(rating as InstructorRatingSummary).avg_overall.toFixed(1)}
+              </p>
+              <p className="mt-0.5 text-[10px] md:text-xs text-[#64748B]">Avg Rating</p>
+              <p className="text-[10px] text-[#94A3B8]">
+                {(rating as InstructorRatingSummary).total_responses} responses
+              </p>
             </>
           ) : (
             <>
               <p className="text-xl font-bold text-[#94A3B8]">—</p>
-              <p className="mt-0.5 text-[11px] md:text-xs text-[#64748B]">Avg Rating</p>
+              <p className="mt-0.5 text-[10px] md:text-xs text-[#64748B]">Avg Rating</p>
             </>
           )}
         </div>

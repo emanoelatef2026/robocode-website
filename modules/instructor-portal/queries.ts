@@ -9,6 +9,7 @@ import type {
   SessionHomeworkItem,
   PendingSubmissionItem,
   StudentProfileForInstructor,
+  StudentAssignmentItem,
   StudentNote,
   InstructorDashboardStats,
   GroupForInstructor,
@@ -1233,6 +1234,64 @@ export async function getStudentProfileForInstructor(
     attendance_late:    late,
     notes,
   }
+}
+
+// ── Student Assignments (instructor view of one student in a group) ───────────
+
+export async function getStudentGroupAssignments(
+  studentId: string,
+  groupId:   string,
+): Promise<StudentAssignmentItem[]> {
+  const db = createServiceClient()
+
+  const { data: gcRow } = await db
+    .from('group_courses')
+    .select('id')
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+    .maybeSingle()
+  if (!gcRow) return []
+  const gcId = (gcRow as any).id as string
+
+  const { data: schedRows } = await db
+    .from('schedules')
+    .select('id')
+    .eq('group_course_id', gcId)
+  const schedIds = (schedRows ?? []).map((s: any) => s.id as string)
+  if (schedIds.length === 0) return []
+
+  const { data: assignRows } = await db
+    .from('assignments')
+    .select('id, title, due_at')
+    .in('schedule_id', schedIds)
+    .is('deleted_at', null)
+    .order('due_at', { ascending: true, nullsFirst: false })
+  if (!assignRows || assignRows.length === 0) return []
+
+  const assignIds = assignRows.map((a: any) => a.id as string)
+
+  const { data: subRows } = await db
+    .from('submissions')
+    .select('assignment_id, status, score, is_late, submitted_at')
+    .eq('student_id', studentId)
+    .in('assignment_id', assignIds)
+
+  const subMap = new Map<string, any>(
+    (subRows ?? []).map((s: any) => [s.assignment_id as string, s])
+  )
+
+  return assignRows.map((a: any) => {
+    const sub = subMap.get(a.id)
+    return {
+      assignment_id: a.id,
+      title:         a.title,
+      due_at:        a.due_at   ?? null,
+      sub_status:    (sub?.status ?? 'not_submitted') as StudentAssignmentItem['sub_status'],
+      score:         sub?.score  ?? null,
+      is_late:       sub?.is_late ?? false,
+      submitted_at:  sub?.submitted_at ?? null,
+    }
+  })
 }
 
 // ── Legacy: upcoming sessions (kept for dashboard backward compat) ─────────────

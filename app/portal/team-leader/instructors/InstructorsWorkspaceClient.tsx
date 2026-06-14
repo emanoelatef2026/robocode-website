@@ -1942,8 +1942,8 @@ export default function InstructorsWorkspaceClient({
       <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-4 md:px-6 py-2 md:py-3">
         <div className="flex items-center justify-between gap-2 md:gap-4">
           <div>
-            <h1 className="text-[15px] md:text-[17px] font-bold text-[#0B1F3A]">Instructors</h1>
-            <p className="text-[10px] md:text-[11px] text-[#94A3B8]">{instructors.length} total · {totalActive} active · {totalAssigned} assigned · {totalUnassigned} unassigned</p>
+            <h1 className="text-xl font-semibold text-[#0B1F3A]">Instructors</h1>
+            <p className="text-xs text-[#64748B] md:text-[11px]">{instructors.length} total · {totalActive} active · {totalAssigned} assigned · {totalUnassigned} unassigned</p>
           </div>
           <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
             {/* View toggle */}

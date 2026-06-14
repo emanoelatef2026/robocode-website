@@ -33,19 +33,20 @@ export default function InstructorShell({ children }: { children: React.ReactNod
       )}
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[#E2E8F0] bg-white px-4 md:px-5">
-          {/* Mobile logo */}
-          <div className="flex items-center md:hidden">
-            <Image src="/logo.png" alt="Robocode" width={100} height={44} className="h-7 w-auto" />
+        {/* Header — 48 px on mobile, 56 px on desktop */}
+        <header className="flex h-12 md:h-14 shrink-0 items-center gap-2 md:gap-3 border-b border-[#E2E8F0] bg-white px-3 md:px-5">
+          {/* Logo — mobile only, compact */}
+          <div className="flex shrink-0 items-center md:hidden">
+            <Image src="/logo.png" alt="Robocode" width={76} height={34} className="h-6.5 w-auto" />
           </div>
 
-          {/* Search — full width on mobile, constrained on desktop */}
-          <form onSubmit={handleSearch} className="flex flex-1 max-w-xs items-center gap-2 ml-2 md:ml-0">
-            <div className="relative flex-1">
+          {/* Search — fills all remaining space */}
+          <form onSubmit={handleSearch} className="flex flex-1 items-center min-w-0">
+            <div className="relative w-full">
               <svg
                 viewBox="0 0 20 20"
                 fill="currentColor"
-                className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]"
+                className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#94A3B8]"
               >
                 <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
               </svg>
@@ -55,15 +56,15 @@ export default function InstructorShell({ children }: { children: React.ReactNod
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search students…"
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] py-1.5 pl-8 pr-3 text-sm text-[#0B1F3A] placeholder-[#94A3B8] outline-none focus:border-[#FF8A1F] focus:bg-white focus:ring-2 focus:ring-[#FF8A1F]/15"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] py-1.5 pl-7 md:pl-8 pr-3 text-sm text-[#0B1F3A] placeholder-[#94A3B8] outline-none focus:border-[#FF8A1F] focus:bg-white focus:ring-2 focus:ring-[#FF8A1F]/15"
               />
             </div>
           </form>
 
-          <div className="flex-1" />
+          {/* Hamburger — mobile only */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-lg text-[#64748B] hover:bg-[#F1F5F9] active:bg-[#E2E8F0] md:hidden"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#64748B] hover:bg-[#F1F5F9] active:bg-[#E2E8F0] md:hidden"
             aria-label="Open menu"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
@@ -71,7 +72,9 @@ export default function InstructorShell({ children }: { children: React.ReactNod
             </svg>
           </button>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-7 pb-bottom-nav md:pb-7 scroll-smooth-mobile">
+
+        {/* Main scroll area — 12 px padding on mobile, 28 px on desktop */}
+        <main className="flex-1 overflow-y-auto p-3 md:p-7 pb-bottom-nav md:pb-7 scroll-smooth-mobile">
           {children}
         </main>
       </div>

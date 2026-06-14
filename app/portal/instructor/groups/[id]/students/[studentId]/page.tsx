@@ -1,5 +1,9 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
-import { getInstructorByUserId, getStudentProfileForInstructor } from '@/modules/instructor-portal/queries'
+import {
+  getInstructorByUserId,
+  getStudentProfileForInstructor,
+  getStudentGroupAssignments,
+} from '@/modules/instructor-portal/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import NoteForm from './NoteForm'
@@ -7,102 +11,204 @@ import DeleteNoteButton from './DeleteNoteButton'
 
 interface Props { params: Promise<{ id: string; studentId: string }> }
 
-export default async function StudentProfilePage({ params }: Props) {
-  const user                = await requirePortalRole('instructor')
-  const { id, studentId }   = await params
-  const instructor          = await getInstructorByUserId(user.id)
+const SUB_META: Record<string, { label: string; cls: string }> = {
+  not_submitted: { label: 'Not submitted', cls: 'bg-[#F1F5F9] text-[#64748B]'         },
+  submitted:     { label: 'Submitted',     cls: 'bg-amber-100 text-amber-700'          },
+  resubmitted:   { label: 'Resubmitted',   cls: 'bg-purple-100 text-purple-700'        },
+  graded:        { label: 'Graded',        cls: 'bg-green-100 text-green-700'          },
+  returned:      { label: 'Returned',      cls: 'bg-blue-100 text-blue-700'            },
+}
 
+export default async function StudentProfilePage({ params }: Props) {
+  const user              = await requirePortalRole('instructor')
+  const { id, studentId } = await params
+  const instructor        = await getInstructorByUserId(user.id)
   if (!instructor) notFound()
 
-  const profile = await getStudentProfileForInstructor(
-    studentId,
-    id,
-    instructor.id,
-    user.id
-  )
+  const [profile, assignments] = await Promise.all([
+    getStudentProfileForInstructor(studentId, id, instructor.id, user.id),
+    getStudentGroupAssignments(studentId, id),
+  ])
   if (!profile) notFound()
 
-  const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email
-  const attendancePct = profile.attendance_total > 0
-    ? Math.round((profile.attendance_present / profile.attendance_total) * 100)
-    : null
+  const name         = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email
+  const initials     = (profile.first_name?.[0] ?? profile.email[0]).toUpperCase()
+  const total        = profile.attendance_total
+  const present      = profile.attendance_present
+  const absent       = profile.attendance_absent
+  const late         = profile.attendance_late
+  const pct          = total > 0 ? Math.round((present / total) * 100) : null
+  const pctColor     = pct === null ? '' : pct >= 75 ? 'text-green-600' : pct >= 50 ? 'text-amber-500' : 'text-red-500'
+  const barColor     = pct === null ? '' : pct >= 75 ? 'bg-green-500'  : pct >= 50 ? 'bg-amber-400'  : 'bg-red-500'
+
+  const doneCount    = assignments.filter(a => ['graded', 'returned', 'submitted', 'resubmitted'].includes(a.sub_status)).length
+  const pendingCount = assignments.filter(a => a.sub_status === 'not_submitted').length
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      {/* Header */}
+    <div className="mx-auto max-w-xl space-y-4">
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
       <div>
-        <Link href={`/portal/instructor/groups/${id}`} className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
+        <Link
+          href={`/portal/instructor/groups/${id}`}
+          className="inline-flex items-center gap-1 text-sm text-[#64748B] hover:text-[#0B1F3A]"
+        >
           ← {profile.group_name}
         </Link>
-        <h1 className="mt-2 text-xl font-bold text-[#0B1F3A]">{name}</h1>
-        <p className="mt-0.5 text-sm text-[#94A3B8]">{profile.email}</p>
-        <p className="mt-0.5 text-xs text-[#94A3B8]">Group: {profile.group_name}</p>
+
+        <div className="mt-2 flex items-center gap-3">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#EFF6FF] text-base font-bold text-[#3B82F6]">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-lg font-bold text-[#0B1F3A] leading-tight truncate">{name}</h1>
+            <p className="text-xs text-[#94A3B8] truncate">{profile.email}</p>
+          </div>
+        </div>
       </div>
 
-      {/* Attendance summary */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-        <p className="text-sm font-semibold text-[#0B1F3A]">Attendance</p>
-        {profile.attendance_total === 0 ? (
-          <p className="mt-2 text-sm text-[#94A3B8]">No sessions recorded yet.</p>
+      {/* ── Attendance ─────────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3.5">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-semibold text-[#0B1F3A]">Attendance</p>
+          {pct !== null && (
+            <span className={`text-sm font-bold ${pctColor}`}>{pct}%</span>
+          )}
+        </div>
+
+        {total === 0 ? (
+          <p className="text-sm text-[#94A3B8]">No sessions recorded yet.</p>
         ) : (
           <>
-            <div className="mt-3 grid grid-cols-4 gap-3">
+            {/* 4-stat grid */}
+            <div className="grid grid-cols-4 gap-2">
               {[
-                { label: 'Total',   value: profile.attendance_total,   color: 'text-[#0B1F3A]' },
-                { label: 'Present', value: profile.attendance_present, color: 'text-green-600' },
-                { label: 'Absent',  value: profile.attendance_absent,  color: 'text-red-600' },
-                { label: 'Late',    value: profile.attendance_late,    color: 'text-yellow-600' },
-              ].map(({ label, value, color }) => (
-                <div key={label} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-center">
-                  <p className={`text-lg font-bold ${color}`}>{value}</p>
-                  <p className="text-xs text-[#94A3B8]">{label}</p>
+                { label: 'Present', value: present, color: 'text-green-600',  bg: 'bg-green-50'  },
+                { label: 'Absent',  value: absent,  color: 'text-red-600',    bg: 'bg-red-50'    },
+                { label: 'Late',    value: late,    color: 'text-amber-600',  bg: 'bg-amber-50'  },
+                { label: 'Total',   value: total,   color: 'text-[#0B1F3A]', bg: 'bg-[#F8FAFC]' },
+              ].map(({ label, value, color, bg }) => (
+                <div key={label} className={`rounded-lg ${bg} px-2 py-2.5 text-center`}>
+                  <p className={`text-lg font-bold leading-none ${color}`}>{value}</p>
+                  <p className="mt-1 text-[10px] text-[#94A3B8]">{label}</p>
                 </div>
               ))}
             </div>
-            {attendancePct !== null && (
-              <div className="mt-3">
-                <div className="flex items-center justify-between text-xs text-[#94A3B8]">
-                  <span>Attendance rate</span>
-                  <span>{attendancePct}%</span>
-                </div>
-                <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-[#F1F5F9]">
-                  <div
-                    className={`h-full rounded-full transition-all ${attendancePct >= 75 ? 'bg-green-500' : attendancePct >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
-                    style={{ width: `${attendancePct}%` }}
-                  />
-                </div>
+
+            {/* Progress bar */}
+            {pct !== null && (
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#F1F5F9]">
+                <div
+                  className={`h-full rounded-full transition-all ${barColor}`}
+                  style={{ width: `${pct}%` }}
+                />
               </div>
             )}
-            {profile.attendance_absent >= 3 && (
-              <div className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-                ⚠ This student has {profile.attendance_absent} absences and requires attention.
+
+            {/* Attention alert */}
+            {absent >= 3 && (
+              <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                <span className="shrink-0 text-red-500">⚠</span>
+                <p className="text-xs text-red-700">
+                  {absent} absences — this student requires attention.
+                </p>
               </div>
             )}
           </>
         )}
       </div>
 
-      {/* Notes Timeline — NEVER visible to students or parents */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-[#0B1F3A]">Notes Timeline</p>
+      {/* ── Assignments ────────────────────────────────────────────────────── */}
+      {assignments.length > 0 && (
+        <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3.5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-semibold text-[#0B1F3A]">Assignments</p>
+            <div className="flex items-center gap-1.5 text-xs text-[#94A3B8]">
+              <span className="font-medium text-green-600">{doneCount} done</span>
+              {pendingCount > 0 && (
+                <>
+                  <span>·</span>
+                  <span className="text-[#94A3B8]">{pendingCount} pending</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="divide-y divide-[#F1F5F9]">
+            {assignments.map((a) => {
+              const meta = SUB_META[a.sub_status] ?? SUB_META.not_submitted
+              const due  = a.due_at
+                ? new Date(a.due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                : null
+
+              return (
+                <div key={a.assignment_id} className="flex items-start gap-3 py-2.5">
+                  {/* Status dot */}
+                  <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
+                    a.sub_status === 'graded' || a.sub_status === 'returned'
+                      ? 'bg-green-500'
+                      : a.sub_status === 'submitted' || a.sub_status === 'resubmitted'
+                      ? 'bg-amber-400'
+                      : 'bg-[#E2E8F0]'
+                  }`} />
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm text-[#0B1F3A]">{a.title}</p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-[#94A3B8]">
+                      {due && <span>Due {due}</span>}
+                      {a.is_late && (
+                        <>
+                          {due && <span className="text-[#E2E8F0]">·</span>}
+                          <span className="text-red-500">Late</span>
+                        </>
+                      )}
+                      {a.submitted_at && (
+                        <>
+                          <span className="text-[#E2E8F0]">·</span>
+                          <span>
+                            Submitted {new Date(a.submitted_at).toLocaleDateString('en-GB', {
+                              day: 'numeric', month: 'short',
+                            })}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${meta.cls}`}>
+                      {meta.label}
+                    </span>
+                    {a.score !== null && (
+                      <p className="mt-0.5 text-xs font-semibold text-[#0B1F3A]">{a.score}/100</p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Notes ──────────────────────────────────────────────────────────── */}
+      <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3.5">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-semibold text-[#0B1F3A]">Notes</p>
           <span className="rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[10px] font-medium text-[#FF8A1F]">
             Instructor only
           </span>
         </div>
 
-        {/* Add note form */}
         <NoteForm studentId={studentId} groupId={id} />
 
-        {/* Notes timeline */}
         {profile.notes.length === 0 ? (
-          <p className="text-sm text-[#94A3B8]">No notes yet.</p>
+          <p className="mt-3 text-sm text-[#94A3B8]">No notes yet.</p>
         ) : (
-          <div className="relative space-y-3 pl-4 before:absolute before:left-1.5 before:top-0 before:h-full before:w-px before:bg-[#E2E8F0]">
+          <div className="relative mt-4 space-y-3 pl-4 before:absolute before:left-1.5 before:top-0 before:h-full before:w-px before:bg-[#E2E8F0]">
             {profile.notes.map((n) => (
-              <div key={n.id} className="relative rounded-lg border border-[#F1F5F9] bg-[#F8FAFC] px-4 py-3">
+              <div key={n.id} className="relative rounded-lg border border-[#F1F5F9] bg-[#F8FAFC] px-3 py-2.5">
                 {/* Timeline dot */}
-                <div className="absolute -left-4.75 top-4 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#FF8A1F]" />
+                <div className="absolute -left-4.5 top-3.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#FF8A1F]" />
 
                 <div className="flex items-start justify-between gap-2">
                   <p className="flex-1 whitespace-pre-wrap text-sm text-[#0B1F3A]">{n.content}</p>
@@ -110,18 +216,34 @@ export default async function StudentProfilePage({ params }: Props) {
                     <DeleteNoteButton noteId={n.id} studentId={studentId} groupId={id} />
                   )}
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-[#94A3B8]">
+
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] text-[#94A3B8]">
                   <span className="font-medium text-[#64748B]">{n.author_name}</span>
                   <span>·</span>
-                  <span>{new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                  {n.schedule_topic && <><span>·</span><span>{n.schedule_topic}</span></>}
-                  {n.is_private && <><span>·</span><span className="text-[#FF8A1F]">private</span></>}
+                  <span>
+                    {new Date(n.created_at).toLocaleDateString('en-GB', {
+                      day: 'numeric', month: 'short', year: 'numeric',
+                    })}
+                  </span>
+                  {n.schedule_topic && (
+                    <>
+                      <span>·</span>
+                      <span className="italic">{n.schedule_topic}</span>
+                    </>
+                  )}
+                  {n.is_private && (
+                    <>
+                      <span>·</span>
+                      <span className="text-[#FF8A1F]">private</span>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
     </div>
   )
 }

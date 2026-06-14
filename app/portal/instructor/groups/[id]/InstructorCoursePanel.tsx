@@ -66,28 +66,28 @@ export default function InstructorCoursePanel({ course }: Props) {
       <button
         type="button"
         onClick={() => setOpen((p) => !p)}
-        className="flex w-full items-center justify-between px-5 py-4 text-left"
+        className="flex w-full items-center justify-between px-4 py-3.5 md:px-5 md:py-4 text-left gap-3"
       >
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-[#0B1F3A]">Course Content</p>
-          <p className="mt-0.5 text-xs text-[#64748B] truncate max-w-xs">{course.title}</p>
+          <p className="mt-0.5 text-xs text-[#64748B] truncate">{course.title}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           {course.resources_url && (
             <a
               href={course.resources_url}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="rounded-lg border border-[#FF8A1F] px-3 py-1.5 text-xs font-medium text-[#FF8A1F] transition hover:bg-[#FFF7EF]"
+              className="rounded-lg border border-[#FF8A1F] px-2.5 py-1 text-xs font-medium text-[#FF8A1F] transition hover:bg-[#FFF7EF]"
             >
-              Open Content
+              Open
             </a>
           )}
           <svg
             viewBox="0 0 20 20"
             fill="currentColor"
-            className={`h-5 w-5 text-[#94A3B8] transition-transform ${open ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 text-[#94A3B8] transition-transform ${open ? 'rotate-180' : ''}`}
           >
             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
           </svg>
@@ -96,7 +96,7 @@ export default function InstructorCoursePanel({ course }: Props) {
 
       {/* Expandable body */}
       {open && (
-        <div className="border-t border-[#E2E8F0] px-5 py-5 space-y-5">
+        <div className="border-t border-[#E2E8F0] px-4 py-4 md:px-5 md:py-5 space-y-4 md:space-y-5">
 
           {!hasContent && (
             <p className="text-sm text-[#94A3B8] italic">No content added to this course yet.</p>

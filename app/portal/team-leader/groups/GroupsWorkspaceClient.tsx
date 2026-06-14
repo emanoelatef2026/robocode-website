@@ -218,7 +218,7 @@ function GroupSidebar({
       {/* Panel header */}
       <div className="flex items-center justify-between gap-2 border-b border-[#E2E8F0] px-3 py-2.5 shrink-0">
         <div className="flex items-center gap-2">
-          <h2 className="text-[13px] font-semibold text-[#0B1F3A]">Groups</h2>
+          <h2 className="text-xl font-semibold text-[#0B1F3A] md:text-[13px]">Groups</h2>
           <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-medium text-[#64748B]">
             {groups.length}{groups.length !== allGroups.length ? ` / ${allGroups.length}` : ''}
           </span>
@@ -231,7 +231,7 @@ function GroupSidebar({
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
             </svg>
-            New
+            New Group
           </button>
         )}
       </div>

@@ -17,10 +17,10 @@ export default async function InstructorGroupsPage() {
   const groups = await listInstructorGroups(instructor.id)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-[#0B1F3A]">My Groups</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">Groups assigned to you</p>
+        <h1 className="text-[18px] md:text-xl font-bold text-[#0B1F3A]">My Groups</h1>
+        <p className="mt-0.5 text-[12px] md:text-sm text-[#64748B]">Groups assigned to you</p>
       </div>
 
       {groups.length === 0 ? (
@@ -29,7 +29,7 @@ export default async function InstructorGroupsPage() {
           <p className="mt-1 text-sm text-[#94A3B8]">Contact your Team Leader to receive group assignments.</p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 md:gap-4">
           {groups.map((g) => {
             const isActive = !!g.course_title
 
@@ -37,7 +37,7 @@ export default async function InstructorGroupsPage() {
               <Link
                 key={g.group_id}
                 href={`/portal/instructor/groups/${g.group_id}`}
-                className="rounded-xl border border-[#E2E8F0] bg-white p-5 transition hover:border-[#CBD5E1] hover:shadow-sm"
+                className="rounded-xl border border-[#E2E8F0] bg-white p-4 md:p-5 transition hover:border-[#CBD5E1] hover:shadow-sm active:bg-[#F8FAFC]"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

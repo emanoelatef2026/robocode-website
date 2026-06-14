@@ -200,7 +200,7 @@ export default function StudentsClient({
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-5">
+    <div className="space-y-3 md:space-y-5">
 
       {/* Header */}
       <div className="flex items-center justify-between gap-3">
@@ -222,28 +222,28 @@ export default function StudentsClient({
       </div>
 
       {/* KPI Strip */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="grid grid-cols-4 gap-1.5 md:gap-3 lg:grid-cols-7">
         {kpis.map(k => (
-          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-            <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-            <p className="text-lg font-bold text-[#0B1F3A]">{k.value}</p>
-            <p className="text-[11px] text-[#64748B]">{k.label}</p>
+          <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+            <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
+            <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
+            <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
           </div>
         ))}
       </div>
 
       {/* Filter bar */}
       <div className="space-y-2">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Name, code, phone, parent, email…"
-            className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none min-w-52"
+            placeholder="Name, code, phone…"
+            className="min-w-0 flex-1 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
           />
           <button
             onClick={() => setShowFilters(f => !f)}
-            className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition
+            className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition
               ${showFilters || activeFilterCount > 0
                 ? 'border-[#FF8A1F] bg-[#FF8A1F]/10 text-[#FF8A1F]'
                 : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:border-[#CBD5E1]'}`}
@@ -261,16 +261,130 @@ export default function StudentsClient({
           {(search || activeFilterCount > 0) && (
             <button
               onClick={clearFilters}
-              className="rounded-xl border border-[#E2E8F0] px-3 py-2 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]"
+              className="shrink-0 rounded-xl border border-[#E2E8F0] px-3 py-2 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]"
             >
               Clear
             </button>
           )}
         </div>
 
-        {/* Expanded filters */}
+        {/* ── Mobile: bottom sheet filter ────────────────────────────── */}
         {showFilters && (
-          <div className="flex flex-wrap gap-2 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+          <>
+            <div
+              className="fixed inset-0 z-50 bg-black/40 md:hidden"
+              onClick={() => setShowFilters(false)}
+            />
+            <div
+              className="fixed bottom-0 left-0 right-0 z-50 max-h-[72vh] overflow-y-auto rounded-t-2xl bg-white shadow-2xl md:hidden"
+              style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
+            >
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="h-1 w-10 rounded-full bg-[#E2E8F0]" />
+              </div>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 pb-3 pt-1">
+                <p className="text-sm font-semibold text-[#0B1F3A]">
+                  Filters {activeFilterCount > 0 && <span className="ml-1 text-[#FF8A1F]">({activeFilterCount})</span>}
+                </p>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-[#94A3B8] hover:bg-[#F1F5F9]"
+                >
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+              {/* Filter selects */}
+              <div className="space-y-2 px-4">
+                {branches.length > 1 && (
+                  <select value={filterBranch} onChange={e => { setFilterBranch(e.target.value); pushFilters({ branch_id: e.target.value }) }}
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    <option value="">All Branches</option>
+                    {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
+                )}
+                <select value={filterGroup} onChange={e => { setFilterGroup(e.target.value); pushFilters({ group_id: e.target.value }) }}
+                  className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                  <option value="">All Groups</option>
+                  {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                </select>
+                {courses.length > 0 && (
+                  <select value={filterCourse} onChange={e => { setFilterCourse(e.target.value); pushFilters({ course_id: e.target.value }) }}
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    <option value="">All Courses</option>
+                    {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                  </select>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <select value={filterRisk} onChange={e => { setFilterRisk(e.target.value); pushFilters({ risk: e.target.value }) }}
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    <option value="">All Risk</option>
+                    <option value="HIGH">High</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="LOW">Low</option>
+                  </select>
+                  <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); pushFilters({ op_status: e.target.value }) }}
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    <option value="">All Statuses</option>
+                    {Object.entries(OP_STATUS_CONFIG).map(([k, v]) => (
+                      <option key={k} value={k}>{v.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <select value={filterActive} onChange={e => { setFilterActive(e.target.value); pushFilters({ active: e.target.value }) }}
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    <option value="">Any Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                  <select value={filterHasGrp} onChange={e => { setFilterHasGrp(e.target.value); pushFilters({ has_group: e.target.value }) }}
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    <option value="">Group / No Group</option>
+                    <option value="yes">Has Group</option>
+                    <option value="no">No Group</option>
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <select value={filterMulti} onChange={e => { setFilterMulti(e.target.value); pushFilters({ multi: e.target.value }) }}
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    <option value="">Any Contract</option>
+                    <option value="1">Multi Only</option>
+                  </select>
+                  {instructors.length > 0 && (
+                    <select value={filterInstructor} onChange={e => { setFilterInstructor(e.target.value); pushFilters({ instructor_id: e.target.value }) }}
+                      className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                      <option value="">All Instructors</option>
+                      {instructors.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+                    </select>
+                  )}
+                </div>
+              </div>
+              {/* Actions */}
+              <div className="mt-4 flex gap-2 border-t border-[#E2E8F0] px-4 pt-3">
+                <button
+                  onClick={() => { clearFilters(); setShowFilters(false) }}
+                  className="flex-1 rounded-xl border border-[#E2E8F0] py-2.5 text-sm font-medium text-[#64748B]"
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={() => setShowFilters(false)}
+                  className="flex-1 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-semibold text-white"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ── Desktop: inline expanded filters ───────────────────────── */}
+        {showFilters && (
+          <div className="hidden md:flex flex-wrap gap-2 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
             {branches.length > 1 && (
               <select value={filterBranch} onChange={e => { setFilterBranch(e.target.value); pushFilters({ branch_id: e.target.value }) }}
                 className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
@@ -278,13 +392,11 @@ export default function StudentsClient({
                 {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
             )}
-
             <select value={filterGroup} onChange={e => { setFilterGroup(e.target.value); pushFilters({ group_id: e.target.value }) }}
               className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
               <option value="">All Groups</option>
               {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
             </select>
-
             {courses.length > 0 && (
               <select value={filterCourse} onChange={e => { setFilterCourse(e.target.value); pushFilters({ course_id: e.target.value }) }}
                 className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
@@ -292,7 +404,6 @@ export default function StudentsClient({
                 {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
               </select>
             )}
-
             <select value={filterRisk} onChange={e => { setFilterRisk(e.target.value); pushFilters({ risk: e.target.value }) }}
               className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
               <option value="">All Risk Levels</option>
@@ -300,7 +411,6 @@ export default function StudentsClient({
               <option value="MEDIUM">Medium Risk</option>
               <option value="LOW">Low Risk</option>
             </select>
-
             <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); pushFilters({ op_status: e.target.value }) }}
               className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
               <option value="">All Statuses</option>
@@ -308,27 +418,23 @@ export default function StudentsClient({
                 <option key={k} value={k}>{v.label}</option>
               ))}
             </select>
-
             <select value={filterActive} onChange={e => { setFilterActive(e.target.value); pushFilters({ active: e.target.value }) }}
               className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
               <option value="">Active + Inactive</option>
               <option value="active">Active Only</option>
               <option value="inactive">Inactive Only</option>
             </select>
-
             <select value={filterHasGrp} onChange={e => { setFilterHasGrp(e.target.value); pushFilters({ has_group: e.target.value }) }}
               className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
               <option value="">Has Group / No Group</option>
               <option value="yes">Has Group</option>
               <option value="no">No Group</option>
             </select>
-
             <select value={filterMulti} onChange={e => { setFilterMulti(e.target.value); pushFilters({ multi: e.target.value }) }}
               className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
               <option value="">All Contracts</option>
               <option value="1">Multi-Contract Only</option>
             </select>
-
             {instructors.length > 0 && (
               <select value={filterInstructor} onChange={e => { setFilterInstructor(e.target.value); pushFilters({ instructor_id: e.target.value }) }}
                 className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
@@ -381,76 +487,76 @@ export default function StudentsClient({
                 return (
                   <div
                     key={row.student_id}
-                    className="cursor-pointer px-4 py-4 hover:bg-[#F8FAFC]"
+                    className="cursor-pointer px-3 py-2.5 hover:bg-[#F8FAFC] active:bg-[#F1F5F9]"
                     onClick={() => setDrawerStudent(row)}
                   >
-                    <div className="flex items-start gap-2">
-                      {/* Checkbox */}
+                    {/* Row 1: checkbox · name · risk · status */}
+                    <div className="flex items-center gap-1.5">
                       {isTL && (
-                        <div className="pt-0.5 shrink-0" onClick={e => e.stopPropagation()}>
+                        <div className="shrink-0" onClick={e => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={selectedIds.has(row.student_id)}
                             onChange={() => toggleStudent(row.student_id)}
-                            className="h-4 w-4 rounded border-[#E2E8F0] accent-[#FF8A1F]"
+                            className="h-3.5 w-3.5 rounded border-[#E2E8F0] accent-[#FF8A1F]"
                           />
                         </div>
                       )}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[15px] font-semibold text-[#0B1F3A] leading-tight">{row.student_name}</p>
-                        <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
-                          {row.student_code && <span className="font-mono text-[11px] text-[#94A3B8]">#{row.student_code}</span>}
-                          {row.age !== null && <span className="text-[11px] text-[#94A3B8]">Age {row.age}</span>}
-                        </div>
-                        {row.group_name && (
-                          <p className="text-[12px] text-[#64748B]">
-                            {row.group_name}{row.instructor_name ? ` · ${row.instructor_name}` : ''}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex flex-col items-end gap-1 shrink-0">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${opCfg.color} ${opCfg.text}`}>
-                          {opCfg.label}
-                        </span>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${riskCfg.color} ${riskCfg.text}`}>
-                          {row.risk_level}
-                        </span>
-                      </div>
+                      <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-[#0B1F3A]">
+                        {row.student_name}
+                      </p>
+                      <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${riskCfg.color} ${riskCfg.text}`}>
+                        {row.risk_level}
+                      </span>
+                      <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold ${opCfg.color} ${opCfg.text}`}>
+                        {opCfg.label}
+                      </span>
                     </div>
-                    <div className="mt-2 grid grid-cols-3 gap-1 text-[11px]">
-                      <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
-                        <p className="font-bold text-[#0B1F3A]">{row.attendance_pct}%</p>
-                        <p className="text-[#94A3B8]">Attend.</p>
-                      </div>
-                      <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
-                        <p className={`font-bold ${row.enrolled_sessions > 0 && row.remaining_sessions <= 2 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
-                          {row.enrolled_sessions > 0 ? `${row.remaining_sessions}/${row.enrolled_sessions}` : '—'}
-                        </p>
-                        <p className="text-[#94A3B8]">Sessions</p>
-                      </div>
-                      <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
-                        <p className="font-bold text-[#0B1F3A]">{row.parent_contact_count}</p>
-                        <p className="text-[#94A3B8]">Contacts</p>
-                      </div>
+
+                    {/* Row 2: code · age · group */}
+                    <div className="mt-0.5 flex items-center gap-x-1.5 overflow-hidden text-[10px] text-[#94A3B8]">
+                      {row.student_code && (
+                        <span className="shrink-0 font-mono">#{row.student_code}</span>
+                      )}
+                      {row.age !== null && (
+                        <span className="shrink-0">· {row.age}y</span>
+                      )}
+                      {row.group_name && (
+                        <span className="truncate text-[#64748B]">· {row.group_name}</span>
+                      )}
                     </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      {row.primary_contact_phone && (
+
+                    {/* Row 3: stats · phone / assign */}
+                    <div className="mt-1 flex min-w-0 items-center gap-x-1 text-[10px]">
+                      <span className={`shrink-0 font-semibold ${row.attendance_pct < 60 ? 'text-red-500' : row.attendance_pct < 80 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                        {row.attendance_pct}%
+                      </span>
+                      <span className="shrink-0 text-[#94A3B8]">att</span>
+                      <span className="mx-0.5 shrink-0 text-[#CBD5E1]">·</span>
+                      <span className={`shrink-0 font-semibold ${row.enrolled_sessions > 0 && row.remaining_sessions <= 2 ? 'text-red-500' : 'text-[#0B1F3A]'}`}>
+                        {row.enrolled_sessions > 0 ? `${row.remaining_sessions}/${row.enrolled_sessions}` : '—'}
+                      </span>
+                      <span className="shrink-0 text-[#94A3B8]">sess</span>
+                      <span className="mx-0.5 shrink-0 text-[#CBD5E1]">·</span>
+                      <span className="shrink-0 font-semibold text-[#0B1F3A]">{row.parent_contact_count}</span>
+                      <span className="shrink-0 text-[#94A3B8]">ctcts</span>
+                      <div className="min-w-0 flex-1" />
+                      {!row.group_id && isTL ? (
+                        <button
+                          onClick={e => { e.stopPropagation(); setAssignStudent(row) }}
+                          className="shrink-0 rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 active:bg-amber-200"
+                        >
+                          Assign
+                        </button>
+                      ) : row.primary_contact_phone ? (
                         <a
                           href={`tel:${row.primary_contact_phone}`}
-                          className="text-[12px] text-[#64748B]"
+                          className="shrink-0 text-[10px] text-[#64748B]"
                           onClick={e => e.stopPropagation()}
                         >
                           {row.primary_contact_phone}
                         </a>
-                      )}
-                      {!row.group_id && isTL && (
-                        <button
-                          onClick={e => { e.stopPropagation(); setAssignStudent(row) }}
-                          className="ml-auto rounded-lg bg-amber-100 px-3 py-1.5 text-[12px] font-semibold text-amber-700"
-                        >
-                          Assign Group
-                        </button>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 )
