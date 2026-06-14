@@ -43,14 +43,14 @@ async function AttendanceSummary({ branchIds }: { branchIds: string[] }) {
   if (!total) return null
 
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-2 md:gap-3">
       {[
         { label: 'Present Today', value: att.present, cls: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
         { label: 'Absent Today',  value: att.absent,  cls: 'border-red-200    bg-red-50    text-red-700'     },
         { label: 'Late Today',    value: att.late,    cls: 'border-amber-200  bg-amber-50  text-amber-700'   },
       ].map(k => (
-        <div key={k.label} className={`rounded-2xl border px-4 py-3 text-center ${k.cls}`}>
-          <p className="text-2xl font-extrabold">{k.value}</p>
+        <div key={k.label} className={`rounded-xl md:rounded-2xl border px-3 py-2.5 md:px-4 md:py-3 text-center ${k.cls}`}>
+          <p className="text-xl md:text-2xl font-extrabold">{k.value}</p>
           <p className="mt-0.5 text-[11px] font-medium">{k.label}</p>
         </div>
       ))}
@@ -81,13 +81,13 @@ async function FinanceKPIStrip({ branchIds }: { branchIds: string[] }) {
   ]
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7 md:gap-3">
       {tiles.map(t => (
         <div
           key={t.label}
-          className={`rounded-2xl border bg-white p-3.5 ${t.alert ? 'border-red-200' : 'border-[#E2E8F0]'}`}
+          className={`rounded-xl md:rounded-2xl border bg-white p-2.5 md:p-3.5 ${t.alert ? 'border-red-200' : 'border-[#E2E8F0]'}`}
         >
-          <p className={`text-[18px] font-extrabold leading-none ${t.alert ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+          <p className={`text-[15px] md:text-[18px] font-extrabold leading-none ${t.alert ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
             {t.value}
           </p>
           <p className="mt-1 text-[10px] font-medium text-[#64748B]">{t.label}</p>
@@ -102,20 +102,20 @@ async function FinanceKPIStrip({ branchIds }: { branchIds: string[] }) {
 async function HeaderKPIs({ branchIds }: { branchIds: string[] }) {
   const kpis = await getTLKPIs(branchIds)
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:gap-3">
       {[
         { label: 'Active Students',    value: String(kpis.active_students),                                                          href: '/portal/team-leader/students'      },
-        { label: 'Monthly Attendance', value: `${kpis.monthly_attendance_pct}%`,                                                     href: '/portal/team-leader/attendance'    },
+        { label: 'Monthly Attendance', value: `${kpis.monthly_attendance_pct}%`,                                                     href: '/portal/team-leader/groups'        },
         { label: 'Homework Rate',      value: `${kpis.homework_completion_pct}%`,                                                    href: '/portal/team-leader/assignments'   },
         { label: 'Satisfaction',       value: kpis.parent_satisfaction_avg != null ? `${kpis.parent_satisfaction_avg}★` : '—',       href: '/portal/team-leader/parent-feedback' },
       ].map(k => (
         <Link
           key={k.label}
           href={k.href}
-          className="rounded-2xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
+          className="rounded-xl md:rounded-2xl border border-[#E2E8F0] bg-white p-3 md:p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
         >
           <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8]">{k.label}</p>
-          <p className="mt-1 text-[24px] font-extrabold leading-none text-[#0B1F3A]">{k.value}</p>
+          <p className="mt-1 text-[20px] md:text-[24px] font-extrabold leading-none text-[#0B1F3A]">{k.value}</p>
         </Link>
       ))}
     </div>
@@ -225,34 +225,20 @@ export default async function TLDashboardPage({ searchParams }: Props) {
   const branches = await fetchBranches(allBranchIds)
 
   return (
-    <div className="space-y-6 pb-32 md:pb-8">
+    <div className="space-y-3 md:space-y-6 pb-24 md:pb-8">
 
       {/* ── Page header ──────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-[20px] font-extrabold tracking-tight text-[#0B1F3A]">
+          <h1 className="text-[17px] md:text-[20px] font-extrabold tracking-tight text-[#0B1F3A]">
             Operations Center
           </h1>
-          <p className="mt-0.5 text-[13px] text-[#64748B]">
+          <p className="mt-0.5 text-[11px] md:text-[13px] text-[#64748B]">
             {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <BranchFilterBar branches={branches} selected={selectedBranch} />
-          <Link
-            href="/portal/team-leader/students/new"
-            className="rounded-xl border border-[#E2E8F0] px-3 py-2 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F] transition"
-          >
-            + Student
-          </Link>
-          <Link
-            href="/portal/team-leader/finance"
-            className="rounded-xl bg-[#FF8A1F] px-3 py-2 text-[12px] font-semibold text-white hover:bg-[#e87c18] transition"
-          >
-            Enroll / Collect
-          </Link>
-        </div>
+        <BranchFilterBar branches={branches} selected={selectedBranch} />
       </div>
 
       {/* ── Section navigation (jump links) ─────────────────────────── */}

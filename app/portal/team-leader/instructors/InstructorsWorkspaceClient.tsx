@@ -204,96 +204,137 @@ function InstructorGridCard({
 }) {
   const name = displayName(instructor.first_name, instructor.last_name, instructor.user_email)
   const wa   = instructor.phone
+  const ini  = initials(instructor.first_name, instructor.last_name, instructor.user_email)
+
+  const waUrl = wa ? buildWhatsAppUrl(wa, null) : null
 
   return (
     <div
       onClick={onClick}
       className={[
-        'group relative flex cursor-pointer flex-col rounded-xl border bg-white transition-all duration-150',
+        'group relative cursor-pointer rounded-xl border bg-white transition-all duration-150',
         selected
           ? 'border-[#FF8A1F] shadow-[0_0_0_2px_rgba(255,138,31,0.20)]'
-          : 'border-[#E2E8F0] hover:border-[#FF8A1F]/50 hover:shadow-md hover:-translate-y-0.5',
+          : 'border-[#E2E8F0] active:bg-[#F8FAFC] md:hover:border-[#FF8A1F]/50 md:hover:shadow-md md:hover:-translate-y-0.5',
       ].join(' ')}
     >
-      {/* Avatar + name + status + branches */}
-      <div className="flex flex-col items-center px-3 pt-4 pb-2">
-        <div className="relative mb-2">
-          <Avatar first={instructor.first_name} last={instructor.last_name} email={instructor.user_email} size="lg" selected={selected} />
-          <span className={`absolute -bottom-1 -right-1 rounded-full px-1.5 py-0.5 text-[7px] font-bold uppercase leading-none ${statusCls(instructor.status)}`}>
-            {instructor.status === 'on_leave' ? 'Leave' : instructor.status}
-          </span>
+      {/* ── MOBILE: compact horizontal row ── */}
+      <div className="flex items-center gap-2.5 px-3 py-2.5 md:hidden">
+        {/* Avatar with status dot */}
+        <div className="relative shrink-0">
+          <div className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold ${selected ? 'bg-[#FF8A1F] text-white' : 'bg-[#0B1F3A] text-white'}`}>
+            {ini}
+          </div>
+          <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-white ${instructor.status === 'active' ? 'bg-emerald-500' : instructor.status === 'inactive' ? 'bg-slate-400' : 'bg-amber-400'}`} />
         </div>
-        <p className="text-center text-[13px] font-bold text-[#0B1F3A] leading-tight line-clamp-1">{name}</p>
-        <div className="mt-1.5 flex flex-wrap justify-center gap-1">
-          {instructor.branch_names.map(b => (
-            <span key={b} className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[9px] text-[#64748B]">{b}</span>
-          ))}
-        </div>
-        {instructor.instructor_code && (
-          <span className="mt-1 rounded bg-[#F1F5F9] px-1.5 py-0.5 font-mono text-[9px] text-[#94A3B8]">{instructor.instructor_code}</span>
-        )}
-      </div>
-
-      {/* Stats row: groups | students | attendance */}
-      <div className="mx-3 mb-2 grid grid-cols-3 divide-x divide-[#F1F5F9] rounded-xl border border-[#F1F5F9] bg-[#F8FAFC]">
-        <div className="flex flex-col items-center py-2">
-          <p className="text-[14px] font-bold text-[#0B1F3A]">{instructor.group_count}</p>
-          <p className="text-[9px] text-[#94A3B8]">Groups</p>
-        </div>
-        <div className="flex flex-col items-center py-2">
-          <p className="text-[14px] font-bold text-[#0B1F3A]">{instructor.student_count}</p>
-          <p className="text-[9px] text-[#94A3B8]">Students</p>
-        </div>
-        <div className="flex flex-col items-center py-2">
-          <p className={`text-[14px] font-bold ${instructor.attendance_compliance > 0 ? attColor(instructor.attendance_compliance) : 'text-[#CBD5E1]'}`}>
-            {instructor.attendance_compliance > 0 ? `${instructor.attendance_compliance}%` : '—'}
+        {/* Name + branch/code */}
+        <div className="flex-1 min-w-0">
+          <p className="text-[12px] font-bold text-[#0B1F3A] truncate leading-tight">{name}</p>
+          <p className="text-[10px] text-[#64748B] truncate mt-0.5 leading-tight">
+            {instructor.branch_names.join(', ')}
+            {instructor.instructor_code ? ` · ${instructor.instructor_code}` : ''}
           </p>
-          <p className="text-[9px] text-[#94A3B8]">Att.</p>
         </div>
-      </div>
-
-      {/* Today sessions + salary */}
-      <div className="flex items-center justify-between px-3 pb-2.5 text-[10px]">
-        {instructor.today_sessions_count > 0
-          ? <span className="rounded bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">{instructor.today_sessions_count} today</span>
-          : <span className="text-[#CBD5E1]">No sessions today</span>
-        }
-        {instructor.salary_per_session
-          ? <span className="text-[#94A3B8]">{fmtCurrency(instructor.salary_per_session)}/sess</span>
-          : <span />
-        }
-      </div>
-
-      {/* Actions on hover */}
-      {canManage && (
-        <div className="flex gap-1 border-t border-[#F1F5F9] px-2 py-2 opacity-0 transition-opacity group-hover:opacity-100">
-          <button onClick={e => { e.stopPropagation(); onClick() }}
-            className="flex-1 rounded-lg bg-[#F8FAFC] py-1.5 text-[10px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition">
-            View
-          </button>
-          <button onClick={onAssign}
-            className="flex-1 rounded-lg bg-[#FF8A1F] py-1.5 text-[10px] font-semibold text-white hover:bg-[#e87c18] transition">
-            Assign
-          </button>
-          <button onClick={onEdit}
-            className="flex-1 rounded-lg bg-[#F8FAFC] py-1.5 text-[10px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition">
-            Edit
-          </button>
-          <button onClick={onDelete}
-            className="flex-1 rounded-lg border border-red-200 py-1.5 text-[10px] font-medium text-red-500 hover:bg-red-500 hover:text-white transition">
-            Delete
-          </button>
-          {wa && buildWhatsAppUrl(wa, null) && (
-            <a href={buildWhatsAppUrl(wa, null)!} target="_blank" rel="noopener noreferrer"
-              onClick={e => e.stopPropagation()}
-              className="flex items-center justify-center rounded-lg bg-green-50 px-2 hover:bg-green-100 transition">
-              <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-green-600">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-            </a>
+        {/* Inline stats */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="text-center">
+            <p className="text-[12px] font-bold text-[#0B1F3A] leading-none">{instructor.group_count}</p>
+            <p className="text-[8px] text-[#94A3B8] mt-0.5">Gr</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[12px] font-bold text-[#0B1F3A] leading-none">{instructor.student_count}</p>
+            <p className="text-[8px] text-[#94A3B8] mt-0.5">St</p>
+          </div>
+          {instructor.today_sessions_count > 0 ? (
+            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 shrink-0">
+              {instructor.today_sessions_count}↑
+            </span>
+          ) : (
+            <div className="text-center">
+              <p className={`text-[12px] font-bold leading-none ${instructor.attendance_compliance > 0 ? attColor(instructor.attendance_compliance) : 'text-[#CBD5E1]'}`}>
+                {instructor.attendance_compliance > 0 ? `${instructor.attendance_compliance}%` : '—'}
+              </p>
+              <p className="text-[8px] text-[#94A3B8] mt-0.5">Att</p>
+            </div>
           )}
         </div>
-      )}
+      </div>
+
+      {/* ── DESKTOP: vertical card layout ── */}
+      <div className="hidden md:flex flex-col">
+        <div className="flex flex-col items-center px-3 pt-4 pb-2">
+          <div className="relative mb-2">
+            <Avatar first={instructor.first_name} last={instructor.last_name} email={instructor.user_email} size="lg" selected={selected} />
+            <span className={`absolute -bottom-1 -right-1 rounded-full px-1.5 py-0.5 text-[7px] font-bold uppercase leading-none ${statusCls(instructor.status)}`}>
+              {instructor.status === 'on_leave' ? 'Leave' : instructor.status}
+            </span>
+          </div>
+          <p className="text-center text-[13px] font-bold text-[#0B1F3A] leading-tight line-clamp-1">{name}</p>
+          <div className="mt-1.5 flex flex-wrap justify-center gap-1">
+            {instructor.branch_names.map(b => (
+              <span key={b} className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[9px] text-[#64748B]">{b}</span>
+            ))}
+          </div>
+          {instructor.instructor_code && (
+            <span className="mt-1 rounded bg-[#F1F5F9] px-1.5 py-0.5 font-mono text-[9px] text-[#94A3B8]">{instructor.instructor_code}</span>
+          )}
+        </div>
+        <div className="mx-3 mb-2 grid grid-cols-3 divide-x divide-[#F1F5F9] rounded-xl border border-[#F1F5F9] bg-[#F8FAFC]">
+          <div className="flex flex-col items-center py-2">
+            <p className="text-[14px] font-bold text-[#0B1F3A]">{instructor.group_count}</p>
+            <p className="text-[9px] text-[#94A3B8]">Groups</p>
+          </div>
+          <div className="flex flex-col items-center py-2">
+            <p className="text-[14px] font-bold text-[#0B1F3A]">{instructor.student_count}</p>
+            <p className="text-[9px] text-[#94A3B8]">Students</p>
+          </div>
+          <div className="flex flex-col items-center py-2">
+            <p className={`text-[14px] font-bold ${instructor.attendance_compliance > 0 ? attColor(instructor.attendance_compliance) : 'text-[#CBD5E1]'}`}>
+              {instructor.attendance_compliance > 0 ? `${instructor.attendance_compliance}%` : '—'}
+            </p>
+            <p className="text-[9px] text-[#94A3B8]">Att.</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between px-3 pb-2.5 text-[10px]">
+          {instructor.today_sessions_count > 0
+            ? <span className="rounded bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">{instructor.today_sessions_count} today</span>
+            : <span className="text-[#CBD5E1]">No sessions today</span>
+          }
+          {instructor.salary_per_session
+            ? <span className="text-[#94A3B8]">{fmtCurrency(instructor.salary_per_session)}/sess</span>
+            : <span />
+          }
+        </div>
+        {canManage && (
+          <div className="flex gap-1 border-t border-[#F1F5F9] px-2 py-2 opacity-0 transition-opacity group-hover:opacity-100">
+            <button onClick={e => { e.stopPropagation(); onClick() }}
+              className="flex-1 rounded-lg bg-[#F8FAFC] py-1.5 text-[10px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition">
+              View
+            </button>
+            <button onClick={onAssign}
+              className="flex-1 rounded-lg bg-[#FF8A1F] py-1.5 text-[10px] font-semibold text-white hover:bg-[#e87c18] transition">
+              Assign
+            </button>
+            <button onClick={onEdit}
+              className="flex-1 rounded-lg bg-[#F8FAFC] py-1.5 text-[10px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition">
+              Edit
+            </button>
+            <button onClick={onDelete}
+              className="flex-1 rounded-lg border border-red-200 py-1.5 text-[10px] font-medium text-red-500 hover:bg-red-500 hover:text-white transition">
+              Delete
+            </button>
+            {waUrl && (
+              <a href={waUrl} target="_blank" rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                className="flex items-center justify-center rounded-lg bg-green-50 px-2 hover:bg-green-100 transition">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-green-600">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+              </a>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -570,49 +611,90 @@ function GroupsTab({ groups, canManage, onAssignGroup, onRemoveGroup }: {
       {groups.length === 0 ? (
         <Empty text="No groups assigned" sub="Use '+ Assign Group' to link this instructor" />
       ) : (
-        <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
-          <table className="w-full text-[12px]">
-            <thead>
-              <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Group</th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Course</th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Branch</th>
-                <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B]">Students</th>
-                <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B]">Sessions</th>
-                <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B]">Att.</th>
-                <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Role</th>
-                {canManage && <th className="px-3 py-2.5" />}
-              </tr>
-            </thead>
-            <tbody>
-              {groups.map(g => (
-                <tr key={g.id} className="border-b border-[#F1F5F9] last:border-0 hover:bg-[#FAFAFA]">
-                  <td className="px-4 py-2.5">
-                    <p className="font-semibold text-[#0B1F3A]">{g.name}</p>
-                    {g.code && <p className="text-[10px] text-[#94A3B8] font-mono">{g.code}</p>}
-                  </td>
-                  <td className="px-3 py-2.5 text-[#64748B]">{g.course_name ?? '—'}</td>
-                  <td className="px-3 py-2.5 text-[10px] text-[#94A3B8]">{g.branch_name}</td>
-                  <td className="px-3 py-2.5 text-right font-medium text-[#0B1F3A]">{g.student_count}/{g.capacity || '∞'}</td>
-                  <td className="px-3 py-2.5 text-right text-[#64748B]">{g.sessions_done}/{g.total_sessions}</td>
-                  <td className="px-3 py-2.5 text-right">
-                    <span className={`font-bold ${attColor(g.attendance_rate)}`}>{g.attendance_rate}%</span>
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${g.role === 'lead' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
-                      {g.role}
-                    </span>
-                  </td>
-                  {canManage && (
-                    <td className="px-3 py-2.5 text-right">
-                      <button onClick={() => onRemoveGroup(g)} className="text-[11px] text-red-400 hover:text-red-600 hover:underline">Remove</button>
-                    </td>
-                  )}
+        <>
+          {/* Mobile card list */}
+          <div className="md:hidden space-y-2">
+            {groups.map(g => (
+              <div key={g.id} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-semibold text-[#0B1F3A] truncate">{g.name}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                      {g.code && <span className="font-mono text-[9px] text-[#94A3B8]">{g.code}</span>}
+                      <span className="text-[9px] text-[#94A3B8]">{g.branch_name}</span>
+                      {g.course_name && <span className="text-[9px] text-[#64748B]">{g.course_name}</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${g.role === 'lead' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>{g.role}</span>
+                    {canManage && (
+                      <button onClick={() => onRemoveGroup(g)} className="text-[10px] text-red-400 active:text-red-600">Remove</button>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-[12px] font-bold text-[#0B1F3A]">{g.student_count}/{g.capacity || '∞'}</p>
+                    <p className="text-[9px] text-[#94A3B8]">Students</p>
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-bold text-[#0B1F3A]">{g.sessions_done}/{g.total_sessions}</p>
+                    <p className="text-[9px] text-[#94A3B8]">Sessions</p>
+                  </div>
+                  <div>
+                    <p className={`text-[12px] font-bold ${attColor(g.attendance_rate)}`}>{g.attendance_rate}%</p>
+                    <p className="text-[9px] text-[#94A3B8]">Att.</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden md:block rounded-xl border border-[#E2E8F0] overflow-hidden">
+            <table className="w-full text-[12px]">
+              <thead>
+                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Group</th>
+                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Course</th>
+                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Branch</th>
+                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B]">Students</th>
+                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B]">Sessions</th>
+                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B]">Att.</th>
+                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Role</th>
+                  {canManage && <th className="px-3 py-2.5" />}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {groups.map(g => (
+                  <tr key={g.id} className="border-b border-[#F1F5F9] last:border-0 hover:bg-[#FAFAFA]">
+                    <td className="px-4 py-2.5">
+                      <p className="font-semibold text-[#0B1F3A]">{g.name}</p>
+                      {g.code && <p className="text-[10px] text-[#94A3B8] font-mono">{g.code}</p>}
+                    </td>
+                    <td className="px-3 py-2.5 text-[#64748B]">{g.course_name ?? '—'}</td>
+                    <td className="px-3 py-2.5 text-[10px] text-[#94A3B8]">{g.branch_name}</td>
+                    <td className="px-3 py-2.5 text-right font-medium text-[#0B1F3A]">{g.student_count}/{g.capacity || '∞'}</td>
+                    <td className="px-3 py-2.5 text-right text-[#64748B]">{g.sessions_done}/{g.total_sessions}</td>
+                    <td className="px-3 py-2.5 text-right">
+                      <span className={`font-bold ${attColor(g.attendance_rate)}`}>{g.attendance_rate}%</span>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${g.role === 'lead' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
+                        {g.role}
+                      </span>
+                    </td>
+                    {canManage && (
+                      <td className="px-3 py-2.5 text-right">
+                        <button onClick={() => onRemoveGroup(g)} className="text-[11px] text-red-400 hover:text-red-600 hover:underline">Remove</button>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
       <p className="mt-2 text-[11px] text-[#94A3B8]">Students are derived automatically through group memberships.</p>
     </div>
@@ -629,7 +711,7 @@ function AttendanceTab({ stats, groups }: {
 }) {
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Compliance"  value={`${stats.compliance_rate}%`} accent={stats.compliance_rate >= 80} danger={stats.compliance_rate < 60} />
         <StatCard label="Total"       value={stats.total_sessions} />
         <StatCard label="Completed"   value={stats.sessions_completed} />
@@ -825,6 +907,8 @@ function NotesTab({ instructorId, notes, onRefresh }: {
 //  INSTRUCTOR POPUP MODAL
 // ═══════════════════════════════════════════════════════════════════════
 
+const WA_PATH = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+
 function InstructorPopup({
   instructor, detail, loading, activeTab, onTabChange, canManage,
   onEdit, onAssignGroup, onArchive, onDelete, onRemoveGroup, onClose, onRefreshDetail,
@@ -843,9 +927,11 @@ function InstructorPopup({
   onClose:         () => void
   onRefreshDetail: () => void
 }) {
+  const [overflowOpen, setOverflowOpen] = useState(false)
   const name  = displayName(instructor.first_name, instructor.last_name, instructor.user_email)
   const phone = detail?.instructor.phone ?? instructor.phone
   const wa    = detail?.instructor.whatsapp_number ?? phone
+  const waUrl = wa ? buildWhatsAppUrl(wa, null) : null
 
   function tabCount(key: TabKey): number | null {
     if (!detail) return null
@@ -859,87 +945,196 @@ function InstructorPopup({
       {/* Backdrop */}
       <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]" onClick={onClose} />
 
-      {/* Centered popup */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      {/* Mobile: full-screen bottom sheet | Desktop: centered modal */}
+      <div
+        className="fixed inset-0 z-50 flex flex-col justify-end md:items-center md:justify-center md:p-4"
+        onClick={onClose}
+      >
         <div
-          className="flex h-[90vh] w-full max-w-[1100px] flex-col rounded-2xl bg-white shadow-2xl overflow-hidden"
+          className="w-full flex flex-col bg-white shadow-2xl overflow-hidden rounded-t-2xl h-[95dvh] md:rounded-2xl md:h-[90vh] md:max-w-[1100px]"
           onClick={e => e.stopPropagation()}
         >
+          {/* ── Mobile drag handle ── */}
+          <div className="flex justify-center pt-2.5 pb-0.5 md:hidden shrink-0">
+            <div className="h-1 w-10 rounded-full bg-[#E2E8F0]" />
+          </div>
+
           {/* ── Header ── */}
-          <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-6 py-4">
-            <div className="flex items-start gap-4">
-              <Avatar first={instructor.first_name} last={instructor.last_name} email={instructor.user_email} size="lg" />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-[16px] font-bold text-[#0B1F3A]">{name}</h2>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${statusCls(instructor.status)}`}>
-                    {instructor.status.replace('_', ' ')}
-                  </span>
-                  {instructor.instructor_code && (
-                    <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 font-mono text-[10px] text-[#94A3B8]">{instructor.instructor_code}</span>
-                  )}
+          <div className="shrink-0 border-b border-[#E2E8F0] bg-white">
+
+            {/* ── Mobile header (compact) ── */}
+            <div className="md:hidden px-4 pt-2 pb-3 space-y-2.5">
+              {/* Row 1: avatar + name/status + close */}
+              <div className="flex items-start gap-2.5">
+                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-bold bg-[#0B1F3A] text-white`}>
+                  {initials(instructor.first_name, instructor.last_name, instructor.user_email)}
                 </div>
-                {/* Branch chips */}
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {instructor.branch_names.map(b => (
-                    <span key={b} className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] text-[#64748B]">{b}</span>
-                  ))}
-                </div>
-                {phone && (
-                  <p className="mt-0.5 text-[12px] text-[#64748B]">
-                    <a href={`tel:${phone}`} className="hover:text-[#FF8A1F]">{phone}</a>
-                  </p>
-                )}
-                {/* Quick KPI */}
-                <div className="mt-2 flex items-center gap-4 text-[11px]">
-                  <span className="text-[#64748B]"><strong className="text-[#0B1F3A]">{instructor.group_count}</strong> groups</span>
-                  <span className="text-[#64748B]"><strong className="text-[#0B1F3A]">{instructor.student_count}</strong> students</span>
-                  {instructor.today_sessions_count > 0 && (
-                    <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-                      {instructor.today_sessions_count} today
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h2 className="text-[14px] font-bold text-[#0B1F3A] leading-tight">{name}</h2>
+                    <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold capitalize ${statusCls(instructor.status)}`}>
+                      {instructor.status.replace('_', ' ')}
                     </span>
-                  )}
+                  </div>
+                  <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                    {instructor.instructor_code && (
+                      <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 font-mono text-[9px] text-[#94A3B8]">{instructor.instructor_code}</span>
+                    )}
+                    {instructor.branch_names.map(b => (
+                      <span key={b} className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[9px] text-[#64748B]">{b}</span>
+                    ))}
+                    {phone && (
+                      <a href={`tel:${phone}`} className="text-[9px] text-[#64748B]">{phone}</a>
+                    )}
+                  </div>
                 </div>
+                <button onClick={onClose} className="shrink-0 mt-0.5 rounded-full border border-[#E2E8F0] p-1.5 text-[#94A3B8] active:bg-[#F1F5F9] transition">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
+                  </svg>
+                </button>
               </div>
 
-              {/* Action buttons */}
-              <div className="flex shrink-0 items-center gap-1.5 flex-wrap justify-end">
-                {wa && buildWhatsAppUrl(wa, null) && (
-                  <a href={buildWhatsAppUrl(wa, null)!} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1 rounded-lg bg-green-500 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-green-600 transition">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3">
-                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                    </svg>
+              {/* Row 2: compact stats strip */}
+              <div className="flex items-center gap-2.5 text-[11px]">
+                <span><strong className="text-[#0B1F3A]">{instructor.group_count}</strong> <span className="text-[#94A3B8]">groups</span></span>
+                <span className="text-[#E2E8F0]">·</span>
+                <span><strong className="text-[#0B1F3A]">{instructor.student_count}</strong> <span className="text-[#94A3B8]">students</span></span>
+                {instructor.today_sessions_count > 0 && (
+                  <>
+                    <span className="text-[#E2E8F0]">·</span>
+                    <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">{instructor.today_sessions_count} today</span>
+                  </>
+                )}
+              </div>
+
+              {/* Row 3: primary actions + overflow menu */}
+              <div className="flex items-center gap-1.5">
+                {waUrl && (
+                  <a href={waUrl} target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-1 rounded-lg bg-green-500 px-2.5 py-1.5 text-[11px] font-medium text-white active:bg-green-600 transition">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 shrink-0"><path d={WA_PATH}/></svg>
                     WA
                   </a>
                 )}
                 {canManage && (
-                  <>
-                    <button onClick={onAssignGroup} className="rounded-lg bg-[#FF8A1F] px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[#e87c18] transition">Assign Group</button>
-                    <button onClick={onEdit} className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] text-[#374151] hover:bg-[#F8FAFC] transition">Edit</button>
-                    <button onClick={onArchive} className="rounded-lg border border-red-100 px-2.5 py-1.5 text-[11px] text-red-500 hover:bg-red-50 transition">Archive</button>
-                    <button onClick={onDelete} className="rounded-lg border border-red-500 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 hover:bg-red-600 hover:text-white transition">Delete</button>
-                  </>
+                  <button onClick={onAssignGroup}
+                    className="flex-1 rounded-lg bg-[#FF8A1F] px-2.5 py-1.5 text-[11px] font-semibold text-white active:bg-[#e87c18] transition text-center">
+                    + Assign Group
+                  </button>
                 )}
-                <button onClick={onClose} className="rounded-lg border border-[#E2E8F0] p-1.5 text-[#94A3B8] hover:bg-[#F1F5F9] transition">
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
-                  </svg>
-                </button>
+                {canManage && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setOverflowOpen(v => !v)}
+                      className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] text-[#374151] active:bg-[#F8FAFC] transition flex items-center gap-1"
+                    >
+                      More
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 shrink-0">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/>
+                      </svg>
+                    </button>
+                    {overflowOpen && (
+                      <>
+                        <div className="fixed inset-0 z-[51]" onClick={() => setOverflowOpen(false)} />
+                        <div className="absolute right-0 top-full mt-1 z-[52] w-36 rounded-xl border border-[#E2E8F0] bg-white shadow-xl overflow-hidden">
+                          <button onClick={() => { setOverflowOpen(false); onEdit() }}
+                            className="flex w-full items-center px-4 py-3 text-[12px] font-medium text-[#374151] active:bg-[#F8FAFC]">
+                            Edit
+                          </button>
+                          <div className="h-px bg-[#F1F5F9]" />
+                          <button onClick={() => { setOverflowOpen(false); onArchive() }}
+                            className="flex w-full items-center px-4 py-3 text-[12px] font-medium text-amber-600 active:bg-amber-50">
+                            Archive
+                          </button>
+                          <div className="h-px bg-[#F1F5F9]" />
+                          <button onClick={() => { setOverflowOpen(false); onDelete() }}
+                            className="flex w-full items-center px-4 py-3 text-[12px] font-medium text-red-600 active:bg-red-50">
+                            Delete
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+                {!canManage && (
+                  <button onClick={onClose} className="ml-auto rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] text-[#64748B] active:bg-[#F8FAFC] transition">
+                    Close
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* ── Desktop header (full) ── */}
+            <div className="hidden md:block px-6 py-4">
+              <div className="flex items-start gap-4">
+                <Avatar first={instructor.first_name} last={instructor.last_name} email={instructor.user_email} size="lg" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-[16px] font-bold text-[#0B1F3A]">{name}</h2>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${statusCls(instructor.status)}`}>
+                      {instructor.status.replace('_', ' ')}
+                    </span>
+                    {instructor.instructor_code && (
+                      <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 font-mono text-[10px] text-[#94A3B8]">{instructor.instructor_code}</span>
+                    )}
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {instructor.branch_names.map(b => (
+                      <span key={b} className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] text-[#64748B]">{b}</span>
+                    ))}
+                  </div>
+                  {phone && (
+                    <p className="mt-0.5 text-[12px] text-[#64748B]">
+                      <a href={`tel:${phone}`} className="hover:text-[#FF8A1F]">{phone}</a>
+                    </p>
+                  )}
+                  <div className="mt-2 flex items-center gap-4 text-[11px]">
+                    <span className="text-[#64748B]"><strong className="text-[#0B1F3A]">{instructor.group_count}</strong> groups</span>
+                    <span className="text-[#64748B]"><strong className="text-[#0B1F3A]">{instructor.student_count}</strong> students</span>
+                    {instructor.today_sessions_count > 0 && (
+                      <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                        {instructor.today_sessions_count} today
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5 flex-wrap justify-end">
+                  {waUrl && (
+                    <a href={waUrl} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1 rounded-lg bg-green-500 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-green-600 transition">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3"><path d={WA_PATH}/></svg>
+                      WA
+                    </a>
+                  )}
+                  {canManage && (
+                    <>
+                      <button onClick={onAssignGroup} className="rounded-lg bg-[#FF8A1F] px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[#e87c18] transition">Assign Group</button>
+                      <button onClick={onEdit} className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] text-[#374151] hover:bg-[#F8FAFC] transition">Edit</button>
+                      <button onClick={onArchive} className="rounded-lg border border-red-100 px-2.5 py-1.5 text-[11px] text-red-500 hover:bg-red-50 transition">Archive</button>
+                      <button onClick={onDelete} className="rounded-lg border border-red-500 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 hover:bg-red-600 hover:text-white transition">Delete</button>
+                    </>
+                  )}
+                  <button onClick={onClose} className="rounded-lg border border-[#E2E8F0] p-1.5 text-[#94A3B8] hover:bg-[#F1F5F9] transition">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           {/* ── Tab bar ── */}
-          <div className="flex shrink-0 overflow-x-auto border-b border-[#E2E8F0] bg-white">
+          <div className="flex shrink-0 border-b border-[#E2E8F0] bg-white">
             {TABS.map(tab => {
               const count = tabCount(tab.key)
               return (
                 <button key={tab.key} onClick={() => onTabChange(tab.key)}
-                  className={`flex items-center gap-1.5 whitespace-nowrap px-5 py-3 text-[12px] font-medium border-b-2 transition ${activeTab === tab.key ? 'border-[#FF8A1F] text-[#FF8A1F]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'}`}>
+                  className={`flex flex-1 md:flex-none items-center justify-center gap-1 md:gap-1.5 whitespace-nowrap px-2 md:px-5 py-2.5 md:py-3 text-[11px] md:text-[12px] font-medium border-b-2 transition ${activeTab === tab.key ? 'border-[#FF8A1F] text-[#FF8A1F]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'}`}>
                   {tab.label}
                   {count !== null && count > 0 && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${activeTab === tab.key ? 'bg-[#FF8A1F] text-white' : 'bg-[#F1F5F9] text-[#64748B]'}`}>{count}</span>
+                    <span className={`rounded-full px-1 py-0.5 text-[9px] font-bold ${activeTab === tab.key ? 'bg-[#FF8A1F] text-white' : 'bg-[#F1F5F9] text-[#64748B]'}`}>{count}</span>
                   )}
                 </button>
               )
@@ -947,7 +1142,7 @@ function InstructorPopup({
           </div>
 
           {/* ── Tab content ── */}
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+          <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-5" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
             {loading ? <Spinner /> : !detail ? (
               <div className="flex items-center justify-center py-16 text-[12px] text-[#94A3B8]">Failed to load instructor data</div>
             ) : (
@@ -1078,25 +1273,30 @@ function InstructorFormModal({ instructor, options, onClose, onSaved }: {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
-      <div className="flex h-[88vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-6 py-4 shrink-0">
-          <h2 className="text-[15px] font-bold text-[#0B1F3A]">
+    <div className="fixed inset-0 z-[60] flex flex-col justify-end bg-black/50 md:items-center md:justify-center md:p-4">
+      <div className="w-full flex flex-col bg-white shadow-2xl overflow-hidden rounded-t-2xl h-[95dvh] md:rounded-2xl md:h-[88vh] md:max-w-2xl">
+        {/* Mobile drag handle */}
+        <div className="flex justify-center pt-2.5 pb-0.5 md:hidden shrink-0">
+          <div className="h-1 w-10 rounded-full bg-[#E2E8F0]" />
+        </div>
+
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 md:px-6 py-3 md:py-4 shrink-0">
+          <h2 className="text-[14px] md:text-[15px] font-bold text-[#0B1F3A]">
             {isEdit ? `Edit — ${displayName(instructor!.first_name, instructor!.last_name, instructor!.user_email)}` : 'New Instructor'}
           </h2>
           <button onClick={onClose} className="rounded-lg p-1.5 text-[#94A3B8] hover:bg-[#F1F5F9]">✕</button>
         </div>
 
-        <div className="flex border-b border-[#E2E8F0] px-4 shrink-0 overflow-x-auto">
+        <div className="flex border-b border-[#E2E8F0] px-2 md:px-4 shrink-0 overflow-x-auto">
           {SECTIONS.map(s => (
             <button key={s.key} onClick={() => setSection(s.key)}
-              className={`px-3 py-2.5 text-[12px] font-medium border-b-2 transition whitespace-nowrap ${section === s.key ? 'border-[#FF8A1F] text-[#FF8A1F]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'}`}>
+              className={`flex-1 md:flex-none px-2 md:px-3 py-2.5 text-[11px] md:text-[12px] font-medium border-b-2 transition whitespace-nowrap text-center ${section === s.key ? 'border-[#FF8A1F] text-[#FF8A1F]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'}`}>
               {s.label}
             </button>
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-5 space-y-4">
           {section === 'basic' && (
             <>
               <div className="grid grid-cols-2 gap-4">
@@ -1234,12 +1434,12 @@ function InstructorFormModal({ instructor, options, onClose, onSaved }: {
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-[#E2E8F0] px-6 py-4 shrink-0">
+        <div className="flex items-center justify-between border-t border-[#E2E8F0] px-4 md:px-6 py-3 md:py-4 shrink-0">
           {error ? <p className="text-[12px] text-red-500 flex-1 mr-4">{error}</p> : <div />}
           <div className="flex gap-2 shrink-0">
-            <button onClick={onClose} className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition">Cancel</button>
+            <button onClick={onClose} className="rounded-lg border border-[#E2E8F0] px-3 md:px-4 py-2 text-[12px] md:text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition">Cancel</button>
             <button onClick={handleSubmit} disabled={isPending}
-              className="rounded-lg bg-[#FF8A1F] px-5 py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] disabled:opacity-50 transition">
+              className="rounded-lg bg-[#FF8A1F] px-4 md:px-5 py-2 text-[12px] md:text-[13px] font-semibold text-white hover:bg-[#e87c18] disabled:opacity-50 transition">
               {isPending ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Instructor'}
             </button>
           </div>
@@ -1284,13 +1484,18 @@ function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onA
   )
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-6 py-4">
-          <h2 className="text-[15px] font-bold text-[#0B1F3A]">Assign Group</h2>
+    <div className="fixed inset-0 z-[70] flex flex-col justify-end bg-black/50 md:items-center md:justify-center md:p-4">
+      <div className="w-full flex flex-col bg-white shadow-2xl overflow-hidden rounded-t-2xl max-h-[90dvh] md:rounded-2xl md:max-h-none md:max-w-lg">
+        {/* Mobile drag handle */}
+        <div className="flex justify-center pt-2.5 pb-0.5 md:hidden shrink-0">
+          <div className="h-1 w-10 rounded-full bg-[#E2E8F0]" />
+        </div>
+
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 md:px-6 py-3 md:py-4 shrink-0">
+          <h2 className="text-[14px] md:text-[15px] font-bold text-[#0B1F3A]">Assign Group</h2>
           <button onClick={onClose} className="text-[#94A3B8] hover:text-[#0B1F3A]">✕</button>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
           <div>
             <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Role</label>
             <div className="flex gap-2">
@@ -1370,24 +1575,26 @@ function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onA
             )
           )}
           {error && <p className="text-[12px] text-red-500">{error}</p>}
-          <div className="flex gap-2 pt-1">
-            <button onClick={onClose} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition">Cancel</button>
-            <button
-              onClick={() => {
-                if (!groupId) { setError('Select a group.'); return }
-                const parsed = allocatedSessions !== '' ? parseInt(allocatedSessions, 10) : undefined
-                if (parsed !== undefined && (isNaN(parsed) || parsed < 1)) { setError('Sessions to teach must be a positive number.'); return }
-                startTransition(async () => {
-                  const res = await assignGroupModalAction(instructorId, groupId, role, fromSession, parsed)
-                  if (res.success) onAssigned()
-                  else setError(res.error?.message ?? 'Failed.')
-                })
-              }}
-              disabled={isPending || !groupId}
-              className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] disabled:opacity-50 transition">
-              {isPending ? 'Assigning…' : 'Assign Group'}
-            </button>
-          </div>
+        </div>
+
+        {/* Sticky footer — always visible */}
+        <div className="shrink-0 border-t border-[#E2E8F0] p-4 md:p-4 flex gap-2" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+          <button onClick={onClose} className="flex-1 rounded-lg border border-[#E2E8F0] py-2.5 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition">Cancel</button>
+          <button
+            onClick={() => {
+              if (!groupId) { setError('Select a group.'); return }
+              const parsed = allocatedSessions !== '' ? parseInt(allocatedSessions, 10) : undefined
+              if (parsed !== undefined && (isNaN(parsed) || parsed < 1)) { setError('Sessions to teach must be a positive number.'); return }
+              startTransition(async () => {
+                const res = await assignGroupModalAction(instructorId, groupId, role, fromSession, parsed)
+                if (res.success) onAssigned()
+                else setError(res.error?.message ?? 'Failed.')
+              })
+            }}
+            disabled={isPending || !groupId}
+            className="flex-1 rounded-lg bg-[#FF8A1F] py-2.5 text-[13px] font-semibold text-white hover:bg-[#e87c18] disabled:opacity-50 transition">
+            {isPending ? 'Assigning…' : 'Assign Group'}
+          </button>
         </div>
       </div>
     </div>
@@ -1732,24 +1939,24 @@ export default function InstructorsWorkspaceClient({
     <div className="flex h-[calc(100vh-64px)] flex-col overflow-hidden bg-[#F8FAFC]">
 
       {/* ── TOP BAR ── */}
-      <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-6 py-3">
-        <div className="flex items-center justify-between gap-4">
+      <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-4 md:px-6 py-2 md:py-3">
+        <div className="flex items-center justify-between gap-2 md:gap-4">
           <div>
-            <h1 className="text-[17px] font-bold text-[#0B1F3A]">Instructors</h1>
-            <p className="text-[11px] text-[#94A3B8]">{instructors.length} total · {totalActive} active · {totalAssigned} assigned · {totalUnassigned} unassigned</p>
+            <h1 className="text-[15px] md:text-[17px] font-bold text-[#0B1F3A]">Instructors</h1>
+            <p className="text-[10px] md:text-[11px] text-[#94A3B8]">{instructors.length} total · {totalActive} active · {totalAssigned} assigned · {totalUnassigned} unassigned</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
             {/* View toggle */}
             <div className="flex rounded-lg border border-[#E2E8F0] overflow-hidden">
               <button onClick={() => setViewMode('grid')}
-                className={`px-3 py-1.5 transition ${viewMode === 'grid' ? 'bg-[#0B1F3A] text-white' : 'bg-white text-[#64748B] hover:bg-[#F8FAFC]'}`}
+                className={`px-2.5 md:px-3 py-1.5 transition ${viewMode === 'grid' ? 'bg-[#0B1F3A] text-white' : 'bg-white text-[#64748B] hover:bg-[#F8FAFC]'}`}
                 title="Grid view">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                   <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
                 </svg>
               </button>
               <button onClick={() => setViewMode('list')}
-                className={`px-3 py-1.5 transition ${viewMode === 'list' ? 'bg-[#0B1F3A] text-white' : 'bg-white text-[#64748B] hover:bg-[#F8FAFC]'}`}
+                className={`px-2.5 md:px-3 py-1.5 transition ${viewMode === 'list' ? 'bg-[#0B1F3A] text-white' : 'bg-white text-[#64748B] hover:bg-[#F8FAFC]'}`}
                 title="List view">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                   <path fillRule="evenodd" d="M3 4a1 1 0 000 2h14a1 1 0 100-2H3zm0 4a1 1 0 000 2h14a1 1 0 100-2H3zm0 4a1 1 0 000 2h14a1 1 0 100-2H3zm0 4a1 1 0 000 2h14a1 1 0 100-2H3z" clipRule="evenodd"/>
@@ -1759,11 +1966,11 @@ export default function InstructorsWorkspaceClient({
             {canManage && (
               <button
                 onClick={() => { setEditingInstructor(null); setShowForm(true) }}
-                className="flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] active:scale-[0.98] transition">
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                className="flex items-center gap-1 rounded-lg bg-[#FF8A1F] px-2.5 md:px-3 py-1.5 md:py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] active:scale-[0.98] transition">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd"/>
                 </svg>
-                Add Instructor
+                <span className="hidden sm:inline">Add Instructor</span>
               </button>
             )}
           </div>
@@ -1771,46 +1978,55 @@ export default function InstructorsWorkspaceClient({
       </div>
 
       {/* ── FILTER BAR ── */}
-      <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-6 py-2.5">
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-xs">
-            <svg viewBox="0 0 20 20" fill="currentColor" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#CBD5E1]">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"/>
-            </svg>
-            <input type="text" value={searchQ} onChange={e => setSearchQ(e.target.value)}
-              placeholder="Search name, email, code, branch…"
-              className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] pl-9 pr-3 py-1.5 text-[12px] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
-            />
+      <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-3 md:px-6 py-2 md:py-2.5">
+        <div className="flex flex-col gap-1.5 md:flex-row md:items-center md:gap-3">
+          {/* Row 1: search + mobile count */}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#CBD5E1]">
+                <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd"/>
+              </svg>
+              <input type="text" value={searchQ} onChange={e => setSearchQ(e.target.value)}
+                placeholder="Search name, code, branch…"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] pl-8 pr-3 py-1.5 text-[11px] md:text-[12px] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+              />
+            </div>
+            <span className="md:hidden text-[10px] text-[#94A3B8] shrink-0 whitespace-nowrap">
+              {visible.length !== instructors.length ? `${visible.length}/${instructors.length}` : `${instructors.length}`}
+            </span>
           </div>
-          {options.branches.length > 1 && (
-            <select value={branchFilter} onChange={e => setBranchFilter(e.target.value)}
-              className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition">
-              <option value="">All Branches</option>
-              {options.branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+          {/* Row 2: selects + clear + desktop count */}
+          <div className="flex items-center gap-1.5 md:gap-3">
+            {options.branches.length > 1 && (
+              <select value={branchFilter} onChange={e => setBranchFilter(e.target.value)}
+                className="flex-1 md:flex-none rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 md:px-3 py-1 md:py-1.5 text-[11px] md:text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition">
+                <option value="">All Branches</option>
+                {options.branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            )}
+            <select value={quickFilter} onChange={e => setQuickFilter(e.target.value as QuickFilter)}
+              className={`flex-1 md:flex-none rounded-lg border px-2 md:px-3 py-1 md:py-1.5 text-[11px] md:text-[12px] outline-none transition ${quickFilter ? 'border-[#FF8A1F] bg-[#FFF7ED] text-[#FF8A1F]' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#374151] focus:border-[#FF8A1F] focus:bg-white'}`}>
+              <option value="">All Status</option>
+              <option value="active">Active ({instructors.filter(i => i.status === 'active').length})</option>
+              <option value="inactive">Inactive ({instructors.filter(i => i.status === 'inactive').length})</option>
+              <option value="on_leave">On Leave ({instructors.filter(i => i.status === 'on_leave').length})</option>
+              <option value="no_groups">No Groups ({instructors.filter(i => i.group_count === 0).length})</option>
             </select>
-          )}
-          <select value={quickFilter} onChange={e => setQuickFilter(e.target.value as QuickFilter)}
-            className={`rounded-lg border px-3 py-1.5 text-[12px] outline-none transition ${quickFilter ? 'border-[#FF8A1F] bg-[#FFF7ED] text-[#FF8A1F]' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#374151] focus:border-[#FF8A1F] focus:bg-white'}`}>
-            <option value="">All Status</option>
-            <option value="active">Active ({instructors.filter(i => i.status === 'active').length})</option>
-            <option value="inactive">Inactive ({instructors.filter(i => i.status === 'inactive').length})</option>
-            <option value="on_leave">On Leave ({instructors.filter(i => i.status === 'on_leave').length})</option>
-            <option value="no_groups">No Groups ({instructors.filter(i => i.group_count === 0).length})</option>
-          </select>
-          {(searchQ || branchFilter || quickFilter) && (
-            <button onClick={() => { setSearchQ(''); setBranchFilter(''); setQuickFilter('') }}
-              className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] text-[#64748B] hover:bg-[#F1F5F9] transition">
-              Clear
-            </button>
-          )}
-          <span className="ml-auto text-[11px] text-[#94A3B8]">
-            {visible.length !== instructors.length ? `${visible.length} of ${instructors.length}` : `${instructors.length} instructors`}
-          </span>
+            {(searchQ || branchFilter || quickFilter) && (
+              <button onClick={() => { setSearchQ(''); setBranchFilter(''); setQuickFilter('') }}
+                className="rounded-lg border border-[#E2E8F0] px-2 md:px-3 py-1 md:py-1.5 text-[11px] md:text-[12px] text-[#64748B] hover:bg-[#F1F5F9] transition shrink-0">
+                Clear
+              </button>
+            )}
+            <span className="hidden md:block ml-auto text-[11px] text-[#94A3B8] whitespace-nowrap">
+              {visible.length !== instructors.length ? `${visible.length} of ${instructors.length}` : `${instructors.length} instructors`}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* ── MAIN AREA ── */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-bottom-nav md:pb-0">
         {visible.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="mb-4 h-12 w-12 text-[#E2E8F0]">
@@ -1820,7 +2036,7 @@ export default function InstructorsWorkspaceClient({
             <p className="mt-1 text-[12px] text-[#CBD5E1]">Try adjusting your filters</p>
           </div>
         ) : viewMode === 'grid' ? (
-          <div className="p-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          <div className="p-2 md:p-5 grid grid-cols-1 gap-1.5 md:gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {visible.map(i => (
               <InstructorGridCard
                 key={i.id}

@@ -11,10 +11,9 @@ interface Action {
 }
 
 const ACTIONS: Action[] = [
-  { label: 'Add Student',     icon: '👤', href: '/portal/team-leader/students/new',              color: 'bg-[#0B1F3A]' },
-  { label: 'Enroll/Collect',  icon: '💰', href: '/portal/team-leader/finance',                   color: 'bg-[#FF8A1F]' },
-  { label: 'Record Attend.',  icon: '✅', href: '/portal/team-leader/attendance/record',          color: 'bg-emerald-600' },
-  { label: 'Create Group',    icon: '📚', href: '/portal/team-leader/groups?action=create',      color: 'bg-indigo-600' },
+  { label: 'Add Student',     icon: '👤', href: '/portal/team-leader/students/new',         color: 'bg-[#0B1F3A]' },
+  { label: 'Enroll/Collect',  icon: '💰', href: '/portal/team-leader/finance',              color: 'bg-[#FF8A1F]' },
+  { label: 'Create Group',    icon: '📚', href: '/portal/team-leader/groups?action=create', color: 'bg-indigo-600' },
   { label: 'Add Payment',     icon: '💳', href: '/portal/team-leader/finance?mode=payment',      color: 'bg-emerald-700' },
   { label: 'Announcement',    icon: '📢', href: '/portal/team-leader/announcements/new',         color: 'bg-blue-600' },
   { label: 'Move Student',    icon: '↔️', href: '/portal/team-leader/students?action=move',     color: 'bg-purple-600' },

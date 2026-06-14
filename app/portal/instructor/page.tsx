@@ -17,7 +17,7 @@ const DAY_MAP: Record<string, number> = {
 }
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
-  return <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">{children}</h2>
+  return <h2 className="mb-2 md:mb-3 text-[13px] md:text-sm font-semibold text-[#0B1F3A]">{children}</h2>
 }
 
 export default async function InstructorDashboardPage() {
@@ -72,40 +72,40 @@ export default async function InstructorDashboardPage() {
   const totalCompleted = groups.reduce((sum, g) => sum + g.completed_sessions, 0)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {/* Greeting */}
       <div>
-        <h1 className="text-xl font-bold text-[#0B1F3A]">Good morning, {name}</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">
+        <h1 className="text-[18px] md:text-xl font-bold text-[#0B1F3A]">Good morning, {name}</h1>
+        <p className="mt-0.5 text-[12px] md:text-sm text-[#64748B]">
           {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
       </div>
 
       {/* Stats bar */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2 md:gap-3 sm:grid-cols-4 lg:grid-cols-5">
         {[
           { label: 'My Groups',          value: String(stats.groupCount) },
           { label: 'My Students',        value: String(stats.studentCount) },
           { label: 'Pending Homework',   value: String(pending.length) },
           { label: 'Sessions Completed', value: String(totalCompleted) },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-4 text-center">
-            <p className="text-2xl font-bold text-[#0B1F3A]">{value}</p>
-            <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
+          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-3 md:px-4 md:py-4 text-center">
+            <p className="text-xl md:text-2xl font-bold text-[#0B1F3A]">{value}</p>
+            <p className="mt-0.5 text-[11px] md:text-xs text-[#64748B]">{label}</p>
           </div>
         ))}
         {/* Instructor Rating */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-4 text-center">
+        <div className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-3 md:px-4 md:py-4 text-center">
           {rating != null ? (
             <>
-              <p className="text-2xl font-bold text-[#FF8A1F]">⭐ {(rating as InstructorRatingSummary).avg_overall.toFixed(1)}</p>
-              <p className="mt-0.5 text-xs text-[#64748B]">Avg Rating</p>
+              <p className="text-xl md:text-2xl font-bold text-[#FF8A1F]">⭐ {(rating as InstructorRatingSummary).avg_overall.toFixed(1)}</p>
+              <p className="mt-0.5 text-[11px] md:text-xs text-[#64748B]">Avg Rating</p>
               <p className="text-[10px] text-[#94A3B8]">{(rating as InstructorRatingSummary).total_responses} responses</p>
             </>
           ) : (
             <>
               <p className="text-xl font-bold text-[#94A3B8]">—</p>
-              <p className="mt-0.5 text-xs text-[#64748B]">Avg Rating</p>
+              <p className="mt-0.5 text-[11px] md:text-xs text-[#64748B]">Avg Rating</p>
             </>
           )}
         </div>
@@ -120,7 +120,7 @@ export default async function InstructorDashboardPage() {
               <Link
                 key={i}
                 href={act.href}
-                className="flex items-center gap-4 rounded-xl border border-[#E2E8F0] bg-white px-5 py-3.5 transition hover:border-[#FF8A1F] hover:shadow-sm"
+                className="flex items-center gap-3 md:gap-4 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 md:px-5 md:py-3.5 transition hover:border-[#FF8A1F] hover:shadow-sm active:bg-[#F8FAFC]"
               >
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${
                   act.type === 'start_session'       ? 'bg-emerald-100 text-emerald-700' :
@@ -150,7 +150,7 @@ export default async function InstructorDashboardPage() {
               <Link
                 key={g.group_id}
                 href={`/portal/instructor/groups/${g.group_id}`}
-                className="flex items-center gap-4 px-5 py-3.5 hover:bg-[#F8FAFC] transition"
+                className="flex items-center gap-3 md:gap-4 px-4 py-3 md:px-5 md:py-3.5 hover:bg-[#F8FAFC] transition"
               >
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold text-[#0B1F3A]">{g.group_name}</p>
@@ -192,7 +192,7 @@ export default async function InstructorDashboardPage() {
                 <Link
                   key={g.group_id}
                   href={`/portal/instructor/groups/${g.group_id}`}
-                  className="rounded-xl border border-[#E2E8F0] bg-white p-5 transition hover:border-[#CBD5E1] hover:shadow-sm"
+                  className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 md:p-5 transition hover:border-[#CBD5E1] hover:shadow-sm active:bg-[#F8FAFC]"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-semibold text-[#0B1F3A]">{g.group_name}</p>
@@ -259,7 +259,7 @@ export default async function InstructorDashboardPage() {
               <Link
                 key={s.submission_id}
                 href={`/portal/instructor/homework/${s.submission_id}`}
-                className="flex items-center gap-4 px-5 py-3 hover:bg-[#F8FAFC] transition"
+                className="flex items-center gap-3 md:gap-4 px-4 py-2.5 md:px-5 md:py-3 hover:bg-[#F8FAFC] transition"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-[#0B1F3A]">{s.student_name}</p>
@@ -293,7 +293,7 @@ export default async function InstructorDashboardPage() {
               <Link
                 key={`${s.student_id}:${s.group_id}`}
                 href={s.href}
-                className="flex items-center gap-4 px-5 py-3 hover:bg-[#F8FAFC] transition"
+                className="flex items-center gap-3 md:gap-4 px-4 py-2.5 md:px-5 md:py-3 hover:bg-[#F8FAFC] transition"
               >
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-600">
                   {s.absence_count}

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
@@ -73,8 +74,9 @@ function NavLink({
 // ── NavContent ────────────────────────────────────────────────────────────────
 
 function NavContent({ onClose }: { onClose?: () => void }) {
-  const pathname = usePathname()
-  const router   = useRouter()
+  const pathname     = usePathname()
+  const router       = useRouter()
+  const [accountOpen, setAccountOpen] = useState(false)
 
   const isActive = (href: string, exact?: boolean) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(href + "/")
@@ -89,7 +91,7 @@ function NavContent({ onClose }: { onClose?: () => void }) {
   const navByKey = Object.fromEntries(INSTRUCTOR_NAV.map((n) => [n.key, n]))
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {/* Logo */}
       <div className="flex h-14 items-center border-b border-white/8 px-5">
         <Image src="/logo.png" alt="Robocode" width={120} height={52} className="h-auto w-24 brightness-0 invert" />
@@ -130,21 +132,55 @@ function NavContent({ onClose }: { onClose?: () => void }) {
       </nav>
 
       {/* Footer */}
-      <div className="border-t border-white/8 p-4 space-y-1">
-        <Link
-          href="/account/password"
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/35 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
-        >
-          {I.password}
-          Change Password
-        </Link>
+      <div className="border-t border-white/8 p-3 shrink-0">
+        {/* My Account toggle */}
         <button
-          onClick={handleLogout}
+          onClick={() => setAccountOpen(v => !v)}
           className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/35 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
         >
-          {I.logout}
-          Logout
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
+          </svg>
+          <span className="flex-1 text-left">My Account</span>
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className={`h-3 w-3 shrink-0 transition-transform duration-200 ${accountOpen ? "rotate-180" : ""}`}
+          >
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
         </button>
+
+        <AnimatePresence initial={false}>
+          {accountOpen && (
+            <motion.div
+              key="instr-account-items"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.18, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="mt-0.5 space-y-0.5 pl-3">
+                <Link
+                  href="/account/password"
+                  onClick={onClose}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-white/30 transition-all duration-150 hover:bg-white/5 hover:text-white/60"
+                >
+                  {I.password}
+                  Change Password
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-red-400/60 transition-all duration-150 hover:bg-white/5 hover:text-red-400"
+                >
+                  {I.logout}
+                  Logout
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )
@@ -172,7 +208,8 @@ export default function InstructorSidebar({ isOpen, onClose }: Props) {
             animate={{ x: 0 }}
             exit={{ x: -224 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed inset-y-0 left-0 z-30 w-56 bg-[#0B1F3A] md:hidden"
+            className="fixed top-0 left-0 z-30 w-56 bg-[#0B1F3A] md:hidden"
+            style={{ bottom: "calc(60px + max(8px, env(safe-area-inset-bottom)))" }}
           >
             <NavContent onClose={onClose} />
           </motion.aside>

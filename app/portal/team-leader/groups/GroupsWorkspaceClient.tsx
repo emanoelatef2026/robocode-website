@@ -158,18 +158,19 @@ function GroupListItem({
     <button
       onClick={onClick}
       className={[
-        'w-full text-left px-4 py-2.5 border-b border-[#F1F5F9] transition-colors',
+        'w-full text-left px-3 py-2 border-b border-[#F1F5F9] transition-colors',
         selected
           ? 'bg-[#FFF7ED] border-l-[3px] border-l-[#FF8A1F]'
-          : 'hover:bg-[#F8FAFC] border-l-[3px] border-l-transparent',
+          : 'active:bg-[#F8FAFC] border-l-[3px] border-l-transparent',
       ].join(' ')}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[13px] font-semibold text-[#0B1F3A] truncate">{group.name}</p>
+        <p className="text-[12px] font-semibold text-[#0B1F3A] truncate">{group.name}</p>
         <StatusChip status={group.status} />
       </div>
       <p className="mt-0.5 text-[11px] text-[#94A3B8]">
         {group.student_count} student{group.student_count !== 1 ? 's' : ''}
+        {group.day_of_week ? <span className="ml-1.5 capitalize">{group.day_of_week.slice(0, 3)}</span> : null}
       </p>
     </button>
   )
@@ -215,7 +216,7 @@ function GroupSidebar({
   return (
     <div className="flex flex-col h-full">
       {/* Panel header */}
-      <div className="flex items-center justify-between gap-2 border-b border-[#E2E8F0] px-4 py-3 shrink-0">
+      <div className="flex items-center justify-between gap-2 border-b border-[#E2E8F0] px-3 py-2.5 shrink-0">
         <div className="flex items-center gap-2">
           <h2 className="text-[13px] font-semibold text-[#0B1F3A]">Groups</h2>
           <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-medium text-[#64748B]">
@@ -236,7 +237,7 @@ function GroupSidebar({
       </div>
 
       {/* Search + branch + quick filter */}
-      <div className="border-b border-[#E2E8F0] px-3 py-2.5 space-y-2 shrink-0">
+      <div className="border-b border-[#E2E8F0] px-3 py-2 space-y-1.5 shrink-0">
         <input
           type="text"
           value={filters.q}
@@ -244,36 +245,38 @@ function GroupSidebar({
           placeholder="Search name, instructor, course…"
           className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:bg-white"
         />
-        {options.branches.length > 1 && (
+        <div className={options.branches.length > 1 ? "grid grid-cols-2 gap-1.5" : ""}>
+          {options.branches.length > 1 && (
+            <select
+              value={filters.branch_id}
+              onChange={e => onFilterChange({ branch_id: e.target.value })}
+              className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F]"
+            >
+              <option value="">All Branches ({searchFiltered.length})</option>
+              {options.branches.map(b => (
+                <option key={b.id} value={b.id}>
+                  {b.name} ({searchFiltered.filter(g => g.branch_id === b.id).length})
+                </option>
+              ))}
+            </select>
+          )}
           <select
-            value={filters.branch_id}
-            onChange={e => onFilterChange({ branch_id: e.target.value })}
-            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F]"
+            value={filters.quickFilter}
+            onChange={e => onFilterChange({ quickFilter: e.target.value as QuickFilter })}
+            className={[
+              'w-full rounded-lg border px-2 py-1.5 text-[12px] outline-none focus:border-[#FF8A1F] transition',
+              filters.quickFilter
+                ? 'border-[#FF8A1F] bg-[#FFF7ED] text-[#FF8A1F] font-medium'
+                : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#374151]',
+            ].join(' ')}
           >
-            <option value="">All Branches ({searchFiltered.length})</option>
-            {options.branches.map(b => (
-              <option key={b.id} value={b.id}>
-                {b.name} ({searchFiltered.filter(g => g.branch_id === b.id).length})
+            {QUICK_FILTER_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label} ({opt.count(baseFiltered)})
               </option>
             ))}
           </select>
-        )}
-        <select
-          value={filters.quickFilter}
-          onChange={e => onFilterChange({ quickFilter: e.target.value as QuickFilter })}
-          className={[
-            'w-full rounded-lg border px-3 py-1.5 text-[12px] outline-none focus:border-[#FF8A1F] transition',
-            filters.quickFilter
-              ? 'border-[#FF8A1F] bg-[#FFF7ED] text-[#FF8A1F] font-medium'
-              : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#374151]',
-          ].join(' ')}
-        >
-          {QUICK_FILTER_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label} ({opt.count(baseFiltered)})
-            </option>
-          ))}
-        </select>
+        </div>
       </div>
 
       {/* Group list — scrollable */}
@@ -402,6 +405,8 @@ function GroupSummaryBar({
   onRecordAttendance: () => void
   onAddStudent:       () => void
 }) {
+  const [infoOpen, setInfoOpen] = useState(false)
+
   const sched = [
     group.day_of_week ? DAYS_FULL[group.day_of_week] : null,
     fmt12(group.start_time),
@@ -433,14 +438,26 @@ function GroupSummaryBar({
   return (
     <div className="border-b border-[#E2E8F0] bg-[#F8FAFC] px-5 py-3 shrink-0">
       {/* Title row */}
-      <div className="flex items-center justify-between gap-3 mb-2">
-        <div className="flex items-center gap-2.5 min-w-0">
+      <div className="flex items-center justify-between gap-3">
+        {/* Name + code + status + collapse toggle */}
+        <button
+          onClick={() => setInfoOpen(v => !v)}
+          className="flex items-center gap-2 min-w-0 flex-1 text-left"
+        >
           <h2 className="text-[15px] font-bold text-[#0B1F3A] truncate">{group.name}</h2>
           {group.code && (
             <span className="font-mono text-[11px] text-[#94A3B8] shrink-0">{group.code}</span>
           )}
           <StatusChip status={group.status} />
-        </div>
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className={`h-3.5 w-3.5 shrink-0 text-[#94A3B8] transition-transform duration-200 ${infoOpen ? 'rotate-180' : ''}`}
+          >
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
+
         <div className="flex items-center gap-2 shrink-0">
           {group.meeting_link && (
             <a
@@ -468,15 +485,17 @@ function GroupSummaryBar({
         </div>
       </div>
 
-      {/* Info pills */}
-      <div className="flex flex-wrap gap-x-5 gap-y-1">
-        {infoItems.map(item => (
-          <div key={item.label} className="flex items-center gap-1">
-            <span className="text-[11px] text-[#94A3B8]">{item.label}:</span>
-            <span className="text-[11px] font-medium text-[#374151]">{item.value}</span>
-          </div>
-        ))}
-      </div>
+      {/* Info pills — collapsible */}
+      {infoOpen && (
+        <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+          {infoItems.map(item => (
+            <div key={item.label} className="flex items-center gap-1">
+              <span className="text-[11px] text-[#94A3B8]">{item.label}:</span>
+              <span className="text-[11px] font-medium text-[#374151]">{item.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -1461,11 +1480,15 @@ function QuickAddStudentModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex w-full max-w-lg flex-col rounded-2xl bg-white shadow-xl" style={{ maxHeight: '85vh' }}>
-        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-4 shrink-0">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40 md:items-center md:justify-center md:p-4">
+      <div className="w-full flex flex-col rounded-t-2xl bg-white shadow-xl max-h-[90dvh] md:rounded-2xl md:max-w-lg">
+        {/* drag handle */}
+        <div className="flex justify-center pt-2.5 pb-0.5 md:hidden shrink-0">
+          <div className="h-1 w-10 rounded-full bg-[#E2E8F0]" />
+        </div>
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 md:px-5 py-3 md:py-4 shrink-0">
           <div>
-            <h3 className="text-[15px] font-bold text-[#0B1F3A]">Add Student</h3>
+            <h3 className="text-[14px] md:text-[15px] font-bold text-[#0B1F3A]">Add Student</h3>
             <p className="mt-0.5 text-[12px] text-[#64748B]">to {group.name}</p>
           </div>
           <button onClick={onClose} className="rounded-lg p-2 text-[#94A3B8] hover:bg-[#F1F5F9] transition">
@@ -1639,11 +1662,15 @@ function MoveGroupModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="flex w-full max-w-md flex-col rounded-2xl bg-white shadow-xl" style={{ maxHeight: '80vh' }}>
-        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-4 shrink-0">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40 md:items-center md:justify-center md:p-4">
+      <div className="w-full flex flex-col rounded-t-2xl bg-white shadow-xl max-h-[90dvh] md:rounded-2xl md:max-w-md">
+        {/* drag handle */}
+        <div className="flex justify-center pt-2.5 pb-0.5 md:hidden shrink-0">
+          <div className="h-1 w-10 rounded-full bg-[#E2E8F0]" />
+        </div>
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 md:px-5 py-3 md:py-4 shrink-0">
           <div>
-            <h3 className="text-[15px] font-bold text-[#0B1F3A]">Move to Group</h3>
+            <h3 className="text-[14px] md:text-[15px] font-bold text-[#0B1F3A]">Move to Group</h3>
             <p className="mt-0.5 text-[12px] text-[#64748B]">
               Moving {selectedIds.size} student{selectedIds.size !== 1 ? 's' : ''} from {currentGroup.name}
             </p>
@@ -1934,13 +1961,13 @@ function GroupWorkspace({
       />
 
       {/* Tabs */}
-      <div className="flex overflow-x-auto border-b border-[#E2E8F0] px-4 shrink-0 bg-white">
+      <div className="flex border-b border-[#E2E8F0] shrink-0 bg-white overflow-x-auto">
         {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={[
-              'shrink-0 border-b-2 px-4 py-2.5 text-[12px] font-medium transition whitespace-nowrap',
+              'flex-1 md:flex-none shrink-0 border-b-2 px-2 md:px-4 py-2.5 text-[11px] md:text-[12px] font-medium transition whitespace-nowrap text-center',
               tab === t.key
                 ? 'border-[#FF8A1F] text-[#FF8A1F]'
                 : 'border-transparent text-[#64748B] hover:text-[#374151]',
@@ -2226,8 +2253,8 @@ export default function GroupsWorkspaceClient({
   return (
     <div className="flex flex-col h-full gap-2">
 
-      {/* ── Compact KPI strip — single row ──────────────────────────── */}
-      <div className="flex items-center gap-5 bg-white border border-[#E2E8F0] rounded-xl px-4 py-2 shrink-0 flex-wrap">
+      {/* ── Compact KPI strip — single row — hidden on mobile ─────── */}
+      <div className="hidden md:flex items-center gap-5 bg-white border border-[#E2E8F0] rounded-xl px-4 py-2 shrink-0 flex-wrap">
         <span className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Overview</span>
         <div className="h-4 w-px bg-[#E2E8F0]" />
         {kpis.map(k => (
@@ -2242,9 +2269,9 @@ export default function GroupsWorkspaceClient({
       {/* ── Split panel workspace ────────────────────────────────────── */}
       <div className="flex-1 min-h-0 flex overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
 
-        {/* Left sidebar — 320px */}
+        {/* Left sidebar — full on mobile, 320px on desktop */}
         <div className={[
-          'w-80 shrink-0 border-r border-[#E2E8F0] overflow-hidden flex flex-col',
+          'w-full md:w-80 shrink-0 border-r border-[#E2E8F0] overflow-hidden flex flex-col',
           mobilePanel === 'detail' ? 'hidden md:flex' : 'flex',
         ].join(' ')}>
           <GroupSidebar

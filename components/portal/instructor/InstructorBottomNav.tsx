@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { INSTRUCTOR_NAV } from "@/modules/instructor-portal/navigation"
 
-// Icons keyed by nav key (24 px, fill="currentColor")
 const ICONS: Record<string, React.ReactNode> = {
   dashboard: (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
@@ -31,6 +30,13 @@ const ICONS: Record<string, React.ReactNode> = {
   ),
 }
 
+const TAB_LABELS: Record<string, string> = {
+  dashboard: "Home",
+  groups:    "My Groups",
+  homework:  "Homework",
+  history:   "History",
+}
+
 export default function InstructorBottomNav() {
   const pathname = usePathname()
 
@@ -50,7 +56,7 @@ export default function InstructorBottomNav() {
               key={item.key}
               href={item.href}
               className={[
-                "relative flex flex-col items-center justify-center gap-1 py-2 min-h-[60px] transition-colors",
+                "relative flex flex-col items-center justify-center gap-1 py-2 min-h-15 transition-colors",
                 active ? "text-[#FF8A1F]" : "text-[#94A3B8] active:text-[#64748B]",
               ].join(" ")}
               aria-current={active ? "page" : undefined}
@@ -60,7 +66,7 @@ export default function InstructorBottomNav() {
               )}
               {ICONS[item.key]}
               <span className={`text-[10px] font-semibold leading-none ${active ? "text-[#FF8A1F]" : "text-[#94A3B8]"}`}>
-                {item.key === "dashboard" ? "Home" : item.key === "history" ? "History" : item.label}
+                {TAB_LABELS[item.key] ?? item.label}
               </span>
             </Link>
           )

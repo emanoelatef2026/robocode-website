@@ -56,7 +56,7 @@ export default async function AcademicQuality({ branchIds }: { branchIds: string
         <QualityTile
           label="Attendance Rate"
           value={`${data.attendance_rate}%`}
-          href="/portal/team-leader/attendance"
+          href="/portal/team-leader/groups"
           colorCls={data.attendance_rate >= 75 ? 'text-emerald-600' : data.attendance_rate >= 55 ? 'text-amber-600' : 'text-red-600'}
         />
         <QualityTile
@@ -97,7 +97,7 @@ export default async function AcademicQuality({ branchIds }: { branchIds: string
         <div className="border-b border-[#E2E8F0] px-4 py-3">
           <p className="text-[13px] font-semibold text-[#0B1F3A]">Performance Breakdown</p>
         </div>
-        <MetricRow label="Monthly Attendance"    value={data.attendance_rate}    href="/portal/team-leader/attendance" />
+        <MetricRow label="Monthly Attendance"    value={data.attendance_rate}    href="/portal/team-leader/groups" />
         <MetricRow label="Homework Completion"   value={data.homework_rate}      href="/portal/team-leader/assignments" />
         <MetricRow label="Submission Rate"       value={data.submission_rate}    href="/portal/team-leader/assignments" />
       </div>

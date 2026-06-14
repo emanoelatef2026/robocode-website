@@ -38,7 +38,7 @@ interface DashCardEmptyProps {
 
 export function DashCardEmpty({ text, emoji = '' }: DashCardEmptyProps) {
   return (
-    <p className="px-4 py-8 text-center text-[12px] text-[#94A3B8]">
+    <p className="px-4 py-5 md:py-8 text-center text-[12px] text-[#94A3B8]">
       {emoji && <span className="mr-1.5">{emoji}</span>}{text}
     </p>
   )
