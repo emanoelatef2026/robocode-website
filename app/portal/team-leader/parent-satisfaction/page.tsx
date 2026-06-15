@@ -18,20 +18,20 @@ function MetricCard({
   const barClr = pct != null ? (pct >= 75 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500') : ''
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
-      <p className={`mt-1 text-3xl font-bold ${color}`}>
+    <div className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-5">
+      <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">{label}</p>
+      <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-3xl ${color}`}>
         {unit === '★' ? (
           <span className="flex items-center gap-1">
-            {value.toFixed(1)} <span className="text-xl text-[#FF8A1F]">★</span>
+            {value.toFixed(1)} <span className="text-[#FF8A1F]">★</span>
           </span>
         ) : (
           `${Math.round(value)}${unit}`
         )}
       </p>
-      {description && <p className="mt-1 text-[11px] text-[#94A3B8]">{description}</p>}
+      {description && <p className="mt-0.5 truncate text-[8px] text-[#94A3B8] leading-tight md:text-[11px]">{description}</p>}
       {pct != null && (
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#F1F5F9]">
+        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[#F1F5F9]">
           <div className={`h-full rounded-full ${barClr}`} style={{ width: `${Math.min(100, pct)}%` }} />
         </div>
       )}
@@ -73,7 +73,7 @@ export default async function ParentSatisfactionPage() {
       ) : (
         <>
           {/* Aggregate metrics */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-1.5 md:gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <MetricCard
               label="Overall Rating"
               value={aggregate.avg_rating}

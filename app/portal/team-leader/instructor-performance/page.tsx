@@ -71,7 +71,7 @@ export default async function InstructorOperationsPage() {
 
       {/* ── KPI Strip ──────────────────────────────────────────────────── */}
       {instructors.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-5">
           {[
             { label: 'Avg Rating',       value: avgRating != null ? `${avgRating}★` : '—',       cls: 'text-[#FF8A1F]' },
             { label: 'Active Students',  value: String(totalStudents),                             cls: 'text-[#0B1F3A]' },
@@ -79,9 +79,9 @@ export default async function InstructorOperationsPage() {
             { label: 'At-Risk Students', value: String(totalRisk),                                 cls: totalRisk > 0 ? 'text-red-600' : 'text-emerald-600' },
             { label: 'Avg Health Score', value: String(avgHealth),                                 cls: avgHealth >= 80 ? 'text-emerald-600' : avgHealth >= 60 ? 'text-amber-600' : 'text-red-600' },
           ].map(k => (
-            <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-              <p className={`text-2xl font-bold ${k.cls}`}>{k.value}</p>
-              <p className="mt-0.5 text-[11px] text-[#64748B]">{k.label}</p>
+            <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4">
+              <p className={`truncate text-[13px] font-bold leading-none md:text-2xl ${k.cls}`}>{k.value}</p>
+              <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
             </div>
           ))}
         </div>

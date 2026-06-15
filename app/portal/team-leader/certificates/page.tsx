@@ -47,9 +47,9 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
         action={
           <Link
             href="/portal/team-leader/certificates/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-[#e87c18]"
           >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
             </svg>
             Issue Certificate
@@ -58,28 +58,30 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
       />
 
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
-        <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
+        <div className="border-b border-[#E2E8F0] px-3 py-2 space-y-1.5 sm:px-4 sm:py-3 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
           <SearchInput placeholder="Search by title, name, or code…" />
-          <FilterSelect
-            name="type"
-            value={type ?? ''}
-            placeholder="All Types"
-            options={[
-              { value: 'course_completion',   label: 'Course Completion' },
-              { value: 'competition_award',   label: 'Competition' },
-              { value: 'achievement',         label: 'Achievement' },
-              { value: 'custom',              label: 'Custom' },
-            ]}
-          />
-          <FilterSelect
-            name="status"
-            value={status ?? ''}
-            placeholder="All Statuses"
-            options={[
-              { value: 'active',  label: 'Active'  },
-              { value: 'revoked', label: 'Revoked' },
-            ]}
-          />
+          <div className="flex gap-2 overflow-x-auto no-scrollbar sm:contents">
+            <FilterSelect
+              name="type"
+              value={type ?? ''}
+              placeholder="All Types"
+              options={[
+                { value: 'course_completion',   label: 'Course Completion' },
+                { value: 'competition_award',   label: 'Competition' },
+                { value: 'achievement',         label: 'Achievement' },
+                { value: 'custom',              label: 'Custom' },
+              ]}
+            />
+            <FilterSelect
+              name="status"
+              value={status ?? ''}
+              placeholder="All Statuses"
+              options={[
+                { value: 'active',  label: 'Active'  },
+                { value: 'revoked', label: 'Revoked' },
+              ]}
+            />
+          </div>
         </div>
 
         {result.data.length === 0 ? (
@@ -89,7 +91,47 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* ── Mobile cards ── */}
+            <div className="md:hidden divide-y divide-[#E2E8F0]">
+              {result.data.map(c => (
+                <div key={c.id} className="px-4 py-3.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14px] font-semibold text-[#0B1F3A] leading-tight truncate">{c.title}</p>
+                      <p className="mt-0.5 text-[12px] font-medium text-[#0B1F3A]">{c.recipient_name}</p>
+                      {c.student_email && <p className="text-[11px] text-[#94A3B8] truncate">{c.student_email}</p>}
+                    </div>
+                    <StatusBadge status={c.status === 'active' ? 'active' : 'inactive'} />
+                  </div>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-[11px] text-[#64748B]">
+                      <span className="font-mono bg-[#F8FAFC] px-1.5 py-0.5 rounded">{c.certificate_code}</span>
+                      <span>{TYPE_LABELS[c.certificate_type] ?? c.certificate_type}</span>
+                      <span>{new Date(c.issued_at).toLocaleDateString('en-GB')}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={`/api/certificates/${c.certificate_code}/pdf`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#64748B]"
+                      >
+                        PDF
+                      </a>
+                      <Link
+                        href={`/portal/team-leader/certificates/${c.id}`}
+                        className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F]"
+                      >
+                        View →
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* ── Desktop table ── */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">

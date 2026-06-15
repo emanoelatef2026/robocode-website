@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { AnimatePresence, motion } from "framer-motion"
 
 // ── Icons ──────────────────────────────────────────────────────────────────────
 
@@ -29,6 +31,42 @@ const I = {
       <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clipRule="evenodd" />
     </svg>
   ),
+  leads: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M7.502 6h7.128A3.375 3.375 0 0 1 18 9.375v9.375a3 3 0 0 0 3-3V6.108c0-1.505-1.125-2.811-2.664-2.94a48.972 48.972 0 0 0-.673-.05A3 3 0 0 0 15 1.5h-1.5a3 3 0 0 0-2.663 1.618c-.225.015-.45.032-.673.05C8.662 3.295 7.554 4.542 7.502 6ZM13.5 3A1.5 1.5 0 0 0 12 4.5h4.5A1.5 1.5 0 0 0 15 3h-1.5Z" clipRule="evenodd" />
+      <path fillRule="evenodd" d="M3 9.375C3 8.339 3.84 7.5 4.875 7.5h9.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-9.75A1.875 1.875 0 0 1 3 20.625V9.375ZM6 12a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H6.75a.75.75 0 0 1-.75-.75V12Zm2.25 0a.75.75 0 0 1 .75-.75h3.75a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75ZM6 15a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H6.75a.75.75 0 0 1-.75-.75V15Zm2.25 0a.75.75 0 0 1 .75-.75h3.75a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75ZM6 18a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H6.75a.75.75 0 0 1-.75-.75V18Zm2.25 0a.75.75 0 0 1 .75-.75h3.75a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+    </svg>
+  ),
+  parents: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path d="M4.5 6.375a4.125 4.125 0 1 1 8.25 0 4.125 4.125 0 0 1-8.25 0ZM14.25 8.625a3.375 3.375 0 1 1 6.75 0 3.375 3.375 0 0 1-6.75 0ZM1.5 19.125a7.125 7.125 0 0 1 14.25 0v.003l-.001.119a.75.75 0 0 1-.363.63 13.067 13.067 0 0 1-6.761 1.873c-2.472 0-4.786-.684-6.76-1.873a.75.75 0 0 1-.364-.63l-.001-.122ZM17.25 19.128l-.001.144a2.25 2.25 0 0 1-.233.96 10.088 10.088 0 0 0 5.06-1.01.75.75 0 0 0 .42-.643 4.875 4.875 0 0 0-6.957-4.611 8.586 8.586 0 0 1 1.71 5.157v.003Z" />
+    </svg>
+  ),
+  courses: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path d="M11.25 4.533A9.707 9.707 0 0 0 6 3a9.735 9.735 0 0 0-3.25.555.75.75 0 0 0-.5.707v14.25a.75.75 0 0 0 1 .707A8.237 8.237 0 0 1 6 18.75c1.995 0 3.823.707 5.25 1.886V4.533ZM12.75 20.636A8.214 8.214 0 0 1 18 18.75c.966 0 1.89.166 2.75.47a.75.75 0 0 0 1-.708V4.262a.75.75 0 0 0-.5-.707A9.735 9.735 0 0 0 18 3a9.707 9.707 0 0 0-5.25 1.533v16.103Z" />
+    </svg>
+  ),
+  certificates: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
+    </svg>
+  ),
+  satisfaction: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 0 1-.814 1.686.75.75 0 0 0 .44 1.223ZM8.25 10.875a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25ZM10.875 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875-1.125a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Z" clipRule="evenodd" />
+    </svg>
+  ),
+  analytics: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75ZM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 0 1-1.875-1.875V8.625ZM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 0 1 3 19.875v-6.75Z" />
+    </svg>
+  ),
+  more: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+    </svg>
+  ),
 }
 
 // ── Config ─────────────────────────────────────────────────────────────────────
@@ -40,45 +78,147 @@ const PRIMARY = [
   { label: "Instructors", href: "/portal/team-leader/instructors", exact: false, icon: I.instructors },
 ] as const
 
+const MORE_ITEMS = [
+  { label: "Leads",        href: "/portal/team-leader/leads",                        icon: I.leads,        matchPatterns: [] },
+  { label: "Parents",      href: "/portal/team-leader/parents",                      icon: I.parents,      matchPatterns: [] },
+  { label: "Courses",      href: "/portal/team-leader/courses",                      icon: I.courses,      matchPatterns: [] },
+  { label: "Certificates", href: "/portal/team-leader/certificates",                 icon: I.certificates, matchPatterns: [] },
+  { label: "Satisfaction", href: "/portal/team-leader/parent-feedback?tab=reviews",  icon: I.satisfaction, matchPatterns: ["/portal/team-leader/parent-feedback", "/portal/team-leader/parent-satisfaction"] },
+  { label: "Analytics",    href: "/portal/team-leader/analytics",                    icon: I.analytics,    matchPatterns: [] },
+]
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export default function TLBottomNav() {
   const pathname = usePathname()
+  const [moreOpen, setMoreOpen] = useState(false)
 
-  function isActive(href: string, exact?: boolean) {
-    if (exact) return pathname === href
-    return pathname === href || pathname.startsWith(href + "/")
+  function isActive(href: string, exact?: boolean, matchPatterns?: string[]) {
+    const hrefPath = href.split("?")[0]
+    if (exact) return pathname === hrefPath
+    if (matchPatterns?.length) {
+      return matchPatterns.some(p => pathname === p || pathname.startsWith(p + "/"))
+    }
+    return pathname === hrefPath || pathname.startsWith(hrefPath + "/")
   }
 
+  const moreActive = MORE_ITEMS.some(item =>
+    isActive(item.href, false, item.matchPatterns)
+  )
+
   return (
-    <nav
-      className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white border-t border-[#E2E8F0] bottom-nav-safe"
-      aria-label="Mobile navigation"
-    >
-      <div className="grid grid-cols-4">
-        {PRIMARY.map(item => {
-          const active = isActive(item.href, item.exact)
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={[
-                "relative flex flex-col items-center justify-center gap-1 py-2 min-h-15 transition-colors",
-                active ? "text-[#FF8A1F]" : "text-[#94A3B8] active:text-[#64748B]",
-              ].join(" ")}
-              aria-current={active ? "page" : undefined}
+    <>
+      <nav
+        className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-white border-t border-[#E2E8F0] bottom-nav-safe"
+        aria-label="Mobile navigation"
+      >
+        <div className="grid grid-cols-5">
+          {PRIMARY.map(item => {
+            const active = isActive(item.href, item.exact)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={[
+                  "relative flex flex-col items-center justify-center gap-1 py-2 min-h-15 transition-colors",
+                  active ? "text-[#FF8A1F]" : "text-[#94A3B8] active:text-[#64748B]",
+                ].join(" ")}
+                aria-current={active ? "page" : undefined}
+              >
+                {active && (
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[#FF8A1F]" />
+                )}
+                {item.icon}
+                <span className={`text-[10px] font-semibold leading-none ${active ? "text-[#FF8A1F]" : "text-[#94A3B8]"}`}>
+                  {item.label}
+                </span>
+              </Link>
+            )
+          })}
+
+          {/* More button */}
+          <button
+            onClick={() => setMoreOpen(true)}
+            className={[
+              "relative flex flex-col items-center justify-center gap-1 py-2 min-h-15 transition-colors",
+              moreActive ? "text-[#FF8A1F]" : "text-[#94A3B8] active:text-[#64748B]",
+            ].join(" ")}
+            aria-label="More navigation items"
+          >
+            {moreActive && (
+              <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[#FF8A1F]" />
+            )}
+            {I.more}
+            <span className={`text-[10px] font-semibold leading-none ${moreActive ? "text-[#FF8A1F]" : "text-[#94A3B8]"}`}>
+              More
+            </span>
+          </button>
+        </div>
+      </nav>
+
+      {/* More sheet */}
+      <AnimatePresence>
+        {moreOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="more-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="fixed inset-0 z-50 bg-black/40 md:hidden"
+              onClick={() => setMoreOpen(false)}
+            />
+
+            {/* Sheet */}
+            <motion.div
+              key="more-sheet"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed inset-x-0 bottom-0 z-50 md:hidden bg-white rounded-t-2xl shadow-xl"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
             >
-              {active && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[#FF8A1F]" />
-              )}
-              {item.icon}
-              <span className={`text-[10px] font-semibold leading-none ${active ? "text-[#FF8A1F]" : "text-[#94A3B8]"}`}>
-                {item.label}
-              </span>
-            </Link>
-          )
-        })}
-      </div>
-    </nav>
+              {/* Handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="h-1 w-10 rounded-full bg-[#E2E8F0]" />
+              </div>
+
+              {/* Title */}
+              <p className="px-5 pt-1 pb-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
+                More
+              </p>
+
+              {/* Grid of items */}
+              <div className="grid grid-cols-3 gap-px bg-[#F1F5F9] border-t border-[#F1F5F9]">
+                {MORE_ITEMS.map(item => {
+                  const active = isActive(item.href, false, item.matchPatterns)
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMoreOpen(false)}
+                      className={[
+                        "flex flex-col items-center justify-center gap-2 py-5 bg-white transition-colors active:bg-[#F8FAFC]",
+                        active ? "text-[#FF8A1F]" : "text-[#64748B]",
+                      ].join(" ")}
+                    >
+                      <span className={active ? "text-[#FF8A1F]" : "text-[#94A3B8]"}>
+                        {item.icon}
+                      </span>
+                      <span className={`text-[11px] font-semibold leading-none ${active ? "text-[#FF8A1F]" : "text-[#64748B]"}`}>
+                        {item.label}
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   )
 }

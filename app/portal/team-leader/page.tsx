@@ -49,9 +49,9 @@ async function AttendanceSummary({ branchIds }: { branchIds: string[] }) {
         { label: 'Absent Today',  value: att.absent,  cls: 'border-red-200    bg-red-50    text-red-700'     },
         { label: 'Late Today',    value: att.late,    cls: 'border-amber-200  bg-amber-50  text-amber-700'   },
       ].map(k => (
-        <div key={k.label} className={`rounded-xl md:rounded-2xl border px-3 py-2.5 md:px-4 md:py-3 text-center ${k.cls}`}>
-          <p className="text-xl md:text-2xl font-extrabold">{k.value}</p>
-          <p className="mt-0.5 text-[11px] font-medium">{k.label}</p>
+        <div key={k.label} className={`min-w-0 rounded-xl border px-2 py-1.5 md:px-4 md:py-3 text-center ${k.cls}`}>
+          <p className="truncate text-[15px] font-extrabold leading-none md:text-2xl">{k.value}</p>
+          <p className="mt-0.5 truncate text-[9px] font-medium leading-tight md:text-[11px]">{k.label}</p>
         </div>
       ))}
     </div>
@@ -85,12 +85,12 @@ async function FinanceKPIStrip({ branchIds }: { branchIds: string[] }) {
       {tiles.map(t => (
         <div
           key={t.label}
-          className={`rounded-xl md:rounded-2xl border bg-white p-2.5 md:p-3.5 ${t.alert ? 'border-red-200' : 'border-[#E2E8F0]'}`}
+          className={`min-w-0 rounded-xl border bg-white px-2 py-1.5 md:p-3.5 ${t.alert ? 'border-red-200' : 'border-[#E2E8F0]'}`}
         >
-          <p className={`text-[15px] md:text-[18px] font-extrabold leading-none ${t.alert ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+          <p className={`truncate text-[13px] font-extrabold leading-none md:text-[18px] ${t.alert ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
             {t.value}
           </p>
-          <p className="mt-1 text-[10px] font-medium text-[#64748B]">{t.label}</p>
+          <p className="mt-0.5 truncate text-[8px] font-medium leading-tight text-[#64748B] md:text-[10px]">{t.label}</p>
         </div>
       ))}
     </div>
@@ -112,10 +112,10 @@ async function HeaderKPIs({ branchIds }: { branchIds: string[] }) {
         <Link
           key={k.label}
           href={k.href}
-          className="rounded-xl md:rounded-2xl border border-[#E2E8F0] bg-white p-3 md:p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
+          className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
         >
-          <p className="text-[10px] font-bold uppercase tracking-wide text-[#94A3B8]">{k.label}</p>
-          <p className="mt-1 text-[20px] md:text-[24px] font-extrabold leading-none text-[#0B1F3A]">{k.value}</p>
+          <p className="truncate text-[8px] font-bold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">{k.label}</p>
+          <p className="mt-0.5 truncate text-[15px] font-extrabold leading-none text-[#0B1F3A] md:text-[24px]">{k.value}</p>
         </Link>
       ))}
     </div>

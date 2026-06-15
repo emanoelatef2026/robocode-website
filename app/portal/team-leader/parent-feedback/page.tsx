@@ -39,16 +39,16 @@ function MetricCard({
   const pct    = unit === '%' ? value : null
   const barClr = pct != null ? (pct >= 75 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500') : ''
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
-      <p className={`mt-1 text-3xl font-bold ${color}`}>
+    <div className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4">
+      <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">{label}</p>
+      <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-2xl ${color}`}>
         {unit === '★'
-          ? <span className="flex items-center gap-1">{value.toFixed(1)} <span className="text-xl text-[#FF8A1F]">★</span></span>
+          ? <span className="flex items-center gap-1">{value.toFixed(1)} <span className="text-[#FF8A1F]">★</span></span>
           : `${Math.round(value)}${unit}`}
       </p>
-      {description && <p className="mt-1 text-[11px] text-[#94A3B8]">{description}</p>}
+      {description && <p className="mt-0.5 truncate text-[8px] text-[#94A3B8] leading-tight md:text-[10px]">{description}</p>}
       {pct != null && (
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#F1F5F9]">
+        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[#F1F5F9]">
           <div className={`h-full rounded-full ${barClr}`} style={{ width: `${Math.min(100, pct)}%` }} />
         </div>
       )}
@@ -128,37 +128,37 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
       </div>
 
       {/* KPI row */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-1.5 md:gap-4 sm:grid-cols-4">
         <Link
           href={buildFilterHref({ status: 'submitted' })}
-          className="rounded-xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#CBD5E1]"
+          className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1]"
         >
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Open Messages</p>
-          <p className="mt-1 text-2xl font-bold text-yellow-600">{counts.open}</p>
+          <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Open Messages</p>
+          <p className="mt-0.5 truncate text-[13px] font-bold leading-none text-yellow-600 md:text-2xl">{counts.open}</p>
         </Link>
         <Link
           href={buildFilterHref({ status: 'resolved' })}
-          className="rounded-xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#CBD5E1]"
+          className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1]"
         >
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Resolved Messages</p>
-          <p className="mt-1 text-2xl font-bold text-green-600">{counts.resolved}</p>
+          <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Resolved Messages</p>
+          <p className="mt-0.5 truncate text-[13px] font-bold leading-none text-green-600 md:text-2xl">{counts.resolved}</p>
         </Link>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Avg. Satisfaction</p>
-          <p className="mt-1 text-2xl font-bold text-[#FF8A1F]">
+        <div className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4">
+          <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Avg. Satisfaction</p>
+          <p className="mt-0.5 truncate text-[13px] font-bold leading-none text-[#FF8A1F] md:text-2xl">
             {analytics.aggregate.avg_rating > 0 ? `${analytics.aggregate.avg_rating.toFixed(1)}★` : '—'}
           </p>
         </div>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Would Recommend</p>
-          <p className="mt-1 text-2xl font-bold text-green-600">
+        <div className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4">
+          <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Would Recommend</p>
+          <p className="mt-0.5 truncate text-[13px] font-bold leading-none text-green-600 md:text-2xl">
             {analytics.aggregate.total_responses > 0 ? `${analytics.aggregate.recommend_pct}%` : '—'}
           </p>
         </div>
       </div>
 
-      {/* Tab switcher */}
-      <div className="flex flex-wrap gap-1 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-1">
+      {/* Tab switcher — scrollable on mobile */}
+      <div className="flex gap-1 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-1 overflow-x-auto no-scrollbar">
         {([
           { key: 'messages',     label: 'Messages',      badge: counts.open > 0 ? String(counts.open) : null },
           { key: 'satisfaction', label: 'Satisfaction',  badge: null },
@@ -170,7 +170,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
             key={key}
             href={tabHref(key)}
             className={[
-              'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-medium transition-all whitespace-nowrap',
+              'shrink-0 flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-[12px] font-medium transition-all whitespace-nowrap',
               activeTab === key
                 ? 'bg-white text-[#0B1F3A] shadow-sm'
                 : 'text-[#64748B] hover:text-[#0B1F3A]',
@@ -209,10 +209,44 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
               </div>
 
               <div className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
-                <div className="border-b border-[#F1F5F9] px-5 py-3.5">
+                <div className="border-b border-[#F1F5F9] px-4 py-3">
                   <p className="text-[13px] font-semibold text-[#0B1F3A]">All Responses</p>
                 </div>
-                <div className="overflow-x-auto">
+
+                {/* Mobile cards */}
+                <div className="md:hidden divide-y divide-[#F1F5F9]">
+                  {analytics.rows.map(r => (
+                    <div key={r.id} className="px-4 py-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-[13px] font-medium text-[#0B1F3A]">{r.student_name}</p>
+                          {r.branch_name && <p className="text-[11px] text-[#94A3B8]">{r.branch_name}</p>}
+                          <p className="text-[11px] text-[#64748B]">After {r.session_milestone} sessions</p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <StarDisplay rating={r.rating} />
+                          <p className="mt-0.5 text-[10px] text-[#94A3B8]">{new Date(r.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex gap-3 text-[11px]">
+                        {[
+                          { label: 'Skills', v: r.q1_yes },
+                          { label: 'Excited', v: r.q2_yes },
+                          { label: 'Comm', v: r.q3_yes },
+                          { label: 'Recommend', v: r.q4_yes },
+                        ].map(({ label, v }) => (
+                          <span key={label} className="flex flex-col items-center gap-0.5">
+                            <span className={`font-semibold ${v ? 'text-green-600' : 'text-red-500'}`}>{v ? '✓' : '✗'}</span>
+                            <span className="text-[#94A3B8]">{label}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-[13px]">
                     <thead>
                       <tr className="border-b border-[#F1F5F9] text-left">
@@ -223,7 +257,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
                         <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Excited</th>
                         <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Comm.</th>
                         <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Recommend</th>
-                        <th className="hidden px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] md:table-cell">Date</th>
+                        <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Date</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F8FAFC]">
@@ -240,7 +274,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
                               <span className={`text-[13px] font-semibold ${v ? 'text-green-600' : 'text-red-500'}`}>{v ? 'Yes' : 'No'}</span>
                             </td>
                           ))}
-                          <td className="hidden px-5 py-3 text-[#94A3B8] md:table-cell">
+                          <td className="px-5 py-3 text-[#94A3B8]">
                             {new Date(r.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </td>
                         </tr>
@@ -272,46 +306,49 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
         <div className="space-y-5">
 
           {/* Filters */}
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-2">
             {/* Status filter */}
-            {(['', 'submitted', 'under_review', 'resolved'] as const).map(s => {
-              const isActive = (status ?? '') === s
-              const label    = s === '' ? 'All' : STATUS_CONFIG[s as MessageStatus].label
-              return (
-                <Link
-                  key={s}
-                  href={buildFilterHref({ status: s, category: category ?? '' })}
-                  className={[
-                    'rounded-full border px-3 py-1 text-[12px] font-medium transition-all',
-                    isActive
-                      ? 'border-[#FF8A1F] bg-[#FF8A1F]/10 text-[#FF8A1F]'
-                      : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1]',
-                  ].join(' ')}
-                >
-                  {label}
-                </Link>
-              )
-            })}
-            <span className="mx-1 text-[#E2E8F0]">|</span>
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+              {(['', 'submitted', 'under_review', 'resolved'] as const).map(s => {
+                const isActive = (status ?? '') === s
+                const label    = s === '' ? 'All' : STATUS_CONFIG[s as MessageStatus].label
+                return (
+                  <Link
+                    key={s}
+                    href={buildFilterHref({ status: s, category: category ?? '' })}
+                    className={[
+                      'shrink-0 rounded-full border px-3 py-1 text-[12px] font-medium transition-all whitespace-nowrap',
+                      isActive
+                        ? 'border-[#FF8A1F] bg-[#FF8A1F]/10 text-[#FF8A1F]'
+                        : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1]',
+                    ].join(' ')}
+                  >
+                    {label}
+                  </Link>
+                )
+              })}
+            </div>
             {/* Category filter */}
-            {(['', ...Object.keys(CATEGORY_LABELS)] as string[]).map(c => {
-              const isActive = (category ?? '') === c
-              const label    = c === '' ? 'All Categories' : CATEGORY_LABELS[c as MessageCategory]
-              return (
-                <Link
-                  key={c}
-                  href={buildFilterHref({ status: status ?? '', category: c })}
-                  className={[
-                    'rounded-full border px-3 py-1 text-[12px] font-medium transition-all',
-                    isActive
-                      ? 'border-[#0B1F3A] bg-[#0B1F3A]/8 text-[#0B1F3A]'
-                      : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1]',
-                  ].join(' ')}
-                >
-                  {label}
-                </Link>
-              )
-            })}
+            <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+              {(['', ...Object.keys(CATEGORY_LABELS)] as string[]).map(c => {
+                const isActive = (category ?? '') === c
+                const label    = c === '' ? 'All Categories' : CATEGORY_LABELS[c as MessageCategory]
+                return (
+                  <Link
+                    key={c}
+                    href={buildFilterHref({ status: status ?? '', category: c })}
+                    className={[
+                      'shrink-0 rounded-full border px-3 py-1 text-[12px] font-medium transition-all whitespace-nowrap',
+                      isActive
+                        ? 'border-[#0B1F3A] bg-[#0B1F3A]/8 text-[#0B1F3A]'
+                        : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1]',
+                    ].join(' ')}
+                  >
+                    {label}
+                  </Link>
+                )
+              })}
+            </div>
           </div>
 
           {messages.length === 0 ? (

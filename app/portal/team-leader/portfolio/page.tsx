@@ -40,7 +40,7 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
         {[
           { key: 'pending_review',    label: 'Pending Review',    color: 'text-amber-600'  },
           { key: 'approved',          label: 'Approved',          color: 'text-green-600'  },
@@ -50,10 +50,10 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
           <Link
             key={key}
             href={`/portal/team-leader/portfolio?tab=${key}`}
-            className={`rounded-xl border bg-white p-4 transition hover:border-[#CBD5E1] ${tab === key ? 'border-[#FF8A1F]' : 'border-[#E2E8F0]'}`}
+            className={`min-w-0 rounded-xl border bg-white px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1] ${tab === key ? 'border-[#FF8A1F]' : 'border-[#E2E8F0]'}`}
           >
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
-            <p className={`mt-1 text-2xl font-bold ${color}`}>{counts[key] ?? 0}</p>
+            <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">{label}</p>
+            <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-2xl ${color}`}>{counts[key] ?? 0}</p>
           </Link>
         ))}
       </div>

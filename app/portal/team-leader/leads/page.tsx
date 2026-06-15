@@ -77,14 +77,14 @@ function KPICard({
   color?: string; href?: string; alert?: boolean
 }) {
   const cls = [
-    'rounded-xl border p-5 transition',
+    'min-w-0 rounded-xl border px-2 py-1.5 md:p-3 transition',
     alert ? 'border-orange-200 bg-orange-50' : 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1]',
   ].join(' ')
   const inner = (
     <>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
-      <p className={`mt-1 text-3xl font-bold ${color}`}>{value}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-[#94A3B8]">{sub}</p>}
+      <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] leading-tight md:text-[10px]">{label}</p>
+      <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-xl ${color}`}>{value}</p>
+      {sub && <p className="mt-0.5 truncate text-[8px] text-[#94A3B8] leading-tight md:text-[10px]">{sub}</p>}
     </>
   )
   return href
@@ -152,7 +152,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
       {/* ── Pipeline KPIs ── */}
       <div>
         <div className="mb-2"><SectionTitle title="Pipeline" /></div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 xl:grid-cols-8">
           <KPICard label="New"            value={kpis.new_leads}      color="text-blue-600"   href="?status=NEW" />
           <KPICard label="Contacted"      value={kpis.contacted}      color="text-yellow-600" href="?status=CONTACTED" />
           <KPICard label="Trial Booked"   value={kpis.trial_booked}   color="text-indigo-600" href="?status=TRIAL_BOOKED" />
@@ -186,7 +186,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
       {/* ── Ownership KPIs ── */}
       <div>
         <div className="mb-2"><SectionTitle title="Your Ownership" /></div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-5">
           <KPICard
             label="My Leads"
             value={ownerKpis.my_leads}
@@ -354,7 +354,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
 
       {/* ── Lead Table ── */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
-        <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-3 py-2.5 sm:px-4 sm:py-3">
           <SearchInput placeholder="Search by name, phone, email…" />
           <FilterSelect name="status"  options={statusOptions} placeholder="All Statuses" value={status ?? ''} />
           <FilterSelect name="source"  options={sourceOptions} placeholder="All Sources"  value={source ?? ''} />

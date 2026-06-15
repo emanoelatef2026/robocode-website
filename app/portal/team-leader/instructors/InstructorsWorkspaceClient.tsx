@@ -166,10 +166,10 @@ function StatCard({ label, value, sub, accent, danger }: {
   label: string; value: string | number; sub?: string; accent?: boolean; danger?: boolean
 }) {
   return (
-    <div className={`rounded-xl border p-3 ${accent ? 'border-[#FF8A1F]/30 bg-[#FFF7ED]' : danger ? 'border-red-200 bg-red-50' : 'border-[#E2E8F0] bg-white'}`}>
-      <p className={`text-[11px] font-medium ${accent ? 'text-[#FF8A1F]/70' : danger ? 'text-red-400' : 'text-[#64748B]'}`}>{label}</p>
-      <p className={`mt-0.5 text-[20px] font-bold leading-none ${accent ? 'text-[#FF8A1F]' : danger ? 'text-red-600' : 'text-[#0B1F3A]'}`}>{value}</p>
-      {sub && <p className={`mt-0.5 text-[10px] ${accent ? 'text-[#FF8A1F]/60' : danger ? 'text-red-400' : 'text-[#94A3B8]'}`}>{sub}</p>}
+    <div className={`min-w-0 rounded-xl border px-2 py-1.5 md:p-3 ${accent ? 'border-[#FF8A1F]/30 bg-[#FFF7ED]' : danger ? 'border-red-200 bg-red-50' : 'border-[#E2E8F0] bg-white'}`}>
+      <p className={`truncate text-[8px] font-medium leading-tight md:text-[11px] ${accent ? 'text-[#FF8A1F]/70' : danger ? 'text-red-400' : 'text-[#64748B]'}`}>{label}</p>
+      <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-[20px] ${accent ? 'text-[#FF8A1F]' : danger ? 'text-red-600' : 'text-[#0B1F3A]'}`}>{value}</p>
+      {sub && <p className={`mt-0.5 truncate text-[8px] leading-tight md:text-[10px] ${accent ? 'text-[#FF8A1F]/60' : danger ? 'text-red-400' : 'text-[#94A3B8]'}`}>{sub}</p>}
     </div>
   )
 }
@@ -491,7 +491,7 @@ function OverviewTab({ detail }: { detail: InstructorDetailData }) {
       </div>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+      <div className="grid grid-cols-3 gap-1.5 md:gap-3 sm:grid-cols-6">
         <StatCard label="Groups"       value={performance.group_count}     sub={`${performance.active_groups} active`} />
         <StatCard label="Students"     value={performance.total_students}  sub={`${performance.at_risk_students} at risk`} danger={performance.at_risk_students > 0} />
         <StatCard label="Attendance"   value={`${performance.attendance_compliance}%`} sub={`${attendance_stats.sessions_missing_attendance} missing`} danger={attendance_stats.sessions_missing_attendance > 0} />
@@ -711,7 +711,7 @@ function AttendanceTab({ stats, groups }: {
 }) {
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-1.5 md:gap-3 md:grid-cols-4">
         <StatCard label="Compliance"  value={`${stats.compliance_rate}%`} accent={stats.compliance_rate >= 80} danger={stats.compliance_rate < 60} />
         <StatCard label="Total"       value={stats.total_sessions} />
         <StatCard label="Completed"   value={stats.sessions_completed} />
@@ -773,7 +773,7 @@ function FinanceTab({ detail }: { detail: InstructorDetailData }) {
 
   return (
     <div className="space-y-5">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-1.5 md:gap-3">
         <StatCard label="Salary / Session"  value={salaryPerSession > 0 ? fmtCurrency(salaryPerSession, currency) : '—'} accent />
         <StatCard label="Sessions Taught"   value={sessionsCompleted} />
         <StatCard label="Estimated Payout"  value={estimatedPayout > 0 ? fmtCurrency(estimatedPayout, currency) : '—'} accent />
@@ -802,7 +802,7 @@ function FinanceTab({ detail }: { detail: InstructorDetailData }) {
 
       <div>
         <SectionLabel>Student Finance (via Groups)</SectionLabel>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-1.5 md:gap-3">
           <StatCard label="Active Contracts"  value={finance.active_contracts} />
           <StatCard label="With Balance"      value={finance.students_with_balance} danger={finance.students_with_balance > 0} />
           <StatCard label="Total Outstanding" value={finance.total_outstanding > 0 ? fmtCurrency(finance.total_outstanding) : '—'} danger={finance.total_outstanding > 0} />

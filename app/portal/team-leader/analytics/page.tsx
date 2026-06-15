@@ -197,7 +197,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               <h2 className="text-base font-semibold text-[#0B1F3A]">Students</h2>
               <Link href={tabHref('students')} className="text-xs text-[#FF8A1F] hover:underline">View details →</Link>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-5">
               {[
                 { label: 'Active',          value: studentsData.total_active,   color: 'bg-blue-400' },
                 { label: 'New This Month',  value: studentsData.new_this_month, color: 'bg-emerald-400' },
@@ -205,10 +205,10 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                 { label: 'Attendance Avg',  value: `${studentsData.attendance_avg}%`, color: studentsData.attendance_avg >= 75 ? 'bg-emerald-400' : 'bg-amber-400' },
                 { label: 'At Risk',         value: studentsData.at_risk_count,  color: studentsData.at_risk_count > 0 ? 'bg-red-400' : 'bg-slate-300' },
               ].map(k => (
-                <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-                  <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-                  <p className="text-xl font-bold text-[#0B1F3A]">{k.value}</p>
-                  <p className="text-[11px] text-[#64748B]">{k.label}</p>
+                <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+                  <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
+                  <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
+                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
                 </div>
               ))}
             </div>
@@ -220,17 +220,17 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               <h2 className="text-base font-semibold text-[#0B1F3A]">Finance</h2>
               <Link href={tabHref('finance')} className="text-xs text-[#FF8A1F] hover:underline">View details →</Link>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
               {[
                 { label: 'Collected This Month', value: `EGP ${fmt(financeKPIs.collected_this_month)}`, color: 'bg-emerald-400' },
                 { label: 'Outstanding',          value: `EGP ${fmt(financeKPIs.outstanding_total)}`,    color: 'bg-amber-400' },
                 { label: 'Collection Rate',      value: `${financeKPIs.collection_rate_pct}%`,          color: financeKPIs.collection_rate_pct >= 80 ? 'bg-emerald-400' : 'bg-red-400' },
                 { label: 'Overdue Accounts',     value: financeKPIs.overdue_count,                      color: financeKPIs.overdue_count > 0 ? 'bg-red-400' : 'bg-slate-300' },
               ].map(k => (
-                <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-                  <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-                  <p className="text-xl font-bold text-[#0B1F3A]">{k.value}</p>
-                  <p className="text-[11px] text-[#64748B]">{k.label}</p>
+                <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+                  <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
+                  <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
+                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
                 </div>
               ))}
             </div>
@@ -242,17 +242,17 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               <h2 className="text-base font-semibold text-[#0B1F3A]">Groups</h2>
               <Link href={tabHref('groups')} className="text-xs text-[#FF8A1F] hover:underline">View details →</Link>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
               {[
                 { label: 'Active Groups',      value: groupsData.total_active,       color: 'bg-blue-400' },
                 { label: 'No Instructor',      value: groupsData.without_instructor, color: groupsData.without_instructor > 0 ? 'bg-amber-400' : 'bg-slate-300' },
                 { label: 'No Course',          value: groupsData.without_course,     color: groupsData.without_course > 0 ? 'bg-amber-400' : 'bg-slate-300' },
                 { label: 'Low Attendance',     value: groupsData.low_attendance,     color: groupsData.low_attendance > 0 ? 'bg-red-400' : 'bg-slate-300' },
               ].map(k => (
-                <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-                  <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-                  <p className="text-xl font-bold text-[#0B1F3A]">{k.value}</p>
-                  <p className="text-[11px] text-[#64748B]">{k.label}</p>
+                <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+                  <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
+                  <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
+                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
                 </div>
               ))}
             </div>
@@ -264,17 +264,17 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               <h2 className="text-base font-semibold text-[#0B1F3A]">Leads</h2>
               <Link href={tabHref('leads')} className="text-xs text-[#FF8A1F] hover:underline">View details →</Link>
             </div>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
               {[
                 { label: 'New This Month',    value: leadsData.new_this_month,      color: 'bg-blue-400' },
                 { label: 'Converted',         value: leadsData.converted_this_month,color: 'bg-emerald-400' },
                 { label: 'Conversion Rate',   value: `${leadsData.conversion_rate_pct}%`, color: leadsData.conversion_rate_pct >= 20 ? 'bg-emerald-400' : 'bg-amber-400' },
                 { label: 'Overdue Follow-ups',value: leadsData.overdue_followups,   color: leadsData.overdue_followups > 0 ? 'bg-red-400' : 'bg-slate-300' },
               ].map(k => (
-                <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-                  <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-                  <p className="text-xl font-bold text-[#0B1F3A]">{k.value}</p>
-                  <p className="text-[11px] text-[#64748B]">{k.label}</p>
+                <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+                  <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
+                  <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
+                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
                 </div>
               ))}
             </div>
@@ -328,10 +328,10 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               { label: 'Monthly Attendance',value: `${studentsData.attendance_avg}%`, color: studentsData.attendance_avg >= 75 ? 'bg-emerald-400' : 'bg-amber-400' },
               { label: 'At Risk',           value: studentsData.at_risk_count,  color: studentsData.at_risk_count > 0 ? 'bg-red-400' : 'bg-slate-300' },
             ].map(k => (
-              <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-                <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-                <p className="text-xl font-bold text-[#0B1F3A]">{k.value}</p>
-                <p className="text-[11px] text-[#64748B]">{k.label}</p>
+              <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+                <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
+                <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
+                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
               </div>
             ))}
           </div>
@@ -395,10 +395,10 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               { label: 'Due This Week',        value: financeKPIs.due_this_week,                       color: financeKPIs.due_this_week > 0 ? 'bg-amber-400' : 'bg-slate-300' },
               { label: 'Overdue Accounts',     value: financeKPIs.overdue_count,                       color: financeKPIs.overdue_count > 0 ? 'bg-red-400' : 'bg-slate-300' },
             ].map(k => (
-              <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-                <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-                <p className="text-xl font-bold text-[#0B1F3A]">{k.value}</p>
-                <p className="text-[11px] text-[#64748B]">{k.label}</p>
+              <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+                <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
+                <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
+                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
               </div>
             ))}
           </div>
@@ -523,10 +523,10 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               { label: 'No Active Course', value: groupsData.without_course,     color: groupsData.without_course > 0 ? 'bg-amber-400' : 'bg-slate-300' },
               { label: 'Low Attendance',   value: groupsData.low_attendance,     color: groupsData.low_attendance > 0 ? 'bg-red-400' : 'bg-slate-300' },
             ].map(k => (
-              <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-                <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-                <p className="text-xl font-bold text-[#0B1F3A]">{k.value}</p>
-                <p className="text-[11px] text-[#64748B]">{k.label}</p>
+              <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+                <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
+                <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
+                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
               </div>
             ))}
           </div>
@@ -631,10 +631,10 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               { label: 'Converted',          value: leadsData.converted_this_month,color: 'bg-emerald-400' },
               { label: 'Overdue Follow-ups', value: leadsData.overdue_followups,   color: leadsData.overdue_followups > 0 ? 'bg-red-400' : 'bg-slate-300' },
             ].map(k => (
-              <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-                <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-                <p className="text-xl font-bold text-[#0B1F3A]">{k.value}</p>
-                <p className="text-[11px] text-[#64748B]">{k.label}</p>
+              <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+                <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
+                <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
+                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
               </div>
             ))}
           </div>
@@ -643,7 +643,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
             {/* Conversion rate */}
             <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
               <h3 className="mb-3 text-sm font-medium text-[#64748B]">Conversion Rate</h3>
-              <p className={`text-3xl font-bold ${leadsData.conversion_rate_pct >= 20 ? 'text-emerald-600' : 'text-amber-600'}`}>
+              <p className={`text-xl font-bold md:text-3xl ${leadsData.conversion_rate_pct >= 20 ? 'text-emerald-600' : 'text-amber-600'}`}>
                 {leadsData.conversion_rate_pct}%
               </p>
               <div className="mt-3 h-2 w-full rounded-full bg-[#F1F5F9]">
@@ -739,10 +739,10 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               { label: 'Pending Review',  value: assignmentData.kpis.pending_review_count, color: assignmentData.kpis.pending_review_count > 0 ? 'bg-amber-400' : 'bg-slate-300' },
               { label: 'Delayed 3d+',    value: assignmentData.kpis.grading_delay_count,  color: assignmentData.kpis.grading_delay_count > 0 ? 'bg-red-400' : 'bg-slate-300' },
             ].map(k => (
-              <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
-                <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-                <p className="text-xl font-bold text-[#0B1F3A]">{k.value}</p>
-                <p className="text-[11px] text-[#64748B]">{k.label}</p>
+              <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+                <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
+                <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
+                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
               </div>
             ))}
           </div>
