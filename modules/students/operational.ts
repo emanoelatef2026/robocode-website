@@ -25,8 +25,10 @@ export interface StudentParentContact {
 }
 
 export interface StudentGroupMembership {
-  group_id:   string
-  group_name: string
+  group_id:    string
+  group_name:  string
+  branch_id:   string
+  branch_name: string
 }
 
 export interface GroupPickerOption {
@@ -71,6 +73,7 @@ export interface StudentOperationalRow {
   instructor_id:     string | null
   instructor_name:   string | null
   group_memberships: StudentGroupMembership[]
+  group_branch_ids:  string[]
 
   // Sessions (from active enrollment)
   enrolled_sessions:  number
@@ -134,13 +137,14 @@ export async function listStudentsOperational(
 
   const studentIds = stuRows.map((s: any) => s.id as string)
 
-  // 2. Load active group memberships with course ID + instructor ID
+  // 2. Load active group memberships with course ID + instructor ID + branch
   const { data: gsMem } = await db
     .from('group_students')
     .select(`
       student_id,
       groups!group_students_group_id_fkey(
-        id, name,
+        id, name, branch_id,
+        branches!groups_branch_id_fkey!left(name),
         group_courses!group_courses_group_id_fkey(
           id,
           courses!group_courses_course_id_fkey(id, title),
@@ -163,7 +167,12 @@ export async function listStudentsOperational(
     const grp = gs.groups
     if (grp?.id) {
       const arr = gsMembershipMap.get(gs.student_id) ?? []
-      arr.push({ group_id: grp.id as string, group_name: grp.name as string })
+      arr.push({
+        group_id:    grp.id   as string,
+        group_name:  grp.name as string,
+        branch_id:   grp.branch_id as string,
+        branch_name: (grp.branches as any)?.name ?? '',
+      })
       gsMembershipMap.set(gs.student_id, arr)
     }
   }
@@ -323,6 +332,7 @@ export async function listStudentsOperational(
       instructor_id:     instrObj?.id ?? null,
       instructor_name:   instrName,
       group_memberships: gsMembershipMap.get(s.id) ?? [],
+      group_branch_ids:  (gsMembershipMap.get(s.id) ?? []).map(m => m.branch_id).filter(Boolean),
 
       enrolled_sessions:  mainEnroll?.enrolled_sessions  ?? 0,
       consumed_sessions:  mainEnroll?.consumed_sessions  ?? 0,

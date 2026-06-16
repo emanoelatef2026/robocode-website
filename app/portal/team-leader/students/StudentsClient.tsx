@@ -57,13 +57,16 @@ export default function StudentsClient({
   const sp        = useSearchParams()
   const [, startTransition] = useTransition()
 
+  // Legacy shortcut param used by dashboard links (e.g. ?filter=at-risk, ?filter=expiring)
+  const legacyFilter = sp.get('filter')
+
   // ── Filter state (URL-backed) ───────────────────────────────────────────────
   const [search,        setSearch]        = useState(sp.get('q')         ?? '')
   const [filterBranch,  setFilterBranch]  = useState(sp.get('branch_id') ?? '')
   const [filterGroup,   setFilterGroup]   = useState(sp.get('group_id')  ?? '')
   const [filterCourse,  setFilterCourse]  = useState(sp.get('course_id') ?? '')
-  const [filterRisk,    setFilterRisk]    = useState(sp.get('risk')      ?? '')
-  const [filterStatus,  setFilterStatus]  = useState(sp.get('op_status') ?? '')
+  const [filterRisk,    setFilterRisk]    = useState(sp.get('risk')      || (legacyFilter === 'at-risk'  ? 'HIGH'            : ''))
+  const [filterStatus,  setFilterStatus]  = useState(sp.get('op_status') || (legacyFilter === 'expiring' ? 'NEAR_EXHAUSTION' : ''))
   const [filterActive,  setFilterActive]  = useState(sp.get('active')    ?? '')
   const [filterHasGrp,  setFilterHasGrp]  = useState(sp.get('has_group') ?? '')
   const [filterMulti,      setFilterMulti]      = useState(sp.get('multi')          ?? '')
@@ -99,6 +102,16 @@ export default function StudentsClient({
     startTransition(() => router.replace(`${pathname}?${params.toString()}`, { scroll: false }))
   }, [search, filterBranch, filterGroup, filterCourse, filterRisk, filterStatus, filterActive, filterHasGrp, filterMulti, filterInstructor, pathname, router])
 
+  // Normalize legacy `?filter=at-risk` / `?filter=expiring` shortcut links (used by
+  // dashboard cards) into the real risk/op_status params, once, so the URL and the
+  // active-filter chip bar stay consistent with what's actually being applied.
+  const normalizedLegacyFilter = useRef(false)
+  useEffect(() => {
+    if (!legacyFilter || normalizedLegacyFilter.current) return
+    normalizedLegacyFilter.current = true
+    pushFilters({})
+  }, [legacyFilter]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // ── Debounced search ────────────────────────────────────────────────────────
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
@@ -116,10 +129,35 @@ export default function StudentsClient({
 
   const activeFilterCount = [filterBranch, filterGroup, filterCourse, filterRisk, filterStatus, filterActive, filterHasGrp, filterMulti, filterInstructor].filter(Boolean).length
 
+  // ── Active filter chips (always-visible context for what's currently applied) ─
+  const RISK_LABELS:   Record<string, string> = { HIGH: 'High Risk', MEDIUM: 'Medium Risk', LOW: 'Low Risk' }
+  const ACTIVE_LABELS: Record<string, string> = { active: 'Active', inactive: 'Inactive' }
+  const HASGRP_LABELS: Record<string, string> = { yes: 'Has Group', no: 'No Group' }
+
+  const activeFilters = useMemo(() => {
+    const chips: { key: string; label: string; clear: () => void }[] = []
+    if (search)        chips.push({ key: 'q',             label: `Search: "${search}"`,                        clear: () => { setSearch('');           pushFilters({ q: '' }) } })
+    if (filterBranch)  chips.push({ key: 'branch_id',      label: `Branch: ${branches.find(b => b.id === filterBranch)?.name ?? filterBranch}`,           clear: () => { setFilterBranch('');      pushFilters({ branch_id: '' }) } })
+    if (filterGroup)   chips.push({ key: 'group_id',       label: `Group: ${groups.find(g => g.id === filterGroup)?.name ?? filterGroup}`,                clear: () => { setFilterGroup('');       pushFilters({ group_id: '' }) } })
+    if (filterCourse)  chips.push({ key: 'course_id',      label: `Course: ${courses.find(c => c.id === filterCourse)?.title ?? filterCourse}`,           clear: () => { setFilterCourse('');      pushFilters({ course_id: '' }) } })
+    if (filterRisk)    chips.push({ key: 'risk',           label: `Risk: ${RISK_LABELS[filterRisk] ?? filterRisk}`,                                       clear: () => { setFilterRisk('');        pushFilters({ risk: '' }) } })
+    if (filterStatus)  chips.push({ key: 'op_status',      label: `Status: ${OP_STATUS_CONFIG[filterStatus]?.label ?? filterStatus}`,                     clear: () => { setFilterStatus('');      pushFilters({ op_status: '' }) } })
+    if (filterActive)  chips.push({ key: 'active',         label: ACTIVE_LABELS[filterActive] ?? filterActive,                                            clear: () => { setFilterActive('');      pushFilters({ active: '' }) } })
+    if (filterHasGrp)  chips.push({ key: 'has_group',      label: HASGRP_LABELS[filterHasGrp] ?? filterHasGrp,                                            clear: () => { setFilterHasGrp('');      pushFilters({ has_group: '' }) } })
+    if (filterMulti)   chips.push({ key: 'multi',          label: 'Multi-Contract Only',                                                                   clear: () => { setFilterMulti('');       pushFilters({ multi: '' }) } })
+    if (filterInstructor) chips.push({ key: 'instructor_id', label: `Instructor: ${instructors.find(i => i.id === filterInstructor)?.name ?? filterInstructor}`, clear: () => { setFilterInstructor(''); pushFilters({ instructor_id: '' }) } })
+    return chips
+  }, [search, filterBranch, filterGroup, filterCourse, filterRisk, filterStatus, filterActive, filterHasGrp, filterMulti, filterInstructor, branches, groups, courses, instructors, pushFilters])
+
   // ── Client-side filtering ───────────────────────────────────────────────────
   const filtered = useMemo(() => {
     return rows.filter(r => {
-      if (filterBranch && r.branch_id !== filterBranch)        return false
+      if (filterBranch) {
+        // Branch is derived from the student's active group(s), not student.branch_id.
+        // Students with no group are excluded when a branch filter is active.
+        if (!r.group_branch_ids.length) return false
+        if (!r.group_branch_ids.includes(filterBranch)) return false
+      }
       if (filterGroup  && r.group_id  !== filterGroup)         return false
       if (filterCourse && r.course_id !== filterCourse)        return false
       if (filterRisk   && r.risk_level !== filterRisk)         return false
@@ -189,14 +227,14 @@ export default function StudentsClient({
 
   // ── KPI strip ───────────────────────────────────────────────────────────────
   const kpis = useMemo(() => [
-    { label: 'Total',          value: rows.length, color: 'bg-blue-400' },
-    { label: 'High Risk',      value: rows.filter(r => r.risk_level === 'HIGH').length,        color: rows.filter(r => r.risk_level === 'HIGH').length ? 'bg-red-400' : 'bg-slate-300' },
-    { label: 'No Group',       value: rows.filter(r => r.op_status === 'NO_GROUP').length,     color: rows.filter(r => r.op_status === 'NO_GROUP').length ? 'bg-amber-400' : 'bg-slate-300' },
-    { label: 'Low Attendance', value: rows.filter(r => r.op_status === 'LOW_ATTENDANCE').length, color: rows.filter(r => r.op_status === 'LOW_ATTENDANCE').length ? 'bg-orange-400' : 'bg-slate-300' },
-    { label: 'Near Exhaustion',value: rows.filter(r => r.op_status === 'NEAR_EXHAUSTION').length, color: rows.filter(r => r.op_status === 'NEAR_EXHAUSTION').length ? 'bg-amber-400' : 'bg-slate-300' },
-    { label: 'New',            value: rows.filter(r => r.op_status === 'NEW_STUDENT').length,  color: 'bg-purple-400' },
-    { label: 'Multi-Contract', value: rows.filter(r => r.active_enrollment_count > 1).length,  color: 'bg-sky-400' },
-  ], [rows])
+    { label: 'Total',          value: filtered.length, color: 'bg-blue-400' },
+    { label: 'High Risk',      value: filtered.filter(r => r.risk_level === 'HIGH').length,          color: filtered.filter(r => r.risk_level === 'HIGH').length ? 'bg-red-400' : 'bg-slate-300' },
+    { label: 'No Group',       value: filtered.filter(r => r.op_status === 'NO_GROUP').length,       color: filtered.filter(r => r.op_status === 'NO_GROUP').length ? 'bg-amber-400' : 'bg-slate-300' },
+    { label: 'Low Attendance', value: filtered.filter(r => r.op_status === 'LOW_ATTENDANCE').length, color: filtered.filter(r => r.op_status === 'LOW_ATTENDANCE').length ? 'bg-orange-400' : 'bg-slate-300' },
+    { label: 'Near Exhaustion',value: filtered.filter(r => r.op_status === 'NEAR_EXHAUSTION').length, color: filtered.filter(r => r.op_status === 'NEAR_EXHAUSTION').length ? 'bg-amber-400' : 'bg-slate-300' },
+    { label: 'New',            value: filtered.filter(r => r.op_status === 'NEW_STUDENT').length,    color: 'bg-purple-400' },
+    { label: 'Multi-Contract', value: filtered.filter(r => r.active_enrollment_count > 1).length,    color: 'bg-sky-400' },
+  ], [filtered])
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -208,10 +246,11 @@ export default function StudentsClient({
           <h1 className="text-xl font-semibold text-[#0B1F3A]">Students</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">{filtered.length} of {rows.length} students</p>
         </div>
+        {/* Mobile-only Add Student — desktop uses Row 1 button */}
         {isTL && (
           <button
             onClick={() => setCreateOpen(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
+            className="md:hidden inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -234,6 +273,8 @@ export default function StudentsClient({
 
       {/* Filter bar */}
       <div className="space-y-2">
+
+        {/* Row 1: Search + Filters toggle + Clear + Add Student (desktop) */}
         <div className="flex gap-2">
           <input
             value={search}
@@ -241,6 +282,7 @@ export default function StudentsClient({
             placeholder="Name, code, phone…"
             className="min-w-0 flex-1 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
           />
+          {/* Filters toggle — all viewports */}
           <button
             onClick={() => setShowFilters(f => !f)}
             className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition
@@ -251,7 +293,7 @@ export default function StudentsClient({
             <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V17a1 1 0 01-.553.894l-4 2A1 1 0 017 19v-8.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
             </svg>
-            Filters
+            <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
               <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF8A1F] text-[10px] font-bold text-white">
                 {activeFilterCount}
@@ -266,7 +308,110 @@ export default function StudentsClient({
               Clear
             </button>
           )}
+          {/* Desktop-only Add Student — in-line with search row */}
+          {isTL && (
+            <button
+              onClick={() => setCreateOpen(true)}
+              className="hidden md:inline-flex shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
+            >
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              Add Student
+            </button>
+          )}
         </div>
+
+        {/* Active filter chips */}
+        {activeFilters.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {activeFilters.map(chip => (
+              <span
+                key={chip.key}
+                className="inline-flex items-center gap-1 rounded-full border border-[#FF8A1F]/30 bg-[#FF8A1F]/10 px-2.5 py-1 text-[11px] font-medium text-[#FF8A1F]"
+              >
+                {chip.label}
+                <button
+                  onClick={chip.clear}
+                  aria-label={`Remove filter: ${chip.label}`}
+                  className="ml-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-[#FF8A1F]/20"
+                >
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* ── Desktop: CSS-grid filter row — never overflows, shrinks to fit ── */}
+        {showFilters && (
+          <div className="hidden md:block sticky top-0 z-10">
+            <div
+              className="grid gap-2 rounded-xl border border-[#E2E8F0] bg-white p-2"
+              style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(0, 1fr))' }}
+            >
+              {branches.length > 1 && (
+                <select value={filterBranch} onChange={e => { setFilterBranch(e.target.value); pushFilters({ branch_id: e.target.value }) }}
+                  className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                  <option value="">All Branches</option>
+                  {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+              )}
+              <select value={filterGroup} onChange={e => { setFilterGroup(e.target.value); pushFilters({ group_id: e.target.value }) }}
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                <option value="">All Groups</option>
+                {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </select>
+              {courses.length > 0 && (
+                <select value={filterCourse} onChange={e => { setFilterCourse(e.target.value); pushFilters({ course_id: e.target.value }) }}
+                  className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                  <option value="">All Courses</option>
+                  {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+                </select>
+              )}
+              <select value={filterRisk} onChange={e => { setFilterRisk(e.target.value); pushFilters({ risk: e.target.value }) }}
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                <option value="">All Risk Levels</option>
+                <option value="HIGH">High Risk</option>
+                <option value="MEDIUM">Medium Risk</option>
+                <option value="LOW">Low Risk</option>
+              </select>
+              <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); pushFilters({ op_status: e.target.value }) }}
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                <option value="">All Statuses</option>
+                {Object.entries(OP_STATUS_CONFIG).map(([k, v]) => (
+                  <option key={k} value={k}>{v.label}</option>
+                ))}
+              </select>
+              <select value={filterActive} onChange={e => { setFilterActive(e.target.value); pushFilters({ active: e.target.value }) }}
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                <option value="">Active + Inactive</option>
+                <option value="active">Active Only</option>
+                <option value="inactive">Inactive Only</option>
+              </select>
+              <select value={filterHasGrp} onChange={e => { setFilterHasGrp(e.target.value); pushFilters({ has_group: e.target.value }) }}
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                <option value="">Has Group / No Group</option>
+                <option value="yes">Has Group</option>
+                <option value="no">No Group</option>
+              </select>
+              <select value={filterMulti} onChange={e => { setFilterMulti(e.target.value); pushFilters({ multi: e.target.value }) }}
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                <option value="">All Contracts</option>
+                <option value="1">Multi-Contract Only</option>
+              </select>
+              {instructors.length > 0 && (
+                <select value={filterInstructor} onChange={e => { setFilterInstructor(e.target.value); pushFilters({ instructor_id: e.target.value }) }}
+                  className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                  <option value="">All Instructors</option>
+                  {instructors.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+                </select>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── Mobile: bottom sheet filter ────────────────────────────── */}
         {showFilters && (
@@ -381,69 +526,6 @@ export default function StudentsClient({
             </div>
           </>
         )}
-
-        {/* ── Desktop: inline expanded filters ───────────────────────── */}
-        {showFilters && (
-          <div className="hidden md:flex flex-wrap gap-2 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
-            {branches.length > 1 && (
-              <select value={filterBranch} onChange={e => { setFilterBranch(e.target.value); pushFilters({ branch_id: e.target.value }) }}
-                className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
-                <option value="">All Branches</option>
-                {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-              </select>
-            )}
-            <select value={filterGroup} onChange={e => { setFilterGroup(e.target.value); pushFilters({ group_id: e.target.value }) }}
-              className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
-              <option value="">All Groups</option>
-              {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
-            </select>
-            {courses.length > 0 && (
-              <select value={filterCourse} onChange={e => { setFilterCourse(e.target.value); pushFilters({ course_id: e.target.value }) }}
-                className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
-                <option value="">All Courses</option>
-                {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
-              </select>
-            )}
-            <select value={filterRisk} onChange={e => { setFilterRisk(e.target.value); pushFilters({ risk: e.target.value }) }}
-              className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
-              <option value="">All Risk Levels</option>
-              <option value="HIGH">High Risk</option>
-              <option value="MEDIUM">Medium Risk</option>
-              <option value="LOW">Low Risk</option>
-            </select>
-            <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); pushFilters({ op_status: e.target.value }) }}
-              className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
-              <option value="">All Statuses</option>
-              {Object.entries(OP_STATUS_CONFIG).map(([k, v]) => (
-                <option key={k} value={k}>{v.label}</option>
-              ))}
-            </select>
-            <select value={filterActive} onChange={e => { setFilterActive(e.target.value); pushFilters({ active: e.target.value }) }}
-              className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
-              <option value="">Active + Inactive</option>
-              <option value="active">Active Only</option>
-              <option value="inactive">Inactive Only</option>
-            </select>
-            <select value={filterHasGrp} onChange={e => { setFilterHasGrp(e.target.value); pushFilters({ has_group: e.target.value }) }}
-              className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
-              <option value="">Has Group / No Group</option>
-              <option value="yes">Has Group</option>
-              <option value="no">No Group</option>
-            </select>
-            <select value={filterMulti} onChange={e => { setFilterMulti(e.target.value); pushFilters({ multi: e.target.value }) }}
-              className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
-              <option value="">All Contracts</option>
-              <option value="1">Multi-Contract Only</option>
-            </select>
-            {instructors.length > 0 && (
-              <select value={filterInstructor} onChange={e => { setFilterInstructor(e.target.value); pushFilters({ instructor_id: e.target.value }) }}
-                className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
-                <option value="">All Instructors</option>
-                {instructors.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
-              </select>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Bulk selection toolbar */}
@@ -472,10 +554,22 @@ export default function StudentsClient({
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
         {filtered.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <p className="text-sm font-medium text-[#0B1F3A]">No students found</p>
-            <p className="mt-1 text-xs text-[#94A3B8]">
-              {search || activeFilterCount > 0 ? 'Try adjusting your search or filters.' : 'Add the first student to get started.'}
+            <p className="text-sm font-medium text-[#0B1F3A]">
+              {search || activeFilterCount > 0 ? 'No students match current filters' : 'No students found'}
             </p>
+            <p className="mt-1 text-xs text-[#94A3B8]">
+              {search || activeFilterCount > 0
+                ? `${rows.length} student${rows.length === 1 ? '' : 's'} total across your branches — none match the filters above.`
+                : 'Add the first student to get started.'}
+            </p>
+            {(search || activeFilterCount > 0) && (
+              <button
+                onClick={clearFilters}
+                className="mt-3 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1]"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         ) : (
           <>
