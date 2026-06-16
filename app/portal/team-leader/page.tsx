@@ -15,6 +15,7 @@ import FinanceCenter                    from './_sections/FinanceCenter'
 import StudentRiskBoard                 from './_sections/StudentRiskBoard'
 import ParentEscalation                 from './_sections/ParentEscalation'
 import AcademicQuality                  from './_sections/AcademicQuality'
+import InstructorPayrollWidget          from './_sections/InstructorPayrollWidget'
 
 // ─── Page props ───────────────────────────────────────────────────────────────
 
@@ -297,6 +298,11 @@ export default async function TLDashboardPage({ searchParams }: Props) {
       <DashSection id="instructor-health" label="Instructors" icon="👨‍🏫" defaultOpen={false}>
         <Suspense fallback={<SectionSkeleton />}>
           <InstructorHealthBoard branchIds={branchIds} />
+        </Suspense>
+        <Suspense fallback={<div className="h-28 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] animate-pulse mt-4" />}>
+          <div className="mt-4">
+            <InstructorPayrollWidget branchIds={branchIds} />
+          </div>
         </Suspense>
       </DashSection>
 
