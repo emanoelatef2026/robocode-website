@@ -153,13 +153,21 @@ export default function IssueCertificateForm({ templates, students, semesters, c
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
             Certificate Title <span className="text-red-500">*</span>
           </label>
-          <input name="title" required placeholder="e.g. Introduction to Robotics — Semester 1 Completion" className={inputClass} />
+          <input
+            name="title"
+            required
+            placeholder="e.g. OF FINISHING SEMESTER 1 OF SCRATCH JR"
+            className={inputClass}
+          />
+          <p className="mt-1 text-[11px] text-[#94A3B8]">
+            Displayed below &quot;CERTIFICATE&quot; on the PDF. If you select a course &amp; semester above, the subtitle is built automatically.
+          </p>
         </div>
 
         {/* Description */}
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Description</label>
-          <textarea name="description" rows={2} placeholder="Additional context shown on the certificate…" className={inputClass} />
+          <textarea name="description" rows={2} placeholder="Additional context (optional, not shown on the official template)…" className={inputClass} />
         </div>
 
         {/* ─── Projects manager ───────────────────────────────────────────── */}

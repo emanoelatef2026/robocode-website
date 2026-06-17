@@ -109,37 +109,62 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
           {certificates.map(c => (
             <div
               key={c.id}
-              className={`flex items-start justify-between gap-4 rounded-xl border bg-white p-4 ${
+              className={`rounded-xl border bg-white p-4 ${
                 c.status === 'revoked' ? 'border-red-200 opacity-60' : 'border-[#E2E8F0]'
               }`}
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-semibold text-[#0B1F3A]">{c.title}</h3>
-                  {c.status === 'revoked' && (
-                    <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-600">
-                      Revoked
-                    </span>
-                  )}
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[14px] font-semibold text-[#0B1F3A] leading-tight">{c.title}</h3>
+                    {c.status === 'revoked' && (
+                      <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-600">
+                        Revoked
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-[12px] text-[#64748B]">
+                    {TYPE_LABELS[c.certificate_type] ?? c.certificate_type}
+                    {c.course_title && ` · ${c.course_title}`}
+                  </p>
+                  <p className="mt-1 text-[11px] text-[#94A3B8]">
+                    Issued {new Date(c.issued_at).toLocaleDateString('en-GB')}
+                    {' · '}
+                    <span className="font-mono">{c.certificate_code}</span>
+                  </p>
                 </div>
-                <p className="mt-0.5 text-[13px] text-[#64748B]">
-                  {TYPE_LABELS[c.certificate_type] ?? c.certificate_type}
-                  {c.course_title && ` · ${c.course_title}`}
-                </p>
-                <p className="mt-1 text-[11px] text-[#94A3B8]">
-                  Issued {new Date(c.issued_at).toLocaleDateString('en-GB')}
-                  {' · '}
-                  <span className="font-mono">{c.certificate_code}</span>
-                </p>
+
+                {/* Active badge on desktop right */}
+                {c.status === 'active' && (
+                  <div className="hidden sm:flex shrink-0 gap-2">
+                    <a
+                      href={`/verify/${c.certificate_code}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
+                    >
+                      Verify
+                    </a>
+                    <a
+                      href={`/api/certificates/${c.certificate_code}/pdf`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#e87c18]"
+                    >
+                      Download PDF
+                    </a>
+                  </div>
+                )}
               </div>
 
+              {/* Mobile buttons — full-width row below content */}
               {c.status === 'active' && (
-                <div className="flex shrink-0 gap-2">
+                <div className="mt-3 flex gap-2 sm:hidden">
                   <a
                     href={`/verify/${c.certificate_code}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
+                    className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-center text-[12px] font-medium text-[#0B1F3A]"
                   >
                     Verify
                   </a>
@@ -147,9 +172,9 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                     href={`/api/certificates/${c.certificate_code}/pdf`}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#e87c18]"
+                    className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-center text-[12px] font-medium text-white"
                   >
-                    Download
+                    Download PDF
                   </a>
                 </div>
               )}

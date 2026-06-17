@@ -8,230 +8,244 @@ import {
 } from '@react-pdf/renderer'
 import type { CertificateDetail } from './types'
 
+// ─── Brand palette ────────────────────────────────────────────────────────────
+const ORANGE = '#FF8A1F'
+const NAVY   = '#0B1F3A'
+const GRAY   = '#64748B'
+const LIGHT  = '#94A3B8'
+const PALE   = '#FFF7ED'
+
 const styles = StyleSheet.create({
   page: {
     flexDirection: 'column',
     backgroundColor: '#FFFFFF',
-    padding: 48,
+    paddingTop: 40,
+    paddingBottom: 36,
+    paddingHorizontal: 50,
     fontFamily: 'Helvetica',
+    position: 'relative',
   },
-  border: {
+
+  // ─── Decorative double border ───────────────────────────────────────────────
+  borderOuter: {
     position: 'absolute',
-    top: 16,
-    left: 16,
-    right: 16,
-    bottom: 16,
-    borderWidth: 2,
+    top: 12,
+    left: 12,
+    right: 12,
+    bottom: 12,
+    borderWidth: 3,
     borderStyle: 'solid',
-    borderColor: '#FF8A1F',
+    borderColor: ORANGE,
   },
+  borderInner: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    right: 20,
+    bottom: 20,
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: ORANGE,
+  },
+
+  // ─── Header row: Robocode logo | org name | (optional second logo) ──────────
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 20,
-    marginBottom: 24,
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
-  logoImage: {
-    height: 40,
+  logoMain: {
+    height: 44,
     objectFit: 'contain',
   },
   logoPlaceholder: {
-    width: 80,
-    height: 30,
-    backgroundColor: '#FF8A1F',
+    width: 90,
+    height: 36,
+    backgroundColor: ORANGE,
     borderRadius: 4,
   },
-  orgName: {
-    fontSize: 11,
-    color: '#64748B',
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-  },
   headerCenter: {
+    flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 12,
   },
-  divider: {
-    height: 1,
-    backgroundColor: '#FF8A1F',
-    marginVertical: 16,
-    opacity: 0.4,
+  orgName: {
+    fontSize: 9,
+    color: GRAY,
+    letterSpacing: 3,
   },
-  certLabel: {
-    fontSize: 10,
-    color: '#64748B',
+
+  // ─── Horizontal rule ─────────────────────────────────────────────────────────
+  rule: {
+    height: 1.5,
+    backgroundColor: ORANGE,
+    marginBottom: 16,
+    opacity: 0.6,
+  },
+
+  // ─── "CERTIFICATE" main heading ──────────────────────────────────────────────
+  certHeading: {
+    fontSize: 38,
+    color: NAVY,
+    fontFamily: 'Helvetica-Bold',
+    textAlign: 'center',
+    letterSpacing: 10,
+    marginBottom: 6,
+  },
+
+  // ─── Subtitle line: "OF FINISHING SEMESTER 1 OF SCRATCH JR" ────────────────
+  certSubtitle: {
+    fontSize: 11,
+    color: NAVY,
+    textAlign: 'center',
     letterSpacing: 2,
-    textAlign: 'center',
-    textTransform: 'uppercase',
-    marginBottom: 6,
+    marginBottom: 18,
   },
-  certTitle: {
-    fontSize: 22,
-    color: '#0B1F3A',
-    fontFamily: 'Helvetica-Bold',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
+
+  // ─── "IS PRESENTED TO" label ─────────────────────────────────────────────────
   presentedTo: {
-    fontSize: 11,
-    color: '#64748B',
+    fontSize: 9,
+    color: GRAY,
     textAlign: 'center',
+    letterSpacing: 3,
     marginBottom: 8,
   },
+
+  // ─── Recipient name ───────────────────────────────────────────────────────────
   recipientName: {
-    fontSize: 30,
-    color: '#FF8A1F',
+    fontSize: 32,
+    color: ORANGE,
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
-  description: {
-    fontSize: 11,
-    color: '#475569',
-    textAlign: 'center',
-    lineHeight: 1.6,
-    marginHorizontal: 40,
-    marginBottom: 12,
-  },
-  // ─── Projects ───────────────────────────────────────────────────────────────
+
+  // ─── Projects bullet list ─────────────────────────────────────────────────────
   projectsSection: {
-    marginHorizontal: 40,
-    marginBottom: 12,
-  },
-  projectsLabel: {
-    fontSize: 8,
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
-    textAlign: 'center',
-    marginBottom: 6,
-  },
-  projectsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  projectChip: {
-    backgroundColor: '#FFF7ED',
-    borderWidth: 1,
-    borderStyle: 'solid',
-    borderColor: '#FF8A1F',
-    borderRadius: 100,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
-  projectChipText: {
-    fontSize: 8,
-    color: '#FF8A1F',
-    fontFamily: 'Helvetica-Bold',
-  },
-  // ────────────────────────────────────────────────────────────────────────────
-  contextRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
-    marginBottom: 8,
-  },
-  contextItem: {
     alignItems: 'center',
+    marginBottom: 16,
   },
-  contextLabel: {
-    fontSize: 8,
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 2,
+  projectRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
   },
-  contextValue: {
-    fontSize: 10,
-    color: '#0B1F3A',
-    fontFamily: 'Helvetica-Bold',
+  projectBullet: {
+    fontSize: 13,
+    color: ORANGE,
+    marginRight: 8,
+    lineHeight: 1,
   },
+  projectText: {
+    fontSize: 11,
+    color: NAVY,
+  },
+
+  // ─── Spacer ───────────────────────────────────────────────────────────────────
+  flex1: {
+    flex: 1,
+  },
+
+  // ─── Footer: 3 columns ────────────────────────────────────────────────────────
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginTop: 24,
+    marginTop: 12,
   },
-  signatoryBlock: {
-    alignItems: 'center',
+
+  // Bottom-left: Certificate ID + QR + URL
+  verifyBlock: {
+    alignItems: 'flex-start',
+    width: 140,
   },
-  sigImage: {
-    width: 80,
-    height: 32,
-    objectFit: 'contain',
+  certIdLabel: {
+    fontSize: 7,
+    color: LIGHT,
+    letterSpacing: 1,
     marginBottom: 2,
   },
-  sigLine: {
-    width: 120,
-    height: 1,
-    backgroundColor: '#0B1F3A',
+  certIdCode: {
+    fontSize: 9,
+    color: NAVY,
+    fontFamily: 'Helvetica-Bold',
+    letterSpacing: 1,
+    marginBottom: 6,
+  },
+  qrImage: {
+    width: 56,
+    height: 56,
     marginBottom: 4,
   },
-  sigName: {
-    fontSize: 10,
-    color: '#0B1F3A',
-    fontFamily: 'Helvetica-Bold',
+  verifyUrl: {
+    fontSize: 6.5,
+    color: GRAY,
   },
-  sigTitle: {
-    fontSize: 8,
-    color: '#64748B',
-  },
-  qrBlock: {
+
+  // Bottom-center: STEM accreditation logo
+  stemBlock: {
+    flex: 1,
     alignItems: 'center',
+    paddingHorizontal: 12,
   },
-  qrLabel: {
-    fontSize: 7,
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginTop: 4,
+  stemLogo: {
+    height: 52,
+    objectFit: 'contain',
   },
-  codeBlock: {
+  stemPlaceholder: {
+    width: 80,
+    height: 40,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 4,
+  },
+
+  // Bottom-right: official signature image only (no names or titles)
+  signatureBlock: {
     alignItems: 'center',
+    width: 140,
   },
-  codeLabel: {
-    fontSize: 8,
-    color: '#94A3B8',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    marginBottom: 2,
+  sigImage: {
+    width: 110,
+    height: 44,
+    objectFit: 'contain',
+    marginBottom: 4,
   },
-  code: {
-    fontSize: 11,
-    color: '#0B1F3A',
-    fontFamily: 'Helvetica-Bold',
-    letterSpacing: 2,
+  sigLine: {
+    width: 130,
+    height: 1,
+    backgroundColor: NAVY,
   },
 })
 
+// ─── Helper: build subtitle from available DB fields ──────────────────────────
+function buildSubtitle(cert: CertificateDetail): string {
+  const parts: string[] = []
+  if (cert.semester_name) parts.push(cert.semester_name.toUpperCase())
+  if (cert.course_title)  parts.push(cert.course_title.toUpperCase())
+
+  if (parts.length === 2) return `OF FINISHING ${parts[0]} OF ${parts[1]}`
+  if (parts.length === 1) return `OF ${parts[0]}`
+  return cert.title.toUpperCase()
+}
+
+// ─── Props ────────────────────────────────────────────────────────────────────
 interface Props {
   certificate: CertificateDetail
   qrDataUrl:   string
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  semester_completion: 'Certificate of Completion',
-  course_completion:   'Certificate of Completion',
-  competition_award:   'Certificate of Achievement',
-  achievement:         'Certificate of Achievement',
-  custom:              'Certificate',
-}
-
+// ─── Component ────────────────────────────────────────────────────────────────
 export function CertificatePDF({ certificate, qrDataUrl }: Props) {
-  const typeLabel  = TYPE_LABELS[certificate.certificate_type] ?? 'Certificate'
-  const template   = certificate.template
-  const sigName    = template?.signatory_name ?? 'Robocode Academy'
-  const sigTitle   = template?.signatory_title ?? 'Program Director'
-  const logoUrl    = template?.logo_url ?? null
+  const template    = certificate.template
+  const accentColor = template?.accent_color ?? ORANGE
+  const logoUrl     = template?.logo_url     ?? null
   const stemLogoUrl = template?.stem_logo_url ?? null
   const signatureUrl = template?.signature_url ?? null
-  const accentColor = template?.accent_color ?? '#FF8A1F'
-  const issuedDate  = new Date(certificate.issued_at).toLocaleDateString('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  })
+  const bgColor     = template?.background_color ?? '#FFFFFF'
+
+  const subtitle  = buildSubtitle(certificate)
+  const verifyUrl = `robocodeschools.com/verify/${certificate.certificate_code}`
 
   const sortedProjects = (certificate.projects ?? [])
     .slice()
@@ -239,99 +253,87 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
 
   return (
     <Document>
-      <Page size="A4" orientation="landscape" style={[styles.page, { backgroundColor: template?.background_color ?? '#FFFFFF' }]}>
-        <View style={[styles.border, { borderColor: accentColor }]} />
+      <Page size="A4" orientation="landscape" style={[styles.page, { backgroundColor: bgColor }]}>
 
-        {/* Header: logos + org name */}
+        {/* Decorative double border */}
+        <View style={[styles.borderOuter, { borderColor: accentColor }]} />
+        <View style={[styles.borderInner, { borderColor: accentColor }]} />
+
+        {/* ── Header: logo | "ROBOCODE ACADEMY" | (optional) ── */}
         <View style={styles.header}>
           {logoUrl ? (
-            <Image src={logoUrl} style={styles.logoImage} />
+            <Image src={logoUrl} style={styles.logoMain} />
           ) : (
             <View style={[styles.logoPlaceholder, { backgroundColor: accentColor }]} />
           )}
 
           <View style={styles.headerCenter}>
-            <Text style={styles.orgName}>Robocode Academy</Text>
+            <Text style={styles.orgName}>ROBOCODE ACADEMY</Text>
           </View>
 
-          {stemLogoUrl && (
-            <Image src={stemLogoUrl} style={styles.logoImage} />
-          )}
+          {/* Right side kept symmetrical — empty spacer matches logo width */}
+          <View style={{ width: logoUrl ? undefined : 90, height: 36 }} />
         </View>
 
-        <View style={[styles.divider, { backgroundColor: accentColor }]} />
+        {/* ── Horizontal rule ── */}
+        <View style={[styles.rule, { backgroundColor: accentColor }]} />
 
-        {/* Certificate type label */}
-        <Text style={styles.certLabel}>{typeLabel}</Text>
+        {/* ── "CERTIFICATE" heading ── */}
+        <Text style={[styles.certHeading, { color: NAVY }]}>CERTIFICATE</Text>
 
-        {/* Certificate title */}
-        <Text style={styles.certTitle}>{certificate.title}</Text>
+        {/* ── Subtitle: "OF FINISHING SEMESTER 1 OF SCRATCH JR" ── */}
+        <Text style={styles.certSubtitle}>{subtitle}</Text>
 
-        {/* Recipient */}
-        <Text style={styles.presentedTo}>This certificate is proudly presented to</Text>
-        <Text style={[styles.recipientName, { color: accentColor }]}>{certificate.recipient_name}</Text>
+        {/* ── "IS PRESENTED TO" ── */}
+        <Text style={styles.presentedTo}>IS PRESENTED TO</Text>
 
-        {/* Description */}
-        {certificate.description && (
-          <Text style={styles.description}>{certificate.description}</Text>
-        )}
+        {/* ── Recipient name ── */}
+        <Text style={[styles.recipientName, { color: accentColor }]}>
+          {certificate.recipient_name}
+        </Text>
 
-        {/* Projects */}
+        {/* ── Projects as bullet list ── */}
         {sortedProjects.length > 0 && (
           <View style={styles.projectsSection}>
-            <Text style={styles.projectsLabel}>Projects Completed</Text>
-            <View style={styles.projectsGrid}>
-              {sortedProjects.map((p, i) => (
-                <View key={i} style={[styles.projectChip, { borderColor: accentColor }]}>
-                  <Text style={[styles.projectChipText, { color: accentColor }]}>{p.title}</Text>
-                </View>
-              ))}
-            </View>
+            {sortedProjects.map((p, i) => (
+              <View key={i} style={styles.projectRow}>
+                <Text style={[styles.projectBullet, { color: accentColor }]}>{'•'}</Text>
+                <Text style={styles.projectText}>{p.title}</Text>
+              </View>
+            ))}
           </View>
         )}
 
-        {/* Context: semester / course / date */}
-        <View style={styles.contextRow}>
-          {certificate.course_title && (
-            <View style={styles.contextItem}>
-              <Text style={styles.contextLabel}>Course</Text>
-              <Text style={styles.contextValue}>{certificate.course_title}</Text>
-            </View>
-          )}
-          {certificate.semester_name && (
-            <View style={styles.contextItem}>
-              <Text style={styles.contextLabel}>Semester</Text>
-              <Text style={styles.contextValue}>{certificate.semester_name}</Text>
-            </View>
-          )}
-          <View style={styles.contextItem}>
-            <Text style={styles.contextLabel}>Date Issued</Text>
-            <Text style={styles.contextValue}>{issuedDate}</Text>
-          </View>
-        </View>
+        <View style={styles.flex1} />
 
-        <View style={[styles.divider, { backgroundColor: accentColor }]} />
-
-        {/* Footer: signatory + code + QR */}
+        {/* ── Footer: 3 columns ── */}
         <View style={styles.footer}>
-          <View style={styles.signatoryBlock}>
-            {signatureUrl && (
-              <Image src={signatureUrl} style={styles.sigImage} />
+
+          {/* Left: Certificate ID + QR code + verification URL */}
+          <View style={styles.verifyBlock}>
+            <Text style={styles.certIdLabel}>Certificate ID:</Text>
+            <Text style={styles.certIdCode}>{certificate.certificate_code}</Text>
+            <Image src={qrDataUrl} style={styles.qrImage} />
+            <Text style={styles.verifyUrl}>{verifyUrl}</Text>
+          </View>
+
+          {/* Center: STEM accreditation logo */}
+          <View style={styles.stemBlock}>
+            {stemLogoUrl ? (
+              <Image src={stemLogoUrl} style={styles.stemLogo} />
+            ) : (
+              <View style={styles.stemPlaceholder} />
             )}
-            <View style={styles.sigLine} />
-            <Text style={styles.sigName}>{sigName}</Text>
-            <Text style={styles.sigTitle}>{sigTitle}</Text>
           </View>
 
-          <View style={styles.codeBlock}>
-            <Text style={styles.codeLabel}>Certificate No.</Text>
-            <Text style={styles.code}>{certificate.certificate_code}</Text>
+          {/* Right: official signature image only — no names or titles */}
+          <View style={styles.signatureBlock}>
+            {signatureUrl ? (
+              <Image src={signatureUrl} style={styles.sigImage} />
+            ) : null}
+            <View style={[styles.sigLine, { backgroundColor: NAVY }]} />
           </View>
 
-          <View style={styles.qrBlock}>
-            <Image src={qrDataUrl} style={{ width: 56, height: 56 }} />
-            <Text style={styles.qrLabel}>Scan to verify</Text>
-          </View>
         </View>
       </Page>
     </Document>
