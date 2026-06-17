@@ -1,5 +1,10 @@
 import type { CertificateType, CertificateStatus } from '@/types/enums'
 
+export interface CertificateProject {
+  title:      string
+  sort_order: number
+}
+
 export interface CertificateTemplate {
   id:                   string
   name:                 string
@@ -9,6 +14,8 @@ export interface CertificateTemplate {
   accent_color:         string
   background_image_url: string | null
   logo_url:             string | null
+  stem_logo_url:        string | null
+  signature_url:        string | null
   signatory_name:       string | null
   signatory_title:      string | null
   branch_id:            string | null
@@ -27,6 +34,7 @@ export interface Certificate {
   title:            string
   description:      string | null
   recipient_name:   string
+  projects:         CertificateProject[]
   semester_id:      string | null
   course_id:        string | null
   achievement_id:   string | null
@@ -107,6 +115,7 @@ export interface CertificateVerification {
   issued_at:        string
   valid_until:      string | null
   status:           CertificateStatus
+  projects:         CertificateProject[]
   semester_name:    string | null
   course_title:     string | null
   issuer_name:      string | null  // signatory_name from template

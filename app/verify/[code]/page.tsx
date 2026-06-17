@@ -122,6 +122,28 @@ export default async function VerifyCertificatePage({ params }: Props) {
                 )}
               </dl>
 
+              {/* Projects completed */}
+              {certificate.projects && certificate.projects.length > 0 && (
+                <div className="border-t border-[#E2E8F0] pt-4">
+                  <p className="text-xs text-[#94A3B8] uppercase tracking-wide text-center mb-3">
+                    Projects Completed
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {certificate.projects
+                      .slice()
+                      .sort((a, b) => a.sort_order - b.sort_order)
+                      .map((p, i) => (
+                        <span
+                          key={i}
+                          className="rounded-full border border-[#FF8A1F] bg-[#FFF7ED] px-3 py-1 text-xs font-medium text-[#FF8A1F]"
+                        >
+                          {p.title}
+                        </span>
+                      ))}
+                  </div>
+                </div>
+              )}
+
               {certificate.snapshot && (
                 <div className="border-t border-[#E2E8F0] pt-4">
                   <p className="text-xs text-[#94A3B8] uppercase tracking-wide text-center mb-3">

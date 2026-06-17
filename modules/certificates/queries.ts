@@ -240,7 +240,7 @@ export async function verifyCertificate(code: string): Promise<CertificateVerifi
   const { data, error } = await db
     .from('certificates')
     .select(
-      `certificate_code, title, recipient_name, certificate_type, issued_at, valid_until, status,
+      `certificate_code, title, recipient_name, certificate_type, issued_at, valid_until, status, projects,
        certificate_templates!certificates_template_id_fkey(signatory_name),
        semesters!certificates_semester_id_fkey(name),
        courses!certificates_course_id_fkey(title),
@@ -264,6 +264,7 @@ export async function verifyCertificate(code: string): Promise<CertificateVerifi
     issued_at:        row.issued_at,
     valid_until:      row.valid_until ?? null,
     status:           row.status,
+    projects:         Array.isArray(row.projects) ? row.projects : [],
     semester_name:    row.semesters?.name ?? null,
     course_title:     row.courses?.title ?? null,
     issuer_name:      row.certificate_templates?.signatory_name ?? null,

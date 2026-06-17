@@ -36,6 +36,8 @@ export default function EditTemplateForm({ template }: Props) {
       background_color:     fd.get('background_color') as string,
       accent_color:         fd.get('accent_color') as string,
       logo_url:             fd.get('logo_url') as string || undefined,
+      stem_logo_url:        fd.get('stem_logo_url') as string || undefined,
+      signature_url:        fd.get('signature_url') as string || undefined,
       signatory_name:       fd.get('signatory_name') as string || undefined,
       signatory_title:      fd.get('signatory_title') as string || undefined,
       is_active:            fd.get('is_active') === 'true',
@@ -102,8 +104,18 @@ export default function EditTemplateForm({ template }: Props) {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Logo URL</label>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Robocode Logo URL</label>
           <input name="logo_url" type="url" defaultValue={template.logo_url ?? ''} className={inputClass} />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">STEM Logo URL</label>
+          <input name="stem_logo_url" type="url" defaultValue={template.stem_logo_url ?? ''} placeholder="https://… (optional second logo)" className={inputClass} />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Signature Image URL</label>
+          <input name="signature_url" type="url" defaultValue={template.signature_url ?? ''} placeholder="https://… (displayed above signatory line)" className={inputClass} />
         </div>
 
         <div>

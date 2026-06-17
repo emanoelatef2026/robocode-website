@@ -26,26 +26,36 @@ const styles = StyleSheet.create({
     borderColor: '#FF8A1F',
   },
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 32,
+    justifyContent: 'center',
+    gap: 20,
+    marginBottom: 24,
+  },
+  logoImage: {
+    height: 40,
+    objectFit: 'contain',
   },
   logoPlaceholder: {
     width: 80,
     height: 30,
     backgroundColor: '#FF8A1F',
     borderRadius: 4,
-    marginBottom: 12,
   },
   orgName: {
     fontSize: 11,
     color: '#64748B',
     letterSpacing: 3,
     textTransform: 'uppercase',
+    textAlign: 'center',
+  },
+  headerCenter: {
+    alignItems: 'center',
   },
   divider: {
     height: 1,
     backgroundColor: '#FF8A1F',
-    marginVertical: 20,
+    marginVertical: 16,
     opacity: 0.4,
   },
   certLabel: {
@@ -61,7 +71,7 @@ const styles = StyleSheet.create({
     color: '#0B1F3A',
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   presentedTo: {
     fontSize: 11,
@@ -74,7 +84,7 @@ const styles = StyleSheet.create({
     color: '#FF8A1F',
     fontFamily: 'Helvetica-Bold',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   description: {
     fontSize: 11,
@@ -82,8 +92,42 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 1.6,
     marginHorizontal: 40,
-    marginBottom: 20,
+    marginBottom: 12,
   },
+  // ─── Projects ───────────────────────────────────────────────────────────────
+  projectsSection: {
+    marginHorizontal: 40,
+    marginBottom: 12,
+  },
+  projectsLabel: {
+    fontSize: 8,
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 1.5,
+    textAlign: 'center',
+    marginBottom: 6,
+  },
+  projectsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  projectChip: {
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderStyle: 'solid',
+    borderColor: '#FF8A1F',
+    borderRadius: 100,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  projectChipText: {
+    fontSize: 8,
+    color: '#FF8A1F',
+    fontFamily: 'Helvetica-Bold',
+  },
+  // ────────────────────────────────────────────────────────────────────────────
   contextRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -109,10 +153,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginTop: 32,
+    marginTop: 24,
   },
   signatoryBlock: {
     alignItems: 'center',
+  },
+  sigImage: {
+    width: 80,
+    height: 32,
+    objectFit: 'contain',
+    marginBottom: 2,
   },
   sigLine: {
     width: 120,
@@ -141,7 +191,6 @@ const styles = StyleSheet.create({
   },
   codeBlock: {
     alignItems: 'center',
-    marginTop: 16,
   },
   codeLabel: {
     fontSize: 8,
@@ -172,25 +221,45 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 export function CertificatePDF({ certificate, qrDataUrl }: Props) {
-  const typeLabel    = TYPE_LABELS[certificate.certificate_type] ?? 'Certificate'
-  const sigName      = certificate.template?.signatory_name ?? 'Robocode Academy'
-  const sigTitle     = certificate.template?.signatory_title ?? 'Program Director'
-  const issuedDate   = new Date(certificate.issued_at).toLocaleDateString('en-GB', {
+  const typeLabel  = TYPE_LABELS[certificate.certificate_type] ?? 'Certificate'
+  const template   = certificate.template
+  const sigName    = template?.signatory_name ?? 'Robocode Academy'
+  const sigTitle   = template?.signatory_title ?? 'Program Director'
+  const logoUrl    = template?.logo_url ?? null
+  const stemLogoUrl = template?.stem_logo_url ?? null
+  const signatureUrl = template?.signature_url ?? null
+  const accentColor = template?.accent_color ?? '#FF8A1F'
+  const issuedDate  = new Date(certificate.issued_at).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 
+  const sortedProjects = (certificate.projects ?? [])
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order)
+
   return (
     <Document>
-      <Page size="A4" orientation="landscape" style={styles.page}>
-        <View style={styles.border} />
+      <Page size="A4" orientation="landscape" style={[styles.page, { backgroundColor: template?.background_color ?? '#FFFFFF' }]}>
+        <View style={[styles.border, { borderColor: accentColor }]} />
 
-        {/* Header */}
+        {/* Header: logos + org name */}
         <View style={styles.header}>
-          <View style={styles.logoPlaceholder} />
-          <Text style={styles.orgName}>Robocode Academy</Text>
+          {logoUrl ? (
+            <Image src={logoUrl} style={styles.logoImage} />
+          ) : (
+            <View style={[styles.logoPlaceholder, { backgroundColor: accentColor }]} />
+          )}
+
+          <View style={styles.headerCenter}>
+            <Text style={styles.orgName}>Robocode Academy</Text>
+          </View>
+
+          {stemLogoUrl && (
+            <Image src={stemLogoUrl} style={styles.logoImage} />
+          )}
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: accentColor }]} />
 
         {/* Certificate type label */}
         <Text style={styles.certLabel}>{typeLabel}</Text>
@@ -200,11 +269,25 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
 
         {/* Recipient */}
         <Text style={styles.presentedTo}>This certificate is proudly presented to</Text>
-        <Text style={styles.recipientName}>{certificate.recipient_name}</Text>
+        <Text style={[styles.recipientName, { color: accentColor }]}>{certificate.recipient_name}</Text>
 
         {/* Description */}
         {certificate.description && (
           <Text style={styles.description}>{certificate.description}</Text>
+        )}
+
+        {/* Projects */}
+        {sortedProjects.length > 0 && (
+          <View style={styles.projectsSection}>
+            <Text style={styles.projectsLabel}>Projects Completed</Text>
+            <View style={styles.projectsGrid}>
+              {sortedProjects.map((p, i) => (
+                <View key={i} style={[styles.projectChip, { borderColor: accentColor }]}>
+                  <Text style={[styles.projectChipText, { color: accentColor }]}>{p.title}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
         )}
 
         {/* Context: semester / course / date */}
@@ -227,11 +310,14 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
           </View>
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: accentColor }]} />
 
-        {/* Footer: signatory + QR + code */}
+        {/* Footer: signatory + code + QR */}
         <View style={styles.footer}>
           <View style={styles.signatoryBlock}>
+            {signatureUrl && (
+              <Image src={signatureUrl} style={styles.sigImage} />
+            )}
             <View style={styles.sigLine} />
             <Text style={styles.sigName}>{sigName}</Text>
             <Text style={styles.sigTitle}>{sigTitle}</Text>

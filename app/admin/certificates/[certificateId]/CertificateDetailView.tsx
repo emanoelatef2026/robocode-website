@@ -99,6 +99,27 @@ export default function CertificateDetailView({ certificate }: Props) {
             <p className="text-sm text-[#475569]">{certificate.description}</p>
           </div>
         )}
+
+        {certificate.projects && certificate.projects.length > 0 && (
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-[#94A3B8] mb-2">
+              Projects Completed ({certificate.projects.length})
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {certificate.projects
+                .slice()
+                .sort((a, b) => a.sort_order - b.sort_order)
+                .map((p, i) => (
+                  <span
+                    key={i}
+                    className="rounded-full border border-[#FF8A1F] bg-[#FFF7ED] px-3 py-1 text-xs font-medium text-[#FF8A1F]"
+                  >
+                    {p.title}
+                  </span>
+                ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Actions */}

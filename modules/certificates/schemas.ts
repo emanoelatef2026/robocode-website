@@ -12,6 +12,8 @@ export const CreateTemplateSchema = z.object({
   accent_color:         z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional().default('#FF8A1F'),
   background_image_url: z.string().url().optional().or(z.literal('')),
   logo_url:             z.string().url().optional().or(z.literal('')),
+  stem_logo_url:        z.string().url().optional().or(z.literal('')),
+  signature_url:        z.string().url().optional().or(z.literal('')),
   signatory_name:       z.string().max(100).optional(),
   signatory_title:      z.string().max(100).optional(),
   branch_id:            z.string().uuid().optional().nullable(),
@@ -22,12 +24,18 @@ export const UpdateTemplateSchema = CreateTemplateSchema.partial()
 
 // ─── Certificate ──────────────────────────────────────────────────────────────
 
+const CertificateProjectSchema = z.object({
+  title:      z.string().min(1).max(200),
+  sort_order: z.number().int().min(0),
+})
+
 export const IssueCertificateSchema = z.object({
   student_id:       z.string().uuid(),
   template_id:      z.string().uuid().optional().nullable(),
   certificate_type: z.enum(CERT_TYPES),
   title:            z.string().min(1).max(300),
   description:      z.string().max(2000).optional(),
+  projects:         z.array(CertificateProjectSchema).optional().default([]),
   semester_id:      z.string().uuid().optional().nullable(),
   course_id:        z.string().uuid().optional().nullable(),
   achievement_id:   z.string().uuid().optional().nullable(),

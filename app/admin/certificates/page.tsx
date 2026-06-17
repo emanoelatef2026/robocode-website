@@ -1,12 +1,16 @@
-import { listCertificates } from '@/modules/certificates/queries'
-import { requirePermission } from '@/modules/rbac/guards'
-import PageHeader from '@/components/admin/PageHeader'
-import StatusBadge from '@/components/admin/StatusBadge'
-import EmptyState from '@/components/admin/EmptyState'
-import Pagination from '@/components/admin/Pagination'
-import SearchInput from '@/components/admin/SearchInput'
-import FilterSelect from '@/components/admin/FilterSelect'
-import Link from 'next/link'
+import { listCertificates, listActiveTemplates } from '@/modules/certificates/queries'
+import { requirePermission }                      from '@/modules/rbac/guards'
+import { listCourses }                            from '@/modules/courses/queries'
+import { listSemesters }                          from '@/modules/semesters/queries'
+import { createServiceClient }                    from '@/lib/supabase/service'
+import PageHeader                                 from '@/components/admin/PageHeader'
+import StatusBadge                                from '@/components/admin/StatusBadge'
+import EmptyState                                 from '@/components/admin/EmptyState'
+import Pagination                                 from '@/components/admin/Pagination'
+import SearchInput                                from '@/components/admin/SearchInput'
+import FilterSelect                               from '@/components/admin/FilterSelect'
+import IssueCertificateModal                      from './IssueCertificateModal'
+import Link                                       from 'next/link'
 
 interface Props {
   searchParams: Promise<{ page?: string; q?: string; type?: string; status?: string }>
@@ -29,7 +33,31 @@ export default async function CertificatesPage({ searchParams }: Props) {
   const status = params.status
 
   const branchIds = user.globalRole === 'super_admin' ? undefined : user.branchIds
-  const result = await listCertificates({ page, perPage: 20, search, type, status, branchIds })
+
+  const db = createServiceClient()
+
+  // Load list + modal data in parallel
+  const [result, templates, coursesResult, semestersResult, studentsResult] = await Promise.all([
+    listCertificates({ page, perPage: 20, search, type, status, branchIds }),
+    listActiveTemplates(),
+    listCourses({ perPage: 200 }),
+    listSemesters({ perPage: 100 }),
+    db
+      .from('students')
+      .select('id, users!students_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name))')
+      .is('deleted_at', null)
+      .eq('status', 'active')
+      .order('id'),
+  ])
+
+  const students = ((studentsResult.data ?? []) as any[]).map(row => {
+    const profile = row.users?.profiles
+    return {
+      id:    row.id,
+      name:  [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || row.users?.email || '—',
+      email: row.users?.email ?? '',
+    }
+  })
 
   return (
     <div>
@@ -44,15 +72,13 @@ export default async function CertificatesPage({ searchParams }: Props) {
             >
               Templates
             </Link>
-            <Link
-              href="/admin/certificates/new"
-              className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
-            >
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-              Issue Certificate
-            </Link>
+            <IssueCertificateModal
+              templates={templates}
+              students={students}
+              semesters={semestersResult.data.map(s => ({ id: s.id, name: s.name }))}
+              courses={coursesResult.data.map(c => ({ id: c.id, title: c.title }))}
+              successRedirect="/admin/certificates"
+            />
           </div>
         }
       />

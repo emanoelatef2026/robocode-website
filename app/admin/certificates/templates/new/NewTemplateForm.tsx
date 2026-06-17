@@ -84,8 +84,18 @@ export default function NewTemplateForm() {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Logo URL</label>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Robocode Logo URL</label>
           <input name="logo_url" type="url" placeholder="https://…" className={inputClass} />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">STEM Logo URL</label>
+          <input name="stem_logo_url" type="url" placeholder="https://… (optional second logo)" className={inputClass} />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Signature Image URL</label>
+          <input name="signature_url" type="url" placeholder="https://… (displayed above signatory line)" className={inputClass} />
         </div>
 
         <div className="flex items-center justify-between border-t border-[#E2E8F0] pt-4">

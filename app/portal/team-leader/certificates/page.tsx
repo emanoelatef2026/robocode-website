@@ -1,12 +1,16 @@
 import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
-import { listCertificates }                     from '@/modules/certificates/queries'
-import PageHeader                               from '@/components/admin/PageHeader'
-import StatusBadge                              from '@/components/admin/StatusBadge'
-import EmptyState                               from '@/components/admin/EmptyState'
-import Pagination                               from '@/components/admin/Pagination'
-import SearchInput                              from '@/components/admin/SearchInput'
-import FilterSelect                             from '@/components/admin/FilterSelect'
-import Link                                     from 'next/link'
+import { listCertificates, listActiveTemplates } from '@/modules/certificates/queries'
+import { listCourses }                           from '@/modules/courses/queries'
+import { listSemesters }                         from '@/modules/semesters/queries'
+import { createServiceClient }                   from '@/lib/supabase/service'
+import PageHeader                                from '@/components/admin/PageHeader'
+import StatusBadge                               from '@/components/admin/StatusBadge'
+import EmptyState                                from '@/components/admin/EmptyState'
+import Pagination                                from '@/components/admin/Pagination'
+import SearchInput                               from '@/components/admin/SearchInput'
+import FilterSelect                              from '@/components/admin/FilterSelect'
+import IssueCertificateModal                     from '@/app/admin/certificates/IssueCertificateModal'
+import Link                                      from 'next/link'
 
 interface Props {
   searchParams: Promise<{ page?: string; q?: string; type?: string; status?: string }>
@@ -21,7 +25,7 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 export default async function TLCertificatesPage({ searchParams }: Props) {
-  const user   = await requirePortalRole('team_leader')
+  const user = await requirePortalRole('team_leader')
   await requirePermission('manage_certificates')
 
   const params = await searchParams
@@ -30,13 +34,30 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
   const type   = params.type
   const status = params.status
 
-  const result = await listCertificates({
-    page,
-    perPage:  20,
-    search,
-    type,
-    status,
-    branchIds: user.branchIds,
+  const db = createServiceClient()
+
+  // Load list + modal data in parallel
+  const [result, templates, coursesResult, semestersResult, studentsResult] = await Promise.all([
+    listCertificates({ page, perPage: 20, search, type, status, branchIds: user.branchIds }),
+    listActiveTemplates(),
+    listCourses({ perPage: 200 }),
+    listSemesters({ perPage: 100 }),
+    db
+      .from('students')
+      .select('id, users!students_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name))')
+      .is('deleted_at', null)
+      .eq('status', 'active')
+      .in('branch_id', user.branchIds)
+      .order('id'),
+  ])
+
+  const students = ((studentsResult.data ?? []) as any[]).map(row => {
+    const profile = row.users?.profiles
+    return {
+      id:    row.id,
+      name:  [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || row.users?.email || '—',
+      email: row.users?.email ?? '',
+    }
   })
 
   return (
@@ -45,15 +66,14 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
         title="Certificates"
         description={`${result.total} certificate${result.total !== 1 ? 's' : ''}`}
         action={
-          <Link
-            href="/portal/team-leader/certificates/new"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-[#e87c18]"
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Issue Certificate
-          </Link>
+          <IssueCertificateModal
+            templates={templates}
+            students={students}
+            semesters={semestersResult.data.map(s => ({ id: s.id, name: s.name }))}
+            courses={coursesResult.data.map(c => ({ id: c.id, title: c.title }))}
+            triggerClassName="inline-flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-[#e87c18]"
+            successRedirect="/portal/team-leader/certificates"
+          />
         }
       />
 

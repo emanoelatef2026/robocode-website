@@ -29,6 +29,8 @@ export async function createTemplate(
     accent_color:         formData.get('accent_color') || '#FF8A1F',
     background_image_url: formData.get('background_image_url') || undefined,
     logo_url:             formData.get('logo_url') || undefined,
+    stem_logo_url:        formData.get('stem_logo_url') || undefined,
+    signature_url:        formData.get('signature_url') || undefined,
     signatory_name:       formData.get('signatory_name') || undefined,
     signatory_title:      formData.get('signatory_title') || undefined,
     branch_id:            formData.get('branch_id') || undefined,
@@ -86,12 +88,20 @@ export async function issueCertificate(
 
   const studentId = formData.get('student_id') as string
 
+  // Parse projects JSON submitted by the client-side project manager
+  let projects: { title: string; sort_order: number }[] = []
+  const projectsRaw = formData.get('projects')
+  if (typeof projectsRaw === 'string' && projectsRaw.trim()) {
+    try { projects = JSON.parse(projectsRaw) } catch { /* invalid JSON → empty list */ }
+  }
+
   const raw = {
     student_id:       studentId,
     template_id:      formData.get('template_id') || undefined,
     certificate_type: formData.get('certificate_type'),
     title:            formData.get('title'),
     description:      formData.get('description') || undefined,
+    projects,
     semester_id:      formData.get('semester_id') || undefined,
     course_id:        formData.get('course_id') || undefined,
     achievement_id:   formData.get('achievement_id') || undefined,
@@ -155,6 +165,7 @@ export async function issueCertificate(
       title:            d.title,
       description:      d.description ?? null,
       recipient_name:   recipientName,
+      projects:         d.projects ?? [],
       semester_id:      d.semester_id ?? null,
       course_id:        d.course_id ?? null,
       achievement_id:   d.achievement_id ?? null,
