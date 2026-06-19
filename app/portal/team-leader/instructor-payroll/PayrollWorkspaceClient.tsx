@@ -23,10 +23,11 @@ import { MONTH_NAMES, fmtAmount, fmtCurrency, formatPayrollPeriod } from "@/modu
 // ── Status helpers ─────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<PayrollRunStatus, { label: string; cls: string }> = {
-  draft:    { label: "Draft",    cls: "bg-amber-100 text-amber-700" },
-  approved: { label: "Approved", cls: "bg-blue-100  text-blue-700"  },
-  paid:     { label: "Paid",     cls: "bg-emerald-100 text-emerald-700" },
-  archived: { label: "Archived", cls: "bg-slate-100 text-slate-500"  },
+  draft:     { label: "Draft",     cls: "bg-amber-100 text-amber-700"      },
+  approved:  { label: "Approved",  cls: "bg-blue-100  text-blue-700"       },
+  paid:      { label: "Paid",      cls: "bg-emerald-100 text-emerald-700"  },
+  archived:  { label: "Archived",  cls: "bg-slate-100 text-slate-500"      },
+  finalized: { label: "Finalized", cls: "bg-purple-100 text-purple-700"    },
 }
 
 const ITEM_STATUS_CONFIG = {
@@ -36,12 +37,16 @@ const ITEM_STATUS_CONFIG = {
 }
 
 const ADJ_TYPE_LABELS: Record<AdjustmentType, string> = {
-  bonus:      "Bonus",
-  penalty:    "Penalty",
-  transport:  "Transport",
-  allowance:  "Allowance",
-  deduction:  "Deduction",
-  other:      "Other",
+  bonus:         "Bonus",
+  penalty:       "Penalty",
+  transport:     "Transport",
+  allowance:     "Allowance",
+  deduction:     "Deduction",
+  advance:       "Advance",
+  purchase:      "Purchase",
+  equipment:     "Equipment",
+  reimbursement: "Reimbursement",
+  other:         "Other",
 }
 
 function StatusBadge({ status }: { status: PayrollRunStatus }) {

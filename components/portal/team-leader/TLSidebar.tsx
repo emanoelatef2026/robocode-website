@@ -123,7 +123,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: "Finance",
     items: [
-      { label: "Payroll", href: "/portal/team-leader/instructor-payroll", icon: I.payroll },
+      { label: "Payroll", href: "/portal/team-leader/payroll", icon: I.payroll },
     ],
   },
   {

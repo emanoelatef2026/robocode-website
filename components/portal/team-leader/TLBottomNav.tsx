@@ -91,7 +91,7 @@ const MORE_ITEMS = [
   { label: "Certificates", href: "/portal/team-leader/certificates",                 icon: I.certificates, matchPatterns: [] },
   { label: "Satisfaction", href: "/portal/team-leader/parent-feedback?tab=reviews",  icon: I.satisfaction, matchPatterns: ["/portal/team-leader/parent-feedback", "/portal/team-leader/parent-satisfaction"] },
   { label: "Analytics",    href: "/portal/team-leader/analytics",                    icon: I.analytics,    matchPatterns: [] },
-  { label: "Payroll",     href: "/portal/team-leader/instructor-payroll",           icon: I.payroll,      matchPatterns: [] },
+  { label: "Payroll",     href: "/portal/team-leader/payroll",                       icon: I.payroll,      matchPatterns: ["/portal/team-leader/instructor-payroll"] },
 ]
 
 // ── Component ──────────────────────────────────────────────────────────────────

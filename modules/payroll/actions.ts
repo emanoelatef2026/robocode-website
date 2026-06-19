@@ -11,7 +11,8 @@ import { getPayrollItemDetail } from './queries'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const REVALIDATE_PATH = '/portal/team-leader/instructor-payroll'
+const REVALIDATE_PATH  = '/portal/team-leader/instructor-payroll'
+const REVALIDATE_PATH2 = '/portal/team-leader/payroll'
 
 const FORBIDDEN = {
   success: false as const,
@@ -652,4 +653,413 @@ export async function getPayrollItemDetailAction(
   const detail = await getPayrollItemDetail(itemId)
   if (!detail) return { success: false, error: { code: 'NOT_FOUND', message: 'Payroll item not found.' } }
   return { success: true, data: detail }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PHASE 20 — UNIFIED STAFF PAYROLL ACTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ── Generate unified monthly payroll ─────────────────────────────────────────
+//
+// Supports SESSION_BASED, FIXED_SALARY, and MIXED payroll types by reading
+// from staff_payroll_profiles instead of hard-coded instructor tables.
+//
+// Calculation rules:
+//   per_session:  gross = sessions_count × session_rate
+//   fixed_salary: gross = basic_salary
+//   mixed:        gross = basic_salary + (sessions_count × session_rate)
+
+function staffName(row: any): string {
+  const prof = row?.users?.profiles ?? {}
+  return [prof.first_name, prof.last_name].filter(Boolean).join(' ') || '—'
+}
+
+export async function generateUnifiedPayrollAction(
+  month:    number,
+  year:     number,
+  branchId: string,
+): Promise<ActionResult<GeneratePayrollResult>> {
+  const user = await requireAuth()
+  if (!hasPayrollAccess(user.permissions)) return FORBIDDEN
+
+  const db = createServiceClient()
+
+  // 1. Duplicate guard
+  const { data: existingRun } = await db
+    .from('payroll_runs')
+    .select('id, status')
+    .eq('branch_id', branchId)
+    .eq('month',     month)
+    .eq('year',      year)
+    .maybeSingle()
+
+  if (existingRun) {
+    return {
+      success: false,
+      error: {
+        code:    'DUPLICATE_RUN',
+        message: `A payroll run for this month already exists (status: ${(existingRun as any).status}). Archive the existing run first.`,
+      },
+    }
+  }
+
+  // 2. Load enabled staff payroll profiles for branch
+  const { data: profiles } = await db
+    .from('staff_payroll_profiles')
+    .select(`
+      *,
+      users!staff_payroll_profiles_user_id_fkey(
+        profiles!profiles_user_id_fkey(first_name, last_name)
+      )
+    `)
+    .eq('branch_id', branchId)
+    .eq('is_payroll_enabled', true)
+
+  if (!profiles?.length) {
+    return { success: false, error: { code: 'NO_STAFF', message: 'No enabled staff payroll profiles found in this branch.' } }
+  }
+
+  // 3. For session-based staff, find their instructor record (to load allocations)
+  const userIds = (profiles as any[]).map(p => p.user_id as string)
+  const { data: instrRows } = await db
+    .from('instructors')
+    .select('id, user_id, salary_per_session, currency')
+    .in('user_id', userIds)
+    .is('deleted_at', null)
+
+  const instrByUser = new Map<string, { id: string; currency: string }>()
+  for (const r of (instrRows ?? []) as any[]) {
+    instrByUser.set(r.user_id, { id: r.id, currency: r.currency ?? 'EGP' })
+  }
+
+  // 4. Load branch groups
+  const { data: grpRows } = await db
+    .from('groups')
+    .select('id, name')
+    .eq('branch_id', branchId)
+    .is('deleted_at', null)
+
+  const branchGroupIds = new Set(((grpRows ?? []) as any[]).map(r => r.id as string))
+  const groupNameMap   = new Map<string, string>()
+  for (const g of (grpRows ?? []) as any[]) groupNameMap.set(g.id, g.name)
+
+  // 5. Load group_instructors allocations for instructor-type staff
+  const instructorIds = [...instrByUser.values()].map(v => v.id)
+  type AllocRow = { instructor_id: string; group_id: string; from_session: number; to_session: number | null; allocation_status: string }
+  let branchAllocs: AllocRow[] = []
+
+  if (instructorIds.length > 0) {
+    const { data: allocRows } = await db
+      .from('group_instructors')
+      .select('instructor_id, group_id, from_session, to_session, allocation_status')
+      .in('instructor_id', instructorIds)
+      .not('allocation_status', 'eq', 'released')
+    branchAllocs = ((allocRows ?? []) as AllocRow[]).filter(r => branchGroupIds.has(r.group_id))
+  }
+
+  // 6. group_courses for branch groups
+  const groupIdList = [...branchGroupIds]
+  const gcMap = new Map<string, string>()
+
+  if (groupIdList.length > 0) {
+    const { data: gcRows } = await db
+      .from('group_courses')
+      .select('id, group_id')
+      .in('group_id', groupIdList)
+      .in('status', ['active', 'completed'])
+    for (const gc of (gcRows ?? []) as any[]) gcMap.set(gc.group_id, gc.id)
+  }
+
+  // 7. Completed schedules in target month
+  const monthStart = new Date(year, month - 1, 1).toISOString()
+  const monthEnd   = new Date(year, month,     0, 23, 59, 59, 999).toISOString()
+
+  const gcIds = [...gcMap.values()]
+  type ScheduleRow = { id: string; group_course_id: string; session_number: number; scheduled_at: string; topic: string | null }
+  let schedules: ScheduleRow[] = []
+
+  if (gcIds.length > 0) {
+    const { data: sRows } = await db
+      .from('schedules')
+      .select('id, group_course_id, session_number, scheduled_at, topic')
+      .in('group_course_id', gcIds)
+      .eq('status', 'completed')
+      .gte('scheduled_at', monthStart)
+      .lte('scheduled_at', monthEnd)
+    schedules = (sRows ?? []) as ScheduleRow[]
+  }
+
+  const schedsByGC = new Map<string, ScheduleRow[]>()
+  for (const s of schedules) {
+    if (!schedsByGC.has(s.group_course_id)) schedsByGC.set(s.group_course_id, [])
+    schedsByGC.get(s.group_course_id)!.push(s)
+  }
+
+  // Build instructor_id → allocations lookup
+  const allocsByInstructor = new Map<string, AllocRow[]>()
+  for (const alloc of branchAllocs) {
+    if (!allocsByInstructor.has(alloc.instructor_id)) allocsByInstructor.set(alloc.instructor_id, [])
+    allocsByInstructor.get(alloc.instructor_id)!.push(alloc)
+  }
+
+  // 8. Calculate payroll per profile
+  const seenSchedules = new Set<string>()
+  const warnings: PayrollWarning[] = []
+
+  type ItemPayload = {
+    profileId:    string
+    staffName:    string
+    payrollType:  string
+    basicSalary:  number
+    sessionRate:  number
+    sessionsCount: number
+    grossAmount:  number
+    currency:     string
+    sessions:     Array<{
+      scheduleId: string; sessionNumber: number; groupId: string
+      groupName: string; topic: string | null; sessionDate: string; sessionValue: number
+    }>
+  }
+
+  const items: ItemPayload[] = []
+
+  for (const profile of (profiles as any[])) {
+    const pType      = profile.payroll_type as string
+    const basicSal   = Number(profile.basic_salary ?? 0)
+    const sessRate   = Number(profile.session_rate ?? 0)
+    const name       = staffName(profile)
+    const instrInfo  = instrByUser.get(profile.user_id)
+    const currency   = instrInfo?.currency ?? 'EGP'
+
+    let sessionsCount = 0
+    const sessionList: ItemPayload['sessions'] = []
+
+    // Session counting for per_session and mixed types
+    if ((pType === 'per_session' || pType === 'mixed') && instrInfo) {
+      const instrAllocs = allocsByInstructor.get(instrInfo.id) ?? []
+      for (const alloc of instrAllocs) {
+        const gcId      = gcMap.get(alloc.group_id)
+        if (!gcId) continue
+        const gcSchedules = schedsByGC.get(gcId) ?? []
+        for (const s of gcSchedules) {
+          const sn = s.session_number
+          if (sn < alloc.from_session) continue
+          if (alloc.to_session !== null && sn > alloc.to_session) continue
+          if (seenSchedules.has(s.id)) continue
+          seenSchedules.add(s.id)
+          sessionsCount++
+          sessionList.push({
+            scheduleId:    s.id,
+            sessionNumber: sn,
+            groupId:       alloc.group_id,
+            groupName:     groupNameMap.get(alloc.group_id) ?? '—',
+            topic:         s.topic ?? null,
+            sessionDate:   s.scheduled_at.slice(0, 10),
+            sessionValue:  sessRate,
+          })
+        }
+      }
+
+      if (sessRate === 0) {
+        warnings.push({
+          type:      pType === 'per_session' ? 'zero_rate' : 'zero_rate',
+          staff_id:  profile.id,
+          staff_name: name,
+          message:   `${name} has a session rate of 0.`,
+        })
+      }
+    }
+
+    // Validate fixed_salary
+    if ((pType === 'fixed_salary' || pType === 'mixed') && basicSal === 0) {
+      warnings.push({
+        type:       'missing_salary',
+        staff_id:   profile.id,
+        staff_name: name,
+        message:    `${name} has a basic salary of 0.`,
+      })
+    }
+
+    // Calculate gross
+    let grossAmount = 0
+    if (pType === 'per_session')  grossAmount = sessionsCount * sessRate
+    if (pType === 'fixed_salary') grossAmount = basicSal
+    if (pType === 'mixed')        grossAmount = basicSal + (sessionsCount * sessRate)
+
+    grossAmount = Number(grossAmount.toFixed(2))
+
+    items.push({
+      profileId:    profile.id as string,
+      staffName:    name,
+      payrollType:  pType,
+      basicSalary:  basicSal,
+      sessionRate:  sessRate,
+      sessionsCount,
+      grossAmount,
+      currency,
+      sessions:     sessionList,
+    })
+  }
+
+  // 9. Create payroll_run
+  const { data: runRow, error: runErr } = await db
+    .from('payroll_runs')
+    .insert({
+      branch_id:    branchId,
+      month,
+      year,
+      status:       'draft',
+      total_amount: 0,
+      generated_by: user.id,
+    })
+    .select('id')
+    .single()
+
+  if (runErr || !runRow) {
+    return { success: false, error: { code: 'DB_ERROR', message: runErr?.message ?? 'Failed to create payroll run.' } }
+  }
+
+  const runId      = (runRow as any).id as string
+  let   totalAmount = 0
+
+  // 10. Create payroll_items + snapshots
+  for (const item of items) {
+    totalAmount += item.grossAmount
+
+    const { data: itemRow, error: itemErr } = await db
+      .from('payroll_items')
+      .insert({
+        payroll_run_id:    runId,
+        staff_profile_id:  item.profileId,
+        instructor_id:     null,
+        sessions_count:    item.sessionsCount,
+        rate_per_session:  item.sessionRate,
+        basic_salary:      item.basicSalary,
+        payroll_type:      item.payrollType,
+        gross_amount:      item.grossAmount,
+        adjustments_total: 0,
+        final_amount:      item.grossAmount,
+        currency:          item.currency,
+        status:            'draft',
+      })
+      .select('id')
+      .single()
+
+    if (itemErr || !itemRow) continue
+
+    const itemId = (itemRow as any).id as string
+
+    if (item.sessions.length > 0) {
+      await db.from('payroll_session_snapshots').insert(
+        item.sessions.map(s => ({
+          payroll_item_id: itemId,
+          schedule_id:     s.scheduleId,
+          session_number:  s.sessionNumber,
+          group_id:        s.groupId,
+          group_name:      s.groupName,
+          topic:           s.topic,
+          session_date:    s.sessionDate,
+          session_value:   s.sessionValue,
+        }))
+      )
+    }
+  }
+
+  // 11. Update run total
+  await db.from('payroll_runs').update({ total_amount: totalAmount }).eq('id', runId)
+
+  // 12. Audit log
+  try {
+    await db.rpc('write_audit_log', {
+      p_performed_by: user.id,
+      p_action:       'generate_unified_payroll',
+      p_entity_type:  'payroll_run',
+      p_entity_id:    runId,
+      p_new_values:   { month, year, branch_id: branchId, total_amount: totalAmount, item_count: items.length },
+    })
+  } catch { /* audit log is non-critical */ }
+
+  revalidatePath(REVALIDATE_PATH)
+  revalidatePath(REVALIDATE_PATH2)
+
+  return {
+    success: true,
+    data: {
+      run_id:       runId,
+      item_count:   items.length,
+      total_amount: totalAmount,
+      currency:     'EGP',
+      warnings,
+    },
+  }
+}
+
+// ── Finalize payroll run (super admin only) ───────────────────────────────────
+
+export async function finalizePayrollRunAction(
+  runId: string,
+): Promise<ActionResult<void>> {
+  const user = await requireAuth()
+  if (!user.permissions.includes('finalize_payroll') && !user.permissions.includes('manage_system')) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Only super admins can finalize payroll runs.' } }
+  }
+
+  const db = createServiceClient()
+
+  const { data: run } = await db.from('payroll_runs').select('status').eq('id', runId).single()
+  if (!run) return { success: false, error: { code: 'NOT_FOUND', message: 'Payroll run not found.' } }
+  if ((run as any).status !== 'paid') {
+    return { success: false, error: { code: 'INVALID_STATUS', message: 'Only paid payroll runs can be finalized.' } }
+  }
+
+  await db.from('payroll_runs').update({ status: 'finalized' }).eq('id', runId)
+
+  try {
+    await db.rpc('write_audit_log', {
+      p_performed_by: user.id,
+      p_action:       'finalize_payroll',
+      p_entity_type:  'payroll_run',
+      p_entity_id:    runId,
+      p_new_values:   { status: 'finalized' },
+    })
+  } catch { /* audit log is non-critical */ }
+
+  revalidatePath(REVALIDATE_PATH)
+  revalidatePath(REVALIDATE_PATH2)
+  return { success: true, data: undefined }
+}
+
+// ── Reopen finalized payroll (super admin only) ───────────────────────────────
+
+export async function reopenPayrollRunAction(
+  runId: string,
+): Promise<ActionResult<void>> {
+  const user = await requireAuth()
+  if (!user.permissions.includes('finalize_payroll') && !user.permissions.includes('manage_system')) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Only super admins can reopen finalized payroll runs.' } }
+  }
+
+  const db = createServiceClient()
+
+  const { data: run } = await db.from('payroll_runs').select('status').eq('id', runId).single()
+  if (!run) return { success: false, error: { code: 'NOT_FOUND', message: 'Payroll run not found.' } }
+  if ((run as any).status !== 'finalized') {
+    return { success: false, error: { code: 'INVALID_STATUS', message: 'Only finalized runs can be reopened.' } }
+  }
+
+  await db.from('payroll_runs').update({ status: 'paid' }).eq('id', runId)
+
+  try {
+    await db.rpc('write_audit_log', {
+      p_performed_by: user.id,
+      p_action:       'reopen_payroll',
+      p_entity_type:  'payroll_run',
+      p_entity_id:    runId,
+      p_new_values:   { status: 'paid' },
+    })
+  } catch { /* audit log is non-critical */ }
+
+  revalidatePath(REVALIDATE_PATH)
+  revalidatePath(REVALIDATE_PATH2)
+  return { success: true, data: undefined }
 }
