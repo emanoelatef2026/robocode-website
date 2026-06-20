@@ -8,6 +8,14 @@ export type FinanceAdjType =
 export type InstructorPaymentMethod =
   | 'instapay' | 'vodafone_cash' | 'bank_transfer' | 'cash'
 
+export type EmploymentStatus = 'active' | 'on_leave' | 'inactive'
+
+// StaffSessionActivityType is stored as TEXT in staff_sessions — no DB constraint,
+// so new values can be added freely without migration.
+export type StaffSessionActivityType =
+  | 'session' | 'camp_day' | 'competition_day' | 'workshop' | 'training'
+  | 'open_day' | 'meeting' | 'admin_task' | 'other'
+
 // ── Adjustment sign: positive = adds to net, negative = subtracts ─────────────
 
 export const ADJ_SIGN: Record<FinanceAdjType, 1 | -1> = {
@@ -44,6 +52,16 @@ export const INSTRUCTOR_PAYMENT_METHOD_LABELS: Record<InstructorPaymentMethod, s
   cash:          'Cash',
 }
 
+export const STAFF_PAYMENT_METHOD_LABELS: Record<string, string> = {
+  instapay:      'Instapay',
+  vodafone_cash: 'Vodafone Cash',
+  wallet:        'Wallet',
+  bank_transfer: 'Bank Transfer',
+  cash:          'Cash',
+  cheque:        'Cheque',
+  other:         'Other',
+}
+
 export const STAFF_ROLE_LABELS: Record<string, string> = {
   instructor:     'Instructor',
   team_leader:    'Team Leader',
@@ -56,6 +74,55 @@ export const STAFF_ROLE_LABELS: Record<string, string> = {
   finance:        'Finance',
   other:          'Other',
 }
+
+export const EMPLOYMENT_STATUS_LABELS: Record<EmploymentStatus, string> = {
+  active:   'Active',
+  on_leave: 'On Leave',
+  inactive: 'Inactive',
+}
+
+export const EMPLOYMENT_STATUS_COLORS: Record<EmploymentStatus, string> = {
+  active:   'bg-emerald-50 text-emerald-700',
+  on_leave: 'bg-amber-50 text-amber-700',
+  inactive: 'bg-slate-100 text-slate-500',
+}
+
+// Record<string, string> (not strict type) so unknown legacy values display gracefully
+export const STAFF_SESSION_ACTIVITY_LABELS: Record<string, string> = {
+  // New simplified types
+  session:         'Session',
+  camp_day:        'Camp Day',
+  competition_day: 'Competition Day',
+  workshop:        'Workshop',
+  training:        'Training',
+  open_day:        'Open Day',
+  meeting:         'Meeting',
+  admin_task:      'Administrative Task',
+  other:           'Other',
+  // Legacy aliases kept for display of old records
+  teaching_session:  'Session',
+  camp:              'Camp Day',
+  event:             'Open Day',
+  outsource_session: 'Session',
+  bonus_activity:    'Other',
+  extra_session:     'Session',
+  admin_event:       'Administrative Task',
+  technical_support: 'Other',
+  custom:            'Other',
+}
+
+// Ordered list for dropdowns
+export const STAFF_ACTIVITY_OPTIONS: { value: string; label: string }[] = [
+  { value: 'session',         label: 'Session'             },
+  { value: 'camp_day',        label: 'Camp Day'            },
+  { value: 'competition_day', label: 'Competition Day'     },
+  { value: 'workshop',        label: 'Workshop'            },
+  { value: 'training',        label: 'Training'            },
+  { value: 'open_day',        label: 'Open Day'            },
+  { value: 'meeting',         label: 'Meeting'             },
+  { value: 'admin_task',      label: 'Administrative Task' },
+  { value: 'other',           label: 'Other'               },
+]
 
 // ── Finance adjustment record ──────────────────────────────────────────────────
 
@@ -71,6 +138,62 @@ export interface FinanceAdjustment {
   created_by:       string | null
   created_at:       string
   updated_at:       string
+}
+
+// ── Staff activity / session (stored in staff_sessions table) ─────────────────
+
+export interface StaffSession {
+  id:               string
+  staff_profile_id: string
+  branch_id:        string
+  session_date:     string   // YYYY-MM-DD
+  activity_type:    string
+  description:      string | null
+  rate:             number
+  quantity:         number
+  amount:           number   // rate × quantity, computed in application
+  notes:            string | null
+  created_by:       string | null
+  created_at:       string
+  updated_at:       string
+}
+
+// ── Staff payment record (actual payment made to staff for a month) ────────────
+
+export interface StaffPaymentRecord {
+  id:               string
+  staff_profile_id: string
+  branch_id:        string
+  month:            number
+  year:             number
+  amount:           number
+  payment_date:     string   // YYYY-MM-DD
+  payment_method:   string | null
+  notes:            string | null
+  created_by:       string | null
+  created_at:       string
+}
+
+// ── Payment status derived from paid vs net ───────────────────────────────────
+
+export type PaymentStatus = 'paid' | 'partial' | 'unpaid'
+
+export function derivePaymentStatus(total_paid: number, net_amount: number): PaymentStatus {
+  if (total_paid <= 0) return 'unpaid'
+  if (total_paid >= net_amount) return 'paid'
+  return 'partial'
+}
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  paid:    'Paid',
+  partial: 'Partial',
+  unpaid:  'Unpaid',
+}
+
+export const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
+  paid:    'bg-emerald-50 text-emerald-700',
+  partial: 'bg-amber-50 text-amber-700',
+  unpaid:  'bg-red-50 text-red-600',
 }
 
 // ── Live instructor finance row ───────────────────────────────────────────────
@@ -105,45 +228,96 @@ export interface InstructorFinanceRow {
 // ── Live staff finance row ────────────────────────────────────────────────────
 
 export interface StaffFinanceRow {
-  profile_id:         string
-  user_id:            string
-  display_name:       string
-  branch_id:          string
-  branch_name:        string
-  role:               string
-  payroll_type:       'per_session' | 'fixed_salary' | 'mixed'
-  basic_salary:       number
-  session_rate:       number
-  payment_method:     string
-  payment_reference:  string | null
-  is_payroll_enabled: boolean
-  notes:              string | null
+  profile_id:          string
+  user_id:             string
+  display_name:        string
+  branch_id:           string
+  branch_name:         string
+  role:                string
+  department:          string | null
+  employment_status:   EmploymentStatus
+  works_all_branches:  boolean
+  payroll_type:        'per_session' | 'fixed_salary' | 'mixed'
+  basic_salary:        number
+  session_rate:        number        // default rate for activities (pre-filled in Add Activity form)
+  // From staff_sessions in the date range
+  sessions_count:      number        // number of activity entries
+  session_earnings:    number        // sum of rate × quantity for all activities
+  payment_method:      string
+  payment_reference:   string | null
+  notes:               string | null
   // Adjustments in the date range
-  adjustments:        FinanceAdjustment[]
-  bonus_total:        number
-  penalty_total:      number
-  advance_total:      number
-  purchase_total:     number
-  other_total:        number
-  adj_net:            number
-  net_amount:         number   // basic_salary + adj_net
+  adjustments:         FinanceAdjustment[]
+  bonus_total:         number
+  penalty_total:       number
+  advance_total:       number
+  purchase_total:      number
+  other_total:         number
+  adj_net:             number
+  // Net = basic_salary + session_earnings + adj_net (all components always included)
+  net_amount:          number
+  // Payment tracking for the selected month
+  payment_records:     StaffPaymentRecord[]
+  total_paid:          number
+  remaining:           number
+  payment_status:      PaymentStatus
 }
 
 // ── Finance summary ───────────────────────────────────────────────────────────
 
 export interface StaffFinanceSummary {
-  date_from:              string
-  date_to:                string
-  instructor_count:       number
-  staff_count:            number
-  total_session_earnings: number
-  total_staff_salaries:   number
-  total_bonus:            number
-  total_penalty:          number
-  total_advance:          number
-  total_purchase:         number
-  total_net:              number
-  currency:               string
+  date_from:                    string
+  date_to:                      string
+  instructor_count:             number
+  staff_count:                  number
+  total_session_earnings:       number   // instructor sessions only
+  total_staff_salaries:         number   // all staff basic salaries
+  total_staff_session_earnings: number   // all staff activity earnings
+  total_bonus:                  number
+  total_penalty:                number
+  total_advance:                number
+  total_purchase:               number
+  total_net:                    number
+  currency:                     string
+}
+
+// ── Session override reason codes ─────────────────────────────────────────────
+
+export type OverrideReason =
+  | 'online_session' | 'old_contract' | 'replacement' | 'trial'
+  | 'special_agreement' | 'premium_workshop' | 'custom'
+
+export const OVERRIDE_REASON_LABELS: Record<OverrideReason, string> = {
+  online_session:    'Online Session',
+  old_contract:      'Old Contract',
+  replacement:       'Replacement Session',
+  trial:             'Trial Session',
+  special_agreement: 'Special Agreement',
+  premium_workshop:  'Premium Workshop',
+  custom:            'Custom',
+}
+
+// ── Instructor session detail (drill-down popup) ──────────────────────────────
+
+export interface InstructorSessionDetail {
+  schedule_id:      string
+  scheduled_at:     string        // ISO datetime
+  group_id:         string
+  group_name:       string
+  course_name:      string
+  topic:            string | null
+  students_total:   number        // all attendance records for this session
+  students_present: number        // present + late + makeup
+  attendance_pct:   number        // 0–100
+  status:           string
+  // Rate hierarchy (override > group > instructor default)
+  base_rate:        number        // instructors.salary_per_session
+  group_rate:       number | null // group_instructors.session_rate (null = not set)
+  override_rate:    number | null // payroll_session_overrides.override_rate (null = not set)
+  override_reason:  string | null
+  override_id:      string | null // payroll_session_overrides.id for deletion
+  final_rate:       number        // override_rate ?? group_rate ?? base_rate
+  session_amount:   number        // = final_rate
 }
 
 // ── User picker option for staff creation ─────────────────────────────────────
@@ -190,4 +364,16 @@ export function computeAdjTotals(adjustments: FinanceAdjustment[]) {
   }
 
   return { bonus_total, penalty_total, advance_total, purchase_total, other_total, adj_net }
+}
+
+// All staff net payroll = basic_salary + activity_earnings + adj_net.
+// payroll_type is kept as a classification label only — it no longer restricts
+// which components count in the calculation.
+export function computeStaffNetAmount(
+  _payroll_type:    'per_session' | 'fixed_salary' | 'mixed',
+  basic_salary:     number,
+  session_earnings: number,
+  adj_net:          number,
+): number {
+  return basic_salary + session_earnings + adj_net
 }

@@ -57,7 +57,6 @@ export default async function PayrollPage({ searchParams }: Props) {
 
   const isSuperAdmin = user.globalRole === 'super_admin' || user.branchIds.length === 0
 
-  // Super admin or unassigned → load all branches; TL → their own branches
   const allBranches  = isSuperAdmin
     ? await fetchAllBranches()
     : await fetchBranchesByIds(user.branchIds)
@@ -80,7 +79,6 @@ export default async function PayrollPage({ searchParams }: Props) {
   const dateFrom = params.date_from || defaultDateFrom()
   const dateTo   = params.date_to   || defaultDateTo()
 
-  // "all" or no branch param → query all available; specific id → single branch
   const branchParam    = params.branch
   const isSingleBranch = branchParam && branchParam !== 'all' && availableBranchIds.includes(branchParam)
   const branchId       = isSingleBranch ? branchParam : 'all'
