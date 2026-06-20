@@ -123,14 +123,26 @@ async function getDashboardData(branchIds: string[] | null) {
   const studentsInGroupsSet  = new Set(((studentsInGroupsRes as any).data ?? []).map((r: any) => r.student_id as string))
   const studentsWithoutGroup = Math.max(0, activeStudentCount - studentsInGroupsSet.size)
 
-  // Top branch by student count
+  // Top branch by student count — via active group memberships (groups are operational source of truth)
   let topBranch: { name: string; students: number; id: string } | null = null
   const branchRows = ((branchesRes as any).data ?? []) as any[]
   if (branchRows.length > 0) {
     const bIds = branchRows.map((b: any) => b.id as string)
-    const { data: bStudents } = await db.from('students').select('branch_id').in('branch_id', bIds).eq('status', 'active').is('deleted_at', null)
+    const { data: activeGroupsForBranch } = await db.from('groups').select('id, branch_id').in('branch_id', bIds).eq('status', 'active').is('deleted_at', null)
+    const branchGroupIds  = (activeGroupsForBranch ?? []).map((g: any) => g.id as string)
+    const branchGroupMap  = Object.fromEntries((activeGroupsForBranch ?? []).map((g: any) => [g.id as string, g.branch_id as string]))
     const bMap: Record<string, number> = {}
-    for (const s of bStudents ?? []) bMap[(s as any).branch_id] = (bMap[(s as any).branch_id] ?? 0) + 1
+    if (branchGroupIds.length > 0) {
+      const { data: gsRows } = await db.from('group_students').select('student_id, group_id').in('group_id', branchGroupIds).eq('status', 'active')
+      const branchStudentSets: Record<string, Set<string>> = {}
+      for (const gs of (gsRows ?? []) as any[]) {
+        const bid = branchGroupMap[gs.group_id]
+        if (!bid) continue
+        if (!branchStudentSets[bid]) branchStudentSets[bid] = new Set()
+        branchStudentSets[bid].add(gs.student_id)
+      }
+      for (const [bid, set] of Object.entries(branchStudentSets)) bMap[bid] = set.size
+    }
     const topEntry = Object.entries(bMap).sort((a, b) => b[1] - a[1])[0]
     if (topEntry) {
       const row = branchRows.find((b: any) => b.id === topEntry[0])

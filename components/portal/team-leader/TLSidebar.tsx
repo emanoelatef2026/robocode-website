@@ -14,6 +14,21 @@ const I = {
       <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
     </svg>
   ),
+  attendance: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+    </svg>
+  ),
+  assignments: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+    </svg>
+  ),
+  collections: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+    </svg>
+  ),
   leads: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
@@ -104,41 +119,49 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    title: "Operations",
+    items: [
+      { label: "Attendance",   href: "/portal/team-leader/attendance",   icon: I.attendance   },
+      { label: "Assignments",  href: "/portal/team-leader/assignments",  icon: I.assignments  },
+    ],
+  },
+  {
     title: "People",
     items: [
-      { label: "Leads",       href: "/portal/team-leader/leads",       icon: I.leads },
-      { label: "Students",    href: "/portal/team-leader/students",    icon: I.students },
-      { label: "Parents",     href: "/portal/team-leader/parents",     icon: I.parents },
+      { label: "Leads",       href: "/portal/team-leader/leads",       icon: I.leads       },
+      { label: "Students",    href: "/portal/team-leader/students",    icon: I.students    },
+      { label: "Parents",     href: "/portal/team-leader/parents",     icon: I.parents     },
       { label: "Instructors", href: "/portal/team-leader/instructors", icon: I.instructors },
     ],
   },
   {
-    title: "Academy",
+    title: "Academics",
     items: [
-      { label: "Groups",       href: "/portal/team-leader/groups",       icon: I.groups },
-      { label: "Courses",      href: "/portal/team-leader/courses",      icon: I.courses },
+      { label: "Groups",       href: "/portal/team-leader/groups",       icon: I.groups       },
+      { label: "Courses",      href: "/portal/team-leader/courses",      icon: I.courses      },
       { label: "Certificates", href: "/portal/team-leader/certificates", icon: I.certificates },
     ],
   },
   {
     title: "Finance",
     items: [
-      { label: "Payroll", href: "/portal/team-leader/payroll", icon: I.payroll },
+      { label: "Payroll",     href: "/portal/team-leader/payroll",     icon: I.payroll     },
+      { label: "Collections", href: "/portal/team-leader/finance",     icon: I.collections },
     ],
   },
   {
-    title: "Engagement",
+    title: "Insights",
     items: [
+      { label: "Analytics",    href: "/portal/team-leader/analytics",                    icon: I.analytics    },
       {
         label: "Satisfaction",
-        href: "/portal/team-leader/parent-feedback?tab=reviews",
-        icon: I.satisfaction,
+        href:  "/portal/team-leader/parent-feedback?tab=reviews",
+        icon:  I.satisfaction,
         matchPatterns: [
           "/portal/team-leader/parent-feedback",
           "/portal/team-leader/parent-satisfaction",
         ],
       },
-      { label: "Analytics", href: "/portal/team-leader/analytics", icon: I.analytics },
     ],
   },
 ]

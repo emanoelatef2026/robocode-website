@@ -36,7 +36,6 @@ async function getBranchPerformance(branchId: string): Promise<BranchPerformance
   const today      = new Date().toISOString().slice(0, 10)
 
   const [
-    studentsRes,
     newStudentsRes,
     groupsRes,
     instructorsRes,
@@ -47,7 +46,7 @@ async function getBranchPerformance(branchId: string): Promise<BranchPerformance
     groupsWithInstRes,
     allActiveGroupsRes,
   ] = await Promise.all([
-    db.from('students').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).eq('status', 'active').is('deleted_at', null),
+    // newStudentsMonth = registrations created this month in this branch (registration metric)
     db.from('students').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).eq('status', 'active').gte('created_at', monthStart),
     db.from('groups').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).eq('status', 'active').is('deleted_at', null),
     db.from('instructors').select('id', { count: 'exact', head: true }).eq('branch_id', branchId).eq('status', 'active').is('deleted_at', null),
@@ -59,7 +58,17 @@ async function getBranchPerformance(branchId: string): Promise<BranchPerformance
     db.from('groups').select('id').eq('branch_id', branchId).eq('status', 'active').is('deleted_at', null),
   ])
 
+  // Active students via group membership (groups are operational source of truth)
   const activeGroupIds: string[] = ((allActiveGroupsRes as any).data ?? []).map((g: any) => g.id as string)
+  let activeStudents = 0
+  if (activeGroupIds.length > 0) {
+    const { data: gsRows } = await db.from('group_students').select('student_id').in('group_id', activeGroupIds).eq('status', 'active')
+    const uniqueStudentIds = new Set((gsRows ?? []).map((r: any) => r.student_id as string))
+    if (uniqueStudentIds.size > 0) {
+      const { count } = await db.from('students').select('id', { count: 'exact', head: true }).in('id', [...uniqueStudentIds]).eq('status', 'active').is('deleted_at', null)
+      activeStudents = count ?? 0
+    }
+  }
 
   // Sessions this month (via branch_id on schedules)
   let sessionsThisMonth = 0
@@ -108,7 +117,6 @@ async function getBranchPerformance(branchId: string): Promise<BranchPerformance
 
   // Health score
   let healthScore = 0
-  const activeStudents   = (studentsRes as any).count ?? 0
   const activeGroups     = (groupsRes as any).count ?? 0
   const activeInstructors = (instructorsRes as any).count ?? 0
   if (activeGroups > 0)                              healthScore += 20

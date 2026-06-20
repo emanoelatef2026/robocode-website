@@ -89,8 +89,9 @@ async function getBranchPerformance() {
 
   const bIds = branches.map((b: any) => b.id as string)
 
-  const [studentCounts, groupCounts, certCounts] = await Promise.all([
-    db.from('students').select('branch_id').in('branch_id', bIds).eq('status', 'active').is('deleted_at', null),
+  // Student counts via active group memberships (groups are operational source of truth)
+  const [activeGroupRows, groupCounts, certCounts] = await Promise.all([
+    db.from('groups').select('id, branch_id').in('branch_id', bIds).eq('status', 'active').is('deleted_at', null),
     db.from('groups').select('branch_id').in('branch_id', bIds).eq('status', 'active').is('deleted_at', null),
     db.from('certificates').select('branch_id').in('branch_id', bIds).eq('status', 'active'),
   ])
@@ -98,7 +99,25 @@ async function getBranchPerformance() {
   const sMap: Record<string, number> = {}
   const gMap: Record<string, number> = {}
   const cMap: Record<string, number> = {}
-  for (const r of studentCounts.data ?? []) sMap[(r as any).branch_id] = (sMap[(r as any).branch_id] ?? 0) + 1
+
+  // Count students per branch through active group memberships
+  const activeGroupIds  = (activeGroupRows.data ?? []).map((g: any) => g.id as string)
+  const groupBranchMap  = Object.fromEntries((activeGroupRows.data ?? []).map((g: any) => [g.id as string, g.branch_id as string]))
+  if (activeGroupIds.length > 0) {
+    const { data: stuRows } = await db.from('students').select('id').eq('status', 'active').is('deleted_at', null)
+    const activeStudentSet = new Set((stuRows ?? []).map((s: any) => s.id as string))
+    const { data: gsRows } = await db.from('group_students').select('student_id, group_id').in('group_id', activeGroupIds).eq('status', 'active')
+    const branchStudentSets: Record<string, Set<string>> = {}
+    for (const gs of (gsRows ?? []) as any[]) {
+      if (!activeStudentSet.has(gs.student_id)) continue
+      const bid = groupBranchMap[gs.group_id]
+      if (!bid) continue
+      if (!branchStudentSets[bid]) branchStudentSets[bid] = new Set()
+      branchStudentSets[bid].add(gs.student_id)
+    }
+    for (const [bid, set] of Object.entries(branchStudentSets)) sMap[bid] = set.size
+  }
+
   for (const r of groupCounts.data ?? [])   gMap[(r as any).branch_id] = (gMap[(r as any).branch_id] ?? 0) + 1
   for (const r of certCounts.data ?? [])    cMap[(r as any).branch_id] = (cMap[(r as any).branch_id] ?? 0) + 1
 

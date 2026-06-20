@@ -14,7 +14,6 @@ import { createServiceClient }  from '@/lib/supabase/service'
 import { requirePermission }    from '@/modules/rbac/guards'
 import { listBranches }         from '@/modules/branches/queries'
 import { listGroups }           from '@/modules/groups/queries'
-import AdminFilterSelect        from '@/components/admin/AdminFilterSelect'
 import Pagination               from '@/components/admin/Pagination'
 import Link                     from 'next/link'
 
@@ -127,7 +126,6 @@ async function listSessions({
   const db   = createServiceClient()
   const from = (page - 1) * perPage
   const to   = from + perPage - 1
-  const now  = new Date().toISOString()
 
   let q = db
     .from('schedules')
@@ -240,8 +238,7 @@ async function getAttendanceAlerts(branchIds?: string[]) {
   let inactiveGroups = 0
   if (activeGroupIds.length > 0) {
     const { data: gcRows } = await db.from('group_courses').select('id, group_id').in('group_id', activeGroupIds).eq('status', 'active')
-    const gcIds       = (gcRows ?? []).map((r: any) => r.id as string)
-    const gcGroupMap  = Object.fromEntries((gcRows ?? []).map((r: any) => [r.id as string, r.group_id as string]))
+    const gcIds = (gcRows ?? []).map((r: any) => r.id as string)
     if (gcIds.length > 0) {
       const { data: recentGrpScheds } = await db.from('schedules').select('group_course_id').in('group_course_id', gcIds).gte('scheduled_at', twoWeeksAgo).neq('status', 'cancelled')
       const activeGcSet = new Set((recentGrpScheds ?? []).map((s: any) => s.group_course_id as string))
@@ -359,23 +356,67 @@ export default async function AttendanceMonitorPage({ searchParams }: Props) {
       </div>
 
       {/* ── Filters ────────────────────────────────────────────────────── */}
-      <div className="mb-4 rounded-xl border border-[#E2E8F0] bg-white">
+      <form method="get" className="mb-4 rounded-xl border border-[#E2E8F0] bg-white">
         <div className="flex flex-wrap items-center gap-2 px-4 py-3">
           {isSuperAdmin && (
-            <AdminFilterSelect param="branch" placeholder="All branches"
-              options={branchesRes.data.map(b => ({ value: b.id, label: b.name }))} />
+            <select
+              name="branch"
+              defaultValue={branchParam ?? ''}
+              className="h-10 rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+            >
+              <option value="">All branches</option>
+              {branchesRes.data.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
           )}
-          <AdminFilterSelect param="group" placeholder="All groups"
-            options={groupsRes.data.map(g => ({ value: g.id, label: g.name }))} />
+          <select
+            name="group"
+            defaultValue={groupParam ?? ''}
+            className="h-10 rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+          >
+            <option value="">All groups</option>
+            {groupsRes.data.map(g => (
+              <option key={g.id} value={g.id}>{g.name}</option>
+            ))}
+          </select>
 
           <label className="flex items-center gap-1.5 text-xs text-[#64748B]">
             From
-            <span className="rounded border border-[#E2E8F0] px-2 py-1.5 text-xs text-[#0B1F3A]">{dateFrom ?? 'start'}</span>
+            <input
+              type="date"
+              name="from"
+              defaultValue={dateFrom ?? ''}
+              className="rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-xs text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+            />
           </label>
           <label className="flex items-center gap-1.5 text-xs text-[#64748B]">
             To
-            <span className="rounded border border-[#E2E8F0] px-2 py-1.5 text-xs text-[#0B1F3A]">{dateTo ?? 'now'}</span>
+            <input
+              type="date"
+              name="to"
+              defaultValue={dateTo ?? ''}
+              className="rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-xs text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+            />
           </label>
+
+          {missingOnly && <input type="hidden" name="missing" value="1" />}
+
+          <button
+            type="submit"
+            className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18]"
+          >
+            Filter
+          </button>
+
+          {(branchParam || groupParam || dateFrom || dateTo) && (
+            <Link
+              href={missingOnly ? '/admin/attendance?missing=1' : '/admin/attendance'}
+              className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1]"
+            >
+              Clear
+            </Link>
+          )}
 
           <Link
             href={missingOnly ? '/admin/attendance' : '/admin/attendance?missing=1'}
@@ -383,10 +424,10 @@ export default async function AttendanceMonitorPage({ searchParams }: Props) {
               missingOnly ? 'border-red-300 bg-red-50 text-red-700' : 'border-[#E2E8F0] text-[#64748B] hover:border-red-300 hover:text-red-600'
             }`}
           >
-            {missingOnly ? '✕ Missing only' : 'Show missing only'}
+            {missingOnly ? '✕ Missing only' : 'Missing only'}
           </Link>
         </div>
-      </div>
+      </form>
 
       {/* ── Session table ──────────────────────────────────────────────── */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
