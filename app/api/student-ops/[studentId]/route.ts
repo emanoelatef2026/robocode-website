@@ -94,7 +94,7 @@ export async function GET(
   // ── Payments: fetch by enrollment_id OR account_id (Phase 5 fix) ──────────
   // Payments may be linked to enrollment only, account only, or both.
   // We union both queries and deduplicate by id so no payment is missed.
-  let payData: any[] = []
+  const payData: any[] = []
   if (enrollmentId || accountId) {
     const [byEnroll, byAccount] = await Promise.all([
       enrollmentId

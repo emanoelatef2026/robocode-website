@@ -16,7 +16,7 @@ export default async function RecordAttendancePage({ searchParams }: Props) {
   const groupsResult = await listGroups({ perPage: 100, status: 'active' })
 
   let students: Awaited<ReturnType<typeof getGroupStudentsForSession>> = []
-  let selectedGroup = groupsResult.data.find((g) => g.id === groupId)
+  const selectedGroup = groupsResult.data.find((g) => g.id === groupId)
 
   if (groupId && selectedGroup) {
     students = await getGroupStudentsForSession(groupId)

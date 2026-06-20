@@ -104,7 +104,7 @@ async function getHealthData() {
 
   // ── Inactive team leaders ────────────────────────────────────────────────────
   const { data: tlRoleRow } = await db.from('roles').select('id').eq('name', 'team_leader').single()
-  let inactiveTLs: IssueItem[] = []
+  const inactiveTLs: IssueItem[] = []
   if (tlRoleRow) {
     const { data: allTLUsers } = await db
       .from('users')

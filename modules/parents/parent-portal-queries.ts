@@ -555,7 +555,7 @@ export async function getChildDashboardData(
   // Sessions (completed count + next upcoming + completed IDs for attendance query)
   let completedSessions = 0
   let nextSessionAt: string | null = null
-  let completedSchedIds: string[] = []
+  const completedSchedIds: string[] = []
   if (gcId) {
     const { data: schedRows } = await db
       .from('schedules')

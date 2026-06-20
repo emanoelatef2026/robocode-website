@@ -74,7 +74,7 @@ function StatsHeader({
     <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
       <div className="mb-4">
         <h1 className="text-xl font-semibold text-[#0B1F3A]">Welcome back, {name}</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">Here's your overview for today.</p>
+        <p className="mt-0.5 text-sm text-[#64748B]">Here&apos;s your overview for today.</p>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map(({ label, value, href }) => (

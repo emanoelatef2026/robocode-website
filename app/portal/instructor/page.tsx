@@ -148,7 +148,7 @@ export default async function InstructorDashboardPage() {
       {/* Today's Groups */}
       {todayGroups.length > 0 && (
         <section>
-          <SectionHeading>Today's Groups</SectionHeading>
+          <SectionHeading>Today&apos;s Groups</SectionHeading>
           <div className="rounded-xl border border-[#E2E8F0] bg-white divide-y divide-[#F1F5F9]">
             {todayGroups.map((g) => (
               <Link

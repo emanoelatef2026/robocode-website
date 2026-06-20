@@ -218,28 +218,51 @@ export async function getLiveStaffFinance(
   const month = d.getMonth() + 1
   const year  = d.getFullYear()
 
-  // 1. Load staff profiles — branch-matched OR works_all_branches.
-  //    Join to branches for name. Deliberately avoid nested auth.users join
-  //    (unreliable across PostgREST schema boundaries); resolve display names
-  //    via a separate profiles query below (same pattern as getLiveInstructorFinance).
-  const { data: profileData, error: profileErr } = await db
-    .from('staff_payroll_profiles')
-    .select(`
-      id, user_id, branch_id, role, department, employment_status, works_all_branches,
-      payroll_type, basic_salary, session_rate,
-      payment_method, payment_reference, notes,
-      branches!staff_payroll_profiles_branch_id_fkey(name)
-    `)
-    .or(`branch_id.in.(${branchIds.map(id => id).join(',')}),works_all_branches.eq.true`)
-    .order('employment_status', { ascending: true })
-    .order('role',              { ascending: true })
+  // 1. Load staff profiles — branch-matched OR works_all_branches=true.
+  //    Two separate queries are used instead of PostgREST .or() with .in()
+  //    because the nested comma list inside .in.(uuid1,uuid2,...) can confuse
+  //    PostgREST's OR parser, silently returning zero rows.
+  const SELECT_COLS = `
+    id, user_id, branch_id, role, department, employment_status, works_all_branches,
+    payroll_type, basic_salary, session_rate,
+    payment_method, payment_reference, notes,
+    branches!staff_payroll_profiles_branch_id_fkey(name)
+  `
 
-  if (profileErr) {
-    console.error('[getLiveStaffFinance] profile query error:', profileErr.message)
-    return []
+  const [{ data: branchData, error: branchErr }, { data: globalData, error: globalErr }] =
+    await Promise.all([
+      db.from('staff_payroll_profiles')
+        .select(SELECT_COLS)
+        .in('branch_id', branchIds)
+        .order('employment_status', { ascending: true })
+        .order('role',              { ascending: true }),
+      db.from('staff_payroll_profiles')
+        .select(SELECT_COLS)
+        .eq('works_all_branches', true)
+        .order('employment_status', { ascending: true })
+        .order('role',              { ascending: true }),
+    ])
+
+  if (branchErr) {
+    console.error('[getLiveStaffFinance] branch-staff query error:', branchErr.message)
+  }
+  if (globalErr) {
+    console.error('[getLiveStaffFinance] global-staff query error:', globalErr.message)
+  }
+  if (branchErr && globalErr) return []
+
+  // Merge + deduplicate by profile id
+  const seen = new Set<string>()
+  const profileData: unknown[] = []
+  for (const p of [...(branchData ?? []), ...(globalData ?? [])]) {
+    const row = p as { id: string }
+    if (!seen.has(row.id)) {
+      seen.add(row.id)
+      profileData.push(p)
+    }
   }
 
-  const profiles = (profileData ?? []) as any[]
+  const profiles = profileData as any[]
   if (!profiles.length) return []
 
   const profileIds = profiles.map(p => p.id as string)

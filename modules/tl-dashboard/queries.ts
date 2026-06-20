@@ -517,7 +517,7 @@ export async function getInstructorPerformance(branchIds: string[]): Promise<Ins
 
   // Session feedback averages per instructor
   const schedIds = completedScheds.map(s => s.id as string)
-  let feedbackMap = new Map<string, number[]>() // gcId → ratings
+  const feedbackMap = new Map<string, number[]>() // gcId → ratings
   if (schedIds.length > 0) {
     const { data: fbRows } = await db
       .from('session_feedback')

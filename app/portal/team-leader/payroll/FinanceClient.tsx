@@ -189,8 +189,11 @@ export default function FinanceClient({
   // Sync server-refreshed props into local state.
   // router.push() causes the Server Component to re-run and pass new props,
   // but useState ignores prop changes after mount — so we sync manually.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setInstructors(initialInstructors) }, [initialInstructors])
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setStaff(initialStaff)             }, [initialStaff])
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setSummary(initialSummary)         }, [initialSummary])
 
   // Staff detail modal
@@ -2971,7 +2974,7 @@ function StaffDetailModal({
                     { label: "Activities",    value: String(row.sessions_count) },
                     { label: "Total Paid",    value: fmtEGP(row.total_paid) },
                     { label: "Net Payroll",   value: fmtEGP(liveNet), hi: true },
-                  ].map((k: any) => (
+                  ].map((k: { label: string; value: string; hi?: boolean }) => (
                     <div key={k.label} className={`rounded-xl border px-3 py-2.5 ${k.hi ? "border-[#FF8A1F]/30 bg-[#FFF7F0]" : "border-[#E2E8F0] bg-white"}`}>
                       <p className={`text-[14px] font-extrabold ${k.hi ? "text-[#FF8A1F]" : "text-[#0B1F3A]"}`}>{k.value}</p>
                       <p className="text-[10px] font-medium text-[#94A3B8] mt-0.5">{k.label}</p>

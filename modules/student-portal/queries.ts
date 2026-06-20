@@ -522,8 +522,8 @@ export async function getStudentTimeline(userId: string): Promise<TimelineEvent[
     .maybeSingle()
   const groupId = (gsRow as any)?.group_id ?? null
 
-  let schedNumMap = new Map<string, number>()
-  let topicMap    = new Map<string, string | null>()
+  const schedNumMap = new Map<string, number>()
+  const topicMap    = new Map<string, string | null>()
 
   if (groupId) {
     // Use ALL group_courses (active AND inactive) so sessions from replaced/inactive

@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState } from "react"
 
 interface Group {
@@ -122,12 +123,12 @@ export default function HistoryFilterPanel({ groups, from, to, groupId, topic, s
               Apply
             </button>
             {hasActive && (
-              <a
+              <Link
                 href="/portal/instructor/history"
                 className="rounded-lg border border-[#E2E8F0] px-3.5 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#CBD5E1] transition"
               >
                 Clear
-              </a>
+              </Link>
             )}
           </div>
         </form>

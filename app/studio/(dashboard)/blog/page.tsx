@@ -158,7 +158,7 @@ export default function BlogAdminPage() {
 
           <div>
             <label className={LABEL}>Content (HTML)</label>
-            <p className="mb-1.5 text-[11px] text-gray-400">Enter content as HTML. Use &lt;h2&gt;, &lt;h3&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;&lt;li&gt;, &lt;img src="…"&gt; tags.</p>
+            <p className="mb-1.5 text-[11px] text-gray-400">Enter content as HTML. Use &lt;h2&gt;, &lt;h3&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;&lt;li&gt;, &lt;img src=&quot;…&quot;&gt; tags.</p>
             <textarea value={f.content} onChange={(e) => setF({ content: e.target.value })} rows={10} placeholder="<h2>Introduction</h2><p>Your content here…</p>" className={`${INPUT} resize-y font-mono text-[12px]`} />
           </div>
 
