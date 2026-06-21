@@ -7,7 +7,53 @@ import {
   type FinanceFilters, type GroupFinanceSummary, type DashboardFinanceSummary,
   type AccountStatus, type ActivityType,
   type StudentOperationsRow, type StudentOpsFilters, type RiskLevel,
+  type RecurringExpense, type GroupExpenseDetail, type ExpenseType,
 } from './types'
+
+// ── Recurring expense helpers ──────────────────────────────────────────────────
+
+function countActiveMonthsInRange(
+  startDate: string,
+  endDate: string | null,
+  from: Date,
+  to: Date
+): number {
+  const s = new Date(startDate)
+  const e = endDate ? new Date(endDate) : to
+
+  const effectiveStart = s > from ? s : from
+  const effectiveEnd   = e < to   ? e : to
+
+  if (effectiveEnd < effectiveStart) return 0
+
+  const months =
+    (effectiveEnd.getFullYear()  - effectiveStart.getFullYear())  * 12 +
+    (effectiveEnd.getMonth()     - effectiveStart.getMonth()) + 1
+
+  return Math.max(0, months)
+}
+
+function sumRecurring(
+  recurring: RecurringExpense[],
+  from: Date,
+  to: Date,
+  groupId?: string,
+  branchId?: string,
+  scope?: 'GROUP' | 'BRANCH' | 'ACADEMY'
+): number {
+  return recurring
+    .filter(r => {
+      if (!r.is_active) return false
+      if (scope    && r.expense_scope !== scope)   return false
+      if (groupId  && r.group_id      !== groupId) return false
+      if (branchId && r.branch_id     !== branchId) return false
+      return true
+    })
+    .reduce((sum, r) => {
+      const months = countActiveMonthsInRange(r.start_date, r.end_date, from, to)
+      return sum + r.amount * months
+    }, 0)
+}
 
 // ── KPI Cards ──────────────────────────────────────────────────────────────────
 
@@ -104,12 +150,12 @@ export async function listFinancialAccounts(
          users!students_user_id_fkey(
            email, phone,
            profiles!profiles_user_id_fkey(first_name, last_name)
-         ),
+         )
        ),
        branches!student_financial_accounts_branch_id_fkey(name),
        groups!student_financial_accounts_group_id_fkey(
          name,
-         group_courses(
+         group_courses!group_courses_group_id_fkey(
            status,
            courses!group_courses_course_id_fkey(title)
          )
@@ -148,47 +194,73 @@ export async function listFinancialAccounts(
   const { data, count, error } = await q.range(from, to)
   if (error) throw new Error(error.message)
 
+  const studentIds = (data ?? []).map((r: any) => r.student_id as string)
+  const accountIds = (data ?? []).map((r: any) => r.id as string)
+
+  const [parentRes, lastPayRes] = await Promise.all([
+    studentIds.length
+      ? db.from('student_parent_contacts').select('student_id, name, phone1, phone2').in('student_id', studentIds)
+      : { data: [] as any[] },
+    accountIds.length
+      ? db.from('finance_payments').select('account_id, payment_date').in('account_id', accountIds).order('payment_date', { ascending: false })
+      : { data: [] as any[] },
+  ])
+
+  const parentMap = new Map<string, { name: string | null; phone1: string | null; phone2: string | null }>()
+  for (const p of (parentRes.data ?? []) as any[]) {
+    if (!parentMap.has(p.student_id)) {
+      parentMap.set(p.student_id, { name: p.name ?? null, phone1: p.phone1 ?? null, phone2: p.phone2 ?? null })
+    }
+  }
+
+  const lastPayMap = new Map<string, string>()
+  for (const p of (lastPayRes.data ?? []) as any[]) {
+    if (!lastPayMap.has(p.account_id)) lastPayMap.set(p.account_id, p.payment_date)
+  }
+
   const items: FinanceListItem[] = ((data ?? []) as any[]).map(row => {
     const student  = row.students   ?? {}
     const branch   = row.branches   ?? {}
     const group    = row.groups     ?? null
     const user     = student.users  ?? {}
     const profile  = user.profiles  ?? {}
+    const guardian = parentMap.get(row.student_id)
     const gc = Array.isArray(group?.group_courses)
       ? (group.group_courses as any[]).find((c: any) => c.status === 'active')
       : null
     const courseTitle = gc?.courses?.title ?? null
 
     const account = {
-      status:       row.status    as any,
+      status:           row.status    as any,
       remaining_amount: Number(row.remaining_amount),
-      next_due_date: row.next_due_date,
+      next_due_date:    row.next_due_date,
     }
 
     return {
-      account_id:      row.id,
-      status:          row.status,
-      total_amount:    Number(row.total_amount),
-      discount_amount: Number(row.discount_amount),
-      net_amount:      Number(row.net_amount),
-      paid_amount:     Number(row.paid_amount),
-      remaining_amount:Number(row.remaining_amount),
-      next_due_date:   row.next_due_date,
-      student_id:      row.student_id,
-      student_name:    [profile.first_name, profile.last_name].filter(Boolean).join(' ') || user.email || 'Unknown',
-      student_email:   user.email ?? '',
-      student_phone:   user.phone ?? null,
-      student_code:    student.student_code ?? null,
-      parent_name:     null,
-      parent_phone_1:  null,
-      parent_phone_2:  null,
-      branch_id:       row.branch_id,
-      branch_name:     branch.name ?? '',
-      group_id:        row.group_id,
-      group_name:      group?.name ?? null,
-      course_title:    courseTitle,
-      priority:        computePriority(account),
-      days_overdue:    computeDaysOverdue(row.next_due_date),
+      account_id:        row.id,
+      status:            row.status,
+      total_amount:      Number(row.total_amount),
+      discount_amount:   Number(row.discount_amount),
+      net_amount:        Number(row.net_amount),
+      paid_amount:       Number(row.paid_amount),
+      remaining_amount:  Number(row.remaining_amount),
+      next_due_date:     row.next_due_date,
+      student_id:        row.student_id,
+      student_name:      [profile.first_name, profile.last_name].filter(Boolean).join(' ') || user.email || 'Unknown',
+      student_email:     user.email ?? '',
+      student_phone:     user.phone ?? null,
+      student_code:      student.student_code ?? null,
+      parent_name:       guardian?.name   ?? null,
+      parent_phone_1:    guardian?.phone1 ?? null,
+      parent_phone_2:    guardian?.phone2 ?? null,
+      branch_id:         row.branch_id,
+      branch_name:       branch.name ?? '',
+      group_id:          row.group_id,
+      group_name:        group?.name ?? null,
+      course_title:      courseTitle,
+      priority:          computePriority(account),
+      days_overdue:      computeDaysOverdue(row.next_due_date),
+      last_payment_date: lastPayMap.get(row.id) ?? null,
     } satisfies FinanceListItem
   })
 
@@ -261,6 +333,14 @@ export async function getStudentFinanceDetail(accountId: string): Promise<Studen
     ? (group.group_courses as any[]).find((c: any) => c.status === 'active')
     : null
 
+  const { data: parentData } = await db
+    .from('student_parent_contacts')
+    .select('name, phone1, phone2')
+    .eq('student_id', row.student_id)
+    .limit(1)
+    .maybeSingle()
+  const guardian = parentData as { name: string | null; phone1: string | null; phone2: string | null } | null
+
   const mapCreatedBy = (r: any) => {
     const p = r.users?.profiles
     return p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || null : null
@@ -318,17 +398,17 @@ export async function getStudentFinanceDetail(accountId: string): Promise<Studen
       created_by_name: mapCreatedBy(r),
     })),
     student: {
-      id:            student.id ?? row.student_id,
-      name:          [profile.first_name, profile.last_name].filter(Boolean).join(' ') || user.email || 'Unknown',
-      email:         user.email  ?? '',
-      phone:         user.phone  ?? null,
-      student_code:  student.student_code ?? null,
-      branch_name:   branch.name ?? '',
-      group_name:    group?.name  ?? null,
-      course_title:  gc?.courses?.title ?? null,
-      parent_name:   null,
-      parent_phone_1: null,
-      parent_phone_2: null,
+      id:             student.id ?? row.student_id,
+      name:           [profile.first_name, profile.last_name].filter(Boolean).join(' ') || user.email || 'Unknown',
+      email:          user.email  ?? '',
+      phone:          user.phone  ?? null,
+      student_code:   student.student_code ?? null,
+      branch_name:    branch.name ?? '',
+      group_name:     group?.name  ?? null,
+      course_title:   gc?.courses?.title ?? null,
+      parent_name:    guardian?.name   ?? null,
+      parent_phone_1: guardian?.phone1 ?? null,
+      parent_phone_2: guardian?.phone2 ?? null,
     },
   }
 }
@@ -1398,4 +1478,741 @@ async function _appendNoContractStudents(
 
   // No-contract rows go at the END (after all risk-sorted enrollment rows)
   return [...existingRows, ...noContractRows]
+}
+
+// ── Phase XXVII: Expense listing ───────────────────────────────────────────────
+
+export async function listExpenses(
+  filters: import('./types').ExpenseFilters = {}
+): Promise<import('./types').FinancialExpense[]> {
+  const db = createServiceClient()
+
+  // Bug fix: do NOT join users!created_by_fkey — that FK points to auth.users
+  // (cross-schema), which PostgREST cannot traverse. Attempting it causes the
+  // entire query to error and return null data. Creator name is left as null.
+  let q = db
+    .from('financial_expenses')
+    .select(`
+      id, expense_scope, expense_type, group_id, branch_id,
+      amount, expense_date, notes, created_by, created_at, updated_at,
+      groups!financial_expenses_group_id_fkey(name),
+      branches!financial_expenses_branch_id_fkey(name)
+    `)
+    .order('expense_date', { ascending: false })
+
+  if (filters.scope)        q = (q as any).eq('expense_scope',  filters.scope)
+  if (filters.expense_type) q = (q as any).eq('expense_type',   filters.expense_type)
+  if (filters.group_id)     q = (q as any).eq('group_id',       filters.group_id)
+  if (filters.branch_id)    q = (q as any).eq('branch_id',      filters.branch_id)
+  if (filters.date_from)    q = (q as any).gte('expense_date',  filters.date_from)
+  if (filters.date_to)      q = (q as any).lte('expense_date',  filters.date_to)
+  if (filters.branch_ids?.length) {
+    // Bug fix: PostgREST .or() does NOT support SQL subqueries.
+    // Pre-fetch group IDs that belong to these branches, then use explicit UUID lists.
+    const { data: gidRows } = await db
+      .from('groups')
+      .select('id')
+      .in('branch_id', filters.branch_ids)
+    const groupIds = ((gidRows ?? []) as any[]).map(g => g.id as string)
+
+    const parts: string[] = [`branch_id.in.(${filters.branch_ids.join(',')})`]
+    if (groupIds.length > 0) {
+      parts.push(`group_id.in.(${groupIds.join(',')})`)
+    }
+    q = (q as any).or(parts.join(','))
+  }
+
+  const { data, error } = await (q as any)
+  if (error) {
+    console.error('[listExpenses] query error:', error.message)
+    return []
+  }
+  return ((data ?? []) as any[]).map(r => {
+    return {
+      id:             r.id,
+      expense_scope:  r.expense_scope,
+      expense_type:   r.expense_type,
+      group_id:       r.group_id,
+      branch_id:      r.branch_id,
+      amount:         Number(r.amount),
+      expense_date:   r.expense_date,
+      notes:          r.notes,
+      created_by:     r.created_by,
+      created_at:     r.created_at,
+      updated_at:     r.updated_at,
+      group_name:      r.groups?.name ?? null,
+      branch_name:     r.branches?.name ?? null,
+      created_by_name: null,
+    } as import('./types').FinancialExpense
+  })
+}
+
+// ── Phase XXVII/XXVIII: Group P&L ─────────────────────────────────────────────
+
+export async function getGroupPnLRows(
+  branchIds?: string[],
+  opts?: { dateFrom?: string; dateTo?: string; includeArchived?: boolean }
+): Promise<import('./types').GroupPnL[]> {
+  const db = createServiceClient()
+  const dateFrom = opts?.dateFrom
+  const dateTo   = opts?.dateTo
+  const today    = new Date().toISOString().slice(0, 10)
+  const from     = new Date(dateFrom ?? '2020-01-01')
+  const to       = new Date(dateTo   ?? today)
+
+  // 1. Groups — simple query, no deep nesting (deep nesting causes silent failure)
+  let groupQ = db
+    .from('groups')
+    .select('id, name, branch_id, status, branches!groups_branch_id_fkey(name)')
+    .is('deleted_at', null)
+  if (!opts?.includeArchived) groupQ = (groupQ as any).eq('status', 'active')
+  if (branchIds?.length) groupQ = (groupQ as any).in('branch_id', branchIds)
+  const { data: groupData, error: groupErr } = await groupQ
+  if (groupErr) console.error('[getGroupPnLRows] groups query error:', groupErr.message)
+  const groups = (groupData ?? []) as any[]
+  const groupIds = groups.map((g: any) => g.id as string)
+  if (!groupIds.length) return []
+
+  // 2. Group courses — separate query for reliability
+  const { data: gcData } = await db
+    .from('group_courses')
+    .select('id, group_id, session_rate, courses!group_courses_course_id_fkey(title), instructors!group_courses_instructor_id_fkey(id, user_id, default_session_rate)')
+    .in('group_id', groupIds)
+  const gcList = (gcData ?? []) as any[]
+  const gcByGroup: Record<string, any> = {}
+  const gcIdToGroupId: Record<string, string> = {}
+  const gcIdToRate:    Record<string, number>  = {}
+  for (const gc of gcList) {
+    if (!gcByGroup[gc.group_id]) gcByGroup[gc.group_id] = gc
+    gcIdToGroupId[gc.id] = gc.group_id
+    gcIdToRate[gc.id]    = Number(gc.session_rate ?? gc.instructors?.default_session_rate ?? 0)
+  }
+  const gcIds = gcList.map(gc => gc.id as string)
+
+  // 3. Instructor names — separate profiles lookup (avoids cross-schema join chain)
+  const userIds = [...new Set(gcList.map(gc => gc.instructors?.user_id).filter(Boolean))] as string[]
+  const instrNameByUserId: Record<string, string> = {}
+  if (userIds.length) {
+    const { data: profData } = await db
+      .from('profiles')
+      .select('user_id, first_name, last_name')
+      .in('user_id', userIds)
+    for (const p of (profData ?? []) as any[]) {
+      instrNameByUserId[p.user_id] = [p.first_name, p.last_name].filter(Boolean).join(' ')
+    }
+  }
+
+  // 4. Revenue aggregated by group_id (all-time — contracts don't change with date filter)
+  const { data: accData } = await db
+    .from('student_financial_accounts')
+    .select('group_id, net_amount, paid_amount, remaining_amount, status')
+    .in('group_id', groupIds)
+  const revenueByGroup: Record<string, { expected: number; collected: number; outstanding: number }> = {}
+  for (const a of (accData ?? []) as any[]) {
+    const gid = a.group_id as string
+    if (!revenueByGroup[gid]) revenueByGroup[gid] = { expected: 0, collected: 0, outstanding: 0 }
+    revenueByGroup[gid].expected   += Number(a.net_amount)
+    revenueByGroup[gid].collected  += Number(a.paid_amount)
+    revenueByGroup[gid].outstanding += a.status !== 'PAID' ? Number(a.remaining_amount) : 0
+  }
+
+  // 5. Active student count per group
+  const { data: gsData } = await db
+    .from('group_students')
+    .select('group_id')
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+  const studentCountByGroup: Record<string, number> = {}
+  for (const gs of (gsData ?? []) as any[]) {
+    studentCountByGroup[gs.group_id] = (studentCountByGroup[gs.group_id] ?? 0) + 1
+  }
+
+  // 6. Instructor cost from completed sessions (filtered by group_course_ids + date range)
+  const instrCostByGroup: Record<string, number> = {}
+  if (gcIds.length) {
+    let schedQ = db
+      .from('schedules')
+      .select('group_course_id, scheduled_at')
+      .eq('status', 'completed')
+      .in('group_course_id', gcIds)
+    if (dateFrom) schedQ = (schedQ as any).gte('scheduled_at', dateFrom)
+    if (dateTo)   schedQ = (schedQ as any).lte('scheduled_at', dateTo + 'T23:59:59')
+    const { data: schedData } = await schedQ
+    for (const s of (schedData ?? []) as any[]) {
+      const gid  = gcIdToGroupId[s.group_course_id]
+      const rate = gcIdToRate[s.group_course_id] ?? 0
+      if (gid) instrCostByGroup[gid] = (instrCostByGroup[gid] ?? 0) + rate
+    }
+  }
+
+  // 7. Manual group expenses (date-filtered)
+  let expQ = db
+    .from('financial_expenses')
+    .select('group_id, amount, expense_type')
+    .eq('expense_scope', 'GROUP')
+    .in('group_id', groupIds)
+  if (dateFrom) expQ = (expQ as any).gte('expense_date', dateFrom)
+  if (dateTo)   expQ = (expQ as any).lte('expense_date', dateTo)
+  const { data: expData } = await expQ
+  const manualExpByGroup: Record<string, number> = {}
+  for (const e of (expData ?? []) as any[]) {
+    if (e.expense_type === 'INSTRUCTOR') continue
+    manualExpByGroup[e.group_id] = (manualExpByGroup[e.group_id] ?? 0) + Number(e.amount)
+  }
+
+  // 8. Recurring group expenses (prorated by months active in date range)
+  const { data: recurData } = await db
+    .from('recurring_expenses')
+    .select('id, group_id, branch_id, expense_scope, expense_type, amount, start_date, end_date, is_active, notes, created_by, created_at, updated_at')
+    .eq('expense_scope', 'GROUP')
+    .in('group_id', groupIds)
+  const allRecurring = ((recurData ?? []) as any[]).map(r => ({
+    ...r, amount: Number(r.amount), expense_type: r.expense_type as ExpenseType,
+  })) as RecurringExpense[]
+  const recurByGroup: Record<string, number> = {}
+  for (const gid of groupIds) {
+    recurByGroup[gid] = sumRecurring(allRecurring, from, to, gid, undefined, 'GROUP')
+  }
+
+  // 9. Build rows — every group is always included (even with all zeros)
+  return groups.map((g: any) => {
+    const gc         = gcByGroup[g.id]
+    const instrUserId = gc?.instructors?.user_id
+    const instrName  = instrUserId ? (instrNameByUserId[instrUserId] ?? null) : null
+    const courseName = gc?.courses?.title ?? null
+
+    const rev      = revenueByGroup[g.id] ?? { expected: 0, collected: 0, outstanding: 0 }
+    const instrCost = instrCostByGroup[g.id] ?? 0
+    const manualExp = manualExpByGroup[g.id]  ?? 0
+    const recurExp  = recurByGroup[g.id]       ?? 0
+    const otherExp  = manualExp + recurExp
+    const totalExp  = instrCost + otherExp
+    const rate      = rev.expected > 0 ? Math.round((rev.collected / rev.expected) * 100) : 0
+
+    return {
+      group_id:           g.id,
+      group_name:         g.name,
+      branch_id:          g.branch_id,
+      branch_name:        (g.branches as any)?.name ?? '',
+      course_name:        courseName,
+      instructor_name:    instrName,
+      student_count:      studentCountByGroup[g.id] ?? 0,
+      expected_revenue:   rev.expected,
+      collected_revenue:  rev.collected,
+      outstanding:        rev.outstanding,
+      collection_rate:    rate,
+      instructor_cost:    instrCost,
+      manual_expenses:    manualExp,
+      recurring_expenses: recurExp,
+      other_expenses:     otherExp,
+      total_expenses:     totalExp,
+      expected_profit:    rev.expected  - totalExp,
+      actual_profit:      rev.collected - totalExp,
+    } as import('./types').GroupPnL
+  })
+}
+
+// ── Phase XXVII/XXVIII: Branch P&L ────────────────────────────────────────────
+
+export async function getBranchPnLRows(
+  branchIds?: string[],
+  opts?: { dateFrom?: string; dateTo?: string }
+): Promise<import('./types').BranchPnL[]> {
+  const db = createServiceClient()
+  const dateFrom = opts?.dateFrom
+  const dateTo   = opts?.dateTo
+  const today    = new Date().toISOString().slice(0, 10)
+  const from     = new Date(dateFrom ?? '2020-01-01')
+  const to       = new Date(dateTo   ?? today)
+
+  // 1. Active branches
+  let branchQ = db.from('branches').select('id, name').eq('is_active', true).is('deleted_at', null)
+  if (branchIds?.length) branchQ = (branchQ as any).in('id', branchIds)
+  const { data: branchData } = await branchQ
+  const branches = (branchData ?? []) as any[]
+  const allBranchIds = branches.map((b: any) => b.id as string)
+  if (!allBranchIds.length) return []
+
+  const branchNameById: Record<string, string> = Object.fromEntries(
+    branches.map((b: any) => [b.id as string, b.name as string])
+  )
+
+  // 2. Revenue by branch_id (all-time)
+  const { data: accData } = await db
+    .from('student_financial_accounts')
+    .select('branch_id, net_amount, paid_amount, remaining_amount, status')
+    .in('branch_id', allBranchIds)
+  const revByBranch: Record<string, { expected: number; collected: number; outstanding: number; students: number }> = {}
+  for (const a of (accData ?? []) as any[]) {
+    const bid = a.branch_id as string
+    if (!revByBranch[bid]) revByBranch[bid] = { expected: 0, collected: 0, outstanding: 0, students: 0 }
+    revByBranch[bid].expected   += Number(a.net_amount)
+    revByBranch[bid].collected  += Number(a.paid_amount)
+    revByBranch[bid].outstanding += a.status !== 'PAID' ? Number(a.remaining_amount) : 0
+    revByBranch[bid].students   += 1
+  }
+
+  // 3. Group count per branch
+  const { data: groupCounts } = await db
+    .from('groups')
+    .select('branch_id')
+    .in('branch_id', allBranchIds)
+    .eq('status', 'active')
+    .is('deleted_at', null)
+  const groupCountByBranch: Record<string, number> = {}
+  for (const g of (groupCounts ?? []) as any[]) {
+    groupCountByBranch[g.branch_id] = (groupCountByBranch[g.branch_id] ?? 0) + 1
+  }
+
+  // 4. Instructor cost by branch (date-filtered)
+  let schedQ = db
+    .from('schedules')
+    .select(`
+      branch_id,
+      group_courses!schedules_group_course_id_fkey(
+        session_rate,
+        instructors!group_courses_instructor_id_fkey(default_session_rate)
+      )
+    `)
+    .eq('status', 'completed')
+    .in('branch_id', allBranchIds)
+  if (dateFrom) schedQ = (schedQ as any).gte('scheduled_at', `${dateFrom}T00:00:00`)
+  if (dateTo)   schedQ = (schedQ as any).lte('scheduled_at', `${dateTo}T23:59:59`)
+  const { data: schedData } = await schedQ
+  const instrCostByBranch: Record<string, number> = {}
+  for (const s of (schedData ?? []) as any[]) {
+    const bid  = s.branch_id as string
+    const gc   = s.group_courses as any
+    const rate = Number(gc?.session_rate ?? gc?.instructors?.default_session_rate ?? 0)
+    instrCostByBranch[bid] = (instrCostByBranch[bid] ?? 0) + rate
+  }
+
+  // 5. Branch manual expenses (scope=BRANCH, date-filtered)
+  let branchExpQ = db
+    .from('financial_expenses')
+    .select('branch_id, amount')
+    .eq('expense_scope', 'BRANCH')
+    .in('branch_id', allBranchIds)
+  if (dateFrom) branchExpQ = (branchExpQ as any).gte('expense_date', dateFrom)
+  if (dateTo)   branchExpQ = (branchExpQ as any).lte('expense_date', dateTo)
+  const { data: branchExpData } = await branchExpQ
+  const branchExpByBranch: Record<string, number> = {}
+  for (const e of (branchExpData ?? []) as any[]) {
+    branchExpByBranch[e.branch_id] = (branchExpByBranch[e.branch_id] ?? 0) + Number(e.amount)
+  }
+
+  // 6. Group manual expenses allocated to branches (scope=GROUP, date-filtered)
+  let groupExpQ = db
+    .from('financial_expenses')
+    .select(`group_id, amount, expense_type, groups!financial_expenses_group_id_fkey(branch_id)`)
+    .eq('expense_scope', 'GROUP')
+  if (dateFrom) groupExpQ = (groupExpQ as any).gte('expense_date', dateFrom)
+  if (dateTo)   groupExpQ = (groupExpQ as any).lte('expense_date', dateTo)
+  const { data: groupExpData } = await groupExpQ
+  const groupExpByBranch: Record<string, number> = {}
+  for (const e of (groupExpData ?? []) as any[]) {
+    if (e.expense_type === 'INSTRUCTOR') continue
+    const bid = e.groups?.branch_id as string | undefined
+    if (!bid || !allBranchIds.includes(bid)) continue
+    groupExpByBranch[bid] = (groupExpByBranch[bid] ?? 0) + Number(e.amount)
+  }
+
+  // 7. Recurring expenses
+  const { data: recurData } = await db
+    .from('recurring_expenses')
+    .select('group_id, branch_id, expense_scope, amount, start_date, end_date, is_active, expense_type')
+  const allRecurring = ((recurData ?? []) as any[]).map(r => ({
+    ...r, id: '', created_by: null, notes: null, created_at: '', updated_at: '',
+    expense_type: r.expense_type as ExpenseType,
+  })) as RecurringExpense[]
+
+  // 8. Build rows
+  return branches.map((b: any) => {
+    const rev          = revByBranch[b.id] ?? { expected: 0, collected: 0, outstanding: 0, students: 0 }
+    const instrCost    = instrCostByBranch[b.id] ?? 0
+    const branchExp    = branchExpByBranch[b.id]  ?? 0
+    const groupExp     = groupExpByBranch[b.id]    ?? 0
+    const branchRecur  = sumRecurring(allRecurring, from, to, undefined, b.id, 'BRANCH')
+    const groupRecur   = sumRecurring(
+      allRecurring.filter(r => r.expense_scope === 'GROUP'),
+      from, to, undefined, undefined
+    ) // will be 0 here; group-level recurring is tracked per group
+    const staffCost    = 0
+    const totalExp     = instrCost + staffCost + branchExp + branchRecur + groupExp
+    const rate         = rev.expected > 0 ? Math.round((rev.collected / rev.expected) * 100) : 0
+
+    return {
+      branch_id:                  b.id,
+      branch_name:                branchNameById[b.id] ?? b.name,
+      student_count:              rev.students,
+      group_count:                groupCountByBranch[b.id] ?? 0,
+      expected_revenue:           rev.expected,
+      collected_revenue:          rev.collected,
+      outstanding:                rev.outstanding,
+      collection_rate:            rate,
+      instructor_cost:            instrCost,
+      staff_cost:                 staffCost,
+      branch_expenses:            branchExp,
+      branch_recurring_expenses:  branchRecur,
+      group_expenses:             groupExp,
+      group_recurring_expenses:   0,
+      total_expenses:             totalExp,
+      expected_profit:            rev.expected  - totalExp,
+      actual_profit:              rev.collected - totalExp,
+    } as import('./types').BranchPnL
+  }).sort((a, b) => b.expected_revenue - a.expected_revenue)
+}
+
+// ── Phase XXVII/XXVIII: Academy P&L with monthly trend ────────────────────────
+
+export async function getAcademyPnL(
+  branchIds?: string[],
+  opts?: { dateFrom?: string; dateTo?: string }
+): Promise<import('./types').AcademyPnL> {
+  const db  = createServiceClient()
+  const now = new Date()
+
+  // Last 6 months
+  const months: string[] = []
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+  }
+  const rangeStart = `${months[0]}-01`
+  const rangeEnd   = now.toISOString().slice(0, 10)
+
+  // Revenue totals (all-time)
+  let accQ = db.from('student_financial_accounts').select('net_amount, paid_amount, remaining_amount, status')
+  if (branchIds?.length) accQ = (accQ as any).in('branch_id', branchIds)
+  const { data: accData } = await accQ
+  const accounts = (accData ?? []) as any[]
+  const totalExpected   = accounts.reduce((s, a) => s + Number(a.net_amount), 0)
+  const totalCollected  = accounts.reduce((s, a) => s + Number(a.paid_amount), 0)
+  const totalOutstanding = accounts.filter(a => a.status !== 'PAID').reduce((s, a) => s + Number(a.remaining_amount), 0)
+  const collectionRate  = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0
+
+  // Monthly payments
+  const payQ = db.from('finance_payments')
+    .select('amount, payment_date, account_id')
+    .gte('payment_date', rangeStart)
+    .lte('payment_date', rangeEnd)
+  let scopedAccIds: string[] = []
+  if (branchIds?.length) {
+    scopedAccIds = accounts.map((a: any) => a.id as string).filter(Boolean)
+    // Note: accounts don't have id in this query — re-fetch ids
+    const { data: idRows } = await (db.from('student_financial_accounts').select('id') as any).in('branch_id', branchIds)
+    scopedAccIds = ((idRows ?? []) as any[]).map((r: any) => r.id as string)
+  }
+  const { data: payData } = branchIds?.length && scopedAccIds.length
+    ? await (payQ as any).in('account_id', scopedAccIds)
+    : await payQ
+  const payments = (payData ?? []) as any[]
+
+  // Monthly sessions (instructor cost proxy)
+  let sessQ = db.from('schedules')
+    .select(`
+      scheduled_at,
+      group_courses!schedules_group_course_id_fkey(
+        session_rate,
+        instructors!group_courses_instructor_id_fkey(default_session_rate)
+      )
+    `)
+    .eq('status', 'completed')
+    .gte('scheduled_at', `${rangeStart}T00:00:00`)
+    .lte('scheduled_at', `${rangeEnd}T23:59:59`)
+  if (branchIds?.length) sessQ = (sessQ as any).in('branch_id', branchIds)
+  const { data: sessData } = await sessQ
+  const sessions = (sessData ?? []) as any[]
+
+  // Monthly expenses from financial_expenses table
+  const expQ = db.from('financial_expenses')
+    .select('amount, expense_date, expense_scope, expense_type, group_id, branch_id')
+    .gte('expense_date', rangeStart)
+    .lte('expense_date', rangeEnd)
+  const { data: expData } = await expQ
+  const expenses = (expData ?? []) as any[]
+
+  // Totals (all-time)
+  let totalInstrCostQ = db.from('schedules')
+    .select(`group_courses!schedules_group_course_id_fkey(session_rate, instructors!group_courses_instructor_id_fkey(default_session_rate))`)
+    .eq('status', 'completed')
+  if (branchIds?.length) totalInstrCostQ = (totalInstrCostQ as any).in('branch_id', branchIds)
+  const { data: allSessData } = await totalInstrCostQ
+  const totalInstrCost = ((allSessData ?? []) as any[]).reduce((s, ss) => {
+    const gc = ss.group_courses as any
+    return s + Number(gc?.session_rate ?? gc?.instructors?.default_session_rate ?? 0)
+  }, 0)
+
+  const totalExpQ = db.from('financial_expenses').select('amount, expense_scope, expense_type')
+  const { data: allExpData } = await totalExpQ
+  const allExpenses = (allExpData ?? []) as any[]
+  const totalBranchExp  = allExpenses.filter(e => e.expense_scope === 'BRANCH').reduce((s, e) => s + Number(e.amount), 0)
+  const totalGroupExp   = allExpenses.filter(e => e.expense_scope === 'GROUP' && e.expense_type !== 'INSTRUCTOR').reduce((s, e) => s + Number(e.amount), 0)
+  const totalAcademyExp = allExpenses.filter(e => e.expense_scope === 'ACADEMY').reduce((s, e) => s + Number(e.amount), 0)
+
+  // Recurring expenses (all-time)
+  const { data: recurData } = await db
+    .from('recurring_expenses')
+    .select('group_id, branch_id, expense_scope, amount, start_date, end_date, is_active, expense_type')
+  const allRecurring = ((recurData ?? []) as any[]).map(r => ({
+    ...r, id: '', created_by: null, notes: null, created_at: '', updated_at: '',
+    expense_type: r.expense_type as ExpenseType,
+  })) as RecurringExpense[]
+  const allTimeFrom   = new Date('2020-01-01')
+  const allTimeTo     = new Date()
+  const totalBranchRecur  = sumRecurring(allRecurring, allTimeFrom, allTimeTo, undefined, undefined, 'BRANCH')
+  const totalGroupRecur   = sumRecurring(allRecurring, allTimeFrom, allTimeTo, undefined, undefined, 'GROUP')
+  const totalAcademyRecur = sumRecurring(allRecurring, allTimeFrom, allTimeTo, undefined, undefined, 'ACADEMY')
+  const totalExpenses   = totalInstrCost + totalBranchExp + totalBranchRecur + totalGroupExp + totalGroupRecur + totalAcademyExp + totalAcademyRecur
+
+  // Monthly trend
+  const monthly_trend: import('./types').MonthlyPnL[] = months.map(m => {
+    const d     = new Date(`${m}-01`)
+    const label = d.toLocaleString('en-US', { month: 'short', year: 'numeric' })
+
+    const collectedRev = payments
+      .filter((p: any) => (p.payment_date as string).startsWith(m))
+      .reduce((s: number, p: any) => s + Number(p.amount), 0)
+
+    // Rough expected: all-time total / 6 as monthly estimate
+    const expectedRev = totalExpected / 6
+
+    const monthInstrCost = sessions
+      .filter((s: any) => (s.scheduled_at as string).startsWith(m))
+      .reduce((s: number, sess: any) => {
+        const gc = sess.group_courses as any
+        return s + Number(gc?.session_rate ?? gc?.instructors?.default_session_rate ?? 0)
+      }, 0)
+
+    const monthOtherExp = expenses
+      .filter((e: any) => (e.expense_date as string).startsWith(m) && e.expense_type !== 'INSTRUCTOR')
+      .reduce((s: number, e: any) => s + Number(e.amount), 0)
+
+    const monthTotalExp    = monthInstrCost + monthOtherExp
+    const monthExpProfit   = expectedRev  - monthTotalExp
+    const monthActProfit   = collectedRev - monthTotalExp
+
+    return {
+      month:             m,
+      label,
+      expected_revenue:  Math.round(expectedRev),
+      collected_revenue: collectedRev,
+      instructor_cost:   monthInstrCost,
+      other_expenses:    monthOtherExp,
+      total_expenses:    monthTotalExp,
+      expected_profit:   monthExpProfit,
+      actual_profit:     monthActProfit,
+    }
+  })
+
+  return {
+    expected_revenue:           totalExpected,
+    collected_revenue:          totalCollected,
+    outstanding:                totalOutstanding,
+    collection_rate:            collectionRate,
+    total_expenses:             totalExpenses,
+    instructor_cost:            totalInstrCost,
+    staff_cost:                 0,
+    branch_expenses:            totalBranchExp,
+    branch_recurring_expenses:  totalBranchRecur,
+    group_expenses:             totalGroupExp,
+    group_recurring_expenses:   totalGroupRecur,
+    academy_expenses:           totalAcademyExp,
+    academy_recurring_expenses: totalAcademyRecur,
+    expected_profit:            totalExpected  - totalExpenses,
+    actual_profit:              totalCollected - totalExpenses,
+    monthly_trend,
+  }
+}
+
+// ── Phase XXVIII: Recurring expenses listing ───────────────────────────────────
+
+export async function listRecurringExpenses(
+  filters: { scope?: import('./types').ExpenseScope; branch_id?: string; group_id?: string; active_only?: boolean } = {}
+): Promise<RecurringExpense[]> {
+  const db = createServiceClient()
+
+  let q = db
+    .from('recurring_expenses')
+    .select(`
+      id, expense_scope, expense_type, group_id, branch_id,
+      amount, start_date, end_date, is_active, notes, created_by, created_at, updated_at,
+      groups!recurring_expenses_group_id_fkey(name),
+      branches!recurring_expenses_branch_id_fkey(name)
+    `)
+    .order('created_at', { ascending: false })
+
+  if (filters.scope)      q = (q as any).eq('expense_scope', filters.scope)
+  if (filters.branch_id)  q = (q as any).eq('branch_id', filters.branch_id)
+  if (filters.group_id)   q = (q as any).eq('group_id', filters.group_id)
+  if (filters.active_only) q = (q as any).eq('is_active', true)
+
+  const { data, error } = await q
+  if (error) {
+    console.error('[listRecurringExpenses] error:', error.message)
+    return []
+  }
+
+  return ((data ?? []) as any[]).map(r => ({
+    id:            r.id,
+    expense_scope: r.expense_scope,
+    expense_type:  r.expense_type,
+    group_id:      r.group_id,
+    branch_id:     r.branch_id,
+    amount:        Number(r.amount),
+    start_date:    r.start_date,
+    end_date:      r.end_date,
+    is_active:     r.is_active,
+    notes:         r.notes,
+    created_by:    r.created_by,
+    created_at:    r.created_at,
+    updated_at:    r.updated_at,
+    group_name:    r.groups?.name  ?? null,
+    branch_name:   r.branches?.name ?? null,
+  })) as RecurringExpense[]
+}
+
+// ── Phase XXVIII: Group expense detail (for modal) ─────────────────────────────
+
+export async function getGroupExpenseDetail(
+  groupId: string,
+  opts?: { dateFrom?: string; dateTo?: string }
+): Promise<GroupExpenseDetail | null> {
+  const db = createServiceClient()
+  const dateFrom = opts?.dateFrom
+  const dateTo   = opts?.dateTo
+  const today    = new Date().toISOString().slice(0, 10)
+  const from     = new Date(dateFrom ?? '2020-01-01')
+  const to       = new Date(dateTo   ?? today)
+
+  // Load group info
+  const { data: groupData } = await db
+    .from('groups')
+    .select(`
+      id, name, branch_id,
+      branches!groups_branch_id_fkey(name),
+      group_courses!group_courses_group_id_fkey(
+        id, session_rate,
+        courses!group_courses_course_id_fkey(title),
+        instructors!group_courses_instructor_id_fkey(
+          users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))
+        )
+      )
+    `)
+    .eq('id', groupId)
+    .single()
+
+  if (!groupData) return null
+  const g = groupData as any
+  const gc = ((g.group_courses as any[]) ?? [])[0]
+  const instrProfile = gc?.instructors?.users?.profiles
+  const instrName = instrProfile
+    ? [instrProfile.first_name, instrProfile.last_name].filter(Boolean).join(' ') || null
+    : null
+
+  // Revenue
+  const { data: accData } = await db
+    .from('student_financial_accounts')
+    .select('net_amount, paid_amount, remaining_amount, status')
+    .eq('group_id', groupId)
+  const rev = ((accData ?? []) as any[]).reduce(
+    (acc, a) => ({
+      expected:    acc.expected   + Number(a.net_amount),
+      collected:   acc.collected  + Number(a.paid_amount),
+      outstanding: acc.outstanding + (a.status !== 'PAID' ? Number(a.remaining_amount) : 0),
+    }),
+    { expected: 0, collected: 0, outstanding: 0 }
+  )
+
+  // Student count
+  const { count: studentCount } = await db
+    .from('group_students')
+    .select('*', { count: 'exact', head: true })
+    .eq('group_id', groupId)
+    .eq('status', 'active')
+
+  // Instructor cost (completed sessions)
+  let schedQ = db
+    .from('schedules')
+    .select(`group_courses!schedules_group_course_id_fkey(group_id, session_rate, instructors!group_courses_instructor_id_fkey(default_session_rate))`)
+    .eq('status', 'completed')
+  const { data: schedData } = await schedQ
+  const instrCost = ((schedData ?? []) as any[])
+    .filter(s => s.group_courses?.group_id === groupId)
+    .reduce((sum, s) => {
+      const gc2 = s.group_courses
+      return sum + Number(gc2?.session_rate ?? gc2?.instructors?.default_session_rate ?? 0)
+    }, 0)
+
+  // Manual expenses
+  let expQ = db
+    .from('financial_expenses')
+    .select('id, expense_scope, expense_type, group_id, branch_id, amount, expense_date, notes, created_by, created_at, updated_at')
+    .eq('expense_scope', 'GROUP')
+    .eq('group_id', groupId)
+    .order('expense_date', { ascending: false })
+  if (dateFrom) expQ = (expQ as any).gte('expense_date', dateFrom)
+  if (dateTo)   expQ = (expQ as any).lte('expense_date', dateTo)
+  const { data: expData } = await expQ
+  const expenses = ((expData ?? []) as any[]).map(e => ({
+    id: e.id, expense_scope: e.expense_scope, expense_type: e.expense_type,
+    group_id: e.group_id, branch_id: e.branch_id,
+    amount: Number(e.amount), expense_date: e.expense_date,
+    notes: e.notes, created_by: e.created_by,
+    created_at: e.created_at, updated_at: e.updated_at,
+    group_name: g.name, branch_name: g.branches?.name ?? null,
+    created_by_name: null,
+  })) as import('./types').FinancialExpense[]
+  const manualExpTotal = expenses.reduce((s, e) => s + e.amount, 0)
+
+  // Recurring expenses for this group
+  const { data: recurData } = await db
+    .from('recurring_expenses')
+    .select('id, expense_scope, expense_type, group_id, branch_id, amount, start_date, end_date, is_active, notes, created_by, created_at, updated_at')
+    .eq('expense_scope', 'GROUP')
+    .eq('group_id', groupId)
+  const recurring = ((recurData ?? []) as any[]).map(r => ({
+    id: r.id, expense_scope: r.expense_scope, expense_type: r.expense_type,
+    group_id: r.group_id, branch_id: r.branch_id,
+    amount: Number(r.amount), start_date: r.start_date, end_date: r.end_date,
+    is_active: r.is_active, notes: r.notes, created_by: r.created_by,
+    created_at: r.created_at, updated_at: r.updated_at,
+    group_name: g.name, branch_name: null,
+  })) as RecurringExpense[]
+  const recurTotal = sumRecurring(recurring, from, to, groupId, undefined, 'GROUP')
+
+  const totalExpenses = instrCost + manualExpTotal + recurTotal
+  const rate = rev.expected > 0 ? Math.round((rev.collected / rev.expected) * 100) : 0
+
+  // By category
+  const categoryMap: Record<string, number> = {}
+  for (const e of expenses) {
+    categoryMap[e.expense_type] = (categoryMap[e.expense_type] ?? 0) + e.amount
+  }
+  const by_category = Object.entries(categoryMap)
+    .map(([type, amount]) => ({ type: type as ExpenseType, label: type, amount }))
+    .sort((a, b) => b.amount - a.amount)
+
+  return {
+    group_id:           groupId,
+    group_name:         g.name,
+    branch_id:          g.branch_id,
+    branch_name:        g.branches?.name ?? '',
+    course_name:        gc?.courses?.title ?? null,
+    instructor_name:    instrName,
+    student_count:      studentCount ?? 0,
+    expected_revenue:   rev.expected,
+    collected_revenue:  rev.collected,
+    outstanding:        rev.outstanding,
+    collection_rate:    rate,
+    instructor_cost:    instrCost,
+    manual_expenses:    manualExpTotal,
+    recurring_expenses: recurTotal,
+    total_expenses:     totalExpenses,
+    expected_profit:    rev.expected  - totalExpenses,
+    actual_profit:      rev.collected - totalExpenses,
+    expenses,
+    recurring,
+    by_category,
+  }
 }

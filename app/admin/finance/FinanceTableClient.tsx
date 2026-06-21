@@ -137,6 +137,7 @@ export default function FinanceTableClient({ accounts, exportUrl }: { accounts: 
               <th className="px-4 py-3 text-right text-xs font-medium text-[#64748B]">Paid</th>
               <th className="px-4 py-3 text-right text-xs font-medium text-[#64748B]">Remaining</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Next Due</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Last Payment</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
               <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Priority</th>
               <th className="px-4 py-3" />
@@ -185,6 +186,9 @@ export default function FinanceTableClient({ accounts, exportUrl }: { accounts: 
                       {item.days_overdue > 0 && <span className="ml-1 text-[11px]">({item.days_overdue}d late)</span>}
                     </span>
                   ) : '—'}
+                </td>
+                <td className="px-4 py-3 text-sm text-[#64748B]">
+                  {dateFmt(item.last_payment_date ?? null)}
                 </td>
                 <td className="px-4 py-3">
                   <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[item.status]}`}>

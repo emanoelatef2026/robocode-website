@@ -6,7 +6,8 @@ import { logTimelineEvent }     from '@/lib/timeline'
 import type {
   AddPaymentInput, AddNoteInput, AddActivityInput,
   CreateAccountInput, AddInstallmentInput, AddPromiseInput,
-  QuickPaymentInput, CreateReversalInput,
+  QuickPaymentInput, CreateReversalInput, AddExpenseInput,
+  AddRecurringExpenseInput,
 } from './types'
 import { getStudentFinanceDetail, getAccountPromises } from './queries'
 
@@ -469,6 +470,160 @@ export async function createReversal(input: CreateReversalInput) {
   revalidatePath('/portal/parent/finance')
   revalidatePath('/portal/team-leader/groups')
 
+  return { ok: true }
+}
+
+// ── Phase XXVII: Expense CRUD ─────────────────────────────────────────────────
+
+export async function addExpense(input: AddExpenseInput) {
+  const user = await requirePermission('manage_financials')
+  const db   = createServiceClient()
+
+  const { error, data } = await db
+    .from('financial_expenses')
+    .insert({
+      expense_scope: input.expense_scope,
+      expense_type:  input.expense_type,
+      group_id:      input.group_id  ?? null,
+      branch_id:     input.branch_id ?? null,
+      amount:        input.amount,
+      expense_date:  input.expense_date,
+      notes:         input.notes ?? null,
+      created_by:    user.id,
+    })
+    .select('id')
+    .single()
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/revenue')
+  revalidatePath('/admin/expenses')
+  revalidatePath('/admin/finance')
+  return { ok: true, id: (data as any).id as string }
+}
+
+export async function updateExpense(id: string, input: Partial<AddExpenseInput>) {
+  await requirePermission('manage_financials')
+  const db = createServiceClient()
+
+  const { error } = await db
+    .from('financial_expenses')
+    .update({
+      ...(input.expense_scope && { expense_scope: input.expense_scope }),
+      ...(input.expense_type  && { expense_type:  input.expense_type }),
+      ...(input.group_id  !== undefined && { group_id:  input.group_id  ?? null }),
+      ...(input.branch_id !== undefined && { branch_id: input.branch_id ?? null }),
+      ...(input.amount        && { amount:        input.amount }),
+      ...(input.expense_date  && { expense_date:  input.expense_date }),
+      ...(input.notes !== undefined && { notes: input.notes ?? null }),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/revenue')
+  revalidatePath('/admin/expenses')
+  return { ok: true }
+}
+
+export async function deleteExpense(id: string) {
+  await requirePermission('manage_financials')
+  const db = createServiceClient()
+
+  const { error } = await db
+    .from('financial_expenses')
+    .delete()
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/revenue')
+  revalidatePath('/admin/expenses')
+  return { ok: true }
+}
+
+// ── Phase XXVIII: Recurring Expense CRUD ──────────────────────────────────────
+
+export async function addRecurringExpense(input: AddRecurringExpenseInput) {
+  const user = await requirePermission('manage_financials')
+  const db   = createServiceClient()
+
+  const { error, data } = await db
+    .from('recurring_expenses')
+    .insert({
+      expense_scope: input.expense_scope,
+      expense_type:  input.expense_type,
+      group_id:      input.group_id  ?? null,
+      branch_id:     input.branch_id ?? null,
+      amount:        input.amount,
+      start_date:    input.start_date,
+      end_date:      input.end_date  ?? null,
+      notes:         input.notes     ?? null,
+      created_by:    user.id,
+    })
+    .select('id')
+    .single()
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/revenue')
+  revalidatePath('/admin/expenses')
+  return { ok: true, id: (data as any).id as string }
+}
+
+export async function updateRecurringExpense(id: string, input: Partial<AddRecurringExpenseInput>) {
+  await requirePermission('manage_financials')
+  const db = createServiceClient()
+
+  const { error } = await db
+    .from('recurring_expenses')
+    .update({
+      ...(input.expense_scope !== undefined && { expense_scope: input.expense_scope }),
+      ...(input.expense_type  !== undefined && { expense_type:  input.expense_type  }),
+      ...(input.group_id      !== undefined && { group_id:      input.group_id  ?? null }),
+      ...(input.branch_id     !== undefined && { branch_id:     input.branch_id ?? null }),
+      ...(input.amount        !== undefined && { amount:        input.amount        }),
+      ...(input.start_date    !== undefined && { start_date:    input.start_date    }),
+      ...(input.end_date      !== undefined && { end_date:      input.end_date ?? null }),
+      ...(input.notes         !== undefined && { notes:         input.notes    ?? null }),
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/revenue')
+  revalidatePath('/admin/expenses')
+  return { ok: true }
+}
+
+export async function toggleRecurringExpense(id: string, isActive: boolean) {
+  await requirePermission('manage_financials')
+  const db = createServiceClient()
+
+  const { error } = await db
+    .from('recurring_expenses')
+    .update({ is_active: isActive, updated_at: new Date().toISOString() })
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/revenue')
+  revalidatePath('/admin/expenses')
+  return { ok: true }
+}
+
+export async function deleteRecurringExpense(id: string) {
+  await requirePermission('manage_financials')
+  const db = createServiceClient()
+
+  const { error } = await db.from('recurring_expenses').delete().eq('id', id)
+
+  if (error) return { error: error.message }
+
+  revalidatePath('/admin/revenue')
+  revalidatePath('/admin/expenses')
   return { ok: true }
 }
 

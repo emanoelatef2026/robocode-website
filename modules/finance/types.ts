@@ -121,8 +121,9 @@ export interface FinanceListItem {
   // Course
   course_title:     string | null
   // Computed
-  priority:         CollectionPriority
-  days_overdue:     number
+  priority:          CollectionPriority
+  days_overdue:      number
+  last_payment_date: string | null
 }
 
 // ── Finance KPI cards ──────────────────────────────────────────────────────────
@@ -576,6 +577,271 @@ export const RISK_FLAG_LABELS: Record<string, string> = {
   milestone_10:         'Session 10 Unpaid',
   milestone_15:         'Session 15 Unpaid',
   milestone_20:         'Session 20 Unpaid',
+}
+
+// ── Financial Expenses (Phase XXVII) ─────────────────────────────────────────
+
+export type ExpenseScope = 'GROUP' | 'BRANCH' | 'ACADEMY'
+
+export type ExpenseType =
+  | 'INSTRUCTOR' | 'GROUP_RENT' | 'MATERIALS' | 'WORKSHOP' | 'COMPETITION'
+  | 'CAMP' | 'TRANSPORTATION' | 'ADS' | 'MARKETING' | 'EQUIPMENT'
+  | 'BRANCH_RENT' | 'UTILITIES' | 'INTERNET' | 'PRINTING' | 'MAINTENANCE'
+  | 'ACCOUNTANT' | 'MANAGEMENT' | 'SOFTWARE' | 'TOOLS' | 'CONSULTING' | 'LEGAL' | 'TAXES'
+  | 'OTHER'
+
+export interface FinancialExpense {
+  id:           string
+  expense_scope: ExpenseScope
+  expense_type:  ExpenseType
+  group_id:      string | null
+  branch_id:     string | null
+  amount:        number
+  expense_date:  string
+  notes:         string | null
+  created_by:    string | null
+  created_at:    string
+  updated_at:    string
+  // Joined
+  group_name?:   string | null
+  branch_name?:  string | null
+  created_by_name?: string | null
+}
+
+export interface AddExpenseInput {
+  expense_scope: ExpenseScope
+  expense_type:  ExpenseType
+  group_id?:     string
+  branch_id?:    string
+  amount:        number
+  expense_date:  string
+  notes?:        string
+}
+
+export interface ExpenseFilters {
+  scope?:       ExpenseScope
+  branch_id?:   string
+  group_id?:    string
+  expense_type?: ExpenseType
+  date_from?:   string
+  date_to?:     string
+  branch_ids?:  string[]
+}
+
+// ── P&L types (Phase XXVII) ───────────────────────────────────────────────────
+
+export interface GroupPnL {
+  group_id:           string
+  group_name:         string
+  branch_id:          string
+  branch_name:        string
+  course_name:        string | null
+  instructor_name:    string | null
+  student_count:      number
+  expected_revenue:   number
+  collected_revenue:  number
+  outstanding:        number
+  collection_rate:    number
+  instructor_cost:    number
+  manual_expenses:    number
+  recurring_expenses: number
+  other_expenses:     number  // = manual_expenses + recurring_expenses (backward compat)
+  total_expenses:     number
+  expected_profit:    number
+  actual_profit:      number
+}
+
+export interface BranchPnL {
+  branch_id:                  string
+  branch_name:                string
+  student_count:              number
+  group_count:                number
+  expected_revenue:           number
+  collected_revenue:          number
+  outstanding:                number
+  collection_rate:            number
+  instructor_cost:            number
+  staff_cost:                 number
+  branch_expenses:            number
+  branch_recurring_expenses:  number
+  group_expenses:             number
+  group_recurring_expenses:   number
+  total_expenses:             number
+  expected_profit:            number
+  actual_profit:              number
+}
+
+export interface AcademyPnL {
+  expected_revenue:           number
+  collected_revenue:          number
+  outstanding:                number
+  collection_rate:            number
+  total_expenses:             number
+  instructor_cost:            number
+  staff_cost:                 number
+  branch_expenses:            number
+  branch_recurring_expenses:  number
+  group_expenses:             number
+  group_recurring_expenses:   number
+  academy_expenses:           number
+  academy_recurring_expenses: number
+  expected_profit:            number
+  actual_profit:              number
+  monthly_trend:              MonthlyPnL[]
+}
+
+export interface MonthlyPnL {
+  month:            string
+  label:            string
+  expected_revenue: number
+  collected_revenue: number
+  instructor_cost:  number
+  other_expenses:   number
+  total_expenses:   number
+  expected_profit:  number
+  actual_profit:    number
+}
+
+export const EXPENSE_TYPE_LABELS: Record<ExpenseType, string> = {
+  INSTRUCTOR:    'Instructor Payroll',
+  GROUP_RENT:    'Group Rent',
+  MATERIALS:     'Materials',
+  WORKSHOP:      'Workshop Cost',
+  COMPETITION:   'Competition Cost',
+  CAMP:          'Camp Cost',
+  TRANSPORTATION:'Transportation',
+  ADS:           'Advertising',
+  MARKETING:     'Marketing',
+  EQUIPMENT:     'Equipment',
+  BRANCH_RENT:   'Branch Rent',
+  UTILITIES:     'Utilities',
+  INTERNET:      'Internet',
+  PRINTING:      'Printing',
+  MAINTENANCE:   'Maintenance',
+  ACCOUNTANT:    'Accountant',
+  MANAGEMENT:    'Management',
+  SOFTWARE:      'Software',
+  TOOLS:         'Tools & Supplies',
+  CONSULTING:    'Consulting',
+  LEGAL:         'Legal',
+  TAXES:         'Taxes',
+  OTHER:         'Other',
+}
+
+export const EXPENSE_SCOPE_LABELS: Record<ExpenseScope, string> = {
+  GROUP:   'Group Expense',
+  BRANCH:  'Branch Expense',
+  ACADEMY: 'Academy Expense',
+}
+
+export const GROUP_EXPENSE_TYPES: ExpenseType[] = [
+  'GROUP_RENT','MATERIALS','WORKSHOP','COMPETITION','CAMP','TRANSPORTATION','OTHER',
+]
+
+export const BRANCH_EXPENSE_TYPES: ExpenseType[] = [
+  'ADS','MARKETING','EQUIPMENT','BRANCH_RENT','UTILITIES','INTERNET','PRINTING','MAINTENANCE','OTHER',
+]
+
+export const ACADEMY_EXPENSE_TYPES: ExpenseType[] = [
+  'ACCOUNTANT','MANAGEMENT','SOFTWARE','TOOLS','CONSULTING','LEGAL','TAXES',
+  'ADS','MARKETING','EQUIPMENT','UTILITIES','INTERNET','PRINTING','MAINTENANCE','OTHER',
+]
+
+// ── Recurring Expenses (Phase XXVIII) ────────────────────────────────────────
+
+export interface RecurringExpense {
+  id:            string
+  expense_scope: ExpenseScope
+  expense_type:  ExpenseType
+  group_id:      string | null
+  branch_id:     string | null
+  amount:        number
+  start_date:    string
+  end_date:      string | null
+  is_active:     boolean
+  notes:         string | null
+  created_by:    string | null
+  created_at:    string
+  updated_at:    string
+  // Joined
+  group_name?:   string | null
+  branch_name?:  string | null
+}
+
+export interface AddRecurringExpenseInput {
+  expense_scope: ExpenseScope
+  expense_type:  ExpenseType
+  group_id?:     string
+  branch_id?:    string
+  amount:        number
+  start_date:    string
+  end_date?:     string
+  notes?:        string
+}
+
+// ── Date range preset ─────────────────────────────────────────────────────────
+
+export type DatePreset = 'current_month' | 'current_year' | 'last_3_months' | 'last_6_months' | 'all_time' | 'custom'
+
+export interface FinancialDateRange {
+  preset:     DatePreset
+  date_from?: string
+  date_to?:   string
+}
+
+export function resolveDateRange(preset: DatePreset, date_from?: string, date_to?: string): { from: string; to: string } {
+  const today = new Date()
+  const todayStr = today.toISOString().slice(0, 10)
+
+  switch (preset) {
+    case 'current_month': {
+      const from = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10)
+      const to   = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().slice(0, 10)
+      return { from, to }
+    }
+    case 'current_year': {
+      return { from: `${today.getFullYear()}-01-01`, to: `${today.getFullYear()}-12-31` }
+    }
+    case 'last_3_months': {
+      const from = new Date(today.getFullYear(), today.getMonth() - 2, 1).toISOString().slice(0, 10)
+      return { from, to: todayStr }
+    }
+    case 'last_6_months': {
+      const from = new Date(today.getFullYear(), today.getMonth() - 5, 1).toISOString().slice(0, 10)
+      return { from, to: todayStr }
+    }
+    case 'all_time':
+      return { from: '2020-01-01', to: todayStr }
+    case 'custom':
+      return { from: date_from ?? '2020-01-01', to: date_to ?? todayStr }
+    default:
+      return { from: '2020-01-01', to: todayStr }
+  }
+}
+
+// ── Group expense detail (for modal) ─────────────────────────────────────────
+
+export interface GroupExpenseDetail {
+  group_id:           string
+  group_name:         string
+  branch_id:          string
+  branch_name:        string
+  course_name:        string | null
+  instructor_name:    string | null
+  student_count:      number
+  expected_revenue:   number
+  collected_revenue:  number
+  outstanding:        number
+  collection_rate:    number
+  instructor_cost:    number
+  manual_expenses:    number
+  recurring_expenses: number
+  total_expenses:     number
+  expected_profit:    number
+  actual_profit:      number
+  expenses:           FinancialExpense[]
+  recurring:          RecurringExpense[]
+  by_category:        { type: ExpenseType; label: string; amount: number }[]
 }
 
 // ── Session exhaustion helpers (Sprint 45) ────────────────────────────────────
