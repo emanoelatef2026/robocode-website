@@ -1,546 +1,564 @@
-/**
- * Super Admin: Sessions Monitor
- *
- * The Super Admin OBSERVES sessions — never records them.
- * Recording belongs to Instructors and Team Leaders.
- *
- * This page shows:
- *   - KPI overview (planned / completed / missing attendance / rate)
- *   - Filterable session table with per-session attendance %
- *   - Alerts: missing attendance, inactive groups, inactive instructors
- */
-
-import { createServiceClient }  from '@/lib/supabase/service'
-import { requirePermission }    from '@/modules/rbac/guards'
-import { listBranches }         from '@/modules/branches/queries'
-import { listGroups }           from '@/modules/groups/queries'
-import Pagination               from '@/components/admin/Pagination'
-import Link                     from 'next/link'
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-interface SessionRow {
-  id:               string
-  scheduled_at:     string
-  duration_minutes: number | null
-  status:           string
-  topic:            string | null
-  group_id:         string
-  group_name:       string
-  branch_name:      string
-  instructor_name:  string | null
-  total_enrolled:   number
-  present_count:    number
-  absent_count:     number
-  attendance_pct:   number | null
-  has_records:      boolean
-  is_past:          boolean
-}
-
-interface SessionKPIs {
-  planned:           number
-  with_attendance:   number
-  missing_att:       number
-  cancelled:         number
-  attendance_rate:   number | null
-  students_absent:   number
-  // Lifecycle-derived
-  completion_rate:   number  // % of sessions that have attendance recorded
-  avg_duration_min:  number | null
-}
-
-// ── Queries ───────────────────────────────────────────────────────────────────
-
-async function getSessionKPIs(
-  branchIds?: string[],
-  dateFrom?:  string,
-  dateTo?:    string
-): Promise<SessionKPIs> {
-  const db       = createServiceClient()
-  const todayISO = new Date().toISOString()
-
-  // Past + present sessions (not cancelled)
-  let q = db.from('schedules')
-    .select('id, status, duration_minutes, branch_id')
-    .lte('scheduled_at', todayISO)
-
-  if (branchIds?.length) q = q.in('branch_id', branchIds)
-  if (dateFrom)          q = q.gte('scheduled_at', `${dateFrom}T00:00:00`)
-  if (dateTo)            q = q.lte('scheduled_at', `${dateTo}T23:59:59`)
-
-  const { data: allRows } = await q
-  const allScheds    = (allRows ?? []) as any[]
-  const cancelled    = allScheds.filter(s => s.status === 'cancelled').length
-  const nonCancelled = allScheds.filter(s => s.status !== 'cancelled')
-  const schedIds     = nonCancelled.map(s => s.id as string)
-
-  if (schedIds.length === 0) {
-    return { planned: 0, with_attendance: 0, missing_att: 0, cancelled, attendance_rate: null, students_absent: 0, completion_rate: 0, avg_duration_min: null }
-  }
-
-  // Attendance records
-  const { data: attRows } = await db
-    .from('attendance_records').select('schedule_id, status').in('schedule_id', schedIds)
-
-  const withAtt    = new Set((attRows ?? []).map((r: any) => r.schedule_id as string))
-  const missing    = schedIds.filter(id => !withAtt.has(id)).length
-  const total      = (attRows ?? []).length
-  const present    = (attRows ?? []).filter(r => (r as any).status === 'present' || (r as any).status === 'late').length
-  const absent     = (attRows ?? []).filter(r => (r as any).status === 'absent').length
-  const rate       = total > 0 ? Math.round((present / total) * 100) : null
-  const completion = schedIds.length > 0 ? Math.round((withAtt.size / schedIds.length) * 100) : 0
-
-  // Avg duration
-  const durations   = nonCancelled.map(s => s.duration_minutes).filter((d): d is number => typeof d === 'number' && d > 0)
-  const avgDuration = durations.length > 0 ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : null
-
-  return {
-    planned:          schedIds.length,
-    with_attendance:  withAtt.size,
-    missing_att:      missing,
-    cancelled,
-    attendance_rate:  rate,
-    students_absent:  absent,
-    completion_rate:  completion,
-    avg_duration_min: avgDuration,
-  }
-}
-
-async function listSessions({
-  page = 1,
-  perPage = 25,
-  branchIds,
-  groupId,
-  dateFrom,
-  dateTo,
-  missingOnly = false,
-}: {
-  page?:        number
-  perPage?:     number
-  branchIds?:   string[]
-  groupId?:     string
-  dateFrom?:    string
-  dateTo?:      string
-  missingOnly?: boolean
-}): Promise<{ data: SessionRow[]; total: number; page: number; perPage: number; totalPages: number }> {
-  const db   = createServiceClient()
-  const from = (page - 1) * perPage
-  const to   = from + perPage - 1
-
-  let q = db
-    .from('schedules')
-    .select(
-      `id, scheduled_at, duration_minutes, status, topic, branch_id,
-       group_courses!schedules_group_course_id_fkey(
-         group_id,
-         instructor_id,
-         groups!group_courses_group_id_fkey(id, name, branches!groups_branch_id_fkey(name)),
-         instructors!group_courses_instructor_id_fkey(
-           users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))
-         )
-       )`,
-      { count: 'exact' }
-    )
-    .neq('status', 'cancelled')
-    .order('scheduled_at', { ascending: false })
-    .range(from, to)
-
-  if (branchIds?.length) q = q.in('branch_id', branchIds)
-  if (dateFrom)          q = q.gte('scheduled_at', `${dateFrom}T00:00:00`)
-  if (dateTo)            q = q.lte('scheduled_at', `${dateTo}T23:59:59`)
-  if (groupId) {
-    const { data: gcIds } = await db.from('group_courses').select('id').eq('group_id', groupId).eq('status', 'active')
-    const ids = (gcIds ?? []).map((r: any) => r.id as string)
-    if (ids.length > 0) q = q.in('group_course_id', ids)
-    else return { data: [], total: 0, page, perPage, totalPages: 0 }
-  }
-
-  const { data: rows, count, error } = await q
-  if (error) throw new Error(error.message)
-
-  const schedIds  = (rows ?? []).map((r: any) => r.id as string)
-  const attMap: Record<string, { present: number; absent: number; late: number; total: number }> = {}
-  if (schedIds.length > 0) {
-    const { data: attRows } = await db
-      .from('attendance_records').select('schedule_id, status').in('schedule_id', schedIds)
-    for (const r of attRows ?? []) {
-      const sid = (r as any).schedule_id as string
-      if (!attMap[sid]) attMap[sid] = { present: 0, absent: 0, late: 0, total: 0 }
-      attMap[sid].total++
-      if ((r as any).status === 'present')     attMap[sid].present++
-      else if ((r as any).status === 'absent') attMap[sid].absent++
-      else if ((r as any).status === 'late')   attMap[sid].late++
-    }
-  }
-
-  let sessions: SessionRow[] = (rows ?? []).map((r: any) => {
-    const gc   = r.group_courses
-    const grp  = gc?.groups
-    const inst = gc?.instructors?.users?.profiles
-    const att  = attMap[r.id] ?? { present: 0, absent: 0, late: 0, total: 0 }
-    const pct  = att.total > 0 ? Math.round(((att.present + att.late) / att.total) * 100) : null
-    const past = new Date(r.scheduled_at) < new Date()
-
-    return {
-      id:               r.id,
-      scheduled_at:     r.scheduled_at,
-      duration_minutes: r.duration_minutes ?? null,
-      status:           r.status,
-      topic:            r.topic ?? null,
-      group_id:         grp?.id ?? '',
-      group_name:       grp?.name ?? '—',
-      branch_name:      grp?.branches?.name ?? r.branch_id ?? '—',
-      instructor_name:  inst ? [inst.first_name, inst.last_name].filter(Boolean).join(' ') || null : null,
-      total_enrolled:   att.total,
-      present_count:    att.present + att.late,
-      absent_count:     att.absent,
-      attendance_pct:   pct,
-      has_records:      att.total > 0,
-      is_past:          past,
-    }
-  })
-
-  if (missingOnly) {
-    sessions = sessions.filter(s => s.is_past && !s.has_records)
-  }
-
-  return { data: sessions, total: count ?? 0, page, perPage, totalPages: Math.ceil((count ?? 0) / perPage) }
-}
-
-// ── Alerts ────────────────────────────────────────────────────────────────────
-
-async function getAttendanceAlerts(branchIds?: string[]) {
-  const db          = createServiceClient()
-  const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString()
-  const now         = new Date().toISOString()
-
-  // Past sessions missing attendance
-  let missQ = db.from('schedules')
-    .select('id')
-    .neq('status', 'cancelled')
-    .lte('scheduled_at', now)
-    .gte('scheduled_at', twoWeeksAgo)
-  if (branchIds?.length) missQ = missQ.in('branch_id', branchIds)
-  const { data: recentScheds } = await missQ
-  const recentIds = (recentScheds ?? []).map((s: any) => s.id as string)
-  let missingSessions = 0
-  if (recentIds.length > 0) {
-    const { data: attRows } = await db.from('attendance_records').select('schedule_id').in('schedule_id', recentIds)
-    const withAtt   = new Set((attRows ?? []).map((r: any) => r.schedule_id as string))
-    missingSessions = recentIds.filter(id => !withAtt.has(id)).length
-  }
-
-  // Active groups with no session in 14 days
-  let groupQ = db.from('groups').select('id, name').eq('status', 'active').is('deleted_at', null)
-  if (branchIds?.length) groupQ = groupQ.in('branch_id', branchIds)
-  const { data: activeGroups } = await groupQ
-  const activeGroupIds = (activeGroups ?? []).map((g: any) => g.id as string)
-  let inactiveGroups = 0
-  if (activeGroupIds.length > 0) {
-    const { data: gcRows } = await db.from('group_courses').select('id, group_id').in('group_id', activeGroupIds).eq('status', 'active')
-    const gcIds = (gcRows ?? []).map((r: any) => r.id as string)
-    if (gcIds.length > 0) {
-      const { data: recentGrpScheds } = await db.from('schedules').select('group_course_id').in('group_course_id', gcIds).gte('scheduled_at', twoWeeksAgo).neq('status', 'cancelled')
-      const activeGcSet = new Set((recentGrpScheds ?? []).map((s: any) => s.group_course_id as string))
-      inactiveGroups = gcIds.filter(gcId => !activeGcSet.has(gcId)).length
-    }
-  }
-
-  return { missingSessions, inactiveGroups }
-}
-
-// ── UI Components ─────────────────────────────────────────────────────────────
-
-function KPICard({ label, value, sub, alert = false }: { label: string; value: string | number; sub?: string; alert?: boolean }) {
-  return (
-    <div className={`rounded-xl border p-4 bg-white ${alert && value !== 0 && value !== '—' ? 'border-red-200' : 'border-[#E2E8F0]'}`}>
-      <p className={`text-2xl font-bold ${alert && value !== 0 && value !== '—' ? 'text-red-600' : 'text-[#0B1F3A]'}`}>{value}</p>
-      <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
-      {sub && <p className="mt-1 text-[11px] text-[#94A3B8]">{sub}</p>}
-    </div>
-  )
-}
-
-function AttPill({ pct, hasRecords }: { pct: number | null; hasRecords: boolean }) {
-  if (!hasRecords) return <span className="inline-block rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-500">No records</span>
-  if (pct === null) return <span className="text-xs text-[#94A3B8]">—</span>
-  const cls = pct >= 80 ? 'bg-emerald-100 text-emerald-700' : pct >= 60 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-  return <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${cls}`}>{pct}%</span>
-}
-
-// ── Page ──────────────────────────────────────────────────────────────────────
+import { requirePermission }                                  from '@/modules/rbac/guards'
+import { listStudentOperations }                              from '@/modules/finance/queries'
+import { computeAttendanceHealth, ATTENDANCE_TREND_CONFIG }  from '@/modules/operational-engine'
+import {
+  getAttendanceReconciliationStatus,
+  getRecentAttendance,
+} from '@/modules/attendance/queries'
+import { listBranches } from '@/modules/branches/queries'
+import Link             from 'next/link'
 
 interface Props {
-  searchParams: Promise<{
-    page?:    string
-    branch?:  string
-    group?:   string
-    from?:    string
-    to?:      string
-    missing?: string
-  }>
+  searchParams: Promise<{ q?: string; risk?: string; att?: string; view?: string; branch?: string }>
 }
 
-export default async function AttendanceMonitorPage({ searchParams }: Props) {
+const STATUS_PILL: Record<string, string> = {
+  present: 'bg-emerald-100 text-emerald-700',
+  absent:  'bg-red-100    text-red-600',
+  late:    'bg-amber-100  text-amber-700',
+  excused: 'bg-blue-100   text-blue-700',
+  makeup:  'bg-purple-100 text-purple-700',
+}
+
+export default async function AdminAttendancePage({ searchParams }: Props) {
   const user   = await requirePermission('manage_attendance')
   const params = await searchParams
 
+  const search       = params.q      ?? ''
+  const riskF        = params.risk   ?? ''
+  const attF         = params.att    ?? ''
+  const view         = params.view   ?? 'monitor'
+  const branchParam  = params.branch ?? ''
+
   const isSuperAdmin = user.globalRole === 'super_admin'
-  const branchScope  = isSuperAdmin ? undefined : (user.branchIds.length > 0 ? user.branchIds : undefined)
 
-  const page        = Number(params.page ?? 1)
-  const branchParam = params.branch
-  const groupParam  = params.group
-  const dateFrom    = params.from
-  const dateTo      = params.to
-  const missingOnly = params.missing === '1'
+  // Load all branches for super admin — needed to resolve branch scope
+  const branchesRes    = await listBranches({ perPage: 200 })
+  const allBranchIds   = branchesRes.data.map(b => b.id)
+  const effectiveBranchIds = branchParam
+    ? [branchParam]
+    : (isSuperAdmin ? allBranchIds : (user.branchIds.length > 0 ? user.branchIds : allBranchIds))
 
-  const effectiveBranchIds = branchParam ? [branchParam] : branchScope
-
-  const [result, kpis, alerts, branchesRes, groupsRes] = await Promise.all([
-    listSessions({ page, perPage: 25, branchIds: effectiveBranchIds, groupId: groupParam, dateFrom, dateTo, missingOnly }),
-    getSessionKPIs(effectiveBranchIds, dateFrom, dateTo),
-    getAttendanceAlerts(effectiveBranchIds),
-    listBranches({ perPage: 100 }),
-    listGroups({ perPage: 200, branchId: effectiveBranchIds }),
+  // ── Parallel data fetch ─────────────────────────────────────────────────────
+  const [rows, reconciliation, recentTimeline] = await Promise.all([
+    listStudentOperations(effectiveBranchIds),
+    getAttendanceReconciliationStatus(effectiveBranchIds),
+    getRecentAttendance(effectiveBranchIds, 10),
   ])
 
+  // ── KPI derivations ─────────────────────────────────────────────────────────
+  const chronicAbsence  = rows.filter(r => r.consecutive_absences >= 3).length
+  const belowThreshold  = rows.filter(r => r.total_sessions >= 3 && r.attendance_pct < 60).length
+  const nearExhaustion  = rows.filter(r => r.enrolled_sessions > 0 && r.remaining_sessions <= 2 && r.remaining_sessions > 0).length
+  const unpaidAttending = rows.filter(r => r.remaining_amount > 0 && r.sessions_attended > 0).length
+  const neverAttended   = rows.filter(r => r.total_sessions >= 2 && r.sessions_attended === 0).length
+
+  // ── Filter ──────────────────────────────────────────────────────────────────
+  let filtered = rows
+  if (riskF)                filtered = filtered.filter(r => r.risk_level === riskF)
+  if (attF === 'low')       filtered = filtered.filter(r => r.total_sessions >= 3 && r.attendance_pct < 60)
+  if (attF === 'chronic')   filtered = filtered.filter(r => r.consecutive_absences >= 3)
+  if (attF === 'never')     filtered = filtered.filter(r => r.total_sessions >= 2 && r.sessions_attended === 0)
+  if (attF === 'exhausted') filtered = filtered.filter(r => r.enrolled_sessions > 0 && r.remaining_sessions <= 0)
+  if (search) {
+    const q = search.toLowerCase()
+    filtered = filtered.filter(r =>
+      r.student_name.toLowerCase().includes(q) ||
+      (r.student_code?.toLowerCase().includes(q) ?? false) ||
+      (r.group_name?.toLowerCase().includes(q) ?? false) ||
+      (r.instructor_name?.toLowerCase().includes(q) ?? false)
+    )
+  }
+
+  function attHref(a: string) {
+    const p = new URLSearchParams()
+    if (riskF)       p.set('risk', riskF)
+    if (a)           p.set('att', a)
+    if (search)      p.set('q', search)
+    if (branchParam) p.set('branch', branchParam)
+    return `/admin/attendance?${p}`
+  }
+
+  const integrityHealthy = reconciliation.drift_count === 0 && reconciliation.unmatched_count === 0
+
   return (
-    <div>
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="mb-6 flex items-start justify-between">
+    <div className="space-y-5">
+
+      {/* ── Warning Banner ──────────────────────────────────────────────────── */}
+      <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-blue-500">
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+        </svg>
+        <p className="text-sm text-blue-700">
+          <span className="font-semibold">Attendance is academic history.</span>{' '}
+          It represents real student participation and must reflect reality — independent of contracts, payments, or packages.
+          Record sessions for any past date; financial attribution can be linked later.
+        </p>
+      </div>
+
+      {/* ── Page Header ─────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Sessions Monitor</h1>
+          <h1 className="text-xl font-semibold text-[#0B1F3A]">Attendance Center</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">
-            Operational visibility into all sessions and attendance quality
+            Academy-wide academic record of all sessions
           </p>
         </div>
-        <div className="flex items-center gap-2 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-2 text-xs text-[#64748B]">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#94A3B8]">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-          </svg>
-          Recording is done by Instructors & Team Leaders
-        </div>
-      </div>
-
-      {/* ── Alerts ─────────────────────────────────────────────────────── */}
-      {(alerts.missingSessions > 0 || alerts.inactiveGroups > 0) && (
-        <div className="mb-5 space-y-2">
-          {alerts.missingSessions > 0 && (
-            <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0"><path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>
-              {alerts.missingSessions} session{alerts.missingSessions !== 1 ? 's' : ''} held in the last 14 days with no attendance recorded
-              <Link href="?missing=1" className="ml-auto text-xs underline">Show →</Link>
-            </div>
-          )}
-          {alerts.inactiveGroups > 0 && (
-            <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
-              {alerts.inactiveGroups} active group{alerts.inactiveGroups !== 1 ? 's' : ''} with no session in 14+ days
-              <Link href="/admin/system-health" className="ml-auto text-xs underline">System Health →</Link>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── KPIs — Lifecycle ──────────────────────────────────────────── */}
-      <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-7">
-        <KPICard label="Sessions"             value={kpis.planned} />
-        <KPICard label="With Attendance"      value={kpis.with_attendance} />
-        <KPICard label="Missing Attendance"   value={kpis.missing_att} alert sub="Past sessions only" />
-        <KPICard label="Cancelled"            value={kpis.cancelled} />
-        <KPICard label="Completion Rate"      value={`${kpis.completion_rate}%`}
-          sub="sessions with records" />
-        <KPICard label="Attendance Rate"      value={kpis.attendance_rate !== null ? `${kpis.attendance_rate}%` : '—'} />
-        <KPICard label="Avg Duration"         value={kpis.avg_duration_min !== null ? `${kpis.avg_duration_min}m` : '—'} />
-      </div>
-
-      {/* ── Filters ────────────────────────────────────────────────────── */}
-      <form method="get" className="mb-4 rounded-xl border border-[#E2E8F0] bg-white">
-        <div className="flex flex-wrap items-center gap-2 px-4 py-3">
+        <div className="flex items-center gap-2">
+          {/* Branch filter for super admin */}
           {isSuperAdmin && (
-            <select
-              name="branch"
-              defaultValue={branchParam ?? ''}
-              className="h-10 rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
-            >
-              <option value="">All branches</option>
-              {branchesRes.data.map(b => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
+            <form method="get">
+              {search      && <input type="hidden" name="q"      value={search} />}
+              {riskF       && <input type="hidden" name="risk"   value={riskF} />}
+              {attF        && <input type="hidden" name="att"    value={attF} />}
+              {view !== 'monitor' && <input type="hidden" name="view" value={view} />}
+              <select
+                name="branch"
+                defaultValue={branchParam}
+                onChange={undefined}
+                className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                onBlur={undefined}
+              >
+                <option value="">All Branches</option>
+                {branchesRes.data.map(b => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+              <noscript><button type="submit">Apply</button></noscript>
+            </form>
           )}
-          <select
-            name="group"
-            defaultValue={groupParam ?? ''}
-            className="h-10 rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
-          >
-            <option value="">All groups</option>
-            {groupsRes.data.map(g => (
-              <option key={g.id} value={g.id}>{g.name}</option>
-            ))}
-          </select>
-
-          <label className="flex items-center gap-1.5 text-xs text-[#64748B]">
-            From
-            <input
-              type="date"
-              name="from"
-              defaultValue={dateFrom ?? ''}
-              className="rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-xs text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
-            />
-          </label>
-          <label className="flex items-center gap-1.5 text-xs text-[#64748B]">
-            To
-            <input
-              type="date"
-              name="to"
-              defaultValue={dateTo ?? ''}
-              className="rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-xs text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
-            />
-          </label>
-
-          {missingOnly && <input type="hidden" name="missing" value="1" />}
-
-          <button
-            type="submit"
-            className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18]"
-          >
-            Filter
-          </button>
-
-          {(branchParam || groupParam || dateFrom || dateTo) && (
-            <Link
-              href={missingOnly ? '/admin/attendance?missing=1' : '/admin/attendance'}
-              className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1]"
-            >
-              Clear
-            </Link>
-          )}
-
           <Link
-            href={missingOnly ? '/admin/attendance' : '/admin/attendance?missing=1'}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
-              missingOnly ? 'border-red-300 bg-red-50 text-red-700' : 'border-[#E2E8F0] text-[#64748B] hover:border-red-300 hover:text-red-600'
-            }`}
+            href={`/admin/attendance?view=${view === 'overview' ? 'monitor' : 'overview'}${riskF ? `&risk=${riskF}` : ''}${attF ? `&att=${attF}` : ''}${branchParam ? `&branch=${branchParam}` : ''}`}
+            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]"
           >
-            {missingOnly ? '✕ Missing only' : 'Missing only'}
+            {view === 'overview' ? 'Switch to Monitor' : 'Switch to Overview'}
+          </Link>
+          <Link
+            href="/admin/attendance/record"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            Record Session
           </Link>
         </div>
-      </form>
+      </div>
 
-      {/* ── Session table ──────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
-        {result.data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
-            <p className="text-sm font-medium text-[#0B1F3A]">No sessions found</p>
-            <p className="mt-1 text-xs text-[#94A3B8]">
-              {missingOnly ? 'All sessions have attendance recorded. Well done.' : 'Sessions appear here once scheduled.'}
-            </p>
+      {/* ── Overview mode ──────────────────────────────────────────────────── */}
+      {view === 'overview' && (
+        <>
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              {
+                label: 'Record Session',
+                desc:  'Log today or any past session',
+                href:  '/admin/attendance/record',
+                color: 'bg-[#FF8A1F]',
+                icon:  (
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                  </svg>
+                ),
+              },
+              {
+                label: 'Chronic Absence',
+                desc:  `${chronicAbsence} students · 3+ consecutive`,
+                href:  attHref('chronic'),
+                color: chronicAbsence > 0 ? 'bg-red-500' : 'bg-slate-400',
+                icon:  (
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                ),
+              },
+              {
+                label: 'Missing Contracts',
+                desc:  `${reconciliation.students_without_contracts} students unfunded`,
+                href:  attHref('never'),
+                color: reconciliation.students_without_contracts > 0 ? 'bg-amber-500' : 'bg-slate-400',
+                icon:  (
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                    <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                  </svg>
+                ),
+              },
+              {
+                label: 'Near Exhaustion',
+                desc:  `${nearExhaustion} students · ≤2 sessions left`,
+                href:  attHref('exhausted'),
+                color: nearExhaustion > 0 ? 'bg-orange-500' : 'bg-slate-400',
+                icon:  (
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                ),
+              },
+            ].map((a) => (
+              <Link
+                key={a.label}
+                href={a.href}
+                className="flex flex-col gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
+              >
+                <div className={`flex h-9 w-9 items-center justify-center rounded-lg text-white ${a.color}`}>
+                  {a.icon}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-[#0B1F3A]">{a.label}</p>
+                  <p className="mt-0.5 text-xs text-[#64748B]">{a.desc}</p>
+                </div>
+              </Link>
+            ))}
           </div>
-        ) : (
-          <>
-            {/* Mobile cards */}
-            <div className="md:hidden divide-y divide-[#E2E8F0]">
-              {result.data.map(s => {
-                const isMissing = s.is_past && !s.has_records
-                return (
-                  <div key={s.id} className={`px-4 py-4 ${isMissing ? 'bg-red-50/40' : ''}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <Link href={`/admin/groups/${s.group_id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">
-                          {s.group_name}
-                        </Link>
-                        <p className="mt-0.5 text-[12px] text-[#64748B]">
-                          {new Date(s.scheduled_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+
+          {/* Two-column: Reconciliation + Recent Timeline */}
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+            {/* Reconciliation Status */}
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-[#0B1F3A]">Reconciliation Health</h2>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${integrityHealthy ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                  {integrityHealthy ? 'HEALTHY' : 'NEEDS ATTENTION'}
+                </span>
+              </div>
+              <div className="space-y-3">
+                {[
+                  {
+                    label: 'Unfunded Sessions',
+                    value: reconciliation.unmatched_count,
+                    desc:  'attendance records without a contract attribution',
+                    warn:  reconciliation.unmatched_count > 0,
+                  },
+                  {
+                    label: 'Students Without Contracts',
+                    value: reconciliation.students_without_contracts,
+                    desc:  'students with sessions but no active enrollment',
+                    warn:  reconciliation.students_without_contracts > 0,
+                  },
+                  {
+                    label: 'Active Packages',
+                    value: reconciliation.contracts_with_unused,
+                    desc:  'enrollments with remaining session capacity',
+                    warn:  false,
+                  },
+                  {
+                    label: 'Session Counter Drift',
+                    value: reconciliation.drift_count,
+                    desc:  'enrollments where stored count ≠ ledger count',
+                    warn:  reconciliation.drift_count > 0,
+                  },
+                ].map((stat) => (
+                  <div key={stat.label} className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[#0B1F3A]">{stat.label}</p>
+                      <p className="text-xs text-[#94A3B8]">{stat.desc}</p>
+                    </div>
+                    <span className={`shrink-0 text-lg font-bold ${stat.warn ? 'text-amber-600' : stat.value > 0 ? 'text-emerald-600' : 'text-[#94A3B8]'}`}>
+                      {stat.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {!integrityHealthy && (
+                <div className="mt-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
+                  Run reconciliation to link unfunded sessions to available contracts automatically.
+                </div>
+              )}
+            </div>
+
+            {/* Recent Timeline */}
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-[#0B1F3A]">Recent Sessions</h2>
+                <Link href="/admin/attendance?view=monitor" className="text-xs font-medium text-[#FF8A1F] hover:underline">
+                  View all →
+                </Link>
+              </div>
+              {recentTimeline.length === 0 ? (
+                <p className="py-6 text-center text-sm text-[#94A3B8]">No sessions recorded yet.</p>
+              ) : (
+                <ul className="divide-y divide-[#E2E8F0]">
+                  {recentTimeline.map((r) => (
+                    <li key={r.id} className="flex items-center justify-between gap-2 py-2.5">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-[#0B1F3A]">{r.student_name}</p>
+                        <p className="truncate text-xs text-[#94A3B8]">
+                          {r.group_name}
+                          {r.branch_name ? ` · ${r.branch_name}` : ''}
                           {' · '}
-                          {new Date(s.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(r.session_date).toLocaleDateString('en-GB', {
+                            day: 'numeric', month: 'short', year: 'numeric',
+                          })}
                         </p>
                       </div>
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <AttPill pct={s.attendance_pct} hasRecords={s.has_records} />
-                        {isMissing && <span className="text-[10px] font-bold text-red-600">Missing!</span>}
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${STATUS_PILL[r.status] ?? 'bg-slate-100 text-slate-600'}`}>
+                        {r.status}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+
+          {/* Rules */}
+          <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+            <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">How This Works — Important Rules</h2>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                { icon: '📋', title: 'Attendance is Always Recordable', body: 'Sessions can be recorded regardless of payment status, contract state, or package balance. Academic history is never blocked.' },
+                { icon: '🔗', title: 'Contracts Link Later', body: 'If no active package exists at session time, the session is marked "Unfunded." Contracts added later will automatically reconcile.' },
+                { icon: '📅', title: 'Historical Backfill', body: 'You can record a session for any past date — even weeks ago. The system will retroactively match it to the correct enrollment package.' },
+                { icon: '🔄', title: 'FIFO Package Attribution', body: 'Sessions are attributed to the oldest active enrollment first. Start dates determine eligibility.' },
+                { icon: '👁️', title: 'Visible Everywhere', body: 'Every attendance record is immediately visible in admin, instructor, student, and parent portals — no sync needed.' },
+                { icon: '🔒', title: 'Records Are Immutable', body: 'Attendance records represent real learning events. They are never deleted when packages change, expire, or are cancelled.' },
+              ].map((rule) => (
+                <div key={rule.title} className="rounded-lg bg-[#F8FAFC] p-4">
+                  <p className="mb-1.5 text-base">{rule.icon}</p>
+                  <p className="text-sm font-semibold text-[#0B1F3A]">{rule.title}</p>
+                  <p className="mt-1 text-xs text-[#64748B]">{rule.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Monitor mode ────────────────────────────────────────────────────── */}
+      {view !== 'overview' && (
+        <>
+          {/* KPI Strip */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {[
+              { label: 'Chronic Absence (3+)',  value: chronicAbsence,  color: chronicAbsence > 0 ? 'bg-red-400' : 'bg-slate-300',    att: 'chronic' },
+              { label: 'Below 60% Attendance',  value: belowThreshold,  color: belowThreshold > 0 ? 'bg-amber-400' : 'bg-slate-300',  att: 'low' },
+              { label: 'Never Attended',         value: neverAttended,   color: neverAttended > 0 ? 'bg-red-400' : 'bg-slate-300',    att: 'never' },
+              { label: 'Near Exhaustion',        value: nearExhaustion,  color: nearExhaustion > 0 ? 'bg-amber-400' : 'bg-slate-300', att: '' },
+              { label: 'Unpaid + Attending',     value: unpaidAttending, color: unpaidAttending > 0 ? 'bg-orange-400' : 'bg-slate-300', att: '' },
+              { label: 'Total Monitored',        value: rows.length,     color: 'bg-blue-400', att: '' },
+            ].map(k => (
+              <Link
+                key={k.label}
+                href={attHref(k.att)}
+                className={`block rounded-xl border border-[#E2E8F0] bg-white p-3 transition hover:border-[#CBD5E1] ${attF === k.att && k.att ? 'border-[#FF8A1F] bg-orange-50' : ''}`}
+              >
+                <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
+                <p className="text-lg font-bold text-[#0B1F3A]">{k.value}</p>
+                <p className="text-[11px] text-[#64748B]">{k.label}</p>
+              </Link>
+            ))}
+          </div>
+
+          {/* Filters */}
+          <form method="get" className="flex flex-wrap gap-2">
+            <input type="hidden" name="view" value="monitor" />
+            {branchParam && <input type="hidden" name="branch" value={branchParam} />}
+            <input
+              name="q"
+              defaultValue={search}
+              placeholder="Search student, group, instructor…"
+              className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none min-w-52"
+            />
+            <select
+              name="risk"
+              defaultValue={riskF}
+              className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+            >
+              <option value="">All Risk Levels</option>
+              <option value="HIGH">High Risk</option>
+              <option value="MEDIUM">Medium Risk</option>
+              <option value="LOW">Low Risk</option>
+            </select>
+            <select
+              name="att"
+              defaultValue={attF}
+              className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+            >
+              <option value="">All Students</option>
+              <option value="low">Below 60%</option>
+              <option value="chronic">Chronic Absence (3+)</option>
+              <option value="never">Never Attended</option>
+              <option value="exhausted">Sessions Exhausted</option>
+            </select>
+            <button type="submit" className="rounded-xl bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18]">
+              Filter
+            </button>
+            {(search || riskF || attF) && (
+              <Link
+                href={`/admin/attendance${branchParam ? `?branch=${branchParam}` : ''}`}
+                className="rounded-xl border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]"
+              >
+                Clear
+              </Link>
+            )}
+          </form>
+
+          {/* Table */}
+          <div className="rounded-xl border border-[#E2E8F0] bg-white">
+            {filtered.length === 0 ? (
+              <div className="px-6 py-12 text-center">
+                <p className="text-sm font-medium text-[#0B1F3A]">No students match the current filters</p>
+                <p className="mt-1 text-xs text-[#94A3B8]">Adjust filters or clear them to see all students.</p>
+              </div>
+            ) : (
+              <>
+                {/* Mobile cards */}
+                <div className="md:hidden divide-y divide-[#E2E8F0]">
+                  {filtered.slice(0, 50).map(row => (
+                    <div key={row.enrollment_id ?? row.student_id} className="px-4 py-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <Link href={`/admin/students/${row.student_id}`} className="text-[15px] font-semibold text-[#0B1F3A]">
+                            {row.student_name}
+                          </Link>
+                          <p className="text-[12px] text-[#64748B]">
+                            {row.group_name ?? '—'}{row.instructor_name ? ` · ${row.instructor_name}` : ''}
+                          </p>
+                        </div>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold
+                          ${row.risk_level === 'HIGH' ? 'bg-red-100 text-red-600' : row.risk_level === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                          {row.risk_level}
+                        </span>
+                      </div>
+                      <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px]">
+                        <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
+                          <p className={`font-bold text-sm ${row.attendance_pct < 60 ? 'text-red-600' : row.attendance_pct < 80 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                            {row.attendance_pct}%
+                          </p>
+                          <p className="text-[#94A3B8]">Attendance</p>
+                        </div>
+                        <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
+                          <p className={`font-bold text-sm ${row.consecutive_absences >= 3 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+                            {row.consecutive_absences}
+                          </p>
+                          <p className="text-[#94A3B8]">Consec. Absent</p>
+                        </div>
+                        <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
+                          <p className={`font-bold text-sm ${row.enrolled_sessions > 0 && row.remaining_sessions <= 2 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+                            {row.enrolled_sessions > 0 ? `${row.remaining_sessions}` : '∞'}
+                          </p>
+                          <p className="text-[#94A3B8]">Sessions Left</p>
+                        </div>
                       </div>
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748B]">
-                      {s.instructor_name && <span>{s.instructor_name}</span>}
-                      <span>{s.branch_name}</span>
-                      {s.has_records && (
-                        <span>
-                          <span className="font-medium text-emerald-700">{s.present_count}P</span>
-                          {' · '}
-                          <span className="font-medium text-red-600">{s.absent_count}A</span>
-                        </span>
-                      )}
-                      {s.topic && <span className="italic truncate max-w-40">{s.topic}</span>}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+                  ))}
+                </div>
 
-            {/* Desktop table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Date & Time</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Group</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Instructor</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Present</th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Absent</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Rate</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Topic</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.data.map(s => {
-                    const isMissing = s.is_past && !s.has_records
-                    return (
-                      <tr
-                        key={s.id}
-                        className={`border-b border-[#E2E8F0] last:border-0 ${isMissing ? 'bg-red-50/40 hover:bg-red-50' : 'hover:bg-[#F8FAFC]'}`}
-                      >
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-[#0B1F3A]">
-                            {new Date(s.scheduled_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                          </div>
-                          <div className="text-[11px] text-[#94A3B8]">
-                            {new Date(s.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                            {s.duration_minutes ? ` · ${s.duration_minutes}m` : ''}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Link href={`/admin/groups/${s.group_id}`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">
-                            {s.group_name}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3 text-[#64748B]">{s.instructor_name ?? '—'}</td>
-                        <td className="px-4 py-3 text-[#64748B]">{s.branch_name}</td>
-                        <td className="px-4 py-3 text-center font-medium text-emerald-700">
-                          {s.has_records ? s.present_count : '—'}
-                        </td>
-                        <td className="px-4 py-3 text-center font-medium text-red-600">
-                          {s.has_records ? s.absent_count : '—'}
-                        </td>
-                        <td className="px-4 py-3">
-                          <AttPill pct={s.attendance_pct} hasRecords={s.has_records} />
-                          {isMissing && <span className="ml-1.5 text-[10px] font-semibold text-red-500">Missing!</span>}
-                        </td>
-                        <td className="px-4 py-3 text-xs text-[#64748B]">
-                          {s.topic ? <span className="max-w-25 truncate block" title={s.topic}>{s.topic}</span> : '—'}
-                        </td>
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                        <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Student</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Group / Instructor</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Attendance %</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Sessions</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Consec. Absent</th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Remaining</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Last Session</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Risk</th>
+                        <th className="px-4 py-3" />
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-            <Pagination page={result.page} totalPages={result.totalPages} total={result.total} perPage={result.perPage} />
-          </>
-        )}
-      </div>
+                    </thead>
+                    <tbody>
+                      {filtered.slice(0, 100).map(row => {
+                        const trend = ATTENDANCE_TREND_CONFIG[computeAttendanceHealth({
+                          enrolled_sessions:    row.enrolled_sessions,
+                          consumed_sessions:    row.consumed_sessions,
+                          remaining_sessions:   row.remaining_sessions,
+                          total_sessions:       row.total_sessions,
+                          sessions_attended:    row.sessions_attended,
+                          attendance_pct:       row.attendance_pct,
+                          consecutive_absences: row.consecutive_absences,
+                          last_attendance_date: row.last_attendance_date,
+                          remaining_balance:    row.remaining_amount,
+                          days_overdue:         row.days_overdue,
+                          financial_status:     row.financial_status,
+                          net_amount:           row.net_amount,
+                          group_id:             row.group_id,
+                          has_assignment_submissions: true,
+                        })]
+                        return (
+                          <tr key={row.enrollment_id ?? row.student_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                            <td className="px-4 py-3">
+                              <Link href={`/admin/students/${row.student_id}`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">
+                                {row.student_name}
+                              </Link>
+                              {row.student_code && <p className="font-mono text-[10px] text-[#94A3B8]">#{row.student_code}</p>}
+                            </td>
+                            <td className="px-4 py-3 text-[#64748B]">
+                              <p>{row.group_name ?? '—'}</p>
+                              {row.instructor_name && <p className="text-[11px] text-[#94A3B8]">{row.instructor_name}</p>}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <div className="flex flex-col items-center gap-1">
+                                <span className={`font-semibold ${row.attendance_pct < 60 ? 'text-red-600' : row.attendance_pct < 80 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                  {row.attendance_pct}%
+                                </span>
+                                <div className="h-1 w-12 rounded-full bg-[#E2E8F0]">
+                                  <div
+                                    className={`h-1 rounded-full ${row.attendance_pct >= 80 ? 'bg-emerald-400' : row.attendance_pct >= 60 ? 'bg-amber-400' : 'bg-red-400'}`}
+                                    style={{ width: `${row.attendance_pct}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-center text-[#64748B]">
+                              {row.sessions_attended}/{row.total_sessions}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <span className={`font-semibold ${row.consecutive_absences >= 3 ? 'text-red-600' : row.consecutive_absences >= 1 ? 'text-amber-600' : 'text-[#94A3B8]'}`}>
+                                {row.consecutive_absences > 0 ? row.consecutive_absences : '—'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {row.enrolled_sessions > 0 ? (
+                                <span className={`font-semibold ${row.remaining_sessions <= 0 ? 'text-red-600' : row.remaining_sessions <= 2 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                  {row.remaining_sessions <= 0 ? 'Exhausted' : row.remaining_sessions}
+                                </span>
+                              ) : (
+                                <span className="text-[#94A3B8]">∞</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-[11px] text-[#94A3B8]">
+                              {row.last_attendance_date
+                                ? new Date(row.last_attendance_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                                : '—'}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex flex-col gap-1">
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
+                                  ${row.risk_level === 'HIGH' ? 'bg-red-100 text-red-600' : row.risk_level === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                  {row.risk_level}
+                                </span>
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${trend.color} ${trend.text}`}>
+                                  {trend.label}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <Link href={`/admin/students/${row.student_id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
+                                View
+                              </Link>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {filtered.length > 100 && (
+                  <p className="border-t border-[#E2E8F0] px-4 py-3 text-center text-xs text-[#94A3B8]">
+                    Showing 100 of {filtered.length} — use filters to narrow down
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }

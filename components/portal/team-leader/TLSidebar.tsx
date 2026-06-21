@@ -119,13 +119,6 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: "Operations",
-    items: [
-      { label: "Attendance",   href: "/portal/team-leader/attendance",   icon: I.attendance   },
-      { label: "Assignments",  href: "/portal/team-leader/assignments",  icon: I.assignments  },
-    ],
-  },
-  {
     title: "People",
     items: [
       { label: "Leads",       href: "/portal/team-leader/leads",       icon: I.leads       },

@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
 const I = {
+  assignments: <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" /></svg>,
   dashboard:   <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>,
   students:    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838l-2.727 1.17 1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3z" /><path d="M3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zm5.99 7.176A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" /></svg>,
   parents:     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>,
@@ -58,45 +59,38 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: 'Operations',
-    items: [
-      { label: 'Sessions Monitor', href: '/admin/sessions',     icon: I.schedules,  permission: 'manage_attendance' },
-      { label: 'Attendance',       href: '/admin/attendance',   icon: I.attendance, permission: 'manage_attendance' },
-      { label: 'Assignments',      href: '/admin/assignments',  icon: I.reports                                      },
-    ],
-  },
-  {
     title: 'People',
     items: [
-      { label: 'Students',     href: '/admin/students',     icon: I.students,     permission: 'manage_students'    },
-      { label: 'Parents',      href: '/admin/parents',      icon: I.parents,      permission: 'manage_parents'     },
-      { label: 'Instructors',  href: '/admin/instructors',  icon: I.instructors,  permission: 'manage_instructors' },
-      { label: 'Team Leaders', href: '/admin/team-leaders', icon: I.teamLeaders,  superAdminOnly: true             },
-      { label: 'Staff',        href: '/admin/staff',        icon: I.staff,        superAdminOnly: true             },
+      { label: 'Leads',        href: '/admin/leads',         icon: I.leads                                           },
+      { label: 'Students',     href: '/admin/students',      icon: I.students,     permission: 'manage_students'    },
+      { label: 'Parents',      href: '/admin/parents',       icon: I.parents,      permission: 'manage_parents'     },
+      { label: 'Instructors',  href: '/admin/instructors',   icon: I.instructors,  permission: 'manage_instructors' },
+      { label: 'Team Leaders', href: '/admin/team-leaders',  icon: I.teamLeaders,  superAdminOnly: true             },
+      { label: 'Staff',        href: '/admin/staff',         icon: I.staff,        superAdminOnly: true             },
     ],
   },
   {
     title: 'Academics',
     items: [
-      { label: 'Groups',       href: '/admin/groups',       icon: I.groups,  permission: 'manage_groups'       },
-      { label: 'Courses',      href: '/admin/courses',      icon: I.courses, permission: 'manage_courses'      },
-      { label: 'Certificates', href: '/admin/certificates', icon: I.certs,   permission: 'manage_certificates' },
+      { label: 'Groups',       href: '/admin/groups',        icon: I.groups,  permission: 'manage_groups'       },
+      { label: 'Courses',      href: '/admin/courses',       icon: I.courses, permission: 'manage_courses'      },
+      { label: 'Certificates', href: '/admin/certificates',  icon: I.certs,   permission: 'manage_certificates' },
     ],
   },
   {
     title: 'Finance',
     items: [
-      { label: 'Payroll',     href: '/admin/payroll',       icon: I.payroll,     superAdminOnly: true            },
-      { label: 'Collections', href: '/admin/finance',       icon: I.collections, permission: 'manage_financials' },
-      { label: 'Revenue',     href: '/admin/revenue',       icon: I.revenue,     permission: 'manage_financials' },
-      { label: 'Expenses',    href: '/admin/expenses',      icon: I.expenses,    permission: 'manage_financials' },
+      { label: 'Payroll',     href: '/admin/payroll',        icon: I.payroll,     superAdminOnly: true            },
+      { label: 'Collections', href: '/admin/finance',        icon: I.collections, permission: 'manage_financials' },
+      { label: 'Revenue',     href: '/admin/revenue',        icon: I.revenue,     permission: 'manage_financials' },
+      { label: 'Expenses',    href: '/admin/expenses',       icon: I.expenses,    permission: 'manage_financials' },
     ],
   },
   {
-    title: 'Sales & CRM',
+    title: 'Operations',
     items: [
-      { label: 'Leads',          href: '/admin/leads',          icon: I.leads },
-      { label: 'Communications', href: '/admin/communications', icon: I.comms },
+      { label: 'Attendance',  href: '/admin/attendance',     icon: I.attendance,   permission: 'manage_attendance' },
+      { label: 'Assignments', href: '/admin/assignments',    icon: I.assignments                                    },
     ],
   },
   {
@@ -112,7 +106,6 @@ const NAV_SECTIONS: NavSection[] = [
       { label: 'Branches',             href: '/admin/branches',             icon: I.branches,  superAdminOnly: true },
       { label: 'System Health',        href: '/admin/system-health',        icon: I.health,    superAdminOnly: true },
       { label: 'Production Readiness', href: '/admin/production-readiness', icon: I.readiness, superAdminOnly: true },
-      { label: 'Settings',             href: '/admin/semesters',            icon: I.settings,  superAdminOnly: true },
     ],
   },
 ]
