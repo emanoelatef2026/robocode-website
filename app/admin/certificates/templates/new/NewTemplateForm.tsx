@@ -4,13 +4,14 @@ import { useActionState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createTemplate } from '@/modules/certificates/actions'
 import SubmitButton from '@/components/admin/SubmitButton'
+import CertificateImageUpload from '@/components/admin/CertificateImageUpload'
 import Link from 'next/link'
 import type { ActionResult } from '@/types/app'
 
 const inputClass = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
 
 const CERT_TYPES = [
-  { value: 'semester_completion', label: 'Course Completion' },
+  { value: 'semester_completion', label: 'Semester Completion' },
   { value: 'course_completion',   label: 'Course Completion' },
   { value: 'competition_award',   label: 'Competition Award' },
   { value: 'achievement',         label: 'Achievement' },
@@ -36,7 +37,7 @@ export default function NewTemplateForm() {
         </div>
       )}
 
-      <form action={action} className="space-y-4">
+      <form action={action} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
@@ -75,27 +76,35 @@ export default function NewTemplateForm() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Signatory Name</label>
-            <input name="signatory_name" placeholder="e.g. John Doe" className={inputClass} />
+            <input name="signatory_name" placeholder="e.g. Emanoel Atef" className={inputClass} />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Signatory Title</label>
-            <input name="signatory_title" placeholder="e.g. Program Director" className={inputClass} />
+            <input name="signatory_title" placeholder="e.g. CEO, Robocode School" className={inputClass} />
           </div>
         </div>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Robocode Logo URL</label>
-          <input name="logo_url" type="url" placeholder="https://…" className={inputClass} />
-        </div>
+        {/* ── Image uploads ── */}
+        <div className="space-y-4 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#64748B]">Certificate Images</p>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">STEM Logo URL</label>
-          <input name="stem_logo_url" type="url" placeholder="https://… (optional second logo)" className={inputClass} />
-        </div>
+          <CertificateImageUpload
+            label="Robocode Logo"
+            name="logo_url"
+            hint="Recommended: transparent PNG, height 92 px"
+          />
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Signature Image URL</label>
-          <input name="signature_url" type="url" placeholder="https://… (displayed above signatory line)" className={inputClass} />
+          <CertificateImageUpload
+            label="STEM Accreditation Logo"
+            name="stem_logo_url"
+            hint="Optional — shown in the footer centre"
+          />
+
+          <CertificateImageUpload
+            label="Signature Image"
+            name="signature_url"
+            hint="Shown above the signatory line — transparent PNG recommended"
+          />
         </div>
 
         <div className="flex items-center justify-between border-t border-[#E2E8F0] pt-4">
