@@ -826,10 +826,10 @@ export async function createSessionHomework(
     type:                 formData.get('type') || 'homework',
     submission_type:      formData.get('submission_type') || 'text',
     max_score:            formData.get('max_score') || 100,
-    allow_late:           formData.get('allow_late') as string | undefined,
-    resubmission_allowed: formData.get('resubmission_allowed') as string | undefined,
+    allow_late:           formData.get('allow_late') ?? undefined,
+    resubmission_allowed: formData.get('resubmission_allowed') ?? undefined,
     max_resubmissions:    formData.get('max_resubmissions') || 1,
-    portfolio_eligible:   formData.get('portfolio_eligible') as string | undefined,
+    portfolio_eligible:   formData.get('portfolio_eligible') ?? undefined,
   }
 
   const parsed = homeworkSchema.safeParse(raw)

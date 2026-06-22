@@ -108,8 +108,8 @@ async function AcademyTab({ branchFilter, dateFrom, dateTo }: { branchFilter: st
       {/* Expense breakdown */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Instructor Cost</p>
-          <p className="mt-1 text-base font-bold text-violet-600">{fmt(data.instructor_cost)}</p>
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Instructor Earned</p>
+          <p className="mt-1 text-base font-bold text-violet-600">{fmt(data.instructor_earned)}</p>
         </div>
         <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Group Expenses</p>
@@ -217,10 +217,10 @@ async function BranchesTab({ branchFilter, dateFrom, dateTo }: { branchFilter: s
 
               {b.total_expenses > 0 && (
                 <div className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[11px] space-y-1">
-                  {b.instructor_cost > 0 && (
+                  {b.instructor_earned > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-[#64748B]">Instructor</span>
-                      <span className="font-medium text-violet-700">{fmt(b.instructor_cost)}</span>
+                      <span className="text-[#64748B]">Instr. Earned</span>
+                      <span className="font-medium text-violet-700">{fmt(b.instructor_earned)}</span>
                     </div>
                   )}
                   {b.branch_expenses + b.branch_recurring_expenses > 0 && (
@@ -343,7 +343,7 @@ async function GroupsTab({ branchFilter, dateFrom, dateTo }: { branchFilter: str
               <td className="px-4 py-3 text-right text-[#0B1F3A]">{fmt(g.expected_revenue)}</td>
               <td className="px-4 py-3 text-right font-medium text-emerald-700">{fmt(g.collected_revenue)}</td>
               <td className="px-4 py-3 text-right text-amber-600">{fmt(g.outstanding)}</td>
-              <td className="px-4 py-3 text-right text-violet-700">{fmt(g.instructor_cost)}</td>
+              <td className="px-4 py-3 text-right text-violet-700">{fmt(g.instructor_earned)}</td>
               <td className="px-4 py-3 text-right text-indigo-700">{fmt(g.other_expenses)}</td>
               <td className="px-4 py-3 text-right"><ProfitBadge value={g.expected_profit} /></td>
               <td className="px-4 py-3 text-right"><ProfitBadge value={g.actual_profit} /></td>

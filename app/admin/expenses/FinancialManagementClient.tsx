@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useMemo } from 'react'
 import { useRouter }    from 'next/navigation'
+import * as XLSX from 'xlsx'
 import {
   addExpense, updateExpense, deleteExpense,
   addRecurringExpense, updateRecurringExpense, toggleRecurringExpense, deleteRecurringExpense,
@@ -64,6 +65,121 @@ function ProfitBadge({ value, size = 'sm' }: { value: number; size?: 'sm' | 'xs'
 function RateBadge({ rate }: { rate: number }) {
   const cls = rate >= 80 ? 'bg-emerald-50 text-emerald-700' : rate >= 50 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-600'
   return <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${cls}`}>{rate}%</span>
+}
+
+// ── Excel export helpers ───────────────────────────────────────────────────────
+
+function downloadWorkbook(wb: XLSX.WorkBook, filename: string) {
+  XLSX.writeFile(wb, filename)
+}
+
+function exportGroupsExcel(rows: GroupPnL[]) {
+  const data = rows.map(r => ({
+    'Group':                   r.group_name,
+    'Branch':                  r.branch_name,
+    'Status':                  r.group_status,
+    'Course':                  r.course_name ?? '',
+    'Instructor':              r.instructor_name ?? '',
+    'Students':                r.student_count,
+    'Total Sessions':          r.total_sessions,
+    'Completed Sessions':      r.completed_sessions,
+    'Remaining Sessions':      r.remaining_sessions,
+    'Session Rate (EGP)':      r.session_rate,
+    'Expected Rev (EGP)':      r.expected_revenue,
+    'Collected (EGP)':         r.collected_revenue,
+    'Outstanding (EGP)':       r.outstanding,
+    'Collection Rate':         `${r.collection_rate}%`,
+    'Instr. Earned (EGP)':     r.instructor_earned,
+    'Instr. Paid (EGP)':       r.instructor_paid,
+    'Instr. Remaining (EGP)':  r.instructor_remaining,
+    'Future Liability (EGP)':  r.future_liability,
+    'Final Instr. Cost (EGP)': r.final_instructor_cost,
+    'Manual Exp (EGP)':        r.manual_expenses,
+    'Recur. Exp (EGP)':        r.recurring_expenses,
+    'Total Exp (EGP)':         r.total_expenses,
+    'Exp. Profit (EGP)':       r.expected_profit,
+    'Act. Profit (EGP)':       r.actual_profit,
+  }))
+  const ws = XLSX.utils.json_to_sheet(data)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Groups')
+  downloadWorkbook(wb, `groups-pnl-${new Date().toISOString().slice(0, 10)}.xlsx`)
+}
+
+function exportBranchesExcel(rows: BranchPnL[]) {
+  const data = rows.map(r => ({
+    'Branch':                  r.branch_name,
+    'Groups':                  r.group_count,
+    'Students':                r.student_count,
+    'Expected Rev (EGP)':      r.expected_revenue,
+    'Collected (EGP)':         r.collected_revenue,
+    'Outstanding (EGP)':       r.outstanding,
+    'Collection Rate':         `${r.collection_rate}%`,
+    'Instr. Earned (EGP)':     r.instructor_earned,
+    'Instr. Paid (EGP)':       r.instructor_paid,
+    'Instr. Remaining (EGP)':  r.instructor_remaining,
+    'Future Liability (EGP)':  r.future_liability,
+    'Final Instr. Cost (EGP)': r.final_instructor_cost,
+    'Branch Exp (EGP)':        r.branch_expenses,
+    'Group Exp (EGP)':         r.group_expenses,
+    'Total Exp (EGP)':         r.total_expenses,
+    'Exp. Profit (EGP)':       r.expected_profit,
+    'Act. Profit (EGP)':       r.actual_profit,
+  }))
+  const ws = XLSX.utils.json_to_sheet(data)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Branches')
+  downloadWorkbook(wb, `branches-pnl-${new Date().toISOString().slice(0, 10)}.xlsx`)
+}
+
+function exportAcademyExcel(academy: AcademyPnL) {
+  const summary = [{
+    'Metric': 'Academy P&L Summary', 'Value (EGP)': '',
+  }, {
+    'Metric': 'Expected Revenue',         'Value (EGP)': academy.expected_revenue,
+  }, {
+    'Metric': 'Collected Revenue',        'Value (EGP)': academy.collected_revenue,
+  }, {
+    'Metric': 'Outstanding',              'Value (EGP)': academy.outstanding,
+  }, {
+    'Metric': 'Collection Rate',          'Value (EGP)': `${academy.collection_rate}%`,
+  }, {
+    'Metric': 'Instructor Earned',        'Value (EGP)': academy.instructor_earned,
+  }, {
+    'Metric': 'Instructor Paid',          'Value (EGP)': academy.instructor_paid,
+  }, {
+    'Metric': 'Instructor Remaining',     'Value (EGP)': academy.instructor_remaining,
+  }, {
+    'Metric': 'Future Liability',         'Value (EGP)': academy.future_liability,
+  }, {
+    'Metric': 'Final Instructor Cost',    'Value (EGP)': academy.final_instructor_cost,
+  }, {
+    'Metric': 'Branch Expenses',          'Value (EGP)': academy.branch_expenses,
+  }, {
+    'Metric': 'Group Expenses',           'Value (EGP)': academy.group_expenses,
+  }, {
+    'Metric': 'Academy Expenses',         'Value (EGP)': academy.academy_expenses,
+  }, {
+    'Metric': 'Total Expenses',           'Value (EGP)': academy.total_expenses,
+  }, {
+    'Metric': 'Expected Profit',          'Value (EGP)': academy.expected_profit,
+  }, {
+    'Metric': 'Actual Profit',            'Value (EGP)': academy.actual_profit,
+  }]
+
+  const trend = academy.monthly_trend.map(m => ({
+    'Month':               m.label,
+    'Collected (EGP)':     m.collected_revenue,
+    'Instr. Earned (EGP)': m.instructor_earned,
+    'Other Exp (EGP)':     m.other_expenses,
+    'Total Exp (EGP)':     m.total_expenses,
+    'Act. Profit (EGP)':   m.actual_profit,
+  }))
+
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), 'Summary')
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(trend),   'Monthly Trend')
+  downloadWorkbook(wb, `academy-pnl-${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
 
 // ── Modal wrapper ─────────────────────────────────────────────────────────────
@@ -659,11 +775,10 @@ function LiveFilterBar({
   // Filter status labels for the indicator
   const activeBranch   = branches.find(b => b.id === currentBranchId)
   const hasDateFilter  = !!(currentDateFrom || currentDateTo)
-  const hasFilters     = !!(currentBranchId || currentDateFrom || currentDateTo || includeArchived)
+  const hasFilters     = !!(currentBranchId || currentDateFrom || currentDateTo)
   const filterParts: string[] = []
   if (activeBranch)   filterParts.push(`Branch: ${activeBranch.name}`)
   if (hasDateFilter)  filterParts.push(`Period: ${currentDateFrom || '…'} → ${currentDateTo || '…'}`)
-  if (includeArchived) filterParts.push('Including Archived')
 
   return (
     <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 space-y-2.5">
@@ -712,16 +827,6 @@ function LiveFilterBar({
           />
         </div>
 
-        {/* Archived toggle — live */}
-        <label className="flex items-center gap-1.5 text-xs text-[#64748B] cursor-pointer">
-          <input
-            type="checkbox" checked={includeArchived}
-            onChange={e => navigate({ archived: e.target.checked })}
-            className="rounded"
-          />
-          Show Archived
-        </label>
-
         {hasFilters && (
           <button onClick={clear} className="text-[11px] text-[#94A3B8] hover:text-red-500 underline">
             Clear filters
@@ -741,6 +846,27 @@ function LiveFilterBar({
   )
 }
 
+// ── Status badge ───────────────────────────────────────────────────────────────
+
+const STATUS_COLORS: Record<string, string> = {
+  active:    'bg-emerald-50 text-emerald-700',
+  forming:   'bg-blue-50 text-blue-700',
+  completed: 'bg-slate-100 text-slate-600',
+  archived:  'bg-gray-100 text-gray-500',
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const cls = STATUS_COLORS[status] ?? 'bg-gray-100 text-gray-500'
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${cls}`}>
+      {status}
+    </span>
+  )
+}
+
+const ALL_STATUSES = ['all', 'active', 'forming', 'completed', 'archived'] as const
+type StatusFilter = typeof ALL_STATUSES[number]
+
 // ── Groups Tab ─────────────────────────────────────────────────────────────────
 
 function GroupsTab({
@@ -753,21 +879,26 @@ function GroupsTab({
   groups:    Group[]
   onRefresh: () => void
 }) {
-  const [search,   setSearch]   = useState('')
-  const [sortCol,  setSortCol]  = useState<keyof GroupPnL>('expected_revenue')
-  const [sortAsc,  setSortAsc]  = useState(false)
-  const [detailId, setDetailId] = useState<string | null>(null)
-  const [addOpen,  setAddOpen]  = useState(false)
+  const [search,       setSearch]       = useState('')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [sortCol,      setSortCol]      = useState<keyof GroupPnL>('expected_revenue')
+  const [sortAsc,      setSortAsc]      = useState(false)
+  const [detailId,     setDetailId]     = useState<string | null>(null)
+  const [addOpen,      setAddOpen]      = useState(false)
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return rows
-      .filter(r => !q || r.group_name.toLowerCase().includes(q) || r.branch_name.toLowerCase().includes(q))
+      .filter(r => {
+        if (statusFilter !== 'all' && r.group_status !== statusFilter) return false
+        if (q && !r.group_name.toLowerCase().includes(q) && !r.branch_name.toLowerCase().includes(q)) return false
+        return true
+      })
       .sort((a, b) => {
         const av = a[sortCol] as number, bv = b[sortCol] as number
         return sortAsc ? av - bv : bv - av
       })
-  }, [rows, search, sortCol, sortAsc])
+  }, [rows, search, statusFilter, sortCol, sortAsc])
 
   function toggleSort(col: keyof GroupPnL) {
     if (sortCol === col) setSortAsc(!sortAsc)
@@ -785,21 +916,23 @@ function GroupsTab({
 
   const detailGroup = detailId ? rows.find(r => r.group_id === detailId) : null
 
-  // Summary KPIs
-  const totalExpRev = rows.reduce((s, r) => s + r.expected_revenue,  0)
-  const totalColRev = rows.reduce((s, r) => s + r.collected_revenue, 0)
-  const totalExp    = rows.reduce((s, r) => s + r.total_expenses,    0)
-  const totalProfit = rows.reduce((s, r) => s + r.actual_profit,     0)
+  // Summary KPIs (from filtered rows)
+  const totalExpRev     = filtered.reduce((s, r) => s + r.expected_revenue,    0)
+  const totalColRev     = filtered.reduce((s, r) => s + r.collected_revenue,   0)
+  const totalEarned     = filtered.reduce((s, r) => s + r.instructor_earned,   0)
+  const totalFinalCost  = filtered.reduce((s, r) => s + r.final_instructor_cost, 0)
+  const totalProfit     = filtered.reduce((s, r) => s + r.actual_profit,       0)
 
   return (
     <div className="space-y-4">
       {/* Summary KPIs */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
-          { label: 'Expected Revenue',  value: fmtK(totalExpRev),  color: 'bg-slate-400' },
-          { label: 'Collected Revenue', value: fmtK(totalColRev),  color: 'bg-emerald-400' },
-          { label: 'Total Expenses',    value: fmtK(totalExp),     color: 'bg-red-400' },
-          { label: 'Actual Profit',     value: fmtK(totalProfit),  color: totalProfit >= 0 ? 'bg-emerald-400' : 'bg-red-400' },
+          { label: 'Expected Revenue',    value: fmtK(totalExpRev),    color: 'bg-slate-400' },
+          { label: 'Collected Revenue',   value: fmtK(totalColRev),    color: 'bg-emerald-400' },
+          { label: 'Instr. Earned',       value: fmtK(totalEarned),    color: 'bg-violet-400' },
+          { label: 'Final Instr. Cost',   value: fmtK(totalFinalCost), color: 'bg-orange-400' },
+          { label: 'Actual Profit',       value: fmtK(totalProfit),    color: totalProfit >= 0 ? 'bg-emerald-400' : 'bg-red-400' },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
             <div className={`mb-2 h-1.5 w-8 rounded-full ${k.color} opacity-80`} />
@@ -809,6 +942,27 @@ function GroupsTab({
         ))}
       </div>
 
+      {/* Status filter pills */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {ALL_STATUSES.map(s => {
+          const count = s === 'all' ? rows.length : rows.filter(r => r.group_status === s).length
+          const isActive = statusFilter === s
+          return (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={`rounded-full px-3 py-1 text-[11px] font-semibold transition border ${
+                isActive
+                  ? 'border-[#FF8A1F] bg-orange-50 text-[#FF8A1F]'
+                  : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
+              }`}
+            >
+              {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)} ({count})
+            </button>
+          )
+        })}
+      </div>
+
       {/* Search + actions */}
       <div className="flex items-center gap-2">
         <input
@@ -816,6 +970,13 @@ function GroupsTab({
           value={search} onChange={e => setSearch(e.target.value)}
           className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none max-w-xs"
         />
+        <button
+          onClick={() => exportGroupsExcel(filtered)}
+          className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A] transition"
+          title="Export visible rows to Excel"
+        >
+          ↓ Excel
+        </button>
         <button
           onClick={() => setAddOpen(true)}
           className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-xs font-semibold text-white hover:bg-[#e07a1a]"
@@ -828,23 +989,28 @@ function GroupsTab({
       <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5">
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">
-            Group Expense Dashboard · {filtered.length} groups
+            Group P&L Dashboard · {filtered.length} groups
           </p>
         </div>
-        <table className="w-full text-sm min-w-[1100px]">
+        <table className="w-full text-sm min-w-[1600px]">
           <thead>
             <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
               <th className="px-3 py-3 text-left text-[11px] font-medium text-[#64748B]">Group</th>
               <th className="px-3 py-3 text-left text-[11px] font-medium text-[#64748B]">Branch</th>
+              <th className="px-3 py-3 text-center text-[11px] font-medium text-[#64748B]">Status</th>
               <th className="px-3 py-3 text-center text-[11px] font-medium text-[#64748B]">Students</th>
-              <SortTh col="expected_revenue"  label="Expected Rev" />
-              <SortTh col="collected_revenue" label="Collected" />
-              <SortTh col="outstanding"       label="Outstanding" />
-              <SortTh col="instructor_cost"   label="Instr. Cost" />
-              <SortTh col="manual_expenses"   label="Manual Exp" />
-              <SortTh col="total_expenses"    label="Total Exp" />
-              <SortTh col="expected_profit"   label="Exp. Profit" />
-              <SortTh col="actual_profit"     label="Act. Profit" />
+              <SortTh col="expected_revenue"     label="Expected Rev" />
+              <SortTh col="collected_revenue"    label="Collected" />
+              <SortTh col="outstanding"          label="Outstanding" />
+              <SortTh col="instructor_earned"    label="Instr. Earned" />
+              <SortTh col="instructor_paid"      label="Instr. Paid" />
+              <SortTh col="instructor_remaining" label="Instr. Owing" />
+              <SortTh col="future_liability"     label="Future Liab." />
+              <SortTh col="final_instructor_cost" label="Final Instr." />
+              <SortTh col="manual_expenses"      label="Manual Exp" />
+              <SortTh col="total_expenses"       label="Total Exp" />
+              <SortTh col="expected_profit"      label="Exp. Profit" />
+              <SortTh col="actual_profit"        label="Act. Profit" />
               <th className="px-3 py-3 text-center text-[11px] font-medium text-[#64748B]">Rate</th>
               <th className="px-3 py-3" />
             </tr>
@@ -856,15 +1022,20 @@ function GroupsTab({
                 className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC] cursor-pointer"
                 onClick={() => setDetailId(g.group_id)}
               >
-                <td className="px-3 py-3 font-semibold text-[#0B1F3A] whitespace-nowrap max-w-[160px] truncate">
+                <td className="px-3 py-3 font-semibold text-[#0B1F3A] whitespace-nowrap max-w-[140px] truncate">
                   {g.group_name}
                 </td>
                 <td className="px-3 py-3 text-[#64748B] whitespace-nowrap">{g.branch_name}</td>
+                <td className="px-3 py-3 text-center"><StatusBadge status={g.group_status} /></td>
                 <td className="px-3 py-3 text-center text-[#64748B]">{g.student_count}</td>
                 <td className="px-3 py-3 text-right text-[#0B1F3A]">{fmt(g.expected_revenue)}</td>
                 <td className="px-3 py-3 text-right font-medium text-emerald-700">{fmt(g.collected_revenue)}</td>
                 <td className="px-3 py-3 text-right text-amber-600">{fmt(g.outstanding)}</td>
-                <td className="px-3 py-3 text-right text-violet-700">{fmt(g.instructor_cost)}</td>
+                <td className="px-3 py-3 text-right text-violet-700">{fmt(g.instructor_earned)}</td>
+                <td className="px-3 py-3 text-right text-emerald-700">{fmt(g.instructor_paid)}</td>
+                <td className="px-3 py-3 text-right text-orange-600">{fmt(g.instructor_remaining)}</td>
+                <td className="px-3 py-3 text-right text-rose-600">{fmt(g.future_liability)}</td>
+                <td className="px-3 py-3 text-right font-semibold text-red-700">{fmt(g.final_instructor_cost)}</td>
                 <td className="px-3 py-3 text-right text-indigo-700">{fmt(g.manual_expenses)}</td>
                 <td className="px-3 py-3 text-right text-red-600 font-medium">{fmt(g.total_expenses)}</td>
                 <td className="px-3 py-3 text-right"><ProfitBadge value={g.expected_profit} size="xs" /></td>
@@ -882,8 +1053,8 @@ function GroupsTab({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={13} className="px-4 py-10 text-center text-sm text-[#94A3B8]">
-                  No groups match your search.
+                <td colSpan={18} className="px-4 py-10 text-center text-sm text-[#94A3B8]">
+                  No groups match your filters.
                 </td>
               </tr>
             )}
@@ -950,6 +1121,16 @@ function BranchesTab({
         ))}
       </div>
 
+      {/* Export */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => exportBranchesExcel(rows)}
+          className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A] transition"
+        >
+          ↓ Export Excel
+        </button>
+      </div>
+
       {/* Branch cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map(b => (
@@ -971,10 +1152,16 @@ function BranchesTab({
 
             {b.total_expenses > 0 && (
               <div className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[11px] space-y-1">
-                {b.instructor_cost > 0 && (
+                {b.final_instructor_cost > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-[#64748B]">Instructor</span>
-                    <span className="font-medium text-violet-700">{fmt(b.instructor_cost)}</span>
+                    <span className="text-[#64748B]">Instr. Earned</span>
+                    <span className="font-medium text-violet-700">{fmt(b.instructor_earned)}</span>
+                  </div>
+                )}
+                {b.future_liability > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-[#64748B]">Future Liability</span>
+                    <span className="font-medium text-rose-600">{fmt(b.future_liability)}</span>
                   </div>
                 )}
                 {b.branch_expenses > 0 && (
@@ -1099,6 +1286,16 @@ function AcademyTab({
 
   return (
     <div className="space-y-5">
+      {/* Export */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => exportAcademyExcel(pnl)}
+          className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A] transition"
+        >
+          ↓ Export Excel
+        </button>
+      </div>
+
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
@@ -1118,10 +1315,12 @@ function AcademyTab({
       </div>
 
       {/* Expense breakdown */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         {[
-          { l: 'Instructor Cost',  v: fmt(pnl.instructor_cost),         c: 'text-violet-600' },
-          { l: 'Group Expenses',   v: fmt(pnl.group_expenses + pnl.group_recurring_expenses), c: 'text-indigo-600' },
+          { l: 'Instr. Earned',    v: fmt(pnl.instructor_earned),    c: 'text-violet-600' },
+          { l: 'Instr. Paid',      v: fmt(pnl.instructor_paid),      c: 'text-emerald-600' },
+          { l: 'Future Liability', v: fmt(pnl.future_liability),     c: 'text-rose-600' },
+          { l: 'Group Expenses',   v: fmt(pnl.group_expenses + pnl.group_recurring_expenses),   c: 'text-indigo-600' },
           { l: 'Branch Expenses',  v: fmt(pnl.branch_expenses + pnl.branch_recurring_expenses), c: 'text-blue-600' },
           { l: 'Academy Expenses', v: fmt(pnl.academy_expenses + pnl.academy_recurring_expenses), c: 'text-cyan-600' },
         ].map(k => (

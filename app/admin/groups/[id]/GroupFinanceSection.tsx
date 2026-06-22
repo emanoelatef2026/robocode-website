@@ -80,8 +80,8 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-[#E2E8F0] border-b border-[#E2E8F0]">
             <div className="bg-white px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Instructor Cost</p>
-              <p className="mt-0.5 text-sm font-bold text-violet-700">EGP {fmt(pnl.instructor_cost)}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Instructor Earned</p>
+              <p className="mt-0.5 text-sm font-bold text-violet-700">EGP {fmt(pnl.instructor_earned)}</p>
             </div>
             <div className="bg-white px-4 py-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Other Expenses</p>

@@ -71,11 +71,9 @@ export default async function FinancialManagementPage({
     ? (branchIdFilter ? branchScope.filter(id => id === branchIdFilter) : branchScope)
     : (branchIdFilter ? [branchIdFilter] : undefined)
 
-  const opts = { dateFrom, dateTo, includeArchived }
-
   const [groupRows, branchRows, academyPnL, expenses, recurring, { branches, groups }] =
     await Promise.all([
-      getGroupPnLRows(effectiveBranchIds, opts),
+      getGroupPnLRows(effectiveBranchIds, { dateFrom, dateTo }),
       getBranchPnLRows(effectiveBranchIds, { dateFrom, dateTo }),
       getAcademyPnL(effectiveBranchIds ?? undefined, { dateFrom, dateTo }),
       listExpenses(

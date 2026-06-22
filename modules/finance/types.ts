@@ -628,27 +628,40 @@ export interface ExpenseFilters {
   branch_ids?:  string[]
 }
 
-// ── P&L types (Phase XXVII) ───────────────────────────────────────────────────
+// ── P&L types (Phase XXVII → Phase XXX) ──────────────────────────────────────
 
 export interface GroupPnL {
-  group_id:           string
-  group_name:         string
-  branch_id:          string
-  branch_name:        string
-  course_name:        string | null
-  instructor_name:    string | null
-  student_count:      number
-  expected_revenue:   number
-  collected_revenue:  number
-  outstanding:        number
-  collection_rate:    number
-  instructor_cost:    number
-  manual_expenses:    number
-  recurring_expenses: number
-  other_expenses:     number  // = manual_expenses + recurring_expenses (backward compat)
-  total_expenses:     number
-  expected_profit:    number
-  actual_profit:      number
+  group_id:               string
+  group_name:             string
+  group_status:           string   // Phase XXX: raw DB status ('active','forming',…)
+  branch_id:              string
+  branch_name:            string
+  course_name:            string | null
+  instructor_name:        string | null
+  student_count:          number
+  // Revenue
+  expected_revenue:       number
+  collected_revenue:      number
+  outstanding:            number
+  collection_rate:        number
+  // Instructor accrual (Phase XXX)
+  total_sessions:         number   // from group_courses.total_sessions (planned)
+  completed_sessions:     number   // count of schedules with status='completed'
+  remaining_sessions:     number   // max(total_sessions - completed, 0)
+  session_rate:           number   // rate used (override → salary_per_session)
+  instructor_earned:      number   // completed_sessions × session_rate
+  instructor_paid:        number   // from instructor_payouts (attributed to group)
+  instructor_remaining:   number   // instructor_earned - instructor_paid
+  future_liability:       number   // remaining_sessions × session_rate
+  final_instructor_cost:  number   // instructor_earned + future_liability
+  // Manual / recurring expenses
+  manual_expenses:        number
+  recurring_expenses:     number
+  other_expenses:         number   // manual + recurring
+  total_expenses:         number   // final_instructor_cost + other_expenses
+  // Profit
+  expected_profit:        number   // expected_revenue - total_expenses
+  actual_profit:          number   // collected_revenue - (instructor_earned + other_expenses)
 }
 
 export interface BranchPnL {
@@ -660,8 +673,13 @@ export interface BranchPnL {
   collected_revenue:          number
   outstanding:                number
   collection_rate:            number
-  instructor_cost:            number
-  staff_cost:                 number
+  // Instructor accrual (Phase XXX)
+  instructor_earned:          number
+  instructor_paid:            number
+  instructor_remaining:       number
+  future_liability:           number
+  final_instructor_cost:      number
+  // Expenses
   branch_expenses:            number
   branch_recurring_expenses:  number
   group_expenses:             number
@@ -676,30 +694,35 @@ export interface AcademyPnL {
   collected_revenue:          number
   outstanding:                number
   collection_rate:            number
-  total_expenses:             number
-  instructor_cost:            number
-  staff_cost:                 number
+  // Instructor accrual (Phase XXX)
+  instructor_earned:          number
+  instructor_paid:            number
+  instructor_remaining:       number
+  future_liability:           number
+  final_instructor_cost:      number
+  // Expenses
   branch_expenses:            number
   branch_recurring_expenses:  number
   group_expenses:             number
   group_recurring_expenses:   number
   academy_expenses:           number
   academy_recurring_expenses: number
+  total_expenses:             number
   expected_profit:            number
   actual_profit:              number
   monthly_trend:              MonthlyPnL[]
 }
 
 export interface MonthlyPnL {
-  month:            string
-  label:            string
-  expected_revenue: number
+  month:             string
+  label:             string
+  expected_revenue:  number
   collected_revenue: number
-  instructor_cost:  number
-  other_expenses:   number
-  total_expenses:   number
-  expected_profit:  number
-  actual_profit:    number
+  instructor_earned: number
+  other_expenses:    number
+  total_expenses:    number
+  expected_profit:   number
+  actual_profit:     number
 }
 
 export const EXPENSE_TYPE_LABELS: Record<ExpenseType, string> = {
