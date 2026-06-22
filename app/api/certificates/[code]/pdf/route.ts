@@ -30,8 +30,14 @@ export async function GET(
     color: { dark: '#0B1F3A', light: '#FFFFFF' },
   })
 
-  const element = React.createElement(CertificatePDF, { certificate: detail, qrDataUrl })
-  const buffer  = await renderToBuffer(element as ReactElement<DocumentProps>)
+  let buffer: Buffer
+  try {
+    const element = React.createElement(CertificatePDF, { certificate: detail, qrDataUrl })
+    buffer = await renderToBuffer(element as ReactElement<DocumentProps>)
+  } catch (err) {
+    console.error('[pdf/route] renderToBuffer failed', { code, error: String(err) })
+    return NextResponse.json({ error: 'PDF generation failed' }, { status: 500 })
+  }
 
   return new NextResponse(new Uint8Array(buffer), {
     status: 200,
