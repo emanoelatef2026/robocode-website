@@ -6,23 +6,25 @@ import {
 } from '@react-pdf/renderer'
 import type { CertificateDetail } from './types'
 
-// ─── Fonts ────────────────────────────────────────────────────────────────────
+// ─── Fonts (Google Fonts gstatic TTF — compatible with react-pdf/fontkit) ────
+// URLs extracted from fonts.googleapis.com CSS2 API with a desktop User-Agent.
+// gstatic TTF URLs are stable: they are versioned by content hash, not date.
 Font.register({
   family: 'Cinzel',
   fonts: [
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/cinzel@5/files/cinzel-latin-400-normal.woff2', fontWeight: 400 },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/cinzel@5/files/cinzel-latin-600-normal.woff2', fontWeight: 600 },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/cinzel@5/files/cinzel-latin-700-normal.woff2', fontWeight: 700 },
+    { src: 'https://fonts.gstatic.com/s/cinzel/v26/8vIU7ww63mVu7gtR-kwKxNvkNOjw-tbnTYo.ttf', fontWeight: 400 },
+    { src: 'https://fonts.gstatic.com/s/cinzel/v26/8vIU7ww63mVu7gtR-kwKxNvkNOjw-gjgTYo.ttf', fontWeight: 600 },
+    { src: 'https://fonts.gstatic.com/s/cinzel/v26/8vIU7ww63mVu7gtR-kwKxNvkNOjw-jHgTYo.ttf', fontWeight: 700 },
   ],
 })
 
 Font.register({
   family: 'Montserrat',
   fonts: [
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5/files/montserrat-latin-400-normal.woff2',  fontWeight: 400 },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5/files/montserrat-latin-400-italic.woff2',  fontWeight: 400, fontStyle: 'italic' },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5/files/montserrat-latin-600-normal.woff2',  fontWeight: 600 },
-    { src: 'https://cdn.jsdelivr.net/npm/@fontsource/montserrat@5/files/montserrat-latin-700-normal.woff2',  fontWeight: 700 },
+    { src: 'https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtr6Ew-.ttf',       fontWeight: 400 },
+    { src: 'https://fonts.gstatic.com/s/montserrat/v31/JTUFjIg1_i6t8kCHKm459Wx7xQYXK0vOoz6jq6R9aX8.ttf',   fontWeight: 400, fontStyle: 'italic' },
+    { src: 'https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCu170w-.ttf',       fontWeight: 600 },
+    { src: 'https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM70w-.ttf',       fontWeight: 700 },
   ],
 })
 
