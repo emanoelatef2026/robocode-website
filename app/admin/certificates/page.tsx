@@ -1,4 +1,4 @@
-import { listCertificates, listActiveTemplates } from '@/modules/certificates/queries'
+import { listCertificates, listActiveTemplates, listCertificateTemplates } from '@/modules/certificates/queries'
 import { requirePermission }                      from '@/modules/rbac/guards'
 import { listCourses }                            from '@/modules/courses/queries'
 import { listSemesters }                          from '@/modules/semesters/queries'
@@ -10,6 +10,7 @@ import Pagination                                 from '@/components/admin/Pagin
 import SearchInput                                from '@/components/admin/SearchInput'
 import FilterSelect                               from '@/components/admin/FilterSelect'
 import IssueCertificateModal                      from './IssueCertificateModal'
+import TemplatesModal                             from './TemplatesModal'
 import Link                                       from 'next/link'
 
 interface Props {
@@ -37,9 +38,10 @@ export default async function CertificatesPage({ searchParams }: Props) {
   const db = createServiceClient()
 
   // Load list + modal data in parallel
-  const [result, templates, coursesResult, semestersResult, studentsResult] = await Promise.all([
+  const [result, templates, allTemplates, coursesResult, semestersResult, studentsResult] = await Promise.all([
     listCertificates({ page, perPage: 20, search, type, status, branchIds }),
     listActiveTemplates(),
+    listCertificateTemplates({ perPage: 200 }),
     listCourses({ perPage: 200 }),
     listSemesters({ perPage: 100 }),
     db
@@ -66,12 +68,7 @@ export default async function CertificatesPage({ searchParams }: Props) {
         description={`${result.total} certificate${result.total !== 1 ? 's' : ''}`}
         action={
           <div className="flex gap-2">
-            <Link
-              href="/admin/certificates/templates"
-              className="inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#0B1F3A] shadow-sm transition hover:bg-[#F8FAFC]"
-            >
-              Templates
-            </Link>
+            <TemplatesModal templates={allTemplates.data} />
             <IssueCertificateModal
               templates={templates}
               students={students}

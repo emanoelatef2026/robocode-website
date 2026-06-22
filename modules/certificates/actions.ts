@@ -9,9 +9,10 @@ import {
   IssueCertificateSchema,
   RevokeCertificateSchema,
 } from './schemas'
-import { generateCertificateCode } from './queries'
+import { generateCertificateCode, getCertificateTemplate } from './queries'
 import { checkCertificateEligibility } from '@/modules/progress/eligibility'
 import type { ActionResult } from '@/types/app'
+import type { CertificateTemplate } from './types'
 
 // ─── Templates ────────────────────────────────────────────────────────────────
 
@@ -75,6 +76,22 @@ export async function updateTemplate(
 
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
 
+  revalidatePath('/admin/certificates/templates')
+  return { success: true, data: undefined }
+}
+
+export async function getTemplateForEdit(templateId: string): Promise<ActionResult<CertificateTemplate>> {
+  await requirePermission('manage_certificates')
+  const template = await getCertificateTemplate(templateId)
+  if (!template) return { success: false, error: { code: 'NOT_FOUND', message: 'Template not found.' } }
+  return { success: true, data: template }
+}
+
+export async function deleteTemplate(templateId: string): Promise<ActionResult<void>> {
+  await requirePermission('manage_certificates')
+  const db = createServiceClient()
+  const { error } = await db.from('certificate_templates').delete().eq('id', templateId)
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
   revalidatePath('/admin/certificates/templates')
   return { success: true, data: undefined }
 }
@@ -287,6 +304,30 @@ export async function reinstateCertificate(certificateId: string): Promise<Actio
     })
     .eq('id', certificateId)
 
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  revalidatePath('/admin/certificates')
+  return { success: true, data: undefined }
+}
+
+// ─── Delete ───────────────────────────────────────────────────────────────────
+
+export async function deleteCertificate(certificateId: string): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_certificates')
+
+  const db = createServiceClient()
+
+  const { data: certRow } = await db
+    .from('certificates').select('student_id').eq('id', certificateId).single()
+  if (!certRow) return { success: false, error: { code: 'NOT_FOUND', message: 'Certificate not found.' } }
+
+  const { data: certStudentRow } = await db
+    .from('students').select('branch_id').eq('id', (certRow as any).student_id).single()
+  if (certStudentRow && !isBranchAccessible(user, (certStudentRow as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this certificate.' } }
+  }
+
+  const { error } = await db.from('certificates').delete().eq('id', certificateId)
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
 
   revalidatePath('/admin/certificates')

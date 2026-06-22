@@ -2,7 +2,7 @@
 
 import { useTransition, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { revokeCertificate, reinstateCertificate } from '@/modules/certificates/actions'
+import { revokeCertificate, reinstateCertificate, deleteCertificate } from '@/modules/certificates/actions'
 import type { CertificateDetail } from '@/modules/certificates/types'
 
 interface Props {
@@ -22,6 +22,7 @@ export default function CertificateDetailView({ certificate }: Props) {
   const [isPending, start]  = useTransition()
   const [revokeReason, setRevokeReason] = useState('')
   const [showRevoke, setShowRevoke]     = useState(false)
+  const [showDelete, setShowDelete]     = useState(false)
   const [error, setError]               = useState<string | null>(null)
 
   async function handleRevoke() {
@@ -33,6 +34,18 @@ export default function CertificateDetailView({ certificate }: Props) {
         setShowRevoke(false)
       } else {
         setError(result.error.message)
+      }
+    })
+  }
+
+  async function handleDelete() {
+    start(async () => {
+      const result = await deleteCertificate(certificate.id)
+      if (result.success) {
+        router.push('/admin/certificates')
+      } else {
+        setError(result.error.message)
+        setShowDelete(false)
       }
     })
   }
@@ -161,7 +174,42 @@ export default function CertificateDetailView({ certificate }: Props) {
             Revoke
           </button>
         )}
+
+        <button
+          onClick={() => setShowDelete(true)}
+          className="inline-flex items-center gap-2 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 ml-auto"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          Delete Permanently
+        </button>
       </div>
+
+      {/* Delete confirmation */}
+      {showDelete && (
+        <div className="rounded-xl border border-red-300 bg-red-50 p-4 space-y-3">
+          <p className="text-sm font-semibold text-red-700">Delete this certificate permanently?</p>
+          <p className="text-xs text-red-600">
+            This action cannot be undone. The certificate record, code <strong>{certificate.certificate_code}</strong>, and all related data will be permanently removed.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDelete}
+              disabled={isPending}
+              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+            >
+              {isPending ? 'Deleting…' : 'Yes, Delete Permanently'}
+            </button>
+            <button
+              onClick={() => setShowDelete(false)}
+              className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#0B1F3A] hover:bg-white"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Revoke dialog */}
       {showRevoke && (
