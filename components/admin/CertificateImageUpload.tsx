@@ -15,12 +15,14 @@ export default function CertificateImageUpload({ label, name, defaultValue, hint
   const [imgOk, setImgOk]       = useState<boolean>(true)   // false when img fails to load
   const [uploading, setUploading] = useState(false)
   const [error, setError]       = useState<string | null>(null)
+  const [alphaWarn, setAlphaWarn] = useState(false)
   const inputRef                = useRef<HTMLInputElement>(null)
 
   const hasImage = Boolean(url) && imgOk
 
   async function handleFile(file: File) {
     setError(null)
+    setAlphaWarn(file.type !== 'image/png')
     setUploading(true)
     try {
       const { blob } = await compressImage(file, { maxKB: 800, maxWidth: 1600 })
@@ -114,6 +116,12 @@ export default function CertificateImageUpload({ label, name, defaultValue, hint
           </button>
 
           {hint && <p className="text-xs text-[#94A3B8]">{hint}</p>}
+
+          {alphaWarn && (
+            <p className="text-xs text-amber-600">
+              JPEG/WebP files don&apos;t support transparency — upload a PNG to avoid a black background.
+            </p>
+          )}
 
           {/* Show a soft warning if we have a URL but it failed to load */}
           {Boolean(url) && !imgOk && !uploading && (

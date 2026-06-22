@@ -216,13 +216,15 @@ const s = StyleSheet.create({
     fontStyle: 'italic',
   },
 
-  // STEM block
-  stemBlock: {
-    alignItems: 'center',
-    justifyContent: 'center',
+  // Stamp overlay (large, absolutely positioned in certificate body)
+  stampOverlay: {
+    position: 'absolute',
+    bottom: 120,
+    right: 58,
   },
-  stemLogo: {
-    height: 58,
+  stampOverlayImg: {
+    width: 140,
+    height: 140,
     objectFit: 'contain',
   },
 
@@ -230,11 +232,11 @@ const s = StyleSheet.create({
   sigBlock: {
     flexDirection: 'column',
     alignItems: 'center',
-    minWidth: 142,
+    minWidth: 165,
   },
   sigImageStyle: {
-    width: 110,
-    height: 33,
+    width: 155,
+    height: 52,
     objectFit: 'contain',
   },
   sigName: {
@@ -433,8 +435,8 @@ function CircuitDecoration({ flip = false }: { flip?: boolean }) {
 
 function SigLine() {
   return (
-    <Svg width={142} height={40} viewBox="0 0 142 40">
-      <Line x1="0" y1="39" x2="142" y2="39" stroke={NAVY} strokeWidth="1" />
+    <Svg width={155} height={40} viewBox="0 0 155 40">
+      <Line x1="0" y1="39" x2="155" y2="39" stroke={NAVY} strokeWidth="1" />
     </Svg>
   )
 }
@@ -474,6 +476,13 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
         <CornerTR />
         <CornerBL />
         <CornerBR />
+
+        {/* ── STEM stamp overlay — large, in certificate body above footer ── */}
+        {stemLogoUrl && (
+          <View style={s.stampOverlay}>
+            <Image src={stemLogoUrl} style={s.stampOverlayImg} />
+          </View>
+        )}
 
         {/* ── Main content ── */}
         <View style={s.content}>
@@ -553,14 +562,6 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
                   <Text style={s.certIdCode}>{certId}</Text>
                   <Text style={s.certIdScan}>Scan to verify authenticity</Text>
                 </View>
-              </View>
-
-              {/* Center: STEM logo */}
-              <View style={s.stemBlock}>
-                {stemLogoUrl
-                  ? <Image src={stemLogoUrl} style={s.stemLogo} />
-                  : <View style={{ width: 58, height: 58, backgroundColor: '#E2E8F0', borderRadius: 3 }} />
-                }
               </View>
 
               {/* Right: Signature */}

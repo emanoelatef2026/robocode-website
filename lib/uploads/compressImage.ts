@@ -1,6 +1,7 @@
 // Shared browser-side image compression utility.
 // Compresses an image File to <= maxKB using Canvas API.
 // Maintains aspect ratio; max width capped; JPEG quality stepped until target met.
+// PNG inputs are kept as PNG so alpha transparency is preserved.
 // Safe on any image/* MIME type.
 
 export interface CompressOptions {
@@ -18,16 +19,23 @@ export async function compressImage(
   { maxKB = 100, maxWidth = 1200 }: CompressOptions = {}
 ): Promise<CompressResult> {
   const maxBytes = maxKB * 1024
+  const isPng    = file.type === 'image/png'
 
+  // Small JPEG that fits: return as-is (PNG always goes through to apply maxWidth and keep PNG format)
   if (file.size <= maxBytes && file.type === 'image/jpeg') {
     return { blob: file, sizeKB: Math.round(file.size / 1024) }
   }
 
-  const blob = await _compress(file, maxWidth, maxBytes)
+  const blob = await _compress(file, maxWidth, maxBytes, isPng)
   return { blob, sizeKB: Math.round(blob.size / 1024) }
 }
 
-function _compress(file: File, maxWidth: number, maxBytes: number): Promise<Blob> {
+function _compress(
+  file: File,
+  maxWidth: number,
+  maxBytes: number,
+  preserveAlpha: boolean,
+): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img       = new Image()
     const objectUrl = URL.createObjectURL(file)
@@ -45,8 +53,25 @@ function _compress(file: File, maxWidth: number, maxBytes: number): Promise<Blob
 
       const ctx = canvas.getContext('2d')
       if (!ctx) { reject(new Error('Canvas 2D not available')); return }
+
+      // Canvas is transparent by default; drawing a PNG preserves its alpha channel.
+      // Do NOT fillRect here — that would destroy transparency.
       ctx.drawImage(img, 0, 0, w, h)
 
+      if (preserveAlpha) {
+        // Output as PNG so the alpha channel survives intact.
+        // PNG is lossless — quality param is irrelevant; one pass suffices.
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) { reject(new Error('toBlob returned null')); return }
+            resolve(blob)
+          },
+          'image/png',
+        )
+        return
+      }
+
+      // JPEG path: step quality down until the file fits.
       let quality = 0.9
 
       const attempt = () => {
@@ -61,7 +86,7 @@ function _compress(file: File, maxWidth: number, maxBytes: number): Promise<Blob
             }
           },
           'image/jpeg',
-          quality
+          quality,
         )
       }
 
@@ -82,6 +107,8 @@ export async function compressToFile(
   options?: CompressOptions
 ): Promise<File> {
   const { blob } = await compressImage(file, options)
-  const name = file.name.replace(/\.[^.]+$/, '') + '_compressed.jpg'
-  return new File([blob], name, { type: 'image/jpeg', lastModified: Date.now() })
+  const isPng    = blob.type === 'image/png'
+  const ext      = isPng ? 'png' : 'jpg'
+  const name     = file.name.replace(/\.[^.]+$/, '') + `_compressed.${ext}`
+  return new File([blob], name, { type: blob.type, lastModified: Date.now() })
 }

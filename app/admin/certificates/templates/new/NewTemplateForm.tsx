@@ -91,19 +91,19 @@ export default function NewTemplateForm() {
           <CertificateImageUpload
             label="Robocode Logo"
             name="logo_url"
-            hint="Recommended: transparent PNG, height 92 px"
+            hint="Transparent PNG required — JPEG will produce a black background. Min width 500 px."
           />
 
           <CertificateImageUpload
             label="STEM Accreditation Logo"
             name="stem_logo_url"
-            hint="Optional — shown in the footer centre"
+            hint="Optional — shown in footer centre. Transparent PNG recommended."
           />
 
           <CertificateImageUpload
             label="Signature Image"
             name="signature_url"
-            hint="Shown above the signatory line — transparent PNG recommended"
+            hint="Transparent PNG required — shown above the signatory line. JPEG will produce a black background."
           />
         </div>
 
