@@ -228,6 +228,16 @@ const s = StyleSheet.create({
     objectFit: 'contain',
   },
 
+  // STEM block (footer centre — small accreditation icon)
+  stemBlock: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stemLogo: {
+    height: 58,
+    objectFit: 'contain',
+  },
+
   // Signature block
   sigBlock: {
     flexDirection: 'column',
@@ -451,6 +461,7 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
   const template       = certificate.template
   const logoUrl        = template?.logo_url        ?? null
   const stemLogoUrl    = template?.stem_logo_url   ?? null
+  const stampUrl       = template?.stamp_url       ?? null
   const signatureUrl   = template?.signature_url   ?? null
   const signatoryName  = template?.signatory_name  ?? 'Emanoel Atef'
   const signatoryTitle = template?.signatory_title ?? 'CEO, Robocode School'
@@ -477,10 +488,10 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
         <CornerBL />
         <CornerBR />
 
-        {/* ── STEM stamp overlay — large, in certificate body above footer ── */}
-        {stemLogoUrl && (
+        {/* ── Academy stamp overlay — large, in certificate body above footer ── */}
+        {stampUrl && (
           <View style={s.stampOverlay}>
-            <Image src={stemLogoUrl} style={s.stampOverlayImg} />
+            <Image src={stampUrl} style={s.stampOverlayImg} />
           </View>
         )}
 
@@ -562,6 +573,14 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
                   <Text style={s.certIdCode}>{certId}</Text>
                   <Text style={s.certIdScan}>Scan to verify authenticity</Text>
                 </View>
+              </View>
+
+              {/* Centre: STEM accreditation logo */}
+              <View style={s.stemBlock}>
+                {stemLogoUrl
+                  ? <Image src={stemLogoUrl} style={s.stemLogo} />
+                  : <View style={{ width: 58, height: 58 }} />
+                }
               </View>
 
               {/* Right: Signature */}

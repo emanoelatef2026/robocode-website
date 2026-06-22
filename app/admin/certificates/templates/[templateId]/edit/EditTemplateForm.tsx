@@ -37,6 +37,7 @@ export default function EditTemplateForm({ template }: Props) {
       accent_color:     fd.get('accent_color') as string,
       logo_url:         fd.get('logo_url') as string || undefined,
       stem_logo_url:    fd.get('stem_logo_url') as string || undefined,
+      stamp_url:        fd.get('stamp_url') as string || undefined,
       signature_url:    fd.get('signature_url') as string || undefined,
       signatory_name:   fd.get('signatory_name') as string || undefined,
       signatory_title:  fd.get('signatory_title') as string || undefined,
@@ -118,7 +119,15 @@ export default function EditTemplateForm({ template }: Props) {
             label="STEM Accreditation Logo"
             name="stem_logo_url"
             defaultValue={template.stem_logo_url}
-            hint="Optional — shown in footer centre. Transparent PNG recommended."
+            hint="Optional — small icon shown in footer centre. Transparent PNG recommended."
+          />
+
+          <CertificateImageUpload
+            label="Academy Stamp"
+            name="stamp_url"
+            defaultValue={template.stamp_url}
+            hint="ختم الأكاديمية — هيظهر كبير على جسم الشهادة. الخلفية بتترشح تلقائياً."
+            removeBackground
           />
 
           <CertificateImageUpload

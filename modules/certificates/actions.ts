@@ -30,6 +30,7 @@ export async function createTemplate(
     background_image_url: formData.get('background_image_url') || undefined,
     logo_url:             formData.get('logo_url') || undefined,
     stem_logo_url:        formData.get('stem_logo_url') || undefined,
+    stamp_url:            formData.get('stamp_url') || undefined,
     signature_url:        formData.get('signature_url') || undefined,
     signatory_name:       formData.get('signatory_name') || undefined,
     signatory_title:      formData.get('signatory_title') || undefined,

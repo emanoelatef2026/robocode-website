@@ -15,6 +15,7 @@ export interface CertificateTemplate {
   background_image_url: string | null
   logo_url:             string | null
   stem_logo_url:        string | null
+  stamp_url:            string | null
   signature_url:        string | null
   signatory_name:       string | null
   signatory_title:      string | null

@@ -4,28 +4,39 @@ import { useState, useRef } from 'react'
 import { compressImage } from '@/lib/uploads/compressImage'
 
 interface Props {
-  label:         string
-  name:          string
-  defaultValue?: string | null
-  hint?:         string
+  label:             string
+  name:              string
+  defaultValue?:     string | null
+  hint?:             string
+  removeBackground?: boolean  // auto-remove solid background (for stamps)
 }
 
-export default function CertificateImageUpload({ label, name, defaultValue, hint }: Props) {
-  const [url, setUrl]           = useState<string>(defaultValue ?? '')
-  const [imgOk, setImgOk]       = useState<boolean>(true)   // false when img fails to load
+export default function CertificateImageUpload({
+  label,
+  name,
+  defaultValue,
+  hint,
+  removeBackground = false,
+}: Props) {
+  const [url, setUrl]             = useState<string>(defaultValue ?? '')
+  const [imgOk, setImgOk]         = useState<boolean>(true)
   const [uploading, setUploading] = useState(false)
-  const [error, setError]       = useState<string | null>(null)
+  const [error, setError]         = useState<string | null>(null)
   const [alphaWarn, setAlphaWarn] = useState(false)
-  const inputRef                = useRef<HTMLInputElement>(null)
+  const inputRef                  = useRef<HTMLInputElement>(null)
 
   const hasImage = Boolean(url) && imgOk
 
   async function handleFile(file: File) {
     setError(null)
-    setAlphaWarn(file.type !== 'image/png')
+    setAlphaWarn(!removeBackground && file.type !== 'image/png')
     setUploading(true)
     try {
-      const { blob } = await compressImage(file, { maxKB: 800, maxWidth: 1600 })
+      const { blob } = await compressImage(file, {
+        maxKB:            800,
+        maxWidth:         1600,
+        removeBackground,
+      })
       const compressed = new File([blob], file.name, { type: blob.type })
 
       const fd = new FormData()
@@ -48,6 +59,7 @@ export default function CertificateImageUpload({ label, name, defaultValue, hint
     setUrl('')
     setImgOk(true)
     setError(null)
+    setAlphaWarn(false)
   }
 
   return (
@@ -58,7 +70,7 @@ export default function CertificateImageUpload({ label, name, defaultValue, hint
       <input type="hidden" name={name} value={url} />
 
       <div className="flex items-start gap-4">
-        {/* Thumbnail or placeholder */}
+        {/* Thumbnail */}
         <div className="relative flex-shrink-0">
           {hasImage ? (
             <>
@@ -88,7 +100,7 @@ export default function CertificateImageUpload({ label, name, defaultValue, hint
           )}
         </div>
 
-        {/* Upload button */}
+        {/* Upload button + hints */}
         <div className="flex flex-1 flex-col justify-center gap-1.5 pt-1">
           <button
             type="button"
@@ -102,7 +114,7 @@ export default function CertificateImageUpload({ label, name, defaultValue, hint
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Uploading…
+                Processing…
               </>
             ) : (
               <>
@@ -117,16 +129,21 @@ export default function CertificateImageUpload({ label, name, defaultValue, hint
 
           {hint && <p className="text-xs text-[#94A3B8]">{hint}</p>}
 
-          {alphaWarn && (
-            <p className="text-xs text-amber-600">
-              JPEG/WebP files don&apos;t support transparency — upload a PNG to avoid a black background.
+          {removeBackground && !hasImage && (
+            <p className="text-xs text-emerald-600">
+              Background removal is automatic — any solid background colour will be stripped on upload.
             </p>
           )}
 
-          {/* Show a soft warning if we have a URL but it failed to load */}
+          {alphaWarn && (
+            <p className="text-xs text-amber-600">
+              JPEG/WebP don&apos;t support transparency — upload a PNG to avoid a black background.
+            </p>
+          )}
+
           {Boolean(url) && !imgOk && !uploading && (
             <p className="text-xs text-amber-500">
-              Previous URL couldn&apos;t load — upload a new image to replace it.
+              Previous image couldn&apos;t load — upload a new one to replace it.
             </p>
           )}
 

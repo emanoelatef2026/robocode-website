@@ -13,6 +13,7 @@ export const CreateTemplateSchema = z.object({
   background_image_url: z.string().url().optional().or(z.literal('')),
   logo_url:             z.string().url().optional().or(z.literal('')),
   stem_logo_url:        z.string().url().optional().or(z.literal('')),
+  stamp_url:            z.string().url().optional().or(z.literal('')),
   signature_url:        z.string().url().optional().or(z.literal('')),
   signatory_name:       z.string().max(100).optional(),
   signatory_title:      z.string().max(100).optional(),

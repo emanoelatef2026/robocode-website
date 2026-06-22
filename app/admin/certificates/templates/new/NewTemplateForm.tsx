@@ -97,7 +97,14 @@ export default function NewTemplateForm() {
           <CertificateImageUpload
             label="STEM Accreditation Logo"
             name="stem_logo_url"
-            hint="Optional — shown in footer centre. Transparent PNG recommended."
+            hint="Optional — small icon shown in footer centre. Transparent PNG recommended."
+          />
+
+          <CertificateImageUpload
+            label="Academy Stamp"
+            name="stamp_url"
+            hint="ختم الأكاديمية — هيظهر كبير على جسم الشهادة. الخلفية بتترشح تلقائياً."
+            removeBackground
           />
 
           <CertificateImageUpload
