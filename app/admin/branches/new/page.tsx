@@ -26,7 +26,6 @@ export default function NewBranchPage() {
         <Link href="/admin/branches" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← Branches
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Add Branch</h1>
       </div>
 
       <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">

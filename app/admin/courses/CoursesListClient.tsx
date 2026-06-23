@@ -39,13 +39,7 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
   return (
     <>
       {/* Header */}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Courses</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">
-            {total} course{total !== 1 ? 's' : ''} · global academy assets
-          </p>
-        </div>
+      <div className="mb-5 flex flex-wrap items-center justify-end gap-3">
         <button
           type="button"
           onClick={openCreate}

@@ -137,12 +137,6 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
   return (
     <div className="space-y-5">
 
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-semibold text-[#0B1F3A]">Branch Analytics</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">Operational intelligence for your branch{branchIds.length > 1 ? 'es' : ''}</p>
-      </div>
-
       {/* Tab navigation */}
       <div className="flex gap-1 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-1 overflow-x-auto">
         {TABS.map(t => (

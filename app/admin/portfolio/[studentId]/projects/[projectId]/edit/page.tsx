@@ -3,7 +3,6 @@ import { requirePermission } from '@/modules/rbac/guards'
 import { getPortfolioProject } from '@/modules/portfolio/queries'
 import { listCourses } from '@/modules/courses/queries'
 import { listSemesters } from '@/modules/semesters/queries'
-import PageHeader from '@/components/admin/PageHeader'
 import EditProjectForm from './EditProjectForm'
 
 interface Props {
@@ -24,7 +23,6 @@ export default async function EditProjectPage({ params }: Props) {
 
   return (
     <div>
-      <PageHeader title="Edit Project" description={project.title} />
       <EditProjectForm
         project={project}
         studentId={studentId}

@@ -4,7 +4,6 @@ import { getOrCreatePortfolio } from '@/modules/portfolio/queries'
 import { listCourses } from '@/modules/courses/queries'
 import { listSemesters } from '@/modules/semesters/queries'
 import { createServiceClient } from '@/lib/supabase/service'
-import PageHeader from '@/components/admin/PageHeader'
 import NewProjectForm from './NewProjectForm'
 
 interface Props {
@@ -38,10 +37,6 @@ export default async function NewProjectPage({ params }: Props) {
 
   return (
     <div>
-      <PageHeader
-        title="New Project"
-        description={`For ${studentName}`}
-      />
       <NewProjectForm
         studentId={studentId}
         portfolioId={portfolio.id}

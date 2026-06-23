@@ -30,7 +30,6 @@ export default async function TeamLeaderEditPage({ params }: Props) {
         <Link href={`/admin/team-leaders/${id}`} className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← {fullName ?? tl.email}
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Edit Team Leader</h1>
       </div>
       <TeamLeaderEditForm
         tl={tl}

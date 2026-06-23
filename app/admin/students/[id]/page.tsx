@@ -83,8 +83,6 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
         <Link href="/admin/students" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← Students
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">{displayName}</h1>
-        <p className="text-sm text-[#64748B]">{student.user_email} · {student.branch_name}</p>
       </div>
 
       {/* Tabs */}

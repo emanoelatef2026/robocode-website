@@ -139,13 +139,7 @@ export default function RecoveryPage() {
     <div className="max-w-3xl space-y-6">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-[#0B1F3A]">Data Recovery Center</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">
-            Sprint 53: Safe repair operations for production incidents
-          </p>
-        </div>
+      <div className="flex items-center justify-end gap-3">
         <div className="flex gap-2">
           <button
             onClick={loadSummary}

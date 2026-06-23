@@ -63,14 +63,7 @@ export default async function SystemEventsPage({ searchParams }: Props) {
     <div className="space-y-6">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-[#0B1F3A]">System Event Log</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">
-            Central observability — automation, jobs, realtime, consistency
-            {events.length > 0 && <span className="ml-1 text-[#94A3B8]">· {events.length} events</span>}
-          </p>
-        </div>
+      <div className="flex items-center justify-end gap-3">
         <Link href="/admin/system-health" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
           Health Score →
         </Link>

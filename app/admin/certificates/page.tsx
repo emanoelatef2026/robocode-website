@@ -3,7 +3,6 @@ import { requirePermission }                      from '@/modules/rbac/guards'
 import { listCourses }                            from '@/modules/courses/queries'
 import { listSemesters }                          from '@/modules/semesters/queries'
 import { createServiceClient }                    from '@/lib/supabase/service'
-import PageHeader                                 from '@/components/admin/PageHeader'
 import StatusBadge                                from '@/components/admin/StatusBadge'
 import EmptyState                                 from '@/components/admin/EmptyState'
 import Pagination                                 from '@/components/admin/Pagination'
@@ -63,22 +62,18 @@ export default async function CertificatesPage({ searchParams }: Props) {
 
   return (
     <div>
-      <PageHeader
-        title="Certificates"
-        description={`${result.total} certificate${result.total !== 1 ? 's' : ''}`}
-        action={
-          <div className="flex gap-2">
-            <TemplatesModal templates={allTemplates.data} />
-            <IssueCertificateModal
-              templates={templates}
-              students={students}
-              semesters={semestersResult.data.map(s => ({ id: s.id, name: s.name }))}
-              courses={coursesResult.data.map(c => ({ id: c.id, title: c.title }))}
-              successRedirect="/admin/certificates"
-            />
-          </div>
-        }
-      />
+      <div className="mb-6 flex justify-end">
+        <div className="flex gap-2">
+          <TemplatesModal templates={allTemplates.data} />
+          <IssueCertificateModal
+            templates={templates}
+            students={students}
+            semesters={semestersResult.data.map(s => ({ id: s.id, name: s.name }))}
+            courses={coursesResult.data.map(c => ({ id: c.id, title: c.title }))}
+            successRedirect="/admin/certificates"
+          />
+        </div>
+      </div>
 
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
         <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">

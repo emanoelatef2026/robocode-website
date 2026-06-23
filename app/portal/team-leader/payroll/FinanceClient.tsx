@@ -497,12 +497,6 @@ export default function FinanceClient({
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-[#E2E8F0] px-4 md:px-6 py-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="text-[20px] font-bold text-[#0B1F3A]">Payroll</h1>
-            <p className="text-[12px] text-[#64748B] mt-0.5">
-              Live instructor earnings & staff salaries
-            </p>
-          </div>
           <div className="flex items-center gap-2">
             {activeTab === "staff" && (
               <button

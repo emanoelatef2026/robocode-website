@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import CourseModal from '@/app/admin/courses/CourseModal'
 import type { CourseListItem } from '@/modules/courses/types'
+import { useTopbarAction } from '@/components/admin/TopbarActionContext'
 
 export interface CourseMetric {
   courseId:  string
@@ -57,27 +58,26 @@ export default function TLCoursesListClient({
 
   const metricsMap = new Map<string, CourseMetric>(metrics.map(m => [m.courseId, m]))
 
+  const { setAction } = useTopbarAction()
+  const openCreate = useCallback(() => setCreateOpen(true), [])
+  useEffect(() => {
+    setAction(
+      <button
+        type="button"
+        onClick={openCreate}
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+        </svg>
+        New Course
+      </button>
+    )
+    return () => setAction(null)
+  }, [openCreate, setAction])
+
   return (
     <>
-      {/* Header */}
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-[17px] font-semibold text-[#0B1F3A] md:text-xl">Courses</h1>
-          <p className="mt-0.5 truncate text-[12px] text-[#64748B] md:text-sm">
-            {total} course{total !== 1 ? 's' : ''} · performance view
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setCreateOpen(true)}
-          className="shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-[#e87c18]"
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          New Course
-        </button>
-      </div>
 
       {/* Table */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white">

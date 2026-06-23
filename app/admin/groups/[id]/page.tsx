@@ -59,8 +59,6 @@ export default async function GroupDetailPage({ params }: Props) {
         <Link href="/admin/groups" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← Groups
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">{group.name}</h1>
-        <p className="text-sm text-[#64748B]">{group.branch_name} · {group.type}</p>
       </div>
 
       <div className="mb-6">

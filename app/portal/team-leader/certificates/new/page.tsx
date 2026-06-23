@@ -3,7 +3,6 @@ import { listActiveTemplates }                  from '@/modules/certificates/que
 import { listCourses }                          from '@/modules/courses/queries'
 import { listSemesters }                        from '@/modules/semesters/queries'
 import { createServiceClient }                  from '@/lib/supabase/service'
-import PageHeader                               from '@/components/admin/PageHeader'
 import IssueCertificateForm                     from '@/app/admin/certificates/new/IssueCertificateForm'
 import Link                                     from 'next/link'
 
@@ -38,17 +37,14 @@ export default async function TLIssueCertificatePage() {
 
   return (
     <div>
-      <PageHeader
-        title="Issue Certificate"
-        action={
-          <Link
-            href="/portal/team-leader/certificates"
-            className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
-          >
-            Cancel
-          </Link>
-        }
-      />
+      <div className="mb-6 flex justify-end">
+        <Link
+          href="/portal/team-leader/certificates"
+          className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
+        >
+          Cancel
+        </Link>
+      </div>
       <IssueCertificateForm
         templates={templates}
         students={students}

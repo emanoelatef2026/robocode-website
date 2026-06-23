@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import StatusBadge from '@/components/admin/StatusBadge'
 import TemplateFormModal from '@/components/admin/TemplateFormModal'
 import type { CertificateTemplateListItem } from '@/modules/certificates/types'
+import { useTopbarAction } from '@/components/admin/TopbarActionContext'
 
 interface Props {
   templates: CertificateTemplateListItem[]
@@ -31,21 +32,26 @@ export default function TemplatesClient({ templates }: Props) {
     router.refresh()
   }
 
+  const { setAction } = useTopbarAction()
+  const openNew = useCallback(() => setModal({ mode: 'new' }), [])
+  useEffect(() => {
+    setAction(
+      <button
+        type="button"
+        onClick={openNew}
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+        </svg>
+        New Template
+      </button>
+    )
+    return () => setAction(null)
+  }, [openNew, setAction])
+
   return (
     <>
-      {/* New Template button */}
-      <div className="flex justify-end mb-0">
-        <button
-          type="button"
-          onClick={() => setModal({ mode: 'new' })}
-          className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          New Template
-        </button>
-      </div>
 
       {/* Table */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white mt-4">

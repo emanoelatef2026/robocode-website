@@ -1,11 +1,11 @@
 import { listTeamLeaders } from '@/modules/team-leaders/queries'
 import { requirePermission } from '@/modules/rbac/guards'
-import PageHeader from '@/components/admin/PageHeader'
 import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
 import Pagination from '@/components/admin/Pagination'
 import SearchInput from '@/components/admin/SearchInput'
 import Link from 'next/link'
+import { TopbarAction } from '@/components/admin/TopbarActionContext'
 
 interface Props {
   searchParams: Promise<{ page?: string; q?: string; status?: string }>
@@ -22,21 +22,17 @@ export default async function TeamLeadersPage({ searchParams }: Props) {
 
   return (
     <div>
-      <PageHeader
-        title="Team Leaders"
-        description={`${result.total} team leader${result.total !== 1 ? 's' : ''}`}
-        action={
-          <Link
-            href="/admin/team-leaders/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Add Team Leader
-          </Link>
-        }
-      />
+      <TopbarAction>
+        <Link
+          href="/admin/team-leaders/new"
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          Add Team Leader
+        </Link>
+      </TopbarAction>
 
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
         <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">

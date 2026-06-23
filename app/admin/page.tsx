@@ -296,21 +296,15 @@ export default async function AdminDashboard() {
 
   return (
     <div className="max-w-300 space-y-0">
-      {/* ── Page header ──────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Academy Overview</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">
-            {now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </p>
-        </div>
-        {totalAlerts > 0 && (
+      {/* ── Alerts shortcut ──────────────────────────────────────────────── */}
+      {totalAlerts > 0 && (
+        <div className="flex justify-end">
           <Link href="/admin/system-health" className="inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 transition hover:bg-red-200">
             <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
             {totalAlerts} alert{totalAlerts !== 1 ? 's' : ''}
           </Link>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── TODAY ────────────────────────────────────────────────────────── */}
       <Section title="Today" />

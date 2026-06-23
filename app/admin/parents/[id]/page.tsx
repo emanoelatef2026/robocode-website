@@ -22,12 +22,6 @@ export default async function ParentDetailPage({ params }: Props) {
         <Link href="/admin/parents" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← Parents
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">
-          {parent.first_name && parent.last_name
-            ? `${parent.first_name} ${parent.last_name}`
-            : parent.user_email}
-        </h1>
-        <p className="text-sm text-[#64748B]">{parent.user_email}</p>
       </div>
       <ParentDetailView parent={parent} students={studentsResult.data} />
     </div>

@@ -13,7 +13,6 @@ export default async function NewParentPage() {
         <Link href="/admin/parents" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← Parents
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Add Parent</h1>
       </div>
       <NewParentForm students={studentsResult.data} />
     </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
+import { useTopbarAction } from '@/components/admin/TopbarActionContext'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import type { StudentOperationalRow, GroupPickerOption } from '@/modules/students/operational'
 import { bulkDeleteStudentsAction } from '@/modules/students/modal-actions'
@@ -87,6 +88,25 @@ export default function StudentsClient({
 
   // Clear selection when data changes (after refresh)
   useEffect(() => { setSelectedIds(new Set()) }, [rows])
+
+  // ── Topbar Add button ───────────────────────────────────────────────────────
+  const { setAction } = useTopbarAction()
+  const openCreate = useCallback(() => setCreateOpen(true), [])
+  useEffect(() => {
+    if (!isTL) return
+    setAction(
+      <button
+        onClick={openCreate}
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+        </svg>
+        Add Student
+      </button>
+    )
+    return () => setAction(null)
+  }, [isTL, openCreate, setAction])
 
   // ── URL persistence helper ──────────────────────────────────────────────────
   const pushFilters = useCallback((overrides: Record<string, string> = {}) => {
@@ -240,26 +260,6 @@ export default function StudentsClient({
   return (
     <div className="space-y-3 md:space-y-5">
 
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Students</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">{filtered.length} of {rows.length} students</p>
-        </div>
-        {/* Mobile-only Add Student — desktop uses Row 1 button */}
-        {isTL && (
-          <button
-            onClick={() => setCreateOpen(true)}
-            className="md:hidden inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Add Student
-          </button>
-        )}
-      </div>
-
       {/* KPI Strip */}
       <div className="grid grid-cols-4 gap-1.5 md:gap-3 lg:grid-cols-7">
         {kpis.map(k => (
@@ -274,7 +274,7 @@ export default function StudentsClient({
       {/* Filter bar */}
       <div className="space-y-2">
 
-        {/* Row 1: Search + Filters toggle + Clear + Add Student (desktop) */}
+        {/* Row 1: Search + Filters toggle + Clear */}
         <div className="flex gap-2">
           <input
             value={search}
@@ -306,18 +306,6 @@ export default function StudentsClient({
               className="shrink-0 rounded-xl border border-[#E2E8F0] px-3 py-2 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]"
             >
               Clear
-            </button>
-          )}
-          {/* Desktop-only Add Student — in-line with search row */}
-          {isTL && (
-            <button
-              onClick={() => setCreateOpen(true)}
-              className="hidden md:inline-flex shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
-            >
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-              Add Student
             </button>
           )}
         </div>

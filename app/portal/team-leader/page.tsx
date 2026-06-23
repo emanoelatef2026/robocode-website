@@ -228,22 +228,13 @@ export default async function TLDashboardPage({ searchParams }: Props) {
   return (
     <div className="space-y-3 md:space-y-6 pb-24 md:pb-8">
 
-      {/* ── Page header ──────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-[17px] md:text-[20px] font-extrabold tracking-tight text-[#0B1F3A]">
-            Operations Center
-          </h1>
-          <p className="mt-0.5 text-[11px] md:text-[13px] text-[#64748B]">
-            {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </p>
+      {/* ── Branch filter + Section navigation ───────────────────────── */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+        <SectionNav />
+        <div className="shrink-0 ml-auto">
+          <BranchFilterBar branches={branches} selected={selectedBranch} />
         </div>
-
-        <BranchFilterBar branches={branches} selected={selectedBranch} />
       </div>
-
-      {/* ── Section navigation (jump links) ─────────────────────────── */}
-      <SectionNav />
 
       {/* ── Finance KPI strip ────────────────────────────────────────── */}
       <Suspense fallback={<FinanceStripSkeleton />}>

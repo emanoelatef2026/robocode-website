@@ -28,12 +28,6 @@ export default async function NewFinanceAccountPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold text-[#0B1F3A]">New Financial Account</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">
-          Create a financial account for a student to begin tracking payments and installments.
-        </p>
-      </div>
 
       <NewFinanceAccountForm
         branches={(branchesRes.data as any[]).map((b: any) => ({ id: b.id, name: b.name }))}

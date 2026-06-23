@@ -202,12 +202,6 @@ export default function CollectionsView({ sections, branchIds, stats }: Props) {
   return (
     <div className="space-y-5">
 
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div>
-        <h1 className="text-xl font-semibold text-[#0B1F3A]">Daily Collections</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">Operational workspace — collect today, resolve tomorrow</p>
-      </div>
-
       {/* ── KPI strip ───────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[

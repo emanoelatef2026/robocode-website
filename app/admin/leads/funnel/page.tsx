@@ -170,8 +170,6 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
       <div className="flex items-start justify-between">
         <div>
           <Link href="/admin/leads" className="text-xs text-[#94A3B8] hover:text-[#FF8A1F]">← Leads</Link>
-          <h1 className="mt-1 text-xl font-semibold text-[#0B1F3A]">Conversion Funnel</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">Lead → Trial → Student pipeline analysis</p>
         </div>
         <div className="flex items-center gap-2">
           {isSuperAdmin && (

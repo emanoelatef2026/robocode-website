@@ -164,16 +164,10 @@ export default async function TLPerformancePage({ params }: Props) {
   return (
     <div className="max-w-3xl space-y-6">
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between">
-        <div>
-          <Link href={`/admin/team-leaders/${id}`} className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
-            ← {name}
-          </Link>
-          <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">{name} — Performance</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">
-            {tl.branch_names.join(', ')} · {now.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-          </p>
-        </div>
+      <div className="flex items-center justify-between">
+        <Link href={`/admin/team-leaders/${id}`} className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
+          ← {name}
+        </Link>
         <div className="text-right">
           <p className={`text-3xl font-bold ${perf.healthScore >= 75 ? 'text-emerald-600' : perf.healthScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
             {perf.healthScore}

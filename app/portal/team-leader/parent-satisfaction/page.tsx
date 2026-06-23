@@ -57,14 +57,6 @@ export default async function ParentSatisfactionPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-8">
 
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-[#0B1F3A]">Parent Satisfaction</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">
-          Aggregated feedback from parent milestone surveys · {aggregate.total_responses} response{aggregate.total_responses !== 1 ? 's' : ''}
-        </p>
-      </div>
-
       {aggregate.total_responses === 0 ? (
         <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-16 text-center">
           <p className="text-sm text-[#64748B]">No parent feedback collected yet.</p>

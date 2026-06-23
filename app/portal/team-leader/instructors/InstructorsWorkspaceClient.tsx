@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useCallback, useRef, useEffect } from 'react'
 import { buildWhatsAppUrl } from '@/lib/phone'
+import { useTopbarAction } from '@/components/admin/TopbarActionContext'
 import {
   getInstructorDetailAction,
   createInstructorModalAction,
@@ -1817,6 +1818,25 @@ export default function InstructorsWorkspaceClient({
   const pendingEditRef   = useRef(false)
   const pendingDeleteRef = useRef(false)
 
+  // ── Topbar Add button ───────────────────────────────────────────────────────
+  const { setAction } = useTopbarAction()
+  const openFormCreate = useCallback(() => { setEditingInstructor(null); setShowForm(true) }, [])
+  useEffect(() => {
+    if (!canManage) return
+    setAction(
+      <button
+        onClick={openFormCreate}
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+        </svg>
+        Add Instructor
+      </button>
+    )
+    return () => setAction(null)
+  }, [canManage, openFormCreate, setAction])
+
   const loadDetail = useCallback(async (id: string) => {
     setDetailLoading(true)
     setDetail(null)
@@ -1941,10 +1961,6 @@ export default function InstructorsWorkspaceClient({
       {/* ── TOP BAR ── */}
       <div className="shrink-0 border-b border-[#E2E8F0] bg-white px-4 md:px-6 py-2 md:py-3">
         <div className="flex items-center justify-between gap-2 md:gap-4">
-          <div>
-            <h1 className="text-xl font-semibold text-[#0B1F3A]">Instructors</h1>
-            <p className="text-xs text-[#64748B] md:text-[11px]">{instructors.length} total · {totalActive} active · {totalAssigned} assigned · {totalUnassigned} unassigned</p>
-          </div>
           <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
             {/* View toggle */}
             <div className="flex rounded-lg border border-[#E2E8F0] overflow-hidden">
@@ -1963,16 +1979,6 @@ export default function InstructorsWorkspaceClient({
                 </svg>
               </button>
             </div>
-            {canManage && (
-              <button
-                onClick={() => { setEditingInstructor(null); setShowForm(true) }}
-                className="flex items-center gap-1 rounded-lg bg-[#FF8A1F] px-2.5 md:px-3 py-1.5 md:py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] active:scale-[0.98] transition">
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
-                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd"/>
-                </svg>
-                <span className="hidden sm:inline">Add Instructor</span>
-              </button>
-            )}
           </div>
         </div>
       </div>

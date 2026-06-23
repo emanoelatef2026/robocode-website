@@ -84,10 +84,10 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Finance',
     items: [
-      { label: 'Payroll',     href: '/admin/payroll',        icon: I.payroll,     superAdminOnly: true            },
+      { label: 'Payroll',     href: '/admin/payroll',        icon: I.payroll,     permission: 'manage_financials' },
       { label: 'Collections', href: '/admin/finance',        icon: I.collections, permission: 'manage_financials' },
-      { label: 'Revenue',     href: '/admin/revenue',        icon: I.revenue,     permission: 'manage_financials' },
-      { label: 'Expenses',    href: '/admin/expenses',       icon: I.expenses,    permission: 'manage_financials' },
+      { label: 'Revenue',     href: '/admin/revenue',        icon: I.revenue,     superAdminOnly: true            },
+      { label: 'Expenses',    href: '/admin/expenses',       icon: I.expenses,    superAdminOnly: true            },
     ],
   },
   {
@@ -249,11 +249,16 @@ function NavContent({ onClose, role, permissions, collapsed, onToggleCollapse }:
     <div className="flex h-full min-h-0 flex-col">
       {/* Logo + collapse toggle */}
       <div className={[
-        "flex h-14 shrink-0 items-center border-b border-white/8",
+        "flex h-16 shrink-0 items-center border-b border-white/8",
         collapsed ? "justify-center px-2" : "justify-between px-4",
       ].join(" ")}>
         {!collapsed && (
-          <Image src="/logo.png" alt="Robocode" width={120} height={52} className="h-auto w-[84px] brightness-0 invert" />
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white">
+              <Image src="/logo.png" alt="Robocode" width={24} height={24} className="h-6 w-6 object-contain" />
+            </div>
+            <span className="font-orbitron text-[12px] font-bold tracking-[.04em] text-white">ROBOCODE</span>
+          </div>
         )}
         <button
           onClick={onToggleCollapse}

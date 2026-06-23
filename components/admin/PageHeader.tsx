@@ -6,11 +6,13 @@ interface Props {
 
 export default function PageHeader({ title, description, action }: Props) {
   return (
-    <div className="mb-4 flex items-center justify-between gap-3">
+    <div className="mb-6 flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="text-[17px] font-semibold leading-tight text-[#0B1F3A] md:text-xl">{title}</h1>
+        <h1 className="font-poppins text-[20px] font-extrabold leading-tight text-[#0B1F3A]">
+          {title}
+        </h1>
         {description && (
-          <p className="mt-0.5 truncate text-[12px] text-[#64748B] md:text-sm">{description}</p>
+          <p className="mt-1 truncate text-[12px] text-[#64748B]">{description}</p>
         )}
       </div>
       {action && <div className="shrink-0">{action}</div>}

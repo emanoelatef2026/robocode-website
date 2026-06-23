@@ -160,3 +160,11 @@ body.font-cairo {
 /* ── Dashboard utilities ─────────────────────────────────────────────────────── */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Font utilities ───────────────────────────────────────────────────────────── */
+@utility font-orbitron {
+  font-family: var(--font-orbitron), 'Orbitron', sans-serif;
+}
+@utility font-poppins {
+  font-family: var(--font-poppins), 'Poppins', sans-serif;
+}

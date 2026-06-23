@@ -17,7 +17,6 @@ export default async function NewGroupPage() {
         <Link href="/admin/groups" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← Groups
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Create Group</h1>
       </div>
       <NewGroupForm branches={branchesResult.data} instructors={instructorsResult.data} />
     </div>

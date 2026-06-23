@@ -35,8 +35,6 @@ export default async function InstructorEditPage({ params }: Props) {
         <Link href="/admin/instructors" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← Instructors
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">{displayName}</h1>
-        <p className="text-sm text-[#64748B]">{instructor.user_email} · {instructor.branch_name}</p>
       </div>
 
       <div className="space-y-5">

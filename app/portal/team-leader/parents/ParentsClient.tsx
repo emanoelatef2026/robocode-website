@@ -5,6 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import type { ParentOperationalRow, StudentPickerOption } from '@/modules/parents/operational'
 import ParentDetailDrawer from './ParentDetailDrawer'
 import ParentFormModal    from './ParentFormModal'
+import { useTopbarAction } from '@/components/admin/TopbarActionContext'
 
 // Normalize Egyptian phone formats so search matches any variant
 function normalizePhone(p: string): string {
@@ -64,6 +65,25 @@ export default function ParentsClient({
   const [drawerParent,  setDrawerParent]  = useState<ParentOperationalRow | null>(null)
   const [createOpen,    setCreateOpen]    = useState(false)
   const [editParent,    setEditParent]    = useState<ParentOperationalRow | null>(null)
+
+  // ── Topbar Add button ───────────────────────────────────────────────────────
+  const { setAction } = useTopbarAction()
+  const openCreate = useCallback(() => setCreateOpen(true), [])
+  useEffect(() => {
+    if (!isTL) return
+    setAction(
+      <button
+        onClick={openCreate}
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+        </svg>
+        Add Parent
+      </button>
+    )
+    return () => setAction(null)
+  }, [isTL, openCreate, setAction])
 
   // ── URL persistence ─────────────────────────────────────────────────────────
   const pushFilters = useCallback((overrides: Record<string, string> = {}) => {
@@ -139,25 +159,6 @@ export default function ParentsClient({
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-5">
-
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Parents</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">{filtered.length} of {rows.length} families</p>
-        </div>
-        {isTL && (
-          <button
-            onClick={() => setCreateOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl bg-[#FF8A1F] px-4 py-2 text-sm font-semibold text-white hover:bg-[#e87c18] active:scale-95 transition"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Add Parent
-          </button>
-        )}
-      </div>
 
       {/* KPI Strip */}
       <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-3 lg:grid-cols-6">

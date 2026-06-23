@@ -1,6 +1,5 @@
 import { requirePermission } from '@/modules/rbac/guards'
 import { getPortfolioByStudentId } from '@/modules/portfolio/queries'
-import PageHeader from '@/components/admin/PageHeader'
 import NewAchievementForm from './NewAchievementForm'
 
 interface Props {
@@ -15,7 +14,6 @@ export default async function NewAchievementPage({ params }: Props) {
 
   return (
     <div>
-      <PageHeader title="Add Achievement" />
       <NewAchievementForm studentId={studentId} portfolioId={portfolio?.id ?? null} />
     </div>
   )

@@ -1,6 +1,5 @@
 import { requirePermission } from '@/modules/rbac/guards'
 import { getPortfolioByStudentId } from '@/modules/portfolio/queries'
-import PageHeader from '@/components/admin/PageHeader'
 import NewBadgeForm from './NewBadgeForm'
 
 interface Props {
@@ -15,7 +14,6 @@ export default async function NewBadgePage({ params }: Props) {
 
   return (
     <div>
-      <PageHeader title="Award Badge" />
       <NewBadgeForm studentId={studentId} portfolioId={portfolio?.id ?? null} />
     </div>
   )

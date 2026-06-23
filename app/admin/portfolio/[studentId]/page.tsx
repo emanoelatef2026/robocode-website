@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation'
 import { requirePermission } from '@/modules/rbac/guards'
 import { getStudentPortfolioDetail } from '@/modules/portfolio/queries'
 import { archiveProject, deleteAchievement, deleteBadge } from '@/modules/portfolio/actions'
-import PageHeader from '@/components/admin/PageHeader'
 import Link from 'next/link'
 import StatusBadge from '@/components/admin/StatusBadge'
 
@@ -21,18 +20,14 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-8">
-      <PageHeader
-        title={student_name}
-        description={student_email}
-        action={
-          <Link
-            href="/admin/portfolio"
-            className="text-sm text-[#64748B] hover:text-[#0B1F3A]"
-          >
-            ← Back to Portfolios
-          </Link>
-        }
-      />
+      <div className="mb-6 flex justify-end">
+        <Link
+          href="/admin/portfolio"
+          className="text-sm text-[#64748B] hover:text-[#0B1F3A]"
+        >
+          ← Back to Portfolios
+        </Link>
+      </div>
 
       {/* ── Projects ─────────────────────────────────────────────────── */}
       <section>

@@ -7,6 +7,7 @@ import Pagination                     from '@/components/admin/Pagination'
 import StatusBadge                    from '@/components/admin/StatusBadge'
 import EmptyState                     from '@/components/admin/EmptyState'
 import Link                           from 'next/link'
+import { TopbarAction }               from '@/components/admin/TopbarActionContext'
 
 interface Props {
   searchParams: Promise<{ page?: string; q?: string; type?: string; status?: string; view?: string; branch?: string }>
@@ -90,44 +91,40 @@ export default async function AdminAssignmentsPage({ searchParams }: Props) {
   return (
     <div className="space-y-5">
 
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Assignments</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">Academy-wide academic supervision — {result.total} assignment{result.total !== 1 ? 's' : ''}</p>
+      <TopbarAction>
+        <Link
+          href="/admin/assignments/new"
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          New Assignment
+        </Link>
+      </TopbarAction>
+
+      {/* Branch filter for super admin */}
+      {isSuperAdmin && (
+        <div className="flex justify-end">
+          <form method="get">
+            {search      && <input type="hidden" name="q"      value={search} />}
+            {type        && <input type="hidden" name="type"   value={type} />}
+            {status      && <input type="hidden" name="status" value={status} />}
+            {view !== 'list' && <input type="hidden" name="view" value={view} />}
+            <select
+              name="branch"
+              defaultValue={branchParam}
+              className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+            >
+              <option value="">All Branches</option>
+              {branchesRes.data.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+            <noscript><button type="submit">Apply</button></noscript>
+          </form>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Branch filter for super admin */}
-          {isSuperAdmin && (
-            <form method="get">
-              {search      && <input type="hidden" name="q"      value={search} />}
-              {type        && <input type="hidden" name="type"   value={type} />}
-              {status      && <input type="hidden" name="status" value={status} />}
-              {view !== 'list' && <input type="hidden" name="view" value={view} />}
-              <select
-                name="branch"
-                defaultValue={branchParam}
-                className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
-              >
-                <option value="">All Branches</option>
-                {branchesRes.data.map(b => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
-                ))}
-              </select>
-              <noscript><button type="submit">Apply</button></noscript>
-            </form>
-          )}
-          <Link
-            href="/admin/assignments/new"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-3 py-2 text-sm font-medium text-white hover:bg-[#e87c18]"
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            New Assignment
-          </Link>
-        </div>
-      </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">

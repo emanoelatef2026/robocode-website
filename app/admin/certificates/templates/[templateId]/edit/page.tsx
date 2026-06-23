@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { requirePermission } from '@/modules/rbac/guards'
 import { getCertificateTemplate } from '@/modules/certificates/queries'
-import PageHeader from '@/components/admin/PageHeader'
 import EditTemplateForm from './EditTemplateForm'
 
 interface Props {
@@ -17,7 +16,6 @@ export default async function EditTemplatePage({ params }: Props) {
 
   return (
     <div>
-      <PageHeader title="Edit Template" description={template.name} />
       <EditTemplateForm template={template} />
     </div>
   )

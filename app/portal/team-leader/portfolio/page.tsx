@@ -34,11 +34,6 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-[#0B1F3A]">Portfolio Operations</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">Review and feature student projects across your branch</p>
-      </div>
-
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
         {[

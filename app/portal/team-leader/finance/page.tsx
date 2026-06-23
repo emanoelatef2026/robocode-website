@@ -41,13 +41,7 @@ export default async function StudentOperationsPage() {
     <div className="space-y-5">
 
       {/* ── Header ───────────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Student Operations Center</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">
-            {user.branchIds.length > 1 ? 'All branches' : 'Branch'} — {totalStudents} students monitored
-          </p>
-        </div>
+      <div className="flex items-center justify-end gap-3">
         <p className="text-xs text-[#94A3B8]">Use the Add Payment button in the table to create contracts.</p>
       </div>
 

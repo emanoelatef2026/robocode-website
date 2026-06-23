@@ -31,7 +31,6 @@ export default async function TLRecordAttendancePage({ searchParams }: Props) {
         <Link href="/portal/team-leader/attendance" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← Attendance
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">Record Session</h1>
       </div>
 
       <TLAttendanceRecordForm

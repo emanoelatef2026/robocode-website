@@ -1,43 +1,128 @@
 "use client";
 
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useTopbarAction } from "./TopbarActionContext";
+
+const PATH_TITLES: Record<string, string> = {
+  "/admin": "Dashboard",
+  "/admin/students": "Students",
+  "/admin/parents": "Parents",
+  "/admin/instructors": "Instructors",
+  "/admin/team-leaders": "Team Leaders",
+  "/admin/staff": "Staff",
+  "/admin/groups": "Groups",
+  "/admin/courses": "Courses",
+  "/admin/certificates": "Certificates",
+  "/admin/payroll": "Payroll",
+  "/admin/finance": "Collections",
+  "/admin/revenue": "Revenue",
+  "/admin/expenses": "Expenses",
+  "/admin/attendance": "Attendance",
+  "/admin/assignments": "Assignments",
+  "/admin/analytics": "Analytics",
+  "/admin/executive": "Reports",
+  "/admin/branches": "Branches",
+  "/admin/system-health": "System Health",
+  "/admin/production-readiness": "Production Readiness",
+  "/admin/leads": "Leads",
+  "/admin/sessions": "Sessions",
+  "/admin/communications": "Communications",
+  "/admin/semesters": "Semesters",
+  "/admin/portfolio": "Portfolio",
+  // Team Leader portal paths
+  "/portal/team-leader": "Dashboard",
+  "/portal/team-leader/students": "Students",
+  "/portal/team-leader/parents": "Parents",
+  "/portal/team-leader/groups": "Groups",
+  "/portal/team-leader/attendance": "Attendance",
+  "/portal/team-leader/finance": "Finance",
+  "/portal/team-leader/leads": "Leads",
+  "/portal/team-leader/instructors": "Instructors",
+  "/portal/team-leader/courses": "Courses",
+  "/portal/team-leader/assignments": "Assignments",
+  "/portal/team-leader/analytics": "Analytics",
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: "Super Admin",
+  team_leader: "Team Leader",
+  instructor: "Instructor",
+};
+
+function getPageTitle(pathname: string): string {
+  if (PATH_TITLES[pathname]) return PATH_TITLES[pathname];
+  const sorted = Object.keys(PATH_TITLES).sort((a, b) => b.length - a.length);
+  for (const key of sorted) {
+    if (pathname.startsWith(key + "/")) return PATH_TITLES[key];
+  }
+  return "Dashboard";
+}
 
 interface Props {
   onMenuClick: () => void;
+  role?: string;
+  branchName?: string;
 }
 
-export default function AdminTopbar({ onMenuClick }: Props) {
-  const router = useRouter();
+export default function AdminTopbar({ onMenuClick, role = "super_admin", branchName }: Props) {
+  const pathname = usePathname();
+  const { action } = useTopbarAction();
+
+  const pageTitle = getPageTitle(pathname);
+  const roleLabel = ROLE_LABELS[role] ?? "Admin";
+  const formattedDate = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-[#E2E8F0] bg-white px-4 md:px-5">
-      {/* Mobile logo */}
-      <div className="flex items-center md:hidden">
-        <Image src="/logo.png" alt="Robocode" width={100} height={44} className="h-7 w-auto" />
+    <header className="flex h-16 shrink-0 items-center gap-4 border-b border-[#E2E8F0] bg-white px-4 md:px-7">
+      {/* Hamburger — mobile only */}
+      <button
+        onClick={onMenuClick}
+        className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#E2E8F0] md:hidden"
+        aria-label="Open menu"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          className="h-5 w-5 text-[#64748B]"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+          />
+        </svg>
+      </button>
+
+      {/* Page title */}
+      <div>
+        <h1 className="font-poppins text-[20px] font-extrabold leading-tight text-[#0B1F3A]">
+          {pageTitle}
+        </h1>
+        <p className="text-[11px] text-[#64748B]">
+          {formattedDate} · {roleLabel}
+        </p>
       </div>
 
       <div className="flex-1" />
 
-      <button
-        onClick={() => router.push("/studio")}
-        className="flex items-center gap-1.5 rounded-md border border-[#E2E8F0] px-3 py-1.5 text-xs font-medium text-[#64748B] transition hover:border-[#CBD5E1] hover:text-[#0B1F3A]"
-      >
-        <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-        </svg>
-        Studio
-      </button>
+      {/* Branch badge — desktop only, when branchName provided */}
+      {branchName && (
+        <div className="hidden items-center gap-2 rounded-[10px] border border-[#e4e9f0] bg-white px-3 py-2 md:flex">
+          <span className="h-2 w-2 rounded-full bg-[#FF8A1F]" />
+          <span className="text-[12px] font-semibold text-[#0B1F3A]">
+            {branchName}
+          </span>
+        </div>
+      )}
 
-      <button
-        onClick={onMenuClick}
-        className="flex h-10 w-10 items-center justify-center rounded-lg text-[#64748B] hover:bg-[#F1F5F9] active:bg-[#E2E8F0] md:hidden"
-        aria-label="Open menu"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-        </svg>
-      </button>
+      {/* Page action — injected by page content via TopbarActionContext */}
+      {action && <div className="shrink-0">{action}</div>}
     </header>
   );
 }

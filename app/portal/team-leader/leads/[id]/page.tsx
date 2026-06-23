@@ -34,12 +34,10 @@ export default async function LeadDetailPage({ params }: Props) {
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6">
         <Link href="/portal/team-leader/leads" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
           ← Leads
         </Link>
-        <span className="text-[#CBD5E1]">/</span>
-        <h1 className="text-xl font-semibold text-[#0B1F3A]">{lead.child_name}</h1>
       </div>
 
       <LeadDetailClient

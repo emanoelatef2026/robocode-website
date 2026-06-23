@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation'
 import { requirePermission } from '@/modules/rbac/guards'
 import { listPromotableSubmissions } from '@/modules/portfolio/queries'
 import { createServiceClient } from '@/lib/supabase/service'
-import PageHeader from '@/components/admin/PageHeader'
 import PromoteForm from './PromoteForm'
 
 interface Props {
@@ -31,10 +30,6 @@ export default async function PromoteSubmissionPage({ params }: Props) {
 
   return (
     <div>
-      <PageHeader
-        title="Promote Submission"
-        description={`Add a graded submission to ${studentName}'s portfolio`}
-      />
       <PromoteForm studentId={studentId} submissions={submissions} />
     </div>
   )

@@ -1,7 +1,6 @@
 import { getInstructor } from '@/modules/instructors/queries'
 import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { notFound } from 'next/navigation'
-import PageHeader from '@/components/admin/PageHeader'
 import TLInstructorEditForm from './TLInstructorEditForm'
 import Link from 'next/link'
 
@@ -20,18 +19,14 @@ export default async function TLInstructorEditPage({ params }: Props) {
 
   return (
     <div>
-      <PageHeader
-        title="Edit Instructor"
-        description={fullName}
-        action={
-          <Link
-            href={`/portal/team-leader/instructors/${id}`}
-            className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
-          >
-            Back
-          </Link>
-        }
-      />
+      <div className="mb-6 flex justify-end">
+        <Link
+          href={`/portal/team-leader/instructors/${id}`}
+          className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
+        >
+          Back
+        </Link>
+      </div>
       <TLInstructorEditForm instructor={instructor} />
     </div>
   )

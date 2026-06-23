@@ -2,7 +2,6 @@ import { getInstructor } from '@/modules/instructors/queries'
 import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { notFound } from 'next/navigation'
 import StatusBadge from '@/components/admin/StatusBadge'
-import PageHeader from '@/components/admin/PageHeader'
 import Link from 'next/link'
 
 interface Props { params: Promise<{ id: string }> }
@@ -20,26 +19,22 @@ export default async function TLInstructorDetailPage({ params }: Props) {
 
   return (
     <div>
-      <PageHeader
-        title={fullName ?? instructor.user_email ?? '—'}
-        description="Instructor profile"
-        action={
-          <div className="flex gap-2">
-            <Link
-              href="/portal/team-leader/instructors"
-              className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
-            >
-              Back
-            </Link>
-            <Link
-              href={`/portal/team-leader/instructors/${id}/edit`}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
-            >
-              Edit
-            </Link>
-          </div>
-        }
-      />
+      <div className="mb-6 flex justify-end">
+        <div className="flex gap-2">
+          <Link
+            href="/portal/team-leader/instructors"
+            className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
+          >
+            Back
+          </Link>
+          <Link
+            href={`/portal/team-leader/instructors/${id}/edit`}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
+          >
+            Edit
+          </Link>
+        </div>
+      </div>
 
       <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">

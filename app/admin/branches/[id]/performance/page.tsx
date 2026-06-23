@@ -184,16 +184,10 @@ export default async function BranchPerformancePage({ params }: Props) {
   return (
     <div className="max-w-4xl space-y-6">
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between">
-        <div>
-          <Link href={`/admin/branches/${id}`} className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
-            ← {branch.name}
-          </Link>
-          <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">{branch.name} — Performance</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">
-            {now.toLocaleString('en-US', { month: 'long', year: 'numeric' })} snapshot
-          </p>
-        </div>
+      <div className="flex items-center justify-between">
+        <Link href={`/admin/branches/${id}`} className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
+          ← {branch.name}
+        </Link>
         <div className="text-right">
           <p className={`text-3xl font-bold ${perf.healthScore >= 80 ? 'text-emerald-600' : perf.healthScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
             {perf.healthScore}

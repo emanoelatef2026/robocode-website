@@ -2,7 +2,6 @@ import { notFound }                             from 'next/navigation'
 import { requirePortalRole, requirePermission }  from '@/modules/rbac/guards'
 import { getAssignment }                         from '@/modules/assignments/queries'
 import { listSubmissions }                       from '@/modules/assignments/submissions/queries'
-import PageHeader                                from '@/components/admin/PageHeader'
 import AssignmentDetailView                      from '@/app/admin/assignments/[id]/AssignmentDetailView'
 import Link                                      from 'next/link'
 
@@ -25,18 +24,14 @@ export default async function TLAssignmentDetailPage({ params }: Props) {
 
   return (
     <div className="max-w-3xl">
-      <PageHeader
-        title={assignment.title}
-        description={assignment.course_title ?? '—'}
-        action={
-          <Link
-            href="/portal/team-leader/assignments"
-            className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
-          >
-            ← Assignments
-          </Link>
-        }
-      />
+      <div className="mb-6 flex justify-end">
+        <Link
+          href="/portal/team-leader/assignments"
+          className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
+        >
+          ← Assignments
+        </Link>
+      </div>
       <AssignmentDetailView assignment={assignment} submissions={submissions} />
     </div>
   )

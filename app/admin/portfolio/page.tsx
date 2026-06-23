@@ -1,6 +1,5 @@
 import { listStudentPortfolioSummaries } from '@/modules/portfolio/queries'
 import { requirePermission } from '@/modules/rbac/guards'
-import PageHeader from '@/components/admin/PageHeader'
 import EmptyState from '@/components/admin/EmptyState'
 import SearchInput from '@/components/admin/SearchInput'
 import Link from 'next/link'
@@ -19,11 +18,6 @@ export default async function PortfolioListPage({ searchParams }: Props) {
 
   return (
     <div>
-      <PageHeader
-        title="Student Portfolios"
-        description={`${summaries.length} student${summaries.length !== 1 ? 's' : ''}`}
-      />
-
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
         <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search students…" />

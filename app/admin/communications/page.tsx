@@ -156,11 +156,7 @@ export default async function CommunicationsPage({ searchParams }: Props) {
   return (
     <div>
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Parent Communications</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">Messages, feedback, and concerns submitted by parents</p>
-        </div>
+      <div className="mb-6 flex items-center justify-end">
         {totalOpen > 0 && (
           <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
             {totalOpen} open

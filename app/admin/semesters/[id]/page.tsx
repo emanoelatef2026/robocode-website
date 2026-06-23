@@ -4,7 +4,6 @@ import { getSemesterDashboard, listSemesterEnrollments, listSemesterCourses, lis
 import { listAcademicYears } from '@/modules/academic-years/queries'
 import { listStudents } from '@/modules/students/queries'
 import { listCourses } from '@/modules/courses/queries'
-import PageHeader from '@/components/admin/PageHeader'
 import SemesterDashboard from './SemesterDashboard'
 import Link from 'next/link'
 
@@ -31,18 +30,14 @@ export default async function SemesterDetailPage({ params }: Props) {
 
   return (
     <div>
-      <PageHeader
-        title={dashboard.semester.name}
-        description={`${dashboard.semester.academic_year_name} · ${dashboard.semester.status}`}
-        action={
-          <Link
-            href="/admin/semesters"
-            className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
-          >
-            Back
-          </Link>
-        }
-      />
+      <div className="mb-6 flex justify-end">
+        <Link
+          href="/admin/semesters"
+          className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
+        >
+          Back
+        </Link>
+      </div>
       <SemesterDashboard
         dashboard={dashboard}
         enrollments={enrollments}

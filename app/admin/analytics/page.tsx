@@ -345,17 +345,9 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
   return (
     <div className="space-y-6">
 
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Analytics</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">
-            Academic performance, certificate readiness, and operational insights
-          </p>
-        </div>
-
-        {/* Semester filter */}
-        {semesters.length > 0 && (
+      {/* ── Semester filter ─────────────────────────────────────────────── */}
+      {semesters.length > 0 && (
+        <div className="flex justify-end">
           <div className="flex items-center gap-2">
             <label className="text-xs text-[#64748B]">Semester:</label>
             <div className="flex items-center gap-0.5 rounded-lg border border-[#E2E8F0] bg-white px-1">
@@ -376,8 +368,8 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
               ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── Academy stats (super_admin only) ───────────────────────────── */}
       {academyStats && (

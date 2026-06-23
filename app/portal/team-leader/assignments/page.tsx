@@ -6,6 +6,7 @@ import Pagination                               from '@/components/admin/Paginat
 import StatusBadge                              from '@/components/admin/StatusBadge'
 import EmptyState                               from '@/components/admin/EmptyState'
 import Link                                     from 'next/link'
+import { TopbarAction }                         from '@/components/admin/TopbarActionContext'
 
 interface Props {
   searchParams: Promise<{ page?: string; q?: string; type?: string; status?: string; view?: string }>
@@ -78,22 +79,17 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
   return (
     <div className="space-y-5">
 
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Assignments</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">Academic supervision — {result.total} assignment{result.total !== 1 ? 's' : ''}</p>
-        </div>
+      <TopbarAction>
         <Link
           href="/portal/team-leader/assignments/new"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-3 py-2 text-sm font-medium text-white hover:bg-[#e87c18]"
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
           </svg>
           New Assignment
         </Link>
-      </div>
+      </TopbarAction>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">

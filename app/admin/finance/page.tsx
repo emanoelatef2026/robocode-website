@@ -78,12 +78,8 @@ export default async function AdminFinancePage({ searchParams }: Props) {
   return (
     <div className="space-y-5">
 
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Finance Center</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">Collections command center — {result.total} accounts</p>
-        </div>
+      {/* Action */}
+      <div className="flex justify-end">
         <Link
           href="/admin/finance/new"
           className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"

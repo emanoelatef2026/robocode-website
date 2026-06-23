@@ -43,14 +43,10 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <Link href="/admin/team-leaders" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
-            ← Team Leaders
-          </Link>
-          <h1 className="mt-2 text-xl font-semibold text-[#0B1F3A]">{fullName ?? tl.email}</h1>
-          <p className="mt-1 text-sm text-[#64748B]">{tl.email} · {tl.branch_name ?? '—'}</p>
-        </div>
+      <div className="flex items-center justify-between gap-4">
+        <Link href="/admin/team-leaders" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
+          ← Team Leaders
+        </Link>
         <div className="flex shrink-0 items-center gap-2">
           <StatusBadge status={tl.status} />
           <Link

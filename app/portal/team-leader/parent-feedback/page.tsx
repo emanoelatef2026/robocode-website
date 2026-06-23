@@ -115,11 +115,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
     <div className="mx-auto max-w-5xl space-y-6">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-[#0B1F3A]">Parent Relations Center</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">Messages, satisfaction, follow-ups, complaints and suggestions</p>
-        </div>
+      <div className="flex items-center justify-end gap-3">
         {needsReplyCount > 0 && (
           <span className="flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] font-semibold text-red-600">
             ⚠ {needsReplyCount} Needs Reply (48h+)

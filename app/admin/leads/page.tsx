@@ -2,12 +2,12 @@ import { createServiceClient }      from '@/lib/supabase/service'
 import { requireAuth }              from '@/modules/rbac/guards'
 import { listLeads, getLeadKPIs }   from '@/modules/leads/queries'
 import { listBranches }             from '@/modules/branches/queries'
-import PageHeader                   from '@/components/admin/PageHeader'
 import SearchInput                  from '@/components/admin/SearchInput'
 import AdminFilterSelect            from '@/components/admin/AdminFilterSelect'
 import Pagination                   from '@/components/admin/Pagination'
 import Link                         from 'next/link'
 import type { LeadStatus }          from '@/modules/leads/types'
+import { TopbarAction }             from '@/components/admin/TopbarActionContext'
 
 // ── Status display ─────────────────────────────────────────────────────────────
 
@@ -99,11 +99,18 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
 
   return (
     <div>
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Leads Pipeline</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">{result.total} lead{result.total !== 1 ? 's' : ''} total</p>
-        </div>
+      <TopbarAction>
+        <Link
+          href="/admin/leads/new"
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+          </svg>
+          Add Lead
+        </Link>
+      </TopbarAction>
+      <div className="mb-6 flex justify-end">
         <Link
           href="/admin/leads/funnel"
           className="inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"

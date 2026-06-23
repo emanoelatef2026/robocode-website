@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800&family=Cairo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .rcscroll::-webkit-scrollbar { height: 10px; width: 10px; }
+  .rcscroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+  .rcscroll::-webkit-scrollbar-track { background: transparent; }
+  @keyframes rcpulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+  @keyframes rcdash { to { stroke-dashoffset: -16; } }
+</style>
+</helmet>
+
+<div dir="{{ dir }}" class="rcscroll" style="font-family: {{ rootFont }}; width: max-content; min-width: 100%; min-height: 100vh; background: #e7e5df; box-sizing: border-box;">
+
+  <!-- ░░ Control toolbar ░░ -->
+  <div dir="ltr" style="position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 18px; padding: 12px 28px; background: rgba(11,31,58,.96); backdrop-filter: blur(8px); border-bottom: 1px solid rgba(255,255,255,.08);">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="width: 30px; height: 30px; border-radius: 8px; background: #fff; display: flex; align-items: center; justify-content: center;">
+        <img src="logo.png" alt="RoboCode" style="width: 24px; height: 24px; object-fit: contain;">
+      </div>
+      <div style="line-height: 1.05;">
+        <div style="font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 13px; color: #fff; letter-spacing: .04em;">ROBOCODE</div>
+        <div style="font-size: 9.5px; color: #7d93b3; letter-spacing: .14em; font-weight: 600;">LMS · TEAM LEADER</div>
+      </div>
+    </div>
+    <div style="width: 1px; height: 24px; background: rgba(255,255,255,.12);"></div>
+    <div style="font-size: 12.5px; color: #aab9d0; font-weight: 500;">{{ ui.toolbarHint }}</div>
+    <div style="flex: 1;"></div>
+
+    <!-- language switch -->
+    <div style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.06); padding: 4px; border-radius: 10px;">
+      <button onClick="{{ setEn }}" style="border: none; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 12px; padding: 6px 14px; border-radius: 7px; background: {{ tabEn.bg }}; color: {{ tabEn.fg }};">EN</button>
+      <button onClick="{{ setAr }}" style="border: none; cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 13px; padding: 6px 14px; border-radius: 7px; background: {{ tabAr.bg }}; color: {{ tabAr.fg }};">عربي</button>
+    </div>
+    <!-- device switch -->
+    <div style="display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.06); padding: 4px; border-radius: 10px;">
+      <button onClick="{{ setDesktop }}" style="border: none; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 12px; padding: 6px 14px; border-radius: 7px; background: {{ tabDesk.bg }}; color: {{ tabDesk.fg }};">{{ ui.desktop }}</button>
+      <button onClick="{{ setMobile }}" style="border: none; cursor: pointer; font-family: inherit; font-weight: 600; font-size: 12px; padding: 6px 14px; border-radius: 7px; background: {{ tabMob.bg }}; color: {{ tabMob.fg }};">{{ ui.mobile }}</button>
+    </div>
+  </div>
+
+  <!-- ░░ Frames row ░░ -->
+  <div style="display: flex; gap: 56px; align-items: flex-start; padding: 44px; min-width: 100%; box-sizing: border-box;">
+
+    <!-- ════════════════ VARIATION A — BRIGHT OPS ════════════════ -->
+    <div style="flex: none;">
+      <div dir="ltr" style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-inline-start: 2px;">
+        <span style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 12px; color: #0B1F3A; background: #fff; border: 1px solid #d8dee8; padding: 5px 11px; border-radius: 20px;">A</span>
+        <span style="font-weight: 700; font-size: 14px; color: #0B1F3A;">Bright Ops</span>
+        <span style="font-size: 12px; color: #6b7785;">— {{ ui.varAsub }}</span>
+      </div>
+
+      <div style="width: {{ frameWpx }}; background: #F8FAFC; border-radius: 18px; box-shadow: 0 18px 50px rgba(11,31,58,.16); overflow: hidden; border: 1px solid #e3e8ef; display: flex; min-height: 720px;">
+
+        <!-- sidebar -->
+        <aside style="display: {{ sidebarDisp }}; width: 196px; flex: none; background: #0B1F3A; flex-direction: column; padding: 18px 14px;">
+          <div style="display: flex; align-items: center; gap: 9px; padding: 4px 6px 18px;">
+            <div style="width: 30px; height: 30px; border-radius: 8px; background: #fff; display: flex; align-items: center; justify-content: center;"><img src="logo.png" style="width: 23px; height: 23px; object-fit: contain;"></div>
+            <span style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 12.5px; color: #fff; letter-spacing: .04em;">ROBOCODE</span>
+          </div>
+          <div style="font-size: 9px; font-weight: 700; letter-spacing: .2em; color: rgba(255,255,255,.28); padding: 0 8px 8px;">{{ ui.navMenu }}</div>
+          <sc-for list="{{ navA }}" as="n" hint-placeholder-count="7">
+            <div style="display: flex; align-items: center; gap: 11px; padding: 9px 10px; border-radius: 9px; margin-bottom: 2px; background: {{ n.bg }}; color: {{ n.fg }};">
+              <svg viewBox="0 0 20 20" fill="currentColor" style="width: 16px; height: 16px;"><path d="{{ n.icon }}"></path></svg>
+              <span style="font-size: 12.5px; font-weight: {{ n.fw }};">{{ n.label }}</span>
+              <sc-if value="{{ n.active }}" hint-placeholder-val="{{ false }}"><span style="margin-inline-start: auto; width: 6px; height: 6px; border-radius: 50%; background: #FF8A1F;"></span></sc-if>
+            </div>
+          </sc-for>
+          <div style="margin-top: auto; display: flex; align-items: center; gap: 9px; padding: 9px 8px; border-top: 1px solid rgba(255,255,255,.08);">
+            <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#38BDF8,#0B1F3A); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px;">MA</div>
+            <div style="line-height: 1.15;"><div style="font-size: 11.5px; font-weight: 600; color: #fff;">{{ ui.userName }}</div><div style="font-size: 9.5px; color: rgba(255,255,255,.45);">{{ ui.role }}</div></div>
+          </div>
+        </aside>
+
+        <!-- main -->
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+          <!-- topbar -->
+          <header style="display: flex; align-items: center; gap: 14px; padding: 16px 22px; border-bottom: 1px solid #e9edf3; background: #fff;">
+            <div>
+              <h1 style="margin: 0; font-size: 18px; font-weight: 800; color: #0B1F3A; letter-spacing: -.01em;">{{ ui.greeting }}</h1>
+              <p style="margin: 3px 0 0; font-size: 12px; color: #64748B;">{{ ui.date }} · {{ ui.role }}</p>
+            </div>
+            <div style="flex: 1;"></div>
+            <div style="display: {{ searchDisp }}; align-items: center; gap: 8px; background: #F1F5F9; border: 1px solid #e4e9f0; border-radius: 10px; padding: 8px 12px; width: 200px;">
+              <svg viewBox="0 0 20 20" fill="#94A3B8" style="width: 15px; height: 15px;"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+              <span style="font-size: 12px; color: #94A3B8;">{{ ui.searchPh }}</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 7px; background: #fff; border: 1px solid #e4e9f0; border-radius: 10px; padding: 8px 12px;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #FF8A1F;"></span>
+              <span style="font-size: 12px; font-weight: 600; color: #0B1F3A;">{{ ui.branch }}</span>
+              <svg viewBox="0 0 20 20" fill="#94A3B8" style="width: 13px; height: 13px;"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"></path></svg>
+            </div>
+            <button style="position: relative; width: 38px; height: 38px; border-radius: 10px; border: 1px solid #e4e9f0; background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 20 20" fill="#475569" style="width: 17px; height: 17px;"><path d="M10 2a6 6 0 00-6 6c0 1.886-.454 3.665-1.257 5.234a.75.75 0 00.515 1.076 32.9 32.9 0 003.256.508 3.5 3.5 0 006.972 0 32.9 32.9 0 003.256-.508.75.75 0 00.515-1.076A11.448 11.448 0 0116 8a6 6 0 00-6-6z"></path></svg>
+              <span style="position: absolute; top: 7px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: #DC2626; border: 1.5px solid #fff;"></span>
+            </button>
+          </header>
+
+          <div style="padding: 20px 22px; display: flex; flex-direction: column; gap: 18px;">
+
+            <!-- KPI row -->
+            <div style="display: grid; grid-template-columns: {{ kpiCols }}; gap: 13px;">
+              <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+                <div style="background: #fff; border: 1px solid #e7ebf1; border-radius: 15px; padding: 15px 16px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-size: 11px; font-weight: 600; color: #64748B;">{{ k.label }}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 700; color: {{ k.deltaFg }}; background: {{ k.deltaBg }}; padding: 2px 7px; border-radius: 20px;">{{ k.delta }}</span>
+                  </div>
+                  <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-top: 9px;">
+                    <span style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 27px; color: #0B1F3A; line-height: 1;">{{ k.value }}</span>
+                    <div style="display: flex; align-items: flex-end; gap: 2.5px; height: 30px;">
+                      <sc-for list="{{ k.bars }}" as="b" hint-placeholder-count="7">
+                        <span style="width: 4px; border-radius: 2px; background: {{ k.barColor }}; height: {{ b }}%;"></span>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+
+            <!-- two column -->
+            <div style="display: grid; grid-template-columns: {{ aMainCols }}; gap: 18px; align-items: start;">
+
+              <!-- priorities -->
+              <div style="background: #fff; border: 1px solid #e7ebf1; border-radius: 16px; overflow: hidden;">
+                <div style="display: flex; align-items: center; gap: 10px; padding: 15px 18px 13px;">
+                  <span style="width: 30px; height: 30px; border-radius: 9px; background: #FFF1E2; display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 20 20" fill="#FF8A1F" style="width: 16px; height: 16px;"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.5 2.5a1 1 0 001.414-1.414L11 9.586V6z" clip-rule="evenodd"></path></svg></span>
+                  <div style="flex: 1;"><div style="font-size: 14px; font-weight: 700; color: #0B1F3A;">{{ ui.priorities }}</div><div style="font-size: 11px; color: #64748B; margin-top: 1px;">{{ ui.prioritiesSub }}</div></div>
+                  <span style="font-size: 11.5px; font-weight: 600; color: #FF8A1F; cursor: pointer;">{{ ui.viewAll }}</span>
+                </div>
+                <sc-for list="{{ priorities }}" as="p" hint-placeholder-count="6">
+                  <div style="display: flex; align-items: center; gap: 13px; padding: 12px 18px; border-top: 1px solid #f1f4f8;">
+                    <span style="width: 4px; align-self: stretch; border-radius: 4px; background: {{ p.rail }}; flex: none;"></span>
+                    <span style="width: 34px; height: 34px; border-radius: 10px; background: {{ p.iconBg }}; display: flex; align-items: center; justify-content: center; flex: none;"><svg viewBox="0 0 20 20" fill="{{ p.iconFg }}" style="width: 17px; height: 17px;"><path d="{{ p.icon }}"></path></svg></span>
+                    <div style="flex: 1; min-width: 0;">
+                      <div style="font-size: 12.5px; font-weight: 600; color: #0B1F3A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ p.title }}</div>
+                      <div style="font-size: 11px; color: #64748B; margin-top: 1px;">{{ p.sub }}</div>
+                    </div>
+                    <div style="text-align: end; flex: none;">
+                      <div style="font-size: 12.5px; font-weight: 700; color: {{ p.metaFg }}; font-family: 'Orbitron', sans-serif;">{{ p.meta }}</div>
+                    </div>
+                    <button style="flex: none; border: none; cursor: pointer; font-family: inherit; font-size: 11px; font-weight: 700; padding: 7px 13px; border-radius: 9px; background: {{ p.actBg }}; color: {{ p.actFg }};">{{ p.action }}</button>
+                  </div>
+                </sc-for>
+              </div>
+
+              <!-- right rail -->
+              <div style="display: flex; flex-direction: column; gap: 18px;">
+                <!-- attendance donut -->
+                <div style="background: #fff; border: 1px solid #e7ebf1; border-radius: 16px; padding: 17px 18px;">
+                  <div style="font-size: 13.5px; font-weight: 700; color: #0B1F3A; margin-bottom: 14px;">{{ ui.attendance }}</div>
+                  <div style="display: flex; align-items: center; gap: 18px;">
+                    <div style="position: relative; width: 104px; height: 104px; flex: none; border-radius: 50%; background: conic-gradient(#10B981 0 90%, #F59E0B 90% 96%, #EF4444 96% 100%);">
+                      <div style="position: absolute; inset: 13px; background: #fff; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <span style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 22px; color: #0B1F3A; line-height: 1;">90%</span>
+                        <span style="font-size: 9.5px; color: #94A3B8; margin-top: 2px;">{{ ui.presentLabel }}</span>
+                      </div>
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 9px;">
+                      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 9px; height: 9px; border-radius: 3px; background: #10B981;"></span><span style="font-size: 11.5px; color: #475569; flex: 1;">{{ ui.present }}</span><span style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 13px; color: #0B1F3A;">286</span></div>
+                      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 9px; height: 9px; border-radius: 3px; background: #F59E0B;"></span><span style="font-size: 11.5px; color: #475569; flex: 1;">{{ ui.late }}</span><span style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 13px; color: #0B1F3A;">8</span></div>
+                      <div style="display: flex; align-items: center; gap: 8px;"><span style="width: 9px; height: 9px; border-radius: 3px; background: #EF4444;"></span><span style="font-size: 11.5px; color: #475569; flex: 1;">{{ ui.absent }}</span><span style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 13px; color: #0B1F3A;">12</span></div>
+                    </div>
+                  </div>
+                </div>
+                <!-- finance -->
+                <div style="background: #fff; border: 1px solid #e7ebf1; border-radius: 16px; padding: 17px 18px;">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px;"><span style="font-size: 13.5px; font-weight: 700; color: #0B1F3A;">{{ ui.finance }}</span><span style="font-size: 11px; font-weight: 600; color: #FF8A1F; cursor: pointer;">{{ ui.viewAll }}</span></div>
+                  <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+                    <div style="flex: 1; background: #F0FdF4; border: 1px solid #d6f0e0; border-radius: 11px; padding: 11px 12px;"><div style="font-size: 10px; color: #15803D; font-weight: 600;">{{ ui.collectedToday }}</div><div style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 16px; color: #15803D; margin-top: 4px;">8,400</div></div>
+                    <div style="flex: 1; background: #F8FAFC; border: 1px solid #e7ebf1; border-radius: 11px; padding: 11px 12px;"><div style="font-size: 10px; color: #64748B; font-weight: 600;">{{ ui.thisMonth }}</div><div style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 16px; color: #0B1F3A; margin-top: 4px;">214K</div></div>
+                  </div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;"><span style="font-size: 11px; color: #64748B;">{{ ui.collectionRate }}</span><span style="font-size: 11.5px; font-weight: 700; color: #0B1F3A; font-family: 'Orbitron', sans-serif;">82%</span></div>
+                  <div style="height: 7px; background: #eef1f6; border-radius: 5px; overflow: hidden;"><div style="width: 82%; height: 100%; background: linear-gradient(90deg,#FF8A1F,#FFB15A); border-radius: 5px;"></div></div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 13px; padding-top: 13px; border-top: 1px solid #f1f4f8;"><span style="font-size: 11.5px; color: #64748B;">{{ ui.outstanding }}</span><span style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 14px; color: #DC2626;">EGP 36,500</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- group health -->
+            <div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 11px;"><span style="font-size: 14px; font-weight: 700; color: #0B1F3A;">{{ ui.groupHealth }}</span><span style="font-size: 11.5px; font-weight: 600; color: #FF8A1F; cursor: pointer;">{{ ui.viewAll }}</span></div>
+              <div style="display: grid; grid-template-columns: {{ groupCols }}; gap: 13px;">
+                <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+                  <div style="background: #fff; border: 1px solid #e7ebf1; border-radius: 14px; padding: 14px 15px;">
+                    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;">
+                      <div><div style="font-size: 13px; font-weight: 700; color: #0B1F3A;">{{ g.name }}</div><div style="font-size: 10.5px; color: #64748B; margin-top: 2px;">{{ g.meta }}</div></div>
+                      <span style="font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: {{ g.tagBg }}; color: {{ g.tagFg }}; white-space: nowrap;">{{ g.tag }}</span>
+                    </div>
+                    <div style="display: flex; gap: 14px; margin-top: 13px;">
+                      <div style="flex: 1;"><div style="display: flex; justify-content: space-between; font-size: 10px; color: #64748B; margin-bottom: 4px;"><span>{{ ui.att }}</span><span style="font-weight: 700; color: #0B1F3A; font-family: 'Orbitron',sans-serif;">{{ g.att }}%</span></div><div style="height: 5px; background: #eef1f6; border-radius: 4px; overflow: hidden;"><div style="height: 100%; border-radius: 4px; background: {{ g.attColor }}; width: {{ g.att }}%;"></div></div></div>
+                      <div style="flex: 1;"><div style="display: flex; justify-content: space-between; font-size: 10px; color: #64748B; margin-bottom: 4px;"><span>{{ ui.hw }}</span><span style="font-weight: 700; color: #0B1F3A; font-family: 'Orbitron',sans-serif;">{{ g.hw }}%</span></div><div style="height: 5px; background: #eef1f6; border-radius: 4px; overflow: hidden;"><div style="height: 100%; border-radius: 4px; background: {{ g.hwColor }}; width: {{ g.hw }}%;"></div></div></div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════ VARIATION B — MISSION CONTROL ════════════════ -->
+    <div style="flex: none;">
+      <div dir="ltr" style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px; padding-inline-start: 2px;">
+        <span style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 12px; color: #fff; background: #0B1F3A; padding: 5px 11px; border-radius: 20px;">B</span>
+        <span style="font-weight: 700; font-size: 14px; color: #0B1F3A;">Mission Control</span>
+        <span style="font-size: 12px; color: #6b7785;">— {{ ui.varBsub }}</span>
+      </div>
+
+      <div style="width: {{ frameWpx }}; background: #0a1626; border-radius: 18px; box-shadow: 0 18px 50px rgba(11,31,58,.28); overflow: hidden; min-height: 720px;">
+
+        <!-- hero band -->
+        <div style="position: relative; background: radial-gradient(120% 140% at 85% -20%, #1c3a63 0%, #0B1F3A 45%, #081325 100%); padding: 18px 24px 24px; overflow: hidden;">
+          <!-- circuit deco -->
+          <svg viewBox="0 0 400 200" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: .14;"><g fill="none" stroke="#38BDF8" stroke-width="1.2"><path d="M0 40 H120 L140 60 H260 L280 40 H400"></path><path d="M0 150 H90 L110 130 H230"></path><circle cx="140" cy="60" r="3" fill="#38BDF8" stroke="none"></circle><circle cx="280" cy="40" r="3" fill="#FF8A1F" stroke="none"></circle><circle cx="110" cy="130" r="3" fill="#FF8A1F" stroke="none"></circle></g></svg>
+
+          <!-- top nav strip -->
+          <div style="position: relative; display: flex; align-items: center; gap: 14px; margin-bottom: 22px;">
+            <div style="display: flex; align-items: center; gap: 9px;">
+              <div style="width: 32px; height: 32px; border-radius: 9px; background: #fff; display: flex; align-items: center; justify-content: center;"><img src="logo.png" style="width: 25px; height: 25px; object-fit: contain;"></div>
+              <span style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 13px; color: #fff; letter-spacing: .04em;">ROBOCODE</span>
+            </div>
+            <div style="display: {{ heroNavDisp }}; align-items: center; gap: 4px; margin-inline-start: 14px;">
+              <sc-for list="{{ navB }}" as="n" hint-placeholder-count="6">
+                <span style="font-size: 12px; font-weight: {{ n.fw }}; padding: 7px 13px; border-radius: 8px; color: {{ n.fg }}; background: {{ n.bg }};">{{ n.label }}</span>
+              </sc-for>
+            </div>
+            <div style="flex: 1;"></div>
+            <div style="display: flex; align-items: center; gap: 7px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); border-radius: 9px; padding: 7px 12px;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #FF8A1F; box-shadow: 0 0 8px #FF8A1F;"></span>
+              <span style="font-size: 11.5px; font-weight: 600; color: #dce6f3;">{{ ui.branch }}</span>
+            </div>
+            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#38BDF8,#0B1F3A); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px;">MA</div>
+          </div>
+
+          <!-- title + KPIs -->
+          <div style="position: relative; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap;">
+            <div>
+              <div style="display: inline-flex; align-items: center; gap: 7px; background: rgba(255,138,31,.16); border: 1px solid rgba(255,138,31,.3); border-radius: 20px; padding: 4px 11px; margin-bottom: 9px;">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: #FF8A1F; animation: rcpulse 1.6s infinite;"></span>
+                <span style="font-size: 10px; font-weight: 700; letter-spacing: .12em; color: #FFB15A;">{{ ui.liveLabel }}</span>
+              </div>
+              <h1 style="margin: 0; font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 23px; color: #fff; letter-spacing: .01em;">{{ ui.opsCenter }}</h1>
+              <p style="margin: 5px 0 0; font-size: 12px; color: #8fa6c4;">{{ ui.greeting }} · {{ ui.date }}</p>
+            </div>
+          </div>
+
+          <div style="position: relative; display: grid; grid-template-columns: {{ kpiCols }}; gap: 12px;">
+            <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+              <div style="background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 14px 15px; backdrop-filter: blur(6px);">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                  <span style="font-size: 10.5px; font-weight: 600; color: #8fa6c4;">{{ k.label }}</span>
+                  <span style="font-size: 10px; font-weight: 700; color: {{ k.deltaGlow }};">{{ k.delta }}</span>
+                </div>
+                <div style="font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 28px; color: #fff; line-height: 1; margin-top: 10px; text-shadow: 0 0 18px {{ k.glow }};">{{ k.value }}</div>
+                <div style="display: flex; align-items: flex-end; gap: 2.5px; height: 18px; margin-top: 9px;">
+                  <sc-for list="{{ k.bars }}" as="b" hint-placeholder-count="7">
+                    <span style="flex: 1; border-radius: 2px 2px 0 0; background: {{ k.barGlow }}; height: {{ b }}%;"></span>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <!-- bento body -->
+        <div style="background: #eef1f6; padding: 18px; display: grid; grid-template-columns: {{ bentoCols }}; gap: 14px;">
+
+          <!-- attendance gauge -->
+          <div style="background: #fff; border-radius: 16px; padding: 18px; grid-column: {{ bentoSpanGauge }};">
+            <div style="font-size: 13px; font-weight: 700; color: #0B1F3A; margin-bottom: 4px;">{{ ui.attendance }}</div>
+            <div style="font-size: 10.5px; color: #94A3B8; margin-bottom: 12px;">{{ ui.todayLabel }}</div>
+            <div style="display: flex; justify-content: center; margin: 4px 0 8px;">
+              <div style="position: relative; width: 150px; height: 84px; overflow: hidden;">
+                <div style="position: absolute; top: 0; width: 150px; height: 150px; border-radius: 50%; background: conic-gradient(from 270deg, #10B981 0 81deg, #F59E0B 81deg 86.4deg, #EF4444 86.4deg 90deg, #1b2c46 90deg 180deg, transparent 180deg);"></div>
+                <div style="position: absolute; top: 15px; left: 15px; width: 120px; height: 120px; border-radius: 50%; background: #fff;"></div>
+                <div style="position: absolute; bottom: 0; left: 0; right: 0; text-align: center;"><div style="font-family: 'Orbitron', sans-serif; font-weight: 800; font-size: 28px; color: #0B1F3A; line-height: 1;">90<span style="font-size: 15px;">%</span></div><div style="font-size: 9.5px; color: #94A3B8; margin-top: 2px;">{{ ui.presentRate }}</div></div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 7px; margin-top: 6px;">
+              <div style="flex: 1; text-align: center; background: #F0FdF4; border-radius: 9px; padding: 7px 4px;"><div style="font-family: 'Orbitron',sans-serif; font-weight: 700; font-size: 15px; color: #15803D;">286</div><div style="font-size: 8.5px; color: #15803D; font-weight: 600;">{{ ui.present }}</div></div>
+              <div style="flex: 1; text-align: center; background: #FFFBEB; border-radius: 9px; padding: 7px 4px;"><div style="font-family: 'Orbitron',sans-serif; font-weight: 700; font-size: 15px; color: #B45309;">8</div><div style="font-size: 8.5px; color: #B45309; font-weight: 600;">{{ ui.late }}</div></div>
+              <div style="flex: 1; text-align: center; background: #FEF2F2; border-radius: 9px; padding: 7px 4px;"><div style="font-family: 'Orbitron',sans-serif; font-weight: 700; font-size: 15px; color: #B91C1C;">12</div><div style="font-size: 8.5px; color: #B91C1C; font-weight: 600;">{{ ui.absent }}</div></div>
+            </div>
+          </div>
+
+          <!-- action feed -->
+          <div style="background: #0B1F3A; border-radius: 16px; padding: 17px 18px; grid-column: {{ bentoSpanFeed }}; grid-row: {{ bentoRowFeed }};">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #FF8A1F; box-shadow: 0 0 8px #FF8A1F;"></span>
+              <span style="font-size: 13px; font-weight: 700; color: #fff;">{{ ui.actionFeed }}</span>
+              <span style="margin-inline-start: auto; font-size: 10px; font-weight: 700; color: #fff; background: #FF8A1F; padding: 2px 8px; border-radius: 20px;">6</span>
+            </div>
+            <sc-for list="{{ priorities }}" as="p" hint-placeholder-count="6">
+              <div style="display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,.07);">
+                <span style="width: 30px; height: 30px; border-radius: 9px; background: {{ p.darkBg }}; display: flex; align-items: center; justify-content: center; flex: none;"><svg viewBox="0 0 20 20" fill="{{ p.rail }}" style="width: 15px; height: 15px;"><path d="{{ p.icon }}"></path></svg></span>
+                <div style="flex: 1; min-width: 0;"><div style="font-size: 12px; font-weight: 600; color: #eaf1fb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ p.title }}</div><div style="font-size: 10px; color: #7d93b3; margin-top: 1px;">{{ p.sub }}</div></div>
+                <span style="font-size: 11px; font-weight: 700; color: {{ p.rail }}; font-family: 'Orbitron', sans-serif; flex: none;">{{ p.meta }}</span>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- finance strip -->
+          <div style="background: #fff; border-radius: 16px; padding: 16px 18px; grid-column: {{ bentoSpanFin }};">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px;"><span style="font-size: 13px; font-weight: 700; color: #0B1F3A;">{{ ui.finance }}</span><span style="font-size: 11px; font-weight: 600; color: #FF8A1F;">{{ ui.viewAll }}</span></div>
+            <div style="display: grid; grid-template-columns: {{ finTileCols }}; gap: 9px;">
+              <sc-for list="{{ finTiles }}" as="f" hint-placeholder-count="6">
+                <div style="background: {{ f.bg }}; border: 1px solid {{ f.bd }}; border-radius: 11px; padding: 10px 11px;">
+                  <div style="font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 15px; color: {{ f.fg }}; line-height: 1;">{{ f.value }}</div>
+                  <div style="font-size: 9px; color: #64748B; font-weight: 600; margin-top: 5px;">{{ f.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- group heat -->
+          <div style="background: #fff; border-radius: 16px; padding: 16px 18px; grid-column: {{ bentoSpanGroups }};">
+            <div style="font-size: 13px; font-weight: 700; color: #0B1F3A; margin-bottom: 13px;">{{ ui.groupHealth }}</div>
+            <div style="display: flex; flex-direction: column; gap: 9px;">
+              <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <div style="flex: 1; min-width: 0;"><div style="font-size: 12px; font-weight: 600; color: #0B1F3A;">{{ g.name }}</div><div style="font-size: 10px; color: #94A3B8;">{{ g.meta }}</div></div>
+                  <div style="display: flex; gap: 4px; flex: none;">
+                    <span style="width: 26px; height: 26px; border-radius: 7px; background: {{ g.attColor }}; color: #fff; font-size: 10px; font-weight: 700; font-family: 'Orbitron',sans-serif; display: flex; align-items: center; justify-content: center;">{{ g.att }}</span>
+                    <span style="width: 26px; height: 26px; border-radius: 7px; background: {{ g.hwColor }}; color: #fff; font-size: 10px; font-weight: 700; font-family: 'Orbitron',sans-serif; display: flex; align-items: center; justify-content: center;">{{ g.hw }}</span>
+                  </div>
+                  <span style="font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 20px; background: {{ g.tagBg }}; color: {{ g.tagFg }}; flex: none;">{{ g.tag }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display: flex; gap: 14px; margin-top: 12px; padding-top: 11px; border-top: 1px solid #f1f4f8;"><span style="font-size: 9.5px; color: #94A3B8;">■ {{ ui.att }}</span><span style="font-size: 9.5px; color: #94A3B8;">■ {{ ui.hw }}</span></div>
+          </div>
+
+          <!-- instructors leaderboard -->
+          <div style="background: #fff; border-radius: 16px; padding: 16px 18px; grid-column: {{ bentoSpanInstr }};">
+            <div style="font-size: 13px; font-weight: 700; color: #0B1F3A; margin-bottom: 13px;">{{ ui.topInstructors }}</div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+              <sc-for list="{{ instructors }}" as="i" hint-placeholder-count="3">
+                <div style="display: flex; align-items: center; gap: 11px;">
+                  <span style="width: 24px; height: 24px; border-radius: 7px; background: {{ i.rankBg }}; color: {{ i.rankFg }}; font-family: 'Orbitron',sans-serif; font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; flex: none;">{{ i.rank }}</span>
+                  <div style="flex: 1; min-width: 0;"><div style="font-size: 12px; font-weight: 600; color: #0B1F3A;">{{ i.name }}</div><div style="font-size: 10px; color: #94A3B8;">{{ i.sessions }} · {{ i.attendance }}</div></div>
+                  <span style="font-size: 12px; font-weight: 700; color: #FF8A1F; font-family: 'Orbitron',sans-serif; flex: none;">{{ i.rating }}★</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:2500,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { lang: 'en', device: 'desktop' };
+
+  renderVals() {
+    const ar = this.state.lang === 'ar';
+    const desktop = this.state.device === 'desktop';
+    const L = (e, a) => (ar ? a : e);
+
+    // ── icon paths ──
+    const IC = {
+      clock: 'M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.5 2.5a1 1 0 001.414-1.414L11 9.586V6z',
+      cash: 'M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm6 3a3 3 0 100 6 3 3 0 000-6z',
+      renew: 'M4 2a1 1 0 011 1v2.101a7 7 0 0111.601 2.566 1 1 0 11-1.885.666A5 5 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5 5 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7 7 0 01-11.601-2.566 1 1 0 01.61-1.276z',
+      alert: 'M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z',
+      chat: 'M2 5a2 2 0 012-2h12a2 2 0 012 2v6a2 2 0 01-2 2H8l-4 4v-4H4a2 2 0 01-2-2V5z',
+      dash: 'M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z',
+      att: 'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z',
+      students: 'M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z',
+      groups: 'M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 14.094A5.973 5.973 0 004 17v1H1v-1a3 3 0 013.75-2.906z',
+      finance: 'M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z M10 18a8 8 0 100-16 8 8 0 000 16z',
+      analytics: 'M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z',
+    };
+
+    // ── ui strings ──
+    const ui = {
+      toolbarHint: L('Team Leader dashboard — two design directions', 'لوحة قائد الفريق — اتجاهان للتصميم'),
+      desktop: L('Desktop', 'ديسكتوب'),
+      mobile: L('Mobile', 'موبايل'),
+      varAsub: L('clean, spacious, sidebar SaaS', 'نظيف وفسيح، بقائمة جانبية'),
+      varBsub: L('bold navy hero + bento grid', 'هيدر داكن + شبكة بنتو'),
+      navMenu: L('MENU', 'القائمة'),
+      userName: 'Mariam A.',
+      role: L('Team Leader · Nasr City', 'قائد فريق · مدينة نصر'),
+      greeting: L('Good morning, Mariam', 'صباح الخير يا مريم'),
+      date: L('Saturday, 21 June', 'السبت، ٢١ يونيو'),
+      searchPh: L('Search students, groups…', 'ابحث عن طالب أو مجموعة…'),
+      branch: L('Nasr City', 'مدينة نصر'),
+      priorities: L("Today's Priorities", 'أولويات اليوم'),
+      prioritiesSub: L('6 items need your attention', '٦ بنود تحتاج انتباهك'),
+      viewAll: L('View all', 'عرض الكل'),
+      attendance: L("Today's Attendance", 'حضور اليوم'),
+      todayLabel: L('Live · across all groups', 'مباشر · كل المجموعات'),
+      present: L('Present', 'حاضر'),
+      late: L('Late', 'متأخر'),
+      absent: L('Absent', 'غائب'),
+      presentLabel: L('present', 'حاضر'),
+      presentRate: L('present rate', 'نسبة الحضور'),
+      finance: L('Finance', 'المالية'),
+      collectedToday: L('Collected today', 'تحصيل اليوم'),
+      thisMonth: L('This month', 'هذا الشهر'),
+      collectionRate: L('Collection rate', 'نسبة التحصيل'),
+      outstanding: L('Outstanding', 'المتأخرات'),
+      groupHealth: L('Group Health', 'صحة المجموعات'),
+      topInstructors: L('Top Instructors', 'أفضل المدرّسين'),
+      actionFeed: L('Action Feed', 'موجز الإجراءات'),
+      att: L('Attendance', 'الحضور'),
+      hw: L('Homework', 'الواجبات'),
+      liveLabel: L('LIVE OPS', 'مباشر'),
+      opsCenter: L('Operations Center', 'مركز العمليات'),
+    };
+
+    // ── nav ──
+    const navDefs = [
+      { label: L('Dashboard', 'الرئيسية'), icon: IC.dash, active: true },
+      { label: L('Attendance', 'الحضور'), icon: IC.att, active: false },
+      { label: L('Students', 'الطلاب'), icon: IC.students, active: false },
+      { label: L('Groups', 'المجموعات'), icon: IC.groups, active: false },
+      { label: L('Finance', 'المالية'), icon: IC.finance, active: false },
+      { label: L('Analytics', 'التحليلات'), icon: IC.analytics, active: false },
+      { label: L('Assignments', 'الواجبات'), icon: IC.renew, active: false },
+    ];
+    const navA = navDefs.map(n => ({
+      ...n,
+      bg: n.active ? 'rgba(255,138,31,.15)' : 'transparent',
+      fg: n.active ? '#FF8A1F' : 'rgba(255,255,255,.5)',
+      fw: n.active ? 700 : 500,
+    }));
+    const navB = navDefs.slice(0, 6).map(n => ({
+      label: n.label,
+      bg: n.active ? 'rgba(255,138,31,.16)' : 'transparent',
+      fg: n.active ? '#FFB15A' : '#8fa6c4',
+      fw: n.active ? 700 : 500,
+    }));
+
+    // ── KPIs ──
+    const kpiRaw = [
+      { label: L('Active Students', 'الطلاب النشطون'), value: '342', delta: '+12', up: true, bars: [40, 55, 48, 62, 58, 70, 78], hue: '#38BDF8' },
+      { label: L('Attendance', 'نسبة الحضور'), value: '94%', delta: '+3', up: true, bars: [66, 70, 64, 78, 74, 84, 92], hue: '#10B981' },
+      { label: L('Homework', 'إنجاز الواجبات'), value: '87%', delta: '-2', up: false, bars: [86, 88, 84, 80, 83, 79, 76], hue: '#FF8A1F' },
+      { label: L('Satisfaction', 'رضا الأهالي'), value: '4.8', delta: '+0.2', up: true, bars: [58, 62, 66, 70, 74, 82, 90], hue: '#A855F7' },
+    ];
+    const kpis = kpiRaw.map(k => ({
+      ...k,
+      deltaFg: k.up ? '#15803D' : '#B91C1C',
+      deltaBg: k.up ? '#E7F8EE' : '#FEECEC',
+      deltaGlow: k.up ? '#4ade80' : '#f87171',
+      barColor: k.hue,
+      barGlow: k.hue,
+      glow: k.hue + '55',
+    }));
+
+    // ── priorities ──
+    const ORANGE = '#FF8A1F', RED = '#EF4444', AMBER = '#F59E0B', BLUE = '#38BDF8', GREEN = '#10B981';
+    const priRaw = [
+      { rail: BLUE, icon: IC.clock, title: L('Robotics L2 — Group A', 'روبوتيكس م٢ — مجموعة أ'), sub: L('Eng. Ahmed · 12 students', 'م. أحمد · ١٢ طالب'), meta: L('18 min', '١٨ د'), metaFg: '#0B1F3A', action: L('Record', 'تسجيل'), act: 'navy' },
+      { rail: RED, icon: IC.cash, title: L('Yusuf Khaled', 'يوسف خالد'), sub: L('Group B · 9 days overdue', 'مجموعة ب · متأخر ٩ أيام'), meta: 'EGP 1,200', metaFg: '#DC2626', action: L('Collect', 'تحصيل'), act: 'red' },
+      { rail: AMBER, icon: IC.renew, title: L('Hana Tarek', 'هنا طارق'), sub: L('1 session left · expiring', 'باقي حصة واحدة'), meta: L('Renew', 'تجديد'), metaFg: '#B45309', action: L('Renew', 'تجديد'), act: 'orange' },
+      { rail: RED, icon: IC.alert, title: L('Group C', 'مجموعة ج'), sub: L('No instructor assigned', 'لا يوجد مدرّس'), meta: L('Gap', 'فجوة'), metaFg: '#DC2626', action: L('Fix', 'إصلاح'), act: 'ghost' },
+      { rail: BLUE, icon: IC.clock, title: L('Coding Jr — Group D', 'برمجة ناشئين — مجموعة د'), sub: L('Eng. Sara · 9 students', 'م. سارة · ٩ طلاب'), meta: L('45 min', '٤٥ د'), metaFg: '#0B1F3A', action: L('Record', 'تسجيل'), act: 'navy' },
+      { rail: GREEN, icon: IC.chat, title: L("Khaled's parent", 'والد خالد'), sub: L('Asked about makeup class', 'سأل عن حصة تعويضية'), meta: L('Reply', 'رد'), metaFg: '#15803D', action: L('Reply', 'رد'), act: 'green' },
+    ];
+    const actStyle = {
+      navy: { bg: '#0B1F3A', fg: '#fff' },
+      red: { bg: '#FEECEC', fg: '#DC2626' },
+      orange: { bg: '#FF8A1F', fg: '#fff' },
+      ghost: { bg: '#F1F5F9', fg: '#475569' },
+      green: { bg: '#E7F8EE', fg: '#15803D' },
+    };
+    const railBgMap = { '#38BDF8': '#E6F6FE', '#EF4444': '#FEECEC', '#F59E0B': '#FFF7E6', '#10B981': '#E7F8EE' };
+    const railDarkMap = { '#38BDF8': 'rgba(56,189,248,.15)', '#EF4444': 'rgba(239,68,68,.16)', '#F59E0B': 'rgba(245,158,11,.16)', '#10B981': 'rgba(16,185,129,.16)' };
+    const priorities = priRaw.map(p => ({
+      ...p,
+      iconBg: railBgMap[p.rail] || '#F1F5F9',
+      iconFg: p.rail,
+      darkBg: railDarkMap[p.rail] || 'rgba(255,255,255,.08)',
+      actBg: actStyle[p.act].bg,
+      actFg: actStyle[p.act].fg,
+    }));
+
+    // ── groups ──
+    const healthColor = v => (v >= 90 ? '#10B981' : v >= 78 ? '#F59E0B' : '#EF4444');
+    const grpRaw = [
+      { name: L('Robotics L2 · A', 'روبوتيكس م٢ · أ'), meta: L('Eng. Ahmed · 12', 'م. أحمد · ١٢'), att: 96, hw: 90, tag: L('Healthy', 'سليمة'), tone: 'green' },
+      { name: L('Coding Jr · D', 'برمجة ناشئين · د'), meta: L('Eng. Sara · 9', 'م. سارة · ٩'), att: 88, hw: 72, tag: L('Watch', 'مراقبة'), tone: 'amber' },
+      { name: L('Robotics L1 · B', 'روبوتيكس م١ · ب'), meta: L('Eng. Mona · 14', 'م. منى · ١٤'), att: 79, hw: 64, tag: L('At risk', 'خطر'), tone: 'red' },
+    ];
+    const toneTag = { green: { bg: '#E7F8EE', fg: '#15803D' }, amber: { bg: '#FFF7E6', fg: '#B45309' }, red: { bg: '#FEECEC', fg: '#DC2626' } };
+    const groups = grpRaw.map(g => ({
+      ...g,
+      attColor: healthColor(g.att),
+      hwColor: healthColor(g.hw),
+      tagBg: toneTag[g.tone].bg,
+      tagFg: toneTag[g.tone].fg,
+    }));
+
+    // ── instructors ──
+    const instrRaw = [
+      { name: L('Eng. Ahmed', 'م. أحمد'), rating: '4.9', sessions: L('24 sessions', '٢٤ حصة'), attendance: '98%', rank: 1 },
+      { name: L('Eng. Sara', 'م. سارة'), rating: '4.7', sessions: L('19 sessions', '١٩ حصة'), attendance: '95%', rank: 2 },
+      { name: L('Eng. Mona', 'م. منى'), rating: '4.4', sessions: L('17 sessions', '١٧ حصة'), attendance: '88%', rank: 3 },
+    ];
+    const rankStyle = { 1: { bg: '#FF8A1F', fg: '#fff' }, 2: { bg: '#0B1F3A', fg: '#fff' }, 3: { bg: '#E2E8F0', fg: '#475569' } };
+    const instructors = instrRaw.map(i => ({ ...i, rankBg: rankStyle[i.rank].bg, rankFg: rankStyle[i.rank].fg }));
+
+    // ── finance tiles (var B) ──
+    const finTiles = [
+      { value: '8,400', label: L('Collected today', 'تحصيل اليوم'), fg: '#15803D', bg: '#F0FdF4', bd: '#d6f0e0' },
+      { value: '214K', label: L('This month', 'هذا الشهر'), fg: '#0B1F3A', bg: '#F8FAFC', bd: '#e7ebf1' },
+      { value: '36.5K', label: L('Outstanding', 'المتأخرات'), fg: '#DC2626', bg: '#FEF2F2', bd: '#f7d4d4' },
+      { value: '82%', label: L('Collection rate', 'نسبة التحصيل'), fg: '#FF8A1F', bg: '#FFF7E6', bd: '#f6e3c4' },
+      { value: '7', label: L('Overdue accounts', 'حسابات متأخرة'), fg: '#DC2626', bg: '#FEF2F2', bd: '#f7d4d4' },
+      { value: '14', label: L('Due this week', 'مستحق هذا الأسبوع'), fg: '#0B1F3A', bg: '#F8FAFC', bd: '#e7ebf1' },
+    ];
+
+    // ── layout (device) ──
+    return {
+      dir: ar ? 'rtl' : 'ltr',
+      rootFont: ar ? "'Cairo', sans-serif" : "'Poppins', sans-serif",
+      ui, navA, navB, kpis, priorities, groups, instructors, finTiles,
+
+      setEn: () => this.setState({ lang: 'en' }),
+      setAr: () => this.setState({ lang: 'ar' }),
+      setDesktop: () => this.setState({ device: 'desktop' }),
+      setMobile: () => this.setState({ device: 'mobile' }),
+      tabEn: !ar ? { bg: '#fff', fg: '#0B1F3A' } : { bg: 'transparent', fg: 'rgba(255,255,255,.6)' },
+      tabAr: ar ? { bg: '#fff', fg: '#0B1F3A' } : { bg: 'transparent', fg: 'rgba(255,255,255,.6)' },
+      tabDesk: desktop ? { bg: '#FF8A1F', fg: '#fff' } : { bg: 'transparent', fg: 'rgba(255,255,255,.6)' },
+      tabMob: !desktop ? { bg: '#FF8A1F', fg: '#fff' } : { bg: 'transparent', fg: 'rgba(255,255,255,.6)' },
+
+      frameWpx: desktop ? '1180px' : '390px',
+      sidebarDisp: desktop ? 'flex' : 'none',
+      searchDisp: desktop ? 'flex' : 'none',
+      heroNavDisp: desktop ? 'flex' : 'none',
+      kpiCols: desktop ? 'repeat(4,1fr)' : 'repeat(2,1fr)',
+      aMainCols: desktop ? '1.6fr 1fr' : '1fr',
+      groupCols: desktop ? 'repeat(3,1fr)' : '1fr',
+      bentoCols: desktop ? 'repeat(3,1fr)' : '1fr',
+      finTileCols: desktop ? 'repeat(3,1fr)' : 'repeat(2,1fr)',
+      bentoSpanGauge: desktop ? 'span 1' : 'span 1',
+      bentoSpanFeed: desktop ? 'span 1' : 'span 1',
+      bentoRowFeed: desktop ? 'span 2' : 'span 1',
+      bentoSpanFin: desktop ? 'span 2' : 'span 1',
+      bentoSpanGroups: desktop ? 'span 1' : 'span 1',
+      bentoSpanInstr: desktop ? 'span 1' : 'span 1',
+    };
+  }
+}
+</script>
+</body>
+</html>

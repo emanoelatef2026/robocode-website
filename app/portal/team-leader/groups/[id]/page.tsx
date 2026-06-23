@@ -7,7 +7,6 @@ import { listSchedules } from '@/modules/schedule/queries'
 import { createServiceClient } from '@/lib/supabase/service'
 import { notFound } from 'next/navigation'
 import StatusBadge from '@/components/admin/StatusBadge'
-import PageHeader from '@/components/admin/PageHeader'
 import TLEnrollStudentsForm, { UnenrollButton } from './TLEnrollStudentsForm'
 import TLAssignCourseForm from './TLAssignCourseForm'
 import Link from 'next/link'
@@ -149,26 +148,22 @@ export default async function TLGroupDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={group.name}
-        description={group.code ? `Code: ${group.code}` : 'Group detail'}
-        action={
-          <div className="flex gap-2">
-            <Link
-              href="/portal/team-leader/groups"
-              className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
-            >
-              Back
-            </Link>
-            <Link
-              href={`/portal/team-leader/groups/${id}/edit`}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
-            >
-              Edit Group
-            </Link>
-          </div>
-        }
-      />
+      <div className="mb-6 flex justify-end">
+        <div className="flex gap-2">
+          <Link
+            href="/portal/team-leader/groups"
+            className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]"
+          >
+            Back
+          </Link>
+          <Link
+            href={`/portal/team-leader/groups/${id}/edit`}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
+          >
+            Edit Group
+          </Link>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Left: info + course assignment + history */}

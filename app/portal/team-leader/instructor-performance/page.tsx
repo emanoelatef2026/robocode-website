@@ -57,13 +57,7 @@ export default async function InstructorOperationsPage() {
     <div className="space-y-6">
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-[#0B1F3A]">Instructor Operations Center</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">
-            Performance, retention, and operational health · {instructors.length} active instructor{instructors.length !== 1 ? 's' : ''}
-          </p>
-        </div>
+      <div className="flex items-center justify-end gap-3">
         <Link href="/portal/team-leader/instructors" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
           Manage →
         </Link>

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition, useEffect, useRef } from 'react'
+import { useState, useTransition, useEffect, useRef, useCallback } from 'react'
+import { useTopbarAction } from '@/components/admin/TopbarActionContext'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import GroupFormModal from './GroupFormModal'
@@ -216,27 +217,6 @@ function GroupSidebar({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Panel header */}
-      <div className="flex items-center justify-between gap-2 border-b border-[#E2E8F0] px-3 py-2.5 shrink-0">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-semibold text-[#0B1F3A] md:text-[13px]">Groups</h2>
-          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-medium text-[#64748B]">
-            {groups.length}{groups.length !== allGroups.length ? ` / ${allGroups.length}` : ''}
-          </span>
-        </div>
-        {isTL && (
-          <button
-            onClick={onCreateGroup}
-            className="flex items-center gap-1 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#e87c18] transition"
-          >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            New Group
-          </button>
-        )}
-      </div>
-
       {/* Search + branch + quick filter */}
       <div className="border-b border-[#E2E8F0] px-3 py-2 space-y-1.5 shrink-0">
         <input
@@ -2379,11 +2359,11 @@ export default function GroupsWorkspaceClient({
   const visible = applyFilters(groups, filters)
   const kpis    = buildKpis(groups)
 
-  function openCreate() {
+  const openCreate = useCallback(() => {
     setModalMode('create')
     setEditGroup(undefined)
     setModalOpen(true)
-  }
+  }, [])
   function openEdit(g: GroupOperationalRow) {
     setModalMode('edit')
     setEditGroup(g)
@@ -2415,16 +2395,30 @@ export default function GroupsWorkspaceClient({
     router.refresh()
   }
 
+  // ── Topbar Add button ───────────────────────────────────────────────────────
+  const { setAction } = useTopbarAction()
+  useEffect(() => {
+    if (!isTL) return
+    setAction(
+      <button
+        onClick={openCreate}
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+      >
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+        </svg>
+        New Group
+      </button>
+    )
+    return () => setAction(null)
+  }, [isTL, openCreate, setAction])
+
   return (
     <div className="flex flex-col h-full gap-3">
 
-      {/* ── Page header (showPageHeader mode) ───────────────────────── */}
+      {/* ── KPI strip (showPageHeader mode) ─────────────────────────── */}
       {showPageHeader && (
         <div className="shrink-0">
-          <div className="mb-3">
-            <h1 className="text-[22px] font-bold text-[#0B1F3A] leading-tight">Groups</h1>
-            <p className="text-[13px] text-[#64748B] mt-0.5">Manage academy groups, students and operations</p>
-          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {buildPageKpis(groups).map(k => (
               <div key={k.label} className={`rounded-xl border border-[#E2E8F0] ${k.bgColor} p-3`}>

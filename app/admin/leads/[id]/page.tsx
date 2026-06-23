@@ -58,7 +58,6 @@ export default async function AdminLeadDetailPage({ params }: Props) {
           <Link href="/admin/leads" className="text-xs text-[#94A3B8] hover:text-[#FF8A1F]">
             ← Back to Leads
           </Link>
-          <h1 className="mt-1 text-xl font-semibold text-[#0B1F3A]">{lead.child_name}</h1>
           <div className="mt-1 flex items-center gap-2">
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${meta.color}`}>
               {meta.label}

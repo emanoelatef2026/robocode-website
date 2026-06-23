@@ -18,15 +18,21 @@ const SOURCE_LABELS: Record<string, string> = {
 const input = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
 const label = 'mb-1 block text-sm font-medium text-[#0B1F3A]'
 
-export default function NewLeadForm({ branches }: { branches: Branch[] }) {
+export default function NewLeadForm({
+  branches,
+  redirectBase = '/portal/team-leader/leads',
+}: {
+  branches: Branch[]
+  redirectBase?: string
+}) {
   const router = useRouter()
   const [state, action] = useActionState<ActionResult<{ id: string }> | null, FormData>(createLead, null)
 
   useEffect(() => {
     if (state?.success) {
-      router.push(`/portal/team-leader/leads/${state.data.id}`)
+      router.push(`${redirectBase}/${state.data.id}`)
     }
-  }, [state, router])
+  }, [state, router, redirectBase])
 
   return (
     <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">

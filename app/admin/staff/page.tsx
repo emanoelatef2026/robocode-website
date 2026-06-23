@@ -20,11 +20,7 @@ export default async function AdminStaffPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-[#0B1F3A]">Staff</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">{staff.length} staff member{staff.length !== 1 ? 's' : ''}</p>
-        </div>
+      <div className="mb-6 flex justify-end">
         <Link
           href="/admin/payroll"
           className="inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F] transition"

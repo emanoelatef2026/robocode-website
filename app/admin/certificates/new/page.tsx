@@ -3,7 +3,6 @@ import { listActiveTemplates } from '@/modules/certificates/queries'
 import { listCourses } from '@/modules/courses/queries'
 import { listSemesters } from '@/modules/semesters/queries'
 import { createServiceClient } from '@/lib/supabase/service'
-import PageHeader from '@/components/admin/PageHeader'
 import IssueCertificateForm from './IssueCertificateForm'
 
 export default async function NewCertificatePage() {
@@ -34,7 +33,6 @@ export default async function NewCertificatePage() {
 
   return (
     <div>
-      <PageHeader title="Issue Certificate" />
       <IssueCertificateForm
         templates={templates}
         students={students}

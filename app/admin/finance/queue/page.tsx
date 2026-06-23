@@ -18,16 +18,10 @@ export default async function CollectionsQueuePage() {
 
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <Link href="/admin/finance" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
-              ← Finance Center
-            </Link>
-          </div>
-          <h1 className="mt-1 text-xl font-semibold text-[#0B1F3A]">Collections Queue</h1>
-          <p className="mt-0.5 text-sm text-[#64748B]">
-            Daily collections workspace — {totalOverdue} overdue · {totalDue} upcoming
-          </p>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/finance" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
+            ← Finance Center
+          </Link>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600">
