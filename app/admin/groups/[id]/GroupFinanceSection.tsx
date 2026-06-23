@@ -60,8 +60,8 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
       {/* Revenue KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[#E2E8F0] border-b border-[#E2E8F0]">
         {[
-          { l: 'Expected Revenue', v: `EGP ${fmt(expected_revenue)}`, c: 'text-[#0B1F3A]' },
-          { l: 'Collected',        v: `EGP ${fmt(collected)}`,        c: 'text-emerald-600 font-bold' },
+          { l: 'Gross Expected', v: `EGP ${fmt(expected_revenue)}`, c: 'text-[#0B1F3A]' },
+          { l: 'Gross Collected', v: `EGP ${fmt(collected)}`,        c: 'text-emerald-600 font-bold' },
           { l: 'Outstanding',      v: `EGP ${fmt(outstanding)}`,      c: outstanding > 0 ? 'text-red-500 font-bold' : 'text-[#94A3B8]' },
           { l: 'Collection Rate',  v: `${collection_rate}%`,           c: collection_rate >= 80 ? 'text-emerald-600 font-bold' : collection_rate >= 50 ? 'text-amber-600 font-bold' : 'text-red-500 font-bold' },
         ].map(({ l, v, c }) => (
@@ -75,8 +75,30 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
       {/* P&L section */}
       {pnl && (
         <>
-          <div className="border-b border-[#E2E8F0] px-5 py-3">
+          <div className="border-b border-[#E2E8F0] px-5 py-3 flex items-center justify-between">
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#94A3B8]">Profit & Loss</p>
+            <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ${pnl.robocode_share_percent < 100 ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-[#64748B]'}`}>
+              Share: {pnl.robocode_share_percent}%
+            </span>
+          </div>
+          {/* Net Revenue */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[#E2E8F0] border-b border-[#E2E8F0]">
+            <div className="bg-white px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Net Expected</p>
+              <p className="mt-0.5 text-sm font-bold text-emerald-700">EGP {fmt(pnl.net_expected_revenue)}</p>
+            </div>
+            <div className="bg-white px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Net Collected</p>
+              <p className="mt-0.5 text-sm font-bold text-emerald-700">EGP {fmt(pnl.net_collected_revenue)}</p>
+            </div>
+            <div className="bg-white px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Future Liability</p>
+              <p className="mt-0.5 text-sm font-bold text-rose-600">EGP {fmt(pnl.future_liability)}</p>
+            </div>
+            <div className="bg-white px-4 py-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Manual Expenses</p>
+              <p className="mt-0.5 text-sm font-bold text-indigo-700">EGP {fmt(pnl.manual_expenses)}</p>
+            </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-[#E2E8F0] border-b border-[#E2E8F0]">
             <div className="bg-white px-4 py-3">

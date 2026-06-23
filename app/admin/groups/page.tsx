@@ -35,6 +35,7 @@ export default async function AdminGroupsPage() {
       studentOptions={studentOptions}
       defaultBranchId={defaultBranchId}
       isTL
+      showPageHeader
     />
   )
 }

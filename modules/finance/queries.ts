@@ -1563,7 +1563,7 @@ export async function getGroupPnLRows(
   // 1. ALL groups — no status filter (finance must show every group regardless of status)
   let groupQ = db
     .from('groups')
-    .select('id, name, branch_id, status, branches!groups_branch_id_fkey(name)')
+    .select('id, name, branch_id, status, robocode_share_percent, branches!groups_branch_id_fkey(name)')
     .is('deleted_at', null)
   if (branchIds?.length) groupQ = (groupQ as any).in('branch_id', branchIds)
   const { data: groupData, error: groupErr } = await groupQ
@@ -1802,6 +1802,11 @@ export async function getGroupPnLRows(
     // Revenue
     const rev           = revenueByGroup[g.id] ?? { expected: 0, collected: 0, outstanding: 0 }
 
+    // Phase XXXII: revenue share
+    const sharePct       = Number(g.robocode_share_percent ?? 100)
+    const netExpected    = rev.expected  * sharePct / 100
+    const netCollected   = rev.collected * sharePct / 100
+
     // Expenses
     const manualExp     = manualExpByGroup[g.id] ?? 0
     const recurExp      = recurByGroup[g.id]      ?? 0
@@ -1811,33 +1816,36 @@ export async function getGroupPnLRows(
     const collRate      = rev.expected > 0 ? Math.round((rev.collected / rev.expected) * 100) : 0
 
     return {
-      group_id:              g.id,
-      group_name:            g.name,
-      group_status:          g.status ?? 'active',
-      branch_id:             g.branch_id,
-      branch_name:           (g.branches as any)?.name ?? '',
-      course_name:           courseName,
-      instructor_name:       instrName,
-      student_count:         studentCountByGroup[g.id] ?? 0,
-      expected_revenue:      rev.expected,
-      collected_revenue:     rev.collected,
-      outstanding:           rev.outstanding,
-      collection_rate:       collRate,
-      total_sessions:        totalPlanned,
-      completed_sessions:    completed,
+      group_id:                g.id,
+      group_name:              g.name,
+      group_status:            g.status ?? 'active',
+      branch_id:               g.branch_id,
+      branch_name:             (g.branches as any)?.name ?? '',
+      course_name:             courseName,
+      instructor_name:         instrName,
+      student_count:           studentCountByGroup[g.id] ?? 0,
+      robocode_share_percent:  sharePct,
+      gross_expected_revenue:  rev.expected,
+      gross_collected_revenue: rev.collected,
+      outstanding:             rev.outstanding,
+      collection_rate:         collRate,
+      net_expected_revenue:    netExpected,
+      net_collected_revenue:   netCollected,
+      total_sessions:          totalPlanned,
+      completed_sessions:      completed,
       remaining_sessions,
-      session_rate:          sessionRate,
-      instructor_earned:     earned,
-      instructor_paid:       paid,
-      instructor_remaining:  earned - paid,
-      future_liability:      futureLiability,
-      final_instructor_cost: finalInstrCost,
-      manual_expenses:       manualExp,
-      recurring_expenses:    recurExp,
-      other_expenses:        otherExp,
-      total_expenses:        totalExp,
-      expected_profit:       rev.expected  - totalExp,
-      actual_profit:         rev.collected - (earned + otherExp),
+      session_rate:            sessionRate,
+      instructor_earned:       earned,
+      instructor_paid:         paid,
+      instructor_remaining:    earned - paid,
+      future_liability:        futureLiability,
+      final_instructor_cost:   finalInstrCost,
+      manual_expenses:         manualExp,
+      recurring_expenses:      recurExp,
+      other_expenses:          otherExp,
+      total_expenses:          totalExp,
+      expected_profit:         netExpected  - totalExp,
+      actual_profit:           netCollected - (earned + otherExp),
     } as import('./types').GroupPnL
   })
 }
@@ -1870,16 +1878,37 @@ export async function getBranchPnLRows(
   // 2. Revenue by branch_id (all-time; branch_id is populated on financial accounts)
   const { data: accData } = await db
     .from('student_financial_accounts')
-    .select('branch_id, net_amount, paid_amount, remaining_amount, status')
+    .select('branch_id, group_id, net_amount, paid_amount, remaining_amount, status')
     .in('branch_id', allBranchIds)
-  const revByBranch: Record<string, { expected: number; collected: number; outstanding: number; students: number }> = {}
-  for (const a of (accData ?? []) as any[]) {
-    const bid = a.branch_id as string
-    if (!revByBranch[bid]) revByBranch[bid] = { expected: 0, collected: 0, outstanding: 0, students: 0 }
-    revByBranch[bid].expected    += Number(a.net_amount)
-    revByBranch[bid].collected   += Number(a.paid_amount)
-    revByBranch[bid].outstanding += a.status !== 'PAID' ? Number(a.remaining_amount) : 0
-    revByBranch[bid].students    += 1
+  const accRows = (accData ?? []) as any[]
+
+  // Phase XXXII: fetch share% for every group that appears on accounts
+  const accGroupIds = [...new Set(accRows.map((a: any) => a.group_id as string | null).filter(Boolean))] as string[]
+  const shareByGroupBranch: Record<string, number> = {}
+  if (accGroupIds.length) {
+    const { data: grpShareData } = await db
+      .from('groups')
+      .select('id, robocode_share_percent')
+      .in('id', accGroupIds)
+    for (const g of (grpShareData ?? []) as any[]) {
+      shareByGroupBranch[g.id as string] = Number(g.robocode_share_percent ?? 100)
+    }
+  }
+
+  const revByBranch: Record<string, {
+    gross_expected: number; gross_collected: number; outstanding: number; students: number
+    net_expected: number; net_collected: number
+  }> = {}
+  for (const a of accRows) {
+    const bid   = a.branch_id as string
+    const share = a.group_id ? (shareByGroupBranch[a.group_id] ?? 100) : 100
+    if (!revByBranch[bid]) revByBranch[bid] = { gross_expected: 0, gross_collected: 0, outstanding: 0, students: 0, net_expected: 0, net_collected: 0 }
+    revByBranch[bid].gross_expected  += Number(a.net_amount)
+    revByBranch[bid].gross_collected += Number(a.paid_amount)
+    revByBranch[bid].outstanding     += a.status !== 'PAID' ? Number(a.remaining_amount) : 0
+    revByBranch[bid].students        += 1
+    revByBranch[bid].net_expected    += Number(a.net_amount)  * share / 100
+    revByBranch[bid].net_collected   += Number(a.paid_amount) * share / 100
   }
 
   // 3. Group IDs + count per branch (ALL statuses)
@@ -2052,7 +2081,7 @@ export async function getBranchPnLRows(
 
   // 9. Build rows
   return branches.map((b: any) => {
-    const rev            = revByBranch[b.id] ?? { expected: 0, collected: 0, outstanding: 0, students: 0 }
+    const rev            = revByBranch[b.id] ?? { gross_expected: 0, gross_collected: 0, outstanding: 0, students: 0, net_expected: 0, net_collected: 0 }
     const earned         = instrEarnedByBranch[b.id] ?? 0
     const paid           = instrPaidByBranch[b.id]   ?? 0
     const futLiab        = futureLiabByBranch[b.id]  ?? 0
@@ -2061,31 +2090,33 @@ export async function getBranchPnLRows(
     const groupExp       = groupExpByBranch[b.id]     ?? 0
     const branchRecur    = sumRecurring(allRecurring, from, to, undefined, b.id, 'BRANCH')
     const totalExp       = finalInstr + branchExp + branchRecur + groupExp
-    const rate           = rev.expected > 0 ? Math.round((rev.collected / rev.expected) * 100) : 0
+    const rate           = rev.gross_expected > 0 ? Math.round((rev.gross_collected / rev.gross_expected) * 100) : 0
 
     return {
-      branch_id:                  b.id,
-      branch_name:                branchNameById[b.id] ?? b.name,
-      student_count:              rev.students,
-      group_count:                groupCountByBranch[b.id] ?? 0,
-      expected_revenue:           rev.expected,
-      collected_revenue:          rev.collected,
-      outstanding:                rev.outstanding,
-      collection_rate:            rate,
-      instructor_earned:          earned,
-      instructor_paid:            paid,
-      instructor_remaining:       earned - paid,
-      future_liability:           futLiab,
-      final_instructor_cost:      finalInstr,
-      branch_expenses:            branchExp,
-      branch_recurring_expenses:  branchRecur,
-      group_expenses:             groupExp,
-      group_recurring_expenses:   0,
-      total_expenses:             totalExp,
-      expected_profit:            rev.expected  - totalExp,
-      actual_profit:              rev.collected - (earned + branchExp + branchRecur + groupExp),
+      branch_id:                   b.id,
+      branch_name:                 branchNameById[b.id] ?? b.name,
+      student_count:               rev.students,
+      group_count:                 groupCountByBranch[b.id] ?? 0,
+      gross_expected_revenue:      rev.gross_expected,
+      gross_collected_revenue:     rev.gross_collected,
+      outstanding:                 rev.outstanding,
+      collection_rate:             rate,
+      net_expected_revenue:        rev.net_expected,
+      net_collected_revenue:       rev.net_collected,
+      instructor_earned:           earned,
+      instructor_paid:             paid,
+      instructor_remaining:        earned - paid,
+      future_liability:            futLiab,
+      final_instructor_cost:       finalInstr,
+      branch_expenses:             branchExp,
+      branch_recurring_expenses:   branchRecur,
+      group_expenses:              groupExp,
+      group_recurring_expenses:    0,
+      total_expenses:              totalExp,
+      expected_profit:             rev.net_expected - totalExp,
+      actual_profit:               rev.net_collected - (earned + branchExp + branchRecur + groupExp),
     } as import('./types').BranchPnL
-  }).sort((a, b) => b.expected_revenue - a.expected_revenue)
+  }).sort((a, b) => b.gross_expected_revenue - a.gross_expected_revenue)
 }
 
 // ── Phase XXX: Academy P&L — accrual model, monthly trend ─────────────────────
@@ -2106,15 +2137,38 @@ export async function getAcademyPnL(
   const rangeStart = `${months[0]}-01`
   const rangeEnd   = now.toISOString().slice(0, 10)
 
-  // 1. Revenue totals (all-time)
-  let accQ = db.from('student_financial_accounts').select('net_amount, paid_amount, remaining_amount, status')
+  // 1. Revenue totals (all-time) — fetch group_id so we can apply share%
+  let accQ = db.from('student_financial_accounts').select('id, net_amount, paid_amount, remaining_amount, status, group_id')
   if (branchIds?.length) accQ = (accQ as any).in('branch_id', branchIds)
   const { data: accData } = await accQ
   const accounts = (accData ?? []) as any[]
-  const totalExpected    = accounts.reduce((s, a) => s + Number(a.net_amount), 0)
-  const totalCollected   = accounts.reduce((s, a) => s + Number(a.paid_amount), 0)
-  const totalOutstanding = accounts.filter(a => a.status !== 'PAID').reduce((s, a) => s + Number(a.remaining_amount), 0)
-  const collectionRate   = totalExpected > 0 ? Math.round((totalCollected / totalExpected) * 100) : 0
+
+  // Phase XXXII: fetch share% for every group referenced by accounts
+  const acGroupIds = [...new Set(accounts.map((a: any) => a.group_id as string | null).filter(Boolean))] as string[]
+  const shareByGroupAcademy: Record<string, number> = {}
+  if (acGroupIds.length) {
+    const { data: grpShareRows } = await db
+      .from('groups')
+      .select('id, robocode_share_percent')
+      .in('id', acGroupIds)
+    for (const g of (grpShareRows ?? []) as any[]) {
+      shareByGroupAcademy[g.id as string] = Number(g.robocode_share_percent ?? 100)
+    }
+  }
+
+  // Also build account_id → group_id map for payment-level net calculation in monthly trend
+  const accGroupMapAcademy: Record<string, string | null> = {}
+  let totalGrossExpected = 0, totalGrossCollected = 0, totalNetExpected = 0, totalNetCollected = 0, totalOutstanding = 0
+  for (const a of accounts) {
+    const share = a.group_id ? (shareByGroupAcademy[a.group_id] ?? 100) : 100
+    totalGrossExpected  += Number(a.net_amount)
+    totalGrossCollected += Number(a.paid_amount)
+    totalNetExpected    += Number(a.net_amount)  * share / 100
+    totalNetCollected   += Number(a.paid_amount) * share / 100
+    if (a.status !== 'PAID') totalOutstanding += Number(a.remaining_amount)
+    if (a.id) accGroupMapAcademy[a.id as string] = a.group_id ?? null
+  }
+  const collectionRate = totalGrossExpected > 0 ? Math.round((totalGrossCollected / totalGrossExpected) * 100) : 0
 
   // 2. Monthly payments (for trend)
   let payQ = db.from('finance_payments')
@@ -2273,11 +2327,19 @@ export async function getAcademyPnL(
     const d     = new Date(`${m}-01`)
     const label = d.toLocaleString('en-US', { month: 'short', year: 'numeric' })
 
-    const collectedRev = payments
-      .filter((p: any) => (p.payment_date as string).startsWith(m))
-      .reduce((s: number, p: any) => s + Number(p.amount), 0)
+    const monthPayments = payments.filter((p: any) => (p.payment_date as string).startsWith(m))
 
-    const expectedRev = totalExpected / 6
+    const grossCollectedRev = monthPayments.reduce((s: number, p: any) => s + Number(p.amount), 0)
+
+    // Phase XXXII: net collected = apply each payment's group share%
+    const netCollectedRev = monthPayments.reduce((s: number, p: any) => {
+      const gid   = accGroupMapAcademy[p.account_id as string] ?? null
+      const share = gid ? (shareByGroupAcademy[gid] ?? 100) : 100
+      return s + Number(p.amount) * share / 100
+    }, 0)
+
+    const grossExpectedRev = totalGrossExpected / 6
+    const netExpectedRev   = totalNetExpected   / 6
 
     const monthInstrEarned = monthlySessions
       .filter((s: any) => (s.scheduled_at as string).startsWith(m))
@@ -2287,40 +2349,43 @@ export async function getAcademyPnL(
       .filter((e: any) => (e.expense_date as string).startsWith(m) && e.expense_type !== 'INSTRUCTOR')
       .reduce((s: number, e: any) => s + Number(e.amount), 0)
 
-    const monthTotalExp  = monthInstrEarned + monthOtherExp
+    const monthTotalExp = monthInstrEarned + monthOtherExp
 
     return {
-      month:             m,
+      month:                   m,
       label,
-      expected_revenue:  Math.round(expectedRev),
-      collected_revenue: collectedRev,
-      instructor_earned: monthInstrEarned,
-      other_expenses:    monthOtherExp,
-      total_expenses:    monthTotalExp,
-      expected_profit:   Math.round(expectedRev) - monthTotalExp,
-      actual_profit:     collectedRev - monthTotalExp,
+      gross_expected_revenue:  Math.round(grossExpectedRev),
+      gross_collected_revenue: grossCollectedRev,
+      net_collected_revenue:   netCollectedRev,
+      instructor_earned:       monthInstrEarned,
+      other_expenses:          monthOtherExp,
+      total_expenses:          monthTotalExp,
+      expected_profit:         Math.round(netExpectedRev) - monthTotalExp,
+      actual_profit:           netCollectedRev - monthTotalExp,
     }
   })
 
   return {
-    expected_revenue:           totalExpected,
-    collected_revenue:          totalCollected,
-    outstanding:                totalOutstanding,
-    collection_rate:            collectionRate,
-    instructor_earned:          totalInstrEarned,
-    instructor_paid:            totalInstrPaid,
-    instructor_remaining:       totalInstrEarned - totalInstrPaid,
-    future_liability:           totalFutureLiab,
-    final_instructor_cost:      totalFinalInstrCost,
-    branch_expenses:            totalBranchExp,
-    branch_recurring_expenses:  totalBranchRecur,
-    group_expenses:             totalGroupExp,
-    group_recurring_expenses:   totalGroupRecur,
-    academy_expenses:           totalAcademyExp,
-    academy_recurring_expenses: totalAcademyRecur,
-    total_expenses:             totalExpenses,
-    expected_profit:            totalExpected  - (totalFinalInstrCost + totalManualExp),
-    actual_profit:              totalCollected - (totalInstrEarned  + totalManualExp),
+    gross_expected_revenue:      totalGrossExpected,
+    gross_collected_revenue:     totalGrossCollected,
+    outstanding:                 totalOutstanding,
+    collection_rate:             collectionRate,
+    net_expected_revenue:        totalNetExpected,
+    net_collected_revenue:       totalNetCollected,
+    instructor_earned:           totalInstrEarned,
+    instructor_paid:             totalInstrPaid,
+    instructor_remaining:        totalInstrEarned - totalInstrPaid,
+    future_liability:            totalFutureLiab,
+    final_instructor_cost:       totalFinalInstrCost,
+    branch_expenses:             totalBranchExp,
+    branch_recurring_expenses:   totalBranchRecur,
+    group_expenses:              totalGroupExp,
+    group_recurring_expenses:    totalGroupRecur,
+    academy_expenses:            totalAcademyExp,
+    academy_recurring_expenses:  totalAcademyRecur,
+    total_expenses:              totalExpenses,
+    expected_profit:             totalNetExpected  - (totalFinalInstrCost + totalManualExp),
+    actual_profit:               totalNetCollected - (totalInstrEarned  + totalManualExp),
     monthly_trend,
   }
 }

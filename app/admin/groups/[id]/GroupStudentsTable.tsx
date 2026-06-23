@@ -264,6 +264,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                  <th className="w-8 px-3 py-2.5 text-center text-xs font-medium text-[#94A3B8]">#</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Code</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Student</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Phone</th>
@@ -275,8 +276,11 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((e) => (
+                {filtered.map((e, idx) => (
                   <tr key={e.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <td className="px-3 py-2.5 text-center">
+                      <span className="text-[11px] font-semibold text-[#94A3B8]">{idx + 1}</span>
+                    </td>
                     <td className="px-4 py-2.5">
                       <span className="font-mono text-xs text-[#64748B]">{e.student_code ?? '—'}</span>
                     </td>

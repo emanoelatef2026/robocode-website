@@ -107,6 +107,25 @@ export default function NewGroupForm({ branches, instructors }: Props) {
           <textarea name="notes" rows={2} className={cls} />
         </div>
 
+        <div>
+          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+            Robocode Share %
+            <span className="ml-1.5 text-xs font-normal text-[#94A3B8]">0–100 · default 100</span>
+          </label>
+          <input
+            name="robocode_share_percent"
+            type="number"
+            min={0}
+            max={100}
+            step={0.01}
+            defaultValue={100}
+            className={cls}
+          />
+          <p className="mt-1 text-xs text-[#94A3B8]">
+            % of collected revenue that belongs to Robocode. Standard groups: 100. Partnership groups: 30–60.
+          </p>
+        </div>
+
         <div className="flex items-center justify-end gap-3 pt-2">
           <Link href="/admin/groups" className="rounded-lg border border-[#E2E8F0] px-4 py-2.5 text-sm font-medium text-[#64748B] transition hover:border-[#CBD5E1]">
             Cancel

@@ -106,6 +106,25 @@ export default function GroupDetailView({ group }: Props) {
             <textarea name="notes" rows={2} defaultValue={group.notes ?? ''} className={cls} />
           </div>
 
+          <div>
+            <label className="mb-1 block text-xs font-medium text-[#64748B]">
+              Robocode Share %
+              <span className="ml-1.5 font-normal text-[#94A3B8]">0–100 · default 100</span>
+            </label>
+            <input
+              name="robocode_share_percent"
+              type="number"
+              min={0}
+              max={100}
+              step={0.01}
+              defaultValue={group.robocode_share_percent ?? 100}
+              className={cls}
+            />
+            <p className="mt-1 text-xs text-[#94A3B8]">
+              % of collected revenue that belongs to Robocode. Standard groups: 100. Partnership groups: 30–60.
+            </p>
+          </div>
+
           <div className="flex justify-end">
             <SubmitButton label="Save Changes" />
           </div>

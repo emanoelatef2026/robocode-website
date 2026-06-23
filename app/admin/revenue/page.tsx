@@ -80,16 +80,26 @@ function TabNav({ active, dateFrom, dateTo, branchId }: { active: string; dateFr
 
 async function AcademyTab({ branchFilter, dateFrom, dateTo }: { branchFilter: string[] | null; dateFrom?: string; dateTo?: string }) {
   const data = await getAcademyPnL(branchFilter ?? undefined, { dateFrom, dateTo })
-  const maxBar = Math.max(...data.monthly_trend.map(m => Math.max(m.collected_revenue, m.total_expenses)), 1)
+  const maxBar = Math.max(...data.monthly_trend.map(m => Math.max(m.net_collected_revenue, m.total_expenses)), 1)
 
   return (
     <div className="space-y-5">
-      {/* Top KPIs */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <KPI label="Expected Revenue"  value={fmtK(data.expected_revenue)}  color="bg-slate-400" />
-        <KPI label="Collected Revenue" value={fmtK(data.collected_revenue)} color="bg-emerald-400" />
-        <KPI label="Outstanding"       value={fmtK(data.outstanding)}       color="bg-amber-400" />
-        <KPI label="Total Expenses"    value={fmtK(data.total_expenses)}    color="bg-red-400" />
+      {/* Top KPIs — Gross Revenue */}
+      <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
+        <p className="mb-2.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#94A3B8]">Gross Revenue (Full Student Value)</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <KPI label="Gross Expected"  value={fmtK(data.gross_expected_revenue)}  color="bg-slate-400" />
+          <KPI label="Gross Collected" value={fmtK(data.gross_collected_revenue)} color="bg-slate-400" />
+          <KPI label="Outstanding"     value={fmtK(data.outstanding)}             color="bg-amber-400" />
+          <KPI label="Collection Rate" value={`${data.collection_rate}%`}         color={data.collection_rate >= 80 ? 'bg-emerald-400' : data.collection_rate >= 50 ? 'bg-amber-400' : 'bg-red-400'} />
+        </div>
+      </div>
+
+      {/* Net Revenue (Robocode's share) + Profit */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <KPI label="Net Expected (Robocode)"  value={fmtK(data.net_expected_revenue)}  color="bg-emerald-400" />
+        <KPI label="Net Collected (Robocode)" value={fmtK(data.net_collected_revenue)} color="bg-emerald-400" />
+        <KPI label="Total Expenses"           value={fmtK(data.total_expenses)}        color="bg-red-400" />
         <KPI
           label="Expected Profit"
           value={fmtK(data.expected_profit)}
@@ -125,20 +135,20 @@ async function AcademyTab({ branchFilter, dateFrom, dateTo }: { branchFilter: st
         </div>
       </div>
 
-      {/* Monthly trend chart */}
+      {/* Monthly trend chart — bars show NET collected vs. expenses */}
       <div className="rounded-xl border border-[#E2E8F0] bg-white">
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#94A3B8]">Monthly Trend — Last 6 Months</p>
           <div className="flex items-center gap-4 text-[11px] text-[#64748B]">
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-emerald-400" /> Collected</span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-emerald-400" /> Net Collected</span>
             <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-red-400" /> Expenses</span>
           </div>
         </div>
         <div className="p-5">
           <div className="flex items-end gap-3">
             {data.monthly_trend.map(m => {
-              const cH = maxBar > 0 ? Math.round((m.collected_revenue / maxBar) * 110) : 2
-              const eH = maxBar > 0 ? Math.round((m.total_expenses   / maxBar) * 110) : 2
+              const cH = maxBar > 0 ? Math.round((m.net_collected_revenue / maxBar) * 110) : 2
+              const eH = maxBar > 0 ? Math.round((m.total_expenses        / maxBar) * 110) : 2
               const profit = m.actual_profit
               return (
                 <div key={m.month} className="flex flex-1 flex-col items-center gap-1.5">
@@ -198,12 +208,20 @@ async function BranchesTab({ branchFilter, dateFrom, dateTo }: { branchFilter: s
 
               <div className="grid grid-cols-2 gap-2 text-[11px]">
                 <div>
-                  <p className="text-[#94A3B8]">Expected</p>
-                  <p className="font-semibold text-[#0B1F3A]">{fmt(b.expected_revenue)}</p>
+                  <p className="text-[#94A3B8]">Gross Expected</p>
+                  <p className="font-semibold text-[#0B1F3A]">{fmt(b.gross_expected_revenue)}</p>
                 </div>
                 <div>
-                  <p className="text-[#94A3B8]">Collected</p>
-                  <p className="font-semibold text-emerald-700">{fmt(b.collected_revenue)}</p>
+                  <p className="text-[#94A3B8]">Gross Collected</p>
+                  <p className="font-semibold text-[#0B1F3A]">{fmt(b.gross_collected_revenue)}</p>
+                </div>
+                <div>
+                  <p className="text-[#94A3B8]">Net Expected</p>
+                  <p className="font-semibold text-emerald-700">{fmt(b.net_expected_revenue)}</p>
+                </div>
+                <div>
+                  <p className="text-[#94A3B8]">Net Collected</p>
+                  <p className="font-semibold text-emerald-700">{fmt(b.net_collected_revenue)}</p>
                 </div>
                 <div>
                   <p className="text-[#94A3B8]">Outstanding</p>
@@ -272,7 +290,7 @@ async function BranchesTab({ branchFilter, dateFrom, dateTo }: { branchFilter: s
         <table className="w-full text-sm min-w-[900px]">
           <thead>
             <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-              {['Branch','Students','Groups','Expected Rev','Collected','Outstanding','Expenses','Exp. Profit','Act. Profit','Rate'].map(h => (
+              {['Branch','Students','Groups','Gross Expected','Gross Collected','Net Expected','Net Collected','Outstanding','Expenses','Exp. Profit','Act. Profit','Rate'].map(h => (
                 <th key={h} className="px-4 py-3 text-left text-xs font-medium text-[#64748B] whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -283,8 +301,10 @@ async function BranchesTab({ branchFilter, dateFrom, dateTo }: { branchFilter: s
                 <td className="px-4 py-3 font-semibold text-[#0B1F3A] whitespace-nowrap">{b.branch_name}</td>
                 <td className="px-4 py-3 text-center text-[#64748B]">{b.student_count}</td>
                 <td className="px-4 py-3 text-center text-[#64748B]">{b.group_count}</td>
-                <td className="px-4 py-3 text-right text-[#0B1F3A]">{fmt(b.expected_revenue)}</td>
-                <td className="px-4 py-3 text-right font-medium text-emerald-700">{fmt(b.collected_revenue)}</td>
+                <td className="px-4 py-3 text-right text-[#0B1F3A]">{fmt(b.gross_expected_revenue)}</td>
+                <td className="px-4 py-3 text-right text-[#0B1F3A]">{fmt(b.gross_collected_revenue)}</td>
+                <td className="px-4 py-3 text-right font-medium text-emerald-700">{fmt(b.net_expected_revenue)}</td>
+                <td className="px-4 py-3 text-right font-medium text-emerald-700">{fmt(b.net_collected_revenue)}</td>
                 <td className="px-4 py-3 text-right text-amber-600">{fmt(b.outstanding)}</td>
                 <td className="px-4 py-3 text-right text-red-600">{fmt(b.total_expenses)}</td>
                 <td className="px-4 py-3 text-right"><ProfitBadge value={b.expected_profit} /></td>
@@ -322,10 +342,10 @@ async function GroupsTab({ branchFilter, dateFrom, dateTo }: { branchFilter: str
         <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#94A3B8]">Group P&L</p>
         <p className="text-[11px] text-[#94A3B8]">{rows.length} groups</p>
       </div>
-      <table className="w-full text-sm min-w-[1000px]">
+      <table className="w-full text-sm min-w-[1200px]">
         <thead>
           <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-            {['Group','Branch','Course','Instructor','Students','Expected Rev','Collected','Outstanding','Instr. Cost','Other Exp.','Exp. Profit','Act. Profit','Rate'].map(h => (
+            {['Group','Branch','Course','Instructor','Students','Share %','Gross Expected','Gross Collected','Net Expected','Net Collected','Outstanding','Instr. Cost','Other Exp.','Exp. Profit','Act. Profit','Rate'].map(h => (
               <th key={h} className="px-4 py-3 text-left text-xs font-medium text-[#64748B] whitespace-nowrap">{h}</th>
             ))}
           </tr>
@@ -340,8 +360,15 @@ async function GroupsTab({ branchFilter, dateFrom, dateTo }: { branchFilter: str
               <td className="px-4 py-3 text-[#64748B] whitespace-nowrap">{g.course_name ?? '—'}</td>
               <td className="px-4 py-3 text-[#64748B] whitespace-nowrap">{g.instructor_name ?? '—'}</td>
               <td className="px-4 py-3 text-center text-[#64748B]">{g.student_count}</td>
-              <td className="px-4 py-3 text-right text-[#0B1F3A]">{fmt(g.expected_revenue)}</td>
-              <td className="px-4 py-3 text-right font-medium text-emerald-700">{fmt(g.collected_revenue)}</td>
+              <td className="px-4 py-3 text-center">
+                <span className={`font-semibold ${g.robocode_share_percent < 100 ? 'text-amber-600' : 'text-[#64748B]'}`}>
+                  {g.robocode_share_percent}%
+                </span>
+              </td>
+              <td className="px-4 py-3 text-right text-[#0B1F3A]">{fmt(g.gross_expected_revenue)}</td>
+              <td className="px-4 py-3 text-right text-[#0B1F3A]">{fmt(g.gross_collected_revenue)}</td>
+              <td className="px-4 py-3 text-right font-medium text-emerald-700">{fmt(g.net_expected_revenue)}</td>
+              <td className="px-4 py-3 text-right font-medium text-emerald-700">{fmt(g.net_collected_revenue)}</td>
               <td className="px-4 py-3 text-right text-amber-600">{fmt(g.outstanding)}</td>
               <td className="px-4 py-3 text-right text-violet-700">{fmt(g.instructor_earned)}</td>
               <td className="px-4 py-3 text-right text-indigo-700">{fmt(g.other_expenses)}</td>

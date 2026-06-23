@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+
+const STORAGE_KEY = "sidebar_collapsed";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
 
@@ -111,13 +114,61 @@ const NAV_SECTIONS: NavSection[] = [
   },
 ]
 
+// ── Chevron icons ──────────────────────────────────────────────────────────────
+
+const ChevronLeft = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+    <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+  </svg>
+)
+
+const ChevronRight = () => (
+  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+  </svg>
+)
+
 // ── NavLink ────────────────────────────────────────────────────────────────────
 
-function NavLink({
-  href, label, icon, active, onClose,
-}: {
-  href: string; label: string; icon: React.ReactNode; active: boolean; onClose?: () => void
-}) {
+interface NavLinkProps {
+  href:           string
+  label:          string
+  icon:           React.ReactNode
+  active:         boolean
+  onClose?:       () => void
+  collapsed:      boolean
+  onShowTooltip:  (label: string, y: number) => void
+  onHideTooltip:  () => void
+}
+
+function NavLink({ href, label, icon, active, onClose, collapsed, onShowTooltip, onHideTooltip }: NavLinkProps) {
+  const linkRef = useRef<HTMLAnchorElement>(null)
+
+  if (collapsed) {
+    return (
+      <Link
+        ref={linkRef}
+        href={href}
+        onClick={onClose}
+        onMouseEnter={() => {
+          if (linkRef.current) {
+            const rect = linkRef.current.getBoundingClientRect()
+            onShowTooltip(label, rect.top + rect.height / 2)
+          }
+        }}
+        onMouseLeave={onHideTooltip}
+        className={[
+          "flex items-center justify-center rounded-lg p-2.5 transition-all duration-150",
+          active
+            ? "bg-[#FF8A1F]/15 text-[#FF8A1F]"
+            : "text-white/50 hover:bg-white/5 hover:text-white/80",
+        ].join(" ")}
+      >
+        <span className={active ? "text-[#FF8A1F]" : "text-white/35"}>{icon}</span>
+      </Link>
+    )
+  }
+
   return (
     <Link
       href={href}
@@ -138,15 +189,23 @@ function NavLink({
 
 // ── NavContent ─────────────────────────────────────────────────────────────────
 
-function NavContent({
-  onClose, role, permissions,
-}: {
-  onClose?: () => void; role: string; permissions: string[]
-}) {
-  const pathname      = usePathname()
-  const router        = useRouter()
-  const isSuperAdmin  = role === 'super_admin'
+interface NavContentProps {
+  onClose?:         () => void
+  role:             string
+  permissions:      string[]
+  collapsed:        boolean
+  onToggleCollapse: () => void
+}
+
+function NavContent({ onClose, role, permissions, collapsed, onToggleCollapse }: NavContentProps) {
+  const pathname     = usePathname()
+  const router       = useRouter()
+  const isSuperAdmin = role === 'super_admin'
   const [accountOpen, setAccountOpen] = useState(false)
+  const [mounted, setMounted]         = useState(false)
+  const [tooltip, setTooltip]         = useState<{ label: string; y: number } | null>(null)
+
+  useEffect(() => { setMounted(true) }, [])
 
   const isActive = (href: string) =>
     href === '/admin' ? pathname === '/admin' : pathname.startsWith(href)
@@ -176,28 +235,55 @@ function NavContent({
     }))
     .filter(section => section.items.length > 0)
 
+  const tooltipProps = {
+    onShowTooltip: (label: string, y: number) => collapsed && setTooltip({ label, y }),
+    onHideTooltip: () => setTooltip(null),
+  }
+
+  // Account icon ref for collapsed tooltip
+  const accountBtnRef = useRef<HTMLButtonElement>(null)
+  const [accountTooltipY, setAccountTooltipY] = useState(0)
+  const [showAccountTooltip, setShowAccountTooltip] = useState(false)
+
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Logo */}
-      <div className="flex h-14 shrink-0 items-center border-b border-white/8 px-5">
-        <Image src="/logo.png" alt="Robocode" width={120} height={52} className="h-auto w-24 brightness-0 invert" />
+      {/* Logo + collapse toggle */}
+      <div className={[
+        "flex h-14 shrink-0 items-center border-b border-white/8",
+        collapsed ? "justify-center px-2" : "justify-between px-4",
+      ].join(" ")}>
+        {!collapsed && (
+          <Image src="/logo.png" alt="Robocode" width={120} height={52} className="h-auto w-[84px] brightness-0 invert" />
+        )}
+        <button
+          onClick={onToggleCollapse}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white/30 hover:bg-white/10 hover:text-white/60 transition"
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <ChevronRight /> : <ChevronLeft />}
+        </button>
       </div>
 
       {/* Role label */}
-      <div className="shrink-0 px-5 pt-4 pb-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/25">
-          {ROLE_LABELS[role] ?? role}
-        </p>
-      </div>
+      {!collapsed && (
+        <div className="shrink-0 px-5 pt-4 pb-1">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/25">
+            {ROLE_LABELS[role] ?? role}
+          </p>
+        </div>
+      )}
 
       {/* Nav sections */}
-      <nav className="flex-1 overflow-y-auto px-3 pb-2">
+      <nav className="flex-1 overflow-y-auto px-2 pb-2">
         {visibleSections.map((section, idx) => (
-          <div key={section.title || '__top'} className={idx === 0 ? "mb-1" : "mt-5"}>
-            {section.title && (
+          <div key={section.title || '__top'} className={idx === 0 ? "mb-1" : "mt-4"}>
+            {section.title && !collapsed && (
               <p className="mb-1.5 px-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/25">
                 {section.title}
               </p>
+            )}
+            {section.title && collapsed && (
+              <div className="my-2 mx-1.5 h-px bg-white/8" />
             )}
             <div className="space-y-0.5">
               {section.items.map(item => (
@@ -208,6 +294,8 @@ function NavContent({
                   icon={item.icon}
                   active={isActive(item.href)}
                   onClose={onClose}
+                  collapsed={collapsed}
+                  {...tooltipProps}
                 />
               ))}
             </div>
@@ -216,55 +304,115 @@ function NavContent({
       </nav>
 
       {/* Footer — My Account */}
-      <div className="shrink-0 border-t border-white/8 p-3">
-        <button
-          onClick={() => setAccountOpen(v => !v)}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/35 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-          </svg>
-          <span className="flex-1 text-left">My Account</span>
-          <svg
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className={`h-3 w-3 shrink-0 transition-transform duration-200 ${accountOpen ? "rotate-180" : ""}`}
+      <div className="shrink-0 border-t border-white/8 p-2">
+        {collapsed ? (
+          <button
+            ref={accountBtnRef}
+            onMouseEnter={() => {
+              if (accountBtnRef.current) {
+                const rect = accountBtnRef.current.getBoundingClientRect()
+                setAccountTooltipY(rect.top + rect.height / 2)
+              }
+              setShowAccountTooltip(true)
+            }}
+            onMouseLeave={() => setShowAccountTooltip(false)}
+            onClick={() => setAccountOpen(v => !v)}
+            className="flex w-full items-center justify-center rounded-lg p-2.5 text-white/35 transition hover:bg-white/5 hover:text-white/70"
           >
-            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </button>
-
-        <AnimatePresence initial={false}>
-          {accountOpen && (
-            <motion.div
-              key="account-items"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.18, ease: "easeInOut" }}
-              className="overflow-hidden"
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
+            </svg>
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={() => setAccountOpen(v => !v)}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/35 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
             >
-              <div className="mt-0.5 space-y-0.5 pl-3">
-                <Link
-                  href="/account/password"
-                  onClick={onClose}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-white/30 transition-all duration-150 hover:bg-white/5 hover:text-white/60"
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
+              </svg>
+              <span className="flex-1 text-left">My Account</span>
+              <svg
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className={`h-3 w-3 shrink-0 transition-transform duration-200 ${accountOpen ? "rotate-180" : ""}`}
+              >
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+
+            <AnimatePresence initial={false}>
+              {accountOpen && (
+                <motion.div
+                  key="account-items"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.18, ease: "easeInOut" }}
+                  className="overflow-hidden"
                 >
-                  {I.password}
-                  Change Password
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-red-400/60 transition-all duration-150 hover:bg-white/5 hover:text-red-400"
-                >
-                  {I.logout}
-                  Logout
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  <div className="mt-0.5 space-y-0.5 pl-3">
+                    <Link
+                      href="/account/password"
+                      onClick={onClose}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-white/30 transition-all duration-150 hover:bg-white/5 hover:text-white/60"
+                    >
+                      {I.password}
+                      Change Password
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-red-400/60 transition-all duration-150 hover:bg-white/5 hover:text-red-400"
+                    >
+                      {I.logout}
+                      Logout
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
+        )}
       </div>
+
+      {/* Portal tooltip for collapsed nav items */}
+      {collapsed && mounted && tooltip && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            left: '64px',
+            top: `${tooltip.y}px`,
+            transform: 'translateY(-50%)',
+            zIndex: 9999,
+            pointerEvents: 'none',
+          }}
+          className="rounded-lg bg-[#0B1F3A] border border-white/10 px-2.5 py-1.5 text-[12px] font-medium text-white shadow-xl whitespace-nowrap"
+        >
+          {tooltip.label}
+          <div className="absolute right-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-r-[#0B1F3A]" />
+        </div>,
+        document.body
+      )}
+
+      {/* Portal tooltip for account button */}
+      {collapsed && mounted && showAccountTooltip && createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            left: '64px',
+            top: `${accountTooltipY}px`,
+            transform: 'translateY(-50%)',
+            zIndex: 9999,
+            pointerEvents: 'none',
+          }}
+          className="rounded-lg bg-[#0B1F3A] border border-white/10 px-2.5 py-1.5 text-[12px] font-medium text-white shadow-xl whitespace-nowrap"
+        >
+          My Account
+          <div className="absolute right-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-r-[#0B1F3A]" />
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
@@ -279,12 +427,37 @@ interface SidebarProps {
 }
 
 export default function AdminSidebar({ isOpen, onClose, role, permissions }: SidebarProps) {
+  const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored === 'true') setCollapsed(true)
+  }, [])
+
+  function toggleCollapsed() {
+    setCollapsed(prev => {
+      const next = !prev
+      localStorage.setItem(STORAGE_KEY, String(next))
+      return next
+    })
+  }
+
   return (
     <>
-      <aside className="hidden w-56 shrink-0 bg-[#0B1F3A] md:flex md:flex-col">
-        <NavContent role={role} permissions={permissions} />
+      {/* Desktop sidebar — always visible, width controlled by collapsed state */}
+      <aside className={[
+        "hidden shrink-0 bg-[#0B1F3A] transition-[width] duration-200 ease-in-out md:flex md:flex-col",
+        collapsed ? "w-14" : "w-56",
+      ].join(" ")}>
+        <NavContent
+          role={role}
+          permissions={permissions}
+          collapsed={collapsed}
+          onToggleCollapse={toggleCollapsed}
+        />
       </aside>
 
+      {/* Mobile slide-in sidebar */}
       <AnimatePresence>
         {isOpen && (
           <motion.aside
@@ -295,7 +468,13 @@ export default function AdminSidebar({ isOpen, onClose, role, permissions }: Sid
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className="fixed inset-y-0 left-0 z-30 w-56 bg-[#0B1F3A] md:hidden"
           >
-            <NavContent onClose={onClose} role={role} permissions={permissions} />
+            <NavContent
+              onClose={onClose}
+              role={role}
+              permissions={permissions}
+              collapsed={false}
+              onToggleCollapse={() => {}}
+            />
           </motion.aside>
         )}
       </AnimatePresence>

@@ -81,12 +81,15 @@ function exportGroupsExcel(rows: GroupPnL[]) {
     'Course':                  r.course_name ?? '',
     'Instructor':              r.instructor_name ?? '',
     'Students':                r.student_count,
+    'Share %':                 r.robocode_share_percent,
     'Total Sessions':          r.total_sessions,
     'Completed Sessions':      r.completed_sessions,
     'Remaining Sessions':      r.remaining_sessions,
     'Session Rate (EGP)':      r.session_rate,
-    'Expected Rev (EGP)':      r.expected_revenue,
-    'Collected (EGP)':         r.collected_revenue,
+    'Gross Expected (EGP)':    r.gross_expected_revenue,
+    'Gross Collected (EGP)':   r.gross_collected_revenue,
+    'Net Expected (EGP)':      r.net_expected_revenue,
+    'Net Collected (EGP)':     r.net_collected_revenue,
     'Outstanding (EGP)':       r.outstanding,
     'Collection Rate':         `${r.collection_rate}%`,
     'Instr. Earned (EGP)':     r.instructor_earned,
@@ -111,8 +114,10 @@ function exportBranchesExcel(rows: BranchPnL[]) {
     'Branch':                  r.branch_name,
     'Groups':                  r.group_count,
     'Students':                r.student_count,
-    'Expected Rev (EGP)':      r.expected_revenue,
-    'Collected (EGP)':         r.collected_revenue,
+    'Gross Expected (EGP)':    r.gross_expected_revenue,
+    'Gross Collected (EGP)':   r.gross_collected_revenue,
+    'Net Expected (EGP)':      r.net_expected_revenue,
+    'Net Collected (EGP)':     r.net_collected_revenue,
     'Outstanding (EGP)':       r.outstanding,
     'Collection Rate':         `${r.collection_rate}%`,
     'Instr. Earned (EGP)':     r.instructor_earned,
@@ -136,9 +141,13 @@ function exportAcademyExcel(academy: AcademyPnL) {
   const summary = [{
     'Metric': 'Academy P&L Summary', 'Value (EGP)': '',
   }, {
-    'Metric': 'Expected Revenue',         'Value (EGP)': academy.expected_revenue,
+    'Metric': 'Gross Expected Revenue',   'Value (EGP)': academy.gross_expected_revenue,
   }, {
-    'Metric': 'Collected Revenue',        'Value (EGP)': academy.collected_revenue,
+    'Metric': 'Gross Collected Revenue',  'Value (EGP)': academy.gross_collected_revenue,
+  }, {
+    'Metric': 'Net Expected Revenue',     'Value (EGP)': academy.net_expected_revenue,
+  }, {
+    'Metric': 'Net Collected Revenue',    'Value (EGP)': academy.net_collected_revenue,
   }, {
     'Metric': 'Outstanding',              'Value (EGP)': academy.outstanding,
   }, {
@@ -168,12 +177,14 @@ function exportAcademyExcel(academy: AcademyPnL) {
   }]
 
   const trend = academy.monthly_trend.map(m => ({
-    'Month':               m.label,
-    'Collected (EGP)':     m.collected_revenue,
-    'Instr. Earned (EGP)': m.instructor_earned,
-    'Other Exp (EGP)':     m.other_expenses,
-    'Total Exp (EGP)':     m.total_expenses,
-    'Act. Profit (EGP)':   m.actual_profit,
+    'Month':                    m.label,
+    'Gross Expected (EGP)':     m.gross_expected_revenue,
+    'Gross Collected (EGP)':    m.gross_collected_revenue,
+    'Net Collected (EGP)':      m.net_collected_revenue,
+    'Instr. Earned (EGP)':      m.instructor_earned,
+    'Other Exp (EGP)':          m.other_expenses,
+    'Total Exp (EGP)':          m.total_expenses,
+    'Act. Profit (EGP)':        m.actual_profit,
   }))
 
   const wb = XLSX.utils.book_new()
@@ -881,7 +892,7 @@ function GroupsTab({
 }) {
   const [search,       setSearch]       = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-  const [sortCol,      setSortCol]      = useState<keyof GroupPnL>('expected_revenue')
+  const [sortCol,      setSortCol]      = useState<keyof GroupPnL>('gross_expected_revenue')
   const [sortAsc,      setSortAsc]      = useState(false)
   const [detailId,     setDetailId]     = useState<string | null>(null)
   const [addOpen,      setAddOpen]      = useState(false)
@@ -917,22 +928,22 @@ function GroupsTab({
   const detailGroup = detailId ? rows.find(r => r.group_id === detailId) : null
 
   // Summary KPIs (from filtered rows)
-  const totalExpRev     = filtered.reduce((s, r) => s + r.expected_revenue,    0)
-  const totalColRev     = filtered.reduce((s, r) => s + r.collected_revenue,   0)
-  const totalEarned     = filtered.reduce((s, r) => s + r.instructor_earned,   0)
-  const totalFinalCost  = filtered.reduce((s, r) => s + r.final_instructor_cost, 0)
-  const totalProfit     = filtered.reduce((s, r) => s + r.actual_profit,       0)
+  const totalGrossExpRev = filtered.reduce((s, r) => s + r.gross_expected_revenue, 0)
+  const totalNetColRev   = filtered.reduce((s, r) => s + r.net_collected_revenue,  0)
+  const totalEarned      = filtered.reduce((s, r) => s + r.instructor_earned,      0)
+  const totalFinalCost   = filtered.reduce((s, r) => s + r.final_instructor_cost,  0)
+  const totalProfit      = filtered.reduce((s, r) => s + r.actual_profit,          0)
 
   return (
     <div className="space-y-4">
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
-          { label: 'Expected Revenue',    value: fmtK(totalExpRev),    color: 'bg-slate-400' },
-          { label: 'Collected Revenue',   value: fmtK(totalColRev),    color: 'bg-emerald-400' },
-          { label: 'Instr. Earned',       value: fmtK(totalEarned),    color: 'bg-violet-400' },
-          { label: 'Final Instr. Cost',   value: fmtK(totalFinalCost), color: 'bg-orange-400' },
-          { label: 'Actual Profit',       value: fmtK(totalProfit),    color: totalProfit >= 0 ? 'bg-emerald-400' : 'bg-red-400' },
+          { label: 'Gross Expected',    value: fmtK(totalGrossExpRev), color: 'bg-slate-400' },
+          { label: 'Net Collected',     value: fmtK(totalNetColRev),   color: 'bg-emerald-400' },
+          { label: 'Instr. Earned',     value: fmtK(totalEarned),      color: 'bg-violet-400' },
+          { label: 'Final Instr. Cost', value: fmtK(totalFinalCost),   color: 'bg-orange-400' },
+          { label: 'Actual Profit',     value: fmtK(totalProfit),      color: totalProfit >= 0 ? 'bg-emerald-400' : 'bg-red-400' },
         ].map(k => (
           <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
             <div className={`mb-2 h-1.5 w-8 rounded-full ${k.color} opacity-80`} />
@@ -999,8 +1010,11 @@ function GroupsTab({
               <th className="px-3 py-3 text-left text-[11px] font-medium text-[#64748B]">Branch</th>
               <th className="px-3 py-3 text-center text-[11px] font-medium text-[#64748B]">Status</th>
               <th className="px-3 py-3 text-center text-[11px] font-medium text-[#64748B]">Students</th>
-              <SortTh col="expected_revenue"     label="Expected Rev" />
-              <SortTh col="collected_revenue"    label="Collected" />
+              <th className="px-3 py-3 text-center text-[11px] font-medium text-[#64748B]">Share %</th>
+              <SortTh col="gross_expected_revenue" label="Gross Expected" />
+              <SortTh col="gross_collected_revenue" label="Gross Collected" />
+              <SortTh col="net_expected_revenue"   label="Net Expected" />
+              <SortTh col="net_collected_revenue"  label="Net Collected" />
               <SortTh col="outstanding"          label="Outstanding" />
               <SortTh col="instructor_earned"    label="Instr. Earned" />
               <SortTh col="instructor_paid"      label="Instr. Paid" />
@@ -1028,8 +1042,15 @@ function GroupsTab({
                 <td className="px-3 py-3 text-[#64748B] whitespace-nowrap">{g.branch_name}</td>
                 <td className="px-3 py-3 text-center"><StatusBadge status={g.group_status} /></td>
                 <td className="px-3 py-3 text-center text-[#64748B]">{g.student_count}</td>
-                <td className="px-3 py-3 text-right text-[#0B1F3A]">{fmt(g.expected_revenue)}</td>
-                <td className="px-3 py-3 text-right font-medium text-emerald-700">{fmt(g.collected_revenue)}</td>
+                <td className="px-3 py-3 text-center">
+                  <span className={`font-semibold text-xs ${g.robocode_share_percent < 100 ? 'text-amber-600' : 'text-[#94A3B8]'}`}>
+                    {g.robocode_share_percent}%
+                  </span>
+                </td>
+                <td className="px-3 py-3 text-right text-[#0B1F3A]">{fmt(g.gross_expected_revenue)}</td>
+                <td className="px-3 py-3 text-right text-[#0B1F3A]">{fmt(g.gross_collected_revenue)}</td>
+                <td className="px-3 py-3 text-right font-medium text-emerald-700">{fmt(g.net_expected_revenue)}</td>
+                <td className="px-3 py-3 text-right font-medium text-emerald-700">{fmt(g.net_collected_revenue)}</td>
                 <td className="px-3 py-3 text-right text-amber-600">{fmt(g.outstanding)}</td>
                 <td className="px-3 py-3 text-right text-violet-700">{fmt(g.instructor_earned)}</td>
                 <td className="px-3 py-3 text-right text-emerald-700">{fmt(g.instructor_paid)}</td>
@@ -1053,7 +1074,7 @@ function GroupsTab({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={18} className="px-4 py-10 text-center text-sm text-[#94A3B8]">
+                <td colSpan={22} className="px-4 py-10 text-center text-sm text-[#94A3B8]">
                   No groups match your filters.
                 </td>
               </tr>
@@ -1108,10 +1129,10 @@ function BranchesTab({
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { l: 'Expected Revenue',  v: fmtK(rows.reduce((s,b) => s + b.expected_revenue,  0)), c: 'bg-slate-400' },
-          { l: 'Collected Revenue', v: fmtK(rows.reduce((s,b) => s + b.collected_revenue, 0)), c: 'bg-emerald-400' },
-          { l: 'Total Expenses',    v: fmtK(rows.reduce((s,b) => s + b.total_expenses,    0)), c: 'bg-red-400' },
-          { l: 'Actual Profit',     v: fmtK(rows.reduce((s,b) => s + b.actual_profit,     0)), c: rows.reduce((s,b) => s+b.actual_profit,0) >= 0 ? 'bg-emerald-400' : 'bg-red-400' },
+          { l: 'Gross Expected',  v: fmtK(rows.reduce((s,b) => s + b.gross_expected_revenue,  0)), c: 'bg-slate-400' },
+          { l: 'Net Collected',   v: fmtK(rows.reduce((s,b) => s + b.net_collected_revenue,   0)), c: 'bg-emerald-400' },
+          { l: 'Total Expenses',  v: fmtK(rows.reduce((s,b) => s + b.total_expenses,          0)), c: 'bg-red-400' },
+          { l: 'Actual Profit',   v: fmtK(rows.reduce((s,b) => s + b.actual_profit,           0)), c: rows.reduce((s,b) => s+b.actual_profit,0) >= 0 ? 'bg-emerald-400' : 'bg-red-400' },
         ].map(k => (
           <div key={k.l} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
             <div className={`mb-2 h-1.5 w-8 rounded-full ${k.c} opacity-80`} />
@@ -1144,8 +1165,8 @@ function BranchesTab({
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <div><p className="text-[#94A3B8]">Expected</p><p className="font-semibold text-[#0B1F3A]">{fmt(b.expected_revenue)}</p></div>
-              <div><p className="text-[#94A3B8]">Collected</p><p className="font-semibold text-emerald-700">{fmt(b.collected_revenue)}</p></div>
+              <div><p className="text-[#94A3B8]">Gross Expected</p><p className="font-semibold text-[#0B1F3A]">{fmt(b.gross_expected_revenue)}</p></div>
+              <div><p className="text-[#94A3B8]">Net Collected</p><p className="font-semibold text-emerald-700">{fmt(b.net_collected_revenue)}</p></div>
               <div><p className="text-[#94A3B8]">Outstanding</p><p className="font-semibold text-amber-600">{fmt(b.outstanding)}</p></div>
               <div><p className="text-[#94A3B8]">Total Expenses</p><p className="font-semibold text-red-600">{fmt(b.total_expenses)}</p></div>
             </div>
@@ -1282,7 +1303,7 @@ function AcademyTab({
   const [addOpen, setAddOpen] = useState(false)
   const acExp = expenses.filter(e => e.expense_scope === 'ACADEMY')
   const acRec = recurring.filter(r => r.expense_scope === 'ACADEMY')
-  const maxBar = Math.max(...pnl.monthly_trend.map(m => Math.max(m.collected_revenue, m.total_expenses)), 1)
+  const maxBar = Math.max(...pnl.monthly_trend.map(m => Math.max(m.net_collected_revenue, m.total_expenses)), 1)
 
   return (
     <div className="space-y-5">
@@ -1299,10 +1320,10 @@ function AcademyTab({
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
-          { l: 'Expected Revenue',  v: fmtK(pnl.expected_revenue),  c: 'bg-slate-400' },
-          { l: 'Collected Revenue', v: fmtK(pnl.collected_revenue), c: 'bg-emerald-400' },
-          { l: 'Outstanding',       v: fmtK(pnl.outstanding),       c: 'bg-amber-400' },
-          { l: 'Total Expenses',    v: fmtK(pnl.total_expenses),    c: 'bg-red-400' },
+          { l: 'Gross Expected',    v: fmtK(pnl.gross_expected_revenue),  c: 'bg-slate-400' },
+          { l: 'Net Collected',     v: fmtK(pnl.net_collected_revenue),   c: 'bg-emerald-400' },
+          { l: 'Outstanding',       v: fmtK(pnl.outstanding),             c: 'bg-amber-400' },
+          { l: 'Total Expenses',    v: fmtK(pnl.total_expenses),          c: 'bg-red-400' },
           { l: 'Expected Profit',   v: fmtK(pnl.expected_profit),   c: pnl.expected_profit >= 0 ? 'bg-emerald-400' : 'bg-red-400', neg: pnl.expected_profit < 0 },
           { l: 'Actual Profit',     v: fmtK(pnl.actual_profit),     c: pnl.actual_profit >= 0 ? 'bg-emerald-400' : 'bg-red-400',   neg: pnl.actual_profit < 0 },
         ].map(k => (
@@ -1343,7 +1364,7 @@ function AcademyTab({
         <div className="p-5">
           <div className="flex items-end gap-3">
             {pnl.monthly_trend.map(m => {
-              const cH = maxBar > 0 ? Math.round((m.collected_revenue / maxBar) * 100) : 2
+              const cH = maxBar > 0 ? Math.round((m.net_collected_revenue / maxBar) * 100) : 2
               const eH = maxBar > 0 ? Math.round((m.total_expenses / maxBar) * 100) : 2
               return (
                 <div key={m.month} className="flex flex-1 flex-col items-center gap-1.5">

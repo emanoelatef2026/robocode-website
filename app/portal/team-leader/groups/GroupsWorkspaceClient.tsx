@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import GroupFormModal from './GroupFormModal'
 import EnrollmentWizard from '../finance/EnrollmentWizard'
@@ -695,6 +695,7 @@ function GroupStudentsTable({
                 className="h-3.5 w-3.5 cursor-pointer rounded border-[#CBD5E1] accent-[#FF8A1F]"
               />
             </th>
+            <th className="w-7 px-1 py-2 text-center text-[11px] font-semibold text-[#94A3B8]">#</th>
             <th className="px-3 py-2 text-left text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Student</th>
             <th className="px-2 py-2 text-center text-[11px] font-semibold text-[#64748B]">Age</th>
             <th className="px-3 py-2 text-left text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Stu. Phone</th>
@@ -709,7 +710,7 @@ function GroupStudentsTable({
           </tr>
         </thead>
         <tbody>
-          {sorted.map(s => {
+          {sorted.map((s, idx) => {
             const isSelected = selectedIds.has(s.student_id)
 
             const attColor = s.attendance_pct >= 75 ? 'text-green-600'
@@ -743,6 +744,11 @@ function GroupStudentsTable({
                     onChange={() => onToggleStudent(s.student_id)}
                     className="h-3.5 w-3.5 cursor-pointer rounded border-[#CBD5E1] accent-[#FF8A1F]"
                   />
+                </td>
+
+                {/* # */}
+                <td className="w-7 px-1 py-1.5 text-center text-[11px] font-semibold text-[#94A3B8]">
+                  {idx + 1}
                 </td>
 
                 {/* Student — name + code + att% */}
@@ -2186,6 +2192,22 @@ function EmptyWorkspace() {
 }
 
 // ════════════════════════════════════════════════════════════════════
+//  PAGE-LEVEL KPI CARDS
+// ════════════════════════════════════════════════════════════════════
+
+function buildPageKpis(groups: GroupOperationalRow[]) {
+  const totalStudents = groups.reduce((s, g) => s + (g.student_count ?? 0), 0)
+  return [
+    { label: 'Total Groups', value: groups.length,                                                             dotColor: 'bg-slate-400',   bgColor: 'bg-white',         valueColor: 'text-[#0B1F3A]'  },
+    { label: 'Active',       value: groups.filter(g => g.status === 'active').length,                          dotColor: 'bg-emerald-400', bgColor: 'bg-emerald-50/60', valueColor: 'text-emerald-700' },
+    { label: 'Forming',      value: groups.filter(g => g.status === 'forming').length,                         dotColor: 'bg-blue-400',    bgColor: 'bg-blue-50/60',    valueColor: 'text-blue-700'    },
+    { label: 'Completed',    value: groups.filter(g => g.status === 'completed').length,                       dotColor: 'bg-slate-400',   bgColor: 'bg-slate-50',      valueColor: 'text-slate-600'   },
+    { label: 'Archived',     value: groups.filter(g => g.status === 'cancelled' || g.status === 'archived').length, dotColor: 'bg-red-300', bgColor: 'bg-red-50/60',    valueColor: 'text-red-600'     },
+    { label: 'Students',     value: totalStudents,                                                             dotColor: 'bg-violet-400',  bgColor: 'bg-violet-50/60',  valueColor: 'text-violet-700'  },
+  ]
+}
+
+// ════════════════════════════════════════════════════════════════════
 //  MAIN COMPONENT
 // ════════════════════════════════════════════════════════════════════
 
@@ -2195,10 +2217,11 @@ interface Props {
   studentOptions:  GroupStudentOption[]
   defaultBranchId: string
   isTL:            boolean
+  showPageHeader?: boolean
 }
 
 export default function GroupsWorkspaceClient({
-  groups, options, studentOptions, defaultBranchId, isTL,
+  groups, options, studentOptions, defaultBranchId, isTL, showPageHeader = false,
 }: Props) {
   const router = useRouter()
 
@@ -2210,6 +2233,56 @@ export default function GroupsWorkspaceClient({
   const [modalMode, setModalMode]             = useState<'create' | 'edit'>('create')
   const [editGroup, setEditGroup]             = useState<GroupOperationalRow | undefined>()
   const [mobilePanel, setMobilePanel]         = useState<'list' | 'detail'>('list')
+
+  // Resizable panel
+  const containerRef   = useRef<HTMLDivElement>(null)
+  const isDraggingRef  = useRef(false)
+  const panelWidthRef  = useRef(30)
+  const [panelWidth, setPanelWidth] = useState(30)
+  const [isDesktop, setIsDesktop]   = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('groups_panel_width')
+    if (stored) {
+      const w = Number(stored)
+      if (w >= 15 && w <= 45) { setPanelWidth(w); panelWidthRef.current = w }
+    }
+    const mq = window.matchMedia('(min-width: 768px)')
+    setIsDesktop(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  function handleDividerMouseDown(e: React.MouseEvent) {
+    e.preventDefault()
+    isDraggingRef.current = true
+    function onMouseMove(ev: MouseEvent) {
+      if (!isDraggingRef.current || !containerRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
+      const minPct = (250 / rect.width) * 100
+      const newW = Math.max(minPct, Math.min(45, ((ev.clientX - rect.left) / rect.width) * 100))
+      panelWidthRef.current = newW
+      setPanelWidth(newW)
+    }
+    function onMouseUp() {
+      isDraggingRef.current = false
+      localStorage.setItem('groups_panel_width', String(Math.round(panelWidthRef.current)))
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }
+
+  function handleDividerDoubleClick() {
+    setPanelWidth(prev => {
+      const next = prev < 25 ? 30 : prev < 35 ? 40 : 20
+      panelWidthRef.current = next
+      localStorage.setItem('groups_panel_width', String(next))
+      return next
+    })
+  }
 
   const visible = applyFilters(groups, filters)
   const kpis    = buildKpis(groups)
@@ -2251,29 +2324,56 @@ export default function GroupsWorkspaceClient({
   }
 
   return (
-    <div className="flex flex-col h-full gap-2">
+    <div className="flex flex-col h-full gap-3">
 
-      {/* ── Compact KPI strip — single row — hidden on mobile ─────── */}
-      <div className="hidden md:flex items-center gap-5 bg-white border border-[#E2E8F0] rounded-xl px-4 py-2 shrink-0 flex-wrap">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Overview</span>
-        <div className="h-4 w-px bg-[#E2E8F0]" />
-        {kpis.map(k => (
-          <div key={k.label} className="flex items-center gap-1.5">
-            <span className={`h-2 w-2 rounded-full ${k.color} shrink-0`} />
-            <span className="text-[13px] font-bold text-[#0B1F3A]">{k.value}</span>
-            <span className="text-[11px] text-[#94A3B8]">{k.label}</span>
+      {/* ── Page header (showPageHeader mode) ───────────────────────── */}
+      {showPageHeader && (
+        <div className="shrink-0">
+          <div className="mb-3">
+            <h1 className="text-[22px] font-bold text-[#0B1F3A] leading-tight">Groups</h1>
+            <p className="text-[13px] text-[#64748B] mt-0.5">Manage academy groups, students and operations</p>
           </div>
-        ))}
-      </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {buildPageKpis(groups).map(k => (
+              <div key={k.label} className={`rounded-xl border border-[#E2E8F0] ${k.bgColor} p-3`}>
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <span className={`h-2 w-2 rounded-full ${k.dotColor} shrink-0`} />
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{k.label}</p>
+                </div>
+                <p className={`text-[22px] font-bold leading-none ${k.valueColor}`}>{k.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Compact KPI strip — only when no page header ────────────── */}
+      {!showPageHeader && (
+        <div className="hidden md:flex items-center gap-5 bg-white border border-[#E2E8F0] rounded-xl px-4 py-2 shrink-0 flex-wrap">
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Overview</span>
+          <div className="h-4 w-px bg-[#E2E8F0]" />
+          {kpis.map(k => (
+            <div key={k.label} className="flex items-center gap-1.5">
+              <span className={`h-2 w-2 rounded-full ${k.color} shrink-0`} />
+              <span className="text-[13px] font-bold text-[#0B1F3A]">{k.value}</span>
+              <span className="text-[11px] text-[#94A3B8]">{k.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* ── Split panel workspace ────────────────────────────────────── */}
-      <div className="flex-1 min-h-0 flex overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
+      <div ref={containerRef} className="flex-1 min-h-0 flex overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
 
-        {/* Left sidebar — full on mobile, 320px on desktop */}
-        <div className={[
-          'w-full md:w-80 shrink-0 border-r border-[#E2E8F0] overflow-hidden flex flex-col',
-          mobilePanel === 'detail' ? 'hidden md:flex' : 'flex',
-        ].join(' ')}>
+        {/* Left panel — resizable on desktop */}
+        <div
+          className={[
+            'shrink-0 border-r border-[#E2E8F0] overflow-hidden flex flex-col',
+            mobilePanel === 'detail' ? 'hidden md:flex' : 'flex',
+            !isDesktop ? 'w-full' : '',
+          ].join(' ')}
+          style={isDesktop ? { width: `${panelWidth}%` } : undefined}
+        >
           <GroupSidebar
             groups={visible}
             allGroups={groups}
@@ -2285,6 +2385,16 @@ export default function GroupsWorkspaceClient({
             isTL={isTL}
             onCreateGroup={openCreate}
           />
+        </div>
+
+        {/* Resizable divider — desktop only */}
+        <div
+          className="hidden md:flex w-1 shrink-0 cursor-col-resize flex-col items-center justify-center bg-[#F1F5F9] hover:bg-[#FF8A1F]/20 active:bg-[#FF8A1F]/30 transition-colors select-none group"
+          onMouseDown={handleDividerMouseDown}
+          onDoubleClick={handleDividerDoubleClick}
+          title="Drag to resize · Double-click to cycle widths (20 / 30 / 40%)"
+        >
+          <div className="h-8 w-0.5 rounded-full bg-[#CBD5E1] group-hover:bg-[#FF8A1F]/70 transition-colors" />
         </div>
 
         {/* Right workspace */}

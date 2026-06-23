@@ -46,7 +46,7 @@ export async function listGroups({
     .from('groups')
     .select(
       `id, branch_id, name, code, type, capacity, status,
-       start_date, day_of_week, time,
+       start_date, day_of_week, time, robocode_share_percent,
        branches!groups_branch_id_fkey(name),
        group_instructors!group_instructors_group_id_fkey(
          role,
@@ -86,19 +86,20 @@ export async function listGroups({
       : null
 
     return {
-      id:              row.id,
-      branch_id:       row.branch_id,
-      name:            row.name,
-      code:            row.code,
-      type:            row.type,
-      capacity:        row.capacity,
-      status:          row.status,
-      start_date:      row.start_date  ?? null,
-      day_of_week:     row.day_of_week ?? null,
-      time:            row.time        ?? null,
-      branch_name:     row.branches?.name ?? '',
-      student_count:   0,
-      instructor_name: instructorName,
+      id:                     row.id,
+      branch_id:              row.branch_id,
+      name:                   row.name,
+      code:                   row.code,
+      type:                   row.type,
+      capacity:               row.capacity,
+      status:                 row.status,
+      start_date:             row.start_date  ?? null,
+      day_of_week:            row.day_of_week ?? null,
+      time:                   row.time        ?? null,
+      robocode_share_percent: Number(row.robocode_share_percent ?? 100),
+      branch_name:            row.branches?.name ?? '',
+      student_count:          0,
+      instructor_name:        instructorName,
     }
   })
 

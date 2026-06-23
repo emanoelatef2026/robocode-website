@@ -639,11 +639,15 @@ export interface GroupPnL {
   course_name:            string | null
   instructor_name:        string | null
   student_count:          number
-  // Revenue
-  expected_revenue:       number
-  collected_revenue:      number
-  outstanding:            number
-  collection_rate:        number
+  // Revenue — GROSS (full student contract value)
+  robocode_share_percent:  number   // Phase XXXII: 0–100, default 100
+  gross_expected_revenue:  number   // sum of student_financial_accounts.net_amount
+  gross_collected_revenue: number   // sum of paid_amount
+  outstanding:             number
+  collection_rate:         number   // based on gross
+  // Revenue — NET (Robocode's share only)
+  net_expected_revenue:    number   // gross_expected  × share% / 100
+  net_collected_revenue:   number   // gross_collected × share% / 100
   // Instructor accrual (Phase XXX)
   total_sessions:         number   // from group_courses.total_sessions (planned)
   completed_sessions:     number   // count of schedules with status='completed'
@@ -659,70 +663,81 @@ export interface GroupPnL {
   recurring_expenses:     number
   other_expenses:         number   // manual + recurring
   total_expenses:         number   // final_instructor_cost + other_expenses
-  // Profit
-  expected_profit:        number   // expected_revenue - total_expenses
-  actual_profit:          number   // collected_revenue - (instructor_earned + other_expenses)
+  // Profit (Phase XXXII: uses NET revenue — not gross)
+  expected_profit:        number   // net_expected_revenue  - total_expenses
+  actual_profit:          number   // net_collected_revenue - (instructor_earned + other_expenses)
 }
 
 export interface BranchPnL {
-  branch_id:                  string
-  branch_name:                string
-  student_count:              number
-  group_count:                number
-  expected_revenue:           number
-  collected_revenue:          number
-  outstanding:                number
-  collection_rate:            number
+  branch_id:                   string
+  branch_name:                 string
+  student_count:               number
+  group_count:                 number
+  // Revenue — GROSS (full student contract value)
+  gross_expected_revenue:      number
+  gross_collected_revenue:     number
+  outstanding:                 number
+  collection_rate:             number   // gross-based
+  // Revenue — NET (Robocode's share, weighted by each group's share%)
+  net_expected_revenue:        number
+  net_collected_revenue:       number
   // Instructor accrual (Phase XXX)
-  instructor_earned:          number
-  instructor_paid:            number
-  instructor_remaining:       number
-  future_liability:           number
-  final_instructor_cost:      number
+  instructor_earned:           number
+  instructor_paid:             number
+  instructor_remaining:        number
+  future_liability:            number
+  final_instructor_cost:       number
   // Expenses
-  branch_expenses:            number
-  branch_recurring_expenses:  number
-  group_expenses:             number
-  group_recurring_expenses:   number
-  total_expenses:             number
-  expected_profit:            number
-  actual_profit:              number
+  branch_expenses:             number
+  branch_recurring_expenses:   number
+  group_expenses:              number
+  group_recurring_expenses:    number
+  total_expenses:              number
+  // Profit (Phase XXXII: uses NET revenue)
+  expected_profit:             number
+  actual_profit:               number
 }
 
 export interface AcademyPnL {
-  expected_revenue:           number
-  collected_revenue:          number
-  outstanding:                number
-  collection_rate:            number
+  // Revenue — GROSS (full student contract value)
+  gross_expected_revenue:      number
+  gross_collected_revenue:     number
+  outstanding:                 number
+  collection_rate:             number   // gross-based
+  // Revenue — NET (Robocode's share, weighted by each group's share%)
+  net_expected_revenue:        number
+  net_collected_revenue:       number
   // Instructor accrual (Phase XXX)
-  instructor_earned:          number
-  instructor_paid:            number
-  instructor_remaining:       number
-  future_liability:           number
-  final_instructor_cost:      number
+  instructor_earned:           number
+  instructor_paid:             number
+  instructor_remaining:        number
+  future_liability:            number
+  final_instructor_cost:       number
   // Expenses
-  branch_expenses:            number
-  branch_recurring_expenses:  number
-  group_expenses:             number
-  group_recurring_expenses:   number
-  academy_expenses:           number
-  academy_recurring_expenses: number
-  total_expenses:             number
-  expected_profit:            number
-  actual_profit:              number
-  monthly_trend:              MonthlyPnL[]
+  branch_expenses:             number
+  branch_recurring_expenses:   number
+  group_expenses:              number
+  group_recurring_expenses:    number
+  academy_expenses:            number
+  academy_recurring_expenses:  number
+  total_expenses:              number
+  // Profit (Phase XXXII: uses NET revenue)
+  expected_profit:             number
+  actual_profit:               number
+  monthly_trend:               MonthlyPnL[]
 }
 
 export interface MonthlyPnL {
-  month:             string
-  label:             string
-  expected_revenue:  number
-  collected_revenue: number
-  instructor_earned: number
-  other_expenses:    number
-  total_expenses:    number
-  expected_profit:   number
-  actual_profit:     number
+  month:                   string
+  label:                   string
+  gross_expected_revenue:  number   // approximation (total / 6 months)
+  gross_collected_revenue: number   // raw payments for the month
+  net_collected_revenue:   number   // payments × per-group share%
+  instructor_earned:       number
+  other_expenses:          number
+  total_expenses:          number
+  expected_profit:         number   // gross_expected / 6 × avg_share% - total_expenses
+  actual_profit:           number   // net_collected - total_expenses
 }
 
 export const EXPENSE_TYPE_LABELS: Record<ExpenseType, string> = {

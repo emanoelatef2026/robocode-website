@@ -12,6 +12,7 @@ export const createGroupSchema = z.object({
   time:         z.string().regex(/^\d{2}:\d{2}$/, 'Use HH:MM format').optional().or(z.literal('')),
   notes:        z.string().max(2000).optional().or(z.literal('')),
   instructor_id: z.string().uuid().optional().or(z.literal('')),
+  robocode_share_percent: z.coerce.number().min(0, 'Share % must be 0–100').max(100, 'Share % must be 0–100').optional(),
 })
 
 export const updateGroupSchema = createGroupSchema.extend({

@@ -30,6 +30,9 @@ const baseFields = {
   // Academic plan — stored on group_courses, not groups
   planned_sessions: z.coerce.number().int().positive().max(9999).optional().or(emptyStr).transform(v => v === '' ? undefined : v as number | undefined),
   open_ended:       z.string().optional().transform(v => v === 'true' || v === 'on'),
+  // Phase XXXII: revenue share — 0–100, default 100 (Robocode keeps 100%)
+  robocode_share_percent: z.coerce.number().min(0, 'Share % must be 0–100').max(100, 'Share % must be 0–100')
+    .optional().or(emptyStr).transform(v => v === '' ? undefined : v as number | undefined),
 }
 
 export const createSchema = z.object(baseFields)

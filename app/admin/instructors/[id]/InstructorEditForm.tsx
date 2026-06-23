@@ -77,7 +77,7 @@ export default function InstructorEditForm({
     const grp = assignedGroups.find((g) => g.id === groupId)
     if (!grp) return
     setAssigned((prev) => prev.filter((g) => g.id !== groupId))
-    setAvailable((prev) => [...prev, { id: grp.id, branch_id: grp.branch_id, name: grp.name, code: grp.code, type: grp.type as any, capacity: null, status: grp.status as any, start_date: null, day_of_week: null, time: null, branch_name: grp.branch_name, student_count: grp.student_count, instructor_name: null }])
+    setAvailable((prev) => [...prev, { id: grp.id, branch_id: grp.branch_id, name: grp.name, code: grp.code, type: grp.type as any, capacity: null, status: grp.status as any, start_date: null, day_of_week: null, time: null, robocode_share_percent: 100, branch_name: grp.branch_name, student_count: grp.student_count, instructor_name: null }])
     startTransition(async () => {
       const res = await removeGroupFromInstructor(instructor.id, groupId)
       if (!res.success) {

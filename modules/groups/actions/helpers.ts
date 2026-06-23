@@ -23,6 +23,7 @@ export function buildGroupInsert(data: GroupCoreInput): Record<string, unknown> 
     time:        data.start_time   ?? null,
     start_date:  data.start_date   ?? null,
     notes:       data.notes        ?? null,
+    robocode_share_percent: data.robocode_share_percent ?? 100,
   }
   if (data.duration_minutes !== undefined) base.duration_minutes = data.duration_minutes
   if (data.end_date)                        base.end_date         = data.end_date
@@ -45,6 +46,7 @@ export function buildGroupUpdate(data: GroupUpdateCore): Record<string, unknown>
   }
   if ('status' in data && data.status)           upd.status           = data.status
   if (data.duration_minutes !== undefined)        upd.duration_minutes = data.duration_minutes
+  if (data.robocode_share_percent !== undefined)  upd.robocode_share_percent = data.robocode_share_percent
   return upd
 }
 

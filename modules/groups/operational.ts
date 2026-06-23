@@ -55,6 +55,8 @@ export interface GroupOperationalRow {
   // Academic plan — owned by the group, not derived from the course
   planned_sessions:      number | null
   open_ended:            boolean
+  // Phase XXXII: revenue share (0–100, default 100)
+  robocode_share_percent: number
 }
 
 export interface EnrolledStudentBasic {
@@ -90,11 +92,11 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
   if (!branchIds.length) return []
   const db = createServiceClient()
 
-  const { data: groups } = await db
+  const { data: groups, error: groupsError } = await db
     .from('groups')
     .select(`
       id, branch_id, name, code, type, capacity, status,
-      start_date, day_of_week, time, notes, completed_sessions,
+      start_date, day_of_week, time, notes, completed_sessions, robocode_share_percent,
       branches!groups_branch_id_fkey(name),
       group_instructors!group_instructors_group_id_fkey(
         instructor_id, role, from_session, to_session, allocation_status,
@@ -108,6 +110,11 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
     .in('branch_id', branchIds)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
+
+  if (groupsError) {
+    console.error('[listGroupsOperational] groups query failed:', groupsError.message, groupsError.details)
+    throw new Error(`Failed to load groups: ${groupsError.message}`)
+  }
 
   const groupRows = (groups ?? []) as any[]
   if (!groupRows.length) return []
@@ -130,7 +137,8 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
         )
       `)
       .in('group_id', groupIds)
-      .eq('status', 'active'),
+      .eq('status', 'active')
+      .order('joined_at', { ascending: true }),
     db.from('groups')
       .select('id, duration_minutes, end_date, meeting_link')
       .in('id', groupIds),
@@ -250,8 +258,9 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
       is_low_capacity:      capacityPct !== null && capacityPct < 50 && studentCount > 0,
       is_overloaded:        capacityPct !== null && capacityPct >= 90,
       starts_soon:          startsSoon,
-      enrolled_students:    enrolledMap.get(g.id) ?? [],
-      completed_sessions:   (g.completed_sessions as number) ?? 0,
+      enrolled_students:      enrolledMap.get(g.id) ?? [],
+      completed_sessions:     (g.completed_sessions as number) ?? 0,
+      robocode_share_percent: Number(g.robocode_share_percent ?? 100),
     }
   })
 }

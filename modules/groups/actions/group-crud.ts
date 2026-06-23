@@ -17,7 +17,8 @@ export async function createGroupModal(
   const raw = Object.fromEntries(
     ['branch_id','name','type','capacity','day_of_week','start_time','duration_minutes',
      'start_date','end_date','meeting_link','notes','course_id','instructor_id',
-     'asst_instructor_id','students_to_add_json','planned_sessions','open_ended']
+     'asst_instructor_id','students_to_add_json','planned_sessions','open_ended',
+     'robocode_share_percent']
       .map(k => [k, formData.get(k) ?? '']),
   )
 
@@ -77,7 +78,7 @@ export async function updateGroupModal(
     ['id','branch_id','name','type','status','capacity','day_of_week','start_time',
      'duration_minutes','start_date','end_date','meeting_link','notes','course_id',
      'instructor_id','asst_instructor_id','students_to_add_json','students_to_remove_json',
-     'planned_sessions','open_ended']
+     'planned_sessions','open_ended','robocode_share_percent']
       .map(k => [k, formData.get(k) ?? '']),
   )
 

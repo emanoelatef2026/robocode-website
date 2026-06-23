@@ -21,15 +21,16 @@ function validReturnTo(raw: FormDataEntryValue | null): string | null {
 
 export async function createGroup(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
   const raw = {
-    branch_id:     formData.get('branch_id'),
-    name:          formData.get('name'),
-    type:          formData.get('type'),
-    capacity:      formData.get('capacity') || undefined,
-    start_date:    formData.get('start_date') || undefined,
-    day_of_week:   formData.get('day_of_week') || undefined,
-    time:          formData.get('time') || undefined,
-    notes:         formData.get('notes') || undefined,
-    instructor_id: formData.get('instructor_id') || undefined,
+    branch_id:              formData.get('branch_id'),
+    name:                   formData.get('name'),
+    type:                   formData.get('type'),
+    capacity:               formData.get('capacity') || undefined,
+    start_date:             formData.get('start_date') || undefined,
+    day_of_week:            formData.get('day_of_week') || undefined,
+    time:                   formData.get('time') || undefined,
+    notes:                  formData.get('notes') || undefined,
+    instructor_id:          formData.get('instructor_id') || undefined,
+    robocode_share_percent: formData.get('robocode_share_percent') || undefined,
   }
 
   const parsed = createGroupSchema.safeParse(raw)
@@ -40,7 +41,7 @@ export async function createGroup(_prev: unknown, formData: FormData): Promise<A
   const user = await requirePermission('manage_groups', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
 
-  const { branch_id, name, type, capacity, start_date, day_of_week, time, notes, instructor_id } = parsed.data
+  const { branch_id, name, type, capacity, start_date, day_of_week, time, notes, instructor_id, robocode_share_percent } = parsed.data
 
   const { data: group, error } = await db
     .from('groups')
@@ -48,12 +49,13 @@ export async function createGroup(_prev: unknown, formData: FormData): Promise<A
       branch_id,
       name,
       type,
-      capacity:    capacity ?? null,
-      status:      'forming',
-      start_date:  start_date  || null,
-      day_of_week: day_of_week || null,
-      time:        time        || null,
-      notes:       notes       || null,
+      capacity:               capacity ?? null,
+      status:                 'forming',
+      start_date:             start_date  || null,
+      day_of_week:            day_of_week || null,
+      time:                   time        || null,
+      notes:                  notes       || null,
+      robocode_share_percent: robocode_share_percent ?? 100,
     })
     .select('id')
     .single()
@@ -89,15 +91,16 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
   const db   = createServiceClient()
 
   const raw = {
-    id:          formData.get('id'),
-    name:        formData.get('name'),
-    type:        formData.get('type'),
-    capacity:    formData.get('capacity') || undefined,
-    status:      formData.get('status') || undefined,
-    start_date:  formData.get('start_date') || undefined,
-    day_of_week: formData.get('day_of_week') || undefined,
-    time:        formData.get('time') || undefined,
-    notes:       formData.get('notes') || undefined,
+    id:                     formData.get('id'),
+    name:                   formData.get('name'),
+    type:                   formData.get('type'),
+    capacity:               formData.get('capacity') || undefined,
+    status:                 formData.get('status') || undefined,
+    start_date:             formData.get('start_date') || undefined,
+    day_of_week:            formData.get('day_of_week') || undefined,
+    time:                   formData.get('time') || undefined,
+    notes:                  formData.get('notes') || undefined,
+    robocode_share_percent: formData.get('robocode_share_percent') || undefined,
   }
 
   const parsed = updateGroupSchema.safeParse(raw)
@@ -105,7 +108,7 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { id, name, type, capacity, status, start_date, day_of_week, time, notes } = parsed.data
+  const { id, name, type, capacity, status, start_date, day_of_week, time, notes, robocode_share_percent } = parsed.data
 
   const { data: existing } = await db.from('groups').select('branch_id').eq('id', id).single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
@@ -114,12 +117,13 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
   }
 
   const updates: Record<string, unknown> = { name, type }
-  if (capacity !== undefined)    updates.capacity    = capacity ?? null
-  if (status)                    updates.status      = status
-  if (start_date  !== undefined) updates.start_date  = start_date  || null
-  if (day_of_week !== undefined) updates.day_of_week = day_of_week || null
-  if (time        !== undefined) updates.time        = time        || null
-  if (notes       !== undefined) updates.notes       = notes       || null
+  if (capacity !== undefined)               updates.capacity               = capacity ?? null
+  if (status)                               updates.status                 = status
+  if (start_date  !== undefined)            updates.start_date             = start_date  || null
+  if (day_of_week !== undefined)            updates.day_of_week            = day_of_week || null
+  if (time        !== undefined)            updates.time                   = time        || null
+  if (notes       !== undefined)            updates.notes                  = notes       || null
+  if (robocode_share_percent !== undefined) updates.robocode_share_percent = robocode_share_percent
 
   const { error } = await db.from('groups').update(updates).eq('id', id)
   if (error) {
@@ -139,7 +143,7 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
   revalidatePath(`/admin/groups/${id}`)
   revalidatePath('/portal/team-leader/groups')
   revalidatePath(`/portal/team-leader/groups/${id}`)
-  redirect(returnTo ?? '/admin/groups')
+  redirect(returnTo ?? `/admin/groups/${id}`)
 }
 
 export async function deleteGroup(id: string): Promise<ActionResult<void>> {

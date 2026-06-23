@@ -805,17 +805,18 @@ export default function GroupFormModal({
   const addJson       = JSON.stringify(studentsToAdd)
   const removeJson    = JSON.stringify(toRemove)
 
-  const name        = group?.name             ?? ''
-  const type        = group?.type             ?? 'class'
-  const status      = group?.status           ?? 'forming'
-  const capacity    = group?.capacity         ?? ''
-  const dayOfWeek   = group?.day_of_week      ?? ''
-  const startTime   = group?.start_time       ?? ''
-  const durationMin = group?.duration_minutes ?? ''
-  const startDate   = group?.start_date       ?? ''
-  const endDate     = group?.end_date         ?? ''
-  const meetingLink = group?.meeting_link     ?? ''
-  const notes       = group?.notes            ?? ''
+  const name        = group?.name                  ?? ''
+  const type        = group?.type                  ?? 'class'
+  const status      = group?.status                ?? 'forming'
+  const capacity    = group?.capacity              ?? ''
+  const dayOfWeek   = group?.day_of_week           ?? ''
+  const startTime   = group?.start_time            ?? ''
+  const durationMin = group?.duration_minutes      ?? ''
+  const startDate   = group?.start_date            ?? ''
+  const endDate     = group?.end_date              ?? ''
+  const meetingLink = group?.meeting_link          ?? ''
+  const notes       = group?.notes                 ?? ''
+  const sharePercent = group?.robocode_share_percent ?? 100
 
   const selectedCourse       = options.courses.find(c => c.id === selectedCourseId)
   const courseRecommendation = selectedCourse?.recommended_sessions ?? null
@@ -905,6 +906,26 @@ export default function GroupFormModal({
                 <textarea name="notes" defaultValue={notes} rows={2}
                   className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20 resize-none"
                   placeholder="Optional notes…" />
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">
+                  Robocode Share %
+                  <span className="ml-1.5 text-[11px] font-normal text-[#94A3B8]">0–100 · default 100</span>
+                </label>
+                <input
+                  name="robocode_share_percent"
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.01}
+                  defaultValue={sharePercent}
+                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                  placeholder="100"
+                />
+                <p className="mt-1 text-[11px] text-[#94A3B8]">
+                  % of collected revenue that belongs to Robocode. Use 100 for standard groups; set lower for partnership groups.
+                </p>
               </div>
             </div>
           </section>
@@ -1092,34 +1113,39 @@ export default function GroupFormModal({
             </div>
 
             {links.length > 0 && (
-              <div className="mb-3 space-y-1.5">
-                {links.map(l => (
-                  <div key={l._key} className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5">
-                    <div className="flex items-start gap-2">
-                      <div className="min-w-0 flex-1 space-y-0.5">
-                        <div className="text-[13px] font-semibold text-[#0B1F3A]">{l.student_name}</div>
-                        <div className="text-[11px] text-[#64748B]">{l.student_code ?? '—'}{' • '}{l.age != null ? `${l.age}y` : '—'}</div>
-                        <div className="font-mono text-[11px] text-[#374151]">{l.phone ?? '—'}</div>
-                        <div className="font-mono text-[11px] text-[#374151]">Parent: {l.parent_phone ?? '—'}</div>
-                        <div className="text-[11px] text-[#94A3B8]">{l.branch_name}</div>
-                        <div className="flex flex-wrap items-center gap-x-2 text-[11px]">
-                          {l.sessions_remaining != null
-                            ? <span className={sessColor(l.sessions_remaining)}>{l.sessions_remaining} sessions left</span>
-                            : <span className="text-[#94A3B8]">— sessions left</span>
-                          }
-                          {l.attendance_pct != null && (
-                            <span className={attColor(l.attendance_pct)}>· {l.attendance_pct}% att.</span>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeLink(l.student_id)}
-                        className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[#94A3B8] hover:bg-[#E2E8F0] hover:text-[#374151] transition"
-                      >
-                        ×
-                      </button>
+              <div className="mb-3 overflow-hidden rounded-lg border border-[#E2E8F0]">
+                {/* Header row */}
+                <div className="flex items-center gap-2 border-b border-[#E2E8F0] bg-[#F1F5F9] px-2 py-1">
+                  <span className="w-6 shrink-0 text-center text-[10px] font-semibold text-[#94A3B8]">#</span>
+                  <span className="flex-1 text-[10px] font-semibold text-[#94A3B8]">Name · Code · Age</span>
+                  <span className="hidden w-28 shrink-0 text-[10px] font-semibold text-[#94A3B8] sm:block">Phone</span>
+                  <span className="hidden w-28 shrink-0 text-[10px] font-semibold text-[#94A3B8] sm:block">Parent</span>
+                  <span className="w-14 shrink-0 text-right text-[10px] font-semibold text-[#94A3B8]">Sess.</span>
+                  <span className="w-5 shrink-0" />
+                </div>
+                {links.map((l, idx) => (
+                  <div key={l._key} className="flex items-center gap-2 border-b border-[#E2E8F0] bg-white px-2 py-1.5 last:border-0 hover:bg-[#F8FAFC]">
+                    <span className="w-6 shrink-0 text-center text-[11px] font-semibold text-[#94A3B8]">{idx + 1}</span>
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[12px] font-semibold text-[#0B1F3A]">{l.student_name}</span>
+                      {l.student_code && <span className="ml-1.5 font-mono text-[11px] text-[#94A3B8]">{l.student_code}</span>}
+                      {l.age != null && <span className="ml-1 text-[11px] text-[#64748B]">· {l.age}y</span>}
+                      {l.attendance_pct != null && (
+                        <span className={`ml-1.5 text-[11px] ${attColor(l.attendance_pct)}`}>{l.attendance_pct}%</span>
+                      )}
                     </div>
+                    <span className="hidden w-28 shrink-0 font-mono text-[11px] text-[#374151] sm:block truncate">{l.phone ?? '—'}</span>
+                    <span className="hidden w-28 shrink-0 font-mono text-[11px] text-[#64748B] sm:block truncate">{l.parent_phone ?? '—'}</span>
+                    <span className={`w-14 shrink-0 text-right text-[11px] ${sessColor(l.sessions_remaining)}`}>
+                      {l.sessions_remaining != null ? `${l.sessions_remaining} left` : '—'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeLink(l.student_id)}
+                      className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[#94A3B8] hover:bg-[#E2E8F0] hover:text-[#374151] transition"
+                    >
+                      ×
+                    </button>
                   </div>
                 ))}
               </div>

@@ -14,6 +14,7 @@ export interface Group {
   day_of_week: string | null
   time: string | null
   notes: string | null
+  robocode_share_percent: number
   metadata: Record<string, unknown>
   deleted_at: string | null
   created_at: string
@@ -35,6 +36,7 @@ export interface GroupListItem {
   start_date: string | null
   day_of_week: string | null
   time: string | null
+  robocode_share_percent: number
   branch_name: string
   student_count: number
   instructor_name: string | null
@@ -69,6 +71,7 @@ export interface CreateGroupInput {
   time?: string
   notes?: string
   instructor_id?: string
+  robocode_share_percent?: number
 }
 
 export interface UpdateGroupInput {
@@ -82,6 +85,7 @@ export interface UpdateGroupInput {
   day_of_week?: string
   time?: string
   notes?: string
+  robocode_share_percent?: number
 }
 
 export interface EnrollStudentInput {
