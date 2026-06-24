@@ -1,4 +1,4 @@
-import { getStudent } from '@/modules/students/queries'
+﻿import { getStudent } from '@/modules/students/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import { createServiceClient } from '@/lib/supabase/service'
 import { listBranches } from '@/modules/branches/queries'
@@ -124,7 +124,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
       />
 
       {/* ── Current Group Assignments ─────────────────────────────────────── */}
-      <div className="mt-6 rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="mt-6 ds-card">
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
           <p className="text-sm font-semibold text-[#0B1F3A]">
             Current Groups
@@ -137,7 +137,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
           <p className="px-5 py-4 text-sm text-[#94A3B8]">Not enrolled in any group.</p>
         ) : (
           <table className="w-full text-sm">
-            <thead>
+            <thead className="ds-table-head">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Group</th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Branch</th>
@@ -159,7 +159,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
                   <td className="px-4 py-2.5">
                     <span className={[
                       'inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium capitalize',
-                      h.enrollment_type === 'primary' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700',
+                      h.enrollment_type === 'primary' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-purple-50 text-purple-700',
                     ].join(' ')}>
                       {h.enrollment_type}
                     </span>
@@ -183,7 +183,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
 
       {/* ── Previous Groups ───────────────────────────────────────────────── */}
       {previousGroups.length > 0 && (
-        <div className="mt-5 rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="mt-5 ds-card">
           <div className="border-b border-[#E2E8F0] px-5 py-3">
             <p className="text-sm font-semibold text-[#0B1F3A]">
               Group History
@@ -191,7 +191,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
             </p>
           </div>
           <table className="w-full text-sm">
-            <thead>
+            <thead className="ds-table-head">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Group</th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Type</th>
@@ -210,7 +210,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
                   </td>
                   <td className="px-4 py-2.5 capitalize text-[#64748B]">{h.groups?.type ?? '—'}</td>
                   <td className="px-4 py-2.5">
-                    <span className={['inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium capitalize', h.enrollment_type === 'primary' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'].join(' ')}>
+                    <span className={['inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium capitalize', h.enrollment_type === 'primary' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-purple-50 text-purple-700'].join(' ')}>
                       {h.enrollment_type}
                     </span>
                   </td>
@@ -226,7 +226,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
 
       {/* ── Semester History ──────────────────────────────────────────────── */}
       {history.semesters.length > 0 && (
-        <div className="mt-5 rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="mt-5 ds-card">
           <div className="border-b border-[#E2E8F0] px-5 py-3">
             <p className="text-sm font-semibold text-[#0B1F3A]">
               Semester History
@@ -234,7 +234,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
             </p>
           </div>
           <table className="w-full text-sm">
-            <thead>
+            <thead className="ds-table-head">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Semester</th>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Dates</th>

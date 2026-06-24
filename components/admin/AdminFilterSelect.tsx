@@ -31,7 +31,7 @@ export default function AdminFilterSelect({ param, options, placeholder, classNa
     router.push(`${pathname}?${params.toString()}`)
   }
 
-  const cls = className ?? 'h-10 rounded-lg border border-[#E2E8F0] bg-white px-3 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] min-w-30'
+  const cls = className ?? 'ds-input h-9 px-3 text-[13px] text-[#0B1F3A]'
 
   return (
     <select value={current} onChange={handleChange} className={cls}>

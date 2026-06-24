@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,7 +27,7 @@ const TIMES = buildTimes();
 // ── Shared style tokens ───────────────────────────────────────────────────────
 
 const inputCls =
-  "w-full rounded-xl border border-[#0B132B]/[0.08] bg-white/60 px-4 py-4 text-sm text-[#0B132B] placeholder:text-slate-400 backdrop-blur-sm transition duration-200 focus:border-[#19C6F4] focus:outline-none focus:ring-2 focus:ring-[#19C6F4]/20 hover:border-[#0B132B]/[0.15]";
+  "w-full rounded-xl border border-[#0B132B]/[0.08] bg-white/60 px-4 py-4 text-sm text-[#0B132B] placeholder:text-[#94A3B8] backdrop-blur-sm transition duration-200 focus:border-[#19C6F4] focus:outline-none focus:ring-2 focus:ring-[#19C6F4]/20 hover:border-[#0B132B]/[0.15]";
 
 const labelCls =
   "mb-3 block text-[13px] font-semibold text-[#0B132B]/80";
@@ -146,7 +146,7 @@ export default function TrialForm() {
               <h3 className="text-2xl font-bold text-[#0B132B]">
                 You&apos;re all set!
               </h3>
-              <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-slate-600">
+              <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-[#475569]">
                 We received your trial session request. Our team will reach out
                 within 24 hours to confirm your booking.
               </p>
@@ -347,7 +347,7 @@ export default function TrialForm() {
                 )}
               </motion.button>
 
-              <p className="text-center text-xs text-slate-500">
+              <p className="text-center text-xs text-[#64748B]">
                 Free session &middot; No commitment &middot; We&apos;ll confirm within 24 hrs
               </p>
 

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useTransition } from 'react'
 import type { ParentOperationalRow, LinkedChild } from '@/modules/parents/operational'
@@ -14,20 +14,20 @@ interface Props {
 type Tab = 'overview' | 'children' | 'contracts' | 'attendance' | 'communication' | 'account'
 
 const HEALTH_CONFIG: Record<string, { label: string; color: string; text: string }> = {
-  HEALTHY:         { label: 'Active',       color: 'bg-emerald-100', text: 'text-emerald-700' },
-  AT_RISK:         { label: 'At Risk',      color: 'bg-red-100',     text: 'text-red-600'     },
-  NEEDS_ATTENTION: { label: 'Needs Action', color: 'bg-amber-100',   text: 'text-amber-700'   },
+  HEALTHY:         { label: 'Active',       color: 'bg-[#E7F8EE]', text: 'text-[#15803D]' },
+  AT_RISK:         { label: 'At Risk',      color: 'bg-[#FEE2E2]',     text: 'text-[#EF4444]'     },
+  NEEDS_ATTENTION: { label: 'Needs Action', color: 'bg-[#FFFBEB]',   text: 'text-[#B45309]'   },
   NO_ENROLLMENTS:  { label: 'No Enrollment',color: 'bg-orange-100',  text: 'text-orange-700'  },
-  GRADUATED:       { label: 'Graduated',    color: 'bg-blue-100',    text: 'text-blue-700'    },
-  INACTIVE:        { label: 'Inactive',     color: 'bg-slate-100',   text: 'text-slate-500'   },
-  ARCHIVED:        { label: 'Archived',     color: 'bg-slate-100',   text: 'text-slate-400'   },
-  NO_CHILDREN:     { label: 'No Children',  color: 'bg-slate-100',   text: 'text-slate-500'   },
+  GRADUATED:       { label: 'Graduated',    color: 'bg-[#EFF6FF]',    text: 'text-[#1D4ED8]'    },
+  INACTIVE:        { label: 'Inactive',     color: 'bg-[#F1F5F9]',   text: 'text-[#64748B]'   },
+  ARCHIVED:        { label: 'Archived',     color: 'bg-[#F1F5F9]',   text: 'text-[#94A3B8]'   },
+  NO_CHILDREN:     { label: 'No Children',  color: 'bg-[#F1F5F9]',   text: 'text-[#64748B]'   },
 }
 
 const RISK_CLR: Record<string, string> = {
-  HIGH:   'bg-red-100 text-red-600',
-  MEDIUM: 'bg-amber-100 text-amber-700',
-  LOW:    'bg-emerald-100 text-emerald-700',
+  HIGH:   'bg-[#FEE2E2] text-[#EF4444]',
+  MEDIUM: 'bg-[#FFFBEB] text-[#B45309]',
+  LOW:    'bg-[#E7F8EE] text-[#15803D]',
 }
 
 export default function ParentDetailDrawer({ parent: p, isTL, onClose, onEdit }: Props) {
@@ -138,13 +138,13 @@ function OverviewTab({ p, hCfg }: { p: ParentOperationalRow; hCfg: { label: stri
             <p className="text-[11px] text-[#94A3B8]">Children</p>
           </div>
           <div className="rounded-lg bg-[#F8FAFC] px-2 py-3">
-            <p className={`text-base font-bold ${p.near_exhaustion_children_count > 0 ? 'text-amber-600' : 'text-[#0B1F3A]'}`}>
+            <p className={`text-base font-bold ${p.near_exhaustion_children_count > 0 ? 'text-[#F59E0B]' : 'text-[#0B1F3A]'}`}>
               {p.total_sessions_remaining}
             </p>
             <p className="text-[11px] text-[#94A3B8]">Sessions Left</p>
           </div>
           <div className="rounded-lg bg-[#F8FAFC] px-2 py-3">
-            <p className={`text-base font-bold ${p.attendance_risk_children_count > 0 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+            <p className={`text-base font-bold ${p.attendance_risk_children_count > 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
               {p.attendance_risk_children_count}
             </p>
             <p className="text-[11px] text-[#94A3B8]">At-Risk Kids</p>
@@ -154,8 +154,8 @@ function OverviewTab({ p, hCfg }: { p: ParentOperationalRow; hCfg: { label: stri
 
       {/* Badges */}
       {(p.children_count > 1 || p.attendance_risk_children_count > 0 || p.near_exhaustion_children_count > 0) && (
-        <section className="rounded-xl border border-amber-100 bg-amber-50 p-4">
-          <h3 className="mb-2 text-xs font-semibold text-amber-700 uppercase tracking-wide">Flags</h3>
+        <section className="rounded-xl border border-amber-100 bg-[#FFFBEB] p-4">
+          <h3 className="mb-2 text-xs font-semibold text-[#B45309] uppercase tracking-wide">Flags</h3>
           <div className="flex flex-wrap gap-1.5">
             {p.children_count > 1 && (
               <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700">
@@ -163,12 +163,12 @@ function OverviewTab({ p, hCfg }: { p: ParentOperationalRow; hCfg: { label: stri
               </span>
             )}
             {p.attendance_risk_children_count > 0 && (
-              <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">
+              <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-bold text-[#EF4444]">
                 {p.attendance_risk_children_count} child{p.attendance_risk_children_count > 1 ? 'ren' : ''} at attendance risk
               </span>
             )}
             {p.near_exhaustion_children_count > 0 && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-bold text-[#B45309]">
                 {p.near_exhaustion_children_count} child{p.near_exhaustion_children_count > 1 ? 'ren' : ''} near session end
               </span>
             )}
@@ -225,7 +225,7 @@ function ChildrenTab({ p }: { p: ParentOperationalRow }) {
 function ChildCard({ c }: { c: LinkedChild }) {
   const isInactive = c.student_status !== 'active'
   return (
-    <div className={`rounded-xl border p-4 space-y-2.5 ${isInactive ? 'border-slate-200 bg-slate-50/60' : 'border-[#E2E8F0]'}`}>
+    <div className={`rounded-xl border p-4 space-y-2.5 ${isInactive ? 'border-slate-200 bg-[#F8FAFC]/60' : 'border-[#E2E8F0]'}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-sm font-semibold text-[#0B1F3A]">{c.student_name}</p>
@@ -234,7 +234,7 @@ function ChildCard({ c }: { c: LinkedChild }) {
             {c.age !== null && <span className="text-[10px] text-[#94A3B8]">Age {c.age}</span>}
             <span className="text-[10px] text-[#94A3B8] capitalize">{c.relationship}</span>
             {/* Status chip */}
-            <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${isInactive ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-700'}`}>
+            <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${isInactive ? 'bg-[#F1F5F9] text-[#64748B]' : 'bg-[#E7F8EE] text-[#15803D]'}`}>
               {isInactive ? 'INACTIVE' : 'ACTIVE'}
             </span>
           </div>
@@ -253,19 +253,19 @@ function ChildCard({ c }: { c: LinkedChild }) {
 
       <div className="grid grid-cols-3 gap-1.5 text-center text-[11px]">
         <div className="rounded-lg bg-[#F8FAFC] px-2 py-2">
-          <p className={`font-bold ${c.attendance_pct >= 80 ? 'text-emerald-600' : c.attendance_pct >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
+          <p className={`font-bold ${c.attendance_pct >= 80 ? 'text-[#10B981]' : c.attendance_pct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
             {c.attendance_pct}%
           </p>
           <p className="text-[#94A3B8]">Attend.</p>
         </div>
         <div className="rounded-lg bg-[#F8FAFC] px-2 py-2">
-          <p className={`font-bold ${c.enrolled_sessions > 0 && c.remaining_sessions <= 2 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+          <p className={`font-bold ${c.enrolled_sessions > 0 && c.remaining_sessions <= 2 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
             {c.enrolled_sessions > 0 ? `${c.remaining_sessions}/${c.enrolled_sessions}` : '—'}
           </p>
           <p className="text-[#94A3B8]">Sessions</p>
         </div>
         <div className="rounded-lg bg-[#F8FAFC] px-2 py-2">
-          <p className={`font-bold ${c.consecutive_absences >= 3 ? 'text-red-600' : c.consecutive_absences >= 2 ? 'text-amber-600' : 'text-[#0B1F3A]'}`}>
+          <p className={`font-bold ${c.consecutive_absences >= 3 ? 'text-[#EF4444]' : c.consecutive_absences >= 2 ? 'text-[#F59E0B]' : 'text-[#0B1F3A]'}`}>
             {c.consecutive_absences}
           </p>
           <p className="text-[#94A3B8]">Absences</p>
@@ -315,7 +315,7 @@ function ContractsTab({ p }: { p: ParentOperationalRow }) {
               {c.course_name && <p className="text-[11px] text-[#64748B]">{c.course_name}</p>}
             </div>
             {c.remaining_sessions <= 2 && (
-              <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">
+              <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-bold text-[#EF4444]">
                 NEAR END
               </span>
             )}
@@ -338,11 +338,11 @@ function ContractsTab({ p }: { p: ParentOperationalRow }) {
             </div>
             <div className="h-1.5 rounded-full bg-[#E2E8F0] overflow-hidden">
               <div
-                className={`h-full rounded-full ${c.remaining_sessions <= 2 ? 'bg-red-400' : c.remaining_sessions <= 5 ? 'bg-amber-400' : 'bg-emerald-400'}`}
+                className={`h-full rounded-full ${c.remaining_sessions <= 2 ? 'bg-[#EF4444]' : c.remaining_sessions <= 5 ? 'bg-[#F59E0B]' : 'bg-[#10B981]'}`}
                 style={{ width: `${Math.min((c.consumed_sessions / Math.max(c.enrolled_sessions, 1)) * 100, 100)}%` }}
               />
             </div>
-            <p className={`mt-1 text-[11px] font-medium ${c.remaining_sessions <= 2 ? 'text-red-600' : c.remaining_sessions <= 5 ? 'text-amber-600' : 'text-emerald-600'}`}>
+            <p className={`mt-1 text-[11px] font-medium ${c.remaining_sessions <= 2 ? 'text-[#EF4444]' : c.remaining_sessions <= 5 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
               {c.remaining_sessions} session{c.remaining_sessions !== 1 ? 's' : ''} remaining
             </p>
           </div>
@@ -351,7 +351,7 @@ function ContractsTab({ p }: { p: ParentOperationalRow }) {
           <div className="flex items-center gap-2">
             <div className="h-1.5 w-20 rounded-full bg-[#E2E8F0] overflow-hidden">
               <div
-                className={`h-full rounded-full ${c.attendance_pct >= 80 ? 'bg-emerald-400' : c.attendance_pct >= 60 ? 'bg-amber-400' : 'bg-red-400'}`}
+                className={`h-full rounded-full ${c.attendance_pct >= 80 ? 'bg-[#10B981]' : c.attendance_pct >= 60 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
                 style={{ width: `${Math.min(c.attendance_pct, 100)}%` }}
               />
             </div>
@@ -389,13 +389,13 @@ function AttendanceTab({ p }: { p: ParentOperationalRow }) {
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="text-[11px] text-[#64748B]">Attendance Rate</span>
-              <span className={`text-[12px] font-bold ${c.attendance_pct >= 80 ? 'text-emerald-600' : c.attendance_pct >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
+              <span className={`text-[12px] font-bold ${c.attendance_pct >= 80 ? 'text-[#10B981]' : c.attendance_pct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
                 {c.attendance_pct}%
               </span>
             </div>
             <div className="h-2 rounded-full bg-[#E2E8F0] overflow-hidden">
               <div
-                className={`h-full rounded-full ${c.attendance_pct >= 80 ? 'bg-emerald-400' : c.attendance_pct >= 60 ? 'bg-amber-400' : 'bg-red-400'}`}
+                className={`h-full rounded-full ${c.attendance_pct >= 80 ? 'bg-[#10B981]' : c.attendance_pct >= 60 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
                 style={{ width: `${Math.min(c.attendance_pct, 100)}%` }}
               />
             </div>
@@ -404,7 +404,7 @@ function AttendanceTab({ p }: { p: ParentOperationalRow }) {
           <div className="space-y-1">
             <Row label="Sessions Attended">{c.sessions_attended}/{c.total_sessions}</Row>
             <Row label="Consecutive Absences">
-              <span className={c.consecutive_absences >= 3 ? 'font-bold text-red-600' : 'text-[#0B1F3A]'}>
+              <span className={c.consecutive_absences >= 3 ? 'font-bold text-[#EF4444]' : 'text-[#0B1F3A]'}>
                 {c.consecutive_absences}
               </span>
             </Row>
@@ -418,17 +418,17 @@ function AttendanceTab({ p }: { p: ParentOperationalRow }) {
 
           {/* Trend label */}
           {c.consecutive_absences >= 3 ? (
-            <div className="rounded-lg border border-red-100 bg-red-50 px-3 py-2">
-              <p className="text-[11px] font-semibold text-red-700">Warning: {c.consecutive_absences} consecutive absences</p>
-              <p className="text-[10px] text-red-600 mt-0.5">Immediate follow-up recommended.</p>
+            <div className="rounded-lg border border-[#FEE2E2] bg-[#FEE2E2] px-3 py-2">
+              <p className="text-[11px] font-semibold text-[#DC2626]">Warning: {c.consecutive_absences} consecutive absences</p>
+              <p className="text-[10px] text-[#EF4444] mt-0.5">Immediate follow-up recommended.</p>
             </div>
           ) : c.consecutive_absences >= 2 ? (
-            <div className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2">
-              <p className="text-[11px] font-semibold text-amber-700">{c.consecutive_absences} consecutive absences — monitor closely</p>
+            <div className="rounded-lg border border-amber-100 bg-[#FFFBEB] px-3 py-2">
+              <p className="text-[11px] font-semibold text-[#B45309]">{c.consecutive_absences} consecutive absences — monitor closely</p>
             </div>
           ) : c.student_status !== 'active' ? (
-            <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2">
-              <p className="text-[11px] text-slate-500">Student is inactive</p>
+            <div className="rounded-lg border border-slate-100 bg-[#F8FAFC] px-3 py-2">
+              <p className="text-[11px] text-[#64748B]">Student is inactive</p>
             </div>
           ) : null}
         </div>
@@ -496,7 +496,7 @@ function CommunicationTab({ p }: { p: ParentOperationalRow }) {
             </a>
           </div>
         ) : (
-          <p className="text-[12px] text-red-400">No phone number on file</p>
+          <p className="text-[12px] text-[#F87171]">No phone number on file</p>
         )}
       </section>
 
@@ -624,26 +624,26 @@ function AccountTab({ p }: { p: ParentOperationalRow }) {
         </p>
 
         {resetResult && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 space-y-1.5">
-            <p className="text-[12px] font-semibold text-emerald-700">Password reset successfully</p>
-            <p className="text-[11px] text-emerald-600">Temporary password:</p>
+          <div className="rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] p-3 space-y-1.5">
+            <p className="text-[12px] font-semibold text-[#15803D]">Password reset successfully</p>
+            <p className="text-[11px] text-[#10B981]">Temporary password:</p>
             <div className="flex items-center gap-2">
-              <p className="flex-1 font-mono text-sm font-bold text-[#0B1F3A] bg-white rounded-lg px-3 py-1.5 border border-emerald-200 tracking-wider">
+              <p className="flex-1 font-mono text-sm font-bold text-[#0B1F3A] bg-white rounded-lg px-3 py-1.5 border border-[#A7F3D0] tracking-wider">
                 {resetResult.temp_password}
               </p>
               <button
                 onClick={() => navigator.clipboard.writeText(resetResult.temp_password)}
-                className="shrink-0 rounded-lg border border-emerald-200 px-2 py-1.5 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100"
+                className="shrink-0 rounded-lg border border-[#A7F3D0] px-2 py-1.5 text-[11px] font-medium text-[#15803D] hover:bg-[#E7F8EE]"
               >
                 Copy
               </button>
             </div>
-            <p className="text-[10px] text-emerald-600">Advise parent to change this after logging in.</p>
+            <p className="text-[10px] text-[#10B981]">Advise parent to change this after logging in.</p>
           </div>
         )}
 
         {resetError && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-700">
+          <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#DC2626]">
             {resetError}
           </div>
         )}
@@ -651,7 +651,7 @@ function AccountTab({ p }: { p: ParentOperationalRow }) {
         {!confirmReset ? (
           <button
             onClick={() => { setResetResult(null); setResetError(null); setConfirmReset(true) }}
-            className="w-full rounded-xl border border-amber-200 bg-amber-50 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-100 transition"
+            className="w-full rounded-xl border border-[#FDE68A] bg-[#FFFBEB] py-2.5 text-sm font-medium text-[#B45309] hover:bg-[#FFFBEB] transition"
           >
             Reset Password
           </button>
@@ -670,7 +670,7 @@ function AccountTab({ p }: { p: ParentOperationalRow }) {
               <button
                 onClick={handleReset}
                 disabled={isPending}
-                className="flex-1 rounded-xl bg-amber-500 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-60 transition"
+                className="flex-1 rounded-xl bg-[#F59E0B] py-2 text-sm font-semibold text-white hover:bg-[#D97706] disabled:opacity-60 transition"
               >
                 {isPending ? 'Resetting…' : 'Confirm Reset'}
               </button>

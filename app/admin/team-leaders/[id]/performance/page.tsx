@@ -1,4 +1,4 @@
-import { createServiceClient }          from '@/lib/supabase/service'
+﻿import { createServiceClient }          from '@/lib/supabase/service'
 import { requirePermission }            from '@/modules/rbac/guards'
 import { getTeamLeader }                from '@/modules/team-leaders/queries'
 import { notFound }                     from 'next/navigation'
@@ -138,8 +138,8 @@ function KPI({
   label: string; value: string | number; sub?: string; alert?: boolean
 }) {
   return (
-    <div className={`rounded-xl border p-4 ${alert && value !== 0 ? 'border-red-200 bg-red-50' : 'border-[#E2E8F0] bg-white'}`}>
-      <p className={`text-2xl font-bold ${alert && value !== 0 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>{value}</p>
+    <div className={`rounded-xl border p-4 ${alert && value !== 0 ? 'border-[#FECACA] bg-[#FEE2E2]' : 'border-[#E2E8F0] bg-white'}`}>
+      <p className={`text-2xl font-bold ${alert && value !== 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>{value}</p>
       <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
       {sub && <p className="mt-1 text-[11px] text-[#94A3B8]">{sub}</p>}
     </div>
@@ -169,7 +169,7 @@ export default async function TLPerformancePage({ params }: Props) {
           ← {name}
         </Link>
         <div className="text-right">
-          <p className={`text-3xl font-bold ${perf.healthScore >= 75 ? 'text-emerald-600' : perf.healthScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+          <p className={`text-3xl font-bold ${perf.healthScore >= 75 ? 'text-[#10B981]' : perf.healthScore >= 50 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
             {perf.healthScore}
           </p>
           <p className="text-xs text-[#94A3B8]">Performance Score</p>
@@ -212,12 +212,12 @@ export default async function TLPerformancePage({ params }: Props) {
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Operational Alerts</h2>
         {perf.groupsWithoutInstructor > 0 ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] px-4 py-3 text-sm font-medium text-[#DC2626]">
             {perf.groupsWithoutInstructor} active group{perf.groupsWithoutInstructor !== 1 ? 's' : ''} without instructor.
             <Link href="/admin/system-health" className="ml-2 underline">Fix →</Link>
           </div>
         ) : (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+          <div className="rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] px-4 py-3 text-sm font-medium text-[#15803D]">
             All groups have instructors assigned.
           </div>
         )}

@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId, listInstructorGroups } from '@/modules/instructor-portal/queries'
 import Link from 'next/link'
 
@@ -37,7 +37,7 @@ export default async function InstructorGroupsPage() {
               <Link
                 key={g.group_id}
                 href={`/portal/instructor/groups/${g.group_id}`}
-                className="rounded-xl border border-[#E2E8F0] bg-white p-4 md:p-5 transition hover:border-[#CBD5E1] hover:shadow-sm active:bg-[#F8FAFC]"
+                className="ds-card p-4 md:p-5 transition hover:border-[#CBD5E1] hover:shadow-sm active:bg-[#F8FAFC]"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -47,11 +47,11 @@ export default async function InstructorGroupsPage() {
                     )}
                   </div>
                   {isActive ? (
-                    <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                    <span className="shrink-0 rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#15803D]">
                       Active
                     </span>
                   ) : (
-                    <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+                    <span className="shrink-0 rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#B45309]">
                       Forming
                     </span>
                   )}
@@ -66,7 +66,7 @@ export default async function InstructorGroupsPage() {
 
                 {!isActive && (
                   <div className="mt-2.5">
-                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700 border border-amber-200">
+                    <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] text-[#B45309] border border-[#FDE68A]">
                       No course assigned
                     </span>
                   </div>

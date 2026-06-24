@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import type { ReactNode } from 'react'
 
@@ -39,7 +39,7 @@ export function OperationalTable<T>({
   return (
     <div className={`overflow-x-auto rounded-xl border border-[#E2E8F0] ${className}`}>
       <table className="min-w-full text-xs">
-        <thead className="bg-[#F8FAFC]">
+        <thead className="ds-table-head">
           <tr>
             {columns.map(col => (
               <th

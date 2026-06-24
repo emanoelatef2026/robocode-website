@@ -1,4 +1,4 @@
-// Operational Engine — single source of truth for all computed operational states.
+﻿// Operational Engine — single source of truth for all computed operational states.
 // Pure functions (no DB calls). Used by every page, dashboard, and drawer.
 //
 // Replaces scattered: computeStudentRisk (finance/types), computeHealthScore
@@ -82,16 +82,16 @@ export interface EngineResult {
 // ── Action definitions ─────────────────────────────────────────────────────────
 
 const ACTION_DEFS: Record<ActionCode, Omit<RecommendedAction, 'code'>> = {
-  BLOCKED_PAYMENT:            { label: 'Payment Blocked',       description: 'Account is blocked. Immediate resolution required.',    priority: 'critical', color: 'bg-red-100',    textColor: 'text-red-700',    icon: '🚫' },
-  OVERDRAFT_WARNING:          { label: 'Sessions Exhausted',    description: 'All enrolled sessions used.',                            priority: 'high',     color: 'bg-amber-100',  textColor: 'text-amber-700',  icon: '⏳' },
-  COLLECT_PAYMENT:            { label: 'Collect Payment',       description: 'Outstanding balance is overdue.',                        priority: 'critical', color: 'bg-red-100',    textColor: 'text-red-700',    icon: '💰' },
-  RENEW_PACKAGE:              { label: 'Renew Package',         description: '2 or fewer sessions remaining.',                         priority: 'high',     color: 'bg-amber-100',  textColor: 'text-amber-700',  icon: '🔄' },
-  INACTIVE_STUDENT:           { label: 'Inactive Student',      description: 'No attendance for 14+ days.',                            priority: 'critical', color: 'bg-slate-100',  textColor: 'text-slate-700',  icon: '😴' },
-  ATTENDANCE_RISK:            { label: 'Attendance Risk',       description: '3+ consecutive absences.',                               priority: 'high',     color: 'bg-red-100',    textColor: 'text-red-700',    icon: '⚠️' },
+  BLOCKED_PAYMENT:            { label: 'Payment Blocked',       description: 'Account is blocked. Immediate resolution required.',    priority: 'critical', color: 'bg-[#FEE2E2]',    textColor: 'text-[#DC2626]',    icon: '🚫' },
+  OVERDRAFT_WARNING:          { label: 'Sessions Exhausted',    description: 'All enrolled sessions used.',                            priority: 'high',     color: 'bg-[#FFFBEB]',  textColor: 'text-[#B45309]',  icon: '⏳' },
+  COLLECT_PAYMENT:            { label: 'Collect Payment',       description: 'Outstanding balance is overdue.',                        priority: 'critical', color: 'bg-[#FEE2E2]',    textColor: 'text-[#DC2626]',    icon: '💰' },
+  RENEW_PACKAGE:              { label: 'Renew Package',         description: '2 or fewer sessions remaining.',                         priority: 'high',     color: 'bg-[#FFFBEB]',  textColor: 'text-[#B45309]',  icon: '🔄' },
+  INACTIVE_STUDENT:           { label: 'Inactive Student',      description: 'No attendance for 14+ days.',                            priority: 'critical', color: 'bg-[#F1F5F9]',  textColor: 'text-[#334155]',  icon: '😴' },
+  ATTENDANCE_RISK:            { label: 'Attendance Risk',       description: '3+ consecutive absences.',                               priority: 'high',     color: 'bg-[#FEE2E2]',    textColor: 'text-[#DC2626]',    icon: '⚠️' },
   CONTACT_PARENT_ATTENDANCE:  { label: 'Contact Parent',        description: 'Attendance below 60% — parent contact needed.',          priority: 'high',     color: 'bg-orange-100', textColor: 'text-orange-700', icon: '📞' },
   ACADEMIC_FOLLOW_UP:         { label: 'Academic Follow-up',   description: 'No assignment submissions recorded.',                    priority: 'medium',   color: 'bg-purple-100', textColor: 'text-purple-700', icon: '📚' },
-  MISSING_GROUP:              { label: 'No Group Assigned',     description: 'Student has an active contract but no delivery group.',  priority: 'medium',   color: 'bg-slate-100',  textColor: 'text-slate-600',  icon: '📦' },
-  PARENT_FOLLOW_UP:           { label: 'Parent Follow-up',      description: 'Unresolved parent complaint or message.',                priority: 'medium',   color: 'bg-blue-100',   textColor: 'text-blue-700',   icon: '💬' },
+  MISSING_GROUP:              { label: 'No Group Assigned',     description: 'Student has an active contract but no delivery group.',  priority: 'medium',   color: 'bg-[#F1F5F9]',  textColor: 'text-[#475569]',  icon: '📦' },
+  PARENT_FOLLOW_UP:           { label: 'Parent Follow-up',      description: 'Unresolved parent complaint or message.',                priority: 'medium',   color: 'bg-[#EFF6FF]',   textColor: 'text-[#1D4ED8]',   icon: '💬' },
 }
 
 // ── computeRisk ────────────────────────────────────────────────────────────────
@@ -259,50 +259,50 @@ export function computeHealthScore(
     portfolioScore  * 0.20 +
     feedbackScore   * 0.10
   )
-  if (score >= 90) return { score, level: 'excellent', label: 'Excellent', cls: 'bg-green-100 text-green-700' }
-  if (score >= 75) return { score, level: 'good',      label: 'Good',      cls: 'bg-blue-100 text-blue-700'  }
+  if (score >= 90) return { score, level: 'excellent', label: 'Excellent', cls: 'bg-[#E7F8EE] text-[#15803D]' }
+  if (score >= 75) return { score, level: 'good',      label: 'Good',      cls: 'bg-[#EFF6FF] text-[#1D4ED8]'  }
   if (score >= 60) return { score, level: 'attention', label: 'Attention', cls: 'bg-yellow-100 text-yellow-700' }
-  return               { score, level: 'at_risk',   label: 'At Risk',   cls: 'bg-red-100 text-red-700'    }
+  return               { score, level: 'at_risk',   label: 'At Risk',   cls: 'bg-[#FEE2E2] text-[#DC2626]'    }
 }
 
 // ── Display helpers ────────────────────────────────────────────────────────────
 
 export const RISK_LEVEL_CLASSES: Record<RiskLevel, string> = {
-  HIGH:   'bg-red-100 text-red-700',
-  MEDIUM: 'bg-amber-100 text-amber-700',
-  LOW:    'bg-emerald-100 text-emerald-700',
+  HIGH:   'bg-[#FEE2E2] text-[#DC2626]',
+  MEDIUM: 'bg-[#FFFBEB] text-[#B45309]',
+  LOW:    'bg-[#E7F8EE] text-[#15803D]',
 }
 
 export const ATTENDANCE_TREND_CONFIG: Record<AttendanceTrend, { label: string; color: string; text: string }> = {
-  RECOVERING: { label: 'Recovering',  color: 'bg-blue-100',    text: 'text-blue-700'   },
-  STABLE:     { label: 'Stable',      color: 'bg-emerald-100', text: 'text-emerald-700'},
-  DECLINING:  { label: 'Declining',   color: 'bg-amber-100',   text: 'text-amber-700'  },
+  RECOVERING: { label: 'Recovering',  color: 'bg-[#EFF6FF]',    text: 'text-[#1D4ED8]'   },
+  STABLE:     { label: 'Stable',      color: 'bg-[#E7F8EE]', text: 'text-[#15803D]'},
+  DECLINING:  { label: 'Declining',   color: 'bg-[#FFFBEB]',   text: 'text-[#B45309]'  },
   DROPPING:   { label: 'Dropping',    color: 'bg-orange-100',  text: 'text-orange-700' },
-  CRITICAL:   { label: 'Critical',    color: 'bg-red-100',     text: 'text-red-700'    },
-  INACTIVE:   { label: 'Inactive',    color: 'bg-slate-100',   text: 'text-slate-600'  },
+  CRITICAL:   { label: 'Critical',    color: 'bg-[#FEE2E2]',     text: 'text-[#DC2626]'    },
+  INACTIVE:   { label: 'Inactive',    color: 'bg-[#F1F5F9]',   text: 'text-[#475569]'  },
   NEW:        { label: 'New Student', color: 'bg-purple-100',  text: 'text-purple-700' },
 }
 
 export const OPERATIONAL_STATUS_CONFIG: Record<OperationalStatus, { label: string; color: string; text: string }> = {
-  HEALTHY:  { label: 'Healthy',  color: 'bg-emerald-100', text: 'text-emerald-700' },
-  WATCH:    { label: 'Watch',    color: 'bg-amber-100',   text: 'text-amber-700'   },
+  HEALTHY:  { label: 'Healthy',  color: 'bg-[#E7F8EE]', text: 'text-[#15803D]' },
+  WATCH:    { label: 'Watch',    color: 'bg-[#FFFBEB]',   text: 'text-[#B45309]'   },
   ACTION:   { label: 'Action',   color: 'bg-orange-100',  text: 'text-orange-700'  },
-  CRITICAL: { label: 'Critical', color: 'bg-red-100',     text: 'text-red-700'     },
+  CRITICAL: { label: 'Critical', color: 'bg-[#FEE2E2]',     text: 'text-[#DC2626]'     },
 }
 
 export const COLLECTION_PRIORITY_CONFIG: Record<CollectionPriority, { label: string; color: string }> = {
-  CRITICAL: { label: 'Critical', color: 'text-red-700'    },
+  CRITICAL: { label: 'Critical', color: 'text-[#DC2626]'    },
   HIGH:     { label: 'High',     color: 'text-orange-700' },
-  MEDIUM:   { label: 'Medium',   color: 'text-amber-700'  },
-  LOW:      { label: 'Low',      color: 'text-blue-700'   },
-  NONE:     { label: '—',        color: 'text-slate-400'  },
+  MEDIUM:   { label: 'Medium',   color: 'text-[#B45309]'  },
+  LOW:      { label: 'Low',      color: 'text-[#1D4ED8]'   },
+  NONE:     { label: '—',        color: 'text-[#94A3B8]'  },
 }
 
 export const RENEWAL_PRIORITY_CONFIG: Record<RenewalPriority, { label: string; color: string }> = {
-  URGENT:   { label: 'Renew Now',  color: 'text-red-700'   },
-  SOON:     { label: 'Renew Soon', color: 'text-amber-700' },
-  UPCOMING: { label: 'Upcoming',   color: 'text-blue-700'  },
-  NONE:     { label: '—',          color: 'text-slate-400' },
+  URGENT:   { label: 'Renew Now',  color: 'text-[#DC2626]'   },
+  SOON:     { label: 'Renew Soon', color: 'text-[#B45309]' },
+  UPCOMING: { label: 'Upcoming',   color: 'text-[#1D4ED8]'  },
+  NONE:     { label: '—',          color: 'text-[#94A3B8]' },
 }
 
 // ── Backward-compat re-exports ─────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState, useTransition } from 'react'
 import {
@@ -155,11 +155,11 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
       </div>
 
       {/* ── Profile editor ─────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+      <div className="ds-card p-6">
         <h2 className="mb-4 text-sm font-semibold text-[#0B1F3A]">Profile</h2>
 
         {editState && !editState.success && (
-          <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
             {editState.error.message}
           </div>
         )}
@@ -238,7 +238,7 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <button type="button" onClick={handleDelete} className="text-sm font-medium text-red-500 hover:text-red-700">
+            <button type="button" onClick={handleDelete} className="text-sm font-medium text-[#EF4444] hover:text-[#DC2626]">
               Remove student
             </button>
             <div className="flex items-center gap-3">
@@ -252,17 +252,17 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
       </div>
 
       {/* ── Group Assignment ──────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Group Assignment</h2>
 
         {groupError && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
             {groupError}
             <button onClick={() => setGroupError(null)} className="ml-2 underline">dismiss</button>
           </div>
         )}
         {enrollState && !enrollState.success && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{enrollState.error.message}</div>
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">{enrollState.error.message}</div>
         )}
 
         {/* Current active groups */}
@@ -281,7 +281,7 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
                     onClick={() => handleChangeType(g.id, student.id, g.enrollment_type)}
                     className={[
                       'rounded-full px-2 py-0.5 text-[11px] font-medium capitalize cursor-pointer transition hover:opacity-75 disabled:opacity-50',
-                      g.enrollment_type === 'primary' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700',
+                      g.enrollment_type === 'primary' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-purple-50 text-purple-700',
                     ].join(' ')}
                     title="Click to toggle type"
                   >
@@ -291,7 +291,7 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
                     type="button"
                     disabled={isPending}
                     onClick={() => handleRemoveGroup(student.id, g)}
-                    className="text-xs text-red-400 hover:text-red-600 disabled:opacity-50"
+                    className="text-xs text-[#F87171] hover:text-[#EF4444] disabled:opacity-50"
                   >
                     Remove
                   </button>
@@ -324,7 +324,7 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
       </div>
 
       {/* ── Password Reset ─────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Password Management</h2>
         <div className="space-y-3">
           <div>
@@ -342,8 +342,8 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
                 Set Password
               </button>
             </div>
-            {pwError   && <p className="mt-1 text-xs text-red-600">{pwError}</p>}
-            {pwSuccess  && <p className="mt-1 text-xs text-emerald-600">{pwSuccess}</p>}
+            {pwError   && <p className="mt-1 text-xs text-[#EF4444]">{pwError}</p>}
+            {pwSuccess  && <p className="mt-1 text-xs text-[#10B981]">{pwSuccess}</p>}
           </div>
 
           <div className="relative flex items-center">
@@ -361,7 +361,7 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
               Send Reset Email
             </button>
             {emailMsg && (
-              <p className={`mt-1.5 text-xs ${emailMsg.includes('sent') ? 'text-emerald-600' : 'text-red-600'}`}>
+              <p className={`mt-1.5 text-xs ${emailMsg.includes('sent') ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
                 {emailMsg}
               </p>
             )}
@@ -371,9 +371,9 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
 
       {/* ── Branch Transfer ────────────────────────────────────────────────── */}
       {branches.length > 1 && (
-        <div className="rounded-xl border border-amber-100 bg-amber-50 p-5">
-          <h2 className="mb-1 text-sm font-semibold text-amber-800">Branch Transfer</h2>
-          <p className="mb-3 text-xs text-amber-700">
+        <div className="rounded-xl border border-amber-100 bg-[#FFFBEB] p-5">
+          <h2 className="mb-1 text-sm font-semibold text-[#92400E]">Branch Transfer</h2>
+          <p className="mb-3 text-xs text-[#B45309]">
             Moves the student to a new branch. Active group memberships are dropped. All academic history is preserved.
           </p>
 
@@ -381,7 +381,7 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
             <select
               value={targetBranch}
               onChange={(e) => setTargetBranch(e.target.value)}
-              className="flex-1 rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-amber-400"
+              className="flex-1 rounded-lg border border-[#FDE68A] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#F59E0B]"
             >
               <option value="">Select target branch…</option>
               {branches.filter((b) => b.id !== student.branch_id).map((b) => (
@@ -389,12 +389,12 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
               ))}
             </select>
             <button type="button" disabled={isPending || !targetBranch} onClick={handleTransfer}
-              className="rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-100 disabled:opacity-50">
+              className="rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-medium text-[#92400E] hover:bg-[#FFFBEB] disabled:opacity-50">
               Transfer
             </button>
           </div>
-          {transferError   && <p className="mt-2 text-xs text-red-600">{transferError}</p>}
-          {transferSuccess  && <p className="mt-2 text-xs text-emerald-600">{transferSuccess}</p>}
+          {transferError   && <p className="mt-2 text-xs text-[#EF4444]">{transferError}</p>}
+          {transferSuccess  && <p className="mt-2 text-xs text-[#10B981]">{transferSuccess}</p>}
         </div>
       )}
     </div>

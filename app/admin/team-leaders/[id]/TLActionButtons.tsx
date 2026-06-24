@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -107,40 +107,40 @@ export default function TLActionButtons({
       <div className="flex flex-wrap items-center gap-2">
         {status === 'active' ? (
           <button onClick={handleDeactivate} disabled={isPending}
-            className={`${btnBase} border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100`}>
+            className={`${btnBase} border-[#FDE68A] bg-[#FFFBEB] text-[#B45309] hover:bg-[#FFFBEB]`}>
             Deactivate
           </button>
         ) : (
           <button onClick={handleEnable} disabled={isPending || branchIds.length === 0}
             title={branchIds.length === 0 ? 'Edit branches first' : ''}
-            className={`${btnBase} border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100`}>
+            className={`${btnBase} border-[#A7F3D0] bg-[#E7F8EE] text-[#15803D] hover:bg-[#E7F8EE]`}>
             Enable
           </button>
         )}
 
         {responsibilities.leadCount > 0 && (
           <button onClick={() => { setShowTransfer(v => !v); setShowDelete(false) }} disabled={isPending}
-            className={`${btnBase} border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100`}>
+            className={`${btnBase} border-blue-200 bg-[#EFF6FF] text-[#1D4ED8] hover:bg-[#EFF6FF]`}>
             Transfer Leads ({responsibilities.leadCount})
           </button>
         )}
 
         <button onClick={() => { setShowDelete(v => !v); setShowTransfer(false) }} disabled={isPending}
-          className={`${btnBase} border-red-200 bg-red-50 text-red-600 hover:bg-red-100`}>
+          className={`${btnBase} border-[#FECACA] bg-[#FEE2E2] text-[#EF4444] hover:bg-[#FEE2E2]`}>
           Delete
         </button>
 
         <button onClick={handleArchive} disabled={isPending}
-          className={`${btnBase} border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100`}>
+          className={`${btnBase} border-slate-200 bg-[#F8FAFC] text-[#475569] hover:bg-[#F1F5F9]`}>
           Archive
         </button>
       </div>
 
       {/* Transfer panel */}
       {showTransfer && (
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 space-y-3">
+        <div className="rounded-lg border border-blue-200 bg-[#EFF6FF] p-4 space-y-3">
           <p className="text-sm font-semibold text-blue-800">Transfer Lead Ownership</p>
-          <p className="text-xs text-blue-600">
+          <p className="text-xs text-[#2563EB]">
             Reassign {responsibilities.leadCount} active lead(s) to another team leader.
           </p>
           <div className="flex items-center gap-2">
@@ -155,32 +155,32 @@ export default function TLActionButtons({
               className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50">
               Transfer
             </button>
-            <button onClick={() => setShowTransfer(false)} className="text-xs text-blue-500 hover:underline">Cancel</button>
+            <button onClick={() => setShowTransfer(false)} className="text-xs text-[#3B82F6] hover:underline">Cancel</button>
           </div>
         </div>
       )}
 
       {/* Delete panel */}
       {showDelete && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 space-y-3">
-          <p className="text-sm font-semibold text-red-800">Permanently Delete Team Leader</p>
+        <div className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] p-4 space-y-3">
+          <p className="text-sm font-semibold text-[#991B1B]">Permanently Delete Team Leader</p>
           <div className="rounded-lg bg-white p-3 text-xs space-y-1">
             <p className="text-[#64748B]">This action cannot be undone. The following will happen:</p>
             <ul className="mt-1 list-disc pl-4 space-y-0.5 text-[#0B1F3A]">
               <li>Team leader role removed</li>
               <li>Portal access revoked permanently</li>
               {responsibilities.leadCount > 0 && (
-                <li className="text-amber-700">{responsibilities.leadCount} active lead(s) will be {deleteTo ? 'transferred' : 'left unassigned'}</li>
+                <li className="text-[#B45309]">{responsibilities.leadCount} active lead(s) will be {deleteTo ? 'transferred' : 'left unassigned'}</li>
               )}
-              <li className="text-emerald-700">Students, groups, certificates — NOT affected</li>
+              <li className="text-[#15803D]">Students, groups, certificates — NOT affected</li>
             </ul>
           </div>
 
           {responsibilities.leadCount > 0 && (
             <div>
-              <p className="mb-1.5 text-xs font-medium text-red-700">Transfer active leads to (optional):</p>
+              <p className="mb-1.5 text-xs font-medium text-[#DC2626]">Transfer active leads to (optional):</p>
               <select value={deleteTo} onChange={e => setDeleteTo(e.target.value)}
-                className="w-full rounded border border-red-200 bg-white px-2 py-1.5 text-sm">
+                className="w-full rounded border border-[#FECACA] bg-white px-2 py-1.5 text-sm">
                 <option value="">Leave leads unassigned</option>
                 {otherTLs.map(tl => (
                   <option key={tl.userId} value={tl.userId}>{tl.name} — {tl.branchName}</option>
@@ -191,16 +191,16 @@ export default function TLActionButtons({
 
           <div className="flex items-center gap-2">
             <button onClick={handleDelete} disabled={isPending}
-              className="rounded-lg bg-red-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50">
+              className="rounded-lg bg-[#DC2626] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#B91C1C] disabled:opacity-50">
               {isPending ? 'Deleting…' : 'Confirm Delete'}
             </button>
-            <button onClick={() => setShowDelete(false)} className="text-xs text-red-500 hover:underline">Cancel</button>
+            <button onClick={() => setShowDelete(false)} className="text-xs text-[#EF4444] hover:underline">Cancel</button>
           </div>
         </div>
       )}
 
       {message && (
-        <p className={`text-xs font-medium ${message.type === 'success' ? 'text-emerald-700' : 'text-red-600'}`}>
+        <p className={`text-xs font-medium ${message.type === 'success' ? 'text-[#15803D]' : 'text-[#EF4444]'}`}>
           {message.text}
         </p>
       )}

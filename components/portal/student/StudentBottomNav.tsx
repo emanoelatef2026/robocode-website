@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -25,9 +25,9 @@ const MAIN_ITEMS = [
     label:       "Tasks",
     href:        "/portal/student/assignments",
     exact:       false,
-    colorIdle:   "bg-amber-50 text-amber-500",
-    colorActive: "bg-amber-500 text-white shadow-md shadow-amber-200",
-    labelActive: "text-amber-500",
+    colorIdle:   "bg-[#FFFBEB] text-[#F59E0B]",
+    colorActive: "bg-[#FFFBEB]0 text-white shadow-md shadow-amber-200",
+    labelActive: "text-[#F59E0B]",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">
         <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
@@ -52,9 +52,9 @@ const MAIN_ITEMS = [
     label:       "Rank",
     href:        "/portal/student/leaderboard",
     exact:       false,
-    colorIdle:   "bg-blue-50 text-blue-500",
-    colorActive: "bg-blue-500 text-white shadow-md shadow-blue-200",
-    labelActive: "text-blue-500",
+    colorIdle:   "bg-[#EFF6FF] text-[#3B82F6]",
+    colorActive: "bg-[#EFF6FF]0 text-white shadow-md shadow-blue-200",
+    labelActive: "text-[#3B82F6]",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">
         <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
@@ -74,7 +74,7 @@ const MORE_ITEMS = [
         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.5 2.5a1 1 0 001.414-1.414L11 9.586V6z" clipRule="evenodd" />
       </svg>
     ),
-    color: "bg-blue-50 text-blue-600",
+    color: "bg-[#EFF6FF] text-[#2563EB]",
   },
   {
     label: "Attendance",
@@ -84,7 +84,7 @@ const MORE_ITEMS = [
         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
       </svg>
     ),
-    color: "bg-emerald-50 text-emerald-600",
+    color: "bg-[#E7F8EE] text-[#10B981]",
   },
   {
     label: "Certificates",
@@ -94,7 +94,7 @@ const MORE_ITEMS = [
         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
       </svg>
     ),
-    color: "bg-amber-50 text-amber-600",
+    color: "bg-[#FFFBEB] text-[#F59E0B]",
   },
   {
     label: "My Videos",
@@ -218,7 +218,7 @@ export default function StudentBottomNav() {
               "flex h-[28px] w-[28px] items-center justify-center rounded-[9px] transition-all",
               (isMoreActive || moreOpen)
                 ? "bg-slate-600 text-white shadow-md shadow-slate-300"
-                : "bg-slate-100 text-slate-500",
+                : "bg-[#F1F5F9] text-[#64748B]",
             ].join(" ")}>
               {moreOpen ? (
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">
@@ -232,7 +232,7 @@ export default function StudentBottomNav() {
             </div>
             <span className={[
               "text-[9.5px] font-semibold leading-none transition-colors",
-              (isMoreActive || moreOpen) ? "text-slate-600" : "text-[#94A3B8]",
+              (isMoreActive || moreOpen) ? "text-[#475569]" : "text-[#94A3B8]",
             ].join(" ")}>
               More
             </span>

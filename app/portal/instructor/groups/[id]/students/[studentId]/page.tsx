@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getInstructorByUserId,
   getStudentProfileForInstructor,
@@ -13,10 +13,10 @@ interface Props { params: Promise<{ id: string; studentId: string }> }
 
 const SUB_META: Record<string, { label: string; cls: string }> = {
   not_submitted: { label: 'Not submitted', cls: 'bg-[#F1F5F9] text-[#64748B]'         },
-  submitted:     { label: 'Submitted',     cls: 'bg-amber-100 text-amber-700'          },
+  submitted:     { label: 'Submitted',     cls: 'bg-[#FFFBEB] text-[#B45309]'          },
   resubmitted:   { label: 'Resubmitted',   cls: 'bg-purple-100 text-purple-700'        },
-  graded:        { label: 'Graded',        cls: 'bg-green-100 text-green-700'          },
-  returned:      { label: 'Returned',      cls: 'bg-blue-100 text-blue-700'            },
+  graded:        { label: 'Graded',        cls: 'bg-[#E7F8EE] text-[#15803D]'          },
+  returned:      { label: 'Returned',      cls: 'bg-[#EFF6FF] text-[#1D4ED8]'            },
 }
 
 export default async function StudentProfilePage({ params }: Props) {
@@ -38,8 +38,8 @@ export default async function StudentProfilePage({ params }: Props) {
   const absent       = profile.attendance_absent
   const late         = profile.attendance_late
   const pct          = total > 0 ? Math.round((present / total) * 100) : null
-  const pctColor     = pct === null ? '' : pct >= 75 ? 'text-green-600' : pct >= 50 ? 'text-amber-500' : 'text-red-500'
-  const barColor     = pct === null ? '' : pct >= 75 ? 'bg-green-500'  : pct >= 50 ? 'bg-amber-400'  : 'bg-red-500'
+  const pctColor     = pct === null ? '' : pct >= 75 ? 'text-[#10B981]' : pct >= 50 ? 'text-[#F59E0B]' : 'text-[#EF4444]'
+  const barColor     = pct === null ? '' : pct >= 75 ? 'bg-[#10B981]'  : pct >= 50 ? 'bg-[#F59E0B]'  : 'bg-[#EF4444]'
 
   const doneCount    = assignments.filter(a => ['graded', 'returned', 'submitted', 'resubmitted'].includes(a.sub_status)).length
   const pendingCount = assignments.filter(a => a.sub_status === 'not_submitted').length
@@ -68,7 +68,7 @@ export default async function StudentProfilePage({ params }: Props) {
       </div>
 
       {/* ── Attendance ─────────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3.5">
+      <div className="ds-card px-4 py-3.5">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-semibold text-[#0B1F3A]">Attendance</p>
           {pct !== null && (
@@ -83,9 +83,9 @@ export default async function StudentProfilePage({ params }: Props) {
             {/* 4-stat grid */}
             <div className="grid grid-cols-4 gap-2">
               {[
-                { label: 'Present', value: present, color: 'text-green-600',  bg: 'bg-green-50'  },
-                { label: 'Absent',  value: absent,  color: 'text-red-600',    bg: 'bg-red-50'    },
-                { label: 'Late',    value: late,    color: 'text-amber-600',  bg: 'bg-amber-50'  },
+                { label: 'Present', value: present, color: 'text-[#10B981]',  bg: 'bg-[#E7F8EE]'  },
+                { label: 'Absent',  value: absent,  color: 'text-[#EF4444]',    bg: 'bg-[#FEE2E2]'    },
+                { label: 'Late',    value: late,    color: 'text-[#F59E0B]',  bg: 'bg-[#FFFBEB]'  },
                 { label: 'Total',   value: total,   color: 'text-[#0B1F3A]', bg: 'bg-[#F8FAFC]' },
               ].map(({ label, value, color, bg }) => (
                 <div key={label} className={`rounded-lg ${bg} px-2 py-2.5 text-center`}>
@@ -107,9 +107,9 @@ export default async function StudentProfilePage({ params }: Props) {
 
             {/* Attention alert */}
             {absent >= 3 && (
-              <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
-                <span className="shrink-0 text-red-500">⚠</span>
-                <p className="text-xs text-red-700">
+              <div className="mt-3 flex items-start gap-2 rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2">
+                <span className="shrink-0 text-[#EF4444]">⚠</span>
+                <p className="text-xs text-[#DC2626]">
                   {absent} absences — this student requires attention.
                 </p>
               </div>
@@ -120,11 +120,11 @@ export default async function StudentProfilePage({ params }: Props) {
 
       {/* ── Assignments ────────────────────────────────────────────────────── */}
       {assignments.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3.5">
+        <div className="ds-card px-4 py-3.5">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-semibold text-[#0B1F3A]">Assignments</p>
             <div className="flex items-center gap-1.5 text-xs text-[#94A3B8]">
-              <span className="font-medium text-green-600">{doneCount} done</span>
+              <span className="font-medium text-[#10B981]">{doneCount} done</span>
               {pendingCount > 0 && (
                 <>
                   <span>·</span>
@@ -146,9 +146,9 @@ export default async function StudentProfilePage({ params }: Props) {
                   {/* Status dot */}
                   <div className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
                     a.sub_status === 'graded' || a.sub_status === 'returned'
-                      ? 'bg-green-500'
+                      ? 'bg-[#10B981]'
                       : a.sub_status === 'submitted' || a.sub_status === 'resubmitted'
-                      ? 'bg-amber-400'
+                      ? 'bg-[#F59E0B]'
                       : 'bg-[#E2E8F0]'
                   }`} />
 
@@ -159,7 +159,7 @@ export default async function StudentProfilePage({ params }: Props) {
                       {a.is_late && (
                         <>
                           {due && <span className="text-[#E2E8F0]">·</span>}
-                          <span className="text-red-500">Late</span>
+                          <span className="text-[#EF4444]">Late</span>
                         </>
                       )}
                       {a.submitted_at && (
@@ -191,7 +191,7 @@ export default async function StudentProfilePage({ params }: Props) {
       )}
 
       {/* ── Notes ──────────────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3.5">
+      <div className="ds-card px-4 py-3.5">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-semibold text-[#0B1F3A]">Notes</p>
           <span className="rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[10px] font-medium text-[#FF8A1F]">

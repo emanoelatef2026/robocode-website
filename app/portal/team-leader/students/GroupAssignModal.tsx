@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useTransition } from 'react'
 import type { StudentOperationalRow } from '@/modules/students/operational'
@@ -58,11 +58,11 @@ export default function GroupAssignModal({ student, groups, onClose, onSuccess }
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-5 space-y-4">
             {error && (
-              <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>
+              <div className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">{error}</div>
             )}
 
             <div>
-              <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Select Group <span className="text-red-500">*</span></label>
+              <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Select Group <span className="text-[#EF4444]">*</span></label>
               {groups.length === 0 ? (
                 <p className="text-sm text-[#94A3B8]">No active groups available in this branch.</p>
               ) : (
@@ -80,7 +80,7 @@ export default function GroupAssignModal({ student, groups, onClose, onSuccess }
             </div>
 
             {student.group_id && (
-              <div className="rounded-lg bg-amber-50 border border-amber-100 px-3 py-2 text-xs text-amber-700">
+              <div className="rounded-lg bg-[#FFFBEB] border border-amber-100 px-3 py-2 text-xs text-[#B45309]">
                 This student is already in a group. Assigning to a new group will add a secondary membership.
               </div>
             )}

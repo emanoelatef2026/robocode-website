@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useTransition, useRef, useState } from 'react'
 import { useRouter }                        from 'next/navigation'
@@ -11,10 +11,10 @@ import type { AttendanceStatus }            from '@/types/enums'
 const STATUSES: AttendanceStatus[] = ['present', 'absent', 'late', 'excused']
 
 const BADGE: Record<AttendanceStatus, string> = {
-  present:  'border-emerald-300 bg-emerald-50  text-emerald-700',
-  absent:   'border-red-200    bg-red-50       text-red-600',
-  late:     'border-amber-200  bg-amber-50     text-amber-700',
-  excused:  'border-blue-200   bg-blue-50      text-blue-600',
+  present:  'border-emerald-300 bg-[#E7F8EE]  text-[#15803D]',
+  absent:   'border-[#FECACA]    bg-[#FEE2E2]       text-[#EF4444]',
+  late:     'border-[#FDE68A]  bg-[#FFFBEB]     text-[#B45309]',
+  excused:  'border-blue-200   bg-[#EFF6FF]      text-[#2563EB]',
   makeup:   'border-purple-200 bg-purple-50    text-purple-600',
 }
 
@@ -64,14 +64,14 @@ export default function TLAttendanceRecordForm({
 
   if (success) {
     return (
-      <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-8 text-center">
-        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-emerald-600">
+      <div className="rounded-xl border border-emerald-100 bg-[#E7F8EE] p-8 text-center">
+        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[#E7F8EE]">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-[#10B981]">
             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
           </svg>
         </div>
-        <p className="text-base font-medium text-emerald-700">Attendance recorded successfully!</p>
-        <p className="mt-1 text-sm text-emerald-600">Session is now visible across all portals. Redirecting…</p>
+        <p className="text-base font-medium text-[#15803D]">Attendance recorded successfully!</p>
+        <p className="mt-1 text-sm text-[#10B981]">Session is now visible across all portals. Redirecting…</p>
       </div>
     )
   }
@@ -79,14 +79,14 @@ export default function TLAttendanceRecordForm({
   return (
     <div className="space-y-5">
       {/* Historical backfill notice */}
-      <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+      <div className="rounded-xl border border-amber-100 bg-[#FFFBEB] p-4">
         <div className="flex gap-3">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-amber-500">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-[#F59E0B]">
             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
           <div>
-            <p className="text-sm font-medium text-amber-700">Historical Session Recording Supported</p>
-            <p className="mt-0.5 text-xs text-amber-600">
+            <p className="text-sm font-medium text-[#B45309]">Historical Session Recording Supported</p>
+            <p className="mt-0.5 text-xs text-[#F59E0B]">
               You can set any past date. Attendance is academic history — contracts and payments can be linked later.
               Sessions appear immediately in student, parent, and instructor portals.
             </p>
@@ -94,11 +94,11 @@ export default function TLAttendanceRecordForm({
         </div>
       </div>
 
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-4 text-sm font-semibold text-[#0B1F3A]">Session Details</h2>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+          <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">{error}</div>
         )}
 
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
@@ -109,7 +109,7 @@ export default function TLAttendanceRecordForm({
           {/* Group */}
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Group <span className="text-red-500">*</span>
+              Group <span className="text-[#EF4444]">*</span>
             </label>
             <select
               name="group_id"
@@ -131,7 +131,7 @@ export default function TLAttendanceRecordForm({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                Session date <span className="text-red-500">*</span>
+                Session date <span className="text-[#EF4444]">*</span>
               </label>
               <input
                 name="session_date"
@@ -177,14 +177,14 @@ export default function TLAttendanceRecordForm({
                   <button
                     type="button"
                     onClick={() => setStatuses(Object.fromEntries(students.map((s) => [s.student_id, 'present' as AttendanceStatus])))}
-                    className="text-xs font-medium text-emerald-600 hover:underline"
+                    className="text-xs font-medium text-[#10B981] hover:underline"
                   >
                     All present
                   </button>
                   <button
                     type="button"
                     onClick={() => setStatuses(Object.fromEntries(students.map((s) => [s.student_id, 'absent' as AttendanceStatus])))}
-                    className="text-xs font-medium text-red-500 hover:underline"
+                    className="text-xs font-medium text-[#EF4444] hover:underline"
                   >
                     All absent
                   </button>

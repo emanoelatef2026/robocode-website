@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition, useMemo } from 'react'
 import { useRouter }    from 'next/navigation'
@@ -53,7 +53,7 @@ function fmtK(n: number) {
 
 function ProfitBadge({ value, size = 'sm' }: { value: number; size?: 'sm' | 'xs' }) {
   const pos = value >= 0
-  const cls = pos ? 'text-emerald-700' : 'text-red-600'
+  const cls = pos ? 'text-[#15803D]' : 'text-[#EF4444]'
   const text = size === 'sm' ? 'text-sm font-bold' : 'text-xs font-semibold'
   return (
     <span className={`${text} ${cls}`}>
@@ -63,7 +63,7 @@ function ProfitBadge({ value, size = 'sm' }: { value: number; size?: 'sm' | 'xs'
 }
 
 function RateBadge({ rate }: { rate: number }) {
-  const cls = rate >= 80 ? 'bg-emerald-50 text-emerald-700' : rate >= 50 ? 'bg-amber-50 text-amber-700' : 'bg-red-50 text-red-600'
+  const cls = rate >= 80 ? 'bg-[#E7F8EE] text-[#15803D]' : rate >= 50 ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#FEE2E2] text-[#EF4444]'
   return <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${cls}`}>{rate}%</span>
 }
 
@@ -351,7 +351,7 @@ function ExpenseModal({
           />
         </div>
 
-        {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>}
+        {error && <p className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#EF4444]">{error}</p>}
 
         <div className="flex justify-end gap-2">
           <button
@@ -524,7 +524,7 @@ function RecurringModal({
           />
         </div>
 
-        {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{error}</p>}
+        {error && <p className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#EF4444]">{error}</p>}
 
         <div className="flex justify-end gap-2">
           <button type="button" onClick={onClose}
@@ -594,7 +594,7 @@ function GroupDetailModal({
               {Object.entries(categoryMap).sort((a,b) => b[1]-a[1]).map(([type, amt]) => (
                 <div key={type} className="rounded-lg border border-[#E2E8F0] px-3 py-2">
                   <p className="text-[11px] text-[#94A3B8]">{EXPENSE_TYPE_LABELS[type as ExpenseType] ?? type}</p>
-                  <p className="text-sm font-bold text-red-600">{fmt(amt)}</p>
+                  <p className="text-sm font-bold text-[#EF4444]">{fmt(amt)}</p>
                 </div>
               ))}
             </div>
@@ -648,7 +648,7 @@ function GroupDetailModal({
           ) : (
             <div className="rounded-xl border border-[#E2E8F0] overflow-x-auto">
               <table className="w-full text-xs">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-3 py-2 text-left font-medium text-[#64748B]">Date</th>
                     <th className="px-3 py-2 text-left font-medium text-[#64748B]">Type</th>
@@ -668,7 +668,7 @@ function GroupDetailModal({
                           {EXPENSE_TYPE_LABELS[e.expense_type]}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-right font-semibold text-red-600">{fmt(e.amount)}</td>
+                      <td className="px-3 py-2 text-right font-semibold text-[#EF4444]">{fmt(e.amount)}</td>
                       <td className="px-3 py-2 text-[#94A3B8] max-w-[140px] truncate">{e.notes ?? '—'}</td>
                       <td className="px-3 py-2">
                         <DeleteBtn id={e.id} onSuccess={() => { handleDelete(e.id); onRefresh() }} />
@@ -713,7 +713,7 @@ function DeleteBtn({ id, onSuccess }: { id: string; onSuccess: () => void }) {
   const [confirm, setConfirm] = useState(false)
   if (!confirm) {
     return (
-      <button onClick={() => setConfirm(true)} className="rounded px-2 py-1 text-[11px] text-[#94A3B8] hover:text-red-600 hover:bg-red-50">
+      <button onClick={() => setConfirm(true)} className="rounded px-2 py-1 text-[11px] text-[#94A3B8] hover:text-[#EF4444] hover:bg-[#FEE2E2]">
         Delete
       </button>
     )
@@ -723,7 +723,7 @@ function DeleteBtn({ id, onSuccess }: { id: string; onSuccess: () => void }) {
       <button
         onClick={() => startTransition(async () => { await deleteExpense(id); onSuccess() })}
         disabled={isPending}
-        className="rounded px-2 py-1 text-[11px] font-semibold text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-50"
+        className="rounded px-2 py-1 text-[11px] font-semibold text-[#EF4444] bg-[#FEE2E2] hover:bg-[#FEE2E2] disabled:opacity-50"
       >
         {isPending ? '…' : 'Confirm'}
       </button>
@@ -792,7 +792,7 @@ function LiveFilterBar({
   if (hasDateFilter)  filterParts.push(`Period: ${currentDateFrom || '…'} → ${currentDateTo || '…'}`)
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 space-y-2.5">
+    <div className="ds-card px-4 py-3 space-y-2.5">
       <div className="flex flex-wrap items-center gap-2">
         {/* Branch — live on change */}
         <select
@@ -839,7 +839,7 @@ function LiveFilterBar({
         </div>
 
         {hasFilters && (
-          <button onClick={clear} className="text-[11px] text-[#94A3B8] hover:text-red-500 underline">
+          <button onClick={clear} className="text-[11px] text-[#94A3B8] hover:text-[#EF4444] underline">
             Clear filters
           </button>
         )}
@@ -860,14 +860,14 @@ function LiveFilterBar({
 // ── Status badge ───────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
-  active:    'bg-emerald-50 text-emerald-700',
-  forming:   'bg-blue-50 text-blue-700',
-  completed: 'bg-slate-100 text-slate-600',
-  archived:  'bg-gray-100 text-gray-500',
+  active:    'bg-[#E7F8EE] text-[#15803D]',
+  forming:   'bg-[#EFF6FF] text-[#1D4ED8]',
+  completed: 'bg-[#F1F5F9] text-[#475569]',
+  archived:  'bg-[#F3F4F6] text-[#6B7280]',
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const cls = STATUS_COLORS[status] ?? 'bg-gray-100 text-gray-500'
+  const cls = STATUS_COLORS[status] ?? 'bg-[#F3F4F6] text-[#6B7280]'
   return (
     <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${cls}`}>
       {status}
@@ -939,15 +939,15 @@ function GroupsTab({
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
-          { label: 'Gross Expected',    value: fmtK(totalGrossExpRev), color: 'bg-slate-400' },
-          { label: 'Net Collected',     value: fmtK(totalNetColRev),   color: 'bg-emerald-400' },
+          { label: 'Gross Expected',    value: fmtK(totalGrossExpRev), color: 'bg-[#94A3B8]' },
+          { label: 'Net Collected',     value: fmtK(totalNetColRev),   color: 'bg-[#10B981]' },
           { label: 'Instr. Earned',     value: fmtK(totalEarned),      color: 'bg-violet-400' },
           { label: 'Final Instr. Cost', value: fmtK(totalFinalCost),   color: 'bg-orange-400' },
-          { label: 'Actual Profit',     value: fmtK(totalProfit),      color: totalProfit >= 0 ? 'bg-emerald-400' : 'bg-red-400' },
+          { label: 'Actual Profit',     value: fmtK(totalProfit),      color: totalProfit >= 0 ? 'bg-[#10B981]' : 'bg-[#EF4444]' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <div key={k.label} className="ds-card p-4">
             <div className={`mb-2 h-1.5 w-8 rounded-full ${k.color} opacity-80`} />
-            <p className={`text-xl font-bold ${k.label === 'Actual Profit' && totalProfit < 0 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>{k.value}</p>
+            <p className={`text-xl font-bold ${k.label === 'Actual Profit' && totalProfit < 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>{k.value}</p>
             <p className="mt-0.5 text-xs text-[#64748B]">{k.label}</p>
           </div>
         ))}
@@ -997,14 +997,14 @@ function GroupsTab({
       </div>
 
       {/* Table */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+      <div className="ds-card overflow-x-auto">
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5">
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">
             Group P&L Dashboard · {filtered.length} groups
           </p>
         </div>
         <table className="w-full text-sm min-w-[1600px]">
-          <thead>
+          <thead className="ds-table-head">
             <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
               <th className="px-3 py-3 text-left text-[11px] font-medium text-[#64748B]">Group</th>
               <th className="px-3 py-3 text-left text-[11px] font-medium text-[#64748B]">Branch</th>
@@ -1033,7 +1033,7 @@ function GroupsTab({
             {filtered.map(g => (
               <tr
                 key={g.group_id}
-                className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC] cursor-pointer"
+                className="ds-table-row cursor-pointer"
                 onClick={() => setDetailId(g.group_id)}
               >
                 <td className="px-3 py-3 font-semibold text-[#0B1F3A] whitespace-nowrap max-w-[140px] truncate">
@@ -1043,22 +1043,22 @@ function GroupsTab({
                 <td className="px-3 py-3 text-center"><StatusBadge status={g.group_status} /></td>
                 <td className="px-3 py-3 text-center text-[#64748B]">{g.student_count}</td>
                 <td className="px-3 py-3 text-center">
-                  <span className={`font-semibold text-xs ${g.robocode_share_percent < 100 ? 'text-amber-600' : 'text-[#94A3B8]'}`}>
+                  <span className={`font-semibold text-xs ${g.robocode_share_percent < 100 ? 'text-[#F59E0B]' : 'text-[#94A3B8]'}`}>
                     {g.robocode_share_percent}%
                   </span>
                 </td>
                 <td className="px-3 py-3 text-right text-[#0B1F3A]">{fmt(g.gross_expected_revenue)}</td>
                 <td className="px-3 py-3 text-right text-[#0B1F3A]">{fmt(g.gross_collected_revenue)}</td>
-                <td className="px-3 py-3 text-right font-medium text-emerald-700">{fmt(g.net_expected_revenue)}</td>
-                <td className="px-3 py-3 text-right font-medium text-emerald-700">{fmt(g.net_collected_revenue)}</td>
-                <td className="px-3 py-3 text-right text-amber-600">{fmt(g.outstanding)}</td>
+                <td className="px-3 py-3 text-right font-medium text-[#15803D]">{fmt(g.net_expected_revenue)}</td>
+                <td className="px-3 py-3 text-right font-medium text-[#15803D]">{fmt(g.net_collected_revenue)}</td>
+                <td className="px-3 py-3 text-right text-[#F59E0B]">{fmt(g.outstanding)}</td>
                 <td className="px-3 py-3 text-right text-violet-700">{fmt(g.instructor_earned)}</td>
-                <td className="px-3 py-3 text-right text-emerald-700">{fmt(g.instructor_paid)}</td>
+                <td className="px-3 py-3 text-right text-[#15803D]">{fmt(g.instructor_paid)}</td>
                 <td className="px-3 py-3 text-right text-orange-600">{fmt(g.instructor_remaining)}</td>
                 <td className="px-3 py-3 text-right text-rose-600">{fmt(g.future_liability)}</td>
-                <td className="px-3 py-3 text-right font-semibold text-red-700">{fmt(g.final_instructor_cost)}</td>
+                <td className="px-3 py-3 text-right font-semibold text-[#DC2626]">{fmt(g.final_instructor_cost)}</td>
                 <td className="px-3 py-3 text-right text-indigo-700">{fmt(g.manual_expenses)}</td>
-                <td className="px-3 py-3 text-right text-red-600 font-medium">{fmt(g.total_expenses)}</td>
+                <td className="px-3 py-3 text-right text-[#EF4444] font-medium">{fmt(g.total_expenses)}</td>
                 <td className="px-3 py-3 text-right"><ProfitBadge value={g.expected_profit} size="xs" /></td>
                 <td className="px-3 py-3 text-right"><ProfitBadge value={g.actual_profit}   size="xs" /></td>
                 <td className="px-3 py-3 text-center"><RateBadge rate={g.collection_rate} /></td>
@@ -1129,12 +1129,12 @@ function BranchesTab({
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { l: 'Gross Expected',  v: fmtK(rows.reduce((s,b) => s + b.gross_expected_revenue,  0)), c: 'bg-slate-400' },
-          { l: 'Net Collected',   v: fmtK(rows.reduce((s,b) => s + b.net_collected_revenue,   0)), c: 'bg-emerald-400' },
-          { l: 'Total Expenses',  v: fmtK(rows.reduce((s,b) => s + b.total_expenses,          0)), c: 'bg-red-400' },
-          { l: 'Actual Profit',   v: fmtK(rows.reduce((s,b) => s + b.actual_profit,           0)), c: rows.reduce((s,b) => s+b.actual_profit,0) >= 0 ? 'bg-emerald-400' : 'bg-red-400' },
+          { l: 'Gross Expected',  v: fmtK(rows.reduce((s,b) => s + b.gross_expected_revenue,  0)), c: 'bg-[#94A3B8]' },
+          { l: 'Net Collected',   v: fmtK(rows.reduce((s,b) => s + b.net_collected_revenue,   0)), c: 'bg-[#10B981]' },
+          { l: 'Total Expenses',  v: fmtK(rows.reduce((s,b) => s + b.total_expenses,          0)), c: 'bg-[#EF4444]' },
+          { l: 'Actual Profit',   v: fmtK(rows.reduce((s,b) => s + b.actual_profit,           0)), c: rows.reduce((s,b) => s+b.actual_profit,0) >= 0 ? 'bg-[#10B981]' : 'bg-[#EF4444]' },
         ].map(k => (
-          <div key={k.l} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <div key={k.l} className="ds-card p-4">
             <div className={`mb-2 h-1.5 w-8 rounded-full ${k.c} opacity-80`} />
             <p className="text-xl font-bold text-[#0B1F3A]">{k.v}</p>
             <p className="mt-0.5 text-xs text-[#64748B]">{k.l}</p>
@@ -1155,7 +1155,7 @@ function BranchesTab({
       {/* Branch cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map(b => (
-          <div key={b.branch_id} className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-3">
+          <div key={b.branch_id} className="ds-card p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#0B1F3A]">{b.branch_name}</p>
@@ -1166,9 +1166,9 @@ function BranchesTab({
 
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               <div><p className="text-[#94A3B8]">Gross Expected</p><p className="font-semibold text-[#0B1F3A]">{fmt(b.gross_expected_revenue)}</p></div>
-              <div><p className="text-[#94A3B8]">Net Collected</p><p className="font-semibold text-emerald-700">{fmt(b.net_collected_revenue)}</p></div>
-              <div><p className="text-[#94A3B8]">Outstanding</p><p className="font-semibold text-amber-600">{fmt(b.outstanding)}</p></div>
-              <div><p className="text-[#94A3B8]">Total Expenses</p><p className="font-semibold text-red-600">{fmt(b.total_expenses)}</p></div>
+              <div><p className="text-[#94A3B8]">Net Collected</p><p className="font-semibold text-[#15803D]">{fmt(b.net_collected_revenue)}</p></div>
+              <div><p className="text-[#94A3B8]">Outstanding</p><p className="font-semibold text-[#F59E0B]">{fmt(b.outstanding)}</p></div>
+              <div><p className="text-[#94A3B8]">Total Expenses</p><p className="font-semibold text-[#EF4444]">{fmt(b.total_expenses)}</p></div>
             </div>
 
             {b.total_expenses > 0 && (
@@ -1188,7 +1188,7 @@ function BranchesTab({
                 {b.branch_expenses > 0 && (
                   <div className="flex justify-between">
                     <span className="text-[#64748B]">Manual</span>
-                    <span className="font-medium text-blue-700">{fmt(b.branch_expenses)}</span>
+                    <span className="font-medium text-[#1D4ED8]">{fmt(b.branch_expenses)}</span>
                   </div>
                 )}
                 {b.branch_recurring_expenses > 0 && (
@@ -1213,7 +1213,7 @@ function BranchesTab({
 
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
               <div
-                className={`h-full rounded-full ${b.collection_rate >= 80 ? 'bg-emerald-400' : b.collection_rate >= 50 ? 'bg-amber-400' : 'bg-red-400'}`}
+                className={`h-full rounded-full ${b.collection_rate >= 80 ? 'bg-[#10B981]' : b.collection_rate >= 50 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
                 style={{ width: `${Math.min(b.collection_rate, 100)}%` }}
               />
             </div>
@@ -1227,7 +1227,7 @@ function BranchesTab({
           </div>
         ))}
         {rows.length === 0 && (
-          <div className="col-span-3 rounded-xl border border-[#E2E8F0] bg-white py-14 text-center">
+          <div className="col-span-3 ds-card py-14 text-center">
             <p className="text-sm text-[#94A3B8]">No branches found.</p>
           </div>
         )}
@@ -1235,12 +1235,12 @@ function BranchesTab({
 
       {/* Branch expense history table */}
       {expenses.filter(e => e.expense_scope === 'BRANCH').length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+        <div className="ds-card overflow-x-auto">
           <div className="border-b border-[#E2E8F0] px-4 py-2.5">
             <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Branch Expense History</p>
           </div>
           <table className="w-full text-sm">
-            <thead>
+            <thead className="ds-table-head">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                 <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Date</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
@@ -1252,7 +1252,7 @@ function BranchesTab({
             </thead>
             <tbody>
               {expenses.filter(e => e.expense_scope === 'BRANCH').map(e => (
-                <tr key={e.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                <tr key={e.id} className="ds-table-row">
                   <td className="px-4 py-3 text-[#64748B] whitespace-nowrap">
                     {new Date(e.expense_date).toLocaleDateString('en-EG', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
@@ -1262,7 +1262,7 @@ function BranchesTab({
                       {EXPENSE_TYPE_LABELS[e.expense_type]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right font-semibold text-red-600">{fmt(e.amount)}</td>
+                  <td className="px-4 py-3 text-right font-semibold text-[#EF4444]">{fmt(e.amount)}</td>
                   <td className="px-4 py-3 text-[#64748B] text-xs max-w-[160px] truncate">{e.notes ?? '—'}</td>
                   <td className="px-4 py-3">
                     <DeleteBtn id={e.id} onSuccess={onRefresh} />
@@ -1320,16 +1320,16 @@ function AcademyTab({
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
-          { l: 'Gross Expected',    v: fmtK(pnl.gross_expected_revenue),  c: 'bg-slate-400' },
-          { l: 'Net Collected',     v: fmtK(pnl.net_collected_revenue),   c: 'bg-emerald-400' },
-          { l: 'Outstanding',       v: fmtK(pnl.outstanding),             c: 'bg-amber-400' },
-          { l: 'Total Expenses',    v: fmtK(pnl.total_expenses),          c: 'bg-red-400' },
-          { l: 'Expected Profit',   v: fmtK(pnl.expected_profit),   c: pnl.expected_profit >= 0 ? 'bg-emerald-400' : 'bg-red-400', neg: pnl.expected_profit < 0 },
-          { l: 'Actual Profit',     v: fmtK(pnl.actual_profit),     c: pnl.actual_profit >= 0 ? 'bg-emerald-400' : 'bg-red-400',   neg: pnl.actual_profit < 0 },
+          { l: 'Gross Expected',    v: fmtK(pnl.gross_expected_revenue),  c: 'bg-[#94A3B8]' },
+          { l: 'Net Collected',     v: fmtK(pnl.net_collected_revenue),   c: 'bg-[#10B981]' },
+          { l: 'Outstanding',       v: fmtK(pnl.outstanding),             c: 'bg-[#F59E0B]' },
+          { l: 'Total Expenses',    v: fmtK(pnl.total_expenses),          c: 'bg-[#EF4444]' },
+          { l: 'Expected Profit',   v: fmtK(pnl.expected_profit),   c: pnl.expected_profit >= 0 ? 'bg-[#10B981]' : 'bg-[#EF4444]', neg: pnl.expected_profit < 0 },
+          { l: 'Actual Profit',     v: fmtK(pnl.actual_profit),     c: pnl.actual_profit >= 0 ? 'bg-[#10B981]' : 'bg-[#EF4444]',   neg: pnl.actual_profit < 0 },
         ].map(k => (
-          <div key={k.l} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <div key={k.l} className="ds-card p-4">
             <div className={`mb-2 h-1.5 w-8 rounded-full ${k.c} opacity-80`} />
-            <p className={`text-xl font-bold ${'neg' in k && k.neg ? 'text-red-600' : 'text-[#0B1F3A]'}`}>{k.v}</p>
+            <p className={`text-xl font-bold ${'neg' in k && k.neg ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>{k.v}</p>
             <p className="mt-0.5 text-xs text-[#64748B]">{k.l}</p>
           </div>
         ))}
@@ -1339,13 +1339,13 @@ function AcademyTab({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         {[
           { l: 'Instr. Earned',    v: fmt(pnl.instructor_earned),    c: 'text-violet-600' },
-          { l: 'Instr. Paid',      v: fmt(pnl.instructor_paid),      c: 'text-emerald-600' },
+          { l: 'Instr. Paid',      v: fmt(pnl.instructor_paid),      c: 'text-[#10B981]' },
           { l: 'Future Liability', v: fmt(pnl.future_liability),     c: 'text-rose-600' },
           { l: 'Group Expenses',   v: fmt(pnl.group_expenses + pnl.group_recurring_expenses),   c: 'text-indigo-600' },
-          { l: 'Branch Expenses',  v: fmt(pnl.branch_expenses + pnl.branch_recurring_expenses), c: 'text-blue-600' },
+          { l: 'Branch Expenses',  v: fmt(pnl.branch_expenses + pnl.branch_recurring_expenses), c: 'text-[#2563EB]' },
           { l: 'Academy Expenses', v: fmt(pnl.academy_expenses + pnl.academy_recurring_expenses), c: 'text-cyan-600' },
         ].map(k => (
-          <div key={k.l} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <div key={k.l} className="ds-card p-4">
             <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">{k.l}</p>
             <p className={`mt-1 text-base font-bold ${k.c}`}>{k.v}</p>
           </div>
@@ -1353,12 +1353,12 @@ function AcademyTab({
       </div>
 
       {/* Monthly trend */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Monthly Trend — Last 6 Months</p>
           <div className="flex items-center gap-4 text-[11px] text-[#64748B]">
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-emerald-400" /> Collected</span>
-            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-red-400" /> Expenses</span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#10B981]" /> Collected</span>
+            <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#EF4444]" /> Expenses</span>
           </div>
         </div>
         <div className="p-5">
@@ -1368,12 +1368,12 @@ function AcademyTab({
               const eH = maxBar > 0 ? Math.round((m.total_expenses / maxBar) * 100) : 2
               return (
                 <div key={m.month} className="flex flex-1 flex-col items-center gap-1.5">
-                  <p className={`text-[10px] font-semibold ${m.actual_profit >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                  <p className={`text-[10px] font-semibold ${m.actual_profit >= 0 ? 'text-[#15803D]' : 'text-[#EF4444]'}`}>
                     {m.actual_profit >= 0 ? '+' : '−'}{fmtK(Math.abs(m.actual_profit)).replace('EGP ', '')}
                   </p>
                   <div className="flex w-full items-end gap-0.5">
-                    <div className="flex-1 rounded-t-sm bg-emerald-400" style={{ height: `${Math.max(cH, 2)}px` }} />
-                    <div className="flex-1 rounded-t-sm bg-red-400"     style={{ height: `${Math.max(eH, 2)}px` }} />
+                    <div className="flex-1 rounded-t-sm bg-[#10B981]" style={{ height: `${Math.max(cH, 2)}px` }} />
+                    <div className="flex-1 rounded-t-sm bg-[#EF4444]"     style={{ height: `${Math.max(eH, 2)}px` }} />
                   </div>
                   <p className="text-[10px] text-[#94A3B8]">{m.label}</p>
                 </div>
@@ -1384,7 +1384,7 @@ function AcademyTab({
       </div>
 
       {/* Academy expenses */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+      <div className="ds-card overflow-x-auto">
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-3">
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Academy Expenses</p>
           <button
@@ -1398,7 +1398,7 @@ function AcademyTab({
           <div className="py-10 text-center text-sm text-[#94A3B8]">No academy expenses yet.</div>
         ) : (
           <table className="w-full text-sm">
-            <thead>
+            <thead className="ds-table-head">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                 {['Date', 'Type', 'Amount', 'Notes', ''].map(h => (
                   <th key={h} className={`px-4 py-3 text-xs font-medium text-[#64748B] ${h === 'Amount' ? 'text-right' : 'text-left'}`}>{h}</th>
@@ -1407,7 +1407,7 @@ function AcademyTab({
             </thead>
             <tbody>
               {acExp.map(e => (
-                <tr key={e.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                <tr key={e.id} className="ds-table-row">
                   <td className="px-4 py-3 text-[#64748B]">
                     {new Date(e.expense_date).toLocaleDateString('en-EG', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
@@ -1416,7 +1416,7 @@ function AcademyTab({
                       {EXPENSE_TYPE_LABELS[e.expense_type]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right font-semibold text-red-600">{fmt(e.amount)}</td>
+                  <td className="px-4 py-3 text-right font-semibold text-[#EF4444]">{fmt(e.amount)}</td>
                   <td className="px-4 py-3 text-[#64748B] text-xs max-w-[160px] truncate">{e.notes ?? '—'}</td>
                   <td className="px-4 py-3"><DeleteBtn id={e.id} onSuccess={onRefresh} /></td>
                 </tr>
@@ -1475,15 +1475,15 @@ function RecurringTab({
     <div className="space-y-4">
       {/* Summary */}
       <div className="grid grid-cols-3 gap-3">
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <div className="ds-card p-4">
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Active Recurring</p>
           <p className="mt-1 text-xl font-bold text-[#0B1F3A]">{active.length}</p>
         </div>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <div className="ds-card p-4">
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Monthly Commitment</p>
-          <p className="mt-1 text-xl font-bold text-red-600">{fmt(monthlyTotal)}</p>
+          <p className="mt-1 text-xl font-bold text-[#EF4444]">{fmt(monthlyTotal)}</p>
         </div>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <div className="ds-card p-4">
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Annual Commitment</p>
           <p className="mt-1 text-xl font-bold text-[#0B1F3A]">{fmt(monthlyTotal * 12)}</p>
         </div>
@@ -1500,13 +1500,13 @@ function RecurringTab({
       </div>
 
       {recurring.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white py-14 text-center">
+        <div className="ds-card py-14 text-center">
           <p className="text-sm text-[#94A3B8]">No recurring expenses yet. Add rent, internet, software subscriptions, etc.</p>
         </div>
       ) : (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+        <div className="ds-card overflow-x-auto">
           <table className="w-full text-sm">
-            <thead>
+            <thead className="ds-table-head">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                 {['Scope','Type','Group / Branch','Amount/mo','Start','End','Status',''].map(h => (
                   <th key={h} className={`px-4 py-3 text-xs font-medium text-[#64748B] ${h === 'Amount/mo' ? 'text-right' : 'text-left'}`}>{h}</th>
@@ -1515,7 +1515,7 @@ function RecurringTab({
             </thead>
             <tbody>
               {recurring.map(r => (
-                <tr key={r.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                <tr key={r.id} className="ds-table-row">
                   <td className="px-4 py-3">
                     <span className="rounded bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-medium text-[#64748B]">
                       {r.expense_scope}
@@ -1525,11 +1525,11 @@ function RecurringTab({
                   <td className="px-4 py-3 text-[#64748B]">
                     {r.group_name ?? r.branch_name ?? '—'}
                   </td>
-                  <td className="px-4 py-3 text-right font-semibold text-red-600">{fmt(r.amount)}</td>
+                  <td className="px-4 py-3 text-right font-semibold text-[#EF4444]">{fmt(r.amount)}</td>
                   <td className="px-4 py-3 text-[#64748B] whitespace-nowrap">{r.start_date}</td>
                   <td className="px-4 py-3 text-[#64748B] whitespace-nowrap">{r.end_date ?? 'Ongoing'}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${r.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-[#F1F5F9] text-[#94A3B8]'}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${r.is_active ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#F1F5F9] text-[#94A3B8]'}`}>
                       {r.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
@@ -1582,7 +1582,7 @@ function DeleteRecurBtn({ id, onSuccess }: { id: string; onSuccess: () => void }
   const [confirm, setConfirm] = useState(false)
   if (!confirm) {
     return (
-      <button onClick={() => setConfirm(true)} className="rounded px-2 py-1 text-[11px] text-[#94A3B8] hover:text-red-600 hover:bg-red-50">
+      <button onClick={() => setConfirm(true)} className="rounded px-2 py-1 text-[11px] text-[#94A3B8] hover:text-[#EF4444] hover:bg-[#FEE2E2]">
         Delete
       </button>
     )
@@ -1592,7 +1592,7 @@ function DeleteRecurBtn({ id, onSuccess }: { id: string; onSuccess: () => void }
       <button
         onClick={() => startTransition(async () => { await deleteRecurringExpense(id); onSuccess() })}
         disabled={isPending}
-        className="rounded px-2 py-1 text-[11px] font-semibold text-red-600 bg-red-50 hover:bg-red-100 disabled:opacity-50"
+        className="rounded px-2 py-1 text-[11px] font-semibold text-[#EF4444] bg-[#FEE2E2] hover:bg-[#FEE2E2] disabled:opacity-50"
       >
         {isPending ? '…' : 'Confirm'}
       </button>

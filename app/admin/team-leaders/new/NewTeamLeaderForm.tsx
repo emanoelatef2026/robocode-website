@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { createTeamLeader } from '@/modules/team-leaders/actions'
@@ -20,9 +20,9 @@ export default function NewTeamLeaderForm({ branches }: Props) {
   )
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -31,13 +31,13 @@ export default function NewTeamLeaderForm({ branches }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              First name <span className="text-red-500">*</span>
+              First name <span className="text-[#EF4444]">*</span>
             </label>
             <input name="first_name" required className={cls} />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Last name <span className="text-red-500">*</span>
+              Last name <span className="text-[#EF4444]">*</span>
             </label>
             <input name="last_name" required className={cls} />
           </div>
@@ -45,14 +45,14 @@ export default function NewTeamLeaderForm({ branches }: Props) {
 
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Email <span className="text-red-500">*</span>
+            Email <span className="text-[#EF4444]">*</span>
           </label>
           <input name="email" type="email" required className={cls} />
         </div>
 
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Password <span className="text-red-500">*</span>
+            Password <span className="text-[#EF4444]">*</span>
           </label>
           <input name="password" type="password" required autoComplete="new-password" placeholder="Minimum 6 characters" className={cls} />
         </div>
@@ -60,7 +60,7 @@ export default function NewTeamLeaderForm({ branches }: Props) {
         {/* Multi-branch selector */}
         <div>
           <label className="mb-2 block text-sm font-medium text-[#0B1F3A]">
-            Branches <span className="text-red-500">*</span>
+            Branches <span className="text-[#EF4444]">*</span>
             <span className="ml-1.5 text-xs font-normal text-[#94A3B8]">(select all that apply)</span>
           </label>
           <div className="grid grid-cols-2 gap-2 rounded-lg border border-[#E2E8F0] p-3">

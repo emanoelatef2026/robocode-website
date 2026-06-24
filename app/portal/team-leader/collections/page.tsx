@@ -1,4 +1,4 @@
-import { requirePermission }       from '@/modules/rbac/guards'
+﻿import { requirePermission }       from '@/modules/rbac/guards'
 import { listStudentOperations }   from '@/modules/finance/queries'
 import CollectionsView             from './CollectionsView'
 import type { StudentOperationsRow } from '@/modules/finance/types'
@@ -70,11 +70,11 @@ export default async function CollectionsPage() {
   }
 
   const sections = [
-    { id: 'due',       label: 'Due Today',             rows: dueToday,    color: 'bg-blue-500',   emptyMsg: 'No payments due today.' },
-    { id: 'overdue',   label: 'Overdue / Blocked',      rows: overdue,     color: 'bg-red-500',    emptyMsg: 'No overdue students.' },
-    { id: 'milestone', label: 'Session Milestone',      rows: milestone,   color: 'bg-amber-500',  emptyMsg: 'No milestone alerts.' },
-    { id: 'absent',    label: 'Absent + Unpaid',        rows: absentUnpaid,color: 'bg-orange-500', emptyMsg: 'No absent+unpaid students.' },
-    { id: 'highrisk',  label: 'High Risk (All)',        rows: highRisk,    color: 'bg-red-400',    emptyMsg: 'No high-risk students.' },
+    { id: 'due',       label: 'Due Today',             rows: dueToday,    color: 'bg-[#3B82F6]',   emptyMsg: 'No payments due today.' },
+    { id: 'overdue',   label: 'Overdue / Blocked',      rows: overdue,     color: 'bg-[#EF4444]',    emptyMsg: 'No overdue students.' },
+    { id: 'milestone', label: 'Session Milestone',      rows: milestone,   color: 'bg-[#F59E0B]',  emptyMsg: 'No milestone alerts.' },
+    { id: 'absent',    label: 'Absent + Unpaid',        rows: absentUnpaid,color: 'bg-[#FF8A1F]', emptyMsg: 'No absent+unpaid students.' },
+    { id: 'highrisk',  label: 'High Risk (All)',        rows: highRisk,    color: 'bg-[#EF4444]',    emptyMsg: 'No high-risk students.' },
   ]
 
   const totalOutstanding = allRows.reduce((s, r) => s + r.remaining_amount, 0)

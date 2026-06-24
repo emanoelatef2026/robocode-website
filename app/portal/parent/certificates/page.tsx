@@ -1,4 +1,4 @@
-import { requirePortalRole }          from '@/modules/rbac/guards'
+﻿import { requirePortalRole }          from '@/modules/rbac/guards'
 import { getParentChildren }          from '@/modules/parents/parent-portal-queries'
 import { getChildSessionsProgress }   from '@/modules/parents/parent-portal-queries'
 import { getChildCertificates }       from '@/modules/certificates/queries'
@@ -62,7 +62,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
       </div>
 
       {/* Eligibility block */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-3">
+      <div className="ds-card p-5 space-y-3">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Certificate Eligibility</p>
 
         <div className="flex items-center justify-between text-sm">
@@ -71,7 +71,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
         </div>
         <div className="h-2.5 overflow-hidden rounded-full bg-[#F1F5F9]">
           <div
-            className={`h-full rounded-full ${progressPct >= 100 ? 'bg-green-500' : progressPct >= 75 ? 'bg-yellow-500' : 'bg-[#FF8A1F]'}`}
+            className={`h-full rounded-full ${progressPct >= 100 ? 'bg-[#10B981]' : progressPct >= 75 ? 'bg-yellow-500' : 'bg-[#FF8A1F]'}`}
             style={{ width: `${Math.min(100, progressPct)}%` }}
           />
         </div>
@@ -81,15 +81,15 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
             Certificates are issued after course completion.
           </p>
           {hasCerts ? (
-            <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-[12px] font-semibold text-green-700">
+            <span className="rounded-full bg-[#E7F8EE] px-2.5 py-0.5 text-[12px] font-semibold text-[#15803D]">
               Certificate Issued
             </span>
           ) : isEligible ? (
-            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[12px] font-semibold text-blue-700">
+            <span className="rounded-full bg-[#EFF6FF] px-2.5 py-0.5 text-[12px] font-semibold text-[#1D4ED8]">
               Eligible
             </span>
           ) : (
-            <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-[12px] font-medium text-gray-500">
+            <span className="rounded-full bg-[#F3F4F6] px-2.5 py-0.5 text-[12px] font-medium text-[#6B7280]">
               Not Eligible Yet
             </span>
           )}
@@ -98,7 +98,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
 
       {/* Certificates list */}
       {certificates.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+        <div className="ds-card px-6 py-12 text-center">
           <p className="text-sm text-[#64748B]">No certificates yet.</p>
           <p className="mt-1 text-xs text-[#94A3B8]">
             Certificates are issued after course completion.
@@ -110,7 +110,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
             <div
               key={c.id}
               className={`rounded-xl border bg-white p-4 ${
-                c.status === 'revoked' ? 'border-red-200 opacity-60' : 'border-[#E2E8F0]'
+                c.status === 'revoked' ? 'border-[#FECACA] opacity-60' : 'border-[#E2E8F0]'
               }`}
             >
               <div className="flex items-start justify-between gap-3">
@@ -118,7 +118,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-[14px] font-semibold text-[#0B1F3A] leading-tight">{c.title}</h3>
                     {c.status === 'revoked' && (
-                      <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-600">
+                      <span className="shrink-0 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-medium text-[#EF4444]">
                         Revoked
                       </span>
                     )}

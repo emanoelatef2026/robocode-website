@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { useRouter }      from 'next/navigation'
@@ -35,9 +35,9 @@ export default function NewLeadForm({
   }, [state, router, redirectBase])
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -46,7 +46,7 @@ export default function NewLeadForm({
 
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
-            <label className={label}>Child Name <span className="text-red-500">*</span></label>
+            <label className={label}>Child Name <span className="text-[#EF4444]">*</span></label>
             <input name="child_name" required className={input} placeholder="e.g. Ahmed Mohamed" />
           </div>
           <div>
@@ -86,7 +86,7 @@ export default function NewLeadForm({
             </select>
           </div>
           <div>
-            <label className={label}>Source <span className="text-red-500">*</span></label>
+            <label className={label}>Source <span className="text-[#EF4444]">*</span></label>
             <select name="source" defaultValue="website" className={input}>
               {LEAD_SOURCES.map(s => (
                 <option key={s} value={s}>{SOURCE_LABELS[s] ?? s}</option>

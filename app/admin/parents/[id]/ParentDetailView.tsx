@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { linkStudentToParent, deleteParent } from '@/modules/parents/actions'
@@ -30,7 +30,7 @@ export default function ParentDetailView({ parent, students }: Props) {
   return (
     <div className="space-y-4">
       {/* Children */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-3 text-sm font-medium text-[#0B1F3A]">Linked Children</h2>
         {parent.children && parent.children.length > 0 ? (
           <ul className="space-y-2">
@@ -57,11 +57,11 @@ export default function ParentDetailView({ parent, students }: Props) {
 
       {/* Link student */}
       {availableStudents.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <div className="ds-card p-5">
           <h2 className="mb-3 text-sm font-medium text-[#0B1F3A]">Link a Student</h2>
 
           {state && !state.success && (
-            <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+            <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
               {state.error.message}
             </div>
           )}
@@ -101,12 +101,12 @@ export default function ParentDetailView({ parent, students }: Props) {
       )}
 
       {/* Danger zone */}
-      <div className="rounded-xl border border-red-100 bg-red-50 p-5">
-        <h2 className="mb-1 text-sm font-medium text-red-700">Danger zone</h2>
-        <p className="mb-3 text-xs text-red-600">This will permanently delete the parent account and all links.</p>
+      <div className="rounded-xl border border-[#FEE2E2] bg-[#FEE2E2] p-5">
+        <h2 className="mb-1 text-sm font-medium text-[#DC2626]">Danger zone</h2>
+        <p className="mb-3 text-xs text-[#EF4444]">This will permanently delete the parent account and all links.</p>
         <button
           onClick={handleDelete}
-          className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+          className="rounded-lg border border-[#FECACA] bg-white px-4 py-2 text-sm font-medium text-[#EF4444] transition hover:bg-[#FEE2E2]"
         >
           Delete parent account
         </button>

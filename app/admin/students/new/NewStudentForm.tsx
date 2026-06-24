@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { createStudent } from '@/modules/students/actions'
@@ -22,9 +22,9 @@ export default function NewStudentForm({ branches, groups }: Props) {
   const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -34,13 +34,13 @@ export default function NewStudentForm({ branches, groups }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              First name <span className="text-red-500">*</span>
+              First name <span className="text-[#EF4444]">*</span>
             </label>
             <input name="first_name" required className={cls} />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Last name <span className="text-red-500">*</span>
+              Last name <span className="text-[#EF4444]">*</span>
             </label>
             <input name="last_name" required className={cls} />
           </div>
@@ -49,13 +49,13 @@ export default function NewStudentForm({ branches, groups }: Props) {
         {/* Email + password */}
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Email <span className="text-red-500">*</span>
+            Email <span className="text-[#EF4444]">*</span>
           </label>
           <input name="email" type="email" required className={cls} />
         </div>
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Password <span className="text-red-500">*</span>
+            Password <span className="text-[#EF4444]">*</span>
           </label>
           <input name="password" type="password" required autoComplete="new-password" placeholder="Minimum 6 characters" className={cls} />
         </div>
@@ -64,7 +64,7 @@ export default function NewStudentForm({ branches, groups }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Branch <span className="text-red-500">*</span>
+              Branch <span className="text-[#EF4444]">*</span>
             </label>
             <select name="branch_id" required className={cls}>
               <option value="">Select branch…</option>

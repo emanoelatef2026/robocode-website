@@ -1,4 +1,4 @@
-import { requirePortalRole }          from '@/modules/rbac/guards'
+﻿import { requirePortalRole }          from '@/modules/rbac/guards'
 import { getParentFeedbackAnalytics } from '@/modules/parent-feedback/queries'
 
 function MetricCard({
@@ -15,10 +15,10 @@ function MetricCard({
   color?:      string
 }) {
   const pct    = unit === '%' ? value : null
-  const barClr = pct != null ? (pct >= 75 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500') : ''
+  const barClr = pct != null ? (pct >= 75 ? 'bg-[#10B981]' : pct >= 50 ? 'bg-yellow-500' : 'bg-[#EF4444]') : ''
 
   return (
-    <div className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-5">
+    <div className="min-w-0 ds-card px-2 py-1.5 md:p-5">
       <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">{label}</p>
       <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-3xl ${color}`}>
         {unit === '★' ? (
@@ -58,7 +58,7 @@ export default async function ParentSatisfactionPage() {
     <div className="mx-auto max-w-5xl space-y-8">
 
       {aggregate.total_responses === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-16 text-center">
+        <div className="ds-card px-6 py-16 text-center">
           <p className="text-sm text-[#64748B]">No parent feedback collected yet.</p>
           <p className="mt-1 text-xs text-[#94A3B8]">Feedback is requested after every 6 completed sessions.</p>
         </div>
@@ -77,7 +77,7 @@ export default async function ParentSatisfactionPage() {
               label="Would Recommend"
               value={aggregate.recommend_pct}
               description="Parents who would recommend Robocode"
-              color="text-green-600"
+              color="text-[#10B981]"
             />
             <MetricCard
               label="Communication Satisfaction"
@@ -94,20 +94,20 @@ export default async function ParentSatisfactionPage() {
               value={aggregate.excitement_pct}
               description="Child is excited to come to class"
             />
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 flex flex-col justify-center items-center">
+            <div className="ds-card p-5 flex flex-col justify-center items-center">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Total Responses</p>
               <p className="mt-2 text-4xl font-bold text-[#0B1F3A]">{aggregate.total_responses}</p>
             </div>
           </div>
 
           {/* Detailed responses */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+          <div className="ds-card overflow-hidden">
             <div className="border-b border-[#F1F5F9] px-5 py-3.5">
               <p className="text-[13px] font-semibold text-[#0B1F3A]">All Responses</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-[13px]">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#F1F5F9] text-left">
                     <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student</th>
                     <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Milestone</th>
@@ -133,22 +133,22 @@ export default async function ParentSatisfactionPage() {
                         <StarDisplay rating={r.rating} />
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`text-[13px] font-semibold ${r.q1_yes ? 'text-green-600' : 'text-red-500'}`}>
+                        <span className={`text-[13px] font-semibold ${r.q1_yes ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
                           {r.q1_yes ? 'Yes' : 'No'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`text-[13px] font-semibold ${r.q2_yes ? 'text-green-600' : 'text-red-500'}`}>
+                        <span className={`text-[13px] font-semibold ${r.q2_yes ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
                           {r.q2_yes ? 'Yes' : 'No'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`text-[13px] font-semibold ${r.q3_yes ? 'text-green-600' : 'text-red-500'}`}>
+                        <span className={`text-[13px] font-semibold ${r.q3_yes ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
                           {r.q3_yes ? 'Yes' : 'No'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className={`text-[13px] font-semibold ${r.q4_yes ? 'text-green-600' : 'text-red-500'}`}>
+                        <span className={`text-[13px] font-semibold ${r.q4_yes ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
                           {r.q4_yes ? 'Yes' : 'No'}
                         </span>
                       </td>

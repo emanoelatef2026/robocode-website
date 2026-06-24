@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname }           from 'next/navigation'
@@ -68,7 +68,7 @@ function estimateTotalSessions(
 
 function PctCell({ value }: { value: number | null }) {
   if (value == null || value === 0) return <span className="text-xs text-[#94A3B8]">—</span>
-  const color = value >= 75 ? 'text-green-600' : value >= 60 ? 'text-yellow-600' : 'text-red-600'
+  const color = value >= 75 ? 'text-[#10B981]' : value >= 60 ? 'text-yellow-600' : 'text-[#EF4444]'
   return <span className={`text-xs font-semibold ${color}`}>{value}%</span>
 }
 
@@ -81,13 +81,13 @@ function StartDateCell({ g }: { g: GroupOperationalRow }) {
   const isFuture         = sd > today
   if (isOverdueForming) {
     return (
-      <span className="text-xs font-medium text-amber-600" title="Forming group is past its start date">
+      <span className="text-xs font-medium text-[#F59E0B]" title="Forming group is past its start date">
         {label} ⚠
       </span>
     )
   }
   return (
-    <span className={`text-xs ${isFuture ? 'text-blue-600 font-medium' : 'text-[#64748B]'}`}>
+    <span className={`text-xs ${isFuture ? 'text-[#2563EB] font-medium' : 'text-[#64748B]'}`}>
       {label}
     </span>
   )
@@ -99,24 +99,24 @@ function SessionsCell({ g }: { g: GroupOperationalRow }) {
   const ratio = total ? done / total : null
   const color = ratio == null
     ? 'text-[#64748B]'
-    : ratio > 1    ? 'text-red-600'
-    : ratio >= 0.7 ? 'text-amber-600'
+    : ratio > 1    ? 'text-[#EF4444]'
+    : ratio >= 0.7 ? 'text-[#F59E0B]'
     : ratio >= 0.3 ? 'text-[#64748B]'
     : done === 0   ? 'text-[#94A3B8]'
-    : 'text-blue-600'
+    : 'text-[#2563EB]'
   const label = total != null ? `${done} / ${total}` : done === 0 ? '0 sess.' : `${done} sess.`
   return <span className={`text-xs font-semibold ${color}`}>{label}</span>
 }
 
 function HealthBadge({ score }: { score: number }) {
   if (!score) return <span className="text-xs text-[#94A3B8]">—</span>
-  const cls = score >= 90 ? 'bg-green-100 text-green-700' : score >= 75 ? 'bg-blue-100 text-blue-700' : score >= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+  const cls = score >= 90 ? 'bg-[#E7F8EE] text-[#15803D]' : score >= 75 ? 'bg-[#EFF6FF] text-[#1D4ED8]' : score >= 60 ? 'bg-yellow-100 text-yellow-700' : 'bg-[#FEE2E2] text-[#DC2626]'
   const lbl = score >= 90 ? 'Excellent' : score >= 75 ? 'Good' : score >= 60 ? 'Needs Attention' : 'At Risk'
   return <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${cls}`}>{lbl}</span>
 }
 
 function StatusChip({ status }: { status: string }) {
-  const cls = status === 'active' ? 'bg-green-100 text-green-700' : status === 'forming' ? 'bg-blue-100 text-blue-700' : status === 'completed' ? 'bg-[#F1F5F9] text-[#64748B]' : 'bg-red-100 text-red-700'
+  const cls = status === 'active' ? 'bg-[#E7F8EE] text-[#15803D]' : status === 'forming' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : status === 'completed' ? 'bg-[#F1F5F9] text-[#64748B]' : 'bg-[#FEE2E2] text-[#DC2626]'
   return <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${cls}`}>{status}</span>
 }
 
@@ -124,9 +124,9 @@ function StatusChip({ status }: { status: string }) {
 
 function buildKpis(groups: GroupOperationalRow[]) {
   return [
-    { label: 'Active',          value: groups.filter(g => g.status === 'active').length,        color: 'bg-blue-400'   },
-    { label: 'Low Attendance',  value: groups.filter(g => g.is_low_attendance).length,           color: 'bg-red-400'    },
-    { label: 'No Instructor',   value: groups.filter(g => !g.has_instructor).length,             color: 'bg-amber-400'  },
+    { label: 'Active',          value: groups.filter(g => g.status === 'active').length,        color: 'bg-[#38BDF8]'   },
+    { label: 'Low Attendance',  value: groups.filter(g => g.is_low_attendance).length,           color: 'bg-[#EF4444]'    },
+    { label: 'No Instructor',   value: groups.filter(g => !g.has_instructor).length,             color: 'bg-[#F59E0B]'  },
     { label: 'Under Capacity',  value: groups.filter(g => g.is_low_capacity).length,             color: 'bg-orange-400' },
     { label: 'Overloaded',      value: groups.filter(g => g.is_overloaded).length,               color: 'bg-purple-400' },
     { label: 'Starting Soon',   value: groups.filter(g => g.starts_soon).length,                 color: 'bg-teal-400'   },
@@ -252,7 +252,7 @@ export default function GroupsClient({ groups, options, studentOptions, defaultB
       {/* ── KPI strip ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-6">
         {kpis.map(k => (
-          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+          <div key={k.label} className="ds-card p-3">
             <div className={`mb-1.5 h-1 w-5 rounded-full ${k.color} opacity-80`} />
             <p className="text-lg font-bold text-[#0B1F3A]">{k.value}</p>
             <p className="text-[11px] text-[#64748B] leading-tight">{k.label}</p>
@@ -261,7 +261,7 @@ export default function GroupsClient({ groups, options, studentOptions, defaultB
       </div>
 
       {/* ── Header + filters ───────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         {/* Top bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] px-4 py-3">
           <div className="flex items-center gap-2">
@@ -394,7 +394,7 @@ export default function GroupsClient({ groups, options, studentOptions, defaultB
                       ].map(({ label, value }) => (
                         <div key={label} className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
                           <p className="text-[10px] text-[#94A3B8]">{label}</p>
-                          <p className={`text-sm font-semibold ${value == null ? 'text-[#94A3B8]' : value >= 75 ? 'text-green-600' : value >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                          <p className={`text-sm font-semibold ${value == null ? 'text-[#94A3B8]' : value >= 75 ? 'text-[#10B981]' : value >= 60 ? 'text-yellow-600' : 'text-[#EF4444]'}`}>
                             {value != null ? `${value}%` : '—'}
                           </p>
                         </div>
@@ -408,8 +408,8 @@ export default function GroupsClient({ groups, options, studentOptions, defaultB
                       </span>
                       {/* Alert dots */}
                       <div className="flex gap-1">
-                        {g.is_low_attendance  && <span className="h-2 w-2 rounded-full bg-red-400"    title="Low attendance" />}
-                        {!g.has_instructor    && <span className="h-2 w-2 rounded-full bg-amber-400"  title="No instructor" />}
+                        {g.is_low_attendance  && <span className="h-2 w-2 rounded-full bg-[#EF4444]"    title="Low attendance" />}
+                        {!g.has_instructor    && <span className="h-2 w-2 rounded-full bg-[#F59E0B]"  title="No instructor" />}
                         {g.is_low_capacity    && <span className="h-2 w-2 rounded-full bg-orange-400" title="Under capacity" />}
                         {g.is_overloaded      && <span className="h-2 w-2 rounded-full bg-purple-400" title="Overloaded" />}
                       </div>
@@ -423,7 +423,7 @@ export default function GroupsClient({ groups, options, studentOptions, defaultB
                       const overdue  = g.status === 'forming' && parseLocalDate(g.start_date) < today
                       return (
                         <div className="mt-1 flex items-center justify-between text-[11px]">
-                          <span className={overdue ? 'text-amber-600 font-medium' : 'text-[#64748B]'}>
+                          <span className={overdue ? 'text-[#F59E0B] font-medium' : 'text-[#64748B]'}>
                             {overdue ? '⚠ ' : ''}Starts: {label}
                           </span>
                           {(done > 0 || total != null) && (
@@ -442,7 +442,7 @@ export default function GroupsClient({ groups, options, studentOptions, defaultB
             {/* Desktop table */}
             <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Instructor</th>
@@ -463,14 +463,14 @@ export default function GroupsClient({ groups, options, studentOptions, defaultB
                     const sched = [g.day_of_week ? DAYS_SHORT[g.day_of_week] : null, fmt12(g.start_time)].filter(Boolean).join(' · ')
                     return (
                       <tr key={g.group_id}
-                        className="cursor-pointer border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC] transition"
+                        className="cursor-pointer ds-table-row transition"
                         onClick={() => setDrawerGroup(g)}>
                         <td className="px-4 py-3">
                           <p className="font-medium text-[#0B1F3A]">{g.name}</p>
                           <div className="flex items-center gap-1.5">
                             {g.code && <p className="font-mono text-[10px] text-[#94A3B8]">{g.code}</p>}
-                            {g.is_low_attendance  && <span className="h-1.5 w-1.5 rounded-full bg-red-400"    title="Low attendance" />}
-                            {!g.has_instructor    && <span className="h-1.5 w-1.5 rounded-full bg-amber-400"  title="No instructor" />}
+                            {g.is_low_attendance  && <span className="h-1.5 w-1.5 rounded-full bg-[#EF4444]"    title="Low attendance" />}
+                            {!g.has_instructor    && <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B]"  title="No instructor" />}
                             {g.is_overloaded      && <span className="h-1.5 w-1.5 rounded-full bg-purple-400" title="Overloaded" />}
                           </div>
                         </td>

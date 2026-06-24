@@ -2,19 +2,26 @@ interface Props {
   title: string;
   description?: string;
   action?: React.ReactNode;
+  icon?: React.ReactNode;
 }
 
-export default function EmptyState({ title, description, action }: Props) {
+const DefaultIcon = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-8 w-8 text-[#94A3B8]">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+  </svg>
+);
+
+export default function EmptyState({ title, description, action, icon }: Props) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] bg-white py-16 text-center">
-      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F1F5F9]">
-        <svg viewBox="0 0 20 20" fill="currentColor" className="h-6 w-6 text-[#94A3B8]">
-          <path fillRule="evenodd" d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm0 2h10v7h-2l-1 2H8l-1-2H5V5z" clipRule="evenodd" />
-        </svg>
+    <div className="ds-card flex flex-col items-center justify-center py-16 text-center">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F1F5F9]">
+        {icon ?? DefaultIcon}
       </div>
-      <p className="text-sm font-medium text-[#0B1F3A]">{title}</p>
-      {description && <p className="mt-1 text-xs text-[#64748B]">{description}</p>}
-      {action && <div className="mt-4">{action}</div>}
+      <p className="text-[14px] font-semibold text-[#0B1F3A]">{title}</p>
+      {description && (
+        <p className="mt-1.5 max-w-xs text-[12px] text-[#64748B] leading-relaxed">{description}</p>
+      )}
+      {action && <div className="mt-5">{action}</div>}
     </div>
   );
 }

@@ -1,18 +1,18 @@
-import { getLead, getLeadTimeline } from '@/modules/leads/queries'
+﻿import { getLead, getLeadTimeline } from '@/modules/leads/queries'
 import { requireAuth }              from '@/modules/rbac/guards'
 import { notFound }                 from 'next/navigation'
 import Link                         from 'next/link'
 import type { LeadStatus }          from '@/modules/leads/types'
 
 const STATUS_META: Record<LeadStatus, { label: string; color: string }> = {
-  NEW:           { label: 'New',            color: 'bg-slate-100 text-slate-700' },
-  CONTACTED:     { label: 'Contacted',      color: 'bg-blue-100 text-blue-700' },
+  NEW:           { label: 'New',            color: 'bg-[#F1F5F9] text-[#334155]' },
+  CONTACTED:     { label: 'Contacted',      color: 'bg-[#EFF6FF] text-[#1D4ED8]' },
   INTERESTED:    { label: 'Interested',     color: 'bg-violet-100 text-violet-700' },
-  TRIAL_BOOKED:  { label: 'Trial Booked',   color: 'bg-amber-100 text-amber-700' },
+  TRIAL_BOOKED:  { label: 'Trial Booked',   color: 'bg-[#FFFBEB] text-[#B45309]' },
   TRIAL_ATTENDED:{ label: 'Trial Attended', color: 'bg-orange-100 text-orange-700' },
   FOLLOW_UP:     { label: 'Follow-up',      color: 'bg-purple-100 text-purple-700' },
-  CONVERTED:     { label: 'Converted',      color: 'bg-emerald-100 text-emerald-700' },
-  LOST:          { label: 'Lost',           color: 'bg-red-100 text-red-700' },
+  CONVERTED:     { label: 'Converted',      color: 'bg-[#E7F8EE] text-[#15803D]' },
+  LOST:          { label: 'Lost',           color: 'bg-[#FEE2E2] text-[#DC2626]' },
 }
 
 const PIPELINE_ORDER: LeadStatus[] = [
@@ -63,14 +63,14 @@ export default async function AdminLeadDetailPage({ params }: Props) {
               {meta.label}
             </span>
             {!isConverted && !isLost && (
-              <span className={`text-xs ${daysInStage > 7 ? 'text-red-600 font-semibold' : 'text-[#94A3B8]'}`}>
+              <span className={`text-xs ${daysInStage > 7 ? 'text-[#EF4444] font-semibold' : 'text-[#94A3B8]'}`}>
                 {daysInStage}d in this stage{daysInStage > 7 ? ' ⚠' : ''}
               </span>
             )}
             {isConverted && lead.converted_student_id && (
               <Link
                 href={`/admin/students/${lead.converted_student_id}`}
-                className="text-xs font-medium text-emerald-600 hover:underline"
+                className="text-xs font-medium text-[#10B981] hover:underline"
               >
                 View Student Record →
               </Link>
@@ -81,7 +81,7 @@ export default async function AdminLeadDetailPage({ params }: Props) {
 
       {/* ── Pipeline progress bar ──────────────────────────────────────── */}
       {!isLost && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <div className="ds-card p-4">
           <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Pipeline</p>
           <div className="flex items-center gap-1 overflow-x-auto">
             {PIPELINE_ORDER.map((s, i) => {
@@ -93,13 +93,13 @@ export default async function AdminLeadDetailPage({ params }: Props) {
                   <div className={[
                     'rounded-full px-2.5 py-1 text-[11px] font-medium transition',
                     active  ? 'bg-[#FF8A1F] text-white' :
-                    passed  ? 'bg-emerald-100 text-emerald-700' :
-                              'bg-slate-100 text-slate-400',
+                    passed  ? 'bg-[#E7F8EE] text-[#15803D]' :
+                              'bg-[#F1F5F9] text-[#94A3B8]',
                   ].join(' ')}>
                     {sm.label}
                   </div>
                   {i < PIPELINE_ORDER.length - 1 && (
-                    <span className={`text-xs ${passed ? 'text-emerald-400' : 'text-slate-300'}`}>→</span>
+                    <span className={`text-xs ${passed ? 'text-[#34D399]' : 'text-[#CBD5E1]'}`}>→</span>
                   )}
                 </div>
               )
@@ -109,14 +109,14 @@ export default async function AdminLeadDetailPage({ params }: Props) {
       )}
 
       {isLost && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           <span className="font-semibold">Lead lost</span>
-          {lead.lost_reason && <span className="ml-2 text-red-600">{lead.lost_reason}</span>}
+          {lead.lost_reason && <span className="ml-2 text-[#EF4444]">{lead.lost_reason}</span>}
         </div>
       )}
 
       {hasOverdueFU && !isConverted && !isLost && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+        <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-sm text-[#B45309]">
           <span className="font-semibold">Follow-up overdue</span>
           <span className="ml-2">
             was due {new Date(lead.next_follow_up_at!).toLocaleDateString('en-GB')}
@@ -125,7 +125,7 @@ export default async function AdminLeadDetailPage({ params }: Props) {
       )}
 
       {/* ── Details grid ───────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Lead Details</p>
         <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
           <Field label="Child Name"        value={lead.child_name} />
@@ -157,7 +157,7 @@ export default async function AdminLeadDetailPage({ params }: Props) {
       </div>
 
       {/* ── Timeline ───────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">
           Activity Timeline
         </p>

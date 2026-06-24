@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import type { StudentOperationalRow } from '@/modules/students/operational'
@@ -15,12 +15,12 @@ interface Props {
 type Tab = 'overview' | 'groups' | 'attendance' | 'contacts'
 
 const OP_STATUS_CONFIG: Record<string, { label: string; color: string; text: string }> = {
-  ACTIVE:           { label: 'Active',          color: 'bg-emerald-100', text: 'text-emerald-700' },
-  NO_GROUP:         { label: 'No Group',        color: 'bg-slate-100',   text: 'text-slate-600'   },
-  INACTIVE:         { label: 'Inactive',        color: 'bg-red-100',     text: 'text-red-600'     },
-  LOW_ATTENDANCE:   { label: 'Low Attendance',  color: 'bg-amber-100',   text: 'text-amber-700'   },
+  ACTIVE:           { label: 'Active',          color: 'bg-[#E7F8EE]', text: 'text-[#15803D]' },
+  NO_GROUP:         { label: 'No Group',        color: 'bg-[#F1F5F9]',   text: 'text-[#475569]'   },
+  INACTIVE:         { label: 'Inactive',        color: 'bg-[#FEE2E2]',     text: 'text-[#EF4444]'     },
+  LOW_ATTENDANCE:   { label: 'Low Attendance',  color: 'bg-[#FFFBEB]',   text: 'text-[#B45309]'   },
   NEAR_EXHAUSTION:  { label: 'Near Exhaustion', color: 'bg-orange-100',  text: 'text-orange-700'  },
-  MULTI_CONTRACT:   { label: 'Multi-Contract',  color: 'bg-blue-100',    text: 'text-blue-700'    },
+  MULTI_CONTRACT:   { label: 'Multi-Contract',  color: 'bg-[#EFF6FF]',    text: 'text-[#1D4ED8]'    },
   NEW_STUDENT:      { label: 'New',             color: 'bg-purple-100',  text: 'text-purple-700'  },
 }
 
@@ -35,7 +35,7 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
   }, [onClose])
 
   const opCfg   = OP_STATUS_CONFIG[s.op_status] ?? OP_STATUS_CONFIG.ACTIVE
-  const riskClr = s.risk_level === 'HIGH' ? 'bg-red-100 text-red-600' : s.risk_level === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+  const riskClr = s.risk_level === 'HIGH' ? 'bg-[#FEE2E2] text-[#EF4444]' : s.risk_level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#E7F8EE] text-[#15803D]'
 
   return (
     <>
@@ -158,13 +158,13 @@ function OverviewTab({ s }: { s: StudentOperationalRow }) {
         <h3 className="mb-3 text-xs font-semibold text-[#64748B] uppercase tracking-wide">Metrics</h3>
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg bg-[#F8FAFC] px-2 py-3">
-            <p className={`text-base font-bold ${s.attendance_pct >= 80 ? 'text-emerald-600' : s.attendance_pct >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
+            <p className={`text-base font-bold ${s.attendance_pct >= 80 ? 'text-[#10B981]' : s.attendance_pct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
               {s.attendance_pct}%
             </p>
             <p className="text-[11px] text-[#94A3B8]">Attendance</p>
           </div>
           <div className="rounded-lg bg-[#F8FAFC] px-2 py-3">
-            <p className={`text-base font-bold ${s.enrolled_sessions > 0 && s.remaining_sessions <= 2 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+            <p className={`text-base font-bold ${s.enrolled_sessions > 0 && s.remaining_sessions <= 2 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
               {s.enrolled_sessions > 0 ? `${s.remaining_sessions}/${s.enrolled_sessions}` : '—'}
             </p>
             <p className="text-[11px] text-[#94A3B8]">Sessions</p>
@@ -178,11 +178,11 @@ function OverviewTab({ s }: { s: StudentOperationalRow }) {
 
       {/* Risk flags */}
       {s.risk_flags.length > 0 && (
-        <section className="rounded-xl border border-amber-100 bg-amber-50 p-4">
-          <h3 className="mb-2 text-xs font-semibold text-amber-700 uppercase tracking-wide">Risk Flags</h3>
+        <section className="rounded-xl border border-amber-100 bg-[#FFFBEB] p-4">
+          <h3 className="mb-2 text-xs font-semibold text-[#B45309] uppercase tracking-wide">Risk Flags</h3>
           <div className="flex flex-wrap gap-1.5">
             {s.risk_flags.map(f => (
-              <span key={f} className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+              <span key={f} className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">
                 {f.replace(/_/g, ' ')}
               </span>
             ))}
@@ -192,9 +192,9 @@ function OverviewTab({ s }: { s: StudentOperationalRow }) {
 
       {/* Multi-contract alert */}
       {s.active_enrollment_count > 1 && (
-        <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
-          <p className="text-xs font-semibold text-blue-700">{s.active_enrollment_count} active contracts</p>
-          <p className="text-[11px] text-blue-600 mt-0.5">This student has multiple simultaneous enrollments.</p>
+        <div className="rounded-xl border border-blue-100 bg-[#EFF6FF] px-4 py-3">
+          <p className="text-xs font-semibold text-[#1D4ED8]">{s.active_enrollment_count} active contracts</p>
+          <p className="text-[11px] text-[#2563EB] mt-0.5">This student has multiple simultaneous enrollments.</p>
         </div>
       )}
     </>
@@ -219,7 +219,7 @@ function GroupsTab({ s }: { s: StudentOperationalRow }) {
         <div className="rounded-xl border border-[#E2E8F0] p-4 space-y-2.5">
           <div className="flex items-start justify-between">
             <h3 className="text-sm font-semibold text-[#0B1F3A]">{s.group_name}</h3>
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">CURRENT</span>
+            <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">CURRENT</span>
           </div>
           {s.course_name     && <Row label="Course">{s.course_name}</Row>}
           {s.instructor_name && <Row label="Instructor">{s.instructor_name}</Row>}
@@ -233,9 +233,9 @@ function GroupsTab({ s }: { s: StudentOperationalRow }) {
           </div>
         </div>
       ) : (
-        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4 text-center">
-          <p className="text-sm font-medium text-amber-700">Not assigned to any group</p>
-          <p className="mt-1 text-xs text-amber-600">Use the Assign Group button to enroll this student.</p>
+        <div className="rounded-xl border border-amber-100 bg-[#FFFBEB] p-4 text-center">
+          <p className="text-sm font-medium text-[#B45309]">Not assigned to any group</p>
+          <p className="mt-1 text-xs text-[#F59E0B]">Use the Assign Group button to enroll this student.</p>
         </div>
       )}
 
@@ -249,7 +249,7 @@ function GroupsTab({ s }: { s: StudentOperationalRow }) {
             <div key={`${h.group_id}-${i}`} className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3 space-y-1.5">
               <div className="flex items-start justify-between">
                 <p className="text-[13px] font-semibold text-[#0B1F3A]">{h.group_name}</p>
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-semibold text-slate-500">PAST</span>
+                <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[9px] font-semibold text-[#64748B]">PAST</span>
               </div>
               {h.course_name     && <p className="text-[11px] text-[#64748B]">Course: {h.course_name}</p>}
               {h.instructor_name && <p className="text-[11px] text-[#64748B]">Instructor: {h.instructor_name}</p>}
@@ -277,13 +277,13 @@ function AttendanceTab({ s }: { s: StudentOperationalRow }) {
   return (
     <section className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 text-center">
-          <p className={`text-2xl font-bold ${s.attendance_pct >= 80 ? 'text-emerald-600' : s.attendance_pct >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
+        <div className="ds-card p-4 text-center">
+          <p className={`text-2xl font-bold ${s.attendance_pct >= 80 ? 'text-[#10B981]' : s.attendance_pct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
             {s.attendance_pct}%
           </p>
           <p className="text-xs text-[#94A3B8]">Attendance Rate</p>
         </div>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 text-center">
+        <div className="ds-card p-4 text-center">
           <p className="text-2xl font-bold text-[#0B1F3A]">{s.sessions_attended}/{s.total_sessions}</p>
           <p className="text-xs text-[#94A3B8]">Sessions Attended</p>
         </div>
@@ -291,7 +291,7 @@ function AttendanceTab({ s }: { s: StudentOperationalRow }) {
 
       <div className="rounded-xl border border-[#E2E8F0] p-4 space-y-2">
         <Row label="Consecutive Absences">
-          <span className={s.consecutive_absences >= 3 ? 'font-semibold text-red-600' : 'text-[#0B1F3A]'}>
+          <span className={s.consecutive_absences >= 3 ? 'font-semibold text-[#EF4444]' : 'text-[#0B1F3A]'}>
             {s.consecutive_absences}
           </span>
         </Row>
@@ -307,7 +307,7 @@ function AttendanceTab({ s }: { s: StudentOperationalRow }) {
         <p className="mb-2 text-xs font-medium text-[#64748B]">Attendance Health</p>
         <div className="h-3 rounded-full bg-[#E2E8F0] overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ${s.attendance_pct >= 80 ? 'bg-emerald-400' : s.attendance_pct >= 60 ? 'bg-amber-400' : 'bg-red-400'}`}
+            className={`h-full rounded-full transition-all ${s.attendance_pct >= 80 ? 'bg-[#10B981]' : s.attendance_pct >= 60 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
             style={{ width: `${Math.min(s.attendance_pct, 100)}%` }}
           />
         </div>
@@ -343,8 +343,8 @@ function ContactsTab({ s }: { s: StudentOperationalRow }) {
               <p className="text-[11px] text-[#94A3B8] capitalize">{c.relation}</p>
             </div>
             <div className="flex gap-1">
-              {c.is_primary   && <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700">Primary</span>}
-              {c.is_emergency && <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-600">Emergency</span>}
+              {c.is_primary   && <span className="rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-semibold text-[#1D4ED8]">Primary</span>}
+              {c.is_emergency && <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#EF4444]">Emergency</span>}
             </div>
           </div>
           <div className="space-y-1.5">

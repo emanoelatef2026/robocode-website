@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -81,7 +81,7 @@ export default function UploadGuidelinesCard({
                   <path d="M5 8l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               ) : (
-                <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-amber-500">
+                <svg viewBox="0 0 16 16" fill="none" className="h-3.5 w-3.5 text-[#F59E0B]">
                   <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
                   <path d="M8 5v3M8 10.5v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                 </svg>

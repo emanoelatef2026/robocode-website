@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { getStudentDashboardData } from '@/modules/student-portal/queries'
 import { getPendingFeedbackSessions } from '@/modules/feedback/queries'
 import { createServiceClient } from '@/lib/supabase/service'
@@ -48,11 +48,11 @@ function calculateLevel(xp: number): number {
 
 function LevelBadge({ level, size = 'sm' }: { level: number; size?: 'sm' | 'lg' }) {
   const tiers = [
-    { min: 1,  max: 3,  bg: 'bg-slate-700',   text: 'text-slate-200',  label: 'Rookie'   },
+    { min: 1,  max: 3,  bg: 'bg-[#334155]',   text: 'text-slate-200',  label: 'Rookie'   },
     { min: 4,  max: 6,  bg: 'bg-blue-600',     text: 'text-blue-100',   label: 'Explorer' },
     { min: 7,  max: 9,  bg: 'bg-violet-600',   text: 'text-violet-100', label: 'Builder'  },
-    { min: 10, max: 12, bg: 'bg-amber-500',    text: 'text-amber-100',  label: 'Expert'   },
-    { min: 13, max: 15, bg: 'bg-orange-500',   text: 'text-orange-100', label: 'Master'   },
+    { min: 10, max: 12, bg: 'bg-[#F59E0B]',    text: 'text-amber-100',  label: 'Expert'   },
+    { min: 13, max: 15, bg: 'bg-[#FF8A1F]',   text: 'text-orange-100', label: 'Master'   },
   ]
   const tier = tiers.find(t => level >= t.min && level <= t.max) ?? tiers[0]
 
@@ -98,7 +98,7 @@ function HeroBanner({ data }: { data: StudentDashboardData }) {
           </div>
           <div className="shrink-0">
             {data.is_student_of_week ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-extrabold text-[#0B1F3A]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#F59E0B] px-2.5 py-1 text-[10px] font-extrabold text-[#0B1F3A]">
                 🏆 Star of the Week!
               </span>
             ) : (
@@ -341,12 +341,12 @@ function MissionsCard({ actions }: { actions: Array<{ label: string; href: strin
   if (actions.length === 0) return null
 
   const config: Record<string, { icon: string; bg: string; text: string }> = {
-    homework:    { icon: '📝', bg: 'bg-amber-50',   text: 'text-amber-700'   },
-    session:     { icon: '🏃', bg: 'bg-emerald-50', text: 'text-emerald-700' },
+    homework:    { icon: '📝', bg: 'bg-[#FFFBEB]',   text: 'text-[#B45309]'   },
+    session:     { icon: '🏃', bg: 'bg-[#E7F8EE]', text: 'text-[#15803D]' },
     portfolio:   { icon: '🎨', bg: 'bg-purple-50',  text: 'text-purple-700'  },
-    certificate: { icon: '🏆', bg: 'bg-amber-50',   text: 'text-amber-700'   },
-    xp:          { icon: '⭐', bg: 'bg-blue-50',    text: 'text-blue-700'    },
-    info:        { icon: 'ℹ️', bg: 'bg-slate-50',   text: 'text-slate-600'   },
+    certificate: { icon: '🏆', bg: 'bg-[#FFFBEB]',   text: 'text-[#B45309]'   },
+    xp:          { icon: '⭐', bg: 'bg-[#EFF6FF]',    text: 'text-[#1D4ED8]'    },
+    info:        { icon: 'ℹ️', bg: 'bg-[#F8FAFC]',   text: 'text-[#475569]'   },
   }
 
   return (
@@ -380,7 +380,7 @@ function MissionsCard({ actions }: { actions: Array<{ label: string; href: strin
 
 function UpcomingCard({ items }: { items: UpcomingHomework[] }) {
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+    <div className="ds-card p-4">
       <div className="mb-2.5 flex items-center justify-between">
         <p className="text-sm font-semibold text-[#0B1F3A]">Upcoming Homework</p>
         <Link href="/portal/student/assignments" className="text-xs text-[#FF8A1F] hover:underline">View all →</Link>
@@ -397,7 +397,7 @@ function UpcomingCard({ items }: { items: UpcomingHomework[] }) {
             >
               <p className="min-w-0 flex-1 truncate text-sm font-medium text-[#0B1F3A]">{hw.title}</p>
               {hw.due_at ? (
-                <p className={`shrink-0 text-xs ${new Date(hw.due_at) < new Date() ? 'font-semibold text-red-500' : 'text-[#94A3B8]'}`}>
+                <p className={`shrink-0 text-xs ${new Date(hw.due_at) < new Date() ? 'font-semibold text-[#EF4444]' : 'text-[#94A3B8]'}`}>
                   Due {new Date(hw.due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </p>
               ) : (
@@ -413,7 +413,7 @@ function UpcomingCard({ items }: { items: UpcomingHomework[] }) {
 
 function FeedbackCard({ items }: { items: RecentFeedbackItem[] }) {
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+    <div className="ds-card p-4">
       <p className="mb-2.5 text-sm font-semibold text-[#0B1F3A]">Recent Feedback</p>
       {items.length === 0 ? (
         <p className="text-sm text-[#94A3B8]">No feedback yet.</p>
@@ -424,7 +424,7 @@ function FeedbackCard({ items }: { items: RecentFeedbackItem[] }) {
               <div className="flex items-start justify-between gap-2">
                 <p className="text-sm font-medium text-[#0B1F3A]">{item.assignment_title}</p>
                 {item.score != null && item.max_score != null && (
-                  <span className="shrink-0 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                  <span className="shrink-0 rounded-full bg-[#E7F8EE] px-2 py-0.5 text-xs font-semibold text-[#15803D]">
                     {item.score}/{item.max_score}
                   </span>
                 )}
@@ -519,8 +519,8 @@ export default async function StudentDashboardPage() {
               href="/portal/student/attendance"
               bgFrom="#F0FDF4"
               bgTo="#DCFCE7"
-              textColor="text-emerald-700"
-              subColor="text-emerald-600/70"
+              textColor="text-[#15803D]"
+              subColor="text-[#10B981]/70"
             />
             <StatCard
               label="Tasks"
@@ -534,8 +534,8 @@ export default async function StudentDashboardPage() {
               href="/portal/student/assignments"
               bgFrom="#FFFBEB"
               bgTo="#FEF3C7"
-              textColor="text-amber-700"
-              subColor="text-amber-600/70"
+              textColor="text-[#B45309]"
+              subColor="text-[#F59E0B]/70"
             />
             <StatCard
               label="Projects"
@@ -557,8 +557,8 @@ export default async function StudentDashboardPage() {
                 : 'No grades yet'}
               bgFrom="#EFF6FF"
               bgTo="#DBEAFE"
-              textColor="text-blue-700"
-              subColor="text-blue-600/70"
+              textColor="text-[#1D4ED8]"
+              subColor="text-[#2563EB]/70"
             />
           </div>
 

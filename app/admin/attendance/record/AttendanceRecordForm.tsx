@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useTransition, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -60,9 +60,9 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
 
   if (success) {
     return (
-      <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-8 text-center">
-        <p className="text-lg font-medium text-emerald-700">Attendance recorded successfully!</p>
-        <p className="mt-1 text-sm text-emerald-600">Redirecting…</p>
+      <div className="rounded-xl border border-emerald-100 bg-[#E7F8EE] p-8 text-center">
+        <p className="text-lg font-medium text-[#15803D]">Attendance recorded successfully!</p>
+        <p className="mt-1 text-sm text-[#10B981]">Redirecting…</p>
       </div>
     )
   }
@@ -70,11 +70,11 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
   return (
     <div className="space-y-5">
       {/* Group + Session info */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">Session Details</h2>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+          <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">{error}</div>
         )}
 
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
@@ -84,7 +84,7 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
 
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Group <span className="text-red-500">*</span>
+              Group <span className="text-[#EF4444]">*</span>
             </label>
             <select
               name="group_id"
@@ -105,7 +105,7 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                Session date <span className="text-red-500">*</span>
+                Session date <span className="text-[#EF4444]">*</span>
               </label>
               <input
                 name="session_date"
@@ -152,14 +152,14 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
                   <button
                     type="button"
                     onClick={() => setStatuses(Object.fromEntries(students.map((s) => [s.student_id, 'present'])))}
-                    className="text-xs font-medium text-emerald-600 hover:underline"
+                    className="text-xs font-medium text-[#10B981] hover:underline"
                   >
                     All present
                   </button>
                   <button
                     type="button"
                     onClick={() => setStatuses(Object.fromEntries(students.map((s) => [s.student_id, 'absent'])))}
-                    className="text-xs font-medium text-red-500 hover:underline"
+                    className="text-xs font-medium text-[#EF4444] hover:underline"
                   >
                     All absent
                   </button>
@@ -191,12 +191,12 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
                             'rounded-md border px-2.5 py-1 text-xs font-medium capitalize transition',
                             statuses[s.student_id] === st
                               ? st === 'present'
-                                ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                                ? 'border-emerald-300 bg-[#E7F8EE] text-[#15803D]'
                                 : st === 'absent'
-                                  ? 'border-red-200 bg-red-50 text-red-600'
+                                  ? 'border-[#FECACA] bg-[#FEE2E2] text-[#EF4444]'
                                   : st === 'late'
-                                    ? 'border-amber-200 bg-amber-50 text-amber-700'
-                                    : 'border-blue-200 bg-blue-50 text-blue-600'
+                                    ? 'border-[#FDE68A] bg-[#FFFBEB] text-[#B45309]'
+                                    : 'border-blue-200 bg-[#EFF6FF] text-[#2563EB]'
                               : 'border-[#E2E8F0] text-[#94A3B8] hover:border-[#CBD5E1]',
                           ].join(' ')}
                         >

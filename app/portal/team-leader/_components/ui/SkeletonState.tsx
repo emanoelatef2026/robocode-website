@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 interface SkeletonRowsProps {
   count?:     number
@@ -22,7 +22,7 @@ interface SkeletonCardProps {
 
 export function SkeletonCard({ lines = 3, className = '' }: SkeletonCardProps) {
   return (
-    <div className={`rounded-xl border border-[#E2E8F0] bg-white p-5 ${className}`}>
+    <div className={`ds-card p-5 ${className}`}>
       <div className="mb-4 h-4 w-1/3 animate-pulse rounded bg-[#F1F5F9]" />
       <div className="space-y-2">
         {Array.from({ length: lines }).map((_, i) => (

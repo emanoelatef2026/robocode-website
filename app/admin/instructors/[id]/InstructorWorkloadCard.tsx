@@ -1,4 +1,4 @@
-import { createServiceClient }         from '@/lib/supabase/service'
+﻿import { createServiceClient }         from '@/lib/supabase/service'
 import { getInstructorRatingSummary }   from '@/modules/feedback/queries'
 
 interface WorkloadData {
@@ -106,9 +106,9 @@ async function getInstructorWorkload(
 
 function ScorePill({ score }: { score: number }) {
   const cls =
-    score >= 75 ? 'bg-emerald-100 text-emerald-700' :
-    score >= 50 ? 'bg-amber-100 text-amber-700' :
-                  'bg-red-100 text-red-700'
+    score >= 75 ? 'bg-[#E7F8EE] text-[#15803D]' :
+    score >= 50 ? 'bg-[#FFFBEB] text-[#B45309]' :
+                  'bg-[#FEE2E2] text-[#DC2626]'
   const label =
     score >= 75 ? 'Healthy' :
     score >= 50 ? 'Needs Attention' :
@@ -129,7 +129,7 @@ export default async function InstructorWorkloadCard({ instructorId, userId }: P
   const w = await getInstructorWorkload(instructorId, userId)
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+    <div className="ds-card p-5">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-[#0B1F3A]">Workload & Performance</h3>
         <ScorePill score={w.healthScore} />
@@ -155,7 +155,7 @@ export default async function InstructorWorkloadCard({ instructorId, userId }: P
       {w.alerts.length > 0 && (
         <div className="mt-4 space-y-1.5">
           {w.alerts.map(alert => (
-            <div key={alert} className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+            <div key={alert} className="flex items-center gap-2 rounded-lg bg-[#FFFBEB] px-3 py-2 text-xs font-medium text-[#B45309]">
               <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 shrink-0">
                 <path d="M8.982 1.566a1.13 1.13 0 00-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 01-1.1 0L7.1 5.995A.905.905 0 018 5zm.002 6a1 1 0 110 2 1 1 0 010-2z" />
               </svg>
@@ -166,7 +166,7 @@ export default async function InstructorWorkloadCard({ instructorId, userId }: P
       )}
 
       {w.alerts.length === 0 && (
-        <div className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+        <div className="mt-4 rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs font-medium text-[#15803D]">
           All performance indicators are healthy.
         </div>
       )}

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useTransition } from 'react'
 import { createGroupSchedule, deleteGroupSchedule } from '@/modules/groups/actions'
@@ -13,10 +13,10 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  scheduled: 'bg-blue-100 text-blue-700',
+  scheduled: 'bg-[#EFF6FF] text-[#1D4ED8]',
   ongoing:   'bg-yellow-100 text-yellow-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
+  completed: 'bg-[#E7F8EE] text-[#15803D]',
+  cancelled: 'bg-[#FEE2E2] text-[#DC2626]',
 }
 
 const TYPE_LABELS: Record<string, string> = {
@@ -46,11 +46,11 @@ export default function GroupSchedulesCard({ groupId, hasCourse, schedules }: Pr
     .slice(0, 16)
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+    <div className="ds-card p-5">
       <h2 className="mb-4 text-sm font-semibold text-[#0B1F3A]">Schedule Management</h2>
 
       {!hasCourse ? (
-        <div className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2.5 text-sm text-amber-700">
+        <div className="rounded-lg border border-amber-100 bg-[#FFFBEB] px-3 py-2.5 text-sm text-[#B45309]">
           Assign a course first to enable session scheduling.
         </div>
       ) : (
@@ -60,12 +60,12 @@ export default function GroupSchedulesCard({ groupId, hasCourse, schedules }: Pr
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#64748B]">Add Session</p>
 
             {state && !state.success && (
-              <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+              <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
                 {state.error.message}
               </div>
             )}
             {state?.success && (
-              <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+              <div className="mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-sm text-[#15803D]">
                 Session scheduled. Instructor can start it from their portal.
               </div>
             )}
@@ -145,7 +145,7 @@ export default function GroupSchedulesCard({ groupId, hasCourse, schedules }: Pr
           ) : (
             <div className="overflow-hidden rounded-xl border border-[#E2E8F0]">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#64748B]">Date & Time</th>
                     <th className="px-4 py-2.5 text-left text-xs font-semibold text-[#64748B]">Duration</th>
@@ -173,7 +173,7 @@ export default function GroupSchedulesCard({ groupId, hasCourse, schedules }: Pr
                       <td className="px-4 py-3 text-[#64748B]">{s.duration_minutes} min</td>
                       <td className="px-4 py-3 text-[#64748B] capitalize">{TYPE_LABELS[s.type] ?? s.type}</td>
                       <td className="px-4 py-3">
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[s.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[s.status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
                           {s.status}
                         </span>
                       </td>
@@ -186,7 +186,7 @@ export default function GroupSchedulesCard({ groupId, hasCourse, schedules }: Pr
                             type="button"
                             onClick={() => handleDelete(s.id)}
                             disabled={isPending}
-                            className="text-xs text-red-400 hover:text-red-600 disabled:opacity-50"
+                            className="text-xs text-[#F87171] hover:text-[#EF4444] disabled:opacity-50"
                           >
                             Cancel
                           </button>

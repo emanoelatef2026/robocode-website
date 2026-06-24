@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Super Admin: Parent Communications Center
  *
  * Aggregates all parent messages across branches.
@@ -158,7 +158,7 @@ export default async function CommunicationsPage({ searchParams }: Props) {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="mb-6 flex items-center justify-end">
         {totalOpen > 0 && (
-          <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+          <span className="rounded-full bg-[#FFFBEB] px-3 py-1 text-xs font-semibold text-[#B45309]">
             {totalOpen} open
           </span>
         )}
@@ -167,9 +167,9 @@ export default async function CommunicationsPage({ searchParams }: Props) {
       {/* ── KPIs ───────────────────────────────────────────────────────── */}
       <div className="mb-5 grid grid-cols-3 gap-3">
         {[
-          { label: 'Submitted (Open)',  count: kpis.open,         cls: kpis.open > 0 ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-[#E2E8F0] bg-white text-[#0B1F3A]' },
-          { label: 'Under Review',      count: kpis.under_review, cls: kpis.under_review > 0 ? 'border-blue-200 bg-blue-50 text-blue-700' : 'border-[#E2E8F0] bg-white text-[#0B1F3A]' },
-          { label: 'Resolved',          count: kpis.resolved,     cls: 'border-[#E2E8F0] bg-white text-emerald-600' },
+          { label: 'Submitted (Open)',  count: kpis.open,         cls: kpis.open > 0 ? 'border-[#FDE68A] bg-[#FFFBEB] text-[#B45309]' : 'border-[#E2E8F0] bg-white text-[#0B1F3A]' },
+          { label: 'Under Review',      count: kpis.under_review, cls: kpis.under_review > 0 ? 'border-blue-200 bg-[#EFF6FF] text-[#1D4ED8]' : 'border-[#E2E8F0] bg-white text-[#0B1F3A]' },
+          { label: 'Resolved',          count: kpis.resolved,     cls: 'border-[#E2E8F0] bg-white text-[#10B981]' },
         ].map(({ label, count, cls }) => (
           <div key={label} className={`rounded-xl border p-4 ${cls}`}>
             <p className="text-2xl font-bold">{count}</p>
@@ -179,7 +179,7 @@ export default async function CommunicationsPage({ searchParams }: Props) {
       </div>
 
       {/* ── Table ──────────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">
           <AdminFilterSelect param="status" placeholder="All statuses"
             options={STATUSES.map(s => ({ value: s, label: STATUS_CONFIG[s].label }))} />
@@ -200,7 +200,7 @@ export default async function CommunicationsPage({ searchParams }: Props) {
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Parent</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Student</th>
@@ -213,10 +213,10 @@ export default async function CommunicationsPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {result.data.map(msg => {
-                    const sc  = STATUS_CONFIG[msg.status as MessageStatus] ?? { label: msg.status, cls: 'bg-slate-100 text-slate-600' }
+                    const sc  = STATUS_CONFIG[msg.status as MessageStatus] ?? { label: msg.status, cls: 'bg-[#F1F5F9] text-[#475569]' }
                     const cat = CATEGORY_LABELS[msg.category as MessageCategory] ?? msg.category
                     return (
-                      <tr key={msg.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                      <tr key={msg.id} className="ds-table-row">
                         <td className="px-4 py-3 font-medium text-[#0B1F3A]">{msg.parent_name ?? <span className="text-[#94A3B8]">—</span>}</td>
                         <td className="px-4 py-3 text-[#64748B]">{msg.student_name ?? '—'}</td>
                         <td className="px-4 py-3 text-[#64748B]">{msg.branch_name}</td>

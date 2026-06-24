@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+﻿import { notFound } from 'next/navigation'
 import { requirePermission } from '@/modules/rbac/guards'
 import { getStudentPortfolioDetail } from '@/modules/portfolio/queries'
 import { archiveProject, deleteAchievement, deleteBadge } from '@/modules/portfolio/actions'
@@ -49,13 +49,13 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
           </div>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="ds-card">
           {projects.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-[#64748B]">No projects yet.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Title</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Course</th>
@@ -69,7 +69,7 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
                 </thead>
                 <tbody>
                   {projects.map((p) => (
-                    <tr key={p.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={p.id} className="ds-table-row">
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">{p.title}</td>
                       <td className="px-4 py-3 text-[#64748B]">{p.course_title ?? '—'}</td>
                       <td className="px-4 py-3 text-[#64748B]">{p.semester_name ?? '—'}</td>
@@ -114,13 +114,13 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
           </Link>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="ds-card">
           {achievements.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-[#64748B]">No achievements yet.</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Title</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Type</th>
@@ -130,7 +130,7 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
                 </thead>
                 <tbody>
                   {achievements.map((a) => (
-                    <tr key={a.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={a.id} className="ds-table-row">
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">{a.title}</td>
                       <td className="px-4 py-3 text-[#64748B] capitalize">{a.achievement_type}</td>
                       <td className="px-4 py-3 text-[#64748B]">
@@ -165,7 +165,7 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
           </Link>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="ds-card">
           {badges.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-[#64748B]">No badges yet.</div>
           ) : (

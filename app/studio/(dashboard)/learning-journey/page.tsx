@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -30,13 +30,13 @@ const arrayToLines = (arr: string[] | null | undefined): string =>
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const inputCls =
-  "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0F172A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20";
+  "w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-3 py-2.5 text-[13px] text-[#0F172A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20";
 
 const textareaCls =
-  "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0F172A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20 resize-none";
+  "w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-3 py-2.5 text-[13px] text-[#0F172A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20 resize-none";
 
 const labelCls =
-  "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
+  "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]";
 
 const BLANK = {
   title:        "",
@@ -186,7 +186,7 @@ export default function LearningJourneyAdminPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[17px] font-bold text-[#0F172A]">Learning Journey</h1>
-          <p className="mt-0.5 text-[13px] text-gray-400">
+          <p className="mt-0.5 text-[13px] text-[#9CA3AF]">
             {loading ? "Loading…" : `${stages.length} stage${stages.length !== 1 ? "s" : ""} configured`}
           </p>
         </div>
@@ -202,14 +202,14 @@ export default function LearningJourneyAdminPage() {
 
       {/* ── Add / Edit form ─────────────────────────────────────────────────── */}
       {showForm && (
-        <div ref={formRef} id="lj-form" className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div ref={formRef} id="lj-form" className="rounded-xl border border-[#F1F5F9] bg-white p-6 shadow-sm">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-[14px] font-semibold text-[#0F172A]">
               {editingId ? "Edit Stage" : "Add New Stage"}
             </h2>
             <button
               onClick={resetForm}
-              className="rounded-lg border border-gray-200 px-3 py-1.5 text-[12px] font-semibold text-gray-400 transition hover:bg-gray-50"
+              className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-semibold text-[#9CA3AF] transition hover:bg-[#F9FAFB]"
             >
               Cancel
             </button>
@@ -311,15 +311,15 @@ export default function LearningJourneyAdminPage() {
                   type="file"
                   accept="image/*"
                   onChange={handleFileChange}
-                  className="block w-full text-[13px] text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200"
+                  className="block w-full text-[13px] text-[#6B7280] file:mr-2 file:rounded-lg file:border-0 file:bg-[#F3F4F6] file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-[#4B5563] hover:file:bg-gray-200"
                 />
 
                 {/* Image guidelines */}
-                <div className="mt-3 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-3">
-                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-gray-400">
+                <div className="mt-3 rounded-lg border border-dashed border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3">
+                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-[#9CA3AF]">
                     Recommended
                   </p>
-                  <ul className="space-y-0.5 text-[11px] text-gray-400">
+                  <ul className="space-y-0.5 text-[11px] text-[#9CA3AF]">
                     <li>· 1600 × 900 px</li>
                     <li>· 16:9 ratio</li>
                     <li>· WebP format</li>
@@ -345,7 +345,7 @@ export default function LearningJourneyAdminPage() {
                   </div>
                 ) : (
                   <div
-                    className="flex items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 text-[12px] text-gray-300"
+                    className="flex items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] bg-[#F9FAFB] text-[12px] text-[#D1D5DB]"
                     style={{ aspectRatio: "16/9" }}
                   >
                     No image
@@ -355,7 +355,7 @@ export default function LearningJourneyAdminPage() {
             </div>
 
             {/* Active toggle + submit */}
-            <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+            <div className="flex items-center justify-between border-t border-[#F1F5F9] pt-4">
               <label className="flex cursor-pointer items-center gap-2.5">
                 <input
                   type="checkbox"
@@ -363,7 +363,7 @@ export default function LearningJourneyAdminPage() {
                   onChange={(e) => setForm({ ...form, active: e.target.checked })}
                   className="h-4 w-4 rounded accent-[#FF8A1F]"
                 />
-                <span className="text-[13px] font-medium text-gray-600">Active (visible on homepage)</span>
+                <span className="text-[13px] font-medium text-[#4B5563]">Active (visible on homepage)</span>
               </label>
 
               <button
@@ -389,7 +389,7 @@ export default function LearningJourneyAdminPage() {
           {stages.map((stage) => (
             <div
               key={stage.id}
-              className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition hover:shadow-md"
+              className="overflow-hidden rounded-xl border border-[#F1F5F9] bg-white shadow-sm transition hover:shadow-md"
             >
               {/* Image / placeholder */}
               <div className="relative w-full overflow-hidden bg-[#0B1F3A]" style={{ aspectRatio: "16/9" }}>
@@ -415,8 +415,8 @@ export default function LearningJourneyAdminPage() {
                   className={[
                     "absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold",
                     stage.active
-                      ? "bg-emerald-500 text-white"
-                      : "bg-gray-500/70 text-white",
+                      ? "bg-[#10B981] text-white"
+                      : "bg-[#F9FAFB]0/70 text-white",
                   ].join(" ")}
                 >
                   {stage.active ? "Active" : "Hidden"}
@@ -430,17 +430,17 @@ export default function LearningJourneyAdminPage() {
                     <p className="text-[14px] font-bold text-[#0F172A]">{stage.title}</p>
                     <p className="text-[12px] text-[#FF8A1F]">{stage.age_range}</p>
                   </div>
-                  <span className="shrink-0 rounded-md border border-gray-100 bg-gray-50 px-2 py-0.5 text-[11px] font-semibold text-gray-400">
+                  <span className="shrink-0 rounded-md border border-[#F1F5F9] bg-[#F9FAFB] px-2 py-0.5 text-[11px] font-semibold text-[#9CA3AF]">
                     #{stage.sort_order}
                   </span>
                 </div>
 
-                <p className="mt-2 line-clamp-2 text-[12px] leading-relaxed text-gray-400">
+                <p className="mt-2 line-clamp-2 text-[12px] leading-relaxed text-[#9CA3AF]">
                   {stage.description}
                 </p>
 
                 {/* Tags count */}
-                <div className="mt-3 flex gap-3 text-[11px] text-gray-300">
+                <div className="mt-3 flex gap-3 text-[11px] text-[#D1D5DB]">
                   <span>{stage.skills?.length ?? 0} skills</span>
                   <span>·</span>
                   <span>{stage.technologies?.length ?? 0} tools</span>
@@ -452,7 +452,7 @@ export default function LearningJourneyAdminPage() {
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   <button
                     onClick={() => handleEdit(stage)}
-                    className="rounded-lg border border-gray-200 py-1.5 text-[11px] font-semibold text-gray-600 transition hover:border-[#0B1F3A] hover:text-[#0B1F3A]"
+                    className="rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#4B5563] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A]"
                   >
                     Edit
                   </button>
@@ -463,7 +463,7 @@ export default function LearningJourneyAdminPage() {
                       "rounded-lg border py-1.5 text-[11px] font-semibold transition disabled:opacity-50",
                       stage.active
                         ? "border-orange-200 bg-orange-50 text-[#FF8A1F] hover:bg-orange-100"
-                        : "border-gray-200 text-gray-400 hover:border-[#FF8A1F] hover:text-[#FF8A1F]",
+                        : "border-[#E2E8F0] text-[#9CA3AF] hover:border-[#FF8A1F] hover:text-[#FF8A1F]",
                     ].join(" ")}
                   >
                     {toggling === stage.id ? "…" : stage.active ? "Hide" : "Show"}
@@ -471,7 +471,7 @@ export default function LearningJourneyAdminPage() {
                   <button
                     onClick={() => handleDelete(stage.id)}
                     disabled={deleting === stage.id}
-                    className="rounded-lg border border-gray-200 py-1.5 text-[11px] font-semibold text-red-400 transition hover:border-red-200 hover:bg-red-50 disabled:opacity-50"
+                    className="rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#F87171] transition hover:border-[#FECACA] hover:bg-[#FEE2E2] disabled:opacity-50"
                   >
                     {deleting === stage.id ? "…" : "Delete"}
                   </button>
@@ -481,7 +481,7 @@ export default function LearningJourneyAdminPage() {
           ))}
 
           {stages.length === 0 && (
-            <div className="col-span-full rounded-xl border border-dashed border-gray-200 py-24 text-center text-gray-400">
+            <div className="col-span-full rounded-xl border border-dashed border-[#E2E8F0] py-24 text-center text-[#9CA3AF]">
               <p className="text-sm font-medium">No stages yet</p>
               <p className="mt-1 text-xs">Click &ldquo;Add Stage&rdquo; above to create your first learning stage.</p>
             </div>

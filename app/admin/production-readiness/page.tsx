@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Production Readiness Audit
  *
  * Comprehensive PASS / WARNING / FAIL checklist for the academy system.
@@ -262,16 +262,16 @@ async function runProductionChecks(): Promise<CheckCategory[]> {
 // ── UI Components ─────────────────────────────────────────────────────────────
 
 const STATUS_STYLE: Record<CheckStatus, { badge: string; row: string }> = {
-  PASS:    { badge: 'bg-emerald-100 text-emerald-700', row: '' },
-  WARNING: { badge: 'bg-amber-100 text-amber-700',     row: 'bg-amber-50/40' },
-  FAIL:    { badge: 'bg-red-100 text-red-700',         row: 'bg-red-50/40' },
+  PASS:    { badge: 'bg-[#E7F8EE] text-[#15803D]', row: '' },
+  WARNING: { badge: 'bg-[#FFFBEB] text-[#B45309]',     row: 'bg-[#FFFBEB]/40' },
+  FAIL:    { badge: 'bg-[#FEE2E2] text-[#DC2626]',         row: 'bg-[#FEE2E2]/40' },
 }
 
 function CategoryScore({ checks }: { checks: Check[] }) {
   const pass  = checks.filter(c => c.status === 'PASS').length
   const total = checks.length
   const pct   = Math.round((pass / total) * 100)
-  const color = pct === 100 ? 'text-emerald-600' : pct >= 70 ? 'text-amber-600' : 'text-red-600'
+  const color = pct === 100 ? 'text-[#10B981]' : pct >= 70 ? 'text-[#F59E0B]' : 'text-[#EF4444]'
   return <span className={`text-sm font-bold ${color}`}>{pass}/{total}</span>
 }
 
@@ -301,14 +301,14 @@ export default async function ProductionReadinessPage() {
     warnCount > 0 ? 'Almost Ready' : 'Production Ready'
 
   const levelColor =
-    failCount > 0 ? 'text-red-600' :
-    warnCount > 3 ? 'text-red-600' :
-    warnCount > 0 ? 'text-amber-600' : 'text-emerald-600'
+    failCount > 0 ? 'text-[#EF4444]' :
+    warnCount > 3 ? 'text-[#EF4444]' :
+    warnCount > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]'
 
   const levelBg =
-    failCount > 0 ? 'bg-red-50 border-red-200' :
-    warnCount > 3 ? 'bg-amber-50 border-amber-200' :
-    warnCount > 0 ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'
+    failCount > 0 ? 'bg-[#FEE2E2] border-[#FECACA]' :
+    warnCount > 3 ? 'bg-[#FFFBEB] border-[#FDE68A]' :
+    warnCount > 0 ? 'bg-[#FFFBEB] border-[#FDE68A]' : 'bg-[#E7F8EE] border-[#A7F3D0]'
 
   const health2Score     = (healthData as any)?.health_score ?? null
   const totalStudentsAll = (capacityData as any[]).reduce((s, b) => s + Number(b.students ?? 0), 0)
@@ -336,17 +336,17 @@ export default async function ProductionReadinessPage() {
           {
             label: 'System Health 2.0',
             value: health2Score != null ? `${health2Score}/100` : '—',
-            cls:   health2Score != null ? (health2Score >= 90 ? 'text-emerald-600' : health2Score >= 75 ? 'text-blue-600' : 'text-amber-600') : 'text-slate-400',
+            cls:   health2Score != null ? (health2Score >= 90 ? 'text-[#10B981]' : health2Score >= 75 ? 'text-[#2563EB]' : 'text-[#F59E0B]') : 'text-[#94A3B8]',
           },
           {
             label: 'Recovery Issues',
             value: recoveryCritical > 0 ? `${recoveryCritical} critical` : 'Clean',
-            cls:   recoveryCritical > 0 ? 'text-red-600' : 'text-emerald-600',
+            cls:   recoveryCritical > 0 ? 'text-[#EF4444]' : 'text-[#10B981]',
           },
           {
             label: 'Academy Capacity',
             value: capacityPct != null ? `${capacityPct}% used` : '—',
-            cls:   capacityPct != null ? (capacityPct > 80 ? 'text-amber-600' : 'text-emerald-600') : 'text-slate-400',
+            cls:   capacityPct != null ? (capacityPct > 80 ? 'text-[#F59E0B]' : 'text-[#10B981]') : 'text-[#94A3B8]',
           },
           {
             label: 'Total Students',
@@ -354,7 +354,7 @@ export default async function ProductionReadinessPage() {
             cls:   'text-[#0B1F3A]',
           },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <div key={k.label} className="ds-card p-4">
             <p className={`text-2xl font-bold ${k.cls}`}>{k.value}</p>
             <p className="text-[11px] text-[#64748B]">{k.label}</p>
           </div>
@@ -371,16 +371,16 @@ export default async function ProductionReadinessPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            {failCount > 0  && <span className="rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">{failCount} FAIL</span>}
-            {warnCount > 0  && <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">{warnCount} WARN</span>}
-            {passCount > 0  && <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">{passCount} PASS</span>}
+            {failCount > 0  && <span className="rounded-full bg-[#FEE2E2] px-2.5 py-1 text-xs font-semibold text-[#DC2626]">{failCount} FAIL</span>}
+            {warnCount > 0  && <span className="rounded-full bg-[#FFFBEB] px-2.5 py-1 text-xs font-semibold text-[#B45309]">{warnCount} WARN</span>}
+            {passCount > 0  && <span className="rounded-full bg-[#E7F8EE] px-2.5 py-1 text-xs font-semibold text-[#15803D]">{passCount} PASS</span>}
           </div>
         </div>
       </div>
 
       {/* ── Categories ─────────────────────────────────────────────────── */}
       {categories.map(cat => (
-        <div key={cat.title} className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+        <div key={cat.title} className="ds-card overflow-hidden">
           <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-[#F8FAFC] px-5 py-3">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-[#0B1F3A]">
               <span>{cat.icon}</span>
@@ -401,7 +401,7 @@ export default async function ProductionReadinessPage() {
                   </td>
                   <td className="px-4 py-3 text-xs font-mono font-medium text-[#0B1F3A]">{c.value}</td>
                   <td className="px-4 py-3 text-xs text-[#64748B]">{c.reason}</td>
-                  <td className="px-4 py-3 text-xs text-amber-600 max-w-48">
+                  <td className="px-4 py-3 text-xs text-[#F59E0B] max-w-48">
                     {c.fix && (
                       c.href
                         ? <Link href={c.href} className="underline hover:text-[#FF8A1F]">{c.fix}</Link>
@@ -417,20 +417,20 @@ export default async function ProductionReadinessPage() {
 
       {/* ── All passing ────────────────────────────────────────────────── */}
       {failCount === 0 && warnCount === 0 && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-6 py-6 text-center">
+        <div className="rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] px-6 py-6 text-center">
           <p className="text-2xl">✓</p>
-          <p className="mt-2 text-base font-semibold text-emerald-700">All systems are production-ready</p>
-          <p className="mt-1 text-sm text-emerald-600">No failures or warnings detected.</p>
+          <p className="mt-2 text-base font-semibold text-[#15803D]">All systems are production-ready</p>
+          <p className="mt-1 text-sm text-[#10B981]">No failures or warnings detected.</p>
         </div>
       )}
 
       {/* ── Sprint 53: Recovery Needs ──────────────────────────────────── */}
       {recoverySummary.filter(r => r.count > 0).length > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-white overflow-hidden">
-          <div className="border-b border-[#E2E8F0] px-5 py-3 bg-amber-50">
+        <div className="rounded-xl border border-[#FDE68A] bg-white overflow-hidden">
+          <div className="border-b border-[#E2E8F0] px-5 py-3 bg-[#FFFBEB]">
             <div className="flex items-center justify-between">
-              <p className="text-[13px] font-semibold text-amber-800">Recovery Needed</p>
-              <Link href="/admin/recovery" className="text-[11px] text-amber-700 hover:underline">Fix Now →</Link>
+              <p className="text-[13px] font-semibold text-[#92400E]">Recovery Needed</p>
+              <Link href="/admin/recovery" className="text-[11px] text-[#B45309] hover:underline">Fix Now →</Link>
             </div>
           </div>
           <div className="divide-y divide-[#F1F5F9]">
@@ -438,7 +438,7 @@ export default async function ProductionReadinessPage() {
               <div key={item.check_name} className="flex items-center justify-between px-5 py-3">
                 <p className="text-[13px] text-[#0B1F3A]">{item.description}</p>
                 <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold
-                  ${item.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                  ${item.severity === 'critical' ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
                   {item.count}
                 </span>
               </div>
@@ -449,13 +449,13 @@ export default async function ProductionReadinessPage() {
 
       {/* ── Sprint 53: Capacity Analysis ──────────────────────────────── */}
       {(capacityData as any[]).length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+        <div className="ds-card overflow-hidden">
           <div className="border-b border-[#E2E8F0] px-5 py-3 bg-[#F8FAFC]">
             <p className="text-[13px] font-semibold text-[#0B1F3A]">Branch Capacity Analysis</p>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-[13px]">
-              <thead>
+              <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   {['Branch', 'Students', 'Instructors', 'Capacity', 'Utilization', 'Open Tasks'].map(h => (
                     <th key={h} className="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">{h}</th>
@@ -473,7 +473,7 @@ export default async function ProductionReadinessPage() {
                       <td className="px-4 py-3 text-[#64748B]">{b.estimated_capacity ?? '—'}</td>
                       <td className="px-4 py-3">
                         {utilPct != null ? (
-                          <span className={`font-semibold ${utilPct > 90 ? 'text-red-600' : utilPct > 70 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                          <span className={`font-semibold ${utilPct > 90 ? 'text-[#EF4444]' : utilPct > 70 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                             {utilPct}%
                           </span>
                         ) : <span className="text-[#94A3B8]">—</span>}
@@ -481,10 +481,10 @@ export default async function ProductionReadinessPage() {
                       <td className="px-4 py-3">
                         {Number(b.open_tasks) > 0 ? (
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
-                            ${Number(b.critical_tasks) > 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'}`}>
+                            ${Number(b.critical_tasks) > 0 ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
                             {b.open_tasks}
                           </span>
-                        ) : <span className="text-emerald-600">✓</span>}
+                        ) : <span className="text-[#10B981]">✓</span>}
                       </td>
                     </tr>
                   )
@@ -496,7 +496,7 @@ export default async function ProductionReadinessPage() {
       )}
 
       {/* ── Sprint 53: Scaling Assessment + Infra Recommendations ────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-4">
+      <div className="ds-card p-5 space-y-4">
         <h2 className="text-[14px] font-semibold text-[#0B1F3A]">Sprint 53: Scaling Assessment</h2>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -505,25 +505,25 @@ export default async function ProductionReadinessPage() {
               title:       'Current Capacity',
               detail:      `${totalStudentsAll.toLocaleString()} students across ${(capacityData as any[]).length} branches`,
               status:      capacityPct != null && capacityPct > 90 ? '⚠' : '✓',
-              statusCls:   capacityPct != null && capacityPct > 90 ? 'text-amber-600' : 'text-emerald-600',
+              statusCls:   capacityPct != null && capacityPct > 90 ? 'text-[#F59E0B]' : 'text-[#10B981]',
             },
             {
               title:       'Concurrency Safety',
               detail:      'Task dedup via unique partial index. Automation 6h cooldown. Realtime debounced 800ms.',
               status:      '✓',
-              statusCls:   'text-emerald-600',
+              statusCls:   'text-[#10B981]',
             },
             {
               title:       'Finance Consistency',
               detail:      'Balance integrity enforced via trigger + repair function. Consistency checker runs on demand.',
               status:      recoveryCritical > 0 ? '⚠' : '✓',
-              statusCls:   recoveryCritical > 0 ? 'text-amber-600' : 'text-emerald-600',
+              statusCls:   recoveryCritical > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]',
             },
             {
               title:       'Observability',
               detail:      'system_event_logs captures all failures. Dead letter jobs visible. Health 2.0 score.',
               status:      '✓',
-              statusCls:   'text-emerald-600',
+              statusCls:   'text-[#10B981]',
             },
           ].map(item => (
             <div key={item.title} className="rounded-lg border border-[#E2E8F0] p-4">
@@ -536,9 +536,9 @@ export default async function ProductionReadinessPage() {
           ))}
         </div>
 
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+        <div className="rounded-lg border border-blue-200 bg-[#EFF6FF] p-4">
           <p className="text-[13px] font-semibold text-blue-800">Recommended Infra Upgrades</p>
-          <ul className="mt-2 space-y-1 text-[12px] text-blue-700">
+          <ul className="mt-2 space-y-1 text-[12px] text-[#1D4ED8]">
             <li>• <strong>pg_cron</strong> for materialized view refresh (currently manual via background jobs)</li>
             <li>• <strong>Supabase Edge Functions</strong> for background job processing (replaces Next.js API routes)</li>
             <li>• <strong>Connection pooling</strong> (PgBouncer) once student count exceeds 10,000</li>

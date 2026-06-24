@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState, useTransition } from 'react'
 import { saveGroupAcademicConfig, addGroupInstructor, removeGroupInstructor } from '@/modules/groups/actions'
@@ -34,27 +34,27 @@ export default function AcademicConfigCard({ groupId, config, courses, instructo
   const availableForAdditional = instructors.filter((i) => !assignedIds.has(i.id))
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+    <div className="ds-card p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-[#0B1F3A]">Group Configuration</h2>
         <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
-          isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+          isActive ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#FFFBEB] text-[#B45309]'
         }`}>
           {isActive ? 'Active' : 'Forming'}
         </span>
       </div>
 
       {!isActive && (
-        <div className="mb-4 rounded-lg border border-amber-100 bg-amber-50 px-3 py-2.5">
-          <p className="mb-1.5 text-xs font-medium text-amber-800">Missing before group can activate:</p>
+        <div className="mb-4 rounded-lg border border-amber-100 bg-[#FFFBEB] px-3 py-2.5">
+          <p className="mb-1.5 text-xs font-medium text-[#92400E]">Missing before group can activate:</p>
           <ul className="space-y-1">
             {[
               { label: 'Course',          met: hasCourse },
               { label: 'Lead Instructor', met: hasInstructor },
             ].map(({ label, met }) => (
               <li key={label} className="flex items-center gap-1.5 text-xs">
-                <span className={met ? 'text-emerald-500' : 'text-amber-500'}>{met ? '✓' : '✗'}</span>
-                <span className={met ? 'text-emerald-700' : 'text-amber-700'}>
+                <span className={met ? 'text-[#10B981]' : 'text-[#F59E0B]'}>{met ? '✓' : '✗'}</span>
+                <span className={met ? 'text-[#15803D]' : 'text-[#B45309]'}>
                   {label}{met ? ' assigned' : ' not assigned'}
                 </span>
               </li>
@@ -64,7 +64,7 @@ export default function AcademicConfigCard({ groupId, config, courses, instructo
       )}
 
       {state?.success && (
-        <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+        <div className="mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-sm text-[#15803D]">
           Configuration saved.{' '}
           {isActive
             ? 'Group is now Active — instructors can start sessions.'
@@ -72,7 +72,7 @@ export default function AcademicConfigCard({ groupId, config, courses, instructo
         </div>
       )}
       {state && !state.success && (
-        <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -171,7 +171,7 @@ function AdditionalInstructorRow({
         type="button"
         onClick={handleRemove}
         disabled={isPending}
-        className="text-xs text-red-400 hover:text-red-600 disabled:opacity-50 transition"
+        className="text-xs text-[#F87171] hover:text-[#EF4444] disabled:opacity-50 transition"
       >
         {isPending ? 'Removing…' : 'Remove'}
       </button>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { createAchievement } from '@/modules/portfolio/actions'
@@ -24,9 +24,9 @@ export default function NewAchievementForm({ studentId, portfolioId }: Props) {
   const today = new Date().toISOString().split('T')[0]
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -37,7 +37,7 @@ export default function NewAchievementForm({ studentId, portfolioId }: Props) {
 
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Title <span className="text-red-500">*</span>
+            Title <span className="text-[#EF4444]">*</span>
           </label>
           <input name="title" required className={inputClass} />
         </div>
@@ -50,7 +50,7 @@ export default function NewAchievementForm({ studentId, portfolioId }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Type <span className="text-red-500">*</span>
+              Type <span className="text-[#EF4444]">*</span>
             </label>
             <select name="achievement_type" required className={inputClass}>
               {ACHIEVEMENT_TYPES.map((t) => (
@@ -60,7 +60,7 @@ export default function NewAchievementForm({ studentId, portfolioId }: Props) {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Date Awarded <span className="text-red-500">*</span>
+              Date Awarded <span className="text-[#EF4444]">*</span>
             </label>
             <input name="date_awarded" type="date" required defaultValue={today} className={inputClass} />
           </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -23,16 +23,16 @@ interface Review {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const INPUT    = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
-const LABEL    = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
+const INPUT    = "w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+const LABEL    = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]";
 const TEXTAREA = `${INPUT} resize-none`;
 
 const blank = { name: "", role: "", review: "", branch: "", rating: "5", sort_order: "0" };
 
 const STATUS_BADGE: Record<string, string> = {
-  pending:  "bg-amber-100 text-amber-700",
-  approved: "bg-emerald-100 text-emerald-700",
-  rejected: "bg-red-100 text-red-600",
+  pending:  "bg-[#FFFBEB] text-[#B45309]",
+  approved: "bg-[#E7F8EE] text-[#15803D]",
+  rejected: "bg-[#FEE2E2] text-[#EF4444]",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -45,7 +45,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 function Stars({ rating }: { rating: number }) {
   return (
-    <span className="text-[11px] text-amber-400">
+    <span className="text-[11px] text-[#F59E0B]">
       {"★".repeat(Math.round(rating))}{"☆".repeat(5 - Math.round(rating))}
     </span>
   );
@@ -155,16 +155,16 @@ export default function ReviewsPage() {
     <div className="space-y-6">
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-700">
+        <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] p-4 text-[13px] text-[#DC2626]">
           <strong>Connection error:</strong> {error}
           <button onClick={load} className="ml-3 underline hover:no-underline">Retry</button>
         </div>
       )}
 
       {/* Add form */}
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-[#F1F5F9] bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-[14px] font-semibold text-[#0B1F3A]">Add Review</h2>
-        <p className="mb-4 text-[12px] text-gray-400">New reviews start as <span className="font-semibold text-amber-600">Pending</span> — approve them below to show on the homepage.</p>
+        <p className="mb-4 text-[12px] text-[#9CA3AF]">New reviews start as <span className="font-semibold text-[#F59E0B]">Pending</span> — approve them below to show on the homepage.</p>
 
         <form onSubmit={handleAdd} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -199,7 +199,7 @@ export default function ReviewsPage() {
             <div>
               <label className={LABEL}>Photo (optional)</label>
               <input ref={fileRef} type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="block w-full text-[13px] text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200" />
+                className="block w-full text-[13px] text-[#6B7280] file:mr-2 file:rounded-lg file:border-0 file:bg-[#F3F4F6] file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-[#4B5563] hover:file:bg-gray-200" />
             </div>
           </div>
 
@@ -214,7 +214,7 @@ export default function ReviewsPage() {
 
       {/* Filter tabs */}
       {!loading && !error && items.length > 0 && (
-        <div className="flex gap-1 rounded-xl border border-gray-100 bg-white p-1.5 shadow-sm w-fit">
+        <div className="flex gap-1 rounded-xl border border-[#F1F5F9] bg-white p-1.5 shadow-sm w-fit">
           {(["all", "pending", "approved", "rejected"] as const).map((f) => (
             <button
               key={f}
@@ -223,13 +223,13 @@ export default function ReviewsPage() {
                 "rounded-lg px-4 py-1.5 text-[12px] font-semibold transition",
                 filter === f
                   ? "bg-[#0B1F3A] text-white"
-                  : "text-gray-400 hover:text-gray-600",
+                  : "text-[#9CA3AF] hover:text-[#4B5563]",
               ].join(" ")}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
               <span className={[
                 "ml-1.5 rounded-full px-1.5 py-0.5 text-[10px]",
-                filter === f ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500",
+                filter === f ? "bg-white/20 text-white" : "bg-[#F3F4F6] text-[#6B7280]",
               ].join(" ")}>
                 {counts[f]}
               </span>
@@ -248,7 +248,7 @@ export default function ReviewsPage() {
           {visible.map((item) => {
             const status = (item.status ?? "pending") as Status;
             return (
-              <div key={item.id} className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+              <div key={item.id} className="overflow-hidden rounded-xl border border-[#F1F5F9] bg-white shadow-sm">
                 <div className="p-4">
                   {editing?.id === item.id ? (
                     /* ── Inline edit form ── */
@@ -263,7 +263,7 @@ export default function ReviewsPage() {
                         onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} className={INPUT} placeholder="Sort order" />
                       <div className="flex gap-2 pt-1">
                         <button onClick={handleEditSave} disabled={saving} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[12px] font-semibold text-white hover:bg-[#38BDF8] disabled:opacity-50 transition">{saving ? "…" : "Save"}</button>
-                        <button onClick={() => setEditing(null)} className="flex-1 rounded-lg border border-gray-200 py-2 text-[12px] font-semibold text-gray-500 hover:bg-gray-50">Cancel</button>
+                        <button onClick={() => setEditing(null)} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[12px] font-semibold text-[#6B7280] hover:bg-[#F9FAFB]">Cancel</button>
                       </div>
                     </div>
                   ) : (
@@ -272,7 +272,7 @@ export default function ReviewsPage() {
                       {/* Author row */}
                       <div className="flex items-start gap-3">
                         {item.image_url ? (
-                          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-gray-100">
+                          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-[#F3F4F6]">
                             <Image src={item.image_url} alt={item.name} fill sizes="40px" className="object-cover" />
                           </div>
                         ) : (
@@ -287,7 +287,7 @@ export default function ReviewsPage() {
                               <span className="shrink-0 rounded-full bg-[#FF8A1F]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#FF8A1F]">FEATURED</span>
                             )}
                           </div>
-                          <p className="text-[11px] text-gray-400">{[item.role, item.branch].filter(Boolean).join(" · ")}</p>
+                          <p className="text-[11px] text-[#9CA3AF]">{[item.role, item.branch].filter(Boolean).join(" · ")}</p>
                           {item.rating != null && <Stars rating={item.rating} />}
                         </div>
                         {/* Status badge */}
@@ -296,7 +296,7 @@ export default function ReviewsPage() {
                         </span>
                       </div>
 
-                      <p className="mt-2 line-clamp-3 text-[12px] leading-relaxed text-gray-600">&ldquo;{item.review}&rdquo;</p>
+                      <p className="mt-2 line-clamp-3 text-[12px] leading-relaxed text-[#4B5563]">&ldquo;{item.review}&rdquo;</p>
 
                       {/* Moderation actions */}
                       <div className="mt-3 space-y-1.5">
@@ -306,7 +306,7 @@ export default function ReviewsPage() {
                             <button
                               onClick={() => patch(item.id, { status: "approved" })}
                               disabled={acting === item.id}
-                              className="flex-1 rounded-lg border border-emerald-200 bg-emerald-50 py-1.5 text-[11px] font-semibold text-emerald-700 transition hover:bg-emerald-100 disabled:opacity-50"
+                              className="flex-1 rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] py-1.5 text-[11px] font-semibold text-[#15803D] transition hover:bg-[#E7F8EE] disabled:opacity-50"
                             >
                               {acting === item.id ? "…" : "Approve"}
                             </button>
@@ -315,7 +315,7 @@ export default function ReviewsPage() {
                             <button
                               onClick={() => patch(item.id, { status: "rejected" })}
                               disabled={acting === item.id}
-                              className="flex-1 rounded-lg border border-red-200 bg-red-50 py-1.5 text-[11px] font-semibold text-red-600 transition hover:bg-red-100 disabled:opacity-50"
+                              className="flex-1 rounded-lg border border-[#FECACA] bg-[#FEE2E2] py-1.5 text-[11px] font-semibold text-[#EF4444] transition hover:bg-[#FEE2E2] disabled:opacity-50"
                             >
                               {acting === item.id ? "…" : "Reject"}
                             </button>
@@ -324,7 +324,7 @@ export default function ReviewsPage() {
                             <button
                               onClick={() => patch(item.id, { status: "pending" })}
                               disabled={acting === item.id}
-                              className="flex-1 rounded-lg border border-amber-200 bg-amber-50 py-1.5 text-[11px] font-semibold text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+                              className="flex-1 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] py-1.5 text-[11px] font-semibold text-[#B45309] transition hover:bg-[#FFFBEB] disabled:opacity-50"
                             >
                               {acting === item.id ? "…" : "Set Pending"}
                             </button>
@@ -340,21 +340,21 @@ export default function ReviewsPage() {
                               "flex-1 rounded-lg border py-1.5 text-[11px] font-semibold transition disabled:opacity-50",
                               item.featured
                                 ? "border-[#FF8A1F]/30 bg-[#FF8A1F]/8 text-[#FF8A1F] hover:bg-[#FF8A1F]/15"
-                                : "border-gray-200 text-gray-400 hover:border-[#FF8A1F]/30 hover:text-[#FF8A1F]",
+                                : "border-[#E2E8F0] text-[#9CA3AF] hover:border-[#FF8A1F]/30 hover:text-[#FF8A1F]",
                             ].join(" ")}
                           >
                             {acting === item.id ? "…" : item.featured ? "Unfeature" : "Feature"}
                           </button>
                           <button
                             onClick={() => setEditing(item)}
-                            className="flex-1 rounded-lg border border-gray-200 py-1.5 text-[11px] font-semibold text-gray-600 transition hover:border-[#38BDF8] hover:text-[#38BDF8]"
+                            className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#4B5563] transition hover:border-[#38BDF8] hover:text-[#38BDF8]"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(item.id)}
                             disabled={deleting === item.id}
-                            className="flex-1 rounded-lg border border-gray-200 py-1.5 text-[11px] font-semibold text-red-400 transition hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
+                            className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#F87171] transition hover:border-[#FCA5A5] hover:bg-[#FEE2E2] disabled:opacity-50"
                           >
                             {deleting === item.id ? "…" : "Delete"}
                           </button>
@@ -368,12 +368,12 @@ export default function ReviewsPage() {
           })}
 
           {!error && visible.length === 0 && (
-            <div className="col-span-full rounded-xl border border-dashed border-gray-200 bg-gray-50 p-12 text-center">
-              <p className="text-[14px] font-semibold text-gray-400">
+            <div className="col-span-full rounded-xl border border-dashed border-[#E2E8F0] bg-[#F9FAFB] p-12 text-center">
+              <p className="text-[14px] font-semibold text-[#9CA3AF]">
                 {filter === "all" ? "No reviews yet" : `No ${filter} reviews`}
               </p>
               {filter === "all" && (
-                <p className="mt-1 text-[12px] text-gray-300">Add your first review using the form above.</p>
+                <p className="mt-1 text-[12px] text-[#D1D5DB]">Add your first review using the form above.</p>
               )}
             </div>
           )}

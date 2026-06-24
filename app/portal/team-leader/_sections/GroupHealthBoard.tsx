@@ -1,4 +1,4 @@
-import { getGroupHealthData } from '@/modules/tl-dashboard/dashboard-v2-queries'
+﻿import { getGroupHealthData } from '@/modules/tl-dashboard/dashboard-v2-queries'
 import GroupHealthBoardClient from './GroupHealthBoardClient'
 
 export default async function GroupHealthBoard({ branchIds }: { branchIds: string[] }) {
@@ -16,12 +16,12 @@ export default async function GroupHealthBoard({ branchIds }: { branchIds: strin
             {groups.length} groups
           </span>
           {dangerCount > 0 && (
-            <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-semibold text-red-700">
+            <span className="rounded-full bg-[#FEE2E2] px-2.5 py-0.5 text-[11px] font-semibold text-[#DC2626]">
               {dangerCount} at risk
             </span>
           )}
           {warningCount > 0 && (
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
+            <span className="rounded-full bg-[#FFFBEB] px-2.5 py-0.5 text-[11px] font-semibold text-[#B45309]">
               {warningCount} warning
             </span>
           )}

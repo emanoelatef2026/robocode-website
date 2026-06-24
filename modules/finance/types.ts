@@ -1,4 +1,4 @@
-export type AccountStatus    = 'CURRENT' | 'DUE_SOON' | 'OVERDUE' | 'PAID'
+﻿export type AccountStatus    = 'CURRENT' | 'DUE_SOON' | 'OVERDUE' | 'PAID'
 // Enrollment-level financial status (superset of AccountStatus: adds BLOCKED/COMPLETED, drops PAID)
 export type EnrollmentFinancialStatus = 'CURRENT' | 'DUE_SOON' | 'OVERDUE' | 'BLOCKED' | 'COMPLETED'
 // Sprint 45: session exhaustion status (computed from remaining_sessions)
@@ -368,25 +368,25 @@ export const STATUS_LABELS: Record<AccountStatus | EnrollmentFinancialStatus, st
 }
 
 export const STATUS_COLORS: Record<AccountStatus | EnrollmentFinancialStatus, string> = {
-  CURRENT:   'bg-emerald-50 text-emerald-700 border-emerald-200',
-  DUE_SOON:  'bg-amber-50 text-amber-700 border-amber-200',
-  OVERDUE:   'bg-red-50 text-red-600 border-red-200',
-  PAID:      'bg-blue-50 text-blue-700 border-blue-200',
-  BLOCKED:   'bg-red-100 text-red-800 border-red-400',
-  COMPLETED: 'bg-slate-50 text-slate-600 border-slate-200',
+  CURRENT:   'bg-[#E7F8EE] text-[#15803D] border-[#A7F3D0]',
+  DUE_SOON:  'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]',
+  OVERDUE:   'bg-[#FEE2E2] text-[#DC2626] border-[#FECACA]',
+  PAID:      'bg-[#EFF6FF] text-[#1D4ED8] border-[#BFDBFE]',
+  BLOCKED:   'bg-[#FEE2E2] text-[#991B1B] border-[#F87171]',
+  COMPLETED: 'bg-[#F1F5F9] text-[#475569] border-[#CBD5E1]',
 }
 
 export const INSTALLMENT_STATUS_COLORS: Record<InstallmentStatus, string> = {
-  PENDING:  'bg-slate-50 text-slate-600',
-  PARTIAL:  'bg-amber-50 text-amber-700',
-  PAID:     'bg-emerald-50 text-emerald-700',
-  OVERDUE:  'bg-red-50 text-red-600',
+  PENDING:  'bg-[#F1F5F9] text-[#475569]',
+  PARTIAL:  'bg-[#FFFBEB] text-[#B45309]',
+  PAID:     'bg-[#E7F8EE] text-[#15803D]',
+  OVERDUE:  'bg-[#FEE2E2] text-[#DC2626]',
 }
 
 export const PRIORITY_COLORS: Record<CollectionPriority, string> = {
-  HIGH:   'bg-red-50 text-red-600',
-  MEDIUM: 'bg-amber-50 text-amber-700',
-  LOW:    'bg-slate-50 text-slate-500',
+  HIGH:   'bg-[#FEE2E2] text-[#DC2626]',
+  MEDIUM: 'bg-[#FFFBEB] text-[#B45309]',
+  LOW:    'bg-[#F1F5F9] text-[#475569]',
 }
 
 // ── Student Operations Center ─────────────────────────────────────────────────
@@ -554,14 +554,14 @@ export function computeStudentRisk(row: {
 }
 
 export const RISK_LEVEL_CLASSES: Record<RiskLevel, string> = {
-  HIGH:   'bg-red-50 text-red-600 border border-red-200',
-  MEDIUM: 'bg-amber-50 text-amber-700 border border-amber-200',
-  LOW:    'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  HIGH:   'bg-[#FEE2E2] text-[#EF4444] border border-[#FECACA]',
+  MEDIUM: 'bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]',
+  LOW:    'bg-[#E7F8EE] text-[#15803D] border border-[#A7F3D0]',
 }
 
 export const RISK_ROW_BG: Record<RiskLevel, string> = {
-  HIGH:   'bg-red-50/40',
-  MEDIUM: 'bg-amber-50/20',
+  HIGH:   'bg-[#FEE2E2]/40',
+  MEDIUM: 'bg-[#FFFBEB]/20',
   LOW:    '',
 }
 
@@ -900,8 +900,8 @@ export const SESSION_EXHAUSTION_LABELS: Record<SessionExhaustionStatus, string> 
 }
 
 export const SESSION_EXHAUSTION_COLORS: Record<SessionExhaustionStatus, string> = {
-  HEALTHY:   'bg-emerald-50 text-emerald-700 border-emerald-200',
-  WARNING:   'bg-amber-50 text-amber-700 border-amber-200',
-  CRITICAL:  'bg-red-50 text-red-600 border-red-200',
-  EXHAUSTED: 'bg-red-100 text-red-800 border-red-400',
+  HEALTHY:   'bg-[#E7F8EE] text-[#15803D] border-[#A7F3D0]',
+  WARNING:   'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]',
+  CRITICAL:  'bg-[#FEE2E2] text-[#EF4444] border-[#FECACA]',
+  EXHAUSTED: 'bg-[#FEE2E2] text-[#991B1B] border-red-400',
 }

@@ -1,4 +1,4 @@
-import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
+﻿import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { getGroupDetail } from '@/modules/schedule/queries'
 import { listStudents } from '@/modules/students/queries'
 import { listCourses } from '@/modules/courses/queries'
@@ -17,13 +17,13 @@ interface Props { params: Promise<{ id: string }> }
 
 function AssignmentStatusPill({ status }: { status: string }) {
   const map: Record<string, string> = {
-    active:   'bg-emerald-50 text-emerald-700',
-    inactive: 'bg-slate-100 text-slate-500',
-    cancelled: 'bg-slate-100 text-slate-500',
-    completed: 'bg-blue-50 text-blue-600',
+    active:   'bg-[#E7F8EE] text-[#15803D]',
+    inactive: 'bg-[#F1F5F9] text-[#64748B]',
+    cancelled: 'bg-[#F1F5F9] text-[#64748B]',
+    completed: 'bg-[#EFF6FF] text-[#2563EB]',
   }
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${map[status] ?? 'bg-slate-100 text-slate-500'}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${map[status] ?? 'bg-[#F1F5F9] text-[#64748B]'}`}>
       {status}
     </span>
   )
@@ -82,7 +82,7 @@ async function AssignmentHistory({ groupId }: { groupId: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white">
+    <div className="ds-card">
       <div className="border-b border-[#E2E8F0] px-5 py-3">
         <h2 className="text-sm font-semibold text-[#0B1F3A]">Assignment History</h2>
       </div>
@@ -169,7 +169,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
         {/* Left: info + course assignment + history */}
         <div className="space-y-6 lg:col-span-1">
           {/* Group info */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+          <div className="ds-card p-5">
             <h2 className="mb-4 text-sm font-semibold text-[#0B1F3A]">Group Info</h2>
             <dl className="space-y-3">
               <div>
@@ -202,7 +202,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
           </div>
 
           {/* Assign course */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+          <div className="ds-card p-5">
             <h2 className="mb-4 text-sm font-semibold text-[#0B1F3A]">Assign Course & Instructor</h2>
             <TLAssignCourseForm
               groupId={id}
@@ -221,7 +221,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
         {/* Right: students + sessions */}
         <div className="space-y-6 lg:col-span-2">
           {/* Students */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white">
+          <div className="ds-card">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
               <h2 className="text-sm font-semibold text-[#0B1F3A]">
                 Students ({group.students.length})
@@ -241,7 +241,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
                           <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ${
                             s.enrollment_type === 'secondary'
                               ? 'bg-purple-50 text-purple-700'
-                              : 'bg-blue-50 text-blue-700'
+                              : 'bg-[#EFF6FF] text-[#1D4ED8]'
                           }`}>
                             {s.enrollment_type}
                           </span>
@@ -273,7 +273,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
           </div>
 
           {/* Sessions */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white">
+          <div className="ds-card">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
               <h2 className="text-sm font-semibold text-[#0B1F3A]">Upcoming Sessions</h2>
               {group.group_course_id && (

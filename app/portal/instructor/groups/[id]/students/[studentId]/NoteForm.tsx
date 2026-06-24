@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { createStudentNote } from '@/modules/instructor-portal/actions'
@@ -17,12 +17,12 @@ export default function NoteForm({ studentId, groupId }: Props) {
       <input type="hidden" name="group_id"   value={groupId} />
 
       {state && !state.success && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+        <div className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-xs text-[#DC2626]">
           {state.error.message}
         </div>
       )}
       {state?.success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+        <div className="rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] px-3 py-2 text-xs text-[#15803D]">
           Note saved.
         </div>
       )}

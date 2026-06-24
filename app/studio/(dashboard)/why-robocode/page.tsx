@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -28,8 +28,8 @@ interface SetupNeeded {
 
 // ── Shared style tokens ───────────────────────────────────────────────────────
 
-const INPUT = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
-const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
+const INPUT = "w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]";
 
 // ── Edit modal ────────────────────────────────────────────────────────────────
 
@@ -94,11 +94,11 @@ function EditModal({
       <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
 
         {/* Modal header */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-[#F1F5F9] px-6 py-4">
           <h2 className="text-[15px] font-bold text-[#0B1F3A]">Edit Tab</h2>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-gray-100 hover:text-gray-600"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9CA3AF] transition hover:bg-[#F3F4F6] hover:text-[#4B5563]"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -131,7 +131,7 @@ function EditModal({
           </div>
 
           {/* Active toggle */}
-          <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+          <div className="flex items-center justify-between rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3">
             <span className="text-[13px] font-medium text-[#0B1F3A]">Visible on homepage</span>
             <button
               type="button"
@@ -154,10 +154,10 @@ function EditModal({
 
           {/* Image replacement */}
           <div>
-            <label className={LABEL}>Replace Image <span className="normal-case font-normal text-gray-300">(optional)</span></label>
+            <label className={LABEL}>Replace Image <span className="normal-case font-normal text-[#D1D5DB]">(optional)</span></label>
 
             {/* Current / preview image */}
-            <div className="mb-3 relative h-36 w-full overflow-hidden rounded-xl border border-gray-200 bg-[#F8FAFC]">
+            <div className="mb-3 relative h-36 w-full overflow-hidden rounded-xl border border-[#E2E8F0] bg-[#F8FAFC]">
               <Image
                 src={preview ?? tab.image_url}
                 alt={tab.tab_name}
@@ -177,17 +177,17 @@ function EditModal({
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              className="block w-full text-[13px] text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200"
+              className="block w-full text-[13px] text-[#6B7280] file:mr-2 file:rounded-lg file:border-0 file:bg-[#F3F4F6] file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-[#4B5563] hover:file:bg-gray-200"
             />
-            <p className="mt-1 text-[11px] text-gray-400">Leave empty to keep the current image.</p>
+            <p className="mt-1 text-[11px] text-[#9CA3AF]">Leave empty to keep the current image.</p>
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-4">
+          <div className="flex items-center justify-end gap-3 border-t border-[#F1F5F9] pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-gray-200 px-5 py-2.5 text-[13px] font-semibold text-gray-500 transition hover:bg-gray-50"
+              className="rounded-lg border border-[#E2E8F0] px-5 py-2.5 text-[13px] font-semibold text-[#6B7280] transition hover:bg-[#F9FAFB]"
             >
               Cancel
             </button>
@@ -343,29 +343,29 @@ export default function WhyRobocodePage() {
         {/* Header */}
         <div>
           <h1 className="text-[16px] font-bold text-[#0B132B]">Why Robocode</h1>
-          <p className="mt-0.5 text-[13px] text-gray-400">
+          <p className="mt-0.5 text-[13px] text-[#9CA3AF]">
             Manage the section heading and feature tabs shown on the homepage.
           </p>
         </div>
 
         {/* Setup instructions — only shown when tables or bucket genuinely don't exist */}
         {setupNeeded && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] text-amber-700">
+          <div className="rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-[12px] text-[#B45309]">
             <p className="font-semibold">One-time setup required</p>
             <ul className="mt-2 list-inside list-disc space-y-1">
               {setupNeeded.tables && (
                 <li>
                   Create tables{" "}
-                  <code className="rounded bg-amber-100 px-1 font-mono">why_robocode_settings</code>
+                  <code className="rounded bg-[#FFFBEB] px-1 font-mono">why_robocode_settings</code>
                   {" "}and{" "}
-                  <code className="rounded bg-amber-100 px-1 font-mono">why_robocode_tabs</code>
+                  <code className="rounded bg-[#FFFBEB] px-1 font-mono">why_robocode_tabs</code>
                   {" "}in Supabase.
                 </li>
               )}
               {setupNeeded.bucket && (
                 <li>
                   Create a public storage bucket named{" "}
-                  <code className="rounded bg-amber-100 px-1 font-mono">why-robocode</code>.
+                  <code className="rounded bg-[#FFFBEB] px-1 font-mono">why-robocode</code>.
                 </li>
               )}
             </ul>
@@ -377,7 +377,7 @@ export default function WhyRobocodePage() {
 
         {/* Connection error */}
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-700">
+          <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] p-4 text-[13px] text-[#DC2626]">
             <strong>Connection error:</strong> {error}
             <button onClick={load} className="ml-3 underline hover:no-underline">Retry</button>
           </div>
@@ -390,9 +390,9 @@ export default function WhyRobocodePage() {
         ) : setupNeeded ? null : (
           <>
             {/* Settings form */}
-            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-[#F1F5F9] bg-white p-6 shadow-sm">
               <h2 className="mb-1 text-[14px] font-semibold text-[#0B1F3A]">Section Text</h2>
-              <p className="mb-4 text-[12px] text-gray-400">
+              <p className="mb-4 text-[12px] text-[#9CA3AF]">
                 The main heading and subtitle shown above the tabs.
               </p>
               <form onSubmit={handleSaveSettings} className="space-y-4">
@@ -418,7 +418,7 @@ export default function WhyRobocodePage() {
                 </div>
                 <div className="flex items-center justify-end gap-3">
                   {settingsSaved && (
-                    <span className="text-[12px] font-semibold text-emerald-500">Saved</span>
+                    <span className="text-[12px] font-semibold text-[#10B981]">Saved</span>
                   )}
                   <button
                     type="submit"
@@ -432,9 +432,9 @@ export default function WhyRobocodePage() {
             </div>
 
             {/* Add tab form */}
-            <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="rounded-xl border border-[#F1F5F9] bg-white p-6 shadow-sm">
               <h2 className="mb-1 text-[14px] font-semibold text-[#0B1F3A]">Add Tab</h2>
-              <p className="mb-4 text-[12px] text-gray-400">
+              <p className="mb-4 text-[12px] text-[#9CA3AF]">
                 Each tab shows a name on the left and its image on the right when selected.
               </p>
               <form onSubmit={handleAddTab} className="space-y-4">
@@ -467,9 +467,9 @@ export default function WhyRobocodePage() {
                     accept="image/*"
                     required
                     onChange={(e) => setTabFile(e.target.files?.[0] ?? null)}
-                    className="block w-full text-[13px] text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200"
+                    className="block w-full text-[13px] text-[#6B7280] file:mr-2 file:rounded-lg file:border-0 file:bg-[#F3F4F6] file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-[#4B5563] hover:file:bg-gray-200"
                   />
-                  <p className="mt-1 text-[11px] text-gray-400">Recommended: 800 × 600 px, WebP, under 300 KB</p>
+                  <p className="mt-1 text-[11px] text-[#9CA3AF]">Recommended: 800 × 600 px, WebP, under 300 KB</p>
                 </div>
                 <div className="flex justify-end">
                   <button
@@ -486,16 +486,16 @@ export default function WhyRobocodePage() {
             {/* Tab list */}
             <div>
               {tabs.length > 0 && (
-                <p className="mb-3 text-[13px] text-gray-400">{tabs.length} tab{tabs.length !== 1 ? "s" : ""}</p>
+                <p className="mb-3 text-[13px] text-[#9CA3AF]">{tabs.length} tab{tabs.length !== 1 ? "s" : ""}</p>
               )}
               <div className="space-y-3">
                 {tabs.map((tab) => (
                   <div
                     key={tab.id}
-                    className="flex items-center gap-4 overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm"
+                    className="flex items-center gap-4 overflow-hidden rounded-xl border border-[#F1F5F9] bg-white shadow-sm"
                   >
                     {/* Thumbnail */}
-                    <div className="relative h-20 w-28 shrink-0 overflow-hidden bg-gray-50">
+                    <div className="relative h-20 w-28 shrink-0 overflow-hidden bg-[#F9FAFB]">
                       {tab.image_url ? (
                         <Image
                           src={tab.image_url}
@@ -505,7 +505,7 @@ export default function WhyRobocodePage() {
                           sizes="112px"
                         />
                       ) : (
-                        <div className="flex h-full items-center justify-center text-gray-300">
+                        <div className="flex h-full items-center justify-center text-[#D1D5DB]">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8">
                             <rect x="3" y="3" width="18" height="18" rx="3" />
                             <path d="M3 16l5-5 4 4 3-3 6 4" />
@@ -517,9 +517,9 @@ export default function WhyRobocodePage() {
                     {/* Info */}
                     <div className="min-w-0 flex-1 py-3">
                       <p className="truncate text-[14px] font-semibold text-[#0B1F3A]">{tab.tab_name}</p>
-                      <p className="text-[11px] text-gray-400">
+                      <p className="text-[11px] text-[#9CA3AF]">
                         Order: {tab.sort_order} &middot;{" "}
-                        <span className={tab.is_active ? "text-emerald-500" : "text-gray-400"}>
+                        <span className={tab.is_active ? "text-[#10B981]" : "text-[#9CA3AF]"}>
                           {tab.is_active ? "Active" : "Inactive"}
                         </span>
                       </p>
@@ -529,7 +529,7 @@ export default function WhyRobocodePage() {
                     <div className="flex shrink-0 items-center gap-2 px-4">
                       <button
                         onClick={() => setEditingTab(tab)}
-                        className="rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-semibold text-[#0B1F3A] transition hover:border-[#38BDF8]/40 hover:bg-[#38BDF8]/6 hover:text-[#38BDF8]"
+                        className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#0B1F3A] transition hover:border-[#38BDF8]/40 hover:bg-[#38BDF8]/6 hover:text-[#38BDF8]"
                       >
                         Edit
                       </button>
@@ -540,7 +540,7 @@ export default function WhyRobocodePage() {
                           "rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition disabled:opacity-50",
                           tab.is_active
                             ? "border-[#38BDF8]/30 bg-[#38BDF8]/8 text-[#38BDF8] hover:bg-[#38BDF8]/15"
-                            : "border-gray-200 text-gray-400 hover:border-[#38BDF8]/30 hover:text-[#38BDF8]",
+                            : "border-[#E2E8F0] text-[#9CA3AF] hover:border-[#38BDF8]/30 hover:text-[#38BDF8]",
                         ].join(" ")}
                       >
                         {toggling === tab.id ? "…" : tab.is_active ? "Active" : "Inactive"}
@@ -548,7 +548,7 @@ export default function WhyRobocodePage() {
                       <button
                         onClick={() => handleDelete(tab.id)}
                         disabled={deleting === tab.id}
-                        className="rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-semibold text-red-400 transition hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
+                        className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#F87171] transition hover:border-[#FCA5A5] hover:bg-[#FEE2E2] disabled:opacity-50"
                       >
                         {deleting === tab.id ? "…" : "Delete"}
                       </button>
@@ -557,9 +557,9 @@ export default function WhyRobocodePage() {
                 ))}
 
                 {tabs.length === 0 && !error && (
-                  <div className="rounded-xl border border-dashed border-gray-200 py-16 text-center">
-                    <p className="text-[14px] text-gray-400">No tabs yet</p>
-                    <p className="mt-1 text-[12px] text-gray-300">Add your first tab above.</p>
+                  <div className="rounded-xl border border-dashed border-[#E2E8F0] py-16 text-center">
+                    <p className="text-[14px] text-[#9CA3AF]">No tabs yet</p>
+                    <p className="mt-1 text-[12px] text-[#D1D5DB]">Add your first tab above.</p>
                   </div>
                 )}
               </div>

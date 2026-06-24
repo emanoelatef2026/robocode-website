@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { assignGroupCourse } from '@/modules/groups/actions'
@@ -69,8 +69,8 @@ export default function TLAssignCourseForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      {error   && <p className="text-sm text-red-600">{error}</p>}
-      {success && <p className="text-sm text-emerald-600">Assignment saved.</p>}
+      {error   && <p className="text-sm text-[#EF4444]">{error}</p>}
+      {success && <p className="text-sm text-[#10B981]">Assignment saved.</p>}
 
       <div>
         <div className="mb-1 flex items-center justify-between">

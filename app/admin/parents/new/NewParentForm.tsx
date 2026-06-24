@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { createParent } from '@/modules/parents/actions'
@@ -16,9 +16,9 @@ export default function NewParentForm({ students }: Props) {
   )
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -27,7 +27,7 @@ export default function NewParentForm({ students }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              First name <span className="text-red-500">*</span>
+              First name <span className="text-[#EF4444]">*</span>
             </label>
             <input
               name="first_name"
@@ -37,7 +37,7 @@ export default function NewParentForm({ students }: Props) {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Last name <span className="text-red-500">*</span>
+              Last name <span className="text-[#EF4444]">*</span>
             </label>
             <input
               name="last_name"
@@ -49,7 +49,7 @@ export default function NewParentForm({ students }: Props) {
 
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Email <span className="text-red-500">*</span>
+            Email <span className="text-[#EF4444]">*</span>
           </label>
           <input
             name="email"
@@ -61,7 +61,7 @@ export default function NewParentForm({ students }: Props) {
 
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Password <span className="text-red-500">*</span>
+            Password <span className="text-[#EF4444]">*</span>
           </label>
           <input
             name="password"

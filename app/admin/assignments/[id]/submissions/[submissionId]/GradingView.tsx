@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState } from 'react'
 import { gradeSubmission } from '@/modules/assignments/submissions/actions'
@@ -46,7 +46,7 @@ export default function GradingView({ assignment, submission }: Props) {
   return (
     <div className="space-y-5">
       {/* Submission info */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <p className="font-medium text-[#0B1F3A]">{submission.student_name}</p>
@@ -55,12 +55,12 @@ export default function GradingView({ assignment, submission }: Props) {
           <div className="flex items-center gap-2">
             <StatusBadge status={submission.status} />
             {submission.is_late && (
-              <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
+              <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-medium text-[#EF4444]">
                 Late
               </span>
             )}
             {submission.resubmission_count > 0 && (
-              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-medium text-[#B45309]">
                 Resubmission #{submission.resubmission_count}
               </span>
             )}
@@ -108,16 +108,16 @@ export default function GradingView({ assignment, submission }: Props) {
       </div>
 
       {/* Grading form */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-4 text-sm font-semibold text-[#0B1F3A]">Grade this submission</h2>
 
         {state && !state.success && (
-          <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="mb-4 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
             {state.error.message}
           </div>
         )}
         {state?.success && (
-          <div className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          <div className="mb-4 rounded-lg bg-[#E7F8EE] px-3 py-2 text-sm text-[#15803D]">
             Grade saved.
           </div>
         )}

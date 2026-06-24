@@ -1,4 +1,4 @@
-import { requirePortalRole }       from '@/modules/rbac/guards'
+﻿import { requirePortalRole }       from '@/modules/rbac/guards'
 import { getParentChildren }       from '@/modules/parents/parent-portal-queries'
 import { getParentChildFinance }   from '@/modules/finance/queries'
 import { listStudentEnrollments }  from '@/modules/enrollments/queries'
@@ -89,7 +89,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                 : 0
 
               return (
-                <div key={enroll.id} className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
+                <div key={enroll.id} className="overflow-hidden ds-card">
                   {/* Card header */}
                   <div className="bg-linear-to-br from-[#0B1F3A] to-[#1a3460] px-4 py-3 text-white">
                     <div className="flex items-start justify-between gap-2">
@@ -125,14 +125,14 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                           <span className="font-semibold text-[#0B1F3A]">
                             {enroll.consumed_sessions} / {enroll.enrolled_sessions} sessions
                             {enroll.remaining_sessions > 0 && (
-                              <span className="ml-1 text-emerald-600">({enroll.remaining_sessions} remaining)</span>
+                              <span className="ml-1 text-[#10B981]">({enroll.remaining_sessions} remaining)</span>
                             )}
                           </span>
                         </div>
                         <div className="h-2 w-full rounded-full bg-[#F1F5F9]">
                           <div
                             className={`h-full rounded-full ${
-                              sessProgress >= 90 ? 'bg-red-500' : sessProgress >= 70 ? 'bg-amber-500' : 'bg-blue-500'
+                              sessProgress >= 90 ? 'bg-[#EF4444]' : sessProgress >= 70 ? 'bg-[#F59E0B]' : 'bg-[#3B82F6]'
                             }`}
                             style={{ width: `${sessProgress}%` }}
                           />
@@ -146,8 +146,8 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                         <div className="mb-1 flex items-center justify-between text-xs">
                           <span className="text-[#64748B]">Attendance</span>
                           <span className={`font-semibold ${
-                            attendancePct >= 80 ? 'text-emerald-600' :
-                            attendancePct >= 60 ? 'text-amber-600' : 'text-red-600'
+                            attendancePct >= 80 ? 'text-[#10B981]' :
+                            attendancePct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'
                           }`}>
                             {enroll.attendance_count} / {enroll.expected_sessions} sessions ({attendancePct}%)
                           </span>
@@ -155,8 +155,8 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                         <div className="h-2 w-full rounded-full bg-[#F1F5F9]">
                           <div
                             className={`h-full rounded-full ${
-                              attendancePct >= 80 ? 'bg-emerald-500' :
-                              attendancePct >= 60 ? 'bg-amber-500' : 'bg-red-500'
+                              attendancePct >= 80 ? 'bg-[#10B981]' :
+                              attendancePct >= 60 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'
                             }`}
                             style={{ width: `${Math.min(100, attendancePct)}%` }}
                           />
@@ -174,7 +174,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                         {enroll.discount_amount > 0 && (
                           <div>
                             <p className="text-[#94A3B8]">Discount</p>
-                            <p className="font-semibold text-emerald-600">-EGP {fmt(enroll.discount_amount)}</p>
+                            <p className="font-semibold text-[#10B981]">-EGP {fmt(enroll.discount_amount)}</p>
                           </div>
                         )}
                         <div>
@@ -193,7 +193,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
 
       {/* ── Finance Account ─────────────────────────────────────────────── */}
       {!data ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+        <div className="ds-card px-6 py-12 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F1F5F9]">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-6 w-6 text-[#94A3B8]">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
@@ -208,15 +208,15 @@ export default async function ParentFinancePage({ searchParams }: Props) {
       ) : (
         <>
           {/* Financial summary card */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+          <div className="ds-card overflow-hidden">
             <div className="bg-linear-to-br from-[#0B1F3A] to-[#1a3460] px-5 py-4 text-white">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">Payment Summary</p>
               <h1 className="mt-1 text-xl font-bold">{selected.student_name}</h1>
               <div className="mt-3 flex items-center gap-2">
                 <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-semibold ${
-                  data.account.status === 'PAID'     ? 'border-emerald-300 bg-emerald-500/20 text-emerald-200' :
-                  data.account.status === 'OVERDUE'  ? 'border-red-300 bg-red-500/20 text-red-200' :
-                  data.account.status === 'DUE_SOON' ? 'border-amber-300 bg-amber-500/20 text-amber-200' :
+                  data.account.status === 'PAID'     ? 'border-emerald-300 bg-[#10B981]/20 text-emerald-200' :
+                  data.account.status === 'OVERDUE'  ? 'border-[#FCA5A5] bg-[#EF4444]/20 text-red-200' :
+                  data.account.status === 'DUE_SOON' ? 'border-amber-300 bg-[#F59E0B]/20 text-amber-200' :
                   'border-white/20 bg-white/10 text-white/70'
                 }`}>
                   {STATUS_LABELS[data.account.status as keyof typeof STATUS_LABELS]}
@@ -227,10 +227,10 @@ export default async function ParentFinancePage({ searchParams }: Props) {
             <div className="grid grid-cols-2 divide-x divide-[#E2E8F0] border-t border-[#E2E8F0]">
               {[
                 { label: 'Total',     value: `EGP ${fmt(data.account.total_amount)}`,     cls: 'text-[#0B1F3A]' },
-                { label: 'Discount',  value: `-EGP ${fmt(data.account.discount_amount)}`, cls: 'text-emerald-600' },
+                { label: 'Discount',  value: `-EGP ${fmt(data.account.discount_amount)}`, cls: 'text-[#10B981]' },
                 { label: 'Net Total', value: `EGP ${fmt(data.account.net_amount)}`,       cls: 'font-bold text-[#0B1F3A]' },
-                { label: 'Paid',      value: `EGP ${fmt(data.account.paid_amount)}`,      cls: 'font-bold text-emerald-600' },
-                { label: 'Remaining', value: `EGP ${fmt(data.account.remaining_amount)}`, cls: `font-bold ${data.account.remaining_amount > 0 ? 'text-red-500' : 'text-emerald-600'}` },
+                { label: 'Paid',      value: `EGP ${fmt(data.account.paid_amount)}`,      cls: 'font-bold text-[#10B981]' },
+                { label: 'Remaining', value: `EGP ${fmt(data.account.remaining_amount)}`, cls: `font-bold ${data.account.remaining_amount > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}` },
                 { label: 'Next Due',  value: dateFmt(data.account.next_due_date),         cls: 'text-[#0B1F3A]' },
               ].map(({ label, value, cls }) => (
                 <div key={label} className="px-4 py-3">
@@ -265,7 +265,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
               <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Installment Schedule</h2>
               <div className="space-y-2">
                 {(data.installments as any[]).map((inst: any) => (
-                  <div key={inst.id} className="flex items-center justify-between rounded-xl border border-[#E2E8F0] bg-white px-4 py-3">
+                  <div key={inst.id} className="flex items-center justify-between ds-card px-4 py-3">
                     <div>
                       <p className="text-sm font-semibold text-[#0B1F3A]">Installment #{inst.installment_number}</p>
                       <p className="text-[12px] text-[#64748B]">Due: {dateFmt(inst.due_date)}</p>
@@ -288,9 +288,9 @@ export default async function ParentFinancePage({ searchParams }: Props) {
               <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Payment History</h2>
               <div className="space-y-2">
                 {(data.payments as any[]).map((p: any, i: number) => (
-                  <div key={i} className="flex items-center justify-between rounded-xl border border-[#E2E8F0] bg-white px-4 py-3">
+                  <div key={i} className="flex items-center justify-between ds-card px-4 py-3">
                     <div>
-                      <p className="text-sm font-semibold text-emerald-600">EGP {fmt(Number(p.amount))}</p>
+                      <p className="text-sm font-semibold text-[#10B981]">EGP {fmt(Number(p.amount))}</p>
                       <p className="text-[12px] text-[#64748B]">{dateFmt(p.payment_date)}</p>
                     </div>
                     <div className="text-right">
@@ -309,9 +309,9 @@ export default async function ParentFinancePage({ searchParams }: Props) {
 
           {/* Outstanding balance warning */}
           {data.account.remaining_amount > 0 && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
-              <p className="text-sm font-semibold text-amber-800">Outstanding Balance</p>
-              <p className="mt-1 text-xs text-amber-700">
+            <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-5 py-4">
+              <p className="text-sm font-semibold text-[#92400E]">Outstanding Balance</p>
+              <p className="mt-1 text-xs text-[#B45309]">
                 A balance of EGP {fmt(data.account.remaining_amount)} remains. Please contact the academy to arrange payment.
                 {data.account.next_due_date && ` Next due date: ${dateFmt(data.account.next_due_date)}.`}
               </p>

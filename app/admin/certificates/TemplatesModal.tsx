@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -58,7 +58,7 @@ export default function TemplatesModal({ templates }: Props) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm font-medium text-[#0B1F3A] shadow-sm transition hover:bg-[#F8FAFC]"
+        className="inline-flex items-center gap-2 ds-card px-4 py-2 text-sm font-medium text-[#0B1F3A] shadow-sm transition hover:bg-[#F8FAFC]"
       >
         Templates
       </button>
@@ -129,7 +129,7 @@ export default function TemplatesModal({ templates }: Props) {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead>
+                    <thead className="ds-table-head">
                       <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                         <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Type</th>
@@ -140,7 +140,7 @@ export default function TemplatesModal({ templates }: Props) {
                     </thead>
                     <tbody>
                       {filtered.map((t) => (
-                        <tr key={t.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                        <tr key={t.id} className="ds-table-row">
                           <td className="px-4 py-3 font-medium text-[#0B1F3A]">{t.name}</td>
                           <td className="px-4 py-3 text-[#64748B]">{TYPE_LABELS[t.certificate_type] ?? t.certificate_type}</td>
                           <td className="px-4 py-3 text-[#64748B]">{t.branch_name ?? 'Global'}</td>

@@ -1,4 +1,4 @@
-import { listCertificateTemplates } from '@/modules/certificates/queries'
+﻿import { listCertificateTemplates } from '@/modules/certificates/queries'
 import { requirePermission }        from '@/modules/rbac/guards'
 import SearchInput                  from '@/components/admin/SearchInput'
 import Pagination                   from '@/components/admin/Pagination'
@@ -28,7 +28,7 @@ export default async function CertificateTemplatesPage({ searchParams }: Props) 
         </Link>
       </div>
 
-      <div className="rounded-xl border border-[#E2E8F0] bg-white mb-0">
+      <div className="ds-card mb-0">
         <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search templates…" />
         </div>
@@ -38,7 +38,7 @@ export default async function CertificateTemplatesPage({ searchParams }: Props) 
       <TemplatesClient templates={result.data} />
 
       {result.totalPages > 1 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white mt-0 border-t-0">
+        <div className="ds-card mt-0 border-t-0">
           <Pagination
             page={result.page}
             totalPages={result.totalPages}

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useRef, useState } from 'react'
 import { submitAssignment } from '@/modules/assignments/submissions/actions'
@@ -146,7 +146,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             rows={6}
             defaultValue={isResubmit ? (submission?.content ?? '') : ''}
             placeholder="Write your answer here…"
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#0B132B] outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full ds-card px-4 py-3 text-sm text-[#0B132B] outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
           />
         </div>
       )}
@@ -170,7 +170,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
                   <button
                     type="button"
                     onClick={() => removeImage(i)}
-                    className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white hover:bg-red-600 transition"
+                    className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#EF4444] text-[9px] font-bold text-white hover:bg-[#DC2626] transition"
                   >
                     ✕
                   </button>
@@ -180,7 +180,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
           )}
 
           {uploadError && (
-            <p className="mb-2 text-xs text-red-600">{uploadError}</p>
+            <p className="mb-2 text-xs text-[#EF4444]">{uploadError}</p>
           )}
 
           {images.length < 5 && (
@@ -233,7 +233,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             name="drive_url"
             defaultValue={isResubmit ? (submission?.drive_url ?? '') : ''}
             placeholder="https://drive.google.com/…"
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
           />
         </div>
       )}
@@ -248,7 +248,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             name="github_url"
             defaultValue={isResubmit ? (submission?.github_url ?? '') : ''}
             placeholder="https://github.com/…"
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
           />
         </div>
       )}
@@ -263,7 +263,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             name="project_url"
             defaultValue={isResubmit ? (submission?.project_url ?? '') : ''}
             placeholder="https://…"
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
           />
         </div>
       )}
@@ -278,17 +278,17 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             name="video_url"
             defaultValue={isResubmit ? (submission?.video_url ?? '') : ''}
             placeholder="https://youtube.com/…"
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
           />
         </div>
       )}
 
       {!state.success && state.error?.message && (
-        <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-600">{state.error.message}</p>
+        <p className="rounded-lg bg-[#FEE2E2] px-4 py-2 text-sm text-[#EF4444]">{state.error.message}</p>
       )}
 
       {state.success && (
-        <p className="rounded-lg bg-green-50 px-4 py-2 text-sm text-green-700">
+        <p className="rounded-lg bg-[#E7F8EE] px-4 py-2 text-sm text-[#15803D]">
           Submitted successfully!
         </p>
       )}

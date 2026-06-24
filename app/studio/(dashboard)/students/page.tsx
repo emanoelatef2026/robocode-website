@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -34,8 +34,8 @@ interface Student {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const INPUT    = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
-const LABEL    = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
+const INPUT    = "w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+const LABEL    = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]";
 const TEXTAREA = `${INPUT} resize-none`;
 
 const blank = {
@@ -118,7 +118,7 @@ function EditModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-100 text-gray-400 transition hover:bg-gray-200"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F3F4F6] text-[#9CA3AF] transition hover:bg-gray-200"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -131,7 +131,7 @@ function EditModal({
           <div>
             <label className={LABEL}>Photo</label>
             <div className="flex items-start gap-4">
-              <div className="relative h-24 w-18 shrink-0 overflow-hidden rounded-xl bg-gray-100" style={{ width: "4.5rem" }}>
+              <div className="relative h-24 w-18 shrink-0 overflow-hidden rounded-xl bg-[#F3F4F6]" style={{ width: "4.5rem" }}>
                 <Image
                   src={preview ?? student.image_url}
                   alt={form.name}
@@ -146,9 +146,9 @@ function EditModal({
                   type="file"
                   accept="image/*"
                   onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
-                  className="block w-full text-[12px] text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-[11px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200"
+                  className="block w-full text-[12px] text-[#6B7280] file:mr-2 file:rounded-lg file:border-0 file:bg-[#F3F4F6] file:px-3 file:py-1.5 file:text-[11px] file:font-semibold file:text-[#4B5563] hover:file:bg-gray-200"
                 />
-                <p className="mt-1 text-[11px] text-gray-400">Leave blank to keep current photo. 3:4 portrait recommended.</p>
+                <p className="mt-1 text-[11px] text-[#9CA3AF]">Leave blank to keep current photo. 3:4 portrait recommended.</p>
               </div>
             </div>
           </div>
@@ -194,7 +194,7 @@ function EditModal({
                     form.featured ? "translate-x-4" : "translate-x-0.5",
                   ].join(" ")} />
                 </div>
-                <span className="text-[12px] font-medium text-gray-600">Active</span>
+                <span className="text-[12px] font-medium text-[#4B5563]">Active</span>
               </label>
             </div>
           </div>
@@ -211,7 +211,7 @@ function EditModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-gray-200 px-5 py-2.5 text-[13px] font-semibold text-gray-500 transition hover:bg-gray-50"
+            className="rounded-lg border border-[#E2E8F0] px-5 py-2.5 text-[13px] font-semibold text-[#6B7280] transition hover:bg-[#F9FAFB]"
           >
             Cancel
           </button>
@@ -253,12 +253,12 @@ function SortableStudentCard({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={[
         "overflow-hidden rounded-xl border bg-white shadow-sm transition-shadow",
-        isDragging ? "border-[#38BDF8] shadow-lg opacity-70" : "border-gray-100",
+        isDragging ? "border-[#38BDF8] shadow-lg opacity-70" : "border-[#F1F5F9]",
         !student.featured ? "opacity-60" : "",
       ].join(" ")}
     >
       {/* Photo */}
-      <div className="relative h-52 w-full overflow-hidden bg-gray-100">
+      <div className="relative h-52 w-full overflow-hidden bg-[#F3F4F6]">
         <Image
           src={student.image_url}
           alt={student.name}
@@ -269,7 +269,7 @@ function SortableStudentCard({
         {/* Status badge */}
         <span className={[
           "absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold",
-          student.featured ? "bg-emerald-500 text-white" : "bg-gray-400 text-white",
+          student.featured ? "bg-[#10B981] text-white" : "bg-gray-400 text-white",
         ].join(" ")}>
           {student.featured ? "Active" : "Hidden"}
         </span>
@@ -277,7 +277,7 @@ function SortableStudentCard({
         <button
           {...attributes}
           {...listeners}
-          className="absolute right-2 top-2 flex h-7 w-7 cursor-grab items-center justify-center rounded-lg bg-white/80 text-gray-500 shadow-sm transition hover:bg-white hover:text-gray-700 active:cursor-grabbing"
+          className="absolute right-2 top-2 flex h-7 w-7 cursor-grab items-center justify-center rounded-lg bg-white/80 text-[#6B7280] shadow-sm transition hover:bg-white hover:text-[#374151] active:cursor-grabbing"
           aria-label="Drag to reorder"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -293,17 +293,17 @@ function SortableStudentCard({
           <p className="mt-0.5 truncate text-[11px] font-semibold text-[#38BDF8]">{student.achievement_title}</p>
         )}
         {student.achievement_description && (
-          <p className="mt-1 line-clamp-2 text-[11px] text-gray-400">{student.achievement_description}</p>
+          <p className="mt-1 line-clamp-2 text-[11px] text-[#9CA3AF]">{student.achievement_description}</p>
         )}
         {student.youtube_url && (
-          <p className="mt-1 truncate text-[10px] text-gray-300">{student.youtube_url}</p>
+          <p className="mt-1 truncate text-[10px] text-[#D1D5DB]">{student.youtube_url}</p>
         )}
-        <p className="mt-1 text-[10px] text-gray-300">Order: {student.sort_order}</p>
+        <p className="mt-1 text-[10px] text-[#D1D5DB]">Order: {student.sort_order}</p>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
           <button
             onClick={() => onEdit(student)}
-            className="flex-1 rounded-lg border border-gray-200 py-1.5 text-[11px] font-semibold text-gray-600 transition hover:border-[#38BDF8] hover:text-[#38BDF8]"
+            className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#4B5563] transition hover:border-[#38BDF8] hover:text-[#38BDF8]"
           >
             Edit
           </button>
@@ -313,8 +313,8 @@ function SortableStudentCard({
             className={[
               "flex-1 rounded-lg border py-1.5 text-[11px] font-semibold transition disabled:opacity-50",
               student.featured
-                ? "border-emerald-200 bg-emerald-50/60 text-emerald-600 hover:bg-emerald-100"
-                : "border-gray-200 text-gray-400 hover:border-emerald-200 hover:text-emerald-600",
+                ? "border-[#A7F3D0] bg-[#E7F8EE]/60 text-[#10B981] hover:bg-[#E7F8EE]"
+                : "border-[#E2E8F0] text-[#9CA3AF] hover:border-[#A7F3D0] hover:text-[#10B981]",
             ].join(" ")}
           >
             {toggling === student.id ? "…" : student.featured ? "Hide" : "Show"}
@@ -322,7 +322,7 @@ function SortableStudentCard({
           <button
             onClick={() => onDelete(student.id)}
             disabled={deleting === student.id}
-            className="w-full rounded-lg border border-gray-200 py-1.5 text-[11px] font-semibold text-red-400 transition hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
+            className="w-full rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#F87171] transition hover:border-[#FCA5A5] hover:bg-[#FEE2E2] disabled:opacity-50"
           >
             {deleting === student.id ? "Deleting…" : "Delete"}
           </button>
@@ -431,9 +431,9 @@ export default function StudentsPage() {
     <div className="space-y-6">
 
       {/* Add form */}
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-[#F1F5F9] bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-[14px] font-semibold text-[#0B1F3A]">Add Featured Student</h2>
-        <p className="mb-5 text-[12px] text-gray-400">Portrait photo required (3:4 ratio recommended). Achievement fields are optional.</p>
+        <p className="mb-5 text-[12px] text-[#9CA3AF]">Portrait photo required (3:4 ratio recommended). Achievement fields are optional.</p>
 
         <form onSubmit={handleAdd} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -469,7 +469,7 @@ export default function StudentsPage() {
                 accept="image/*"
                 required
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="block w-full text-[12px] text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[11px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200"
+                className="block w-full text-[12px] text-[#6B7280] file:mr-2 file:rounded-lg file:border-0 file:bg-[#F3F4F6] file:px-3 file:py-2 file:text-[11px] file:font-semibold file:text-[#4B5563] hover:file:bg-gray-200"
               />
             </div>
           </div>
@@ -494,7 +494,7 @@ export default function StudentsPage() {
       ) : (
         <>
           {students.length > 0 && (
-            <p className="text-[12px] text-gray-400">
+            <p className="text-[12px] text-[#9CA3AF]">
               {students.length} student{students.length !== 1 ? "s" : ""} — drag cards to reorder
             </p>
           )}
@@ -515,9 +515,9 @@ export default function StudentsPage() {
                 ))}
 
                 {students.length === 0 && (
-                  <div className="col-span-full rounded-xl border border-dashed border-gray-200 bg-gray-50 p-12 text-center">
-                    <p className="text-[14px] font-semibold text-gray-400">No students yet</p>
-                    <p className="mt-1 text-[12px] text-gray-300">Add your first featured student using the form above.</p>
+                  <div className="col-span-full rounded-xl border border-dashed border-[#E2E8F0] bg-[#F9FAFB] p-12 text-center">
+                    <p className="text-[14px] font-semibold text-[#9CA3AF]">No students yet</p>
+                    <p className="mt-1 text-[12px] text-[#D1D5DB]">Add your first featured student using the form above.</p>
                   </div>
                 )}
               </div>

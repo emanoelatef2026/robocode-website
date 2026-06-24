@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -57,9 +57,9 @@ export default function StartGroupSessionButton({ groupId, groupCourseId, branch
         </button>
       </div>
       {touched && topicInvalid && (
-        <p className="text-xs text-red-600">Topic is required to start a session.</p>
+        <p className="text-xs text-[#EF4444]">Topic is required to start a session.</p>
       )}
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-[#EF4444]">{error}</p>}
     </div>
   )
 }

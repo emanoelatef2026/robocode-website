@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -35,16 +35,16 @@ export default function CourseDetailView({ course, returnPath = '/admin/courses'
 
   return (
     <div className="space-y-5">
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">Course Settings</h2>
 
         {editState && !editState.success && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
             {editState.error.message}
           </div>
         )}
         {editState?.success && (
-          <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+          <div className="mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-sm text-[#15803D]">
             Changes saved.
           </div>
         )}
@@ -241,18 +241,18 @@ export default function CourseDetailView({ course, returnPath = '/admin/courses'
         </form>
       </div>
 
-      <div className="rounded-xl border border-red-100 bg-red-50 p-5">
-        <h2 className="mb-1 text-sm font-medium text-red-700">Danger zone</h2>
-        <p className="mb-3 text-xs text-red-600">Soft-deletes the course and hides it from all views.</p>
+      <div className="rounded-xl border border-[#FEE2E2] bg-[#FEE2E2] p-5">
+        <h2 className="mb-1 text-sm font-medium text-[#DC2626]">Danger zone</h2>
+        <p className="mb-3 text-xs text-[#EF4444]">Soft-deletes the course and hides it from all views.</p>
         {deleteError && (
-          <div className="mb-3 rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-red-700">
+          <div className="mb-3 rounded-lg border border-[#FECACA] bg-white px-3 py-2 text-sm text-[#DC2626]">
             {deleteError}
           </div>
         )}
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+          className="rounded-lg border border-[#FECACA] bg-white px-4 py-2 text-sm font-medium text-[#EF4444] transition hover:bg-[#FEE2E2] disabled:opacity-50"
         >
           {deleting ? 'Deleting…' : 'Delete course'}
         </button>

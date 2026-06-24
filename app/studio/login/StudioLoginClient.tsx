@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Suspense, useActionState } from 'react'
 import Image from 'next/image'
@@ -33,25 +33,25 @@ function StudioLoginForm() {
   return (
     <>
       <h1 className="mb-1 text-center text-lg font-bold text-[#0B132B]">Studio</h1>
-      <p className="mb-7 text-center text-[13px] text-gray-400">
+      <p className="mb-7 text-center text-[13px] text-[#9CA3AF]">
         Sign in with your Robocode account
       </p>
 
       {successMessage && (
-        <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-[13px] text-green-700">
+        <div className="mb-4 rounded-lg bg-[#E7F8EE] px-4 py-3 text-[13px] text-[#15803D]">
           {successMessage}
         </div>
       )}
 
       {errorMessage && !successMessage && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-[13px] text-red-600">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#EF4444]">
           {errorMessage}
         </div>
       )}
 
       <form action={action} className="space-y-4">
         <div>
-          <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-gray-400">
+          <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
             Email address
           </label>
           <input
@@ -60,12 +60,12 @@ function StudioLoginForm() {
             required
             autoComplete="email"
             placeholder="you@example.com"
-            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
           />
         </div>
 
         <div>
-          <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-gray-400">
+          <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
             Password
           </label>
           <input
@@ -74,7 +74,7 @@ function StudioLoginForm() {
             required
             autoComplete="current-password"
             placeholder="••••••••"
-            className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
           />
         </div>
 
@@ -103,15 +103,15 @@ export default function StudioLoginClient() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F4F7FB] px-4">
       <div className="w-full max-w-sm">
-        <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-[#F1F5F9] bg-white p-8 shadow-sm">
           <div className="mb-8 flex justify-center">
             <Image src="/logo.png" alt="Robocode" width={140} height={60} className="h-auto w-28" />
           </div>
-          <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-gray-50" />}>
+          <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-[#F9FAFB]" />}>
             <StudioLoginForm />
           </Suspense>
         </div>
-        <p className="mt-4 text-center text-[12px] text-gray-400">Robocode School · Studio</p>
+        <p className="mt-4 text-center text-[12px] text-[#9CA3AF]">Robocode School · Studio</p>
       </div>
     </div>
   )

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { updateProject, archiveProject } from '@/modules/portfolio/actions'
@@ -57,9 +57,9 @@ export default function EditProjectForm({ project, studentId, courses, semesters
   }
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -67,7 +67,7 @@ export default function EditProjectForm({ project, studentId, courses, semesters
       <form action={formAction} className="space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Title <span className="text-red-500">*</span>
+            Title <span className="text-[#EF4444]">*</span>
           </label>
           <input name="title" required defaultValue={project.title} className={inputClass} />
         </div>
@@ -158,7 +158,7 @@ export default function EditProjectForm({ project, studentId, courses, semesters
                 type="button"
                 onClick={handleArchive}
                 disabled={archiving}
-                className="text-sm text-red-500 hover:text-red-700 disabled:opacity-50"
+                className="text-sm text-[#EF4444] hover:text-[#DC2626] disabled:opacity-50"
               >
                 Archive
               </button>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -62,25 +62,25 @@ export default function ResetPasswordPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F4F7FB] px-4">
       <div className="w-full max-w-sm">
-        <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-[#F1F5F9] bg-white p-8 shadow-sm">
           <div className="mb-8 flex justify-center">
             <Image src="/logo.png" alt="Robocode" width={140} height={60} className="h-auto w-28" />
           </div>
 
           <h1 className="mb-1 text-center text-lg font-bold text-[#0B132B]">Set new password</h1>
-          <p className="mb-7 text-center text-[13px] text-gray-400">
+          <p className="mb-7 text-center text-[13px] text-[#9CA3AF]">
             Choose a new password for your account
           </p>
 
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-[13px] text-red-600">
+            <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#EF4444]">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-gray-400">
+              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
                 New password
               </label>
               <input
@@ -89,12 +89,12 @@ export default function ResetPasswordPage() {
                 required
                 autoComplete="new-password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-gray-400">
+              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
                 Confirm new password
               </label>
               <input
@@ -103,7 +103,7 @@ export default function ResetPasswordPage() {
                 required
                 autoComplete="new-password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
               />
             </div>
 
@@ -116,7 +116,7 @@ export default function ResetPasswordPage() {
             </button>
           </form>
         </div>
-        <p className="mt-4 text-center text-[12px] text-gray-400">Robocode School · LMS</p>
+        <p className="mt-4 text-center text-[12px] text-[#9CA3AF]">Robocode School · LMS</p>
       </div>
     </div>
   )

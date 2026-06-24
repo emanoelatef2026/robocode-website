@@ -1,4 +1,4 @@
-// Recommended Action Engine — pure rule evaluation (no DB calls here)
+﻿// Recommended Action Engine — pure rule evaluation (no DB calls here)
 // Input: operational data (enrollment, attendance, finance, sessions)
 // Output: list of recommended actions with priority and display config
 
@@ -40,16 +40,16 @@ const ACTIONS: Record<ActionCode, Omit<RecommendedAction, 'code'>> = {
     label:       'Renew Package',
     description: 'Student has 2 or fewer sessions remaining.',
     priority:    'high',
-    color:       'bg-amber-100',
-    textColor:   'text-amber-700',
+    color:       'bg-[#FFFBEB]',
+    textColor:   'text-[#B45309]',
     icon:        '🔄',
   },
   COLLECT_PAYMENT: {
     label:       'Collect Payment',
     description: 'Outstanding balance is overdue.',
     priority:    'critical',
-    color:       'bg-red-100',
-    textColor:   'text-red-700',
+    color:       'bg-[#FEE2E2]',
+    textColor:   'text-[#DC2626]',
     icon:        '💰',
   },
   CONTACT_PARENT_ATTENDANCE: {
@@ -64,8 +64,8 @@ const ACTIONS: Record<ActionCode, Omit<RecommendedAction, 'code'>> = {
     label:       'Attendance Risk',
     description: '3 or more consecutive absences detected.',
     priority:    'high',
-    color:       'bg-red-100',
-    textColor:   'text-red-700',
+    color:       'bg-[#FEE2E2]',
+    textColor:   'text-[#DC2626]',
     icon:        '⚠️',
   },
   ACADEMIC_FOLLOW_UP: {
@@ -80,24 +80,24 @@ const ACTIONS: Record<ActionCode, Omit<RecommendedAction, 'code'>> = {
     label:       'Inactive Student',
     description: 'No attendance for 14+ days.',
     priority:    'critical',
-    color:       'bg-slate-100',
-    textColor:   'text-slate-700',
+    color:       'bg-[#F1F5F9]',
+    textColor:   'text-[#334155]',
     icon:        '😴',
   },
   OVERDRAFT_WARNING: {
     label:       'Sessions Exhausted',
     description: 'Student has used all enrolled sessions.',
     priority:    'high',
-    color:       'bg-amber-100',
-    textColor:   'text-amber-700',
+    color:       'bg-[#FFFBEB]',
+    textColor:   'text-[#B45309]',
     icon:        '⏳',
   },
   BLOCKED_PAYMENT: {
     label:       'Payment Blocked',
     description: 'Financial account is blocked. Requires immediate resolution.',
     priority:    'critical',
-    color:       'bg-red-100',
-    textColor:   'text-red-700',
+    color:       'bg-[#FEE2E2]',
+    textColor:   'text-[#DC2626]',
     icon:        '🚫',
   },
 }

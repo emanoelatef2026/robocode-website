@@ -1,4 +1,4 @@
-import { verifyCertificate } from '@/modules/certificates/queries'
+﻿import { verifyCertificate } from '@/modules/certificates/queries'
 
 interface Props {
   params: Promise<{ code: string }>
@@ -30,8 +30,8 @@ export default async function VerifyCertificatePage({ params }: Props) {
         {/* ── Not found ── */}
         {!certificate ? (
           <div className="rounded-2xl border border-[#E2E8F0] bg-white px-8 py-10 text-center shadow-sm">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-7 w-7 text-red-400" strokeWidth={2}>
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#FEE2E2]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-7 w-7 text-[#F87171]" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
@@ -43,24 +43,24 @@ export default async function VerifyCertificatePage({ params }: Props) {
 
         /* ── Revoked ── */
         ) : certificate.status === 'revoked' ? (
-          <div className="rounded-2xl border border-red-200 bg-white px-8 py-10 text-center shadow-sm">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-7 w-7 text-red-400" strokeWidth={2}>
+          <div className="rounded-2xl border border-[#FECACA] bg-white px-8 py-10 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#FEE2E2]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-7 w-7 text-[#F87171]" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
               </svg>
             </div>
-            <h2 className="text-[15px] font-semibold text-red-600">Certificate Revoked</h2>
+            <h2 className="text-[15px] font-semibold text-[#EF4444]">Certificate Revoked</h2>
             <p className="mt-2 text-[13px] text-[#64748B]">This certificate has been revoked and is no longer valid.</p>
             <p className="mt-3 font-mono text-xs text-[#94A3B8]">{certificate.certificate_code}</p>
           </div>
 
         /* ── Valid ── */
         ) : (
-          <div className="rounded-2xl border border-green-200 bg-white shadow-sm overflow-hidden">
+          <div className="rounded-2xl border border-[#A7F3D0] bg-white shadow-sm overflow-hidden">
 
             {/* Dark header stripe */}
             <div className="bg-gradient-to-r from-[#0B1F3A] to-[#1a3a6e] px-8 py-5 text-center">
-              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-green-400/20">
+              <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-[#10B981]/20">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-6 w-6 text-green-300" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
                 </svg>

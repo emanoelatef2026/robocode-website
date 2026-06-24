@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Group Health Card
  * 0–100 score with color-coded status and per-criterion breakdown.
  * Shows exact reasons for score deductions.
@@ -41,9 +41,9 @@ function statusLabel(status: HealthStatus) {
 }
 function statusColor(status: HealthStatus) {
   return {
-    green:  { badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500', ring: 'text-emerald-600' },
-    yellow: { badge: 'bg-amber-100 text-amber-700',     dot: 'bg-amber-500',   ring: 'text-amber-600'  },
-    red:    { badge: 'bg-red-100 text-red-700',         dot: 'bg-red-500',     ring: 'text-red-600'    },
+    green:  { badge: 'bg-[#E7F8EE] text-[#15803D]', dot: 'bg-[#10B981]', ring: 'text-[#10B981]' },
+    yellow: { badge: 'bg-[#FFFBEB] text-[#B45309]',     dot: 'bg-[#F59E0B]',   ring: 'text-[#F59E0B]'  },
+    red:    { badge: 'bg-[#FEE2E2] text-[#DC2626]',         dot: 'bg-[#EF4444]',     ring: 'text-[#EF4444]'    },
   }[status]
 }
 
@@ -189,13 +189,13 @@ async function computeGroupHealth(
 function FactorRow({ factor }: { factor: HealthFactor }) {
   const pct = Math.round((factor.earned / factor.points) * 100)
   return (
-    <div className={`flex items-start gap-2.5 rounded-lg px-3 py-2.5 ${factor.passed ? 'bg-emerald-50' : pct > 0 ? 'bg-amber-50' : 'bg-red-50'}`}>
-      <span className={`mt-0.5 text-sm font-bold ${factor.passed ? 'text-emerald-500' : pct > 0 ? 'text-amber-500' : 'text-red-500'}`}>
+    <div className={`flex items-start gap-2.5 rounded-lg px-3 py-2.5 ${factor.passed ? 'bg-[#E7F8EE]' : pct > 0 ? 'bg-[#FFFBEB]' : 'bg-[#FEE2E2]'}`}>
+      <span className={`mt-0.5 text-sm font-bold ${factor.passed ? 'text-[#10B981]' : pct > 0 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
         {factor.passed ? '✓' : pct > 0 ? '~' : '✗'}
       </span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className={`text-xs font-medium ${factor.passed ? 'text-emerald-700' : pct > 0 ? 'text-amber-700' : 'text-red-700'}`}>
+          <p className={`text-xs font-medium ${factor.passed ? 'text-[#15803D]' : pct > 0 ? 'text-[#B45309]' : 'text-[#DC2626]'}`}>
             {factor.label}
           </p>
           <span className="text-[11px] font-semibold text-[#64748B] shrink-0">
@@ -228,7 +228,7 @@ export default async function GroupHealthCard({ groupId, capacity }: Props) {
   const failedFactors = h.factors.filter(f => !f.passed && f.earned < f.points)
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+    <div className="ds-card p-5">
       {/* ── Header ──────────────────────────────────────────────────── */}
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
@@ -246,7 +246,7 @@ export default async function GroupHealthCard({ groupId, capacity }: Props) {
       {/* Progress bar */}
       <div className="mb-4 h-2 rounded-full bg-[#F1F5F9]">
         <div
-          className={`h-2 rounded-full transition-all ${h.status === 'green' ? 'bg-emerald-500' : h.status === 'yellow' ? 'bg-amber-500' : 'bg-red-500'}`}
+          className={`h-2 rounded-full transition-all ${h.status === 'green' ? 'bg-[#10B981]' : h.status === 'yellow' ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
           style={{ width: `${h.score}%` }}
         />
       </div>
@@ -265,7 +265,7 @@ export default async function GroupHealthCard({ groupId, capacity }: Props) {
           </div>
           <div className="h-1.5 rounded-full bg-[#F1F5F9]">
             <div
-              className={`h-1.5 rounded-full ${(fillPct ?? 0) >= 90 ? 'bg-emerald-400' : (fillPct ?? 0) >= 50 ? 'bg-[#FF8A1F]' : 'bg-slate-300'}`}
+              className={`h-1.5 rounded-full ${(fillPct ?? 0) >= 90 ? 'bg-[#10B981]' : (fillPct ?? 0) >= 50 ? 'bg-[#FF8A1F]' : 'bg-[#CBD5E1]'}`}
               style={{ width: `${fillPct ?? 0}%` }}
             />
           </div>
@@ -292,7 +292,7 @@ export default async function GroupHealthCard({ groupId, capacity }: Props) {
 
       {/* ── All clear message ────────────────────────────────────────── */}
       {failedFactors.length === 0 && (
-        <div className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+        <div className="mt-4 rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs font-medium text-[#15803D]">
           All health indicators are passing.
         </div>
       )}

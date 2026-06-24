@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition } from 'react'
 import { useRouter }               from 'next/navigation'
@@ -80,10 +80,10 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
 
   if (done) {
     return (
-      <div className="flex min-h-60 flex-col items-center justify-center gap-3 rounded-xl border border-green-200 bg-green-50 px-6 py-10 text-center">
+      <div className="flex min-h-60 flex-col items-center justify-center gap-3 rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] px-6 py-10 text-center">
         <span className="text-3xl">✓</span>
-        <p className="text-lg font-semibold text-green-700">Thank you for your feedback!</p>
-        <p className="text-sm text-green-600">Redirecting to dashboard…</p>
+        <p className="text-lg font-semibold text-[#15803D]">Thank you for your feedback!</p>
+        <p className="text-sm text-[#10B981]">Redirecting to dashboard…</p>
       </div>
     )
   }
@@ -94,7 +94,7 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
       {QUESTIONS.map(({ key, en, ar }) => {
         const ans = answers[key as QKey]
         return (
-          <div key={key} className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+          <div key={key} className="ds-card p-5">
             <p className="mb-0.5 text-sm font-semibold text-[#0B1F3A]">{en}</p>
             <p className="mb-4 text-[13px] text-[#94A3B8]" dir="rtl">{ar}</p>
             <div className="flex gap-3">
@@ -103,7 +103,7 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
                 className={[
                   'flex-1 rounded-lg border py-2 text-sm font-medium transition-all',
                   ans === true
-                    ? 'border-green-400 bg-green-50 text-green-700'
+                    ? 'border-green-400 bg-[#E7F8EE] text-[#15803D]'
                     : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-green-300',
                 ].join(' ')}
               >
@@ -114,8 +114,8 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
                 className={[
                   'flex-1 rounded-lg border py-2 text-sm font-medium transition-all',
                   ans === false
-                    ? 'border-red-400 bg-red-50 text-red-700'
-                    : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-red-300',
+                    ? 'border-[#F87171] bg-[#FEE2E2] text-[#DC2626]'
+                    : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#FCA5A5]',
                 ].join(' ')}
               >
                 No / لا
@@ -126,7 +126,7 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
       })}
 
       {/* Star rating */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <p className="mb-1 text-sm font-semibold text-[#0B1F3A]">Overall Rating</p>
         <p className="mb-4 text-[13px] text-[#94A3B8]">1 star = poor, 5 stars = excellent</p>
         <div className="flex gap-2">
@@ -147,7 +147,7 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
       </div>
 
       {/* Notes */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <p className="mb-1 text-sm font-semibold text-[#0B1F3A]">
           Notes or Suggestions <span className="text-[12px] font-normal text-[#94A3B8]">(optional)</span>
         </p>
@@ -162,7 +162,7 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
       </div>
 
       {error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</p>
+        <p className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-4 py-2.5 text-sm text-[#EF4444]">{error}</p>
       )}
 
       <button

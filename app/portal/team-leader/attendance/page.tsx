@@ -1,4 +1,4 @@
-import { requirePortalRole, requirePermission }             from '@/modules/rbac/guards'
+﻿import { requirePortalRole, requirePermission }             from '@/modules/rbac/guards'
 import { listStudentOperations }                             from '@/modules/finance/queries'
 import { computeAttendanceHealth, ATTENDANCE_TREND_CONFIG } from '@/modules/operational-engine'
 import {
@@ -14,10 +14,10 @@ interface Props {
 
 // ── Status pill colours ───────────────────────────────────────────────────────
 const STATUS_PILL: Record<string, string> = {
-  present: 'bg-emerald-100 text-emerald-700',
-  absent:  'bg-red-100    text-red-600',
-  late:    'bg-amber-100  text-amber-700',
-  excused: 'bg-blue-100   text-blue-700',
+  present: 'bg-[#E7F8EE] text-[#15803D]',
+  absent:  'bg-[#FEE2E2]    text-[#EF4444]',
+  late:    'bg-[#FFFBEB]  text-[#B45309]',
+  excused: 'bg-[#EFF6FF]   text-[#1D4ED8]',
   makeup:  'bg-purple-100 text-purple-700',
 }
 
@@ -76,11 +76,11 @@ export default async function TLAttendancePage({ searchParams }: Props) {
     <div className="space-y-5">
 
       {/* ── Warning Banner ─────────────────────────────────────────────────── */}
-      <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3">
-        <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-blue-500">
+      <div className="flex items-start gap-3 rounded-xl border border-blue-100 bg-[#EFF6FF] px-4 py-3">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="mt-0.5 h-4 w-4 shrink-0 text-[#3B82F6]">
           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
         </svg>
-        <p className="text-sm text-blue-700">
+        <p className="text-sm text-[#1D4ED8]">
           <span className="font-semibold">Attendance is academic history.</span>{' '}
           It represents real student participation and must reflect reality — independent of contracts, payments, or packages.
           Record sessions for any past date; financial attribution can be linked later.
@@ -129,7 +129,7 @@ export default async function TLAttendancePage({ searchParams }: Props) {
                 label: 'Chronic Absence',
                 desc:  `${chronicAbsence} students · 3+ consecutive`,
                 href:  attHref('chronic'),
-                color: chronicAbsence > 0 ? 'bg-red-500' : 'bg-slate-400',
+                color: chronicAbsence > 0 ? 'bg-[#EF4444]' : 'bg-[#94A3B8]',
                 icon:  (
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -140,7 +140,7 @@ export default async function TLAttendancePage({ searchParams }: Props) {
                 label: 'Missing Contracts',
                 desc:  `${reconciliation.students_without_contracts} students unfunded`,
                 href:  attHref('never'),
-                color: reconciliation.students_without_contracts > 0 ? 'bg-amber-500' : 'bg-slate-400',
+                color: reconciliation.students_without_contracts > 0 ? 'bg-[#F59E0B]' : 'bg-[#94A3B8]',
                 icon:  (
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
                     <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
@@ -151,7 +151,7 @@ export default async function TLAttendancePage({ searchParams }: Props) {
                 label: 'Near Exhaustion',
                 desc:  `${nearExhaustion} students · ≤2 sessions left`,
                 href:  attHref('exhausted'),
-                color: nearExhaustion > 0 ? 'bg-orange-500' : 'bg-slate-400',
+                color: nearExhaustion > 0 ? 'bg-[#FF8A1F]' : 'bg-[#94A3B8]',
                 icon:  (
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
@@ -162,7 +162,7 @@ export default async function TLAttendancePage({ searchParams }: Props) {
               <Link
                 key={a.label}
                 href={a.href}
-                className="flex flex-col gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
+                className="flex flex-col gap-3 ds-card p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
               >
                 <div className={`flex h-9 w-9 items-center justify-center rounded-lg text-white ${a.color}`}>
                   {a.icon}
@@ -179,10 +179,10 @@ export default async function TLAttendancePage({ searchParams }: Props) {
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
 
             {/* Reconciliation Status */}
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+            <div className="ds-card p-5">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[#0B1F3A]">Reconciliation Health</h2>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${integrityHealthy ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${integrityHealthy ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
                   {integrityHealthy ? 'HEALTHY' : 'NEEDS ATTENTION'}
                 </span>
               </div>
@@ -218,21 +218,21 @@ export default async function TLAttendancePage({ searchParams }: Props) {
                       <p className="text-sm font-medium text-[#0B1F3A]">{stat.label}</p>
                       <p className="text-xs text-[#94A3B8]">{stat.desc}</p>
                     </div>
-                    <span className={`shrink-0 text-lg font-bold ${stat.warn ? 'text-amber-600' : stat.value > 0 ? 'text-emerald-600' : 'text-[#94A3B8]'}`}>
+                    <span className={`shrink-0 text-lg font-bold ${stat.warn ? 'text-[#F59E0B]' : stat.value > 0 ? 'text-[#10B981]' : 'text-[#94A3B8]'}`}>
                       {stat.value}
                     </span>
                   </div>
                 ))}
               </div>
               {!integrityHealthy && (
-                <div className="mt-4 rounded-lg bg-amber-50 p-3 text-xs text-amber-700">
+                <div className="mt-4 rounded-lg bg-[#FFFBEB] p-3 text-xs text-[#B45309]">
                   Run reconciliation to link unfunded sessions to available contracts automatically.
                 </div>
               )}
             </div>
 
             {/* Recent Attendance Timeline */}
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+            <div className="ds-card p-5">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[#0B1F3A]">Recent Sessions</h2>
                 <Link
@@ -259,7 +259,7 @@ export default async function TLAttendancePage({ searchParams }: Props) {
                           })}
                         </p>
                       </div>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${STATUS_PILL[r.status] ?? 'bg-slate-100 text-slate-600'}`}>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${STATUS_PILL[r.status] ?? 'bg-[#F1F5F9] text-[#475569]'}`}>
                         {r.status}
                       </span>
                     </li>
@@ -270,7 +270,7 @@ export default async function TLAttendancePage({ searchParams }: Props) {
           </div>
 
           {/* Important Rules Card */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+          <div className="ds-card p-5">
             <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">How This Works — Important Rules</h2>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {[
@@ -322,17 +322,17 @@ export default async function TLAttendancePage({ searchParams }: Props) {
           {/* KPI Strip */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {[
-              { label: 'Chronic Absence (3+)',  value: chronicAbsence,  color: chronicAbsence > 0 ? 'bg-red-400' : 'bg-slate-300',   att: 'chronic' },
-              { label: 'Below 60% Attendance',  value: belowThreshold,  color: belowThreshold > 0 ? 'bg-amber-400' : 'bg-slate-300', att: 'low' },
-              { label: 'Never Attended',         value: neverAttended,   color: neverAttended > 0 ? 'bg-red-400' : 'bg-slate-300',   att: 'never' },
-              { label: 'Near Exhaustion',        value: nearExhaustion,  color: nearExhaustion > 0 ? 'bg-amber-400' : 'bg-slate-300', att: '' },
-              { label: 'Unpaid + Attending',     value: unpaidAttending, color: unpaidAttending > 0 ? 'bg-orange-400' : 'bg-slate-300', att: '' },
-              { label: 'Total Monitored',        value: rows.length,     color: 'bg-blue-400', att: '' },
+              { label: 'Chronic Absence (3+)',  value: chronicAbsence,  color: chronicAbsence > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]',   att: 'chronic' },
+              { label: 'Below 60% Attendance',  value: belowThreshold,  color: belowThreshold > 0 ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]', att: 'low' },
+              { label: 'Never Attended',         value: neverAttended,   color: neverAttended > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]',   att: 'never' },
+              { label: 'Near Exhaustion',        value: nearExhaustion,  color: nearExhaustion > 0 ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]', att: '' },
+              { label: 'Unpaid + Attending',     value: unpaidAttending, color: unpaidAttending > 0 ? 'bg-orange-400' : 'bg-[#CBD5E1]', att: '' },
+              { label: 'Total Monitored',        value: rows.length,     color: 'bg-[#38BDF8]', att: '' },
             ].map(k => (
               <Link
                 key={k.label}
                 href={attHref(k.att)}
-                className={`block rounded-xl border border-[#E2E8F0] bg-white p-3 transition hover:border-[#CBD5E1] ${attF === k.att && k.att ? 'border-[#FF8A1F] bg-orange-50' : ''}`}
+                className={`block ds-card p-3 transition hover:border-[#CBD5E1] ${attF === k.att && k.att ? 'border-[#FF8A1F] bg-orange-50' : ''}`}
               >
                 <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
                 <p className="text-lg font-bold text-[#0B1F3A]">{k.value}</p>
@@ -382,7 +382,7 @@ export default async function TLAttendancePage({ searchParams }: Props) {
           </form>
 
           {/* Table */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white">
+          <div className="ds-card">
             {filtered.length === 0 ? (
               <div className="px-6 py-12 text-center">
                 <p className="text-sm font-medium text-[#0B1F3A]">No students match the current filters</p>
@@ -404,25 +404,25 @@ export default async function TLAttendancePage({ searchParams }: Props) {
                           </p>
                         </div>
                         <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold
-                          ${row.risk_level === 'HIGH' ? 'bg-red-100 text-red-600' : row.risk_level === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                          ${row.risk_level === 'HIGH' ? 'bg-[#FEE2E2] text-[#EF4444]' : row.risk_level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#E7F8EE] text-[#15803D]'}`}>
                           {row.risk_level}
                         </span>
                       </div>
                       <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px]">
                         <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
-                          <p className={`font-bold text-sm ${row.attendance_pct < 60 ? 'text-red-600' : row.attendance_pct < 80 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                          <p className={`font-bold text-sm ${row.attendance_pct < 60 ? 'text-[#EF4444]' : row.attendance_pct < 80 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                             {row.attendance_pct}%
                           </p>
                           <p className="text-[#94A3B8]">Attendance</p>
                         </div>
                         <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
-                          <p className={`font-bold text-sm ${row.consecutive_absences >= 3 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+                          <p className={`font-bold text-sm ${row.consecutive_absences >= 3 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
                             {row.consecutive_absences}
                           </p>
                           <p className="text-[#94A3B8]">Consec. Absent</p>
                         </div>
                         <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
-                          <p className={`font-bold text-sm ${row.enrolled_sessions > 0 && row.remaining_sessions <= 2 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+                          <p className={`font-bold text-sm ${row.enrolled_sessions > 0 && row.remaining_sessions <= 2 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
                             {row.enrolled_sessions > 0 ? `${row.remaining_sessions}` : '∞'}
                           </p>
                           <p className="text-[#94A3B8]">Sessions Left</p>
@@ -435,7 +435,7 @@ export default async function TLAttendancePage({ searchParams }: Props) {
                 {/* Desktop table */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead>
+                    <thead className="ds-table-head">
                       <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                         <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Student</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Group / Instructor</th>
@@ -467,7 +467,7 @@ export default async function TLAttendancePage({ searchParams }: Props) {
                           has_assignment_submissions: true,
                         })]
                         return (
-                          <tr key={row.enrollment_id ?? row.student_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                          <tr key={row.enrollment_id ?? row.student_id} className="ds-table-row">
                             <td className="px-4 py-3">
                               <Link href={`/portal/team-leader/students/${row.student_id}`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">
                                 {row.student_name}
@@ -480,12 +480,12 @@ export default async function TLAttendancePage({ searchParams }: Props) {
                             </td>
                             <td className="px-4 py-3 text-center">
                               <div className="flex flex-col items-center gap-1">
-                                <span className={`font-semibold ${row.attendance_pct < 60 ? 'text-red-600' : row.attendance_pct < 80 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                <span className={`font-semibold ${row.attendance_pct < 60 ? 'text-[#EF4444]' : row.attendance_pct < 80 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                                   {row.attendance_pct}%
                                 </span>
                                 <div className="h-1 w-12 rounded-full bg-[#E2E8F0]">
                                   <div
-                                    className={`h-1 rounded-full ${row.attendance_pct >= 80 ? 'bg-emerald-400' : row.attendance_pct >= 60 ? 'bg-amber-400' : 'bg-red-400'}`}
+                                    className={`h-1 rounded-full ${row.attendance_pct >= 80 ? 'bg-[#10B981]' : row.attendance_pct >= 60 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
                                     style={{ width: `${row.attendance_pct}%` }}
                                   />
                                 </div>
@@ -495,13 +495,13 @@ export default async function TLAttendancePage({ searchParams }: Props) {
                               {row.sessions_attended}/{row.total_sessions}
                             </td>
                             <td className="px-4 py-3 text-center">
-                              <span className={`font-semibold ${row.consecutive_absences >= 3 ? 'text-red-600' : row.consecutive_absences >= 1 ? 'text-amber-600' : 'text-[#94A3B8]'}`}>
+                              <span className={`font-semibold ${row.consecutive_absences >= 3 ? 'text-[#EF4444]' : row.consecutive_absences >= 1 ? 'text-[#F59E0B]' : 'text-[#94A3B8]'}`}>
                                 {row.consecutive_absences > 0 ? row.consecutive_absences : '—'}
                               </span>
                             </td>
                             <td className="px-4 py-3 text-center">
                               {row.enrolled_sessions > 0 ? (
-                                <span className={`font-semibold ${row.remaining_sessions <= 0 ? 'text-red-600' : row.remaining_sessions <= 2 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                <span className={`font-semibold ${row.remaining_sessions <= 0 ? 'text-[#EF4444]' : row.remaining_sessions <= 2 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                                   {row.remaining_sessions <= 0 ? 'Exhausted' : row.remaining_sessions}
                                 </span>
                               ) : (
@@ -516,7 +516,7 @@ export default async function TLAttendancePage({ searchParams }: Props) {
                             <td className="px-4 py-3">
                               <div className="flex flex-col gap-1">
                                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
-                                  ${row.risk_level === 'HIGH' ? 'bg-red-100 text-red-600' : row.risk_level === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                                  ${row.risk_level === 'HIGH' ? 'bg-[#FEE2E2] text-[#EF4444]' : row.risk_level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#E7F8EE] text-[#15803D]'}`}>
                                   {row.risk_level}
                                 </span>
                                 <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${trend.color} ${trend.text}`}>

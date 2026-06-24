@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { gradeSubmission } from '@/modules/assignments/submissions/actions'
@@ -24,12 +24,12 @@ export default function GradeForm({ submission }: Props) {
       <input type="hidden" name="assignment_id"  value={submission.assignment_id} />
 
       {state && !state.success && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
       {state?.success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+        <div className="rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] px-4 py-3 text-sm text-[#15803D]">
           Grade saved successfully.
         </div>
       )}

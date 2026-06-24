@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -39,28 +39,28 @@ function initials(name: string): string {
 }
 
 function statusBadgeCls(status: string) {
-  if (status === 'present')   return 'bg-emerald-100 text-emerald-700'
-  if (status === 'late')      return 'bg-amber-100 text-amber-700'
-  if (status === 'absent')    return 'bg-red-100 text-red-700'
-  if (status === 'excused')   return 'bg-blue-100 text-blue-700'
+  if (status === 'present')   return 'bg-[#E7F8EE] text-[#15803D]'
+  if (status === 'late')      return 'bg-[#FFFBEB] text-[#B45309]'
+  if (status === 'absent')    return 'bg-[#FEE2E2] text-[#DC2626]'
+  if (status === 'excused')   return 'bg-[#EFF6FF] text-[#1D4ED8]'
   if (status === 'makeup')    return 'bg-purple-100 text-purple-700'
-  if (status === 'cancelled') return 'bg-slate-100 text-slate-400'
-  return 'bg-slate-100 text-slate-600'
+  if (status === 'cancelled') return 'bg-[#F1F5F9] text-[#94A3B8]'
+  return 'bg-[#F1F5F9] text-[#475569]'
 }
 
 function paymentStatusCls(s: string | null) {
-  if (s === 'OVERDUE')  return 'bg-red-100 text-red-700'
-  if (s === 'DUE_SOON') return 'bg-amber-100 text-amber-700'
-  if (s === 'PAID')     return 'bg-emerald-100 text-emerald-700'
-  if (s === 'BLOCKED')  return 'bg-red-200 text-red-800'
-  return 'bg-slate-100 text-slate-600'
+  if (s === 'OVERDUE')  return 'bg-[#FEE2E2] text-[#DC2626]'
+  if (s === 'DUE_SOON') return 'bg-[#FFFBEB] text-[#B45309]'
+  if (s === 'PAID')     return 'bg-[#E7F8EE] text-[#15803D]'
+  if (s === 'BLOCKED')  return 'bg-[#FECACA] text-[#991B1B]'
+  return 'bg-[#F1F5F9] text-[#475569]'
 }
 
 function enrollmentStatusCls(status: string) {
-  if (status === 'ACTIVE')    return 'bg-emerald-100 text-emerald-700'
-  if (status === 'COMPLETED') return 'bg-blue-100 text-blue-700'
-  if (status === 'EXPIRED')   return 'bg-slate-100 text-slate-500'
-  return 'bg-slate-100 text-slate-500'
+  if (status === 'ACTIVE')    return 'bg-[#E7F8EE] text-[#15803D]'
+  if (status === 'COMPLETED') return 'bg-[#EFF6FF] text-[#1D4ED8]'
+  if (status === 'EXPIRED')   return 'bg-[#F1F5F9] text-[#64748B]'
+  return 'bg-[#F1F5F9] text-[#64748B]'
 }
 
 async function copyToClipboard(text: string) {
@@ -106,7 +106,7 @@ function WaButton({ url, label }: { url: string; label: string }) {
   return (
     <a
       href={url} target="_blank" rel="noopener noreferrer"
-      className="flex items-center gap-1.5 rounded-lg bg-green-500 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-green-600 transition"
+      className="flex items-center gap-1.5 rounded-lg bg-[#10B981] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#059669] transition"
     >
       <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 shrink-0">
         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
@@ -120,7 +120,7 @@ function CallButton({ url, label }: { url: string; label: string }) {
   return (
     <a
       href={url}
-      className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-[11px] font-medium text-[#374151] hover:bg-[#F8FAFC] transition"
+      className="flex items-center gap-1.5 ds-card px-3 py-1.5 text-[11px] font-medium text-[#374151] hover:bg-[#F8FAFC] transition"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5 shrink-0">
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -169,10 +169,10 @@ const TABS: { key: Tab; label: string }[] = [
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 
 function portalStatusBadge(status: StudentPortalCredentials['status']) {
-  if (status === 'active')           return <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-700 uppercase tracking-wide">Active</span>
-  if (status === 'password_missing') return <span className="rounded-full bg-amber-100  px-2 py-0.5 text-[9px] font-bold text-amber-700  uppercase tracking-wide">Password Not Set</span>
-  if (status === 'no_access')        return <span className="rounded-full bg-red-100    px-2 py-0.5 text-[9px] font-bold text-red-700    uppercase tracking-wide">No Portal Access</span>
-  return                                    <span className="rounded-full bg-slate-100  px-2 py-0.5 text-[9px] font-bold text-slate-500  uppercase tracking-wide">No Account</span>
+  if (status === 'active')           return <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[9px] font-bold text-[#15803D] uppercase tracking-wide">Active</span>
+  if (status === 'password_missing') return <span className="rounded-full bg-[#FFFBEB]  px-2 py-0.5 text-[9px] font-bold text-[#B45309]  uppercase tracking-wide">Password Not Set</span>
+  if (status === 'no_access')        return <span className="rounded-full bg-[#FEE2E2]    px-2 py-0.5 text-[9px] font-bold text-[#DC2626]    uppercase tracking-wide">No Portal Access</span>
+  return                                    <span className="rounded-full bg-[#F1F5F9]  px-2 py-0.5 text-[9px] font-bold text-[#64748B]  uppercase tracking-wide">No Account</span>
 }
 
 function OverviewTab({
@@ -186,9 +186,9 @@ function OverviewTab({
   attSumLoading: boolean
 }) {
   const attColor = (pct: number) =>
-    pct >= 85 ? 'text-emerald-600 bg-emerald-50 border-emerald-100'
-    : pct >= 60 ? 'text-amber-600 bg-amber-50 border-amber-100'
-    : pct > 0   ? 'text-red-600 bg-red-50 border-red-100'
+    pct >= 85 ? 'text-[#10B981] bg-[#E7F8EE] border-emerald-100'
+    : pct >= 60 ? 'text-[#F59E0B] bg-[#FFFBEB] border-amber-100'
+    : pct > 0   ? 'text-[#EF4444] bg-[#FEE2E2] border-[#FEE2E2]'
     :             'text-[#94A3B8] bg-[#F1F5F9] border-[#E2E8F0]'
 
   return (
@@ -254,7 +254,7 @@ function OverviewTab({
           <InfoRow label="Joined"     value={fmtDate(s.joined_at)} />
           <InfoRow label="Remaining sessions" value={
             s.sessions_remaining != null
-              ? <span className={s.sessions_remaining <= 2 ? 'text-red-600 font-semibold' : ''}>{s.sessions_remaining}</span>
+              ? <span className={s.sessions_remaining <= 2 ? 'text-[#EF4444] font-semibold' : ''}>{s.sessions_remaining}</span>
               : <span className="text-[#CBD5E1]">—</span>
           } />
         </div>
@@ -271,9 +271,9 @@ function OverviewTab({
           <>
             <div className="grid grid-cols-4 gap-2 mb-2">
               {[
-                { label: 'Present',  value: attSummary.present_count,  cls: 'bg-emerald-50 border-emerald-100 text-emerald-700' },
-                { label: 'Absent',   value: attSummary.absent_count,   cls: 'bg-red-50 border-red-100 text-red-700' },
-                { label: 'Late',     value: attSummary.late_count,     cls: 'bg-amber-50 border-amber-100 text-amber-700' },
+                { label: 'Present',  value: attSummary.present_count,  cls: 'bg-[#E7F8EE] border-emerald-100 text-[#15803D]' },
+                { label: 'Absent',   value: attSummary.absent_count,   cls: 'bg-[#FEE2E2] border-[#FEE2E2] text-[#DC2626]' },
+                { label: 'Late',     value: attSummary.late_count,     cls: 'bg-[#FFFBEB] border-amber-100 text-[#B45309]' },
                 { label: 'Consumed', value: attSummary.consumed_count, cls: 'bg-[#F8FAFC] border-[#E2E8F0] text-[#0B1F3A]' },
               ].map(card => (
                 <div key={card.label} className={`rounded-xl border px-2 py-2 text-center ${card.cls}`}>
@@ -330,7 +330,7 @@ function FinanceTab({
     <div className="space-y-4">
       {finCase === 'no_contract' && (
         <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-5 text-center">
-          <div className="mb-2 inline-flex rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-[#64748B]">
+          <div className="mb-2 inline-flex rounded-full bg-[#F1F5F9] px-3 py-1 text-[11px] font-semibold text-[#64748B]">
             No active financial contract
           </div>
           <p className="text-[12px] text-[#94A3B8]">
@@ -340,16 +340,16 @@ function FinanceTab({
       )}
 
       {finCase === 'exhausted' && (
-        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 flex items-center gap-2">
-          <span className="text-red-500 text-[16px]">⚠</span>
-          <p className="text-[12px] font-semibold text-red-700">Package exhausted — renew to continue tracking</p>
+        <div className="rounded-xl border border-[#FEE2E2] bg-[#FEE2E2] px-4 py-2.5 flex items-center gap-2">
+          <span className="text-[#EF4444] text-[16px]">⚠</span>
+          <p className="text-[12px] font-semibold text-[#DC2626]">Package exhausted — renew to continue tracking</p>
         </div>
       )}
 
       {finCase === 'overdue' && (
-        <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-2.5 flex items-center gap-2">
-          <span className="text-red-500 text-[16px]">!</span>
-          <p className="text-[12px] font-semibold text-red-700">Payment overdue — collection action required</p>
+        <div className="rounded-xl border border-[#FEE2E2] bg-[#FEE2E2] px-4 py-2.5 flex items-center gap-2">
+          <span className="text-[#EF4444] text-[16px]">!</span>
+          <p className="text-[12px] font-semibold text-[#DC2626]">Payment overdue — collection action required</p>
         </div>
       )}
 
@@ -361,14 +361,14 @@ function FinanceTab({
           <InfoRow label="Sessions consumed"      value={s.sessions_used  != null ? `${s.sessions_used}`  : '—'} />
           <InfoRow label="Sessions remaining"     value={
             s.sessions_remaining != null
-              ? <span className={s.sessions_remaining <= 2 ? 'text-red-600 font-semibold' : ''}>{s.sessions_remaining}</span>
+              ? <span className={s.sessions_remaining <= 2 ? 'text-[#EF4444] font-semibold' : ''}>{s.sessions_remaining}</span>
               : '—'
           } />
           <InfoRow label="Total paid"    value={s.paid_amount > 0 ? fmtCurrency(s.paid_amount) : '—'} />
           <InfoRow label="Remaining balance" value={
             s.remaining_balance > 0
-              ? <span className="font-semibold text-red-600">{fmtCurrency(s.remaining_balance)}</span>
-              : <span className="text-emerald-600">Settled</span>
+              ? <span className="font-semibold text-[#EF4444]">{fmtCurrency(s.remaining_balance)}</span>
+              : <span className="text-[#10B981]">Settled</span>
           } />
           <InfoRow label="Payment status" value={
             s.payment_status ? (
@@ -428,13 +428,13 @@ function AttendanceTab({
         </div>
       ) : attSummary && attSummary.total_records > 0 ? (
         <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2 text-center">
-            <p className="text-[18px] font-bold text-emerald-700">{attSummary.present_count}</p>
-            <p className="text-[9px] font-medium text-emerald-600 uppercase tracking-wide">Present</p>
+          <div className="rounded-xl bg-[#E7F8EE] border border-emerald-100 px-3 py-2 text-center">
+            <p className="text-[18px] font-bold text-[#15803D]">{attSummary.present_count}</p>
+            <p className="text-[9px] font-medium text-[#10B981] uppercase tracking-wide">Present</p>
           </div>
-          <div className="rounded-xl bg-red-50 border border-red-100 px-3 py-2 text-center">
-            <p className="text-[18px] font-bold text-red-700">{attSummary.absent_count}</p>
-            <p className="text-[9px] font-medium text-red-600 uppercase tracking-wide">Absent</p>
+          <div className="rounded-xl bg-[#FEE2E2] border border-[#FEE2E2] px-3 py-2 text-center">
+            <p className="text-[18px] font-bold text-[#DC2626]">{attSummary.absent_count}</p>
+            <p className="text-[9px] font-medium text-[#EF4444] uppercase tracking-wide">Absent</p>
           </div>
           <div className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2 text-center">
             <p className="text-[18px] font-bold text-[#0B1F3A]">{attSummary.consumed_count}</p>
@@ -463,7 +463,7 @@ function AttendanceTab({
                       {h.scheduled_at ? fmtDate(h.scheduled_at) : '—'}
                     </p>
                     {h.is_consumed && (
-                      <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold text-[#64748B]">
+                      <span className="rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[9px] font-semibold text-[#64748B]">
                         Consumed
                       </span>
                     )}
@@ -531,7 +531,7 @@ function PackageLedgerTab({
       </div>
 
       {removeError && (
-        <p className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-[11px] text-red-600">{removeError}</p>
+        <p className="rounded-lg bg-[#FEE2E2] border border-[#FEE2E2] px-3 py-2 text-[11px] text-[#EF4444]">{removeError}</p>
       )}
 
       {loading ? (
@@ -563,7 +563,7 @@ function PackageLedgerTab({
                     <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold capitalize ${statusBadgeCls(rec.attendance_status)}`}>
                       {rec.attendance_status}
                     </span>
-                    <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">
+                    <span className="rounded-full bg-[#E7F8EE] px-1.5 py-0.5 text-[9px] font-semibold text-[#15803D]">
                       consumed
                     </span>
                   </div>
@@ -580,7 +580,7 @@ function PackageLedgerTab({
                 <button
                   onClick={() => handleRemove(rec.consumption_id)}
                   disabled={removingId === rec.consumption_id}
-                  className="shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-medium text-red-500 hover:bg-red-50 disabled:opacity-50 transition"
+                  className="shrink-0 rounded-lg px-2.5 py-1 text-[10px] font-medium text-[#EF4444] hover:bg-[#FEE2E2] disabled:opacity-50 transition"
                 >
                   {removingId === rec.consumption_id ? '…' : 'Remove'}
                 </button>
@@ -627,10 +627,10 @@ function HistoryTab({
             const remaining = entry.remaining_sessions ?? 0
             const pct       = enrolled > 0 ? Math.min(100, Math.round((consumed / enrolled) * 100)) : 0
             const rate      = Number(entry.attendance_rate ?? 0)
-            const rateCls   = rate >= 85 ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-                            : rate >= 60 ? 'bg-amber-50  border-amber-100  text-amber-700'
-                            :              'bg-red-50    border-red-100    text-red-700'
-            const rateTextCls = rate >= 85 ? 'text-emerald-700' : rate >= 60 ? 'text-amber-700' : 'text-red-700'
+            const rateCls   = rate >= 85 ? 'bg-[#E7F8EE] border-emerald-100 text-[#15803D]'
+                            : rate >= 60 ? 'bg-[#FFFBEB]  border-amber-100  text-[#B45309]'
+                            :              'bg-[#FEE2E2]    border-[#FEE2E2]    text-[#DC2626]'
+            const rateTextCls = rate >= 85 ? 'text-[#15803D]' : rate >= 60 ? 'text-[#B45309]' : 'text-[#DC2626]'
 
             return (
               <div key={`${entry.group_id}-${entry.course_id ?? 'none'}-${idx}`}
@@ -661,17 +661,17 @@ function HistoryTab({
 
                 {/* Attendance stats: present / absent / late / rate */}
                 <div className="grid grid-cols-4 gap-1.5 mb-3">
-                  <div className="rounded-lg bg-emerald-50 border border-emerald-100 px-2 py-2 text-center">
-                    <p className="text-[15px] font-bold text-emerald-700">{entry.total_present}</p>
-                    <p className="text-[8px] font-semibold text-emerald-600 uppercase tracking-wide">Present</p>
+                  <div className="rounded-lg bg-[#E7F8EE] border border-emerald-100 px-2 py-2 text-center">
+                    <p className="text-[15px] font-bold text-[#15803D]">{entry.total_present}</p>
+                    <p className="text-[8px] font-semibold text-[#10B981] uppercase tracking-wide">Present</p>
                   </div>
-                  <div className="rounded-lg bg-red-50 border border-red-100 px-2 py-2 text-center">
-                    <p className="text-[15px] font-bold text-red-700">{entry.total_absent}</p>
-                    <p className="text-[8px] font-semibold text-red-600 uppercase tracking-wide">Absent</p>
+                  <div className="rounded-lg bg-[#FEE2E2] border border-[#FEE2E2] px-2 py-2 text-center">
+                    <p className="text-[15px] font-bold text-[#DC2626]">{entry.total_absent}</p>
+                    <p className="text-[8px] font-semibold text-[#EF4444] uppercase tracking-wide">Absent</p>
                   </div>
-                  <div className="rounded-lg bg-amber-50 border border-amber-100 px-2 py-2 text-center">
-                    <p className="text-[15px] font-bold text-amber-700">{entry.total_late}</p>
-                    <p className="text-[8px] font-semibold text-amber-600 uppercase tracking-wide">Late</p>
+                  <div className="rounded-lg bg-[#FFFBEB] border border-amber-100 px-2 py-2 text-center">
+                    <p className="text-[15px] font-bold text-[#B45309]">{entry.total_late}</p>
+                    <p className="text-[8px] font-semibold text-[#F59E0B] uppercase tracking-wide">Late</p>
                   </div>
                   <div className={`rounded-lg border px-2 py-2 text-center ${rateCls}`}>
                     <p className={`text-[15px] font-bold ${rateTextCls}`}>{rate}%</p>
@@ -693,7 +693,7 @@ function HistoryTab({
                         <p className="text-[8px] font-medium text-[#94A3B8] uppercase tracking-wide">Consumed</p>
                       </div>
                       <div className="rounded-lg bg-white border border-[#E2E8F0] px-2 py-1.5 text-center">
-                        <p className={`text-[14px] font-bold ${remaining <= 2 ? 'text-red-600' : 'text-emerald-600'}`}>
+                        <p className={`text-[14px] font-bold ${remaining <= 2 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
                           {remaining}
                         </p>
                         <p className="text-[8px] font-medium text-[#94A3B8] uppercase tracking-wide">Remaining</p>
@@ -705,7 +705,7 @@ function HistoryTab({
                     </div>
                     <div className="h-1.5 rounded-full bg-[#F1F5F9]">
                       <div
-                        className={`h-1.5 rounded-full transition-all ${pct >= 75 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-[#CBD5E1]'}`}
+                        className={`h-1.5 rounded-full transition-all ${pct >= 75 ? 'bg-[#10B981]' : pct >= 40 ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]'}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -899,9 +899,9 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   const telUrl = buildTelUrl(s.parent_phone, s.phone)
   const stuTel = buildTelUrl(null, s.phone)
 
-  const riskCls = s.risk_level === 'HIGH'   ? 'bg-red-100 text-red-700'
-                : s.risk_level === 'MEDIUM' ? 'bg-amber-100 text-amber-700'
-                :                             'bg-emerald-100 text-emerald-700'
+  const riskCls = s.risk_level === 'HIGH'   ? 'bg-[#FEE2E2] text-[#DC2626]'
+                : s.risk_level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]'
+                :                             'bg-[#E7F8EE] text-[#15803D]'
 
   const anyOverlayOpen = wizardOpen
 

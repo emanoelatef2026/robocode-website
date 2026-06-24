@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -48,7 +48,7 @@ export default function RevenueFilterBar({ activeTab, currentDateFrom, currentDa
   const hasFilters = from || to
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3">
+    <div className="ds-card px-4 py-3">
       <div className="flex flex-wrap items-center gap-2">
         {(['month', 'year', '3m', '6m'] as const).map(p => (
           <button key={p} onClick={() => preset(p)}

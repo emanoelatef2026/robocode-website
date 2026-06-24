@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useTransition, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -32,11 +32,11 @@ export default function StartSessionButton({
       <button
         onClick={handleStart}
         disabled={isPending}
-        className="rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+        className="rounded-lg bg-[#059669] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#047857] disabled:opacity-60"
       >
         {isPending ? 'Starting…' : 'Start Session'}
       </button>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-[#EF4444]">{error}</p>}
     </div>
   )
 }

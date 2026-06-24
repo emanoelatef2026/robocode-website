@@ -1,10 +1,10 @@
-type Status = "new" | "contacted" | "confirmed" | "cancelled";
+﻿type Status = "new" | "contacted" | "confirmed" | "cancelled";
 
 const STYLES: Record<Status, string> = {
-  new:       "bg-blue-50 text-blue-600",
-  contacted: "bg-amber-50 text-amber-600",
-  confirmed: "bg-emerald-50 text-emerald-600",
-  cancelled: "bg-red-50 text-red-500",
+  new:       "bg-[#EFF6FF] text-[#2563EB]",
+  contacted: "bg-[#FFFBEB] text-[#F59E0B]",
+  confirmed: "bg-[#E7F8EE] text-[#10B981]",
+  cancelled: "bg-[#FEE2E2] text-[#EF4444]",
 };
 
 const LABELS: Record<Status, string> = {

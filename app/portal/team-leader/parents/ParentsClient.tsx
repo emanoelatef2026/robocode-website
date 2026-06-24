@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
@@ -18,14 +18,14 @@ function normalizePhone(p: string): string {
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const HEALTH_CONFIG: Record<string, { label: string; color: string; text: string }> = {
-  HEALTHY:         { label: 'Active',         color: 'bg-emerald-100', text: 'text-emerald-700' },
-  AT_RISK:         { label: 'At Risk',         color: 'bg-red-100',    text: 'text-red-600'     },
-  NEEDS_ATTENTION: { label: 'Needs Action',    color: 'bg-amber-100',  text: 'text-amber-700'   },
+  HEALTHY:         { label: 'Active',         color: 'bg-[#E7F8EE]', text: 'text-[#15803D]' },
+  AT_RISK:         { label: 'At Risk',         color: 'bg-[#FEE2E2]',    text: 'text-[#EF4444]'     },
+  NEEDS_ATTENTION: { label: 'Needs Action',    color: 'bg-[#FFFBEB]',  text: 'text-[#B45309]'   },
   NO_ENROLLMENTS:  { label: 'No Enrollment',   color: 'bg-orange-100', text: 'text-orange-700'  },
-  GRADUATED:       { label: 'Graduated',       color: 'bg-blue-100',   text: 'text-blue-700'    },
-  INACTIVE:        { label: 'Inactive',        color: 'bg-slate-100',  text: 'text-slate-500'   },
-  ARCHIVED:        { label: 'Archived',        color: 'bg-slate-100',  text: 'text-slate-400'   },
-  NO_CHILDREN:     { label: 'No Children',     color: 'bg-slate-100',  text: 'text-slate-500'   },
+  GRADUATED:       { label: 'Graduated',       color: 'bg-[#EFF6FF]',   text: 'text-[#1D4ED8]'    },
+  INACTIVE:        { label: 'Inactive',        color: 'bg-[#F1F5F9]',  text: 'text-[#64748B]'   },
+  ARCHIVED:        { label: 'Archived',        color: 'bg-[#F1F5F9]',  text: 'text-[#94A3B8]'   },
+  NO_CHILDREN:     { label: 'No Children',     color: 'bg-[#F1F5F9]',  text: 'text-[#64748B]'   },
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────────
@@ -148,12 +148,12 @@ export default function ParentsClient({
 
   // ── KPI strip ───────────────────────────────────────────────────────────────
   const kpis = useMemo(() => [
-    { label: 'Total Families',  value: rows.length,                                                                                              color: 'bg-blue-400'   },
-    { label: 'At Risk',         value: rows.filter(r => r.op_health === 'AT_RISK').length,                                                       color: rows.some(r => r.op_health === 'AT_RISK') ? 'bg-red-400' : 'bg-slate-300'    },
-    { label: 'Needs Action',    value: rows.filter(r => r.op_health === 'NEEDS_ATTENTION').length,                                               color: rows.some(r => r.op_health === 'NEEDS_ATTENTION') ? 'bg-amber-400' : 'bg-slate-300' },
-    { label: 'No Enrollment',   value: rows.filter(r => r.op_health === 'NO_ENROLLMENTS').length,                                                color: rows.some(r => r.op_health === 'NO_ENROLLMENTS') ? 'bg-orange-400' : 'bg-slate-300' },
+    { label: 'Total Families',  value: rows.length,                                                                                              color: 'bg-[#38BDF8]'   },
+    { label: 'At Risk',         value: rows.filter(r => r.op_health === 'AT_RISK').length,                                                       color: rows.some(r => r.op_health === 'AT_RISK') ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]'    },
+    { label: 'Needs Action',    value: rows.filter(r => r.op_health === 'NEEDS_ATTENTION').length,                                               color: rows.some(r => r.op_health === 'NEEDS_ATTENTION') ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]' },
+    { label: 'No Enrollment',   value: rows.filter(r => r.op_health === 'NO_ENROLLMENTS').length,                                                color: rows.some(r => r.op_health === 'NO_ENROLLMENTS') ? 'bg-orange-400' : 'bg-[#CBD5E1]' },
     { label: 'Multi-Child',     value: rows.filter(r => r.children_count > 1).length,                                                           color: 'bg-purple-400' },
-    { label: 'Graduated/Inact', value: rows.filter(r => r.op_health === 'GRADUATED' || r.op_health === 'INACTIVE' || r.op_health === 'ARCHIVED').length, color: 'bg-slate-300'  },
+    { label: 'Graduated/Inact', value: rows.filter(r => r.op_health === 'GRADUATED' || r.op_health === 'INACTIVE' || r.op_health === 'ARCHIVED').length, color: 'bg-[#CBD5E1]'  },
   ], [rows])
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -163,7 +163,7 @@ export default function ParentsClient({
       {/* KPI Strip */}
       <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {kpis.map(k => (
-          <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+          <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
             <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
             <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
             <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
@@ -211,7 +211,7 @@ export default function ParentsClient({
           <div className="flex flex-wrap gap-2 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
             {branches.length > 1 && (
               <select value={filterBranch} onChange={e => { setFilterBranch(e.target.value); pushFilters({ branch_id: e.target.value }) }}
-                className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
                 <option value="">All Branches</option>
                 {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
@@ -219,7 +219,7 @@ export default function ParentsClient({
 
             {instructors.length > 0 && (
               <select value={filterInstructor} onChange={e => { setFilterInstructor(e.target.value); pushFilters({ instructor_id: e.target.value }) }}
-                className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
                 <option value="">All Instructors</option>
                 {instructors.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
               </select>
@@ -227,7 +227,7 @@ export default function ParentsClient({
 
             {courses.length > 0 && (
               <select value={filterCourse} onChange={e => { setFilterCourse(e.target.value); pushFilters({ course_id: e.target.value }) }}
-                className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
                 <option value="">All Courses</option>
                 {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
               </select>
@@ -235,14 +235,14 @@ export default function ParentsClient({
 
             {groups.length > 0 && (
               <select value={filterGroup} onChange={e => { setFilterGroup(e.target.value); pushFilters({ group_id: e.target.value }) }}
-                className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
                 <option value="">All Groups</option>
                 {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
             )}
 
             <select value={filterHealth} onChange={e => { setFilterHealth(e.target.value); pushFilters({ health: e.target.value }) }}
-              className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+              className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
               <option value="">All Health</option>
               {Object.entries(HEALTH_CONFIG).map(([k, v]) => (
                 <option key={k} value={k}>{v.label}</option>
@@ -250,13 +250,13 @@ export default function ParentsClient({
             </select>
 
             <select value={filterMulti} onChange={e => { setFilterMulti(e.target.value); pushFilters({ multi: e.target.value }) }}
-              className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+              className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
               <option value="">All Families</option>
               <option value="1">Multi-Child Only</option>
             </select>
 
             <select value={filterRisk} onChange={e => { setFilterRisk(e.target.value); pushFilters({ has_risk: e.target.value }) }}
-              className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+              className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
               <option value="">All Risk Levels</option>
               <option value="1">Has Attendance Risk</option>
             </select>
@@ -265,7 +265,7 @@ export default function ParentsClient({
       </div>
 
       {/* Table / Cards */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         {filtered.length === 0 ? (
           <div className="px-6 py-12 text-center">
             <p className="text-sm font-medium text-[#0B1F3A]">No parents found</p>
@@ -314,7 +314,7 @@ export default function ParentsClient({
                             {c.age !== null && <span>· Age {c.age}</span>}
                             {c.group_name && <span>· {c.group_name}</span>}
                             {c.risk_level === 'HIGH' && (
-                              <span className="ml-auto rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-600">RISK</span>
+                              <span className="ml-auto rounded-full bg-[#FEE2E2] px-1.5 py-0.5 text-[9px] font-bold text-[#EF4444]">RISK</span>
                             )}
                           </div>
                         ))}
@@ -330,7 +330,7 @@ export default function ParentsClient({
                           <a
                             href={`https://wa.me/${row.phone.replace(/\D/g, '')}`}
                             target="_blank" rel="noopener noreferrer"
-                            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#25D366] hover:bg-green-50"
+                            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#25D366] hover:bg-[#E7F8EE]"
                           >
                             WhatsApp
                           </a>
@@ -364,7 +364,7 @@ export default function ParentsClient({
             {/* ── Desktop table ─────────────────────────────────────────── */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Parent</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Phone</th>
@@ -381,7 +381,7 @@ export default function ParentsClient({
                     return (
                       <tr
                         key={row.parent_id}
-                        className="cursor-pointer border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]"
+                        className="cursor-pointer ds-table-row"
                         onClick={() => setDrawerParent(row)}
                       >
                         {/* Parent identity */}
@@ -400,7 +400,7 @@ export default function ParentsClient({
                               <a
                                 href={`https://wa.me/${row.phone.replace(/\D/g, '')}`}
                                 target="_blank" rel="noopener noreferrer"
-                                className="rounded border border-[#25D366]/30 px-1.5 py-0.5 text-[10px] font-medium text-[#25D366] hover:bg-green-50"
+                                className="rounded border border-[#25D366]/30 px-1.5 py-0.5 text-[10px] font-medium text-[#25D366] hover:bg-[#E7F8EE]"
                               >
                                 WA
                               </a>
@@ -426,7 +426,7 @@ export default function ParentsClient({
                         <td className="px-4 py-3">
                           {row.total_sessions_remaining > 0 ? (
                             <>
-                              <p className={`font-medium ${row.near_exhaustion_children_count > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                              <p className={`font-medium ${row.near_exhaustion_children_count > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                                 {row.total_sessions_remaining} remaining
                               </p>
                               <p className="text-[11px] text-[#94A3B8]">across {row.active_contracts_count} contract{row.active_contracts_count !== 1 ? 's' : ''}</p>
@@ -452,17 +452,17 @@ export default function ParentsClient({
                               </span>
                             )}
                             {row.attendance_risk_children_count > 0 && (
-                              <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-bold text-red-600">
+                              <span className="rounded-full bg-[#FEE2E2] px-1.5 py-0.5 text-[9px] font-bold text-[#EF4444]">
                                 ATT RISK
                               </span>
                             )}
                             {row.near_exhaustion_children_count > 0 && (
-                              <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">
+                              <span className="rounded-full bg-[#FFFBEB] px-1.5 py-0.5 text-[9px] font-bold text-[#B45309]">
                                 NEAR END
                               </span>
                             )}
                             {(row.op_health === 'NO_CHILDREN' || row.op_health === 'ARCHIVED') && (
-                              <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-slate-500">
+                              <span className="rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[9px] font-bold text-[#64748B]">
                                 {row.op_health === 'ARCHIVED' ? 'ARCHIVED' : 'NO CHILD'}
                               </span>
                             )}

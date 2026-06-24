@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition, useActionState, useMemo } from 'react'
 import {
@@ -26,7 +26,7 @@ function TypeBadge({ type }: { type: 'primary' | 'secondary' }) {
       className={[
         'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium capitalize',
         type === 'primary'
-          ? 'bg-blue-50 text-blue-700'
+          ? 'bg-[#EFF6FF] text-[#1D4ED8]'
           : 'bg-purple-50 text-purple-700',
       ].join(' ')}
     >
@@ -150,16 +150,16 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: 'Total',     value: totalActive,   sub: capacity ? `/ ${capacity}` : null, color: 'text-[#0B1F3A]' },
-          { label: 'Primary',   value: primaryCnt,    sub: null,                              color: 'text-blue-700' },
+          { label: 'Primary',   value: primaryCnt,    sub: null,                              color: 'text-[#1D4ED8]' },
           { label: 'Secondary', value: secondaryCnt,  sub: null,                              color: 'text-purple-700' },
           {
             label: 'Capacity',
             value: capacity ? `${capacity - totalActive}` : '∞',
             sub:   capacity ? 'available' : null,
-            color: capacity && totalActive >= capacity ? 'text-red-600' : 'text-emerald-600',
+            color: capacity && totalActive >= capacity ? 'text-[#EF4444]' : 'text-[#10B981]',
           },
         ].map(({ label, value, sub, color }) => (
-          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <div key={label} className="ds-card p-4">
             <p className="text-xs text-[#64748B]">{label}</p>
             <p className={`mt-1 text-2xl font-bold ${color}`}>
               {value}{sub && <span className="ml-1 text-sm font-normal text-[#94A3B8]">{sub}</span>}
@@ -169,7 +169,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
       </div>
 
       {/* ── Student management table ─────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">
           <input
@@ -241,12 +241,12 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
 
         {/* Enroll error */}
         {enrollState && !enrollState.success && (
-          <div className="border-b border-[#E2E8F0] bg-red-50 px-4 py-2.5 text-sm text-red-700">
+          <div className="border-b border-[#E2E8F0] bg-[#FEE2E2] px-4 py-2.5 text-sm text-[#DC2626]">
             {enrollState.error.message}
           </div>
         )}
         {rowError && (
-          <div className="border-b border-[#E2E8F0] bg-red-50 px-4 py-2.5 text-sm text-red-700">
+          <div className="border-b border-[#E2E8F0] bg-[#FEE2E2] px-4 py-2.5 text-sm text-[#DC2626]">
             {rowError}
             <button onClick={() => setRowError(null)} className="ml-2 underline">dismiss</button>
           </div>
@@ -262,7 +262,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   <th className="w-8 px-3 py-2.5 text-center text-xs font-medium text-[#94A3B8]">#</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Code</th>
@@ -277,7 +277,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
               </thead>
               <tbody>
                 {filtered.map((e, idx) => (
-                  <tr key={e.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                  <tr key={e.id} className="ds-table-row">
                     <td className="px-3 py-2.5 text-center">
                       <span className="text-[11px] font-semibold text-[#94A3B8]">{idx + 1}</span>
                     </td>
@@ -335,7 +335,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                           <button
                             onClick={() => handleRemove(e)}
                             disabled={isPending}
-                            className="text-xs font-medium text-red-400 hover:text-red-600 disabled:opacity-50"
+                            className="text-xs font-medium text-[#F87171] hover:text-[#EF4444] disabled:opacity-50"
                           >
                             Remove
                           </button>
@@ -439,12 +439,12 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
             {/* Footer */}
             <div className="border-t border-[#E2E8F0] px-4 py-3">
               {bulkState && !bulkState.success && (
-                <p className="mb-2 rounded-lg bg-red-50 px-3 py-1.5 text-xs text-red-700">
+                <p className="mb-2 rounded-lg bg-[#FEE2E2] px-3 py-1.5 text-xs text-[#DC2626]">
                   {bulkState.error.message}
                 </p>
               )}
               {bulkSuccess && (
-                <p className="mb-2 rounded-lg bg-green-50 px-3 py-1.5 text-xs text-green-700">
+                <p className="mb-2 rounded-lg bg-[#E7F8EE] px-3 py-1.5 text-xs text-[#15803D]">
                   Enrolled {bulkState.data.enrolled} student{bulkState.data.enrolled !== 1 ? 's' : ''}
                   {bulkState.data.skipped > 0 ? `, ${bulkState.data.skipped} skipped` : ''}.
                 </p>

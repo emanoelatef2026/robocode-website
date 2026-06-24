@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getInstructorByUserId,
   listInstructorGroups,
@@ -89,13 +89,13 @@ export default async function InstructorDashboardPage() {
           { label: 'Pending HW',     value: String(pending.length) },
           { label: 'Sessions Done',  value: String(totalCompleted) },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white px-3 py-3 text-center">
+          <div key={label} className="ds-card px-3 py-3 text-center">
             <p className="text-xl md:text-2xl font-bold text-[#0B1F3A]">{value}</p>
             <p className="mt-0.5 text-[10px] md:text-xs text-[#64748B] leading-tight">{label}</p>
           </div>
         ))}
         {/* Rating — spans 2 cols on mobile so it fills its row, 1 col on lg */}
-        <div className="col-span-2 sm:col-span-1 rounded-xl border border-[#E2E8F0] bg-white px-3 py-3 text-center">
+        <div className="col-span-2 sm:col-span-1 ds-card px-3 py-3 text-center">
           {rating != null ? (
             <>
               <p className="text-xl md:text-2xl font-bold text-[#FF8A1F]">
@@ -124,12 +124,12 @@ export default async function InstructorDashboardPage() {
               <Link
                 key={i}
                 href={act.href}
-                className="flex items-center gap-3 md:gap-4 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 md:px-5 md:py-3.5 transition hover:border-[#FF8A1F] hover:shadow-sm active:bg-[#F8FAFC]"
+                className="flex items-center gap-3 md:gap-4 ds-card px-4 py-3 md:px-5 md:py-3.5 transition hover:border-[#FF8A1F] hover:shadow-sm active:bg-[#F8FAFC]"
               >
                 <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${
-                  act.type === 'start_session'       ? 'bg-emerald-100 text-emerald-700' :
-                  act.type === 'complete_attendance' ? 'bg-amber-100 text-amber-700' :
-                  act.type === 'review_homework'     ? 'bg-blue-100 text-blue-700' :
+                  act.type === 'start_session'       ? 'bg-[#E7F8EE] text-[#15803D]' :
+                  act.type === 'complete_attendance' ? 'bg-[#FFFBEB] text-[#B45309]' :
+                  act.type === 'review_homework'     ? 'bg-[#EFF6FF] text-[#1D4ED8]' :
                   'bg-[#F1F5F9] text-[#64748B]'
                 }`}>
                   {act.type === 'start_session' ? '▶' : act.type === 'review_homework' ? '📋' : '✓'}
@@ -149,7 +149,7 @@ export default async function InstructorDashboardPage() {
       {todayGroups.length > 0 && (
         <section>
           <SectionHeading>Today&apos;s Groups</SectionHeading>
-          <div className="rounded-xl border border-[#E2E8F0] bg-white divide-y divide-[#F1F5F9]">
+          <div className="ds-card divide-y divide-[#F1F5F9]">
             {todayGroups.map((g) => (
               <Link
                 key={g.group_id}
@@ -196,11 +196,11 @@ export default async function InstructorDashboardPage() {
                 <Link
                   key={g.group_id}
                   href={`/portal/instructor/groups/${g.group_id}`}
-                  className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 md:p-5 transition hover:border-[#CBD5E1] hover:shadow-sm active:bg-[#F8FAFC]"
+                  className="ds-card p-3.5 md:p-5 transition hover:border-[#CBD5E1] hover:shadow-sm active:bg-[#F8FAFC]"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-semibold text-[#0B1F3A]">{g.group_name}</p>
-                    <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase text-emerald-700">
+                    <span className="shrink-0 rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold uppercase text-[#15803D]">
                       Active
                     </span>
                   </div>
@@ -258,7 +258,7 @@ export default async function InstructorDashboardPage() {
               View all →
             </Link>
           </div>
-          <div className="rounded-xl border border-[#E2E8F0] bg-white divide-y divide-[#F1F5F9]">
+          <div className="ds-card divide-y divide-[#F1F5F9]">
             {pending.slice(0, 5).map((s) => (
               <Link
                 key={s.submission_id}
@@ -270,11 +270,11 @@ export default async function InstructorDashboardPage() {
                   <p className="truncate text-xs text-[#64748B]">{s.assignment_title}</p>
                 </div>
                 <div className="shrink-0 text-right">
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                  <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-medium text-[#B45309]">
                     {s.status}
                   </span>
                   {s.is_late && (
-                    <span className="ml-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-medium text-red-600">late</span>
+                    <span className="ml-1 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-medium text-[#EF4444]">late</span>
                   )}
                 </div>
               </Link>
@@ -292,14 +292,14 @@ export default async function InstructorDashboardPage() {
       {attention.length > 0 && (
         <section>
           <SectionHeading>Students Requiring Attention</SectionHeading>
-          <div className="rounded-xl border border-[#E2E8F0] bg-white divide-y divide-[#F1F5F9]">
+          <div className="ds-card divide-y divide-[#F1F5F9]">
             {attention.map((s) => (
               <Link
                 key={`${s.student_id}:${s.group_id}`}
                 href={s.href}
                 className="flex items-center gap-3 md:gap-4 px-4 py-2.5 md:px-5 md:py-3 hover:bg-[#F8FAFC] transition"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-600">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#FEE2E2] text-xs font-semibold text-[#EF4444]">
                   {s.absence_count}
                 </div>
                 <div className="min-w-0 flex-1">

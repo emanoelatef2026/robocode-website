@@ -1,4 +1,4 @@
-import { requirePortalRole }        from '@/modules/rbac/guards'
+﻿import { requirePortalRole }        from '@/modules/rbac/guards'
 import { getSystemEvents }           from '@/modules/observability'
 import type { EventSeverity, EventType } from '@/modules/observability/types'
 import Link                          from 'next/link'
@@ -7,13 +7,13 @@ import Link                          from 'next/link'
 
 function SeverityBadge({ sev }: { sev: string }) {
   const cfg: Record<string, string> = {
-    critical: 'bg-red-100 text-red-800',
+    critical: 'bg-[#FEE2E2] text-[#991B1B]',
     error:    'bg-orange-100 text-orange-700',
-    warning:  'bg-amber-100 text-amber-700',
-    info:     'bg-blue-100 text-blue-700',
+    warning:  'bg-[#FFFBEB] text-[#B45309]',
+    info:     'bg-[#EFF6FF] text-[#1D4ED8]',
   }
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${cfg[sev] ?? 'bg-slate-100 text-slate-600'}`}>
+    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${cfg[sev] ?? 'bg-[#F1F5F9] text-[#475569]'}`}>
       {sev}
     </span>
   )
@@ -113,14 +113,14 @@ export default async function SystemEventsPage({ searchParams }: Props) {
 
       {/* ── Event List ─────────────────────────────────────────────────── */}
       {events.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-16 text-center">
+        <div className="ds-card px-6 py-16 text-center">
           <p className="text-sm font-medium text-[#0B1F3A]">No events found</p>
           <p className="mt-1 text-xs text-[#94A3B8]">
             {unresolvedOnly ? 'No unresolved events — the system is healthy.' : 'No events match the current filters.'}
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="overflow-hidden ds-card">
           <div className="divide-y divide-[#F1F5F9]">
             {events.map(evt => (
               <div key={evt.id} className={`px-5 py-4 hover:bg-[#F8FAFC] ${!evt.resolved ? '' : 'opacity-50'}`}>
@@ -155,7 +155,7 @@ export default async function SystemEventsPage({ searchParams }: Props) {
                       })}
                     </p>
                     {evt.resolved && (
-                      <span className="mt-1 block text-[10px] text-emerald-600">Resolved</span>
+                      <span className="mt-1 block text-[10px] text-[#10B981]">Resolved</span>
                     )}
                   </div>
                 </div>

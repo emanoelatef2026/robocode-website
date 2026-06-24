@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useTransition, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -66,12 +66,12 @@ export default function CertificateDetailView({ certificate }: Props) {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">{error}</div>
       )}
 
       {/* Status banner */}
       {isRevoked && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg bg-[#FEE2E2] border border-[#FECACA] px-4 py-3 text-sm text-[#DC2626]">
           <strong>Revoked</strong>
           {certificate.revoke_reason && ` — ${certificate.revoke_reason}`}
           {certificate.revoked_at && ` (${new Date(certificate.revoked_at).toLocaleDateString('en-GB')})`}
@@ -79,14 +79,14 @@ export default function CertificateDetailView({ certificate }: Props) {
       )}
 
       {/* Main details */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 space-y-4">
+      <div className="ds-card p-6 space-y-4">
         <div className="grid grid-cols-2 gap-x-8 gap-y-4">
           <Field label="Certificate Code">
             <span className="font-mono text-sm font-bold text-[#FF8A1F]">{certificate.certificate_code}</span>
           </Field>
           <Field label="Status">
             <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-              isRevoked ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+              isRevoked ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#E7F8EE] text-[#15803D]'
             }`}>
               {isRevoked ? 'Revoked' : 'Active'}
             </span>
@@ -162,14 +162,14 @@ export default function CertificateDetailView({ certificate }: Props) {
           <button
             onClick={handleReinstate}
             disabled={isPending}
-            className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white hover:bg-green-600 disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#10B981] px-4 py-2 text-sm font-medium text-white hover:bg-[#059669] disabled:opacity-50"
           >
             Reinstate
           </button>
         ) : (
           <button
             onClick={() => setShowRevoke(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#EF4444] px-4 py-2 text-sm font-medium text-white hover:bg-[#DC2626]"
           >
             Revoke
           </button>
@@ -177,7 +177,7 @@ export default function CertificateDetailView({ certificate }: Props) {
 
         <button
           onClick={() => setShowDelete(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 ml-auto"
+          className="inline-flex items-center gap-2 rounded-lg border border-[#FCA5A5] px-4 py-2 text-sm font-medium text-[#EF4444] hover:bg-[#FEE2E2] ml-auto"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -188,16 +188,16 @@ export default function CertificateDetailView({ certificate }: Props) {
 
       {/* Delete confirmation */}
       {showDelete && (
-        <div className="rounded-xl border border-red-300 bg-red-50 p-4 space-y-3">
-          <p className="text-sm font-semibold text-red-700">Delete this certificate permanently?</p>
-          <p className="text-xs text-red-600">
+        <div className="rounded-xl border border-[#FCA5A5] bg-[#FEE2E2] p-4 space-y-3">
+          <p className="text-sm font-semibold text-[#DC2626]">Delete this certificate permanently?</p>
+          <p className="text-xs text-[#EF4444]">
             This action cannot be undone. The certificate record, code <strong>{certificate.certificate_code}</strong>, and all related data will be permanently removed.
           </p>
           <div className="flex gap-2">
             <button
               onClick={handleDelete}
               disabled={isPending}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              className="rounded-lg bg-[#DC2626] px-4 py-2 text-sm font-medium text-white hover:bg-[#B91C1C] disabled:opacity-50"
             >
               {isPending ? 'Deleting…' : 'Yes, Delete Permanently'}
             </button>
@@ -213,20 +213,20 @@ export default function CertificateDetailView({ certificate }: Props) {
 
       {/* Revoke dialog */}
       {showRevoke && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-3">
-          <p className="text-sm font-medium text-red-700">Enter a reason for revoking this certificate:</p>
+        <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] p-4 space-y-3">
+          <p className="text-sm font-medium text-[#DC2626]">Enter a reason for revoking this certificate:</p>
           <textarea
             value={revokeReason}
             onChange={(e) => setRevokeReason(e.target.value)}
             rows={2}
             placeholder="e.g. Issued in error, student did not complete requirements…"
-            className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-red-400 focus:ring-2 focus:ring-red-400/15"
+            className="w-full rounded-lg border border-[#FECACA] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#F87171] focus:ring-2 focus:ring-red-400/15"
           />
           <div className="flex gap-2">
             <button
               onClick={handleRevoke}
               disabled={isPending || !revokeReason.trim()}
-              className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-50"
+              className="rounded-lg bg-[#EF4444] px-4 py-2 text-sm font-medium text-white hover:bg-[#DC2626] disabled:opacity-50"
             >
               {isPending ? 'Revoking…' : 'Confirm Revoke'}
             </button>

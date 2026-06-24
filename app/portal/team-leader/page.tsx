@@ -1,4 +1,4 @@
-import { Suspense }                    from 'react'
+﻿import { Suspense }                    from 'react'
 import Link                             from 'next/link'
 import { requirePortalRole }            from '@/modules/rbac/guards'
 import { getTLKPIs, getTodayAttendanceSummary } from '@/modules/tl-dashboard/queries'
@@ -46,9 +46,9 @@ async function AttendanceSummary({ branchIds }: { branchIds: string[] }) {
   return (
     <div className="grid grid-cols-3 gap-2 md:gap-3">
       {[
-        { label: 'Present Today', value: att.present, cls: 'border-emerald-200 bg-emerald-50 text-emerald-700' },
-        { label: 'Absent Today',  value: att.absent,  cls: 'border-red-200    bg-red-50    text-red-700'     },
-        { label: 'Late Today',    value: att.late,    cls: 'border-amber-200  bg-amber-50  text-amber-700'   },
+        { label: 'Present Today', value: att.present, cls: 'border-[#A7F3D0] bg-[#E7F8EE] text-[#15803D]' },
+        { label: 'Absent Today',  value: att.absent,  cls: 'border-[#FECACA]    bg-[#FEE2E2]    text-[#DC2626]'     },
+        { label: 'Late Today',    value: att.late,    cls: 'border-[#FDE68A]  bg-[#FFFBEB]  text-[#B45309]'   },
       ].map(k => (
         <div key={k.label} className={`min-w-0 rounded-xl border px-2 py-1.5 md:px-4 md:py-3 text-center ${k.cls}`}>
           <p className="truncate text-[15px] font-extrabold leading-none md:text-2xl">{k.value}</p>
@@ -86,9 +86,9 @@ async function FinanceKPIStrip({ branchIds }: { branchIds: string[] }) {
       {tiles.map(t => (
         <div
           key={t.label}
-          className={`min-w-0 rounded-xl border bg-white px-2 py-1.5 md:p-3.5 ${t.alert ? 'border-red-200' : 'border-[#E2E8F0]'}`}
+          className={`min-w-0 rounded-xl border bg-white px-2 py-1.5 md:p-3.5 ${t.alert ? 'border-[#FECACA]' : 'border-[#E2E8F0]'}`}
         >
-          <p className={`truncate text-[13px] font-extrabold leading-none md:text-[18px] ${t.alert ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+          <p className={`truncate text-[13px] font-extrabold leading-none md:text-[18px] ${t.alert ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
             {t.value}
           </p>
           <p className="mt-0.5 truncate text-[8px] font-medium leading-tight text-[#64748B] md:text-[10px]">{t.label}</p>
@@ -113,7 +113,7 @@ async function HeaderKPIs({ branchIds }: { branchIds: string[] }) {
         <Link
           key={k.label}
           href={k.href}
-          className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
+          className="min-w-0 ds-card px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
         >
           <p className="truncate text-[8px] font-bold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">{k.label}</p>
           <p className="mt-0.5 truncate text-[15px] font-extrabold leading-none text-[#0B1F3A] md:text-[24px]">{k.value}</p>

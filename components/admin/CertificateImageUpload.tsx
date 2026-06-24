@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef } from 'react'
 import { compressImage } from '@/lib/uploads/compressImage'
@@ -85,7 +85,7 @@ export default function CertificateImageUpload({
                 type="button"
                 onClick={handleClear}
                 aria-label="Remove image"
-                className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs leading-none hover:bg-red-600 transition"
+                className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#FEE2E2]0 text-white text-xs leading-none hover:bg-red-600 transition"
               >
                 ×
               </button>
@@ -130,24 +130,24 @@ export default function CertificateImageUpload({
           {hint && <p className="text-xs text-[#94A3B8]">{hint}</p>}
 
           {removeBackground && !hasImage && (
-            <p className="text-xs text-emerald-600">
+            <p className="text-xs text-[#10B981]">
               Background removal is automatic — any solid background colour will be stripped on upload.
             </p>
           )}
 
           {alphaWarn && (
-            <p className="text-xs text-amber-600">
+            <p className="text-xs text-[#F59E0B]">
               JPEG/WebP don&apos;t support transparency — upload a PNG to avoid a black background.
             </p>
           )}
 
           {Boolean(url) && !imgOk && !uploading && (
-            <p className="text-xs text-amber-500">
+            <p className="text-xs text-[#F59E0B]">
               Previous image couldn&apos;t load — upload a new one to replace it.
             </p>
           )}
 
-          {error && <p className="text-xs text-red-500">{error}</p>}
+          {error && <p className="text-xs text-[#EF4444]">{error}</p>}
         </div>
       </div>
 

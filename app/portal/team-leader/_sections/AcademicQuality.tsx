@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { getAcademicQualityData } from '@/modules/tl-dashboard/dashboard-v2-queries'
 import { ScoreBar } from '../_components/RiskBadge'
 
@@ -22,7 +22,7 @@ function QualityTile({ label, value, sub, href, colorCls }: {
 }
 
 function MetricRow({ label, value, href }: { label: string; value: number; href?: string }) {
-  const color = value >= 75 ? 'text-emerald-600' : value >= 55 ? 'text-amber-600' : 'text-red-600'
+  const color = value >= 75 ? 'text-[#10B981]' : value >= 55 ? 'text-[#F59E0B]' : 'text-[#EF4444]'
   return (
     <div className="flex items-center gap-3 border-b border-[#F1F5F9] px-4 py-3 last:border-0">
       <div className="min-w-0 flex-1">
@@ -57,38 +57,38 @@ export default async function AcademicQuality({ branchIds }: { branchIds: string
           label="Attendance Rate"
           value={`${data.attendance_rate}%`}
           href="/portal/team-leader/groups"
-          colorCls={data.attendance_rate >= 75 ? 'text-emerald-600' : data.attendance_rate >= 55 ? 'text-amber-600' : 'text-red-600'}
+          colorCls={data.attendance_rate >= 75 ? 'text-[#10B981]' : data.attendance_rate >= 55 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}
         />
         <QualityTile
           label="Homework Rate"
           value={`${data.homework_rate}%`}
           href="/portal/team-leader/assignments"
-          colorCls={data.homework_rate >= 75 ? 'text-emerald-600' : data.homework_rate >= 55 ? 'text-amber-600' : 'text-red-600'}
+          colorCls={data.homework_rate >= 75 ? 'text-[#10B981]' : data.homework_rate >= 55 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}
         />
         <QualityTile
           label="Pending Reviews"
           value={String(data.pending_reviews)}
           sub="portfolios"
           href="/portal/team-leader/assignments?filter=pending"
-          colorCls={data.pending_reviews > 5 ? 'text-amber-600' : 'text-[#0B1F3A]'}
+          colorCls={data.pending_reviews > 5 ? 'text-[#F59E0B]' : 'text-[#0B1F3A]'}
         />
         <QualityTile
           label="Low Engagement"
           value={String(data.low_engagement_groups)}
           sub="groups < 60% att"
-          colorCls={data.low_engagement_groups > 0 ? 'text-red-600' : 'text-emerald-600'}
+          colorCls={data.low_engagement_groups > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}
         />
         <QualityTile
           label="No Session 7d"
           value={String(data.groups_no_session_7d)}
           sub="active groups"
-          colorCls={data.groups_no_session_7d > 0 ? 'text-amber-600' : 'text-[#0B1F3A]'}
+          colorCls={data.groups_no_session_7d > 0 ? 'text-[#F59E0B]' : 'text-[#0B1F3A]'}
         />
         <QualityTile
           label="Submission Rate"
           value={`${data.submission_rate}%`}
           href="/portal/team-leader/assignments"
-          colorCls={data.submission_rate >= 70 ? 'text-emerald-600' : 'text-amber-600'}
+          colorCls={data.submission_rate >= 70 ? 'text-[#10B981]' : 'text-[#F59E0B]'}
         />
       </div>
 

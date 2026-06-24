@@ -1,12 +1,12 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { getProgressForParent } from '@/modules/progress/queries'
 
 function ScoreBar({ label, value }: { label: string; value: number }) {
   const pct = Math.min(Math.max(value, 0), 100)
   const color =
-    pct >= 75 ? 'bg-green-400'
+    pct >= 75 ? 'bg-[#10B981]'
     : pct >= 50 ? 'bg-yellow-400'
-    : 'bg-red-400'
+    : 'bg-[#EF4444]'
 
   return (
     <div>
@@ -23,12 +23,12 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
 
 function statusBadge(status: string) {
   const map: Record<string, string> = {
-    active:    'bg-blue-100 text-blue-700',
-    completed: 'bg-green-100 text-green-700',
-    failed:    'bg-red-100 text-red-700',
+    active:    'bg-[#EFF6FF] text-[#1D4ED8]',
+    completed: 'bg-[#E7F8EE] text-[#15803D]',
+    failed:    'bg-[#FEE2E2] text-[#DC2626]',
   }
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${map[status] ?? 'bg-gray-100 text-gray-600'}`}>
+    <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${map[status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
       {status}
     </span>
   )
@@ -79,7 +79,7 @@ export default async function ParentProgressPage() {
               {summary.courses.map(course => (
                 <div
                   key={course.id}
-                  className="rounded-xl border border-[#E2E8F0] bg-white p-5"
+                  className="ds-card p-5"
                 >
                   <div className="mb-4 flex items-start justify-between gap-4">
                     <div>

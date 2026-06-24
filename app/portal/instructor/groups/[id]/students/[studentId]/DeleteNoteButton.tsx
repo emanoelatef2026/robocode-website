@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { deleteStudentNote } from '@/modules/instructor-portal/actions'
 import { useRouter } from 'next/navigation'
@@ -26,7 +26,7 @@ export default function DeleteNoteButton({ noteId, studentId, groupId }: Props) 
     <button
       type="button"
       onClick={handleDelete}
-      className="text-xs text-red-400 hover:text-red-600 transition"
+      className="text-xs text-[#F87171] hover:text-[#EF4444] transition"
     >
       Delete
     </button>

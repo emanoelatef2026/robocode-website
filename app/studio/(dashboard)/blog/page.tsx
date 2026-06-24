@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -31,8 +31,8 @@ interface EditForm {
   status:           string;
 }
 
-const INPUT = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
-const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
+const INPUT = "w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]";
 
 const blankForm: EditForm = {
   title: "", slug: "", excerpt: "", content: "",
@@ -118,25 +118,25 @@ export default function BlogAdminPage() {
 
       {/* Real error — only shown when API/DB actually fails */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-700">
+        <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] p-4 text-[13px] text-[#DC2626]">
           <strong>Connection error:</strong> {error}
           <button onClick={load} className="ml-3 underline hover:no-underline">Retry</button>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 rounded-lg border border-gray-100 bg-gray-50 p-1 w-fit">
+      <div className="flex gap-1 rounded-lg border border-[#F1F5F9] bg-[#F9FAFB] p-1 w-fit">
         {(["add", "list"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={["rounded-md px-4 py-1.5 text-[13px] font-semibold transition",
-              tab === t ? "bg-white text-[#0B1F3A] shadow-sm" : "text-gray-400 hover:text-gray-700"].join(" ")}>
+              tab === t ? "bg-white text-[#0B1F3A] shadow-sm" : "text-[#9CA3AF] hover:text-[#374151]"].join(" ")}>
             {t === "add" ? "New Post" : `All Posts (${posts.length})`}
           </button>
         ))}
       </div>
 
       {tab === "add" && (
-        <form onSubmit={handleAdd} className="space-y-5 rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <form onSubmit={handleAdd} className="space-y-5 rounded-xl border border-[#F1F5F9] bg-white p-6 shadow-sm">
           <h2 className="text-[14px] font-semibold text-[#0B1F3A]">Create New Post</h2>
 
           {/* Core fields */}
@@ -158,7 +158,7 @@ export default function BlogAdminPage() {
 
           <div>
             <label className={LABEL}>Content (HTML)</label>
-            <p className="mb-1.5 text-[11px] text-gray-400">Enter content as HTML. Use &lt;h2&gt;, &lt;h3&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;&lt;li&gt;, &lt;img src=&quot;…&quot;&gt; tags.</p>
+            <p className="mb-1.5 text-[11px] text-[#9CA3AF]">Enter content as HTML. Use &lt;h2&gt;, &lt;h3&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;ul&gt;&lt;li&gt;, &lt;img src=&quot;…&quot;&gt; tags.</p>
             <textarea value={f.content} onChange={(e) => setF({ content: e.target.value })} rows={10} placeholder="<h2>Introduction</h2><p>Your content here…</p>" className={`${INPUT} resize-y font-mono text-[12px]`} />
           </div>
 
@@ -184,9 +184,9 @@ export default function BlogAdminPage() {
 
           <div>
             <label className={LABEL}>Featured Image</label>
-            <p className="mb-1.5 text-[11px] text-gray-400">WebP recommended · 1600×900 · max 400KB</p>
+            <p className="mb-1.5 text-[11px] text-[#9CA3AF]">WebP recommended · 1600×900 · max 400KB</p>
             <input ref={fileRef} type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="block w-full text-[13px] text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200" />
+              className="block w-full text-[13px] text-[#6B7280] file:mr-2 file:rounded-lg file:border-0 file:bg-[#F3F4F6] file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-[#4B5563] hover:file:bg-gray-200" />
           </div>
 
           {/* SEO fields */}
@@ -225,7 +225,7 @@ export default function BlogAdminPage() {
         ) : (
           <div className="space-y-3">
             {posts.map((post) => (
-              <div key={post.id} className="rounded-xl border border-gray-100 bg-white shadow-sm">
+              <div key={post.id} className="rounded-xl border border-[#F1F5F9] bg-white shadow-sm">
                 {editing?.id === post.id ? (
                   <div className="p-5 space-y-4">
                     <h3 className="text-[13px] font-semibold text-[#0B1F3A]">Editing: {post.title}</h3>
@@ -244,30 +244,30 @@ export default function BlogAdminPage() {
                     <div><label className={LABEL}>Meta Description</label><textarea value={editForm.meta_description} onChange={(e) => setEditForm({ ...editForm, meta_description: e.target.value })} rows={2} className={`${INPUT} resize-none`} /></div>
                     <div className="flex gap-2 pt-2">
                       <button onClick={handleEditSave} disabled={saving} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[13px] font-semibold text-white hover:bg-[#38BDF8] disabled:opacity-50 transition">{saving ? "Saving…" : "Save"}</button>
-                      <button onClick={() => setEditing(null)} className="flex-1 rounded-lg border border-gray-200 py-2 text-[13px] font-semibold text-gray-500 hover:bg-gray-50">Cancel</button>
+                      <button onClick={() => setEditing(null)} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-semibold text-[#6B7280] hover:bg-[#F9FAFB]">Cancel</button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-4 p-4">
                     {post.featured_image && (
-                      <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                      <div className="relative h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-[#F3F4F6]">
                         <Image src={post.featured_image} alt={post.title} fill sizes="80px" className="object-cover" />
                       </div>
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="truncate text-[13px] font-bold text-[#0B1F3A]">{post.title}</p>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${post.status === "published" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${post.status === "published" ? "bg-[#E7F8EE] text-[#15803D]" : "bg-[#F3F4F6] text-[#6B7280]"}`}>
                           {post.status}
                         </span>
                       </div>
-                      <p className="mt-0.5 text-[11px] text-gray-400">{post.category} · {post.author} · /blog/{post.slug}</p>
+                      <p className="mt-0.5 text-[11px] text-[#9CA3AF]">{post.category} · {post.author} · /blog/{post.slug}</p>
                     </div>
                     <div className="flex shrink-0 gap-1.5">
-                      <button onClick={() => startEdit(post)} className="rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-semibold text-gray-600 hover:border-[#38BDF8] hover:text-[#38BDF8] transition">Edit</button>
-                      <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-semibold text-gray-600 hover:border-[#38BDF8] hover:text-[#38BDF8] transition">View</a>
+                      <button onClick={() => startEdit(post)} className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#4B5563] hover:border-[#38BDF8] hover:text-[#38BDF8] transition">Edit</button>
+                      <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#4B5563] hover:border-[#38BDF8] hover:text-[#38BDF8] transition">View</a>
                       <button onClick={() => handleDelete(post.id)} disabled={deleting === post.id}
-                        className="rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-semibold text-red-400 hover:border-red-300 hover:bg-red-50 transition disabled:opacity-50">
+                        className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#F87171] hover:border-[#FCA5A5] hover:bg-[#FEE2E2] transition disabled:opacity-50">
                         {deleting === post.id ? "…" : "Del"}
                       </button>
                     </div>

@@ -1,10 +1,11 @@
-import { createServiceClient }      from '@/lib/supabase/service'
+﻿import { createServiceClient }      from '@/lib/supabase/service'
 import { requireAuth }              from '@/modules/rbac/guards'
 import { listLeads, getLeadKPIs }   from '@/modules/leads/queries'
 import { listBranches }             from '@/modules/branches/queries'
 import SearchInput                  from '@/components/admin/SearchInput'
 import AdminFilterSelect            from '@/components/admin/AdminFilterSelect'
 import Pagination                   from '@/components/admin/Pagination'
+import KpiCard                      from '@/components/admin/KpiCard'
 import Link                         from 'next/link'
 import type { LeadStatus }          from '@/modules/leads/types'
 import { TopbarAction }             from '@/components/admin/TopbarActionContext'
@@ -12,14 +13,14 @@ import { TopbarAction }             from '@/components/admin/TopbarActionContext
 // ── Status display ─────────────────────────────────────────────────────────────
 
 const STATUS_META: Record<LeadStatus, { label: string; color: string }> = {
-  NEW:           { label: 'New',           color: 'bg-slate-100 text-slate-700' },
-  CONTACTED:     { label: 'Contacted',     color: 'bg-blue-100 text-blue-700' },
-  INTERESTED:    { label: 'Interested',    color: 'bg-violet-100 text-violet-700' },
-  TRIAL_BOOKED:  { label: 'Trial Booked',  color: 'bg-amber-100 text-amber-700' },
-  TRIAL_ATTENDED:{ label: 'Trial Attended',color: 'bg-orange-100 text-orange-700' },
-  FOLLOW_UP:     { label: 'Follow-up',     color: 'bg-purple-100 text-purple-700' },
-  CONVERTED:     { label: 'Converted',     color: 'bg-emerald-100 text-emerald-700' },
-  LOST:          { label: 'Lost',          color: 'bg-red-100 text-red-700' },
+  NEW:           { label: 'New',           color: 'bg-[#F1F5F9] text-[#475569]' },
+  CONTACTED:     { label: 'Contacted',     color: 'bg-[#E0F2FE] text-[#0369A1]' },
+  INTERESTED:    { label: 'Interested',    color: 'bg-[#F3E8FF] text-[#6B21A8]' },
+  TRIAL_BOOKED:  { label: 'Trial Booked',  color: 'bg-[#FFFBEB] text-[#B45309]' },
+  TRIAL_ATTENDED:{ label: 'Trial Attended',color: 'bg-[#FFF1E2] text-[#FF8A1F]' },
+  FOLLOW_UP:     { label: 'Follow-up',     color: 'bg-[#F3E8FF] text-[#6B21A8]' },
+  CONVERTED:     { label: 'Converted',     color: 'bg-[#E7F8EE] text-[#15803D]' },
+  LOST:          { label: 'Lost',          color: 'bg-[#FEF2F2] text-[#B91C1C]' },
 }
 
 const LEAD_STATUSES: LeadStatus[] = [
@@ -31,22 +32,6 @@ const LEAD_SOURCES = [
   'website', 'facebook_ad', 'instagram_ad', 'whatsapp', 'referral', 'walk_in', 'other',
 ]
 
-// ── KPI cards ─────────────────────────────────────────────────────────────────
-
-function KPICard({
-  label, value, sub, color = 'bg-slate-300',
-}: {
-  label: string; value: number | string; sub?: string; color?: string
-}) {
-  return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
-      <div className={`mb-2.5 h-1.5 w-7 rounded-full ${color} opacity-80`} />
-      <p className="text-2xl font-bold text-[#0B1F3A]">{value}</p>
-      <p className="mt-0.5 text-xs font-medium text-[#64748B]">{label}</p>
-      {sub && <p className="mt-1 text-[11px] text-[#94A3B8]">{sub}</p>}
-    </div>
-  )
-}
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -90,11 +75,11 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
 
   // Funnel pipeline counts (quick visual from KPIs)
   const funnelStages = [
-    { key: 'new_leads',      label: 'New',      count: kpis.new_leads,      color: 'bg-slate-300' },
-    { key: 'contacted',      label: 'Contacted', count: kpis.contacted,     color: 'bg-blue-400' },
-    { key: 'trial_booked',   label: 'Trial',     count: kpis.trial_booked,  color: 'bg-amber-400' },
+    { key: 'new_leads',      label: 'New',      count: kpis.new_leads,      color: 'bg-[#CBD5E1]' },
+    { key: 'contacted',      label: 'Contacted', count: kpis.contacted,     color: 'bg-[#38BDF8]' },
+    { key: 'trial_booked',   label: 'Trial',     count: kpis.trial_booked,  color: 'bg-[#F59E0B]' },
     { key: 'trial_attended', label: 'Attended',  count: kpis.trial_attended,color: 'bg-orange-400' },
-    { key: 'converted',      label: 'Converted', count: kpis.converted,     color: 'bg-emerald-500' },
+    { key: 'converted',      label: 'Converted', count: kpis.converted,     color: 'bg-[#10B981]' },
   ]
 
   return (
@@ -124,17 +109,16 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
 
       {/* ── KPI row ────────────────────────────────────────────────────── */}
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <KPICard label="Total Leads"      value={kpis.total}            color="bg-slate-300" />
-        <KPICard label="Converted"        value={kpis.converted}        color="bg-emerald-400"
-          sub={`${kpis.conversion_rate}% rate`} />
-        <KPICard label="Trial Booked"     value={kpis.trial_booked}     color="bg-amber-400" />
-        <KPICard label="Follow-ups Today" value={kpis.follow_ups_today} color={kpis.follow_ups_today > 0 ? 'bg-red-400' : 'bg-slate-300'} />
-        <KPICard label="Conversion Rate"  value={`${kpis.conversion_rate}%`} color="bg-violet-400" />
+        <KpiCard label="Total Leads"      value={kpis.total}            barColor="#94A3B8" />
+        <KpiCard label="Converted"        value={kpis.converted}        barColor="#10B981" sub={`${kpis.conversion_rate}% rate`} />
+        <KpiCard label="Trial Booked"     value={kpis.trial_booked}     barColor="#F59E0B" />
+        <KpiCard label="Follow-ups Today" value={kpis.follow_ups_today} barColor={kpis.follow_ups_today > 0 ? '#EF4444' : '#94A3B8'} alert={kpis.follow_ups_today > 0} />
+        <KpiCard label="Conversion Rate"  value={`${kpis.conversion_rate}%`} barColor="#A855F7" />
       </div>
 
       {/* ── Funnel visual ──────────────────────────────────────────────── */}
-      <div className="mb-5 rounded-xl border border-[#E2E8F0] bg-white p-4">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Pipeline Funnel</p>
+      <div className="mb-5 ds-card p-4">
+        <p className="mb-3 text-[10.5px] font-bold uppercase tracking-[0.14em] text-[#94A3B8]">Pipeline Funnel</p>
         <div className="flex items-end gap-2">
           {funnelStages.map((stage, i) => {
             const maxCount = Math.max(...funnelStages.map(s => s.count), 1)
@@ -159,8 +143,8 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
       </div>
 
       {/* ── Leads table ────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
-        <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">
+      <div className="ds-card overflow-hidden">
+        <div className="flex flex-wrap items-center gap-2 border-b border-[#e7ebf1] px-4 py-3 bg-white">
           <SearchInput placeholder="Search leads…" />
           {isSuperAdmin && (
             <AdminFilterSelect
@@ -212,7 +196,7 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
                         )}
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5">
-                        <span className={`text-[11px] font-semibold ${isOld ? 'text-red-600' : 'text-[#64748B]'}`}>
+                        <span className={`text-[11px] font-semibold ${isOld ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
                           {lead.days_in_stage}d{isOld && ' ⚠'}
                         </span>
                         <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${meta.color}`}>
@@ -229,7 +213,7 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
                     <div className="mt-2 flex items-center justify-between gap-2">
                       <span className="text-[11px] text-[#94A3B8]">
                         {new Date(lead.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                        {hasFU && <span className="ml-1 text-red-500">● overdue</span>}
+                        {hasFU && <span className="ml-1 text-[#EF4444]">● overdue</span>}
                       </span>
                       <Link href={`/admin/leads/${lead.id}`} className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center">
                         View →
@@ -242,19 +226,19 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
 
             {/* ── Desktop table (≥ md) ── */}
             <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Child</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Parent</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Phone</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Source</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Owner</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Days</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Created</th>
-                    <th className="px-4 py-3" />
+              <table className="w-full">
+                <thead className="ds-table-head">
+                  <tr>
+                    <th>Child</th>
+                    <th>Parent</th>
+                    <th>Phone</th>
+                    <th>Branch</th>
+                    <th>Source</th>
+                    <th>Status</th>
+                    <th>Owner</th>
+                    <th>Days</th>
+                    <th>Created</th>
+                    <th />
                   </tr>
                 </thead>
                 <tbody>
@@ -264,35 +248,35 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
                     const hasFU  = lead.next_follow_up_at && new Date(lead.next_follow_up_at) < new Date()
 
                     return (
-                      <tr key={lead.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
-                        <td className="px-4 py-3">
-                          <Link href={`/admin/leads/${lead.id}`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">
+                      <tr key={lead.id} className="ds-table-row">
+                        <td>
+                          <Link href={`/admin/leads/${lead.id}`} className="font-semibold text-[#0B1F3A] hover:text-[#FF8A1F] transition-colors">
                             {lead.child_name}
                           </Link>
                           {lead.age && <span className="ml-1 text-[11px] text-[#94A3B8]">({lead.age}y)</span>}
                         </td>
-                        <td className="px-4 py-3 text-[#64748B]">{lead.parent_name ?? '—'}</td>
-                        <td className="px-4 py-3 text-[#64748B] font-mono text-xs">{lead.phone ?? '—'}</td>
-                        <td className="px-4 py-3 text-[#64748B]">{lead.branch_name ?? '—'}</td>
-                        <td className="px-4 py-3 text-[#64748B] capitalize">{lead.source.replace(/_/g, ' ')}</td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${meta.color}`}>
+                        <td className="text-[#64748B]">{lead.parent_name ?? '—'}</td>
+                        <td className="text-[#64748B] font-mono text-[12px]">{lead.phone ?? '—'}</td>
+                        <td className="text-[#64748B]">{lead.branch_name ?? '—'}</td>
+                        <td className="text-[#64748B] capitalize">{lead.source.replace(/_/g, ' ')}</td>
+                        <td>
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10.5px] font-bold ${meta.color}`}>
                             {meta.label}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-[#64748B]">{lead.assigned_name ?? <span className="text-[#94A3B8]">Unassigned</span>}</td>
-                        <td className="px-4 py-3">
-                          <span className={`text-xs font-medium ${isOld ? 'text-red-600' : 'text-[#64748B]'}`}>
+                        <td className="text-[#64748B]">{lead.assigned_name ?? <span className="text-[#94A3B8]">Unassigned</span>}</td>
+                        <td>
+                          <span className={`text-[12px] font-semibold ${isOld ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
                             {lead.days_in_stage}d{isOld && ' ⚠'}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-xs text-[#94A3B8]">
+                        <td className="text-[12px] text-[#94A3B8]">
                           {new Date(lead.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                          {hasFU && <span className="ml-1 text-red-500">●</span>}
+                          {hasFU && <span className="ml-1 text-[#EF4444]">●</span>}
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          <Link href={`/admin/leads/${lead.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
-                            View
+                        <td className="text-end">
+                          <Link href={`/admin/leads/${lead.id}`} className="text-[12px] font-semibold text-[#FF8A1F] hover:text-[#e87c18] transition-colors">
+                            View →
                           </Link>
                         </td>
                       </tr>
@@ -313,8 +297,8 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
 
       {/* Legend */}
       <div className="mt-3 flex items-center gap-4 text-[11px] text-[#94A3B8]">
-        <span><span className="text-red-500">⚠</span> Stage &gt;7 days</span>
-        <span><span className="text-red-500">●</span> Follow-up overdue</span>
+        <span><span className="text-[#EF4444]">⚠</span> Stage &gt;7 days</span>
+        <span><span className="text-[#EF4444]">●</span> Follow-up overdue</span>
       </div>
     </div>
   )

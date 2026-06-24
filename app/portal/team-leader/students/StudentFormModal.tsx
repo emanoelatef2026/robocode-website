@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react'
 import { createStudentModal, updateStudentModal, deleteStudentAction } from '@/modules/students/modal-actions'
@@ -321,7 +321,7 @@ export default function StudentFormModal({
 
         {/* Server error */}
         {state && !state.success && (
-          <div className="mx-6 mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mx-6 mt-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
             {state.error.message}
           </div>
         )}
@@ -340,7 +340,7 @@ export default function StudentFormModal({
           {!singleBranch && !isEdit && (
             <div>
               <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                Branch <span className="text-red-500">*</span>
+                Branch <span className="text-[#EF4444]">*</span>
               </label>
               <select name="branch_id" required
                 className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
@@ -358,7 +358,7 @@ export default function StudentFormModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                  First name <span className="text-red-500">*</span>
+                  First name <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
                   name="first_name"
@@ -369,7 +369,7 @@ export default function StudentFormModal({
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                  Last name <span className="text-red-500">*</span>
+                  Last name <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
                   name="last_name"
@@ -384,7 +384,7 @@ export default function StudentFormModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                  Age <span className="text-red-500">*</span>
+                  Age <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
                   name="age"
@@ -397,14 +397,14 @@ export default function StudentFormModal({
                   onChange={e => onAgeChange(e.target.value)}
                   placeholder="e.g. 10"
                   className={`w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none
-                    ${ageErr ? 'border-red-400 bg-red-50' : 'border-[#E2E8F0] focus:border-[#FF8A1F]'}`}
+                    ${ageErr ? 'border-[#F87171] bg-[#FEE2E2]' : 'border-[#E2E8F0] focus:border-[#FF8A1F]'}`}
                 />
-                {ageErr && <p className="mt-0.5 text-[11px] text-red-600">{ageErr}</p>}
-                {ageWarn && !ageErr && <p className="mt-0.5 text-[11px] text-amber-600">{ageWarn}</p>}
+                {ageErr && <p className="mt-0.5 text-[11px] text-[#EF4444]">{ageErr}</p>}
+                {ageWarn && !ageErr && <p className="mt-0.5 text-[11px] text-[#F59E0B]">{ageWarn}</p>}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                  Student phone <span className="text-red-500">*</span>
+                  Student phone <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
                   name="phone"
@@ -448,7 +448,7 @@ export default function StudentFormModal({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                    Email <span className="text-red-500">*</span>
+                    Email <span className="text-[#EF4444]">*</span>
                   </label>
                   <input
                     name="email"
@@ -459,7 +459,7 @@ export default function StudentFormModal({
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                    Password <span className="text-red-500">*</span>
+                    Password <span className="text-[#EF4444]">*</span>
                   </label>
                   <input
                     name="password"
@@ -554,9 +554,9 @@ export default function StudentFormModal({
                     placeholder="Leave blank to keep current"
                     autoComplete="new-password"
                     className={`w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none
-                      ${pwErr ? 'border-red-400 bg-red-50' : 'border-[#E2E8F0] focus:border-[#FF8A1F]'}`}
+                      ${pwErr ? 'border-[#F87171] bg-[#FEE2E2]' : 'border-[#E2E8F0] focus:border-[#FF8A1F]'}`}
                   />
-                  {pwErr && <p className="mt-0.5 text-[11px] text-red-600">{pwErr}</p>}
+                  {pwErr && <p className="mt-0.5 text-[11px] text-[#EF4444]">{pwErr}</p>}
                 </div>
               </div>
             </fieldset>
@@ -566,7 +566,7 @@ export default function StudentFormModal({
           <fieldset className="space-y-3 rounded-xl border border-[#E2E8F0] p-4">
             <div className="flex items-center justify-between">
               <legend className="px-1 text-xs font-semibold text-[#64748B] uppercase tracking-wide">
-                Parent Contacts <span className="text-red-500">*</span>
+                Parent Contacts <span className="text-[#EF4444]">*</span>
               </legend>
               <button
                 type="button"
@@ -608,7 +608,7 @@ export default function StudentFormModal({
                       <button
                         type="button"
                         onClick={() => removeContact(c._key)}
-                        className="rounded p-0.5 text-red-400 hover:bg-red-50 hover:text-red-600"
+                        className="rounded p-0.5 text-[#F87171] hover:bg-[#FEE2E2] hover:text-[#EF4444]"
                         aria-label="Remove contact"
                       >
                         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -623,7 +623,7 @@ export default function StudentFormModal({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="mb-0.5 block text-xs text-[#64748B]">
-                      Name <span className="text-red-500">*</span>
+                      Name <span className="text-[#EF4444]">*</span>
                     </label>
                     <input
                       value={c.name}
@@ -650,7 +650,7 @@ export default function StudentFormModal({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="mb-0.5 block text-xs text-[#64748B]">
-                      Phone 1 <span className="text-red-500">*</span>
+                      Phone 1 <span className="text-[#EF4444]">*</span>
                     </label>
                     <input
                       value={c.phone1}
@@ -694,7 +694,7 @@ export default function StudentFormModal({
                         onChange={e => updateContact(c._key, 'email', e.target.value)}
                         placeholder="parent@email.com"
                         type="email"
-                        className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full ds-card px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
                       />
                     </div>
                     <div>
@@ -704,7 +704,7 @@ export default function StudentFormModal({
                         onChange={e => updateContact(c._key, 'password', e.target.value)}
                         placeholder="Min 6 chars"
                         type="password"
-                        className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full ds-card px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
                       />
                     </div>
                   </div>
@@ -739,13 +739,13 @@ export default function StudentFormModal({
                       <div
                         key={g.group_id}
                         className={`flex items-start justify-between gap-3 rounded-lg border p-3
-                          ${isFull ? 'border-amber-200 bg-amber-50' : 'border-[#E2E8F0] bg-[#F8FAFC]'}`}
+                          ${isFull ? 'border-[#FDE68A] bg-[#FFFBEB]' : 'border-[#E2E8F0] bg-[#F8FAFC]'}`}
                       >
                         <div className="min-w-0 flex-1 space-y-0.5">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <p className="text-[13px] font-semibold text-[#0B1F3A]">{g.group_name}</p>
                             {isFull && (
-                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">FULL</span>
+                              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">FULL</span>
                             )}
                           </div>
                           <p className="text-[11px] text-[#64748B]">
@@ -761,7 +761,7 @@ export default function StudentFormModal({
                         <button
                           type="button"
                           onClick={() => removeGroupLink(g.group_id)}
-                          className="shrink-0 rounded p-0.5 text-[#94A3B8] hover:bg-red-50 hover:text-red-500"
+                          className="shrink-0 rounded p-0.5 text-[#94A3B8] hover:bg-[#FEE2E2] hover:text-[#EF4444]"
                           aria-label="Remove group"
                         >
                           <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -775,7 +775,7 @@ export default function StudentFormModal({
               )}
 
               {sameCourseWarning && (
-                <p className="text-[11px] text-amber-600">
+                <p className="text-[11px] text-[#F59E0B]">
                   Warning: multiple selected groups share the same course.
                 </p>
               )}
@@ -812,7 +812,7 @@ export default function StudentFormModal({
                 </div>
 
                 {showGroupPicker && pickerResults.length > 0 && (
-                  <div className="absolute z-20 max-h-60 w-full overflow-y-auto rounded-xl border border-[#E2E8F0] bg-white shadow-xl">
+                  <div className="absolute z-20 max-h-60 w-full overflow-y-auto ds-card shadow-xl">
                     {pickerResults.map(g => {
                       const isFull = g.capacity != null && g.student_count >= g.capacity
                       const sessionStr = g.day_of_week
@@ -830,7 +830,7 @@ export default function StudentFormModal({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <p className="text-[13px] font-semibold text-[#0B1F3A]">{g.group_name}</p>
                             {isFull && (
-                              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">FULL</span>
+                              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">FULL</span>
                             )}
                           </div>
                           <p className="text-[11px] text-[#64748B]">
@@ -849,7 +849,7 @@ export default function StudentFormModal({
                 )}
 
                 {showGroupPicker && groupPickerQ && pickerResults.length === 0 && (
-                  <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm text-[#94A3B8]">
+                  <div className="ds-card px-4 py-3 text-sm text-[#94A3B8]">
                     No groups match your search.
                   </div>
                 )}
@@ -868,15 +868,15 @@ export default function StudentFormModal({
               {isEdit && isTL && onDelete && (
                 deleteConfirm ? (
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm text-red-600">
+                    <p className="text-sm text-[#EF4444]">
                       Delete <span className="font-semibold">{student?.student_name}</span>?
                     </p>
-                    {deleteErr && <p className="w-full text-xs text-red-500">{deleteErr}</p>}
+                    {deleteErr && <p className="w-full text-xs text-[#EF4444]">{deleteErr}</p>}
                     <button
                       type="button"
                       onClick={handleConfirmDelete}
                       disabled={deleteLoading}
-                      className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                      className="rounded-lg bg-[#DC2626] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#B91C1C] disabled:opacity-60"
                     >
                       {deleteLoading ? 'Deleting…' : 'Confirm'}
                     </button>
@@ -892,7 +892,7 @@ export default function StudentFormModal({
                   <button
                     type="button"
                     onClick={() => setDeleteConfirm(true)}
-                    className="text-sm font-medium text-red-500 hover:text-red-700"
+                    className="text-sm font-medium text-[#EF4444] hover:text-[#DC2626]"
                   >
                     Delete Student
                   </button>

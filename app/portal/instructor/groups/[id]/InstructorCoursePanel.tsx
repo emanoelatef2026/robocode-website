@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import type { Course } from '@/modules/courses/types'
@@ -61,7 +61,7 @@ export default function InstructorCoursePanel({ course }: Props) {
     hasResources
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white">
+    <div className="ds-card">
       {/* Header — always visible */}
       <button
         type="button"

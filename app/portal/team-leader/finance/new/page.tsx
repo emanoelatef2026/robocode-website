@@ -1,4 +1,4 @@
-import { requirePermission }   from '@/modules/rbac/guards'
+﻿import { requirePermission }   from '@/modules/rbac/guards'
 import { createServiceClient } from '@/lib/supabase/service'
 import { listGroups }          from '@/modules/groups/queries'
 import NewFinanceAccountForm   from '@/app/admin/finance/new/NewFinanceAccountForm'
@@ -11,7 +11,7 @@ export default async function TLNewFinanceAccountPage() {
   if (!branchIds.length) {
     return (
       <div className="mx-auto max-w-2xl space-y-5">
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+        <div className="ds-card px-6 py-12 text-center">
           <p className="text-sm font-medium text-[#0B1F3A]">No branch assigned</p>
           <p className="mt-1 text-xs text-[#94A3B8]">Contact your administrator to assign a branch to your account.</p>
         </div>

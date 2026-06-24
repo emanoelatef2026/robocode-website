@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import {
   getSessionsStartingSoon,
   getOverdueCollections,
@@ -38,13 +38,13 @@ function SessionCard({ session }: { session: SessionStartingSoon }) {
           <p className="text-[13px] font-medium text-[#0B1F3A] leading-snug">{session.group_name}</p>
           <p className="mt-0.5 text-[11px] text-[#64748B]">
             {session.course_title && <span>{session.course_title} · </span>}
-            {session.instructor_name ?? <span className="text-amber-600">No instructor</span>}
+            {session.instructor_name ?? <span className="text-[#F59E0B]">No instructor</span>}
           </p>
         </>
       }
       right={
         <div className="text-right">
-          <p className={`text-[13px] font-bold ${urgent ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+          <p className={`text-[13px] font-bold ${urgent ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
             {session.starts_in_min <= 0 ? 'Now' : `${session.starts_in_min}m`}
           </p>
           <p className="text-[10px] text-[#94A3B8]">{fmtTime(session.scheduled_at)}</p>
@@ -64,7 +64,7 @@ function SessionCard({ session }: { session: SessionStartingSoon }) {
               href={`https://wa.me/${session.instructor_phone.replace(/\D/g, '')}${waMsg ? `?text=${waMsg}` : ''}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-700 hover:bg-emerald-100"
+              className="rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] px-2.5 py-1 text-[10px] font-semibold text-[#15803D] hover:bg-[#E7F8EE]"
             >
               WA
             </a>
@@ -90,12 +90,12 @@ function CollectRow({ item }: { item: OverdueCollectionItem }) {
           </Link>
           <p className="mt-0.5 text-[11px] text-[#64748B]">
             {item.group_name ?? 'No group'}
-            {item.days_overdue > 0 && <span className={`ml-1.5 font-medium ${critical ? 'text-red-600' : 'text-amber-600'}`}>{item.days_overdue}d overdue</span>}
+            {item.days_overdue > 0 && <span className={`ml-1.5 font-medium ${critical ? 'text-[#EF4444]' : 'text-[#F59E0B]'}`}>{item.days_overdue}d overdue</span>}
           </p>
         </>
       }
       right={
-        <p className={`text-[13px] font-bold ${critical ? 'text-red-600' : 'text-amber-700'}`}>
+        <p className={`text-[13px] font-bold ${critical ? 'text-[#EF4444]' : 'text-[#B45309]'}`}>
           {fmtEGP(item.remaining_amount)}
         </p>
       }
@@ -118,9 +118,9 @@ function RenewalRow({ item }: { item: RenewalItem }) {
     : item.urgency === 'critical' ? '1 left'
     : '2 left'
 
-  const urgencyCls = item.urgency === 'exhausted' ? 'bg-red-100 text-red-700'
+  const urgencyCls = item.urgency === 'exhausted' ? 'bg-[#FEE2E2] text-[#DC2626]'
     : item.urgency === 'critical' ? 'bg-orange-100 text-orange-700'
-    : 'bg-amber-100 text-amber-700'
+    : 'bg-[#FFFBEB] text-[#B45309]'
 
   return (
     <DashRow
@@ -169,9 +169,9 @@ const ALERT_TYPE_LABEL: Record<string, string> = {
 }
 
 const SEVERITY_CLS: Record<string, string> = {
-  critical: 'bg-red-100 text-red-700',
-  warning:  'bg-amber-100 text-amber-700',
-  info:     'bg-blue-100 text-blue-700',
+  critical: 'bg-[#FEE2E2] text-[#DC2626]',
+  warning:  'bg-[#FFFBEB] text-[#B45309]',
+  info:     'bg-[#EFF6FF] text-[#1D4ED8]',
 }
 
 function AlertRow({ alert }: { alert: MissingDataAlert }) {
@@ -219,9 +219,9 @@ export default async function TodayActionCenter({ branchIds }: Props) {
 
   if (!totalAlerts && !sessions.length && !overdue.length && !renewals.length && !missingData.length) {
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-center">
-        <p className="text-[15px] font-semibold text-emerald-700">All clear today! 🎉</p>
-        <p className="mt-0.5 text-[12px] text-emerald-600">No urgent actions required right now.</p>
+      <div className="rounded-2xl border border-[#A7F3D0] bg-[#E7F8EE] px-5 py-4 text-center">
+        <p className="text-[15px] font-semibold text-[#15803D]">All clear today! 🎉</p>
+        <p className="mt-0.5 text-[12px] text-[#10B981]">No urgent actions required right now.</p>
       </div>
     )
   }
@@ -255,7 +255,7 @@ export default async function TodayActionCenter({ branchIds }: Props) {
         <DashCard
           title="💰 Overdue Collections"
           count={overdue.length}
-          accent={overdue.length > 0 ? 'border-red-200' : 'border-[#E2E8F0]'}
+          accent={overdue.length > 0 ? 'border-[#FECACA]' : 'border-[#E2E8F0]'}
           action={overdue.length > 0 ? (
             <Link href="/portal/team-leader/finance" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
               View all →
@@ -276,7 +276,7 @@ export default async function TodayActionCenter({ branchIds }: Props) {
         <DashCard
           title="🔄 Renewals Needed"
           count={renewals.length}
-          accent={renewals.length > 0 ? 'border-amber-200' : 'border-[#E2E8F0]'}
+          accent={renewals.length > 0 ? 'border-[#FDE68A]' : 'border-[#E2E8F0]'}
           action={renewals.length > 0 ? (
             <Link href="/portal/team-leader/students?filter=expiring" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
               View all →
@@ -293,7 +293,7 @@ export default async function TodayActionCenter({ branchIds }: Props) {
         <DashCard
           title="⚠️ Operational Gaps"
           count={missingData.length}
-          accent={criticalMissing.length > 0 ? 'border-red-200' : missingData.length > 0 ? 'border-amber-200' : 'border-[#E2E8F0]'}
+          accent={criticalMissing.length > 0 ? 'border-[#FECACA]' : missingData.length > 0 ? 'border-[#FDE68A]' : 'border-[#E2E8F0]'}
         >
           {missingData.length === 0 ? (
             <DashCardEmpty text="All operational data is complete ✅" />

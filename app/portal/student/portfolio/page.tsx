@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { getOwnPortfolioDetail } from '@/modules/portfolio/queries'
 import { PROJECT_STATUS_CONFIG, BADGE_EMOJIS } from '@/modules/portfolio/types'
 import ToggleUploadPanel from './ToggleUploadPanel'
@@ -16,7 +16,7 @@ export default async function StudentPortfolioPage() {
     return (
       <div className="mx-auto max-w-3xl space-y-4">
         <h1 className="text-base font-bold text-[#0B1F3A]">My Portfolio</h1>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 text-center">
+        <div className="ds-card p-6 text-center">
           <p className="text-sm text-[#94A3B8]">No student record found. Contact your administrator.</p>
         </div>
       </div>
@@ -43,11 +43,11 @@ export default async function StudentPortfolioPage() {
       <div className="grid grid-cols-4 gap-2">
         {[
           { label: 'Uploaded',  value: activeProjects.length, color: 'text-[#0B1F3A]' },
-          { label: 'Approved',  value: approved,              color: 'text-green-600'  },
-          { label: 'Pending',   value: pending,               color: 'text-amber-600'  },
+          { label: 'Approved',  value: approved,              color: 'text-[#10B981]'  },
+          { label: 'Pending',   value: pending,               color: 'text-[#F59E0B]'  },
           { label: 'Avg Score', value: avgScore != null ? `${avgScore}` : '—', color: 'text-[#FF8A1F]' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-3 text-center">
+          <div key={label} className="ds-card p-3 text-center">
             <p className={`text-xl font-bold leading-none ${color}`}>{value}</p>
             <p className="mt-1 text-[10px] text-[#94A3B8]">{label}</p>
           </div>
@@ -56,7 +56,7 @@ export default async function StudentPortfolioPage() {
 
       {/* Badges */}
       {badges.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5">
+        <div className="ds-card p-3.5">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">My Badges</p>
           <div className="flex flex-wrap gap-2">
             {badges.map((b) => (
@@ -84,7 +84,7 @@ export default async function StudentPortfolioPage() {
               ? (PROJECT_STATUS_CONFIG[p.status] ?? PROJECT_STATUS_CONFIG.pending_review)
               : PROJECT_STATUS_CONFIG.pending_review
             return (
-              <div key={p.id} className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+              <div key={p.id} className="ds-card overflow-hidden">
                 {p.thumbnail_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.thumbnail_url} alt={p.title} className="h-32 w-full object-cover" />
@@ -108,7 +108,7 @@ export default async function StudentPortfolioPage() {
                       </span>
                     )}
                     {p.final_score != null && (
-                      <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                      <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-medium text-[#15803D]">
                         Score: {p.final_score}
                       </span>
                     )}
@@ -144,7 +144,7 @@ export default async function StudentPortfolioPage() {
                         href={p.video_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-red-500 hover:underline"
+                        className="flex items-center gap-1 text-xs text-[#EF4444] hover:underline"
                       >
                         ▶ Demo
                       </a>

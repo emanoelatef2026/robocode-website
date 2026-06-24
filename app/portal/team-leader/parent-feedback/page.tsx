@@ -1,4 +1,4 @@
-import { requirePortalRole }          from '@/modules/rbac/guards'
+﻿import { requirePortalRole }          from '@/modules/rbac/guards'
 import { getParentFeedbackAnalytics } from '@/modules/parent-feedback/queries'
 import {
   getTLMessages,
@@ -37,9 +37,9 @@ function MetricCard({
   label: string; value: number; unit?: string; description?: string; color?: string
 }) {
   const pct    = unit === '%' ? value : null
-  const barClr = pct != null ? (pct >= 75 ? 'bg-green-500' : pct >= 50 ? 'bg-yellow-500' : 'bg-red-500') : ''
+  const barClr = pct != null ? (pct >= 75 ? 'bg-[#10B981]' : pct >= 50 ? 'bg-yellow-500' : 'bg-[#EF4444]') : ''
   return (
-    <div className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4">
+    <div className="min-w-0 ds-card px-2 py-1.5 md:p-4">
       <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">{label}</p>
       <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-2xl ${color}`}>
         {unit === '★'
@@ -117,7 +117,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
       {/* Header */}
       <div className="flex items-center justify-end gap-3">
         {needsReplyCount > 0 && (
-          <span className="flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-[12px] font-semibold text-red-600">
+          <span className="flex items-center gap-1.5 rounded-full border border-[#FECACA] bg-[#FEE2E2] px-3 py-1.5 text-[12px] font-semibold text-[#EF4444]">
             ⚠ {needsReplyCount} Needs Reply (48h+)
           </span>
         )}
@@ -127,27 +127,27 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
       <div className="grid grid-cols-2 gap-1.5 md:gap-4 sm:grid-cols-4">
         <Link
           href={buildFilterHref({ status: 'submitted' })}
-          className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1]"
+          className="min-w-0 ds-card px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1]"
         >
           <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Open Messages</p>
           <p className="mt-0.5 truncate text-[13px] font-bold leading-none text-yellow-600 md:text-2xl">{counts.open}</p>
         </Link>
         <Link
           href={buildFilterHref({ status: 'resolved' })}
-          className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1]"
+          className="min-w-0 ds-card px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1]"
         >
           <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Resolved Messages</p>
-          <p className="mt-0.5 truncate text-[13px] font-bold leading-none text-green-600 md:text-2xl">{counts.resolved}</p>
+          <p className="mt-0.5 truncate text-[13px] font-bold leading-none text-[#10B981] md:text-2xl">{counts.resolved}</p>
         </Link>
-        <div className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4">
+        <div className="min-w-0 ds-card px-2 py-1.5 md:p-4">
           <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Avg. Satisfaction</p>
           <p className="mt-0.5 truncate text-[13px] font-bold leading-none text-[#FF8A1F] md:text-2xl">
             {analytics.aggregate.avg_rating > 0 ? `${analytics.aggregate.avg_rating.toFixed(1)}★` : '—'}
           </p>
         </div>
-        <div className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-4">
+        <div className="min-w-0 ds-card px-2 py-1.5 md:p-4">
           <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Would Recommend</p>
-          <p className="mt-0.5 truncate text-[13px] font-bold leading-none text-green-600 md:text-2xl">
+          <p className="mt-0.5 truncate text-[13px] font-bold leading-none text-[#10B981] md:text-2xl">
             {analytics.aggregate.total_responses > 0 ? `${analytics.aggregate.recommend_pct}%` : '—'}
           </p>
         </div>
@@ -186,7 +186,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
       {activeTab === 'satisfaction' && (
         <div className="space-y-6">
           {analytics.aggregate.total_responses === 0 ? (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-16 text-center">
+            <div className="ds-card px-6 py-16 text-center">
               <p className="text-sm text-[#64748B]">No milestone feedback collected yet.</p>
               <p className="mt-1 text-xs text-[#94A3B8]">Feedback is requested after every 6 completed sessions.</p>
             </div>
@@ -194,17 +194,17 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <MetricCard label="Overall Rating"            value={analytics.aggregate.avg_rating}          unit="★" description="Average across all submissions"           color="text-[#FF8A1F]" />
-                <MetricCard label="Would Recommend"           value={analytics.aggregate.recommend_pct}                description="Would recommend Robocode to others"      color="text-green-600" />
+                <MetricCard label="Would Recommend"           value={analytics.aggregate.recommend_pct}                description="Would recommend Robocode to others"      color="text-[#10B981]" />
                 <MetricCard label="Communication Satisfaction" value={analytics.aggregate.communication_pct}            description="Satisfied with follow-up & communication" />
                 <MetricCard label="Skill Growth Observed"     value={analytics.aggregate.skill_growth_pct}             description="Noticed improvement in child's skills"    />
                 <MetricCard label="Excitement to Attend"      value={analytics.aggregate.excitement_pct}               description="Child is excited to come to class"        />
-                <div className="flex flex-col items-center justify-center rounded-xl border border-[#E2E8F0] bg-white p-5">
+                <div className="flex flex-col items-center justify-center ds-card p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Total Responses</p>
                   <p className="mt-2 text-4xl font-bold text-[#0B1F3A]">{analytics.aggregate.total_responses}</p>
                 </div>
               </div>
 
-              <div className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
+              <div className="overflow-hidden ds-card">
                 <div className="border-b border-[#F1F5F9] px-4 py-3">
                   <p className="text-[13px] font-semibold text-[#0B1F3A]">All Responses</p>
                 </div>
@@ -232,7 +232,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
                           { label: 'Recommend', v: r.q4_yes },
                         ].map(({ label, v }) => (
                           <span key={label} className="flex flex-col items-center gap-0.5">
-                            <span className={`font-semibold ${v ? 'text-green-600' : 'text-red-500'}`}>{v ? '✓' : '✗'}</span>
+                            <span className={`font-semibold ${v ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>{v ? '✓' : '✗'}</span>
                             <span className="text-[#94A3B8]">{label}</span>
                           </span>
                         ))}
@@ -244,7 +244,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
                 {/* Desktop table */}
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full text-[13px]">
-                    <thead>
+                    <thead className="ds-table-head">
                       <tr className="border-b border-[#F1F5F9] text-left">
                         <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student</th>
                         <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Milestone</th>
@@ -267,7 +267,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
                           <td className="px-5 py-3"><StarDisplay rating={r.rating} /></td>
                           {[r.q1_yes, r.q2_yes, r.q3_yes, r.q4_yes].map((v, i) => (
                             <td key={i} className="px-4 py-3 text-center">
-                              <span className={`text-[13px] font-semibold ${v ? 'text-green-600' : 'text-red-500'}`}>{v ? 'Yes' : 'No'}</span>
+                              <span className={`text-[13px] font-semibold ${v ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>{v ? 'Yes' : 'No'}</span>
                             </td>
                           ))}
                           <td className="px-5 py-3 text-[#94A3B8]">
@@ -348,7 +348,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
           </div>
 
           {messages.length === 0 ? (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-16 text-center">
+            <div className="ds-card px-6 py-16 text-center">
               <p className="text-sm text-[#64748B]">No messages found.</p>
             </div>
           ) : (
@@ -356,7 +356,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
               {messages.map(msg => {
                 const statusCfg = STATUS_CONFIG[msg.status]
                 return (
-                  <div key={msg.id} className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+                  <div key={msg.id} className="ds-card p-5">
                     {/* Top row */}
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div>
@@ -376,7 +376,7 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
                       </div>
                       <div className="flex items-center gap-1.5">
                         {needsReply(msg.created_at, msg.status) && (
-                          <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">
+                          <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-bold text-[#EF4444]">
                             Needs Reply
                           </span>
                         )}

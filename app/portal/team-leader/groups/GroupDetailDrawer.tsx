@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useTransition, useCallback } from 'react'
 import {
@@ -79,18 +79,18 @@ function fmtDateTime(iso: string) {
 }
 
 function RiskBadge({ level }: { level: 'HIGH' | 'MEDIUM' | 'LOW' }) {
-  const cls = level === 'HIGH' ? 'bg-red-100 text-red-700' : level === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+  const cls = level === 'HIGH' ? 'bg-[#FEE2E2] text-[#DC2626]' : level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#E7F8EE] text-[#15803D]'
   return <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${cls}`}>{level}</span>
 }
 
 function PctBar({ value }: { value: number }) {
-  const color = value >= 75 ? 'bg-green-500' : value >= 60 ? 'bg-amber-400' : 'bg-red-500'
+  const color = value >= 75 ? 'bg-[#10B981]' : value >= 60 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'
   return (
     <div className="flex items-center gap-2">
       <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[#E2E8F0]">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, value)}%` }} />
       </div>
-      <span className={`text-[12px] font-semibold ${value >= 75 ? 'text-green-600' : value >= 60 ? 'text-amber-600' : 'text-red-600'}`}>{value}%</span>
+      <span className={`text-[12px] font-semibold ${value >= 75 ? 'text-[#10B981]' : value >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>{value}%</span>
     </div>
   )
 }
@@ -127,7 +127,7 @@ function OverviewTab({ group }: { group: GroupOperationalRow }) {
         />
       </div>
 
-      <div className="space-y-2.5 rounded-xl border border-[#E2E8F0] bg-white p-4">
+      <div className="space-y-2.5 ds-card p-4">
         <Row label="Branch"      value={group.branch_name} />
         <Row label="Course"      value={group.course_name ?? '—'} />
         <Row
@@ -153,9 +153,9 @@ function OverviewTab({ group }: { group: GroupOperationalRow }) {
               <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[#E2E8F0]">
                 <div
                   className={`h-full rounded-full transition-all ${
-                    progressPct >= 100 ? 'bg-red-400' :
-                    progressPct >= 70  ? 'bg-amber-400' :
-                    progressPct >= 10  ? 'bg-blue-400' : 'bg-[#CBD5E1]'
+                    progressPct >= 100 ? 'bg-[#EF4444]' :
+                    progressPct >= 70  ? 'bg-[#F59E0B]' :
+                    progressPct >= 10  ? 'bg-[#38BDF8]' : 'bg-[#CBD5E1]'
                   }`}
                   style={{ width: `${progressPct}%` }}
                 />
@@ -229,11 +229,11 @@ function StudentsTab({ students, loading }: { students: GroupDetailStudent[]; lo
             <p className="text-[11px] text-[#94A3B8]">Joined {fmtDate(s.joined_at)}</p>
             {/* Line 6: Attendance + sessions */}
             <p className="text-[11px]">
-              <span className={s.attendance_pct >= 75 ? 'text-green-600' : s.attendance_pct >= 60 ? 'text-amber-600' : 'text-red-500'}>
+              <span className={s.attendance_pct >= 75 ? 'text-[#10B981]' : s.attendance_pct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}>
                 {s.attendance_pct}% att.
               </span>
               <span className="text-[#94A3B8]">{' • '}</span>
-              <span className={s.sessions_remaining != null && s.sessions_remaining <= 2 ? 'text-red-500' : 'text-[#64748B]'}>
+              <span className={s.sessions_remaining != null && s.sessions_remaining <= 2 ? 'text-[#EF4444]' : 'text-[#64748B]'}>
                 {s.sessions_remaining != null ? `${s.sessions_remaining} left` : '—'}
               </span>
             </p>
@@ -253,12 +253,12 @@ const ATT_STATUSES = ['present', 'absent', 'late', 'excused', 'makeup'] as const
 type AttStatus = typeof ATT_STATUSES[number]
 
 function attStatusCls(s: AttStatus | string): string {
-  if (s === 'present') return 'bg-emerald-100 text-emerald-700'
-  if (s === 'late')    return 'bg-amber-100 text-amber-700'
-  if (s === 'absent')  return 'bg-red-100 text-red-700'
-  if (s === 'excused') return 'bg-blue-100 text-blue-700'
+  if (s === 'present') return 'bg-[#E7F8EE] text-[#15803D]'
+  if (s === 'late')    return 'bg-[#FFFBEB] text-[#B45309]'
+  if (s === 'absent')  return 'bg-[#FEE2E2] text-[#DC2626]'
+  if (s === 'excused') return 'bg-[#EFF6FF] text-[#1D4ED8]'
   if (s === 'makeup')  return 'bg-purple-100 text-purple-700'
-  return 'bg-slate-100 text-slate-500'
+  return 'bg-[#F1F5F9] text-[#64748B]'
 }
 
 // ── Record Session inline panel ───────────────────────────────────────────────
@@ -327,7 +327,7 @@ function RecordSessionPanel({
             type="datetime-local"
             value={datetime}
             onChange={e => setDatetime(e.target.value)}
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+            className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
           />
         </div>
         <div>
@@ -337,19 +337,19 @@ function RecordSessionPanel({
             value={duration}
             onChange={e => setDuration(e.target.value)}
             min={15} max={240} step={15}
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+            className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
           />
         </div>
       </div>
 
       <div>
-        <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Topic <span className="text-red-400">*</span></label>
+        <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Topic <span className="text-[#F87171]">*</span></label>
         <input
           type="text"
           value={topic}
           onChange={e => setTopic(e.target.value)}
           placeholder="e.g. CSS Selectors, Variables…"
-          className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+          className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
         />
       </div>
 
@@ -381,7 +381,7 @@ function RecordSessionPanel({
           </label>
           <div className="space-y-1.5">
             {students.map(s => (
-              <div key={s.student_id} className="flex items-center justify-between gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2">
+              <div key={s.student_id} className="flex items-center justify-between gap-2 ds-card px-3 py-2">
                 <span className="text-[12px] font-medium text-[#0B1F3A] truncate flex-1">{s.student_name}</span>
                 <div className="flex gap-1 shrink-0">
                   {ATT_STATUSES.map(st => (
@@ -406,13 +406,13 @@ function RecordSessionPanel({
       )}
 
       {error && (
-        <p className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-[11px] text-red-700">{error}</p>
+        <p className="rounded-lg bg-[#FEE2E2] border border-[#FEE2E2] px-3 py-2 text-[11px] text-[#DC2626]">{error}</p>
       )}
 
       <div className="flex gap-2 pt-1">
         <button
           onClick={onCancel}
-          className="flex-1 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition"
+          className="flex-1 ds-card px-3 py-2 text-[12px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition"
         >
           Cancel
         </button>
@@ -504,8 +504,8 @@ function AttendanceTab({
       {toast && (
         <div className={`rounded-lg border px-3 py-2 text-[11px] font-medium ${
           toast.type === 'success'
-            ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-            : 'bg-red-50 border-red-100 text-red-700'
+            ? 'bg-[#E7F8EE] border-emerald-100 text-[#15803D]'
+            : 'bg-[#FEE2E2] border-[#FEE2E2] text-[#DC2626]'
         }`}>
           {toast.msg}
         </div>
@@ -516,7 +516,7 @@ function AttendanceTab({
         <p className="text-[11px] text-[#94A3B8]">
           {sessions.length} session{sessions.length !== 1 ? 's' : ''}
           {past.length > 0 && (
-            <span className="ml-1 text-emerald-600">· {past.length} recorded</span>
+            <span className="ml-1 text-[#10B981]">· {past.length} recorded</span>
           )}
         </p>
         <div className="flex gap-2">
@@ -542,7 +542,7 @@ function AttendanceTab({
       </div>
 
       {rebuildMsg && (
-        <p className="rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2 text-[11px] text-emerald-700">
+        <p className="rounded-lg bg-[#E7F8EE] border border-emerald-100 px-3 py-2 text-[11px] text-[#15803D]">
           {rebuildMsg}
         </p>
       )}
@@ -560,7 +560,7 @@ function AttendanceTab({
       {upcoming.length > 0 && (
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Upcoming</p>
-          <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0] bg-white">
+          <div className="divide-y divide-[#F1F5F9] ds-card">
             {upcoming.slice(0, 5).map(s => (
               <SessionRow
                 key={s.id}
@@ -584,7 +584,7 @@ function AttendanceTab({
       {past.length > 0 && (
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Recorded Sessions</p>
-          <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0] bg-white">
+          <div className="divide-y divide-[#F1F5F9] ds-card">
             {past.map(s => (
               <SessionRow
                 key={s.id}
@@ -695,10 +695,10 @@ function SessionEditForm({
             type="datetime-local"
             value={datetime}
             onChange={e => setDatetime(e.target.value)}
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2 py-1.5 text-[11px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+            className="w-full ds-card px-2 py-1.5 text-[11px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
           />
           {datetime !== originalDatetime && (
-            <p className="mt-0.5 text-[9px] text-amber-600">
+            <p className="mt-0.5 text-[9px] text-[#F59E0B]">
               ⚠ Date change will re-evaluate package eligibility
             </p>
           )}
@@ -710,7 +710,7 @@ function SessionEditForm({
             value={duration}
             onChange={e => setDuration(e.target.value)}
             min={15} max={240} step={15}
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2 py-1.5 text-[11px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+            className="w-full ds-card px-2 py-1.5 text-[11px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
           />
         </div>
       </div>
@@ -723,7 +723,7 @@ function SessionEditForm({
           value={topic}
           onChange={e => setTopic(e.target.value)}
           placeholder="e.g. CSS Selectors, Variables…"
-          className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2 py-1.5 text-[11px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+          className="w-full ds-card px-2 py-1.5 text-[11px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
         />
       </div>
 
@@ -756,7 +756,7 @@ function SessionEditForm({
           </label>
           <div className="space-y-1">
             {students.map(s => (
-              <div key={s.student_id} className="flex items-center justify-between gap-2 rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5">
+              <div key={s.student_id} className="flex items-center justify-between gap-2 ds-card px-2.5 py-1.5">
                 <span className="text-[11px] font-medium text-[#0B1F3A] truncate flex-1 min-w-0">
                   {s.student_name}
                 </span>
@@ -783,14 +783,14 @@ function SessionEditForm({
       )}
 
       {error && (
-        <p className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-[10px] text-red-700">{error}</p>
+        <p className="rounded-lg bg-[#FEE2E2] border border-[#FEE2E2] px-3 py-2 text-[10px] text-[#DC2626]">{error}</p>
       )}
 
       <div className="flex gap-2 pt-0.5">
         <button
           onClick={onCancel}
           disabled={saving}
-          className="flex-1 rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition disabled:opacity-50"
+          className="flex-1 ds-card px-2.5 py-1.5 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition disabled:opacity-50"
         >
           Cancel
         </button>
@@ -832,8 +832,8 @@ function SessionRow({
   onEditSave:    (id: string, patch: Parameters<typeof editGroupSessionAction>[1]) => Promise<void>
 }) {
   const isPast    = new Date(session.scheduled_at) < new Date()
-  const statusCls = session.status === 'completed' ? 'bg-green-100 text-green-700' :
-                    session.status === 'scheduled'  ? 'bg-blue-100 text-blue-700'  :
+  const statusCls = session.status === 'completed' ? 'bg-[#E7F8EE] text-[#15803D]' :
+                    session.status === 'scheduled'  ? 'bg-[#EFF6FF] text-[#1D4ED8]'  :
                                                       'bg-[#F1F5F9] text-[#64748B]'
   const isConfirming = confirmId === session.id
   const isDeleting   = deletingId === session.id
@@ -856,8 +856,8 @@ function SessionRow({
             {session.delivery && (
               <span className={`text-[9px] font-medium rounded px-1.5 py-0.5 ${
                 session.delivery === 'online'
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'bg-slate-100 text-slate-500'
+                  ? 'bg-[#EFF6FF] text-[#2563EB]'
+                  : 'bg-[#F1F5F9] text-[#64748B]'
               }`}>
                 {session.delivery}
               </span>
@@ -871,12 +871,12 @@ function SessionRow({
           {session.status === 'completed' && (
             <div className="mt-1 flex items-center gap-2">
               {session.present_count > 0 && (
-                <span className="text-[10px] font-medium text-emerald-600">
+                <span className="text-[10px] font-medium text-[#10B981]">
                   ✓ {session.present_count} present
                 </span>
               )}
               {session.absent_count > 0 && (
-                <span className="text-[10px] font-medium text-red-500">
+                <span className="text-[10px] font-medium text-[#EF4444]">
                   ✗ {session.absent_count} absent
                 </span>
               )}
@@ -905,7 +905,7 @@ function SessionRow({
               </button>
               <button
                 onClick={() => onConfirmOpen(session.id)}
-                className="text-[10px] text-red-400 hover:text-red-600 transition"
+                className="text-[10px] text-[#F87171] hover:text-[#EF4444] transition"
               >
                 Delete
               </button>
@@ -926,8 +926,8 @@ function SessionRow({
 
       {/* Delete confirmation */}
       {isConfirming && (
-        <div className="mt-2 flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2">
-          <span className="flex-1 text-[11px] text-red-700">
+        <div className="mt-2 flex items-center gap-2 rounded-lg border border-[#FEE2E2] bg-[#FEE2E2] px-3 py-2">
+          <span className="flex-1 text-[11px] text-[#DC2626]">
             Delete session? This reverses all package consumptions.
           </span>
           <button
@@ -939,7 +939,7 @@ function SessionRow({
           <button
             onClick={() => onDelete(session.id)}
             disabled={isDeleting}
-            className="rounded bg-red-500 px-2 py-1 text-[10px] font-medium text-white hover:bg-red-600 transition disabled:opacity-50"
+            className="rounded bg-[#EF4444] px-2 py-1 text-[10px] font-medium text-white hover:bg-[#DC2626] transition disabled:opacity-50"
           >
             {isDeleting ? '…' : 'Confirm'}
           </button>
@@ -969,7 +969,7 @@ function PerformanceTab({ group }: { group: GroupOperationalRow }) {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
+      <div className="ds-card p-4 space-y-3">
         {metrics.map(m => (
           <div key={m.label} className="flex items-center justify-between">
             <span className="text-[13px] font-medium text-[#374151]">{m.label}</span>
@@ -979,12 +979,12 @@ function PerformanceTab({ group }: { group: GroupOperationalRow }) {
       </div>
 
       {flags.length > 0 && (
-        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
-          <p className="mb-2 text-[12px] font-semibold text-amber-700">Alerts</p>
+        <div className="rounded-xl border border-amber-100 bg-[#FFFBEB] p-4">
+          <p className="mb-2 text-[12px] font-semibold text-[#B45309]">Alerts</p>
           <ul className="space-y-1">
             {flags.map(f => (
-              <li key={String(f)} className="flex items-center gap-2 text-[12px] text-amber-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+              <li key={String(f)} className="flex items-center gap-2 text-[12px] text-[#B45309]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B] shrink-0" />
                 {f}
               </li>
             ))}
@@ -993,7 +993,7 @@ function PerformanceTab({ group }: { group: GroupOperationalRow }) {
       )}
 
       {flags.length === 0 && group.health_score >= 75 && (
-        <div className="rounded-xl border border-green-100 bg-green-50 px-4 py-3 text-[13px] text-green-700 font-medium">
+        <div className="rounded-xl border border-green-100 bg-[#E7F8EE] px-4 py-3 text-[13px] text-[#15803D] font-medium">
           Group is performing well ✓
         </div>
       )}
@@ -1014,7 +1014,7 @@ function ScheduleTab({ group, sessions, loading }: { group: GroupOperationalRow;
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-2.5">
+      <div className="ds-card p-4 space-y-2.5">
         <Row label="Recurring" value={schedule || '—'} />
         <Row label="Start Date" value={fmtDate(group.start_date)} />
         {group.end_date && <Row label="End Date" value={fmtDate(group.end_date)} />}
@@ -1031,7 +1031,7 @@ function ScheduleTab({ group, sessions, loading }: { group: GroupOperationalRow;
       {loading ? <LoadingState /> : upcoming.length > 0 && (
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Next Sessions</p>
-          <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0] bg-white">
+          <div className="divide-y divide-[#F1F5F9] ds-card">
             {upcoming.map(s => <ScheduleSessionRow key={s.id} session={s} />)}
           </div>
         </div>
@@ -1042,8 +1042,8 @@ function ScheduleTab({ group, sessions, loading }: { group: GroupOperationalRow;
 
 // Read-only session row used by ScheduleTab (no delete controls)
 function ScheduleSessionRow({ session }: { session: GroupDetailSession }) {
-  const statusCls = session.status === 'completed' ? 'bg-green-100 text-green-700' :
-                    session.status === 'scheduled'  ? 'bg-blue-100 text-blue-700'  :
+  const statusCls = session.status === 'completed' ? 'bg-[#E7F8EE] text-[#15803D]' :
+                    session.status === 'scheduled'  ? 'bg-[#EFF6FF] text-[#1D4ED8]'  :
                                                       'bg-[#F1F5F9] text-[#64748B]'
   return (
     <div className="flex items-center justify-between gap-3 px-4 py-3">
@@ -1135,7 +1135,7 @@ export default function GroupDetailDrawer({ group, isTL, onClose, onEdit, onArch
               <span>{group.branch_name}</span>
               {group.code && <><span>·</span><span className="font-mono">{group.code}</span></>}
               <span>·</span>
-              <span className={`capitalize font-medium ${group.status === 'active' ? 'text-green-600' : group.status === 'forming' ? 'text-blue-600' : 'text-[#94A3B8]'}`}>
+              <span className={`capitalize font-medium ${group.status === 'active' ? 'text-[#10B981]' : group.status === 'forming' ? 'text-[#2563EB]' : 'text-[#94A3B8]'}`}>
                 {group.status}
               </span>
             </div>
@@ -1204,13 +1204,13 @@ export default function GroupDetailDrawer({ group, isTL, onClose, onEdit, onArch
                   Cancel
                 </button>
                 <button onClick={handleArchive}
-                  className="rounded-lg bg-red-500 px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-red-600">
+                  className="rounded-lg bg-[#EF4444] px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-[#DC2626]">
                   Confirm
                 </button>
               </div>
             ) : (
               <button onClick={() => setArchiveConfirm(true)}
-                className="text-[12px] font-medium text-[#94A3B8] hover:text-red-500 transition">
+                className="text-[12px] font-medium text-[#94A3B8] hover:text-[#EF4444] transition">
                 Archive Group
               </button>
             )}

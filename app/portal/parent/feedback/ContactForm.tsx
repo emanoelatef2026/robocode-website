@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRef, useState, useTransition } from 'react'
 import { submitParentMessage }              from '@/modules/parent-messages/actions'
@@ -54,10 +54,10 @@ export default function ContactForm({ studentId, studentName }: Props) {
 
   if (done) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-6 py-10 text-center">
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] px-6 py-10 text-center">
         <span className="text-3xl">✓</span>
-        <p className="font-semibold text-green-700">Message sent successfully!</p>
-        <p className="text-[13px] text-green-600">The team leader will review your message and get back to you.</p>
+        <p className="font-semibold text-[#15803D]">Message sent successfully!</p>
+        <p className="text-[13px] text-[#10B981]">The team leader will review your message and get back to you.</p>
         <button
           onClick={() => setDone(false)}
           className="mt-1 text-[13px] text-[#FF8A1F] hover:underline"
@@ -74,12 +74,12 @@ export default function ContactForm({ studentId, studentName }: Props) {
       {/* Category */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-[#0B1F3A]">
-          Category <span className="text-red-500">*</span>
+          Category <span className="text-[#EF4444]">*</span>
         </label>
         <select
           value={category}
           onChange={e => setCategory(e.target.value as MessageCategory)}
-          className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none focus:ring-1 focus:ring-[#FF8A1F]/30"
+          className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none focus:ring-1 focus:ring-[#FF8A1F]/30"
         >
           {CATEGORIES.map(([key, label]) => (
             <option key={key} value={key}>{label}</option>
@@ -90,7 +90,7 @@ export default function ContactForm({ studentId, studentName }: Props) {
       {/* Message */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-[#0B1F3A]">
-          Message <span className="text-red-500">*</span>
+          Message <span className="text-[#EF4444]">*</span>
         </label>
         <textarea
           value={message}
@@ -99,7 +99,7 @@ export default function ContactForm({ studentId, studentName }: Props) {
           placeholder="Write your message here… (minimum 10 characters)"
           className="w-full resize-none rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] placeholder:text-[#CBD5E1] focus:border-[#FF8A1F] focus:outline-none focus:ring-1 focus:ring-[#FF8A1F]/30"
         />
-        <p className={`mt-1 text-right text-[11px] ${message.length < 10 && message.length > 0 ? 'text-red-500' : 'text-[#94A3B8]'}`}>
+        <p className={`mt-1 text-right text-[11px] ${message.length < 10 && message.length > 0 ? 'text-[#EF4444]' : 'text-[#94A3B8]'}`}>
           {message.trim().length} / min 10
         </p>
       </div>
@@ -113,7 +113,7 @@ export default function ContactForm({ studentId, studentName }: Props) {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition"
+            className="ds-card px-3 py-2 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition"
           >
             Choose File
           </button>
@@ -127,7 +127,7 @@ export default function ContactForm({ studentId, studentName }: Props) {
                 setFileName(null)
                 if (fileRef.current) fileRef.current.value = ''
               }}
-              className="text-[12px] text-red-500 hover:underline"
+              className="text-[12px] text-[#EF4444] hover:underline"
             >
               Remove
             </button>
@@ -143,7 +143,7 @@ export default function ContactForm({ studentId, studentName }: Props) {
       </div>
 
       {error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">{error}</p>
+        <p className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-4 py-2.5 text-sm text-[#EF4444]">{error}</p>
       )}
 
       <button

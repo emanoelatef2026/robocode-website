@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState, useRef, useCallback } from 'react'
 import { submitPortfolioProject, editPortfolioProject } from '@/modules/portfolio/student-actions'
@@ -120,11 +120,11 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
 
   if (isSuccess) {
     return (
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5 text-center">
-        <p className="font-semibold text-emerald-800">
+      <div className="rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] p-5 text-center">
+        <p className="font-semibold text-[#065F46]">
           {isEdit ? 'Project updated.' : 'Project submitted for review!'}
         </p>
-        <p className="mt-1 text-sm text-emerald-700">Your instructor will review it soon.</p>
+        <p className="mt-1 text-sm text-[#15803D]">Your instructor will review it soon.</p>
       </div>
     )
   }
@@ -138,7 +138,7 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
 
       {/* Error */}
       {state && !state.success && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {(state as any).error?.message ?? 'Something went wrong.'}
         </div>
       )}
@@ -146,7 +146,7 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
       {/* Image upload */}
       <div>
         <label className="mb-1 block text-xs font-medium text-[#64748B]">
-          Cover Image <span className="text-red-500">*</span>
+          Cover Image <span className="text-[#EF4444]">*</span>
           <span className="ml-1 font-normal text-[#94A3B8]">(JPEG/PNG/WebP, auto-compressed to ≤500 KB)</span>
         </label>
         {imageUrl ? (
@@ -156,7 +156,7 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
             <button
               type="button"
               onClick={() => { setImageUrl(''); if (fileInputRef.current) fileInputRef.current.value = '' }}
-              className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-xs text-red-600 shadow hover:bg-white"
+              className="absolute right-2 top-2 rounded-full bg-white/90 px-2 py-0.5 text-xs text-[#EF4444] shadow hover:bg-white"
             >
               Remove
             </button>
@@ -178,13 +178,13 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
           onChange={handleFile}
           disabled={imageUploading}
         />
-        {imageError && <p className="mt-1 text-xs text-red-600">{imageError}</p>}
+        {imageError && <p className="mt-1 text-xs text-[#EF4444]">{imageError}</p>}
       </div>
 
       {/* Title */}
       <div>
         <label className="mb-1 block text-xs font-medium text-[#64748B]">
-          Project Title <span className="text-red-500">*</span>
+          Project Title <span className="text-[#EF4444]">*</span>
         </label>
         <input name="title" required defaultValue={project?.title ?? ''} placeholder="e.g. My Space Invaders Game" className={cls} />
       </div>
@@ -192,7 +192,7 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
       {/* Description */}
       <div>
         <label className="mb-1 block text-xs font-medium text-[#64748B]">
-          Project Description <span className="text-red-500">*</span>
+          Project Description <span className="text-[#EF4444]">*</span>
         </label>
         <textarea name="description" required rows={3} defaultValue={project?.description ?? ''} placeholder="Describe what the project does and what you learned…" className={cls} />
       </div>
@@ -200,7 +200,7 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
       {/* Category */}
       <div>
         <label className="mb-1 block text-xs font-medium text-[#64748B]">
-          Category <span className="text-red-500">*</span>
+          Category <span className="text-[#EF4444]">*</span>
         </label>
         <select name="category" required defaultValue={project?.category ?? 'Other'} className={cls}>
           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -210,7 +210,7 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
       {/* Project link */}
       <div>
         <label className="mb-1 block text-xs font-medium text-[#64748B]">
-          Project Link <span className="text-red-500">*</span>
+          Project Link <span className="text-[#EF4444]">*</span>
           <span className="ml-1 font-normal text-[#94A3B8]">(Google Drive, GitHub, Scratch, Replit, Website…)</span>
         </label>
         <input name="project_link" type="url" required defaultValue={project?.project_url ?? ''} placeholder="https://…" className={cls} />
@@ -243,7 +243,7 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
         )}
       </div>
       {mode === 'create' && !imageUrl && (
-        <p className="text-xs text-amber-600">Please upload a cover image before submitting.</p>
+        <p className="text-xs text-[#F59E0B]">Please upload a cover image before submitting.</p>
       )}
     </form>
   )

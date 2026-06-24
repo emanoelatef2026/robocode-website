@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+﻿import { notFound } from 'next/navigation'
 import { requirePortalRole } from '@/modules/rbac/guards'
 import { getChildPortfolioDetail } from '@/modules/portfolio/queries'
 
@@ -35,7 +35,7 @@ export default async function ParentChildPortfolioPage({ params }: Props) {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
             {activeProjects.map((p) => (
-              <div key={p.id} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+              <div key={p.id} className="ds-card p-4">
                 {p.thumbnail_url && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -76,7 +76,7 @@ export default async function ParentChildPortfolioPage({ params }: Props) {
           </h2>
           <div className="space-y-3">
             {achievements.map((a) => (
-              <div key={a.id} className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4">
+              <div key={a.id} className="flex items-start gap-3 ds-card p-4">
                 {a.image_url && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={a.image_url} alt={a.title} className="h-10 w-10 rounded-lg object-cover" />

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState, useTransition } from 'react'
 import {
@@ -34,12 +34,12 @@ const PROVIDER_LABELS: Record<string, string> = {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  cancelled:             'bg-red-100 text-red-700 border-red-200',
+  cancelled:             'bg-[#FEE2E2] text-[#DC2626] border-[#FECACA]',
   cancelled_with_makeup: 'bg-orange-100 text-orange-700 border-orange-200',
   postponed:             'bg-yellow-100 text-yellow-800 border-yellow-200',
-  completed:             'bg-emerald-100 text-emerald-700 border-emerald-200',
-  ongoing:               'bg-blue-100 text-blue-700 border-blue-200',
-  scheduled:             'bg-slate-100 text-slate-600 border-slate-200',
+  completed:             'bg-[#E7F8EE] text-[#15803D] border-[#A7F3D0]',
+  ongoing:               'bg-[#EFF6FF] text-[#1D4ED8] border-blue-200',
+  scheduled:             'bg-[#F1F5F9] text-[#475569] border-slate-200',
 }
 
 // ── Section collapse state ────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ function SectionCard({ title, children, defaultOpen = true }: {
 }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+    <div className="ds-card overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -176,10 +176,10 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
       {/* ── Topic & Notes ─────────────────────────────────────────────────── */}
       <SectionCard title="Session Details">
         {detailState && !detailState.success && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{detailState.error.message}</div>
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#DC2626]">{detailState.error.message}</div>
         )}
         {detailState?.success && (
-          <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700">Saved.</div>
+          <div className="mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#15803D]">Saved.</div>
         )}
 
         <form action={detailAction} className="space-y-3">
@@ -221,7 +221,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
                     {hw.due_at && ` · Due ${new Date(hw.due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
                   </p>
                 </div>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${hw.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${hw.status === 'published' ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-yellow-100 text-yellow-700'}`}>
                   {hw.status}
                 </span>
               </div>
@@ -230,10 +230,10 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
         )}
 
         {hwState && !hwState.success && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">{hwState.error.message}</div>
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#EF4444]">{hwState.error.message}</div>
         )}
         {hwState?.success && (
-          <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-xs text-green-600">Homework created and published.</div>
+          <div className="mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#10B981]">Homework created and published.</div>
         )}
 
         {!hwOpen ? (
@@ -250,7 +250,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
             )}
 
             <div>
-              <label className="mb-1 block text-xs font-medium text-[#64748B]">Title <span className="text-red-500">*</span></label>
+              <label className="mb-1 block text-xs font-medium text-[#64748B]">Title <span className="text-[#EF4444]">*</span></label>
               <input name="title" required placeholder="e.g. Practice loops exercise" className={cls} />
             </div>
 
@@ -337,14 +337,14 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
                 <a href={r.url} target="_blank" rel="noopener noreferrer"
                   className="min-w-0 flex-1 truncate text-sm text-[#3B82F6] hover:underline">{r.title}</a>
                 <button type="button" onClick={() => handleRemoveResource(i)}
-                  className="shrink-0 text-xs text-red-400 hover:text-red-600 transition">✕</button>
+                  className="shrink-0 text-xs text-[#F87171] hover:text-[#EF4444] transition">✕</button>
               </div>
             ))}
           </div>
         )}
 
-        {resError && <p className="mb-2 text-xs text-red-600">{resError}</p>}
-        {resState && !resState.success && <p className="mb-2 text-xs text-red-600">{resState.error.message}</p>}
+        {resError && <p className="mb-2 text-xs text-[#EF4444]">{resError}</p>}
+        {resState && !resState.success && <p className="mb-2 text-xs text-[#EF4444]">{resState.error.message}</p>}
 
         <div className="space-y-2">
           <input value={newResUrl} onChange={(e) => setNewResUrl(e.target.value)}
@@ -371,11 +371,11 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
                 <div className="flex shrink-0 items-center gap-2">
                   <span className="text-[10px] text-[#94A3B8]">{PROVIDER_LABELS[rec.provider]}</span>
                   {rec.visible_to_students && (
-                    <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-[9px] font-medium text-blue-600">Students</span>
+                    <span className="rounded-full bg-[#EFF6FF] px-1.5 py-0.5 text-[9px] font-medium text-[#2563EB]">Students</span>
                   )}
                   <button type="button"
                     onClick={() => startTransition(async () => { await removeSessionRecording(rec.id, session.id, groupId) })}
-                    className="text-xs text-red-400 hover:text-red-600 transition">✕</button>
+                    className="text-xs text-[#F87171] hover:text-[#EF4444] transition">✕</button>
                 </div>
               </div>
             ))}
@@ -383,10 +383,10 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
         )}
 
         {recState && !recState.success && (
-          <p className="mb-2 text-xs text-red-600">{recState.error.message}</p>
+          <p className="mb-2 text-xs text-[#EF4444]">{recState.error.message}</p>
         )}
         {recState?.success && (
-          <p className="mb-2 text-xs text-green-600">Recording added.</p>
+          <p className="mb-2 text-xs text-[#10B981]">Recording added.</p>
         )}
 
         <form action={recAction} className="space-y-2">
@@ -410,14 +410,14 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
             <div className="mb-4">
               <p className="mb-2 text-xs font-medium text-[#64748B]">End session</p>
               <div className="mb-3 space-y-1.5">
-                <div className={`flex items-center gap-2 text-xs ${allMarked ? 'text-emerald-600' : 'text-[#64748B]'}`}>
-                  <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${allMarked ? 'bg-emerald-100' : 'bg-[#F1F5F9]'}`}>
+                <div className={`flex items-center gap-2 text-xs ${allMarked ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
+                  <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${allMarked ? 'bg-[#E7F8EE]' : 'bg-[#F1F5F9]'}`}>
                     {allMarked ? '✓' : '○'}
                   </span>
                   Attendance — {markedCount}/{session.student_count} marked
                 </div>
-                <div className={`flex items-center gap-2 text-xs ${(session.topic || session.notes) ? 'text-emerald-600' : 'text-[#64748B]'}`}>
-                  <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${(session.topic || session.notes) ? 'bg-emerald-100' : 'bg-[#F1F5F9]'}`}>
+                <div className={`flex items-center gap-2 text-xs ${(session.topic || session.notes) ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
+                  <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${(session.topic || session.notes) ? 'bg-[#E7F8EE]' : 'bg-[#F1F5F9]'}`}>
                     {(session.topic || session.notes) ? '✓' : '○'}
                   </span>
                   Notes — {(session.topic || session.notes) ? 'added' : 'required'}
@@ -425,16 +425,16 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
               </div>
 
               {endError && (
-                <div className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-700">{endError}</div>
+                <div className="mb-3 rounded-lg bg-[#FFFBEB] px-3 py-2 text-xs text-[#B45309]">{endError}</div>
               )}
 
               <button type="button" onClick={() => handleEnd(false)} disabled={isPendingEnd}
-                className="w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-60 transition">
+                className="w-full rounded-lg bg-[#059669] py-2.5 text-sm font-semibold text-white hover:bg-[#047857] disabled:opacity-60 transition">
                 {isPendingEnd ? 'Ending…' : 'End Session'}
               </button>
               {endError && (
                 <button type="button" onClick={() => handleEnd(true)} disabled={isPendingEnd}
-                  className="mt-2 w-full rounded-lg border border-[#E2E8F0] py-2 text-xs font-medium text-[#64748B] hover:border-amber-300 hover:text-amber-700 disabled:opacity-60 transition">
+                  className="mt-2 w-full rounded-lg border border-[#E2E8F0] py-2 text-xs font-medium text-[#64748B] hover:border-amber-300 hover:text-[#B45309] disabled:opacity-60 transition">
                   End anyway (skip validation)
                 </button>
               )}
@@ -458,7 +458,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
                   <input type="hidden" name="group_id"   value={groupId} />
 
                   {postponeState && !postponeState.success && (
-                    <p className="text-xs text-red-600">{postponeState.error.message}</p>
+                    <p className="text-xs text-[#EF4444]">{postponeState.error.message}</p>
                   )}
 
                   <div>
@@ -489,49 +489,49 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
             <div className="mt-2">
               {!showCancelForm ? (
                 <button type="button" onClick={() => setShowCancelForm(true)}
-                  className="w-full rounded-lg border border-red-200 py-2 text-sm text-red-600 hover:bg-red-50 transition">
+                  className="w-full rounded-lg border border-[#FECACA] py-2 text-sm text-[#EF4444] hover:bg-[#FEE2E2] transition">
                   Cancel Session
                 </button>
               ) : (
-                <form action={cancelAction} className="space-y-3 rounded-xl border border-red-200 bg-red-50 p-4">
-                  <p className="text-sm font-semibold text-red-800">Cancel this session?</p>
+                <form action={cancelAction} className="space-y-3 rounded-xl border border-[#FECACA] bg-[#FEE2E2] p-4">
+                  <p className="text-sm font-semibold text-[#991B1B]">Cancel this session?</p>
                   <input type="hidden" name="session_id" value={session.id} />
                   <input type="hidden" name="group_id"   value={groupId} />
 
                   {cancelState && !cancelState.success && (
-                    <p className="text-xs text-red-700">{cancelState.error.message}</p>
+                    <p className="text-xs text-[#DC2626]">{cancelState.error.message}</p>
                   )}
 
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-red-800">Reason <span className="text-red-500">*</span></label>
+                    <label className="mb-1 block text-xs font-medium text-[#991B1B]">Reason <span className="text-[#EF4444]">*</span></label>
                     <textarea name="reason" required rows={2}
                       placeholder="Why is this session being cancelled?"
-                      className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-200" />
+                      className="w-full rounded-lg border border-[#FECACA] bg-white px-3 py-2 text-sm outline-none focus:border-[#F87171] focus:ring-2 focus:ring-[#FECACA]" />
                   </div>
 
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="create_makeup" value="true"
                       checked={createMakeup} onChange={(e) => setCreateMakeup(e.target.checked)}
                       className="accent-[#FF8A1F]" />
-                    <span className="text-xs text-red-800">Schedule makeup session</span>
+                    <span className="text-xs text-[#991B1B]">Schedule makeup session</span>
                   </label>
 
                   {createMakeup && (
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-red-800">Makeup date</label>
+                      <label className="mb-1 block text-xs font-medium text-[#991B1B]">Makeup date</label>
                       <input name="makeup_date" type="datetime-local"
-                        className="w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm outline-none focus:border-red-400" />
-                      <p className="mt-0.5 text-[10px] text-red-600">Defaults to +7 days if left empty.</p>
+                        className="w-full rounded-lg border border-[#FECACA] bg-white px-3 py-2 text-sm outline-none focus:border-[#F87171]" />
+                      <p className="mt-0.5 text-[10px] text-[#EF4444]">Defaults to +7 days if left empty.</p>
                     </div>
                   )}
 
                   <div className="flex gap-2">
                     <button type="submit"
-                      className="flex-1 rounded-lg bg-red-600 py-2 text-sm font-medium text-white hover:bg-red-700 transition">
+                      className="flex-1 rounded-lg bg-[#DC2626] py-2 text-sm font-medium text-white hover:bg-[#B91C1C] transition">
                       {createMakeup ? 'Cancel & Schedule Makeup' : 'Confirm Cancellation'}
                     </button>
                     <button type="button" onClick={() => setShowCancelForm(false)}
-                      className="rounded-lg border border-red-200 bg-white px-3 text-sm text-red-600 hover:bg-red-50 transition">
+                      className="rounded-lg border border-[#FECACA] bg-white px-3 text-sm text-[#EF4444] hover:bg-[#FEE2E2] transition">
                       Back
                     </button>
                   </div>
@@ -544,7 +544,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
 
       {/* ── Terminal state banners ────────────────────────────────────────────── */}
       {session.status === 'completed' && (
-        <div className="rounded-lg bg-emerald-50 px-4 py-3 text-center text-sm font-medium text-emerald-700">
+        <div className="rounded-lg bg-[#E7F8EE] px-4 py-3 text-center text-sm font-medium text-[#15803D]">
           ✓ Session completed
         </div>
       )}

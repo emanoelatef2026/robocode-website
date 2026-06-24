@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -16,8 +16,8 @@ export default function CharacterLimitHint({ current, max }: CharacterLimitHintP
     <p
       className={[
         "mt-0.5 text-right text-[11px] tabular-nums transition-colors",
-        isOver    ? "text-red-500"   :
-        isWarning ? "text-amber-500" :
+        isOver    ? "text-[#EF4444]"   :
+        isWarning ? "text-[#F59E0B]" :
                     "text-[#CBD5E1]",
       ].join(" ")}
     >

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { createSchedule } from '@/modules/schedule/actions'
@@ -19,9 +19,9 @@ export default function TLNewSessionForm({ groupId, groupCourseId, branchId }: P
   )
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -34,7 +34,7 @@ export default function TLNewSessionForm({ groupId, groupCourseId, branchId }: P
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Date &amp; Time <span className="text-red-500">*</span>
+              Date &amp; Time <span className="text-[#EF4444]">*</span>
             </label>
             <input
               name="scheduled_at"
@@ -45,7 +45,7 @@ export default function TLNewSessionForm({ groupId, groupCourseId, branchId }: P
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Duration (minutes) <span className="text-red-500">*</span>
+              Duration (minutes) <span className="text-[#EF4444]">*</span>
             </label>
             <input
               name="duration_minutes"
@@ -88,7 +88,7 @@ export default function TLNewSessionForm({ groupId, groupCourseId, branchId }: P
 
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Topic <span className="text-red-500">*</span>
+            Topic <span className="text-[#EF4444]">*</span>
           </label>
           <input
             name="topic"

@@ -1,4 +1,4 @@
-import { requirePortalRole }                    from '@/modules/rbac/guards'
+﻿import { requirePortalRole }                    from '@/modules/rbac/guards'
 import { getParentChildren, getChildDashboardData, getChildEnrollmentContracts } from '@/modules/parents/parent-portal-queries'
 import { getChildSessionsProgress }             from '@/modules/parents/parent-portal-queries'
 import { getPendingFeedbackMilestone }           from '@/modules/parent-feedback/queries'
@@ -21,18 +21,18 @@ interface Props {
 function ActivityIcon({ type }: { type: string }) {
   const base = 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full'
   if (type === 'attendance_marked')
-    return <span className={`${base} bg-green-100 text-green-600`}>✓</span>
+    return <span className={`${base} bg-[#E7F8EE] text-[#10B981]`}>✓</span>
   if (type === 'homework_submitted')
-    return <span className={`${base} bg-blue-100 text-blue-600`}>📄</span>
+    return <span className={`${base} bg-[#EFF6FF] text-[#2563EB]`}>📄</span>
   if (type === 'homework_graded')
     return <span className={`${base} bg-indigo-100 text-indigo-600`}>✦</span>
   if (type === 'portfolio_uploaded')
     return <span className={`${base} bg-purple-100 text-purple-600`}>🖼</span>
   if (type === 'portfolio_approved')
-    return <span className={`${base} bg-emerald-100 text-emerald-600`}>★</span>
+    return <span className={`${base} bg-[#E7F8EE] text-[#10B981]`}>★</span>
   if (type === 'certificate_earned')
     return <span className={`${base} bg-[#FF8A1F]/15 text-[#FF8A1F]`}>🏆</span>
-  return <span className={`${base} bg-gray-100 text-gray-500`}>•</span>
+  return <span className={`${base} bg-[#F3F4F6] text-[#6B7280]`}>•</span>
 }
 
 function ProgressBar({ value, color = 'bg-[#FF8A1F]' }: { value: number; color?: string }) {
@@ -157,12 +157,12 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: 'Attendance',   value: dashboard?.attendance_pct   ?? null, suffix: '%',  href: childHref('/portal/parent/attendance'),   color: 'text-green-600'  },
-          { label: 'Assignments',  value: dashboard?.assignment_pct   ?? null, suffix: '%',  href: childHref('/portal/parent/assignments'),  color: 'text-blue-600'   },
+          { label: 'Attendance',   value: dashboard?.attendance_pct   ?? null, suffix: '%',  href: childHref('/portal/parent/attendance'),   color: 'text-[#10B981]'  },
+          { label: 'Assignments',  value: dashboard?.assignment_pct   ?? null, suffix: '%',  href: childHref('/portal/parent/assignments'),  color: 'text-[#2563EB]'   },
           { label: 'Projects',     value: dashboard?.portfolio_count  ?? 0,    suffix: '',   href: childHref('/portal/parent/portfolio'),    color: 'text-purple-600' },
           { label: 'Certificates', value: dashboard?.certificate_count ?? 0,   suffix: '',   href: childHref('/portal/parent/certificates'), color: 'text-[#FF8A1F]'  },
         ].map(({ label, value, suffix, href, color }) => (
-          <Link key={label} href={href} className="rounded-xl border border-[#E2E8F0] bg-white p-4 transition hover:border-[#CBD5E1]">
+          <Link key={label} href={href} className="ds-card p-4 transition hover:border-[#CBD5E1]">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
             {value == null ? (
               <p className="mt-1 text-sm text-[#94A3B8]">—</p>
@@ -181,26 +181,26 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
           <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Enrollment Contracts</p>
           <div className="space-y-3">
             {contracts.filter(c => c.status === 'ACTIVE').map(c => (
-              <div key={c.enrollment_id} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+              <div key={c.enrollment_id} className="ds-card p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="font-semibold text-[#0B1F3A]">{c.course_name ?? 'Course'}</p>
                     <p className="text-xs text-[#94A3B8]">{[c.group_name, c.instructor_name].filter(Boolean).join(' · ')}</p>
                     {c.contract_code && <p className="font-mono text-[10px] text-[#94A3B8]">{c.contract_code}</p>}
                   </div>
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 shrink-0">Active</span>
+                  <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D] shrink-0">Active</span>
                 </div>
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="rounded-lg bg-[#F8FAFC] p-2">
-                    <p className={`font-bold text-sm ${c.enrolled_sessions > 0 && c.remaining_sessions <= 2 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+                    <p className={`font-bold text-sm ${c.enrolled_sessions > 0 && c.remaining_sessions <= 2 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
                       {c.enrolled_sessions > 0 ? `${c.remaining_sessions}` : '∞'}
                     </p>
                     <p className="text-[#94A3B8]">Sessions Left</p>
                     {c.enrolled_sessions > 0 && <p className="text-[10px] text-[#CBD5E1]">{c.consumed_sessions}/{c.enrolled_sessions} used</p>}
                   </div>
                   <div className="rounded-lg bg-[#F8FAFC] p-2">
-                    <p className={`font-bold text-sm ${c.remaining_amount > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    <p className={`font-bold text-sm ${c.remaining_amount > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                       {c.remaining_amount > 0 ? `EGP ${fmtMoney(c.remaining_amount)}` : 'Paid ✓'}
                     </p>
                     <p className="text-[#94A3B8]">Balance</p>
@@ -214,7 +214,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                 {c.remaining_amount > 0 && c.next_due_date && (
                   <div className="mt-2 flex items-center justify-between text-xs">
                     <span className="text-[#94A3B8]">Next due</span>
-                    <span className={`font-medium ${new Date(c.next_due_date) < new Date() ? 'text-red-600' : 'text-[#64748B]'}`}>
+                    <span className={`font-medium ${new Date(c.next_due_date) < new Date() ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
                       {fmtDate(c.next_due_date)}
                     </span>
                   </div>
@@ -236,7 +236,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                         <p className="text-[11px] text-[#94A3B8]">{fmtDate(c.start_date)} → {fmtDate(c.end_date)}</p>
                       </div>
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
-                        ${c.status === 'COMPLETED' ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700'}`}>
+                        ${c.status === 'COMPLETED' ? 'bg-[#F1F5F9] text-[#475569]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
                         {c.status}
                       </span>
                     </div>
@@ -254,15 +254,15 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
         const activeContract = contracts.find(c => c.status === 'ACTIVE')
         if (activeContract) {
           if (activeContract.enrolled_sessions > 0 && activeContract.remaining_sessions <= 2) {
-            alerts.push({ icon: '🔄', text: `Sessions running low — ${activeContract.remaining_sessions} sessions remaining. Please renew soon.`, cls: 'border-amber-200 bg-amber-50 text-amber-800' })
+            alerts.push({ icon: '🔄', text: `Sessions running low — ${activeContract.remaining_sessions} sessions remaining. Please renew soon.`, cls: 'border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]' })
           }
           if (activeContract.remaining_amount > 0 && activeContract.next_due_date && new Date(activeContract.next_due_date) < new Date()) {
-            alerts.push({ icon: '💰', text: `Payment overdue — EGP ${fmtMoney(activeContract.remaining_amount)} due since ${fmtDate(activeContract.next_due_date)}.`, cls: 'border-red-200 bg-red-50 text-red-800' })
+            alerts.push({ icon: '💰', text: `Payment overdue — EGP ${fmtMoney(activeContract.remaining_amount)} due since ${fmtDate(activeContract.next_due_date)}.`, cls: 'border-[#FECACA] bg-[#FEE2E2] text-[#991B1B]' })
           }
           if (activeContract.remaining_amount > 0 && activeContract.next_due_date && new Date(activeContract.next_due_date) >= new Date()) {
             const daysUntil = Math.ceil((new Date(activeContract.next_due_date).getTime() - Date.now()) / 86400000)
             if (daysUntil <= 7) {
-              alerts.push({ icon: '📅', text: `Payment due in ${daysUntil} day${daysUntil !== 1 ? 's' : ''} — EGP ${fmtMoney(activeContract.remaining_amount)}.`, cls: 'border-blue-200 bg-blue-50 text-blue-800' })
+              alerts.push({ icon: '📅', text: `Payment due in ${daysUntil} day${daysUntil !== 1 ? 's' : ''} — EGP ${fmtMoney(activeContract.remaining_amount)}.`, cls: 'border-blue-200 bg-[#EFF6FF] text-blue-800' })
             }
           }
         }
@@ -283,14 +283,14 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
       })()}
 
       {/* Course progress */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-[#0B1F3A]">Course Progress</p>
           <span className="text-sm font-bold text-[#0B1F3A]">{courseProgress}%</span>
         </div>
         <ProgressBar
           value={courseProgress}
-          color={courseProgress >= 75 ? 'bg-green-500' : courseProgress >= 50 ? 'bg-yellow-500' : 'bg-[#FF8A1F]'}
+          color={courseProgress >= 75 ? 'bg-[#10B981]' : courseProgress >= 50 ? 'bg-yellow-500' : 'bg-[#FF8A1F]'}
         />
         <p className="mt-2 text-[12px] text-[#94A3B8]">
           {completedS} consumed · {Math.max(0, totalS - completedS)} remaining · {totalS} enrolled sessions
@@ -300,7 +300,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
       <div className="grid gap-4 lg:grid-cols-2">
 
         {/* Upcoming class */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <div className="ds-card p-5">
           <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Upcoming Class</p>
           {!dashboard?.upcoming_class || (!dashboard.upcoming_class.day_of_week && !dashboard.upcoming_class.next_session_at) ? (
             <p className="text-sm text-[#94A3B8]">No upcoming sessions scheduled.</p>
@@ -356,7 +356,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
         </div>
 
         {/* Recent activity */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <div className="ds-card p-5">
           <div className="mb-3 flex items-center justify-between">
             <p className="text-sm font-semibold text-[#0B1F3A]">Recent Activity</p>
             <Link href={childHref('/portal/parent/semesters')} className="text-[12px] text-[#FF8A1F] hover:underline">

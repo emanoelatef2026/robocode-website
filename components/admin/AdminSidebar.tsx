@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -368,7 +368,7 @@ function NavContent({ onClose, role, permissions, collapsed, onToggleCollapse }:
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-red-400/60 transition-all duration-150 hover:bg-white/5 hover:text-red-400"
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-[#F87171]/60 transition-all duration-150 hover:bg-white/5 hover:text-[#F87171]"
                     >
                       {I.logout}
                       Logout

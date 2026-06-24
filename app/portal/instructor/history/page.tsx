@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getInstructorByUserId,
   listSessionHistory,
@@ -12,10 +12,10 @@ interface Props {
 }
 
 const STATUS_META: Record<string, { label: string; cls: string; dot: string }> = {
-  completed: { label: 'Completed', cls: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
-  ongoing:   { label: 'Ongoing',   cls: 'bg-blue-100 text-blue-700',       dot: 'bg-blue-500 animate-pulse' },
-  scheduled: { label: 'Scheduled', cls: 'bg-slate-100 text-slate-600',     dot: 'bg-slate-400' },
-  cancelled: { label: 'Cancelled', cls: 'bg-red-100 text-red-500',         dot: 'bg-red-400' },
+  completed: { label: 'Completed', cls: 'bg-[#E7F8EE] text-[#15803D]', dot: 'bg-[#10B981]' },
+  ongoing:   { label: 'Ongoing',   cls: 'bg-[#EFF6FF] text-[#1D4ED8]',       dot: 'bg-[#3B82F6] animate-pulse' },
+  scheduled: { label: 'Scheduled', cls: 'bg-[#F1F5F9] text-[#475569]',     dot: 'bg-[#94A3B8]' },
+  cancelled: { label: 'Cancelled', cls: 'bg-[#FEE2E2] text-[#EF4444]',         dot: 'bg-[#EF4444]' },
 }
 
 export default async function SessionHistoryPage({ searchParams }: Props) {
@@ -69,7 +69,7 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
           No sessions found
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="overflow-hidden ds-card">
 
           {/* Count header */}
           <div className="border-b border-[#E2E8F0] px-4 py-2.5">
@@ -91,7 +91,7 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
 
           <div className="divide-y divide-[#F1F5F9]">
             {sessions.map(s => {
-              const meta      = STATUS_META[s.status] ?? { label: s.status, cls: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' }
+              const meta      = STATUS_META[s.status] ?? { label: s.status, cls: 'bg-[#F1F5F9] text-[#475569]', dot: 'bg-[#94A3B8]' }
               const dateShort = new Date(s.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
               const dateFull  = new Date(s.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
@@ -133,11 +133,11 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
                       </p>
                       {s.total_students > 0 && (
                         <p className="shrink-0 text-[11px] font-medium">
-                          <span className="text-emerald-600">{s.present_count}P</span>
+                          <span className="text-[#10B981]">{s.present_count}P</span>
                           <span className="text-[#CBD5E1]"> · </span>
-                          <span className="text-red-500">{s.absent_count}A</span>
+                          <span className="text-[#EF4444]">{s.absent_count}A</span>
                           {s.late_count > 0 && (
-                            <><span className="text-[#CBD5E1]"> · </span><span className="text-amber-500">{s.late_count}L</span></>
+                            <><span className="text-[#CBD5E1]"> · </span><span className="text-[#F59E0B]">{s.late_count}L</span></>
                           )}
                           <span className="text-[#94A3B8]">/{s.total_students}</span>
                         </p>
@@ -158,10 +158,10 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
                     </span>
                     {s.total_students > 0 ? (
                       <span className="text-[12px]">
-                        <span className="text-emerald-600">{s.present_count}P</span>
+                        <span className="text-[#10B981]">{s.present_count}P</span>
                         {' · '}
-                        <span className="text-red-500">{s.absent_count}A</span>
-                        {s.late_count > 0 && <>{' · '}<span className="text-amber-500">{s.late_count}L</span></>}
+                        <span className="text-[#EF4444]">{s.absent_count}A</span>
+                        {s.late_count > 0 && <>{' · '}<span className="text-[#F59E0B]">{s.late_count}L</span></>}
                         <span className="text-[#94A3B8]"> / {s.total_students}</span>
                       </span>
                     ) : (

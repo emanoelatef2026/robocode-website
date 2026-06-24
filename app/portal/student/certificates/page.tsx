@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { getOwnCertificates } from '@/modules/certificates/queries'
 import { getCertificateEligibility } from '@/modules/student-portal/queries'
 
@@ -27,14 +27,14 @@ export default async function StudentCertificatesPage() {
 
       {/* Eligibility card */}
       {eligibility && (
-        <div className={`rounded-xl border p-4 ${eligibility.is_eligible ? 'border-emerald-200 bg-emerald-50' : 'border-[#E2E8F0] bg-white'}`}>
+        <div className={`rounded-xl border p-4 ${eligibility.is_eligible ? 'border-[#A7F3D0] bg-[#E7F8EE]' : 'border-[#E2E8F0] bg-white'}`}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Certificate Status</p>
               {eligibility.is_eligible ? (
                 <>
-                  <p className="mt-1 text-sm font-bold text-emerald-700">✓ Eligible for Certificate</p>
-                  <p className="mt-0.5 text-xs text-emerald-600">
+                  <p className="mt-1 text-sm font-bold text-[#15803D]">✓ Eligible for Certificate</p>
+                  <p className="mt-0.5 text-xs text-[#10B981]">
                     {eligibility.consumed_sessions} / {eligibility.enrolled_sessions} sessions consumed
                   </p>
                 </>
@@ -64,7 +64,7 @@ export default async function StudentCertificatesPage() {
             <div className="mt-3">
               <div className="h-2 overflow-hidden rounded-full bg-white/60">
                 <div
-                  className={`h-full rounded-full transition-all ${eligibility.is_eligible ? 'bg-emerald-500' : 'bg-[#FF8A1F]'}`}
+                  className={`h-full rounded-full transition-all ${eligibility.is_eligible ? 'bg-[#10B981]' : 'bg-[#FF8A1F]'}`}
                   style={{ width: `${Math.min(100, Math.round((eligibility.consumed_sessions / eligibility.enrolled_sessions) * 100))}%` }}
                 />
               </div>
@@ -81,7 +81,7 @@ export default async function StudentCertificatesPage() {
 
       {/* Certificate list */}
       {certificates.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-10 text-center">
+        <div className="ds-card px-5 py-10 text-center">
           <p className="text-sm text-[#64748B]">No certificates yet. Complete your sessions to become eligible.</p>
         </div>
       ) : (
@@ -90,7 +90,7 @@ export default async function StudentCertificatesPage() {
             <div
               key={c.id}
               className={`rounded-xl border bg-white p-4 ${
-                c.status === 'revoked' ? 'border-red-200 opacity-60' : 'border-[#E2E8F0]'
+                c.status === 'revoked' ? 'border-[#FECACA] opacity-60' : 'border-[#E2E8F0]'
               }`}
             >
               <div className="flex items-start justify-between gap-3">
@@ -98,7 +98,7 @@ export default async function StudentCertificatesPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-[14px] font-semibold text-[#0B1F3A] leading-tight">{c.title}</h3>
                     {c.status === 'revoked' && (
-                      <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-600">Revoked</span>
+                      <span className="shrink-0 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-medium text-[#EF4444]">Revoked</span>
                     )}
                   </div>
                   <p className="mt-0.5 text-[12px] text-[#64748B]">

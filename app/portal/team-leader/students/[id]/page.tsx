@@ -1,4 +1,4 @@
-import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
+﻿import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { createServiceClient }                  from '@/lib/supabase/service'
 import { notFound }                             from 'next/navigation'
 import Link                                     from 'next/link'
@@ -128,7 +128,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
 
       {/* ── Profile + Contact ────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <div className="ds-card p-4">
           <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Profile</h2>
           <dl className="space-y-2 text-sm">
             <div className="flex justify-between">
@@ -150,7 +150,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
           </dl>
         </div>
 
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <div className="ds-card p-4">
           <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">
             Parent Contacts ({parentContacts.length})
           </h2>
@@ -164,8 +164,8 @@ export default async function TLStudentDetailPage({ params }: Props) {
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-medium text-[#0B1F3A]">{c.name}</span>
                     <span className="text-[10px] text-[#94A3B8] capitalize">({c.relation})</span>
-                    {c.is_primary   && <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">Primary</span>}
-                    {c.is_emergency && <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-semibold text-red-600">Emergency</span>}
+                    {c.is_primary   && <span className="rounded-full bg-[#EFF6FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#1D4ED8]">Primary</span>}
+                    {c.is_emergency && <span className="rounded-full bg-[#FEE2E2] px-1.5 py-0.5 text-[10px] font-semibold text-[#EF4444]">Emergency</span>}
                   </div>
                   <dl className="space-y-1 text-sm">
                     {c.phone1 && (
@@ -200,14 +200,14 @@ export default async function TLStudentDetailPage({ params }: Props) {
         </div>
 
         {activeEnrollments.length === 0 ? (
-          <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+          <div className="ds-card px-6 py-10 text-center">
             <p className="text-sm font-medium text-[#0B1F3A]">No active contracts</p>
             <p className="mt-1 text-xs text-[#94A3B8]">Use the Enrollment Wizard to create a new contract.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {enriched.filter(e => e.status === 'ACTIVE').map(e => (
-              <div key={e.id} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+              <div key={e.id} className="ds-card p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -219,7 +219,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
                           {e.contract_code}
                         </span>
                       )}
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">ACTIVE</span>
+                      <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">ACTIVE</span>
                     </div>
                     <p className="mt-0.5 text-xs text-[#64748B]">
                       {[e.groupName, e.instructor_name_snapshot].filter(Boolean).join(' · ')}
@@ -232,8 +232,8 @@ export default async function TLStudentDetailPage({ params }: Props) {
                 <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="rounded-lg bg-[#F8FAFC] px-2 py-2">
                     <p className={`font-bold text-sm ${
-                      e.enrolled_sessions > 0 && e.remaining_sessions <= 2 ? 'text-red-600' :
-                      e.enrolled_sessions > 0 && e.remaining_sessions <= 5 ? 'text-amber-600' :
+                      e.enrolled_sessions > 0 && e.remaining_sessions <= 2 ? 'text-[#EF4444]' :
+                      e.enrolled_sessions > 0 && e.remaining_sessions <= 5 ? 'text-[#F59E0B]' :
                       'text-[#0B1F3A]'
                     }`}>
                       {e.enrolled_sessions > 0 ? `${e.remaining_sessions}/${e.enrolled_sessions}` : '∞'}
@@ -241,7 +241,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
                     <p className="text-[#94A3B8]">Sessions</p>
                   </div>
                   <div className="rounded-lg bg-[#F8FAFC] px-2 py-2">
-                    <p className={`font-bold text-sm ${e.acc?.remaining_amount > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    <p className={`font-bold text-sm ${e.acc?.remaining_amount > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                       {e.acc ? (e.acc.remaining_amount > 0 ? `EGP ${fmt(e.acc.remaining_amount)}` : 'Paid') : '—'}
                     </p>
                     <p className="text-[#94A3B8]">Balance</p>
@@ -279,9 +279,9 @@ export default async function TLStudentDetailPage({ params }: Props) {
       {enrollments.filter(e => e.status !== 'ACTIVE').length > 0 && (
         <div>
           <h2 className="mb-3 text-base font-semibold text-[#0B1F3A]">Contract History</h2>
-          <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+          <div className="ds-card overflow-hidden">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Course</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Sessions</th>
@@ -292,7 +292,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
               </thead>
               <tbody>
                 {enriched.filter(e => e.status !== 'ACTIVE').map(e => (
-                  <tr key={e.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                  <tr key={e.id} className="ds-table-row">
                     <td className="px-4 py-3">
                       <p className="font-medium text-[#0B1F3A]">{e.courseName ?? '—'}</p>
                       {e.groupName && <p className="text-[11px] text-[#94A3B8]">{e.groupName}</p>}
@@ -304,10 +304,10 @@ export default async function TLStudentDetailPage({ params }: Props) {
                     <td className="px-4 py-3 text-[#0B1F3A]">EGP {fmt(e.net_amount)}</td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
-                        ${e.status === 'COMPLETED'   ? 'bg-slate-100 text-slate-600' :
-                          e.status === 'TRANSFERRED' ? 'bg-blue-100 text-blue-600' :
-                          e.status === 'DROPPED'     ? 'bg-red-100 text-red-600' :
-                          'bg-amber-100 text-amber-700'}`}>
+                        ${e.status === 'COMPLETED'   ? 'bg-[#F1F5F9] text-[#475569]' :
+                          e.status === 'TRANSFERRED' ? 'bg-[#EFF6FF] text-[#2563EB]' :
+                          e.status === 'DROPPED'     ? 'bg-[#FEE2E2] text-[#EF4444]' :
+                          'bg-[#FFFBEB] text-[#B45309]'}`}>
                         {e.status}
                       </span>
                     </td>
@@ -324,7 +324,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
 
       {/* ── Notes ────────────────────────────────────────────────────────── */}
       {s.notes && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <div className="ds-card p-4">
           <h2 className="mb-2 text-sm font-semibold text-[#0B1F3A]">Notes</h2>
           <p className="text-sm text-[#64748B] whitespace-pre-wrap">{s.notes}</p>
         </div>

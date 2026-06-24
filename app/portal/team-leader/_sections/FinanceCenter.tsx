@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { getFinanceDailyData, getOverdueCollections } from '@/modules/tl-dashboard/dashboard-v2-queries'
 import DashCard, { DashCardEmpty, DashRow } from '../_components/DashCard'
 import WaCallButtons from '../_components/WaCallButtons'
@@ -16,8 +16,8 @@ function FinKPI({ label, value, sub, color = 'text-[#0B1F3A]', alert = false }: 
   color?: string; alert?: boolean
 }) {
   return (
-    <div className={`rounded-2xl border bg-white p-4 ${alert ? 'border-red-200' : 'border-[#E2E8F0]'}`}>
-      <p className={`text-[11px] font-semibold uppercase tracking-wide ${alert ? 'text-red-500' : 'text-[#94A3B8]'}`}>{label}</p>
+    <div className={`rounded-2xl border bg-white p-4 ${alert ? 'border-[#FECACA]' : 'border-[#E2E8F0]'}`}>
+      <p className={`text-[11px] font-semibold uppercase tracking-wide ${alert ? 'text-[#EF4444]' : 'text-[#94A3B8]'}`}>{label}</p>
       <p className={`mt-1.5 text-[20px] font-bold leading-none ${color}`}>{value}</p>
       {sub && <p className="mt-1 text-[10px] text-[#94A3B8]">{sub}</p>}
     </div>
@@ -28,7 +28,7 @@ function FinKPI({ label, value, sub, color = 'text-[#0B1F3A]', alert = false }: 
 
 function CollectionRateGauge({ rate }: { rate: number }) {
   const color = rate >= 80 ? '#10B981' : rate >= 60 ? '#F59E0B' : '#EF4444'
-  const bg    = rate >= 80 ? 'bg-emerald-50 border-emerald-200' : rate >= 60 ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'
+  const bg    = rate >= 80 ? 'bg-[#E7F8EE] border-[#A7F3D0]' : rate >= 60 ? 'bg-[#FFFBEB] border-[#FDE68A]' : 'bg-[#FEE2E2] border-[#FECACA]'
 
   return (
     <div className={`rounded-2xl border px-5 py-4 ${bg}`}>
@@ -59,7 +59,7 @@ export default async function FinanceCenter({ branchIds }: { branchIds: string[]
         <div className="flex items-center gap-2">
           <h2 className="text-[16px] font-bold text-[#0B1F3A]">Finance Command Center</h2>
           {fin.overdue_count > 0 && (
-            <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-semibold text-red-700">
+            <span className="rounded-full bg-[#FEE2E2] px-2.5 py-0.5 text-[11px] font-semibold text-[#DC2626]">
               {fin.overdue_count} overdue
             </span>
           )}
@@ -76,7 +76,7 @@ export default async function FinanceCenter({ branchIds }: { branchIds: string[]
         <FinKPI
           label="Collected Today"
           value={fmtEGP(fin.collected_today)}
-          color={fin.collected_today > 0 ? 'text-emerald-600' : 'text-[#0B1F3A]'}
+          color={fin.collected_today > 0 ? 'text-[#10B981]' : 'text-[#0B1F3A]'}
         />
         <FinKPI
           label="This Month"
@@ -85,20 +85,20 @@ export default async function FinanceCenter({ branchIds }: { branchIds: string[]
         <FinKPI
           label="Outstanding"
           value={fmtEGP(fin.outstanding)}
-          color={fin.outstanding > 0 ? 'text-amber-600' : 'text-emerald-600'}
+          color={fin.outstanding > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]'}
         />
         <FinKPI
           label="Overdue"
           value={fmtEGP(fin.overdue_total_amount)}
           sub={`${fin.overdue_count} student${fin.overdue_count !== 1 ? 's' : ''}`}
-          color={fin.overdue_count > 0 ? 'text-red-600' : 'text-emerald-600'}
+          color={fin.overdue_count > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}
           alert={fin.overdue_count > 0}
         />
         <FinKPI
           label="Exhausted"
           value={String(fin.exhausted_count)}
           sub={`${fin.low_sessions_count} low (1–3)`}
-          color={fin.exhausted_count > 0 ? 'text-red-600' : 'text-[#0B1F3A]'}
+          color={fin.exhausted_count > 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}
           alert={fin.exhausted_count > 0}
         />
       </div>
@@ -109,7 +109,7 @@ export default async function FinanceCenter({ branchIds }: { branchIds: string[]
           <DashCard
             title="Top Overdue Accounts"
             count={fin.overdue_count}
-            accent="border-red-200"
+            accent="border-[#FECACA]"
             action={
               <Link href="/portal/team-leader/finance?filter=overdue" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
                 View all →
@@ -132,12 +132,12 @@ export default async function FinanceCenter({ branchIds }: { branchIds: string[]
                     </Link>
                     <p className="mt-0.5 text-[11px] text-[#64748B]">
                       {item.group_name ?? 'No group'}
-                      <span className="ml-1.5 font-medium text-red-600">{item.days_overdue}d overdue</span>
+                      <span className="ml-1.5 font-medium text-[#EF4444]">{item.days_overdue}d overdue</span>
                     </p>
                   </>
                 }
                 right={
-                  <p className="text-[13px] font-bold text-red-600">{fmtEGP(item.remaining_amount)}</p>
+                  <p className="text-[13px] font-bold text-[#EF4444]">{fmtEGP(item.remaining_amount)}</p>
                 }
                 actions={
                   <>
@@ -163,9 +163,9 @@ export default async function FinanceCenter({ branchIds }: { branchIds: string[]
 
       {/* Empty state */}
       {topOverdue.length === 0 && collectionOk && (
-        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-center">
-          <p className="text-[14px] font-semibold text-emerald-700">Finance looking healthy! 💚</p>
-          <p className="mt-0.5 text-[12px] text-emerald-600">Collection rate {fin.collection_rate}% · No overdue accounts.</p>
+        <div className="mt-4 rounded-2xl border border-[#A7F3D0] bg-[#E7F8EE] px-5 py-4 text-center">
+          <p className="text-[14px] font-semibold text-[#15803D]">Finance looking healthy! 💚</p>
+          <p className="mt-0.5 text-[12px] text-[#10B981]">Collection rate {fin.collection_rate}% · No overdue accounts.</p>
         </div>
       )}
     </section>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { enrollStudent, unenrollStudent } from '@/modules/groups/actions'
@@ -29,7 +29,7 @@ export default function TLEnrollStudentsForm({ groupId, enrolledIds, availableSt
   return (
     <div className="space-y-3">
       {state && !state.success && (
-        <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -71,7 +71,7 @@ export function UnenrollButton({ groupId, studentId, name }: UnenrollProps) {
     <button
       type="button"
       onClick={handleClick}
-      className="text-xs font-medium text-red-500 hover:text-red-700"
+      className="text-xs font-medium text-[#EF4444] hover:text-[#DC2626]"
     >
       Remove
     </button>

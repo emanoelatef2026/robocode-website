@@ -1,4 +1,4 @@
-import { listCertificates, listActiveTemplates, listCertificateTemplates } from '@/modules/certificates/queries'
+﻿import { listCertificates, listActiveTemplates, listCertificateTemplates } from '@/modules/certificates/queries'
 import { requirePermission }                      from '@/modules/rbac/guards'
 import { listCourses }                            from '@/modules/courses/queries'
 import { listSemesters }                          from '@/modules/semesters/queries'
@@ -75,7 +75,7 @@ export default async function CertificatesPage({ searchParams }: Props) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search by title, name, or code…" />
           <FilterSelect
@@ -110,7 +110,7 @@ export default async function CertificatesPage({ searchParams }: Props) {
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Title</th>
@@ -124,7 +124,7 @@ export default async function CertificatesPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {result.data.map((c) => (
-                    <tr key={c.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={c.id} className="ds-table-row">
                       <td className="px-4 py-3 font-mono text-xs text-[#0B1F3A]">{c.certificate_code}</td>
                       <td className="px-4 py-3 font-medium text-[#0B1F3A] max-w-[200px] truncate">{c.title}</td>
                       <td className="px-4 py-3">

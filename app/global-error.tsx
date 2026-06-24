@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect } from 'react'
 
@@ -15,7 +15,7 @@ export default function GlobalError({ error, reset }: Props) {
   return (
     <html>
       <body className="flex min-h-screen items-center justify-center bg-[#F4F7FB] px-4">
-        <div className="w-full max-w-sm rounded-2xl border border-gray-100 bg-white p-8 shadow-sm text-center">
+        <div className="w-full max-w-sm rounded-2xl border border-[#F1F5F9] bg-white p-8 shadow-sm text-center">
           <h1 className="text-lg font-bold text-[#0B1F3A] mb-2">Unexpected error</h1>
           <p className="text-sm text-[#64748B] mb-6">
             {error.message ?? 'Something went wrong. Please try again.'}

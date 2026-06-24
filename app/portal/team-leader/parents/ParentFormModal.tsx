@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -189,7 +189,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
           >
             {/* Error banner */}
             {state && 'error' in state && state.error && (
-              <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+              <div className="rounded-xl bg-[#FEE2E2] border border-[#FECACA] px-4 py-3 text-sm text-[#DC2626]">
                 {state.error.message}
               </div>
             )}
@@ -203,7 +203,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
               {/* Name */}
               <div>
                 <label className="block text-xs font-medium text-[#374151] mb-1">
-                  Full Name <span className="text-red-500">*</span>
+                  Full Name <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
                   value={name}
@@ -231,7 +231,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
               {/* Phone 1 */}
               <div>
                 <label className="block text-xs font-medium text-[#374151] mb-1">
-                  Phone 1 <span className="text-red-500">*</span>
+                  Phone 1 <span className="text-[#EF4444]">*</span>
                 </label>
                 <input
                   value={phone1}
@@ -312,7 +312,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                       <button
                         type="button"
                         onClick={() => removeLinkedChild(c.contact_id, c.student_id)}
-                        className="ml-2 rounded-lg p-1 text-[#94A3B8] hover:bg-red-50 hover:text-red-500"
+                        className="ml-2 rounded-lg p-1 text-[#94A3B8] hover:bg-[#FEE2E2] hover:text-[#EF4444]"
                       >
                         <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -408,7 +408,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                   <h3 className="text-xs font-semibold text-[#64748B] uppercase tracking-wide">
                     Portal Access
                   </h3>
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
+                  <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">
                     Active
                   </span>
                 </div>
@@ -435,7 +435,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                       onChange={e => setEmail(e.target.value)}
                       placeholder={hasPortal ? 'New email (leave blank to keep current)' : 'parent@email.com'}
                       type="email"
-                      className="w-full rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
+                      className="w-full ds-card px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
                     />
                   </div>
                   <div>
@@ -447,7 +447,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                       onChange={e => setPassword(e.target.value)}
                       placeholder={hasPortal ? 'Leave blank to keep current password' : 'Min. 6 characters'}
                       type="password"
-                      className="w-full rounded-xl border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
+                      className="w-full ds-card px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
                     />
                   </div>
                 </div>

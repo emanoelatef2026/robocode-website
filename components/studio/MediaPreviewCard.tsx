@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Image from "next/image";
 
@@ -44,9 +44,9 @@ export default function MediaPreviewCard({
   const status = fileSize ? sizeStatus(fileSize, type) : null;
 
   const statusConfig = {
-    ok:    { color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-200", label: "Size OK" },
-    warn:  { color: "text-amber-600",   bg: "bg-amber-50",   border: "border-amber-200",   label: "Near limit" },
-    error: { color: "text-red-600",     bg: "bg-red-50",     border: "border-red-200",     label: "Too large" },
+    ok:    { color: "text-[#10B981]", bg: "bg-[#E7F8EE]", border: "border-[#A7F3D0]", label: "Size OK" },
+    warn:  { color: "text-[#F59E0B]",   bg: "bg-[#FFFBEB]",   border: "border-[#FDE68A]",   label: "Near limit" },
+    error: { color: "text-[#EF4444]",     bg: "bg-[#FEE2E2]",     border: "border-[#FECACA]",     label: "Too large" },
   };
 
   return (
@@ -75,7 +75,7 @@ export default function MediaPreviewCard({
         {onRemove && (
           <button
             onClick={onRemove}
-            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#64748B] shadow-sm transition hover:bg-white hover:text-red-500"
+            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 text-[#64748B] shadow-sm transition hover:bg-white hover:text-[#EF4444]"
             aria-label="Remove media"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">

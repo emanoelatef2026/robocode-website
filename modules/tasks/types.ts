@@ -1,4 +1,4 @@
-// Operational Task System — types
+﻿// Operational Task System — types
 
 export type TaskType =
   | 'COLLECTION'
@@ -75,26 +75,26 @@ export interface UpdateTaskInput {
 export const TASK_TYPE_CONFIG: Record<TaskType, {
   label: string; icon: string; color: string; text: string
 }> = {
-  COLLECTION:        { label: 'Collection',        icon: '💰', color: 'bg-red-100',     text: 'text-red-700'     },
-  RENEWAL:           { label: 'Renewal',           icon: '🔄', color: 'bg-amber-100',   text: 'text-amber-700'   },
+  COLLECTION:        { label: 'Collection',        icon: '💰', color: 'bg-[#FEE2E2]',     text: 'text-[#DC2626]'     },
+  RENEWAL:           { label: 'Renewal',           icon: '🔄', color: 'bg-[#FFFBEB]',   text: 'text-[#B45309]'   },
   ATTENDANCE:        { label: 'Attendance',        icon: '⚠️', color: 'bg-orange-100',  text: 'text-orange-700'  },
   RETENTION:         { label: 'Retention',         icon: '📊', color: 'bg-purple-100',  text: 'text-purple-700'  },
-  PARENT_REPLY:      { label: 'Parent Reply',      icon: '💬', color: 'bg-blue-100',    text: 'text-blue-700'    },
+  PARENT_REPLY:      { label: 'Parent Reply',      icon: '💬', color: 'bg-[#EFF6FF]',    text: 'text-[#1D4ED8]'    },
   INSTRUCTOR_REVIEW: { label: 'Instructor Review', icon: '👨‍🏫', color: 'bg-indigo-100',  text: 'text-indigo-700'  },
-  COMPLAINT:         { label: 'Complaint',         icon: '🚨', color: 'bg-red-100',     text: 'text-red-700'     },
-  FOLLOW_UP:         { label: 'Follow Up',         icon: '📞', color: 'bg-slate-100',   text: 'text-slate-700'   },
+  COMPLAINT:         { label: 'Complaint',         icon: '🚨', color: 'bg-[#FEE2E2]',     text: 'text-[#DC2626]'     },
+  FOLLOW_UP:         { label: 'Follow Up',         icon: '📞', color: 'bg-[#F1F5F9]',   text: 'text-[#334155]'   },
 }
 
 export const TASK_SEVERITY_CONFIG: Record<TaskSeverity, { color: string; text: string }> = {
-  LOW:      { color: 'bg-slate-100',   text: 'text-slate-600'   },
-  MEDIUM:   { color: 'bg-amber-100',   text: 'text-amber-700'   },
+  LOW:      { color: 'bg-[#F1F5F9]',   text: 'text-[#475569]'   },
+  MEDIUM:   { color: 'bg-[#FFFBEB]',   text: 'text-[#B45309]'   },
   HIGH:     { color: 'bg-orange-100',  text: 'text-orange-700'  },
-  CRITICAL: { color: 'bg-red-100',     text: 'text-red-700'     },
+  CRITICAL: { color: 'bg-[#FEE2E2]',     text: 'text-[#DC2626]'     },
 }
 
 export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; color: string; text: string }> = {
-  OPEN:        { label: 'Open',        color: 'bg-blue-100',    text: 'text-blue-700'    },
-  IN_PROGRESS: { label: 'In Progress', color: 'bg-amber-100',   text: 'text-amber-700'   },
-  COMPLETED:   { label: 'Completed',   color: 'bg-emerald-100', text: 'text-emerald-700' },
-  DISMISSED:   { label: 'Dismissed',   color: 'bg-slate-100',   text: 'text-slate-500'   },
+  OPEN:        { label: 'Open',        color: 'bg-[#EFF6FF]',    text: 'text-[#1D4ED8]'    },
+  IN_PROGRESS: { label: 'In Progress', color: 'bg-[#FFFBEB]',   text: 'text-[#B45309]'   },
+  COMPLETED:   { label: 'Completed',   color: 'bg-[#E7F8EE]', text: 'text-[#15803D]' },
+  DISMISSED:   { label: 'Dismissed',   color: 'bg-[#F1F5F9]',   text: 'text-[#64748B]'   },
 }

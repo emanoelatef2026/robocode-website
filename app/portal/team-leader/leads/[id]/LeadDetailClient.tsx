@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState, useEffect } from 'react'
 import { useRouter }                            from 'next/navigation'
@@ -31,14 +31,14 @@ interface Props {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
-  NEW:            'bg-blue-100  text-blue-700',
+  NEW:            'bg-[#EFF6FF]  text-[#1D4ED8]',
   CONTACTED:      'bg-yellow-100 text-yellow-700',
   INTERESTED:     'bg-purple-100 text-purple-700',
   TRIAL_BOOKED:   'bg-indigo-100 text-indigo-700',
   TRIAL_ATTENDED: 'bg-cyan-100  text-cyan-700',
   FOLLOW_UP:      'bg-orange-100 text-orange-700',
-  CONVERTED:      'bg-green-100 text-green-700',
-  LOST:           'bg-red-100  text-red-700',
+  CONVERTED:      'bg-[#E7F8EE] text-[#15803D]',
+  LOST:           'bg-[#FEE2E2]  text-[#DC2626]',
 }
 
 const EVENT_ICONS: Record<string, string> = {
@@ -119,16 +119,16 @@ export default function LeadDetailClient({
       <div className="space-y-5 lg:col-span-2">
 
         {/* Info card */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="ds-card">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E2E8F0] px-5 py-4">
             <h2 className="font-semibold text-[#0B1F3A]">Lead Information</h2>
             <div className="flex items-center gap-2">
               {isAging && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-semibold text-red-700">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#FEE2E2] px-2.5 py-1 text-[11px] font-semibold text-[#DC2626]">
                   ⚠ Stuck {daysInStage}d
                 </span>
               )}
-              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_COLORS[lead.status] ?? 'bg-slate-100 text-slate-700'}`}>
+              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_COLORS[lead.status] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
                 {lead.status.replace(/_/g, ' ')}
               </span>
             </div>
@@ -185,7 +185,7 @@ export default function LeadDetailClient({
         </div>
 
         {/* Action tabs */}
-        <div className="rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="ds-card">
           {/* Tab bar */}
           <div className="flex overflow-x-auto border-b border-[#E2E8F0]">
             {TABS.map(t => (
@@ -211,12 +211,12 @@ export default function LeadDetailClient({
               <div className="space-y-4">
                 {/* Reopen section — only when currently LOST */}
                 {isLost && (
-                  <div className="rounded-lg border border-red-200 bg-red-50 p-4">
+                  <div className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
-                        <p className="text-sm font-semibold text-red-800">This lead is marked as Lost</p>
+                        <p className="text-sm font-semibold text-[#991B1B]">This lead is marked as Lost</p>
                         {lead.lost_reason && (
-                          <p className="mt-0.5 text-sm text-red-700">Reason: {lead.lost_reason}</p>
+                          <p className="mt-0.5 text-sm text-[#DC2626]">Reason: {lead.lost_reason}</p>
                         )}
                       </div>
                     </div>
@@ -319,7 +319,7 @@ export default function LeadDetailClient({
                 <form action={reassignAction} className="space-y-4">
                   <input type="hidden" name="id" value={lead.id} />
                   <div>
-                    <label className={labelCls}>New Owner <span className="text-red-500">*</span></label>
+                    <label className={labelCls}>New Owner <span className="text-[#EF4444]">*</span></label>
                     {teamMembers.length === 0 ? (
                       <p className="text-sm text-[#94A3B8]">No team members found for this branch.</p>
                     ) : (
@@ -348,7 +348,7 @@ export default function LeadDetailClient({
             {tab === 'convert' && (
               <div>
                 {isConverted ? (
-                  <div className="rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">
+                  <div className="rounded-lg bg-[#E7F8EE] px-4 py-3 text-sm text-[#15803D]">
                     Already converted.
                     {lead.converted_student_id && (
                       <span className="ml-1">Student ID: {lead.converted_student_id.slice(0, 8)}…</span>
@@ -365,23 +365,23 @@ export default function LeadDetailClient({
                         <legend className="px-2 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student Account</legend>
                         <div className="mt-3 grid gap-4 sm:grid-cols-2">
                           <div>
-                            <label className={labelCls}>First Name <span className="text-red-500">*</span></label>
+                            <label className={labelCls}>First Name <span className="text-[#EF4444]">*</span></label>
                             <input name="first_name" required className={inputCls} defaultValue={lead.child_name.split(' ')[0] ?? ''} />
                           </div>
                           <div>
-                            <label className={labelCls}>Last Name <span className="text-red-500">*</span></label>
+                            <label className={labelCls}>Last Name <span className="text-[#EF4444]">*</span></label>
                             <input name="last_name" required className={inputCls} defaultValue={lead.child_name.split(' ').slice(1).join(' ')} />
                           </div>
                           <div>
-                            <label className={labelCls}>Email <span className="text-red-500">*</span></label>
+                            <label className={labelCls}>Email <span className="text-[#EF4444]">*</span></label>
                             <input name="email" type="email" required className={inputCls} placeholder="student@email.com" />
                           </div>
                           <div>
-                            <label className={labelCls}>Password <span className="text-red-500">*</span></label>
+                            <label className={labelCls}>Password <span className="text-[#EF4444]">*</span></label>
                             <input name="password" type="password" required minLength={6} className={inputCls} />
                           </div>
                           <div className="sm:col-span-2">
-                            <label className={labelCls}>Branch <span className="text-red-500">*</span></label>
+                            <label className={labelCls}>Branch <span className="text-[#EF4444]">*</span></label>
                             <select name="branch_id" required className={inputCls} defaultValue={lead.branch_id ?? ''}>
                               <option value="">Select branch…</option>
                               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -394,19 +394,19 @@ export default function LeadDetailClient({
                         <legend className="px-2 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Parent Account</legend>
                         <div className="mt-3 grid gap-4 sm:grid-cols-2">
                           <div>
-                            <label className={labelCls}>First Name <span className="text-red-500">*</span></label>
+                            <label className={labelCls}>First Name <span className="text-[#EF4444]">*</span></label>
                             <input name="parent_first" required className={inputCls} defaultValue={(lead.parent_name ?? '').split(' ')[0]} />
                           </div>
                           <div>
-                            <label className={labelCls}>Last Name <span className="text-red-500">*</span></label>
+                            <label className={labelCls}>Last Name <span className="text-[#EF4444]">*</span></label>
                             <input name="parent_last" required className={inputCls} defaultValue={(lead.parent_name ?? '').split(' ').slice(1).join(' ')} />
                           </div>
                           <div>
-                            <label className={labelCls}>Email <span className="text-red-500">*</span></label>
+                            <label className={labelCls}>Email <span className="text-[#EF4444]">*</span></label>
                             <input name="parent_email" type="email" required className={inputCls} defaultValue={lead.email ?? ''} />
                           </div>
                           <div>
-                            <label className={labelCls}>Password <span className="text-red-500">*</span></label>
+                            <label className={labelCls}>Password <span className="text-[#EF4444]">*</span></label>
                             <input name="parent_password" type="password" required minLength={6} className={inputCls} />
                           </div>
                           <div>
@@ -437,7 +437,7 @@ export default function LeadDetailClient({
                       <input type="hidden" name="lead_id"    value={lead.id} />
                       <input type="hidden" name="student_id" value={lead.converted_student_id ?? ''} />
                       <div>
-                        <label className={labelCls}>Select Group <span className="text-red-500">*</span></label>
+                        <label className={labelCls}>Select Group <span className="text-[#EF4444]">*</span></label>
                         {groups.length === 0 ? (
                           <p className="text-sm text-[#94A3B8]">No active groups in this branch.</p>
                         ) : (
@@ -464,7 +464,7 @@ export default function LeadDetailClient({
 
       {/* ── RIGHT: Timeline ── */}
       <div className="space-y-4">
-        <div className="rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="ds-card">
           <div className="border-b border-[#E2E8F0] px-5 py-4">
             <h2 className="font-semibold text-[#0B1F3A]">Activity Timeline</h2>
           </div>
@@ -530,7 +530,7 @@ function InfoRow({ label, value, highlight = false, sub }: {
   return (
     <div>
       <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
-      <p className={`mt-0.5 text-sm font-medium ${highlight ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+      <p className={`mt-0.5 text-sm font-medium ${highlight ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
         {value ?? <span className="text-[#CBD5E1]">—</span>}
       </p>
       {sub && <p className="text-[11px] text-[#94A3B8]">{sub}</p>}
@@ -543,7 +543,7 @@ function InfoRow({ label, value, highlight = false, sub }: {
 function Alert({ state, success }: { state: ActionResult<unknown> | null; success: string }) {
   if (!state) return null
   if (state.success) {
-    return <div className="mb-3 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-700">{success}</div>
+    return <div className="mb-3 rounded-lg bg-[#E7F8EE] px-4 py-3 text-sm text-[#15803D]">{success}</div>
   }
-  return <div className="mb-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{state.error.message}</div>
+  return <div className="mb-3 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">{state.error.message}</div>
 }

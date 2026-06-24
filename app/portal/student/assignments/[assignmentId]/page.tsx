@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+﻿import { notFound } from 'next/navigation'
 import { requirePortalRole } from '@/modules/rbac/guards'
 import { getStudentAssignmentWithSubmission } from '@/modules/assignments/submissions/queries'
 import SubmitForm from './SubmitForm'
@@ -41,7 +41,7 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
             {detail.max_score} points
           </span>
           {dueDate && (
-            <span className={`text-xs ${isOverdue ? 'font-semibold text-red-500' : 'text-[#94A3B8]'}`}>
+            <span className={`text-xs ${isOverdue ? 'font-semibold text-[#EF4444]' : 'text-[#94A3B8]'}`}>
               {isOverdue ? 'Overdue · ' : 'Due '}
               {dueDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
             </span>
@@ -51,7 +51,7 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
 
       {/* Description */}
       {detail.description && (
-        <section className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <section className="ds-card p-4">
           <h2 className="mb-1.5 text-sm font-semibold text-[#0B132B]">Description</h2>
           <p className="whitespace-pre-wrap text-sm text-[#64748B]">{detail.description}</p>
         </section>
@@ -59,7 +59,7 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
 
       {/* Instructions */}
       {detail.instructions && (
-        <section className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <section className="ds-card p-4">
           <h2 className="mb-1.5 text-sm font-semibold text-[#0B132B]">Instructions</h2>
           <p className="whitespace-pre-wrap text-sm text-[#64748B]">{detail.instructions}</p>
         </section>
@@ -67,7 +67,7 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
 
       {/* Rubric */}
       {detail.rubric?.length > 0 && (
-        <section className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <section className="ds-card p-4">
           <h2 className="mb-2.5 text-sm font-semibold text-[#0B132B]">Grading Criteria</h2>
           <div className="space-y-2">
             {detail.rubric.map(criterion => (
@@ -88,7 +88,7 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
       )}
 
       {/* Submission form or status */}
-      <section className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+      <section className="ds-card p-4">
         <h2 className="mb-3 text-sm font-semibold text-[#0B132B]">
           {submission ? 'Your Submission' : 'Submit Your Work'}
         </h2>

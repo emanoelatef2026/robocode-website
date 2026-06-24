@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import SectionEmptyState from "@/components/ui/SectionEmptyState";
@@ -17,8 +17,8 @@ interface FAQItem {
   sort_order: number;
 }
 
-const INPUT = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
-const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
+const INPUT = "w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]";
 
 const blank = { question: "", answer: "", category: "Programs", sort_order: "0" };
 
@@ -98,14 +98,14 @@ export default function FAQPage() {
 
       {/* Real error — only shown when API/DB actually fails */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-700">
+        <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] p-4 text-[13px] text-[#DC2626]">
           <strong>Connection error:</strong> {error}
           <button onClick={load} className="ml-3 underline hover:no-underline">Retry</button>
         </div>
       )}
 
       {/* Add form — always visible */}
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-[#F1F5F9] bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-[14px] font-semibold text-[#0B1F3A]">Add FAQ Item</h2>
 
         <form onSubmit={handleAdd} className="space-y-4">
@@ -145,7 +145,7 @@ export default function FAQPage() {
         {["All", ...FAQ_CATEGORIES].map((cat) => (
           <button key={cat} onClick={() => setFilter(cat)}
             className={["rounded-full px-3 py-1 text-[12px] font-semibold transition",
-              filter === cat ? "bg-[#0B1F3A] text-white" : "border border-gray-200 text-gray-500 hover:text-[#0B1F3A]"].join(" ")}>
+              filter === cat ? "bg-[#0B1F3A] text-white" : "border border-[#E2E8F0] text-[#6B7280] hover:text-[#0B1F3A]"].join(" ")}>
             {cat}
           </button>
         ))}
@@ -158,10 +158,10 @@ export default function FAQPage() {
       ) : (
         <div className="space-y-3">
           {filtered.length > 0 && (
-            <p className="text-[13px] text-gray-400">{filtered.length} item{filtered.length !== 1 ? "s" : ""}</p>
+            <p className="text-[13px] text-[#9CA3AF]">{filtered.length} item{filtered.length !== 1 ? "s" : ""}</p>
           )}
           {filtered.map((item) => (
-            <div key={item.id} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+            <div key={item.id} className="rounded-xl border border-[#F1F5F9] bg-white p-4 shadow-sm">
               {editing?.id === item.id ? (
                 <div className="space-y-3">
                   <input value={editing.question} onChange={(e) => setEditing({ ...editing, question: e.target.value })} className={INPUT} placeholder="Question" />
@@ -174,7 +174,7 @@ export default function FAQPage() {
                   </div>
                   <div className="flex gap-2">
                     <button onClick={handleEditSave} disabled={saving} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[12px] font-semibold text-white hover:bg-[#38BDF8] disabled:opacity-50 transition">{saving ? "…" : "Save"}</button>
-                    <button onClick={() => setEditing(null)} className="flex-1 rounded-lg border border-gray-200 py-2 text-[12px] font-semibold text-gray-500 hover:bg-gray-50">Cancel</button>
+                    <button onClick={() => setEditing(null)} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[12px] font-semibold text-[#6B7280] hover:bg-[#F9FAFB]">Cancel</button>
                   </div>
                 </div>
               ) : (
@@ -182,20 +182,20 @@ export default function FAQPage() {
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex flex-wrap items-center gap-2">
                       <span className="rounded-full bg-[#38BDF8]/10 px-2 py-0.5 text-[10px] font-bold text-[#0B1F3A]">{item.category}</span>
-                      {!item.active && <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-400">Inactive</span>}
+                      {!item.active && <span className="rounded-full bg-[#F3F4F6] px-2 py-0.5 text-[10px] font-semibold text-[#9CA3AF]">Inactive</span>}
                     </div>
                     <p className="text-[13px] font-semibold text-[#0F172A]">{item.question}</p>
-                    <p className="mt-1 line-clamp-2 text-[12px] text-gray-500">{item.answer}</p>
+                    <p className="mt-1 line-clamp-2 text-[12px] text-[#6B7280]">{item.answer}</p>
                   </div>
                   <div className="flex shrink-0 gap-1.5">
-                    <button onClick={() => setEditing(item)} className="rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-semibold text-gray-600 hover:border-[#38BDF8] hover:text-[#38BDF8] transition">Edit</button>
+                    <button onClick={() => setEditing(item)} className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#4B5563] hover:border-[#38BDF8] hover:text-[#38BDF8] transition">Edit</button>
                     <button onClick={() => handleToggle(item)} disabled={toggling === item.id}
                       className={["rounded-lg border px-3 py-1.5 text-[11px] font-semibold transition disabled:opacity-50",
-                        item.active ? "border-[#38BDF8]/30 bg-[#38BDF8]/8 text-[#38BDF8]" : "border-gray-200 text-gray-400 hover:text-[#38BDF8]"].join(" ")}>
+                        item.active ? "border-[#38BDF8]/30 bg-[#38BDF8]/8 text-[#38BDF8]" : "border-[#E2E8F0] text-[#9CA3AF] hover:text-[#38BDF8]"].join(" ")}>
                       {toggling === item.id ? "…" : item.active ? "On" : "Off"}
                     </button>
                     <button onClick={() => handleDelete(item.id)} disabled={deleting === item.id}
-                      className="rounded-lg border border-gray-200 px-3 py-1.5 text-[11px] font-semibold text-red-400 hover:border-red-300 hover:bg-red-50 transition disabled:opacity-50">
+                      className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#F87171] hover:border-[#FCA5A5] hover:bg-[#FEE2E2] transition disabled:opacity-50">
                       {deleting === item.id ? "…" : "Del"}
                     </button>
                   </div>

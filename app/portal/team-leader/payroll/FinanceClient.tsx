@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState, useTransition, useCallback, useMemo, useEffect } from "react"
 import { useRouter, usePathname, useSearchParams } from "next/navigation"
@@ -91,8 +91,8 @@ function AdjBadge({ type, amount }: { type: FinanceAdjType; amount: number }) {
 
 function NetChip({ amount }: { amount: number }) {
   const cls = amount >= 0
-    ? "bg-emerald-50 text-emerald-700"
-    : "bg-red-50 text-red-600"
+    ? "bg-[#E7F8EE] text-[#15803D]"
+    : "bg-[#FEE2E2] text-[#EF4444]"
   return (
     <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[13px] font-bold ${cls}`}>
       {fmtEGP(amount)}
@@ -805,11 +805,11 @@ export default function FinanceClient({
                 </div>
               </div>
               {Number(qaRate) > 0 && Number(qaQty) > 0 && (
-                <p className="text-[11px] font-semibold text-emerald-700">
+                <p className="text-[11px] font-semibold text-[#15803D]">
                   Total: {fmtEGP(Number(qaRate) * Number(qaQty))}
                 </p>
               )}
-              {qaErr && <p className="text-[12px] text-red-600">{qaErr}</p>}
+              {qaErr && <p className="text-[12px] text-[#EF4444]">{qaErr}</p>}
               <div className="flex gap-2 pt-1">
                 <button onClick={() => setQuickActModal(null)} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">Cancel</button>
                 <button onClick={submitQuickActivity} disabled={qaBusy} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[13px] font-semibold text-white hover:bg-[#1a2f4a] disabled:opacity-50">
@@ -879,7 +879,7 @@ export default function FinanceClient({
                   className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 resize-none"
                 />
               </div>
-              {adjErr && <p className="text-[12px] text-red-600">{adjErr}</p>}
+              {adjErr && <p className="text-[12px] text-[#EF4444]">{adjErr}</p>}
               <div className="flex gap-2 pt-1">
                 <button onClick={() => setAdjModal(null)} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">Cancel</button>
                 <button onClick={submitAdjustment} disabled={adjBusy} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[13px] font-semibold text-white hover:bg-[#1a2f4a] disabled:opacity-50">
@@ -938,7 +938,7 @@ export default function FinanceClient({
                   className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 resize-none"
                 />
               </div>
-              {payErr && <p className="text-[12px] text-red-600">{payErr}</p>}
+              {payErr && <p className="text-[12px] text-[#EF4444]">{payErr}</p>}
               <div className="flex gap-2 pt-1">
                 <button onClick={() => setPayModal(null)} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">Cancel</button>
                 <button onClick={submitPaymentInfo} disabled={payBusy} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[13px] font-semibold text-white hover:bg-[#1a2f4a] disabled:opacity-50">
@@ -961,9 +961,9 @@ export default function FinanceClient({
                 {quickPayModal.total_paid > 0 && (
                   <>
                     <span className="text-[#64748B] ml-3">Paid: </span>
-                    <span className="font-semibold text-emerald-700">{fmtEGP(quickPayModal.total_paid)}</span>
+                    <span className="font-semibold text-[#15803D]">{fmtEGP(quickPayModal.total_paid)}</span>
                     <span className="text-[#64748B] ml-3">Remaining: </span>
-                    <span className="font-semibold text-red-600">{fmtEGP(quickPayModal.remaining)}</span>
+                    <span className="font-semibold text-[#EF4444]">{fmtEGP(quickPayModal.remaining)}</span>
                   </>
                 )}
               </div>
@@ -993,10 +993,10 @@ export default function FinanceClient({
                 <input value={qpNotes} onChange={e => setQpNotes(e.target.value)} placeholder="Reference, receipt no…"
                   className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
               </div>
-              {qpErr && <p className="text-[12px] text-red-600">{qpErr}</p>}
+              {qpErr && <p className="text-[12px] text-[#EF4444]">{qpErr}</p>}
               <div className="flex gap-2 pt-1">
                 <button onClick={() => setQuickPayModal(null)} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">Cancel</button>
-                <button onClick={submitQuickPayment} disabled={qpBusy} className="flex-1 rounded-lg bg-emerald-600 py-2 text-[13px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">
+                <button onClick={submitQuickPayment} disabled={qpBusy} className="flex-1 rounded-lg bg-[#059669] py-2 text-[13px] font-semibold text-white hover:bg-[#047857] disabled:opacity-50">
                   {qpBusy ? "Saving…" : "Record Payment"}
                 </button>
               </div>
@@ -1025,7 +1025,7 @@ export default function FinanceClient({
                       className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
                     />
                     {sfUserOpts.length > 0 && (
-                      <div className="absolute z-10 left-0 right-0 top-full mt-1 rounded-xl border border-[#E2E8F0] bg-white shadow-xl max-h-48 overflow-y-auto">
+                      <div className="absolute z-10 left-0 right-0 top-full mt-1 ds-card shadow-xl max-h-48 overflow-y-auto">
                         {sfUserOpts.map(u => (
                           <button
                             key={u.user_id}
@@ -1048,7 +1048,7 @@ export default function FinanceClient({
                     )}
                   </div>
                   {sfUserId && (
-                    <p className="mt-1.5 text-[11px] text-emerald-600 font-medium">✓ Selected: {sfUserName}</p>
+                    <p className="mt-1.5 text-[11px] text-[#10B981] font-medium">✓ Selected: {sfUserName}</p>
                   )}
                 </div>
               )}
@@ -1166,13 +1166,13 @@ export default function FinanceClient({
                 </select>
               </div>
 
-              {sfErr && <p className="text-[12px] text-red-600">{sfErr}</p>}
+              {sfErr && <p className="text-[12px] text-[#EF4444]">{sfErr}</p>}
               <div className="flex gap-2 pt-1">
                 {staffModal.mode === "edit" && staffModal.row && (
                   <button
                     onClick={() => { setStaffModal(null); deleteStaff(staffModal.row!.profile_id) }}
                     disabled={sfBusy}
-                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[12px] font-semibold text-red-600 hover:bg-red-100 transition disabled:opacity-50"
+                    className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-[12px] font-semibold text-[#EF4444] hover:bg-[#FEE2E2] transition disabled:opacity-50"
                   >
                     Delete
                   </button>
@@ -1240,9 +1240,9 @@ function InstructorsTab({
         <>
           {/* Desktop table */}
           <div className="hidden md:block">
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+            <div className="ds-card overflow-hidden">
               <table className="w-full text-[12px]">
-                <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                <thead className="ds-table-head">
                   <tr>
                     <th className="py-3 pl-4 pr-2 text-left font-semibold text-[#64748B]">Instructor</th>
                     <th className="py-3 px-2 text-right font-semibold text-[#64748B]">Sessions</th>
@@ -1278,7 +1278,7 @@ function InstructorsTab({
                         {row.adjustments.length === 0 ? (
                           <span className="text-[#94A3B8]">—</span>
                         ) : (
-                          <span className={`font-semibold ${row.adj_net >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                          <span className={`font-semibold ${row.adj_net >= 0 ? "text-[#15803D]" : "text-[#EF4444]"}`}>
                             {row.adj_net >= 0 ? "+" : ""}{fmtEGP(row.adj_net)}
                           </span>
                         )}
@@ -1322,7 +1322,7 @@ function InstructorsTab({
           {/* Mobile cards */}
           <div className="md:hidden space-y-2">
             {rows.map(row => (
-              <div key={row.instructor_id} className="rounded-xl border border-[#E2E8F0] bg-white p-3.5">
+              <div key={row.instructor_id} className="ds-card p-3.5">
                 <div className="flex items-start gap-2.5">
                   <Avatar name={row.display_name} />
                   <div className="flex-1 min-w-0">
@@ -1425,9 +1425,9 @@ function StaffTab({
         <>
           {/* Desktop */}
           <div className="hidden md:block">
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+            <div className="ds-card overflow-hidden">
               <table className="w-full text-[12px]">
-                <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                <thead className="ds-table-head">
                   <tr>
                     <th className="py-3 pl-4 pr-2 text-left font-semibold text-[#64748B]">Name</th>
                     <th className="py-3 px-2 text-left font-semibold text-[#64748B]">Role</th>
@@ -1482,17 +1482,17 @@ function StaffTab({
                         {row.adjustments.length === 0 ? (
                           <span className="text-[#94A3B8]">—</span>
                         ) : (
-                          <span className={`font-semibold ${row.adj_net >= 0 ? "text-emerald-700" : "text-red-600"}`}>
+                          <span className={`font-semibold ${row.adj_net >= 0 ? "text-[#15803D]" : "text-[#EF4444]"}`}>
                             {row.adj_net >= 0 ? "+" : ""}{fmtEGP(row.adj_net)}
                           </span>
                         )}
                       </td>
-                      <td className="py-3 px-2 text-right font-medium text-emerald-700">
+                      <td className="py-3 px-2 text-right font-medium text-[#15803D]">
                         {row.total_paid > 0 ? fmtEGP(row.total_paid) : <span className="text-[#CBD5E1]">—</span>}
                       </td>
                       <td className="py-3 px-2 text-right">
                         {row.remaining > 0 ? (
-                          <span className="font-medium text-red-600">{fmtEGP(row.remaining)}</span>
+                          <span className="font-medium text-[#EF4444]">{fmtEGP(row.remaining)}</span>
                         ) : (
                           <span className="text-[#CBD5E1]">—</span>
                         )}
@@ -1513,7 +1513,7 @@ function StaffTab({
                           </button>
                           <button
                             onClick={() => onQuickPay(row)}
-                            className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition"
+                            className="rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] px-2.5 py-1 text-[11px] font-semibold text-[#15803D] hover:bg-[#E7F8EE] transition"
                           >
                             + Pay
                           </button>
@@ -1530,7 +1530,7 @@ function StaffTab({
           {/* Mobile */}
           <div className="md:hidden space-y-2">
             {rows.map(row => (
-              <div key={row.profile_id} className={`rounded-xl border border-[#E2E8F0] bg-white p-3.5 ${row.employment_status === "inactive" ? "opacity-60" : ""}`}>
+              <div key={row.profile_id} className={`ds-card p-3.5 ${row.employment_status === "inactive" ? "opacity-60" : ""}`}>
                 <div className="flex items-start gap-2.5">
                   <Avatar name={row.display_name} />
                   <div className="flex-1 min-w-0">
@@ -1557,13 +1557,13 @@ function StaffTab({
                     <p className="text-[10px] text-[#94A3B8]">Salary</p>
                   </div>
                   <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5">
-                    <p className="text-[12px] font-bold text-emerald-700">
+                    <p className="text-[12px] font-bold text-[#15803D]">
                       {row.total_paid > 0 ? fmtEGP(row.total_paid) : "—"}
                     </p>
                     <p className="text-[10px] text-[#94A3B8]">Paid</p>
                   </div>
                   <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5">
-                    <p className={`text-[12px] font-bold ${row.remaining > 0 ? "text-red-600" : "text-[#CBD5E1]"}`}>
+                    <p className={`text-[12px] font-bold ${row.remaining > 0 ? "text-[#EF4444]" : "text-[#CBD5E1]"}`}>
                       {row.remaining > 0 ? fmtEGP(row.remaining) : "—"}
                     </p>
                     <p className="text-[10px] text-[#94A3B8]">Remaining</p>
@@ -1571,7 +1571,7 @@ function StaffTab({
                 </div>
                 <div className="mt-2.5 flex gap-1.5">
                   <button onClick={() => onOpenDetail(row)} className="flex-1 rounded-lg border border-[#FF8A1F]/40 bg-[#FFF7F0] py-1.5 text-[11px] font-semibold text-[#FF8A1F]">View</button>
-                  <button onClick={() => onQuickPay(row)} className="flex-1 rounded-lg border border-emerald-200 bg-emerald-50 py-1.5 text-[11px] font-semibold text-emerald-700">+ Pay</button>
+                  <button onClick={() => onQuickPay(row)} className="flex-1 rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] py-1.5 text-[11px] font-semibold text-[#15803D]">+ Pay</button>
                   <button onClick={() => onEdit(row)} className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#64748B]">Edit</button>
                 </div>
               </div>
@@ -1597,7 +1597,7 @@ function SummaryTab({
 }) {
   return (
     <div className="space-y-4 max-w-2xl">
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <p className="text-[13px] font-semibold text-[#0B1F3A] mb-1">Period</p>
         <p className="text-[22px] font-extrabold text-[#0B1F3A]">{monthLabel}</p>
         <p className="text-[11px] text-[#94A3B8] mt-1">{dateFrom} → {dateTo}</p>
@@ -1630,9 +1630,9 @@ function SummaryCard({
   value: string
   color?: "emerald" | "red" | "amber"
 }) {
-  const textCls = color === "emerald" ? "text-emerald-700" : color === "red" ? "text-red-600" : color === "amber" ? "text-amber-700" : "text-[#0B1F3A]"
+  const textCls = color === "emerald" ? "text-[#15803D]" : color === "red" ? "text-[#EF4444]" : color === "amber" ? "text-[#B45309]" : "text-[#0B1F3A]"
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3">
+    <div className="ds-card px-4 py-3">
       <p className={`text-[18px] font-extrabold ${textCls}`}>{value}</p>
       <p className="text-[11px] font-medium text-[#94A3B8] mt-0.5">{label}</p>
     </div>
@@ -1708,7 +1708,7 @@ function DrawerContent({
               <DrawerRow
                 label="Adjustments"
                 value={`${row.adj_net >= 0 ? "+" : ""}${fmtEGP(row.adj_net)}`}
-                cls={row.adj_net >= 0 ? "text-emerald-700 font-semibold" : "text-red-600 font-semibold"}
+                cls={row.adj_net >= 0 ? "text-[#15803D] font-semibold" : "text-[#EF4444] font-semibold"}
               />
             )}
             <div className="border-t border-[#E2E8F0] pt-2 mt-1">
@@ -1781,7 +1781,7 @@ function DrawerContent({
                     <p className="text-[10px] text-[#94A3B8]">{a.adjustment_date}</p>
                     <button
                       onClick={() => onRemoveAdj(a.id)}
-                      className="text-[#CBD5E1] hover:text-red-400 transition"
+                      className="text-[#CBD5E1] hover:text-[#F87171] transition"
                       title="Delete"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2179,17 +2179,17 @@ function InstructorDetailModal({
                 </div>
 
                 {/* Earnings breakdown */}
-                <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+                <div className="ds-card overflow-hidden">
                   <div className="bg-[#F8FAFC] border-b border-[#E2E8F0] px-4 py-2.5">
                     <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Earnings Breakdown</p>
                   </div>
                   <div className="px-4 py-3 space-y-2">
                     <ModalRow label="Session Earnings" value={`${row.sessions_count} sessions × ${fmtEGP(row.salary_per_session)}`} right={fmtEGP(row.session_earnings)} />
-                    {row.bonus_total > 0    && <ModalRow label="Bonuses"    right={`+${fmtEGP(row.bonus_total)}`}    rightCls="text-emerald-700 font-semibold" />}
-                    {row.penalty_total > 0  && <ModalRow label="Penalties"  right={`−${fmtEGP(row.penalty_total)}`}  rightCls="text-red-600 font-semibold" />}
-                    {row.advance_total > 0  && <ModalRow label="Advances"   right={`−${fmtEGP(row.advance_total)}`}  rightCls="text-amber-700 font-semibold" />}
+                    {row.bonus_total > 0    && <ModalRow label="Bonuses"    right={`+${fmtEGP(row.bonus_total)}`}    rightCls="text-[#15803D] font-semibold" />}
+                    {row.penalty_total > 0  && <ModalRow label="Penalties"  right={`−${fmtEGP(row.penalty_total)}`}  rightCls="text-[#EF4444] font-semibold" />}
+                    {row.advance_total > 0  && <ModalRow label="Advances"   right={`−${fmtEGP(row.advance_total)}`}  rightCls="text-[#B45309] font-semibold" />}
                     {row.purchase_total > 0 && <ModalRow label="Purchases"  right={`−${fmtEGP(row.purchase_total)}`} rightCls="text-orange-700 font-semibold" />}
-                    {row.other_total > 0    && <ModalRow label="Other"      right={`+${fmtEGP(row.other_total)}`}    rightCls="text-slate-700 font-semibold" />}
+                    {row.other_total > 0    && <ModalRow label="Other"      right={`+${fmtEGP(row.other_total)}`}    rightCls="text-[#334155] font-semibold" />}
                     <div className="border-t border-[#E2E8F0] pt-2">
                       <ModalRow label="Net Amount" right={fmtEGP(row.net_amount)} rightCls="text-[#FF8A1F] font-extrabold text-[14px]" />
                     </div>
@@ -2197,7 +2197,7 @@ function InstructorDetailModal({
                 </div>
 
                 {/* Payment info */}
-                <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+                <div className="ds-card overflow-hidden">
                   <div className="bg-[#F8FAFC] border-b border-[#E2E8F0] px-4 py-2.5 flex items-center justify-between">
                     <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Payment Info</p>
                     <button onClick={() => setTab("payments")} className="text-[11px] font-semibold text-[#FF8A1F] hover:text-[#e07018]">Edit →</button>
@@ -2255,13 +2255,13 @@ function InstructorDetailModal({
                               value={editRateValue}
                               onChange={e => setEditRateValue(e.target.value)}
                               placeholder={String(editRateSession.final_rate)}
-                              className="mt-1 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                              className="mt-1 w-full ds-card px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
                           </div>
                         </div>
                         <div>
                           <label className="text-[11px] font-semibold text-[#0B1F3A]">Reason</label>
                           <select value={editRateReason} onChange={e => setEditRateReason(e.target.value)}
-                            className="mt-1 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30">
+                            className="mt-1 w-full ds-card px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30">
                             {(Object.entries(OVERRIDE_REASON_LABELS) as [string, string][]).map(([k, v]) => (
                               <option key={k} value={k}>{v}</option>
                             ))}
@@ -2271,9 +2271,9 @@ function InstructorDetailModal({
                           <label className="text-[11px] font-semibold text-[#0B1F3A]">Notes (optional)</label>
                           <input type="text" value={editRateNotes} onChange={e => setEditRateNotes(e.target.value)}
                             placeholder="e.g. online group contract"
-                            className="mt-1 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                            className="mt-1 w-full ds-card px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
                         </div>
-                        {editRateErr && <p className="text-[11px] text-red-600">{editRateErr}</p>}
+                        {editRateErr && <p className="text-[11px] text-[#EF4444]">{editRateErr}</p>}
                         <div className="flex gap-2 pt-1">
                           <button onClick={saveEditRate} disabled={editRateBusy}
                             className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-[12px] font-bold text-white hover:bg-[#E07718] disabled:opacity-50 transition">
@@ -2281,7 +2281,7 @@ function InstructorDetailModal({
                           </button>
                           {editRateSession.override_id && (
                             <button onClick={() => handleRemoveOverride(editRateSession!)} disabled={editRateBusy}
-                              className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-semibold text-red-600 hover:bg-red-100 transition">
+                              className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-[11px] font-semibold text-[#EF4444] hover:bg-[#FEE2E2] transition">
                               Remove Override
                             </button>
                           )}
@@ -2290,9 +2290,9 @@ function InstructorDetailModal({
                     )}
 
                     {/* Session table – desktop */}
-                    <div className="hidden md:block rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+                    <div className="hidden md:block ds-card overflow-x-auto">
                       <table className="w-full text-[12px] min-w-[900px]">
-                        <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                        <thead className="ds-table-head">
                           <tr>
                             <th className="py-2.5 pl-4 pr-2 text-left font-semibold text-[#64748B] whitespace-nowrap">Date</th>
                             <th className="py-2.5 px-2 text-left font-semibold text-[#64748B]">Group</th>
@@ -2328,7 +2328,7 @@ function InstructorDetailModal({
                                 </td>
                                 <td className="py-2.5 px-2 text-right">
                                   {s.students_total > 0 ? (
-                                    <span className={`font-semibold ${s.attendance_pct >= 75 ? "text-emerald-700" : s.attendance_pct >= 50 ? "text-amber-700" : "text-red-600"}`}>
+                                    <span className={`font-semibold ${s.attendance_pct >= 75 ? "text-[#15803D]" : s.attendance_pct >= 50 ? "text-[#B45309]" : "text-[#EF4444]"}`}>
                                       {s.attendance_pct}%
                                     </span>
                                   ) : <span className="text-[#CBD5E1]">—</span>}
@@ -2387,7 +2387,7 @@ function InstructorDetailModal({
                     {/* Session cards – mobile */}
                     <div className="md:hidden space-y-2">
                       {sessions.map(s => (
-                        <div key={s.schedule_id} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+                        <div key={s.schedule_id} className="ds-card p-3">
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
                               <p className="text-[12px] font-bold text-[#0B1F3A]">
@@ -2426,7 +2426,7 @@ function InstructorDetailModal({
                           {s.students_total > 0 && (
                             <div className="mt-1.5 flex items-center gap-3">
                               <span className="text-[11px] text-[#64748B]">{s.students_present}/{s.students_total} present</span>
-                              <span className={`text-[11px] font-semibold ${s.attendance_pct >= 75 ? "text-emerald-700" : s.attendance_pct >= 50 ? "text-amber-700" : "text-red-600"}`}>
+                              <span className={`text-[11px] font-semibold ${s.attendance_pct >= 75 ? "text-[#15803D]" : s.attendance_pct >= 50 ? "text-[#B45309]" : "text-[#EF4444]"}`}>
                                 {s.attendance_pct}%
                               </span>
                             </div>
@@ -2437,7 +2437,7 @@ function InstructorDetailModal({
 
                     {/* Group summary */}
                     {groupSummary.length > 1 && (
-                      <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+                      <div className="ds-card overflow-hidden">
                         <div className="bg-[#F8FAFC] border-b border-[#E2E8F0] px-4 py-2.5">
                           <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Group Summary</p>
                         </div>
@@ -2473,7 +2473,7 @@ function InstructorDetailModal({
               <div className="p-5 space-y-4">
                 {/* Add form */}
                 {showAdjForm ? (
-                  <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
+                  <div className="ds-card p-4 space-y-3">
                     <p className="text-[13px] font-bold text-[#0B1F3A]">New Adjustment</p>
                     <div>
                       <label className="text-[11px] font-semibold text-[#0B1F3A]">Type</label>
@@ -2503,7 +2503,7 @@ function InstructorDetailModal({
                       <input value={adjNotes} onChange={e => setAdjNotes(e.target.value)} placeholder="Description…"
                         className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
                     </div>
-                    {adjErr && <p className="text-[12px] text-red-600">{adjErr}</p>}
+                    {adjErr && <p className="text-[12px] text-[#EF4444]">{adjErr}</p>}
                     <div className="flex gap-2">
                       <button onClick={() => { setShowAdjForm(false); setAdjErr("") }} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[12px] font-medium text-[#64748B]">Cancel</button>
                       <button onClick={submitAdj} disabled={adjBusy} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[12px] font-semibold text-white disabled:opacity-50">
@@ -2523,16 +2523,16 @@ function InstructorDetailModal({
                 ) : (
                   <div className="space-y-2">
                     {row.adjustments.map(a => (
-                      <div key={a.id} className="flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3">
+                      <div key={a.id} className="flex items-center gap-3 ds-card px-4 py-3">
                         <AdjBadge type={a.type} amount={a.amount} />
                         <div className="flex-1 min-w-0">
                           {a.notes && <p className="text-[12px] text-[#0B1F3A] truncate">{a.notes}</p>}
                           <p className="text-[11px] text-[#94A3B8]">{a.adjustment_date}</p>
                         </div>
-                        <p className={`text-[13px] font-bold shrink-0 ${ADJ_SIGN[a.type] === 1 ? "text-emerald-700" : "text-red-600"}`}>
+                        <p className={`text-[13px] font-bold shrink-0 ${ADJ_SIGN[a.type] === 1 ? "text-[#15803D]" : "text-[#EF4444]"}`}>
                           {ADJ_SIGN[a.type] === 1 ? "+" : "−"}{fmtEGP(a.amount)}
                         </p>
-                        <button onClick={() => removeAdj(a.id)} className="text-[#CBD5E1] hover:text-red-400 transition shrink-0">
+                        <button onClick={() => removeAdj(a.id)} className="text-[#CBD5E1] hover:text-[#F87171] transition shrink-0">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
@@ -2547,7 +2547,7 @@ function InstructorDetailModal({
             {/* ── PAYMENTS ── */}
             {tab === "payments" && (
               <div className="p-5 space-y-4 max-w-md">
-                <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
+                <div className="ds-card p-4 space-y-3">
                   <p className="text-[13px] font-bold text-[#0B1F3A]">Payment Configuration</p>
                   <div>
                     <label className="text-[11px] font-semibold text-[#0B1F3A]">Session Rate (EGP)</label>
@@ -2575,8 +2575,8 @@ function InstructorDetailModal({
                     <textarea rows={2} value={payNotes} onChange={e => setPayNotes(e.target.value)}
                       className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 resize-none" />
                   </div>
-                  {payErr && <p className="text-[12px] text-red-600">{payErr}</p>}
-                  {payOk  && <p className="text-[12px] text-emerald-600 font-semibold">✓ Saved successfully</p>}
+                  {payErr && <p className="text-[12px] text-[#EF4444]">{payErr}</p>}
+                  {payOk  && <p className="text-[12px] text-[#10B981] font-semibold">✓ Saved successfully</p>}
                   <button onClick={submitPayment} disabled={payBusy} className="w-full rounded-lg bg-[#0B1F3A] py-2.5 text-[13px] font-semibold text-white disabled:opacity-50 hover:bg-[#1a2f4a] transition">
                     {payBusy ? "Saving…" : "Save Payment Info"}
                   </button>
@@ -2588,7 +2588,7 @@ function InstructorDetailModal({
                   <ModalRow label="Sessions"       right={String(row.sessions_count)} />
                   <ModalRow label="Rate/session"   right={fmtEGP(row.salary_per_session)} />
                   <ModalRow label="Total Earnings" right={fmtEGP(row.session_earnings)} />
-                  <ModalRow label="Adjustments"    right={`${row.adj_net >= 0 ? "+" : ""}${fmtEGP(row.adj_net)}`} rightCls={row.adj_net >= 0 ? "text-emerald-700 font-semibold" : "text-red-600 font-semibold"} />
+                  <ModalRow label="Adjustments"    right={`${row.adj_net >= 0 ? "+" : ""}${fmtEGP(row.adj_net)}`} rightCls={row.adj_net >= 0 ? "text-[#15803D] font-semibold" : "text-[#EF4444] font-semibold"} />
                   <div className="border-t border-[#E2E8F0] pt-2">
                     <ModalRow label="Net Amount" right={fmtEGP(row.net_amount)} rightCls="text-[#FF8A1F] font-extrabold" />
                   </div>
@@ -2604,9 +2604,9 @@ function InstructorDetailModal({
                 ) : monthlyHistory.length === 0 ? (
                   <EmptyState message="No session data available for history view." />
                 ) : (
-                  <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+                  <div className="ds-card overflow-hidden">
                     <table className="w-full text-[12px]">
-                      <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                      <thead className="ds-table-head">
                         <tr>
                           <th className="py-2.5 pl-4 pr-2 text-left font-semibold text-[#64748B]">Month</th>
                           <th className="py-2.5 px-2 text-right font-semibold text-[#64748B]">Sessions</th>
@@ -2627,7 +2627,7 @@ function InstructorDetailModal({
                               {h.adj === 0 ? (
                                 <span className="text-[#CBD5E1]">—</span>
                               ) : (
-                                <span className={h.adj >= 0 ? "text-emerald-700 font-semibold" : "text-red-600 font-semibold"}>
+                                <span className={h.adj >= 0 ? "text-[#15803D] font-semibold" : "text-[#EF4444] font-semibold"}>
                                   {h.adj >= 0 ? "+" : ""}{fmtEGP(h.adj)}
                                 </span>
                               )}
@@ -2645,7 +2645,7 @@ function InstructorDetailModal({
             {/* ── NOTES ── */}
             {tab === "notes" && (
               <div className="p-5 space-y-4 max-w-md">
-                <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
+                <div className="ds-card p-4 space-y-3">
                   <p className="text-[13px] font-bold text-[#0B1F3A]">Notes</p>
                   <p className="text-[11px] text-[#94A3B8]">Visible to team leaders and admins only.</p>
                   <textarea
@@ -2655,7 +2655,7 @@ function InstructorDetailModal({
                     placeholder="Add notes about this instructor's payroll, payment preferences, or any relevant information…"
                     className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-[13px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 resize-none"
                   />
-                  {notesOk && <p className="text-[12px] text-emerald-600 font-semibold">✓ Notes saved</p>}
+                  {notesOk && <p className="text-[12px] text-[#10B981] font-semibold">✓ Notes saved</p>}
                   <button onClick={saveNotes} disabled={notesBusy} className="w-full rounded-lg bg-[#0B1F3A] py-2.5 text-[13px] font-semibold text-white disabled:opacity-50 hover:bg-[#1a2f4a] transition">
                     {notesBusy ? "Saving…" : "Save Notes"}
                   </button>
@@ -2976,7 +2976,7 @@ function StaffDetailModal({
                   ))}
                 </div>
 
-                <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+                <div className="ds-card overflow-hidden">
                   <div className="bg-[#F8FAFC] border-b border-[#E2E8F0] px-4 py-2.5">
                     <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Earnings Breakdown</p>
                   </div>
@@ -2987,9 +2987,9 @@ function StaffDetailModal({
                     {liveSessionEarnings > 0 && (
                       <ModalRow label={`Activity Earnings (${row.sessions_count} activities)`} right={fmtEGP(liveSessionEarnings)} />
                     )}
-                    {row.bonus_total > 0    && <ModalRow label="Bonuses"   right={`+${fmtEGP(row.bonus_total)}`}    rightCls="text-emerald-700 font-semibold" />}
-                    {row.penalty_total > 0  && <ModalRow label="Penalties" right={`−${fmtEGP(row.penalty_total)}`}  rightCls="text-red-600 font-semibold" />}
-                    {row.advance_total > 0  && <ModalRow label="Advances"  right={`−${fmtEGP(row.advance_total)}`}  rightCls="text-amber-700 font-semibold" />}
+                    {row.bonus_total > 0    && <ModalRow label="Bonuses"   right={`+${fmtEGP(row.bonus_total)}`}    rightCls="text-[#15803D] font-semibold" />}
+                    {row.penalty_total > 0  && <ModalRow label="Penalties" right={`−${fmtEGP(row.penalty_total)}`}  rightCls="text-[#EF4444] font-semibold" />}
+                    {row.advance_total > 0  && <ModalRow label="Advances"  right={`−${fmtEGP(row.advance_total)}`}  rightCls="text-[#B45309] font-semibold" />}
                     {row.purchase_total > 0 && <ModalRow label="Purchases" right={`−${fmtEGP(row.purchase_total)}`} rightCls="text-orange-700 font-semibold" />}
                     <div className="border-t border-[#E2E8F0] pt-2">
                       <ModalRow label="Net Amount" right={fmtEGP(liveNet)} rightCls="text-[#FF8A1F] font-extrabold text-[14px]" />
@@ -2997,7 +2997,7 @@ function StaffDetailModal({
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+                <div className="ds-card overflow-hidden">
                   <div className="bg-[#F8FAFC] border-b border-[#E2E8F0] px-4 py-2.5 flex items-center justify-between">
                     <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Payment Info</p>
                     <button onClick={() => setTab("payments")} className="text-[11px] font-semibold text-[#FF8A1F] hover:text-[#e07018]">Edit →</button>
@@ -3015,7 +3015,7 @@ function StaffDetailModal({
               <div className="p-5 space-y-4">
                 {/* Add session form */}
                 {showAddSession ? (
-                  <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
+                  <div className="ds-card p-4 space-y-3">
                     <p className="text-[13px] font-bold text-[#0B1F3A]">Add Session Activity</p>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
@@ -3051,11 +3051,11 @@ function StaffDetailModal({
                       </div>
                     </div>
                     {Number(ssRate) > 0 && Number(ssQty) > 0 && (
-                      <p className="text-[11px] font-semibold text-emerald-700">
+                      <p className="text-[11px] font-semibold text-[#15803D]">
                         Amount: {fmtEGP(Number(ssRate) * Number(ssQty))}
                       </p>
                     )}
-                    {ssErr && <p className="text-[11px] text-red-600">{ssErr}</p>}
+                    {ssErr && <p className="text-[11px] text-[#EF4444]">{ssErr}</p>}
                     <div className="flex gap-2">
                       <button onClick={() => { setShowAddSession(false); setSsErr("") }} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[12px] font-medium text-[#64748B]">Cancel</button>
                       <button onClick={submitSession} disabled={ssBusy} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[12px] font-semibold text-white disabled:opacity-50">
@@ -3080,12 +3080,12 @@ function StaffDetailModal({
                       <div>
                         <label className="text-[11px] font-semibold text-[#0B1F3A]">Date</label>
                         <input type="date" value={esDate} onChange={e => setEsDate(e.target.value)}
-                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                          className="mt-1 w-full ds-card px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
                       </div>
                       <div>
                         <label className="text-[11px] font-semibold text-[#0B1F3A]">Activity Type</label>
                         <select value={esActivity} onChange={e => setEsActivity(e.target.value)}
-                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30">
+                          className="mt-1 w-full ds-card px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30">
                           {STAFF_ACTIVITY_OPTIONS.map(o => (
                             <option key={o.value} value={o.value}>{o.label}</option>
                           ))}
@@ -3095,24 +3095,24 @@ function StaffDetailModal({
                     <div>
                       <label className="text-[11px] font-semibold text-[#0B1F3A]">Description</label>
                       <input value={esDesc} onChange={e => setEsDesc(e.target.value)} placeholder="Optional…"
-                        className="mt-1 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                        className="mt-1 w-full ds-card px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <label className="text-[11px] font-semibold text-[#0B1F3A]">Rate (EGP)</label>
                         <input type="number" min="0" step="50" value={esRate} onChange={e => setEsRate(e.target.value)}
-                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                          className="mt-1 w-full ds-card px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
                       </div>
                       <div>
                         <label className="text-[11px] font-semibold text-[#0B1F3A]">Quantity</label>
                         <input type="number" min="0.5" step="0.5" value={esQty} onChange={e => setEsQty(e.target.value)}
-                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                          className="mt-1 w-full ds-card px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
                       </div>
                     </div>
                     {Number(esRate) > 0 && Number(esQty) > 0 && (
-                      <p className="text-[11px] font-semibold text-emerald-700">Amount: {fmtEGP(Number(esRate) * Number(esQty))}</p>
+                      <p className="text-[11px] font-semibold text-[#15803D]">Amount: {fmtEGP(Number(esRate) * Number(esQty))}</p>
                     )}
-                    {esErr && <p className="text-[11px] text-red-600">{esErr}</p>}
+                    {esErr && <p className="text-[11px] text-[#EF4444]">{esErr}</p>}
                     <div className="flex gap-2 pt-1">
                       <button onClick={saveEditSession} disabled={esBusy}
                         className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-[12px] font-bold text-white hover:bg-[#E07718] disabled:opacity-50 transition">
@@ -3129,9 +3129,9 @@ function StaffDetailModal({
                 ) : (
                   <>
                     {/* Desktop table */}
-                    <div className="hidden md:block rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+                    <div className="hidden md:block ds-card overflow-hidden">
                       <table className="w-full text-[12px]">
-                        <thead className="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                        <thead className="ds-table-head">
                           <tr>
                             <th className="py-2.5 pl-4 pr-2 text-left font-semibold text-[#64748B]">Date</th>
                             <th className="py-2.5 px-2 text-left font-semibold text-[#64748B]">Activity</th>
@@ -3162,7 +3162,7 @@ function StaffDetailModal({
                                     ✎
                                   </button>
                                   <button onClick={() => handleDeleteSession(s.id)}
-                                    className="rounded-lg bg-red-50 px-2 py-1 text-[11px] font-semibold text-red-500 hover:bg-red-100 transition">
+                                    className="rounded-lg bg-[#FEE2E2] px-2 py-1 text-[11px] font-semibold text-[#EF4444] hover:bg-[#FEE2E2] transition">
                                     ✕
                                   </button>
                                 </div>
@@ -3187,7 +3187,7 @@ function StaffDetailModal({
                     {/* Mobile cards */}
                     <div className="md:hidden space-y-2">
                       {sessions.map(s => (
-                        <div key={s.id} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+                        <div key={s.id} className="ds-card p-3">
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
                               <p className="text-[12px] font-bold text-[#0B1F3A]">{s.session_date}</p>
@@ -3200,7 +3200,7 @@ function StaffDetailModal({
                               <span className="text-[13px] font-bold text-[#0B1F3A]">{fmtEGP(s.amount)}</span>
                               <div className="flex gap-1">
                                 <button onClick={() => openEditSession(s)} className="rounded-lg bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold text-[#64748B]">✎</button>
-                                <button onClick={() => handleDeleteSession(s.id)} className="rounded-lg bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-500">✕</button>
+                                <button onClick={() => handleDeleteSession(s.id)} className="rounded-lg bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#EF4444]">✕</button>
                               </div>
                             </div>
                           </div>
@@ -3219,7 +3219,7 @@ function StaffDetailModal({
             {tab === "adjustments" && (
               <div className="p-5 space-y-4">
                 {showAdjForm ? (
-                  <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
+                  <div className="ds-card p-4 space-y-3">
                     <p className="text-[13px] font-bold text-[#0B1F3A]">New Adjustment</p>
                     <div>
                       <label className="text-[11px] font-semibold text-[#0B1F3A]">Type</label>
@@ -3249,7 +3249,7 @@ function StaffDetailModal({
                       <input value={adjNotes} onChange={e => setAdjNotes(e.target.value)} placeholder="Description…"
                         className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
                     </div>
-                    {adjErr && <p className="text-[12px] text-red-600">{adjErr}</p>}
+                    {adjErr && <p className="text-[12px] text-[#EF4444]">{adjErr}</p>}
                     <div className="flex gap-2">
                       <button onClick={() => { setShowAdjForm(false); setAdjErr("") }} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[12px] font-medium text-[#64748B]">Cancel</button>
                       <button onClick={submitAdj} disabled={adjBusy} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[12px] font-semibold text-white disabled:opacity-50">
@@ -3268,16 +3268,16 @@ function StaffDetailModal({
                 ) : (
                   <div className="space-y-2">
                     {row.adjustments.map(a => (
-                      <div key={a.id} className="flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3">
+                      <div key={a.id} className="flex items-center gap-3 ds-card px-4 py-3">
                         <AdjBadge type={a.type} amount={a.amount} />
                         <div className="flex-1 min-w-0">
                           {a.notes && <p className="text-[12px] text-[#0B1F3A] truncate">{a.notes}</p>}
                           <p className="text-[11px] text-[#94A3B8]">{a.adjustment_date}</p>
                         </div>
-                        <p className={`text-[13px] font-bold shrink-0 ${ADJ_SIGN[a.type] === 1 ? "text-emerald-700" : "text-red-600"}`}>
+                        <p className={`text-[13px] font-bold shrink-0 ${ADJ_SIGN[a.type] === 1 ? "text-[#15803D]" : "text-[#EF4444]"}`}>
                           {ADJ_SIGN[a.type] === 1 ? "+" : "−"}{fmtEGP(a.amount)}
                         </p>
-                        <button onClick={() => removeAdj(a.id)} className="text-[#CBD5E1] hover:text-red-400 transition shrink-0">
+                        <button onClick={() => removeAdj(a.id)} className="text-[#CBD5E1] hover:text-[#F87171] transition shrink-0">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
@@ -3292,7 +3292,7 @@ function StaffDetailModal({
             {/* ── PAYMENTS ── */}
             {tab === "payments" && (
               <div className="p-5 space-y-4 max-w-md">
-                <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
+                <div className="ds-card p-4 space-y-3">
                   <p className="text-[13px] font-bold text-[#0B1F3A]">Payment Configuration</p>
                   <div>
                     <label className="text-[11px] font-semibold text-[#0B1F3A]">Base Salary (EGP)</label>
@@ -3318,8 +3318,8 @@ function StaffDetailModal({
                     <input value={payRef} onChange={e => setPayRef(e.target.value)} placeholder="Account / phone / IBAN"
                       className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
                   </div>
-                  {payErr && <p className="text-[12px] text-red-600">{payErr}</p>}
-                  {payOk  && <p className="text-[12px] text-emerald-600 font-semibold">✓ Saved successfully</p>}
+                  {payErr && <p className="text-[12px] text-[#EF4444]">{payErr}</p>}
+                  {payOk  && <p className="text-[12px] text-[#10B981] font-semibold">✓ Saved successfully</p>}
                   <button onClick={submitPayment} disabled={payBusy} className="w-full rounded-lg bg-[#0B1F3A] py-2.5 text-[13px] font-semibold text-white disabled:opacity-50 hover:bg-[#1a2f4a] transition">
                     {payBusy ? "Saving…" : "Save Payment Info"}
                   </button>
@@ -3329,7 +3329,7 @@ function StaffDetailModal({
                   <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider">Current Payroll Summary</p>
                   <ModalRow label="Base Salary"        right={fmtEGP(row.basic_salary)} />
                   <ModalRow label="Activity Earnings"  right={fmtEGP(liveSessionEarnings)} />
-                  <ModalRow label="Adjustments" right={`${row.adj_net >= 0 ? "+" : ""}${fmtEGP(row.adj_net)}`} rightCls={row.adj_net >= 0 ? "text-emerald-700 font-semibold" : "text-red-600 font-semibold"} />
+                  <ModalRow label="Adjustments" right={`${row.adj_net >= 0 ? "+" : ""}${fmtEGP(row.adj_net)}`} rightCls={row.adj_net >= 0 ? "text-[#15803D] font-semibold" : "text-[#EF4444] font-semibold"} />
                   <div className="border-t border-[#E2E8F0] pt-2">
                     <ModalRow label="Net Amount" right={fmtEGP(liveNet)} rightCls="text-[#FF8A1F] font-extrabold" />
                   </div>
@@ -3340,7 +3340,7 @@ function StaffDetailModal({
             {/* ── NOTES ── */}
             {tab === "notes" && (
               <div className="p-5 space-y-4 max-w-md">
-                <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
+                <div className="ds-card p-4 space-y-3">
                   <p className="text-[13px] font-bold text-[#0B1F3A]">Notes</p>
                   <p className="text-[11px] text-[#94A3B8]">Visible to team leaders and admins only.</p>
                   <textarea
@@ -3350,7 +3350,7 @@ function StaffDetailModal({
                     placeholder="Add notes about this staff member's payroll, payment preferences, or any relevant information…"
                     className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-[13px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 resize-none"
                   />
-                  {notesOk && <p className="text-[12px] text-emerald-600 font-semibold">✓ Notes saved</p>}
+                  {notesOk && <p className="text-[12px] text-[#10B981] font-semibold">✓ Notes saved</p>}
                   <button onClick={saveNotes} disabled={notesBusy} className="w-full rounded-lg bg-[#0B1F3A] py-2.5 text-[13px] font-semibold text-white disabled:opacity-50 hover:bg-[#1a2f4a] transition">
                     {notesBusy ? "Saving…" : "Save Notes"}
                   </button>

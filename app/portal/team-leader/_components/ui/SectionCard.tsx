@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import type { ReactNode } from 'react'
 
@@ -12,7 +12,7 @@ interface SectionCardProps {
 
 export function SectionCard({ title, action, children, className = '', noPad = false }: SectionCardProps) {
   return (
-    <div className={`rounded-xl border border-[#E2E8F0] bg-white shadow-sm ${className}`}>
+    <div className={`ds-card shadow-sm ${className}`}>
       {(title || action) && (
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
           {title && <h3 className="text-sm font-semibold text-[#1E293B]">{title}</h3>}

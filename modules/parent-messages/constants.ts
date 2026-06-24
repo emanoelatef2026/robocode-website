@@ -1,4 +1,4 @@
-// Shared constants — no 'server-only', safe for client components
+﻿// Shared constants — no 'server-only', safe for client components
 
 export type MessageStatus   = 'submitted' | 'under_review' | 'resolved'
 export type MessageCategory =
@@ -17,6 +17,6 @@ export const CATEGORY_LABELS: Record<MessageCategory, string> = {
 
 export const STATUS_CONFIG: Record<MessageStatus, { label: string; cls: string }> = {
   submitted:    { label: 'Submitted',    cls: 'bg-yellow-100 text-yellow-700' },
-  under_review: { label: 'Under Review', cls: 'bg-blue-100   text-blue-700'   },
-  resolved:     { label: 'Resolved',     cls: 'bg-green-100  text-green-700'  },
+  under_review: { label: 'Under Review', cls: 'bg-[#EFF6FF]   text-[#1D4ED8]'   },
+  resolved:     { label: 'Resolved',     cls: 'bg-[#E7F8EE]  text-[#15803D]'  },
 }

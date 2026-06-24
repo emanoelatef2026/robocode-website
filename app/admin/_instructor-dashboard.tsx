@@ -1,4 +1,4 @@
-import {
+﻿import {
   getInstructorByUserId,
   listInstructorGroups,
   getUpcomingSessionsForInstructor,
@@ -12,22 +12,22 @@ import Link from 'next/link'
 // ── Design tokens ─────────────────────────────────────────────────────────────
 
 const ACTION_COLORS: Record<TodayAction['type'], string> = {
-  start_session:       'border-l-emerald-400 bg-emerald-50',
-  complete_attendance: 'border-l-amber-400   bg-amber-50',
-  add_notes:           'border-l-blue-400    bg-blue-50',
+  start_session:       'border-l-emerald-400 bg-[#E7F8EE]',
+  complete_attendance: 'border-l-amber-400   bg-[#FFFBEB]',
+  add_notes:           'border-l-blue-400    bg-[#EFF6FF]',
   review_homework:     'border-l-violet-400  bg-violet-50',
 }
 
 const ACTION_LABEL_COLORS: Record<TodayAction['type'], string> = {
-  start_session:       'text-emerald-700',
-  complete_attendance: 'text-amber-700',
-  add_notes:           'text-blue-700',
+  start_session:       'text-[#15803D]',
+  complete_attendance: 'text-[#B45309]',
+  add_notes:           'text-[#1D4ED8]',
   review_homework:     'text-violet-700',
 }
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">{children}</div>
+    <div className="ds-card overflow-hidden">{children}</div>
   )
 }
 
@@ -71,7 +71,7 @@ function StatsHeader({
   ]
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+    <div className="ds-card p-5">
       <div className="mb-4">
         <h1 className="text-xl font-semibold text-[#0B1F3A]">Welcome back, {name}</h1>
         <p className="mt-0.5 text-sm text-[#64748B]">Here&apos;s your overview for today.</p>
@@ -137,7 +137,7 @@ function UpcomingSessionsSection({
         <EmptyRow message="No scheduled sessions." />
       ) : (
         <table className="w-full text-sm">
-          <thead>
+          <thead className="ds-table-head">
             <tr className="bg-[#F8FAFC]">
               <th className="px-5 py-2.5 text-left text-xs font-medium text-[#64748B]">Date</th>
               <th className="px-5 py-2.5 text-left text-xs font-medium text-[#64748B]">Time</th>
@@ -203,7 +203,7 @@ function MyGroupsSection({
     <Card>
       <SectionHeader title="My Groups" count={groups.length} />
       <table className="w-full text-sm">
-        <thead>
+        <thead className="ds-table-head">
           <tr className="bg-[#F8FAFC]">
             <th className="px-5 py-2.5 text-left text-xs font-medium text-[#64748B]">Code</th>
             <th className="px-5 py-2.5 text-left text-xs font-medium text-[#64748B]">Group</th>
@@ -229,9 +229,9 @@ function MyGroupsSection({
                 <td className="px-5 py-3 text-right font-medium text-[#0B1F3A]">{g.student_count}</td>
                 <td className="px-5 py-3">
                   {isActive ? (
-                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">Active</span>
+                    <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#15803D]">Active</span>
                   ) : (
-                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">Forming</span>
+                    <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#B45309]">Forming</span>
                   )}
                 </td>
                 <td className="px-5 py-3 text-right">
@@ -239,7 +239,7 @@ function MyGroupsSection({
                     {isActive && (
                       <Link
                         href={`/portal/instructor/groups/${g.group_id}/sessions/new`}
-                        className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-medium text-[#64748B] transition hover:border-emerald-400 hover:text-emerald-600"
+                        className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-medium text-[#64748B] transition hover:border-[#10B981] hover:text-[#10B981]"
                       >
                         Start Session
                       </Link>
@@ -275,7 +275,7 @@ function PendingReviewsSection({
         <EmptyRow message="No submissions waiting for review." />
       ) : (
         <table className="w-full text-sm">
-          <thead>
+          <thead className="ds-table-head">
             <tr className="bg-[#F8FAFC]">
               <th className="px-5 py-2.5 text-left text-xs font-medium text-[#64748B]">Student</th>
               <th className="px-5 py-2.5 text-left text-xs font-medium text-[#64748B]">Assignment</th>
@@ -295,7 +295,7 @@ function PendingReviewsSection({
                 <td className="px-5 py-3 text-[#64748B]">
                   {sub.assignment_title}
                   {sub.is_late && (
-                    <span className="ml-1.5 rounded bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-600">Late</span>
+                    <span className="ml-1.5 rounded bg-[#FEE2E2] px-1.5 py-0.5 text-[10px] font-medium text-[#EF4444]">Late</span>
                   )}
                 </td>
                 <td className="px-5 py-3 text-[#94A3B8] hidden md:table-cell">
@@ -367,7 +367,7 @@ function QuickActionsSection({ permissions }: { permissions: string[] }) {
   const visible = actions.filter((a) => !a.permission || permissions.includes(a.permission))
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+    <div className="ds-card p-5">
       <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">Quick Actions</h2>
       <div className="flex flex-wrap gap-2">
         {visible.map(({ label, href }) => (

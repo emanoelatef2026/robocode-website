@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { createSemester } from '@/modules/semesters/actions'
@@ -22,9 +22,9 @@ export default function NewSemesterForm({ years }: Props) {
   )
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -32,7 +32,7 @@ export default function NewSemesterForm({ years }: Props) {
       <form action={action} className="space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Academic Year <span className="text-red-500">*</span>
+            Academic Year <span className="text-[#EF4444]">*</span>
           </label>
           <select
             name="academic_year_id"
@@ -49,7 +49,7 @@ export default function NewSemesterForm({ years }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Name <span className="text-red-500">*</span>
+              Name <span className="text-[#EF4444]">*</span>
             </label>
             <input
               id="sem-name"
@@ -65,7 +65,7 @@ export default function NewSemesterForm({ years }: Props) {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Slug <span className="text-red-500">*</span>
+              Slug <span className="text-[#EF4444]">*</span>
             </label>
             <input
               id="sem-slug"
@@ -81,7 +81,7 @@ export default function NewSemesterForm({ years }: Props) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Start date <span className="text-red-500">*</span>
+              Start date <span className="text-[#EF4444]">*</span>
             </label>
             <input
               name="start_date"
@@ -92,7 +92,7 @@ export default function NewSemesterForm({ years }: Props) {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              End date <span className="text-red-500">*</span>
+              End date <span className="text-[#EF4444]">*</span>
             </label>
             <input
               name="end_date"

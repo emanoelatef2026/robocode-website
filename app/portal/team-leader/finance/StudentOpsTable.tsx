@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
@@ -34,20 +34,20 @@ function rowPriority(r: StudentOperationsRow): number {
 }
 
 function getStatusBadge(r: StudentOperationsRow): { label: string; cls: string } | null {
-  if (!r.account_id) return { label: 'No Package', cls: 'bg-amber-50 text-amber-700 border-amber-200' }
+  if (!r.account_id) return { label: 'No Package', cls: 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]' }
   if (!r.financial_status) return null
-  const cls = STATUS_COLORS[r.financial_status as keyof typeof STATUS_COLORS] ?? 'bg-slate-50 text-slate-600 border-slate-200'
+  const cls = STATUS_COLORS[r.financial_status as keyof typeof STATUS_COLORS] ?? 'bg-[#F8FAFC] text-[#475569] border-slate-200'
   return { label: STATUS_LABELS[r.financial_status as keyof typeof STATUS_LABELS] ?? r.financial_status, cls }
 }
 
 function getActionBadge(r: StudentOperationsRow): { label: string; cls: string } | null {
   const ex = computeSessionExhaustion(r.enrolled_sessions, r.remaining_sessions)
-  if (r.financial_status === 'BLOCKED')  return { label: 'Collect Now', cls: 'bg-red-100 text-red-800 border-red-300' }
-  if (r.financial_status === 'OVERDUE')  return { label: 'Collect Now', cls: 'bg-red-50 text-red-600 border-red-200' }
+  if (r.financial_status === 'BLOCKED')  return { label: 'Collect Now', cls: 'bg-[#FEE2E2] text-[#991B1B] border-[#FCA5A5]' }
+  if (r.financial_status === 'OVERDUE')  return { label: 'Collect Now', cls: 'bg-[#FEE2E2] text-[#EF4444] border-[#FECACA]' }
   if (ex === 'EXHAUSTED')                return { label: 'Renew', cls: 'bg-purple-50 text-purple-700 border-purple-200' }
-  if (r.consecutive_absences >= 3)       return { label: 'Absent ×' + r.consecutive_absences, cls: 'bg-amber-50 text-amber-700 border-amber-200' }
+  if (r.consecutive_absences >= 3)       return { label: 'Absent ×' + r.consecutive_absences, cls: 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]' }
   if (r.sessions_attended >= 10 && r.remaining_amount > 0)
-                                         return { label: 'Missing Pay', cls: 'bg-amber-100 text-amber-800 border-amber-300' }
+                                         return { label: 'Missing Pay', cls: 'bg-[#FFFBEB] text-[#92400E] border-amber-300' }
   return null
 }
 
@@ -186,29 +186,29 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
       {/* ── Summary strip ────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-2 text-xs">
         {highCount > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 font-medium text-red-600">
+          <span className="inline-flex items-center gap-1 rounded-full border border-[#FECACA] bg-[#FEE2E2] px-2.5 py-1 font-medium text-[#EF4444]">
             🔴 {highCount} HIGH risk
           </span>
         )}
         {blockedCount > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-red-300 bg-red-100 px-2.5 py-1 font-medium text-red-800">
+          <span className="inline-flex items-center gap-1 rounded-full border border-[#FCA5A5] bg-[#FEE2E2] px-2.5 py-1 font-medium text-[#991B1B]">
             🚫 {blockedCount} BLOCKED
           </span>
         )}
         {overdueCount > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 font-medium text-amber-700">
+          <span className="inline-flex items-center gap-1 rounded-full border border-[#FDE68A] bg-[#FFFBEB] px-2.5 py-1 font-medium text-[#B45309]">
             ⚠️ {overdueCount} overdue
           </span>
         )}
         {noGroupCount > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 font-medium text-slate-600">
+          <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-[#F8FAFC] px-2.5 py-1 font-medium text-[#475569]">
             📋 {noGroupCount} no group
           </span>
         )}
       </div>
 
       {/* ── Filters (sticky) ─────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 rounded-xl border border-[#E2E8F0] bg-white shadow-sm">
+      <div className="sticky top-0 z-20 ds-card shadow-sm">
         <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] p-3">
           {/* Search */}
           <div className="relative min-w-48 flex-1">
@@ -299,7 +299,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                   <col style={{ width: '7%' }} />
                   <col style={{ width: '9%' }} />
                 </colgroup>
-                <thead className="sticky top-0 z-10 bg-[#F8FAFC]">
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0]">
                     <SortTh field="student_name">Student</SortTh>
                     <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-medium text-[#64748B]">Group / Course</th>
@@ -338,7 +338,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                             ? <p className="truncate text-xs font-medium text-[#0B1F3A]">{row.group_name}</p>
                             : row.course_name
                               ? <p className="truncate text-xs text-[#0B1F3A]">{row.course_name}</p>
-                              : <span className="text-[11px] font-medium text-amber-600">No group</span>}
+                              : <span className="text-[11px] font-medium text-[#F59E0B]">No group</span>}
                           {row.course_name && row.group_name && (
                             <p className="truncate text-[11px] text-[#94A3B8]">{row.course_name}</p>
                           )}
@@ -351,22 +351,22 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                         <td className="px-3 py-2.5">
                           {row.instructor_name
                             ? <p className="truncate text-xs text-[#64748B]">{row.instructor_name}</p>
-                            : <span className="text-[11px] font-medium text-amber-600">Unassigned</span>}
+                            : <span className="text-[11px] font-medium text-[#F59E0B]">Unassigned</span>}
                         </td>
 
                         {/* Sessions (attendance + package) */}
                         <td className="px-3 py-2.5">
                           <p className="text-xs text-[#64748B]">
-                            <span className={row.sessions_attended >= 10 && row.remaining_amount > 0 ? 'font-semibold text-amber-700' : ''}>
+                            <span className={row.sessions_attended >= 10 && row.remaining_amount > 0 ? 'font-semibold text-[#B45309]' : ''}>
                               {row.sessions_attended}
                             </span>
                             <span className="text-[#94A3B8]">/{row.total_sessions}</span>
                           </p>
                           {row.enrolled_sessions > 0 && (
                             <p className={`text-[11px] font-medium ${
-                              ex === 'EXHAUSTED' ? 'text-red-600' :
-                              ex === 'CRITICAL'  ? 'text-red-500' :
-                              ex === 'WARNING'   ? 'text-amber-600' : 'text-emerald-600'
+                              ex === 'EXHAUSTED' ? 'text-[#EF4444]' :
+                              ex === 'CRITICAL'  ? 'text-[#EF4444]' :
+                              ex === 'WARNING'   ? 'text-[#F59E0B]' : 'text-[#10B981]'
                             }`}>
                               {row.remaining_sessions <= 0 ? 'Exhausted' : `${row.remaining_sessions} left`}
                             </p>
@@ -387,7 +387,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                               </span>
                             )}
                             {!statusBadge && !actionBadge && (
-                              <span className="text-[10px] text-emerald-600">✓ OK</span>
+                              <span className="text-[10px] text-[#10B981]">✓ OK</span>
                             )}
                           </div>
                         </td>
@@ -398,33 +398,33 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                             row.remaining_amount > 0 ? (
                               <span className={`text-xs font-semibold ${
                                 row.financial_status === 'OVERDUE' || row.financial_status === 'BLOCKED'
-                                  ? 'text-red-600' : 'text-[#0B1F3A]'
+                                  ? 'text-[#EF4444]' : 'text-[#0B1F3A]'
                               }`}>
                                 EGP {fmt(row.remaining_amount)}
                               </span>
                             ) : (
-                              <span className="text-xs text-emerald-600">Paid ✓</span>
+                              <span className="text-xs text-[#10B981]">Paid ✓</span>
                             )
                           ) : (
-                            <span className="text-[11px] font-medium text-amber-600">No pkg</span>
+                            <span className="text-[11px] font-medium text-[#F59E0B]">No pkg</span>
                           )}
                           {row.next_due_date && row.days_overdue > 0 && (
-                            <p className="text-[10px] font-medium text-red-600">{row.days_overdue}d late</p>
+                            <p className="text-[10px] font-medium text-[#EF4444]">{row.days_overdue}d late</p>
                           )}
                         </td>
 
                         {/* Attendance */}
                         <td className="px-3 py-2.5">
                           <span className={`text-xs font-semibold ${
-                            row.attendance_pct >= 80 ? 'text-emerald-600' :
-                            row.attendance_pct >= 60 ? 'text-amber-600' :
-                            row.total_sessions > 0   ? 'text-red-600' :
+                            row.attendance_pct >= 80 ? 'text-[#10B981]' :
+                            row.attendance_pct >= 60 ? 'text-[#F59E0B]' :
+                            row.total_sessions > 0   ? 'text-[#EF4444]' :
                             'text-[#94A3B8]'
                           }`}>
                             {row.total_sessions > 0 ? `${row.attendance_pct}%` : '—'}
                           </span>
                           {row.consecutive_absences >= 3 && (
-                            <p className="text-[10px] font-medium text-red-600">{row.consecutive_absences} consec.</p>
+                            <p className="text-[10px] font-medium text-[#EF4444]">{row.consecutive_absences} consec.</p>
                           )}
                         </td>
 
@@ -437,7 +437,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                                   href={`https://wa.me/${row.parent_phone_1.replace(/\D/g, '')}`}
                                   target="_blank" rel="noopener noreferrer"
                                   title="WhatsApp parent"
-                                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-emerald-600 hover:bg-emerald-50"
+                                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#10B981] hover:bg-[#E7F8EE]"
                                 >
                                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                                     <path fillRule="evenodd" d="M18 10c0 4.418-3.582 8-8 8a7.96 7.96 0 01-4.126-1.144L2 18l1.168-3.744A7.96 7.96 0 012 10c0-4.418 3.582-8 8-8s8 3.582 8 8zm-8 6a6 6 0 100-12 6 6 0 000 12z" clipRule="evenodd" />
@@ -446,7 +446,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                                 <a
                                   href={`tel:${row.parent_phone_1}`}
                                   title="Call parent"
-                                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-blue-600 hover:bg-blue-50"
+                                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#2563EB] hover:bg-[#EFF6FF]"
                                 >
                                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                                     <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
@@ -489,7 +489,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                           {row.student_name}
                         </button>
                         <p className="text-xs text-[#64748B] truncate">
-                          {row.group_name ?? <span className="text-amber-600">No group</span>}
+                          {row.group_name ?? <span className="text-[#F59E0B]">No group</span>}
                           {row.instructor_name ? ` · ${row.instructor_name}` : ''}
                         </p>
                       </div>
@@ -511,9 +511,9 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                       <div>
                         <p className="text-[#94A3B8]">Attendance</p>
                         <p className={`font-semibold ${
-                          row.attendance_pct >= 80 ? 'text-emerald-600' :
-                          row.attendance_pct >= 60 ? 'text-amber-600' :
-                          row.total_sessions > 0   ? 'text-red-600' :
+                          row.attendance_pct >= 80 ? 'text-[#10B981]' :
+                          row.attendance_pct >= 60 ? 'text-[#F59E0B]' :
+                          row.total_sessions > 0   ? 'text-[#EF4444]' :
                           'text-[#94A3B8]'
                         }`}>
                           {row.total_sessions > 0
@@ -523,10 +523,10 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                       </div>
                       <div>
                         <p className="text-[#94A3B8]">Remaining</p>
-                        <p className={`font-semibold ${row.remaining_amount > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                        <p className={`font-semibold ${row.remaining_amount > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
                           {row.account_id
                             ? (row.remaining_amount > 0 ? `EGP ${fmt(row.remaining_amount)}` : 'Paid ✓')
-                            : <span className="text-amber-600">No package</span>}
+                            : <span className="text-[#F59E0B]">No package</span>}
                         </p>
                       </div>
                       {row.parent_name && (
@@ -538,7 +538,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                       {row.next_due_date && (
                         <div>
                           <p className="text-[#94A3B8]">Next Due</p>
-                          <p className={`font-medium ${row.days_overdue > 0 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+                          <p className={`font-medium ${row.days_overdue > 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
                             {fmtDateShort(row.next_due_date)}
                             {row.days_overdue > 0 && ` (${row.days_overdue}d)`}
                           </p>
@@ -550,11 +550,11 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                       {row.parent_phone_1 && (
                         <>
                           <a href={`https://wa.me/${row.parent_phone_1.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
-                            className="rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                            className="rounded-lg bg-[#E7F8EE] px-2.5 py-1 text-xs font-medium text-[#15803D]">
                             WhatsApp
                           </a>
                           <a href={`tel:${row.parent_phone_1}`}
-                            className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+                            className="rounded-lg bg-[#EFF6FF] px-2.5 py-1 text-xs font-medium text-[#1D4ED8]">
                             Call
                           </a>
                         </>

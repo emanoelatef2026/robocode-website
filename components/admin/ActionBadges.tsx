@@ -1,4 +1,4 @@
-import type { RecommendedAction } from '@/modules/actions-engine'
+﻿import type { RecommendedAction } from '@/modules/actions-engine'
 
 interface Props {
   actions: RecommendedAction[]
@@ -23,7 +23,7 @@ export default function ActionBadges({ actions, max = 3 }: Props) {
         </span>
       ))}
       {rest > 0 && (
-        <span className="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+        <span className="inline-flex items-center rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold text-[#475569]">
           +{rest} more
         </span>
       )}

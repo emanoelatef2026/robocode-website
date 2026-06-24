@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState } from 'react'
 import { reviewPortfolioProject, assignProjectBadge } from '@/modules/portfolio/instructor-actions'
@@ -38,10 +38,10 @@ export default function ProjectReviewForm({ projectId, studentId, currentFeedbac
         <input type="hidden" name="project_id" value={projectId} />
 
         {reviewState && !reviewState.success && (
-          <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{reviewState.error.message}</div>
+          <div className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#DC2626]">{reviewState.error.message}</div>
         )}
         {reviewState?.success && (
-          <div className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700">Review saved.</div>
+          <div className="rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#15803D]">Review saved.</div>
         )}
 
         <div>
@@ -84,10 +84,10 @@ export default function ProjectReviewForm({ projectId, studentId, currentFeedbac
           <input type="hidden" name="student_id" value={studentId} />
 
           {badgeState && !badgeState.success && (
-            <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{badgeState.error.message}</div>
+            <div className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#DC2626]">{badgeState.error.message}</div>
           )}
           {badgeState?.success && (
-            <div className="rounded-lg bg-green-50 px-3 py-2 text-xs text-green-700">Badge assigned.</div>
+            <div className="rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#15803D]">Badge assigned.</div>
           )}
 
           <div>

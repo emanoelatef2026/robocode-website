@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { createInstructor } from '@/modules/instructors/actions'
@@ -20,9 +20,9 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
   )
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -32,7 +32,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
           <input type="hidden" name="branch_id" value={singleBranch} />
         ) : (
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Branch <span className="text-red-500">*</span></label>
+            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Branch <span className="text-[#EF4444]">*</span></label>
             <select name="branch_id" required className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
               <option value="">— Select branch —</option>
               {(branches ?? []).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -44,7 +44,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              First name <span className="text-red-500">*</span>
+              First name <span className="text-[#EF4444]">*</span>
             </label>
             <input
               name="first_name"
@@ -54,7 +54,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Last name <span className="text-red-500">*</span>
+              Last name <span className="text-[#EF4444]">*</span>
             </label>
             <input
               name="last_name"
@@ -66,7 +66,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
 
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Email <span className="text-red-500">*</span>
+            Email <span className="text-[#EF4444]">*</span>
           </label>
           <input
             name="email"
@@ -78,7 +78,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
 
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Password <span className="text-red-500">*</span>
+            Password <span className="text-[#EF4444]">*</span>
           </label>
           <input
             name="password"

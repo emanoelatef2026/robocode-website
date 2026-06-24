@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback, useTransition } from 'react'
 import type { StudentOperationsRow, StudentOpsDetail, PaymentMethod } from '@/modules/finance/types'
@@ -30,10 +30,10 @@ function fmtDate(iso: string | null) {
 }
 
 const ATTENDANCE_COLORS: Record<string, string> = {
-  present:  'bg-emerald-50 text-emerald-700',
-  late:     'bg-amber-50 text-amber-700',
-  makeup:   'bg-blue-50 text-blue-700',
-  absent:   'bg-red-50 text-red-600',
+  present:  'bg-[#E7F8EE] text-[#15803D]',
+  late:     'bg-[#FFFBEB] text-[#B45309]',
+  makeup:   'bg-[#EFF6FF] text-[#1D4ED8]',
+  absent:   'bg-[#FEE2E2] text-[#EF4444]',
   excused:  'bg-purple-50 text-purple-700',
 }
 
@@ -147,7 +147,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                 href={`https://wa.me/${student.parent_phone_1.replace(/\D/g, '')}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100"
+                className="inline-flex items-center gap-1 rounded-lg bg-[#E7F8EE] px-3 py-1.5 text-xs font-medium text-[#15803D] hover:bg-[#E7F8EE]"
               >
                 WhatsApp
               </a>
@@ -155,7 +155,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
             {student.parent_phone_1 && (
               <a
                 href={`tel:${student.parent_phone_1}`}
-                className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100"
+                className="inline-flex items-center gap-1 rounded-lg bg-[#EFF6FF] px-3 py-1.5 text-xs font-medium text-[#1D4ED8] hover:bg-[#EFF6FF]"
               >
                 Call
               </a>
@@ -238,7 +238,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                     <Row label="Instructor"  value={student.instructor_name ?? '—'} />
                     {student.enrollment_id && (
                       <Row label="Enrollment" value={
-                        <span className="rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-600">
+                        <span className="rounded-full bg-[#EFF6FF] px-1.5 py-0.5 text-[10px] font-medium text-[#2563EB]">
                           Enrolled ✓
                         </span>
                       } />
@@ -252,13 +252,13 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                   <dl className="space-y-2">
                     <Row label="Attended"   value={`${student.sessions_attended} / ${student.total_sessions} sessions`} />
                     <Row label="Rate" value={
-                      <span className={`font-semibold ${student.attendance_pct >= 80 ? 'text-emerald-600' : student.attendance_pct >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
+                      <span className={`font-semibold ${student.attendance_pct >= 80 ? 'text-[#10B981]' : student.attendance_pct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
                         {student.attendance_pct}%
                       </span>
                     } />
                     <Row label="Last Seen"  value={fmtDate(student.last_attendance_date)} />
                     <Row label="Consec. Absences" value={
-                      <span className={student.consecutive_absences >= 3 ? 'font-semibold text-red-600' : ''}>
+                      <span className={student.consecutive_absences >= 3 ? 'font-semibold text-[#EF4444]' : ''}>
                         {student.consecutive_absences}
                       </span>
                     } />
@@ -272,8 +272,8 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                   <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#64748B]">Finance Summary</h3>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     <Kpi label="Total"     value={`EGP ${fmt(student.net_amount)}`} />
-                    <Kpi label="Paid"      value={`EGP ${fmt(student.paid_amount)}`} color="text-emerald-600" />
-                    <Kpi label="Remaining" value={`EGP ${fmt(student.remaining_amount)}`} color={student.remaining_amount > 0 ? 'text-red-600' : 'text-emerald-600'} />
+                    <Kpi label="Paid"      value={`EGP ${fmt(student.paid_amount)}`} color="text-[#10B981]" />
+                    <Kpi label="Remaining" value={`EGP ${fmt(student.remaining_amount)}`} color={student.remaining_amount > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'} />
                     <Kpi label="Status"    value={
                       student.financial_status
                         ? <span className={`inline-block rounded-full px-2 py-0.5 text-xs border ${STATUS_COLORS[student.financial_status]}`}>
@@ -290,15 +290,15 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                     </div>
                     <div className="h-2 w-full rounded-full bg-[#F1F5F9]">
                       <div
-                        className={`h-full rounded-full ${student.payment_progress_pct >= 80 ? 'bg-emerald-500' : student.payment_progress_pct >= 50 ? 'bg-amber-500' : 'bg-red-500'}`}
+                        className={`h-full rounded-full ${student.payment_progress_pct >= 80 ? 'bg-[#10B981]' : student.payment_progress_pct >= 50 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
                         style={{ width: `${Math.min(100, student.payment_progress_pct)}%` }}
                       />
                     </div>
                   </div>
                   {student.next_due_date && (
                     <p className="mt-2 text-xs text-[#64748B]">
-                      Next due: <span className={student.days_overdue > 0 ? 'font-medium text-red-600' : 'font-medium'}>{fmtDate(student.next_due_date)}</span>
-                      {student.days_overdue > 0 && <span className="ml-1 text-red-600">({student.days_overdue}d overdue)</span>}
+                      Next due: <span className={student.days_overdue > 0 ? 'font-medium text-[#EF4444]' : 'font-medium'}>{fmtDate(student.next_due_date)}</span>
+                      {student.days_overdue > 0 && <span className="ml-1 text-[#EF4444]">({student.days_overdue}d overdue)</span>}
                     </p>
                   )}
                 </div>
@@ -313,7 +313,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
             </div>
           )}
           {activeTab !== 'overview' && error && (
-            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>
+            <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] px-4 py-3 text-sm text-[#EF4444]">{error}</div>
           )}
 
           {/* ── TAB: PAYMENTS ─────────────────────────────────────────────── */}
@@ -346,7 +346,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                         onChange={e => setPayAmount(e.target.value)}
                         placeholder="e.g. 500"
                         autoFocus
-                        className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
                       />
                     </div>
                     <div>
@@ -354,7 +354,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                       <select
                         value={payMethod}
                         onChange={e => setPayMethod(e.target.value as PaymentMethod)}
-                        className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
                       >
                         {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
                           <option key={k} value={k}>{v}</option>
@@ -367,7 +367,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                         type="date"
                         value={payDate}
                         onChange={e => setPayDate(e.target.value)}
-                        className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
                       />
                     </div>
                     <div>
@@ -376,7 +376,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                         value={payRef}
                         onChange={e => setPayRef(e.target.value)}
                         placeholder="e.g. Instapay ref"
-                        className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
                       />
                     </div>
                   </div>
@@ -384,9 +384,9 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                     value={payNotes}
                     onChange={e => setPayNotes(e.target.value)}
                     placeholder="Notes (optional)"
-                    className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                    className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
                   />
-                  {payError && <p className="text-xs text-red-600">{payError}</p>}
+                  {payError && <p className="text-xs text-[#EF4444]">{payError}</p>}
                   <div className="flex gap-2">
                     <button
                       onClick={() => { setShowPayForm(false); setPayError(null) }}
@@ -412,7 +412,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                   const runningPaid = detail.payments.slice(i).reduce((s, x) => s + x.amount, 0)
                   return (
                     <div key={p.id} className="flex items-start gap-4 rounded-xl border border-[#E2E8F0] p-4">
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E7F8EE] text-[#15803D]">
                         <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                           <path d="M10.75 10.818v2.614A3.13 3.13 0 0011.888 13c.482-.315.612-.648.612-.875 0-.227-.13-.546-.612-.875a3.13 3.13 0 00-1.138-.432zM8.33 8.62c.053.055.115.11.184.164.208.16.46.284.736.363V6.603a2.45 2.45 0 00-.35.13c-.14.065-.27.143-.386.233-.377.292-.514.627-.514.909 0 .184.058.39.33.615z" />
                           <path fillRule="evenodd" d="M9.99 2C5.57 2 2 5.571 2 9.99 2 14.41 5.571 18 9.99 18c4.42 0 7.99-3.571 7.99-7.99C17.98 5.57 14.41 2 9.99 2zM9.25 4.447v.733a3.985 3.985 0 00-1.985 1.021 2.906 2.906 0 00-.95 2.154c0 .99.47 1.79 1.117 2.309.47.375 1.074.647 1.818.798v2.931a3.99 3.99 0 01-2.48-1.374l-1.06 1.061a5.493 5.493 0 003.54 1.82v.641h1.5v-.667a4.53 4.53 0 001.983-1.019 2.956 2.956 0 001-2.238c0-1.022-.49-1.837-1.16-2.369-.473-.376-1.082-.65-1.823-.801V7.191a2.47 2.47 0 011.733 1.052l1.1-1.008A3.98 3.98 0 0010.75 5.88v-.733h-1.5z" clipRule="evenodd" />
@@ -420,7 +420,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
-                          <p className="font-semibold text-emerald-700">EGP {fmt(p.amount)}</p>
+                          <p className="font-semibold text-[#15803D]">EGP {fmt(p.amount)}</p>
                           <span className="text-xs text-[#94A3B8]">{fmtDate(p.payment_date)}</span>
                         </div>
                         <p className="text-xs text-[#64748B]">
@@ -446,7 +446,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
               ) : (
                 <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
                   <table className="w-full text-sm">
-                    <thead>
+                    <thead className="ds-table-head">
                       <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                         <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Date</th>
                         <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Topic</th>
@@ -457,16 +457,16 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                     <tbody>
                       {detail.attendance_sessions.map(sess => {
                         const attStatus = sess.attendance_status
-                        const attColor  = attStatus ? (ATTENDANCE_COLORS[attStatus] ?? 'bg-slate-50 text-slate-600') : 'bg-slate-50 text-slate-400'
+                        const attColor  = attStatus ? (ATTENDANCE_COLORS[attStatus] ?? 'bg-[#F8FAFC] text-[#475569]') : 'bg-[#F8FAFC] text-[#94A3B8]'
                         return (
-                          <tr key={sess.schedule_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                          <tr key={sess.schedule_id} className="ds-table-row">
                             <td className="px-4 py-2.5 text-xs text-[#64748B]">{fmtDate(sess.scheduled_at)}</td>
                             <td className="px-4 py-2.5 text-xs text-[#0B1F3A]">{sess.topic ?? <span className="text-[#94A3B8]">—</span>}</td>
                             <td className="px-4 py-2.5">
                               <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                                sess.session_status === 'completed' ? 'bg-emerald-50 text-emerald-700' :
-                                sess.session_status === 'scheduled' ? 'bg-blue-50 text-blue-700' :
-                                'bg-slate-50 text-slate-600'
+                                sess.session_status === 'completed' ? 'bg-[#E7F8EE] text-[#15803D]' :
+                                sess.session_status === 'scheduled' ? 'bg-[#EFF6FF] text-[#1D4ED8]' :
+                                'bg-[#F8FAFC] text-[#475569]'
                               }`}>
                                 {sess.session_status}
                               </span>
@@ -501,7 +501,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                       ? Math.floor((Date.now() - new Date(inst.due_date).getTime()) / 86400000)
                       : 0
                     return (
-                      <div key={inst.id} className={`rounded-xl border p-4 ${isLate ? 'border-red-200 bg-red-50/30' : 'border-[#E2E8F0]'}`}>
+                      <div key={inst.id} className={`rounded-xl border p-4 ${isLate ? 'border-[#FECACA] bg-[#FEE2E2]/30' : 'border-[#E2E8F0]'}`}>
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs font-medium text-[#64748B]">Installment #{inst.installment_number}</span>
                           <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>
@@ -510,10 +510,10 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                         </div>
                         <p className="text-lg font-bold text-[#0B1F3A]">EGP {fmt(inst.amount)}</p>
                         <div className="mt-2 space-y-0.5 text-xs text-[#64748B]">
-                          <p>Due: <span className={isLate ? 'text-red-600 font-medium' : ''}>{fmtDate(inst.due_date)}</span></p>
-                          {inst.paid_amount > 0 && <p>Paid: <span className="text-emerald-600">EGP {fmt(inst.paid_amount)}</span></p>}
+                          <p>Due: <span className={isLate ? 'text-[#EF4444] font-medium' : ''}>{fmtDate(inst.due_date)}</span></p>
+                          {inst.paid_amount > 0 && <p>Paid: <span className="text-[#10B981]">EGP {fmt(inst.paid_amount)}</span></p>}
                           {inst.paid_amount < inst.amount && <p>Remaining: <span className="font-medium">EGP {fmt(inst.amount - inst.paid_amount)}</span></p>}
-                          {isLate && daysLate > 0 && <p className="text-red-600 font-medium">{daysLate} days late</p>}
+                          {isLate && daysLate > 0 && <p className="text-[#EF4444] font-medium">{daysLate} days late</p>}
                         </div>
                       </div>
                     )
@@ -533,13 +533,13 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                     <a
                       href={`https://wa.me/${student.parent_phone_1.replace(/\D/g, '')}`}
                       target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#E7F8EE] px-3 py-2 text-sm font-medium text-[#15803D] hover:bg-[#E7F8EE]"
                     >
                       💬 WhatsApp Parent
                     </a>
                     <a
                       href={`tel:${student.parent_phone_1}`}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-2 text-sm font-medium text-blue-700 hover:bg-blue-100"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#EFF6FF] px-3 py-2 text-sm font-medium text-[#1D4ED8] hover:bg-[#EFF6FF]"
                     >
                       📞 Call Parent
                     </a>
@@ -556,10 +556,10 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                   <div className="space-y-2">
                     {/* Promises */}
                     {detail.promises.map(p => (
-                      <div key={p.id} className={`rounded-xl border p-3 ${p.status === 'BROKEN' ? 'border-red-200 bg-red-50' : p.status === 'FULFILLED' ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50'}`}>
+                      <div key={p.id} className={`rounded-xl border p-3 ${p.status === 'BROKEN' ? 'border-[#FECACA] bg-[#FEE2E2]' : p.status === 'FULFILLED' ? 'border-[#A7F3D0] bg-[#E7F8EE]' : 'border-[#FDE68A] bg-[#FFFBEB]'}`}>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-[#0B1F3A]">💰 Payment Promise — EGP {fmt(p.promised_amount)}</span>
-                          <span className={`text-[10px] font-medium ${p.status === 'BROKEN' ? 'text-red-600' : p.status === 'FULFILLED' ? 'text-emerald-700' : 'text-amber-700'}`}>{p.status}</span>
+                          <span className={`text-[10px] font-medium ${p.status === 'BROKEN' ? 'text-[#EF4444]' : p.status === 'FULFILLED' ? 'text-[#15803D]' : 'text-[#B45309]'}`}>{p.status}</span>
                         </div>
                         <p className="text-xs text-[#64748B]">By {fmtDate(p.promised_date)}</p>
                         {p.notes && <p className="mt-1 text-xs text-[#94A3B8]">{p.notes}</p>}
@@ -582,7 +582,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
 
                     {/* Notes */}
                     {detail.notes.map(n => (
-                      <div key={n.id} className={`rounded-xl border p-3 ${n.is_internal ? 'border-slate-200 bg-slate-50' : 'border-[#E2E8F0]'}`}>
+                      <div key={n.id} className={`rounded-xl border p-3 ${n.is_internal ? 'border-slate-200 bg-[#F8FAFC]' : 'border-[#E2E8F0]'}`}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs font-medium text-[#0B1F3A]">📝 Note{n.is_internal ? ' (internal)' : ''}</span>
                           <span className="ml-auto text-[11px] text-[#94A3B8]">{fmtDate(n.created_at)}</span>

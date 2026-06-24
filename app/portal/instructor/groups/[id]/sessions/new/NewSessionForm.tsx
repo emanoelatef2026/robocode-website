@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { createSession } from '@/modules/instructor-portal/actions'
@@ -34,7 +34,7 @@ export default function NewSessionForm({ groupId, groupCourseId, branchId }: Pro
       <input type="hidden" name="group_id"         value={groupId} />
 
       {state && !state.success && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -93,7 +93,7 @@ export default function NewSessionForm({ groupId, groupCourseId, branchId }: Pro
 
       <div>
         <label className="block text-sm font-medium text-[#0B1F3A]">
-          Topic <span className="text-red-500">*</span>
+          Topic <span className="text-[#EF4444]">*</span>
         </label>
         <input
           type="text"

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useTransition, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -54,16 +54,16 @@ export default function EditTemplateForm({ template }: Props) {
   }
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">{error}</div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Template Name <span className="text-red-500">*</span>
+              Template Name <span className="text-[#EF4444]">*</span>
             </label>
             <input name="name" required defaultValue={template.name} className={inputClass} />
           </div>

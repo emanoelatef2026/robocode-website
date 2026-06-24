@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { updateGroup, deleteGroup } from '@/modules/groups/actions'
@@ -28,16 +28,16 @@ export default function GroupDetailView({ group }: Props) {
   return (
     <div className="space-y-5">
       {/* Group Settings */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-4 text-sm font-semibold text-[#0B1F3A]">Group Settings</h2>
 
         {editState && !editState.success && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
             {editState.error.message}
           </div>
         )}
         {editState?.success && (
-          <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+          <div className="mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-sm text-[#15803D]">
             Changes saved.
           </div>
         )}
@@ -132,7 +132,7 @@ export default function GroupDetailView({ group }: Props) {
       </div>
 
       {/* Edit in full view */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+      <div className="ds-card p-4">
         <Link
           href={`/admin/groups/${group.id}/edit`}
           className="text-sm font-medium text-[#FF8A1F] hover:underline"
@@ -142,12 +142,12 @@ export default function GroupDetailView({ group }: Props) {
       </div>
 
       {/* Danger zone */}
-      <div className="rounded-xl border border-red-100 bg-red-50 p-5">
-        <h2 className="mb-1 text-sm font-semibold text-red-700">Danger zone</h2>
-        <p className="mb-3 text-xs text-red-600">Soft-deletes the group and cancels all enrollments.</p>
+      <div className="rounded-xl border border-[#FEE2E2] bg-[#FEE2E2] p-5">
+        <h2 className="mb-1 text-sm font-semibold text-[#DC2626]">Danger zone</h2>
+        <p className="mb-3 text-xs text-[#EF4444]">Soft-deletes the group and cancels all enrollments.</p>
         <button
           onClick={handleDelete}
-          className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+          className="rounded-lg border border-[#FECACA] bg-white px-4 py-2 text-sm font-medium text-[#EF4444] transition hover:bg-[#FEE2E2]"
         >
           Delete group
         </button>

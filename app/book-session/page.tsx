@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Navbar from "../../components/Navbar";
 import TrialForm from "../../components/TrialForm";
 
@@ -30,7 +30,7 @@ export default function BookSessionPage() {
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-[#0B132B] md:text-5xl">
             Book a Trial Session
           </h1>
-          <p className="mx-auto mt-5 max-w-md text-sm font-medium leading-relaxed text-slate-600">
+          <p className="mx-auto mt-5 max-w-md text-sm font-medium leading-relaxed text-[#475569]">
             Fill in the details below and our team will confirm your
             child&apos;s free trial within 24 hours.
           </p>

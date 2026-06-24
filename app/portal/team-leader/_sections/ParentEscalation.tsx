@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { getParentEscalationData, type ParentEscalationItem } from '@/modules/tl-dashboard/dashboard-v2-queries'
 import DashCard, { DashCardEmpty, DashRow } from '../_components/DashCard'
 import WaCallButtons from '../_components/WaCallButtons'
@@ -11,9 +11,9 @@ function fmtAge(hours: number): string {
 }
 
 const PRIORITY_CLS: Record<string, string> = {
-  high:   'bg-red-100 text-red-700',
-  medium: 'bg-amber-100 text-amber-700',
-  low:    'bg-blue-100 text-blue-700',
+  high:   'bg-[#FEE2E2] text-[#DC2626]',
+  medium: 'bg-[#FFFBEB] text-[#B45309]',
+  low:    'bg-[#EFF6FF] text-[#1D4ED8]',
 }
 
 function EscalationRow({ item }: { item: ParentEscalationItem }) {
@@ -67,10 +67,10 @@ export default async function ParentEscalation({ branchIds }: { branchIds: strin
         count={escalations.length}
         badge={
           highCount > 0
-            ? <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">{highCount} high</span>
+            ? <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#DC2626]">{highCount} high</span>
             : undefined
         }
-        accent={highCount > 0 ? 'border-red-200' : escalations.length > 0 ? 'border-amber-200' : 'border-[#E2E8F0]'}
+        accent={highCount > 0 ? 'border-[#FECACA]' : escalations.length > 0 ? 'border-[#FDE68A]' : 'border-[#E2E8F0]'}
         action={
           <Link href="/portal/team-leader/parent-feedback?tab=messages&status=submitted" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
             View all →

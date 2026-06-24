@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import { useState } from "react"
@@ -23,7 +23,7 @@ export default function HistoryFilterPanel({ groups, from, to, groupId, topic, s
   const [expanded, setExpanded] = useState(hasActive)
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+    <div className="ds-card overflow-hidden">
       {/* Toggle row */}
       <button
         type="button"

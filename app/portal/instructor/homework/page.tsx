@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getInstructorByUserId,
   listInboxSubmissions,
@@ -12,10 +12,10 @@ interface Props {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  submitted:   'bg-amber-100 text-amber-700',
+  submitted:   'bg-[#FFFBEB] text-[#B45309]',
   resubmitted: 'bg-purple-100 text-purple-700',
-  graded:      'bg-green-100 text-green-700',
-  returned:    'bg-blue-100 text-blue-700',
+  graded:      'bg-[#E7F8EE] text-[#15803D]',
+  returned:    'bg-[#EFF6FF] text-[#1D4ED8]',
 }
 
 export default async function HomeworkInboxPage({ searchParams }: Props) {
@@ -58,7 +58,7 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
       {/* Filters row */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Status tabs */}
-        <div className="flex rounded-lg border border-[#E2E8F0] bg-white overflow-hidden">
+        <div className="flex ds-card overflow-hidden">
           {(['pending', 'reviewed', 'all'] as const).map((f) => (
             <Link
               key={f}
@@ -91,7 +91,7 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
           No submissions found.
         </div>
       ) : (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+        <div className="ds-card overflow-hidden">
           <div className="border-b border-[#E2E8F0] px-5 py-3">
             <p className="text-sm font-semibold text-[#0B1F3A]">
               {submissions.length} submission{submissions.length !== 1 ? 's' : ''}
@@ -117,7 +117,7 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
                 <div>
                   <p className="font-medium text-[#0B1F3A] text-sm">{s.student_name}</p>
                   {s.is_late && (
-                    <span className="text-[10px] text-red-500">late</span>
+                    <span className="text-[10px] text-[#EF4444]">late</span>
                   )}
                 </div>
                 <p className="text-sm text-[#64748B] truncate">{s.assignment_title}</p>
@@ -126,7 +126,7 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
                   {new Date(s.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </p>
                 <div className="flex items-center gap-1 flex-wrap">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_COLORS[s.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_COLORS[s.status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
                     {s.status}
                   </span>
                   {s.resubmission_count > 0 && (

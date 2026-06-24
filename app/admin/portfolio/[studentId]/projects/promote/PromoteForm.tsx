@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { promoteSubmission } from '@/modules/portfolio/actions'
@@ -23,9 +23,9 @@ export default function PromoteForm({ studentId, submissions }: Props) {
   const available = submissions.filter((s) => !s.already_promoted)
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -40,7 +40,7 @@ export default function PromoteForm({ studentId, submissions }: Props) {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Submission <span className="text-red-500">*</span>
+              Submission <span className="text-[#EF4444]">*</span>
             </label>
             <select name="submission_id" required className={inputClass}>
               <option value="">Select a submission…</option>
@@ -58,7 +58,7 @@ export default function PromoteForm({ studentId, submissions }: Props) {
 
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Project Title <span className="text-red-500">*</span>
+              Project Title <span className="text-[#EF4444]">*</span>
             </label>
             <input name="title" required className={inputClass} />
           </div>

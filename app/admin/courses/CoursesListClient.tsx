@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -53,7 +53,7 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
       </div>
 
       {/* Table card */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         {/* Search bar */}
         <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
           <form method="get" action="/admin/courses" className="flex gap-2">
@@ -109,7 +109,7 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
             {/* Desktop table */}
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Course</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Level</th>
@@ -140,8 +140,8 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
                         <span
                           className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                             course.is_published
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : 'bg-slate-100 text-slate-500'
+                              ? 'bg-[#E7F8EE] text-[#15803D]'
+                              : 'bg-[#F1F5F9] text-[#64748B]'
                           }`}
                         >
                           {course.is_published ? 'Published' : 'Draft'}

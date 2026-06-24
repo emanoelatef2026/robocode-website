@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import {
@@ -28,14 +28,14 @@ interface Props {
 
 const STATUS_COLORS: Record<string, string> = {
   planned:   'bg-yellow-50 text-yellow-700 border-yellow-200',
-  active:    'bg-green-50  text-green-700  border-green-200',
-  completed: 'bg-blue-50   text-blue-700   border-blue-200',
-  archived:  'bg-gray-50   text-gray-500   border-gray-200',
+  active:    'bg-[#E7F8EE]  text-[#15803D]  border-[#A7F3D0]',
+  completed: 'bg-[#EFF6FF]   text-[#1D4ED8]   border-blue-200',
+  archived:  'bg-[#F9FAFB]   text-[#6B7280]   border-[#E2E8F0]',
 }
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+    <div className="ds-card p-4">
       <p className="text-xs font-medium text-[#64748B]">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-[#0B1F3A]">{value}</p>
       {sub && <p className="text-xs text-[#94A3B8]">{sub}</p>}
@@ -88,14 +88,14 @@ export default function SemesterDashboard({
 
       {/* Capacity bar */}
       {semester.max_capacity && capacity_pct !== null && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+        <div className="ds-card p-4">
           <div className="mb-1.5 flex items-center justify-between">
             <span className="text-xs font-medium text-[#64748B]">Capacity</span>
             <span className="text-xs font-semibold text-[#0B1F3A]">{capacity_pct}%</span>
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
             <div
-              className={`h-full rounded-full transition-all ${capacity_pct >= 90 ? 'bg-red-500' : capacity_pct >= 70 ? 'bg-yellow-400' : 'bg-green-500'}`}
+              className={`h-full rounded-full transition-all ${capacity_pct >= 90 ? 'bg-[#EF4444]' : capacity_pct >= 70 ? 'bg-yellow-400' : 'bg-[#10B981]'}`}
               style={{ width: `${Math.min(capacity_pct, 100)}%` }}
             />
           </div>
@@ -103,14 +103,14 @@ export default function SemesterDashboard({
       )}
 
       {/* Settings */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">Semester Settings</h2>
 
         {editState && !editState.success && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{editState.error.message}</div>
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">{editState.error.message}</div>
         )}
         {editState?.success && (
-          <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">Changes saved.</div>
+          <div className="mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-sm text-[#15803D]">Changes saved.</div>
         )}
 
         <form action={editAction} className="space-y-3">
@@ -199,13 +199,13 @@ export default function SemesterDashboard({
       </div>
 
       {/* Enrollments */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">
           Student Enrollments ({enrolled_count})
         </h2>
 
         {enrollState && !enrollState.success && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{enrollState.error.message}</div>
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">{enrollState.error.message}</div>
         )}
 
         {availStudents.length > 0 && (
@@ -244,7 +244,7 @@ export default function SemesterDashboard({
                     </p>
                   </div>
                   <button type="button" onClick={() => handleDrop(e.student_id)}
-                    className="text-xs text-red-400 hover:text-red-600">
+                    className="text-xs text-[#F87171] hover:text-[#EF4444]">
                     Drop
                   </button>
                 </li>
@@ -276,13 +276,13 @@ export default function SemesterDashboard({
       </div>
 
       {/* Courses */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">
           Courses ({course_count})
         </h2>
 
         {courseState && !courseState.success && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{courseState.error.message}</div>
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">{courseState.error.message}</div>
         )}
 
         {availCourses.length > 0 && (
@@ -312,7 +312,7 @@ export default function SemesterDashboard({
                   </p>
                 </div>
                 <button type="button" onClick={() => handleRemoveCourse(c.course_id)}
-                  className="text-xs text-red-400 hover:text-red-600">
+                  className="text-xs text-[#F87171] hover:text-[#EF4444]">
                   Remove
                 </button>
               </li>
@@ -323,7 +323,7 @@ export default function SemesterDashboard({
 
       {/* Groups */}
       {groups.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <div className="ds-card p-5">
           <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">Groups ({group_count})</h2>
           <p className="mb-3 text-xs text-[#94A3B8]">
             Groups are assigned to semesters from the Groups admin page.
@@ -345,13 +345,13 @@ export default function SemesterDashboard({
       )}
 
       {/* Danger zone */}
-      <div className="rounded-xl border border-red-100 bg-red-50 p-5">
-        <h2 className="mb-1 text-sm font-medium text-red-700">Danger zone</h2>
-        <p className="mb-3 text-xs text-red-600">
+      <div className="rounded-xl border border-[#FEE2E2] bg-[#FEE2E2] p-5">
+        <h2 className="mb-1 text-sm font-medium text-[#DC2626]">Danger zone</h2>
+        <p className="mb-3 text-xs text-[#EF4444]">
           Delete is blocked if students are enrolled — archive the semester instead.
         </p>
         <button onClick={handleDelete}
-          className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50">
+          className="rounded-lg border border-[#FECACA] bg-white px-4 py-2 text-sm font-medium text-[#EF4444] transition hover:bg-[#FEE2E2]">
           Delete semester
         </button>
       </div>

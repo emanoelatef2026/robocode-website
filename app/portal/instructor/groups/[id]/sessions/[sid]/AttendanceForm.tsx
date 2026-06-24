@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState } from 'react'
 import { saveAttendance } from '@/modules/instructor-portal/actions'
@@ -16,10 +16,10 @@ type AttStatus = 'present' | 'absent' | 'late' | 'excused' | 'makeup'
 const CYCLE: AttStatus[] = ['present', 'absent', 'late', 'excused', 'makeup']
 
 const CHIP: Record<AttStatus, string> = {
-  present: 'bg-green-100 text-green-700 ring-green-200',
-  absent:  'bg-red-100 text-red-700 ring-red-200',
+  present: 'bg-[#E7F8EE] text-[#15803D] ring-green-200',
+  absent:  'bg-[#FEE2E2] text-[#DC2626] ring-red-200',
   late:    'bg-yellow-100 text-yellow-700 ring-yellow-200',
-  excused: 'bg-blue-100 text-blue-700 ring-blue-200',
+  excused: 'bg-[#EFF6FF] text-[#1D4ED8] ring-blue-200',
   makeup:  'bg-purple-100 text-purple-700 ring-purple-200',
 }
 
@@ -93,9 +93,9 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
       ))}
 
       {/* ── Topic (required) ─────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3.5">
+      <div className="ds-card px-4 py-3.5">
         <label className="block text-xs font-semibold uppercase tracking-wide text-[#94A3B8] mb-1.5">
-          Session Topic <span className="text-red-500">*</span>
+          Session Topic <span className="text-[#EF4444]">*</span>
         </label>
         <input
           type="text"
@@ -106,33 +106,33 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
           placeholder="Variables &amp; Loops"
           className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${
             topicTouched && !topicValid
-              ? 'border-red-300 focus:border-red-400 bg-red-50'
+              ? 'border-[#FCA5A5] focus:border-[#F87171] bg-[#FEE2E2]'
               : 'border-[#E2E8F0] focus:border-[#FF8A1F]'
           }`}
         />
         {topicTouched && !topicValid && (
-          <p className="mt-1 text-xs text-red-600">Topic is required before saving attendance.</p>
+          <p className="mt-1 text-xs text-[#EF4444]">Topic is required before saving attendance.</p>
         )}
       </div>
 
       {state && !state.success && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        <div className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-4 py-2 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
       {state?.success && (
-        <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700">
+        <div className="rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] px-4 py-2 text-sm text-[#15803D]">
           Attendance saved.
         </div>
       )}
 
-      <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+      <div className="ds-card overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5">
           <div className="flex items-center gap-3 text-xs">
             <span className="font-semibold text-[#0B1F3A]">{rows.length} students</span>
-            {presentCount > 0 && <span className="text-green-600">{presentCount} present</span>}
-            {absentCount  > 0 && <span className="text-red-600">{absentCount} absent</span>}
+            {presentCount > 0 && <span className="text-[#10B981]">{presentCount} present</span>}
+            {absentCount  > 0 && <span className="text-[#EF4444]">{absentCount} absent</span>}
             {lateCount    > 0 && <span className="text-yellow-600">{lateCount} late</span>}
             {otherCount   > 0 && <span className="text-[#94A3B8]">{otherCount} other</span>}
           </div>

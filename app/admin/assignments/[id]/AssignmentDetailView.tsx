@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -60,7 +60,7 @@ function RubricBuilder({ initial }: { initial: RubricCriteria[] }) {
           <button
             type="button"
             onClick={() => remove(c.id)}
-            className="text-red-400 hover:text-red-600"
+            className="text-[#F87171] hover:text-[#EF4444]"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -106,15 +106,15 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
   return (
     <div className="space-y-5">
       {/* Edit form */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+      <div className="ds-card p-6">
         <h2 className="mb-4 text-sm font-semibold text-[#0B1F3A]">Assignment Settings</h2>
         {state && !state.success && (
-          <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="mb-4 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
             {state.error.message}
           </div>
         )}
         {state?.success && (
-          <div className="mb-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          <div className="mb-4 rounded-lg bg-[#E7F8EE] px-3 py-2 text-sm text-[#15803D]">
             Saved successfully.
           </div>
         )}
@@ -273,7 +273,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
       </div>
 
       {/* Submissions */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-3">
           <h2 className="text-sm font-semibold text-[#0B1F3A]">
             Submissions
@@ -285,7 +285,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
           <p className="px-4 py-6 text-sm text-[#94A3B8]">No submissions yet.</p>
         ) : (
           <table className="w-full text-sm">
-            <thead>
+            <thead className="ds-table-head">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                 <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Student</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
@@ -296,7 +296,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
             </thead>
             <tbody>
               {submissions.map((s) => (
-                <tr key={s.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                <tr key={s.id} className="ds-table-row">
                   <td className="px-4 py-3">
                     <div className="font-medium text-[#0B1F3A]">{s.student_name}</div>
                     <div className="text-xs text-[#94A3B8]">{s.student_email}</div>
@@ -304,7 +304,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
                   <td className="px-4 py-3">
                     <StatusBadge status={s.status} />
                     {s.is_late && (
-                      <span className="ml-1 text-[10px] text-red-500">late</span>
+                      <span className="ml-1 text-[10px] text-[#EF4444]">late</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-[#64748B]">
@@ -329,13 +329,13 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
       </div>
 
       {/* Danger zone */}
-      <div className="rounded-xl border border-red-100 bg-white p-5">
-        <h2 className="mb-1 text-sm font-semibold text-red-700">Danger zone</h2>
+      <div className="rounded-xl border border-[#FEE2E2] bg-white p-5">
+        <h2 className="mb-1 text-sm font-semibold text-[#DC2626]">Danger zone</h2>
         <p className="mb-3 text-xs text-[#64748B]">Archiving this assignment hides it from students. Existing submissions are preserved.</p>
         <button
           type="button"
           onClick={handleDelete}
-          className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50"
+          className="rounded-lg border border-[#FECACA] px-4 py-2 text-sm font-medium text-[#EF4444] transition hover:bg-[#FEE2E2]"
         >
           Archive assignment
         </button>

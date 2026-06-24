@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import UploadProjectForm from './UploadProjectForm'
@@ -7,7 +7,7 @@ export default function ToggleUploadPanel() {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+    <div className="ds-card overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { buildWhatsAppUrl, buildTelUrl, normalizeEgyptPhone } from '@/lib/phone'
 
@@ -36,7 +36,7 @@ export default function WaCallButtons({ parentPhone, studentPhone, studentName, 
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${cls} bg-emerald-500 text-white hover:bg-emerald-600`}
+          className={`${cls} bg-[#10B981] text-white hover:bg-[#059669]`}
           aria-label={`WhatsApp ${parentPhone ? 'parent' : 'student'}`}
         >
           <WaIcon />

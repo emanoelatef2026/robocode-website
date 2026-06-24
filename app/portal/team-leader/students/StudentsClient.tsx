@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useTopbarAction } from '@/components/admin/TopbarActionContext'
@@ -19,19 +19,19 @@ function normalizePhone(p: string): string {
 // ── Constants ──────────────────────────────────────────────────────────────────
 
 const OP_STATUS_CONFIG: Record<string, { label: string; color: string; text: string }> = {
-  ACTIVE:          { label: 'Active',          color: 'bg-emerald-100', text: 'text-emerald-700' },
-  NO_GROUP:        { label: 'No Group',        color: 'bg-slate-100',   text: 'text-slate-600'   },
-  INACTIVE:        { label: 'Inactive',        color: 'bg-red-100',     text: 'text-red-600'     },
-  LOW_ATTENDANCE:  { label: 'Low Attendance',  color: 'bg-amber-100',   text: 'text-amber-700'   },
-  NEAR_EXHAUSTION: { label: 'Near Exhaustion', color: 'bg-orange-100',  text: 'text-orange-700'  },
-  MULTI_CONTRACT:  { label: 'Multi-Contract',  color: 'bg-blue-100',    text: 'text-blue-700'    },
-  NEW_STUDENT:     { label: 'New',             color: 'bg-purple-100',  text: 'text-purple-700'  },
+  ACTIVE:          { label: 'Active',          color: 'bg-[#E7F8EE]', text: 'text-[#15803D]' },
+  NO_GROUP:        { label: 'No Group',        color: 'bg-[#F1F5F9]', text: 'text-[#475569]' },
+  INACTIVE:        { label: 'Inactive',        color: 'bg-[#FEE2E2]', text: 'text-[#DC2626]' },
+  LOW_ATTENDANCE:  { label: 'Low Attendance',  color: 'bg-[#FFFBEB]', text: 'text-[#B45309]' },
+  NEAR_EXHAUSTION: { label: 'Near Exhaustion', color: 'bg-[#FFF3E0]', text: 'text-[#C2410C]' },
+  MULTI_CONTRACT:  { label: 'Multi-Contract',  color: 'bg-[#EFF6FF]', text: 'text-[#1D4ED8]' },
+  NEW_STUDENT:     { label: 'New',             color: 'bg-[#F3E8FF]', text: 'text-[#7C3AED]' },
 }
 
 const RISK_CONFIG = {
-  HIGH:   { color: 'bg-red-100',     text: 'text-red-600'     },
-  MEDIUM: { color: 'bg-amber-100',   text: 'text-amber-700'   },
-  LOW:    { color: 'bg-emerald-100', text: 'text-emerald-700' },
+  HIGH:   { color: 'bg-[#FEE2E2]', text: 'text-[#DC2626]' },
+  MEDIUM: { color: 'bg-[#FFFBEB]', text: 'text-[#B45309]' },
+  LOW:    { color: 'bg-[#E7F8EE]', text: 'text-[#15803D]' },
 }
 
 // ── Props ──────────────────────────────────────────────────────────────────────
@@ -97,7 +97,7 @@ export default function StudentsClient({
     setAction(
       <button
         onClick={openCreate}
-        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+        className="ds-btn-orange"
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
           <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -247,11 +247,11 @@ export default function StudentsClient({
 
   // ── KPI strip ───────────────────────────────────────────────────────────────
   const kpis = useMemo(() => [
-    { label: 'Total',          value: filtered.length, color: 'bg-blue-400' },
-    { label: 'High Risk',      value: filtered.filter(r => r.risk_level === 'HIGH').length,          color: filtered.filter(r => r.risk_level === 'HIGH').length ? 'bg-red-400' : 'bg-slate-300' },
-    { label: 'No Group',       value: filtered.filter(r => r.op_status === 'NO_GROUP').length,       color: filtered.filter(r => r.op_status === 'NO_GROUP').length ? 'bg-amber-400' : 'bg-slate-300' },
-    { label: 'Low Attendance', value: filtered.filter(r => r.op_status === 'LOW_ATTENDANCE').length, color: filtered.filter(r => r.op_status === 'LOW_ATTENDANCE').length ? 'bg-orange-400' : 'bg-slate-300' },
-    { label: 'Near Exhaustion',value: filtered.filter(r => r.op_status === 'NEAR_EXHAUSTION').length, color: filtered.filter(r => r.op_status === 'NEAR_EXHAUSTION').length ? 'bg-amber-400' : 'bg-slate-300' },
+    { label: 'Total',          value: filtered.length, color: 'bg-[#38BDF8]' },
+    { label: 'High Risk',      value: filtered.filter(r => r.risk_level === 'HIGH').length,          color: filtered.filter(r => r.risk_level === 'HIGH').length ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]' },
+    { label: 'No Group',       value: filtered.filter(r => r.op_status === 'NO_GROUP').length,       color: filtered.filter(r => r.op_status === 'NO_GROUP').length ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]' },
+    { label: 'Low Attendance', value: filtered.filter(r => r.op_status === 'LOW_ATTENDANCE').length, color: filtered.filter(r => r.op_status === 'LOW_ATTENDANCE').length ? 'bg-orange-400' : 'bg-[#CBD5E1]' },
+    { label: 'Near Exhaustion',value: filtered.filter(r => r.op_status === 'NEAR_EXHAUSTION').length, color: filtered.filter(r => r.op_status === 'NEAR_EXHAUSTION').length ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]' },
     { label: 'New',            value: filtered.filter(r => r.op_status === 'NEW_STUDENT').length,    color: 'bg-purple-400' },
     { label: 'Multi-Contract', value: filtered.filter(r => r.active_enrollment_count > 1).length,    color: 'bg-sky-400' },
   ], [filtered])
@@ -263,7 +263,7 @@ export default function StudentsClient({
       {/* KPI Strip */}
       <div className="grid grid-cols-4 gap-1.5 md:gap-3 lg:grid-cols-7">
         {kpis.map(k => (
-          <div key={k.label} className="min-w-0 rounded-xl border border-[#E2E8F0] bg-white px-2 py-1.5 md:p-3">
+          <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
             <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
             <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
             <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
@@ -337,7 +337,7 @@ export default function StudentsClient({
         {showFilters && (
           <div className="hidden md:block sticky top-0 z-10">
             <div
-              className="grid gap-2 rounded-xl border border-[#E2E8F0] bg-white p-2"
+              className="grid gap-2 ds-card p-2"
               style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(0, 1fr))' }}
             >
               {branches.length > 1 && (
@@ -524,14 +524,14 @@ export default function StudentsClient({
           {isTL && (
             <button
               onClick={() => { setBulkDeleteErr(null); setBulkDeleteConfirm(true) }}
-              className="rounded-lg border border-red-500 bg-red-600/20 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-600/40"
+              className="rounded-lg border border-red-500 bg-[#DC2626]/20 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-[#DC2626]/40"
             >
               Delete Selected
             </button>
           )}
           <button
             onClick={() => setSelectedIds(new Set())}
-            className="rounded-lg px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white"
+            className="rounded-lg px-3 py-1.5 text-xs font-medium text-[#CBD5E1] hover:text-white"
           >
             Clear
           </button>
@@ -539,7 +539,7 @@ export default function StudentsClient({
       )}
 
       {/* Table / Cards */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card overflow-hidden">
         {filtered.length === 0 ? (
           <div className="px-6 py-12 text-center">
             <p className="text-sm font-medium text-[#0B1F3A]">
@@ -610,12 +610,12 @@ export default function StudentsClient({
 
                     {/* Row 3: stats · phone / assign */}
                     <div className="mt-1 flex min-w-0 items-center gap-x-1 text-[10px]">
-                      <span className={`shrink-0 font-semibold ${row.attendance_pct < 60 ? 'text-red-500' : row.attendance_pct < 80 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                      <span className={`shrink-0 font-semibold ${row.attendance_pct < 60 ? 'text-[#EF4444]' : row.attendance_pct < 80 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                         {row.attendance_pct}%
                       </span>
                       <span className="shrink-0 text-[#94A3B8]">att</span>
                       <span className="mx-0.5 shrink-0 text-[#CBD5E1]">·</span>
-                      <span className={`shrink-0 font-semibold ${row.enrolled_sessions > 0 && row.remaining_sessions <= 2 ? 'text-red-500' : 'text-[#0B1F3A]'}`}>
+                      <span className={`shrink-0 font-semibold ${row.enrolled_sessions > 0 && row.remaining_sessions <= 2 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
                         {row.enrolled_sessions > 0 ? `${row.remaining_sessions}/${row.enrolled_sessions}` : '—'}
                       </span>
                       <span className="shrink-0 text-[#94A3B8]">sess</span>
@@ -626,7 +626,7 @@ export default function StudentsClient({
                       {!row.group_id && isTL ? (
                         <button
                           onClick={e => { e.stopPropagation(); setAssignStudent(row) }}
-                          className="shrink-0 rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 active:bg-amber-200"
+                          className="shrink-0 rounded-md bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309] active:bg-[#FEF3C7]"
                         >
                           Assign
                         </button>
@@ -648,10 +648,10 @@ export default function StudentsClient({
             {/* ── Desktop table ─────────────────────────────────────────── */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                <thead className="ds-table-head">
+                  <tr>
                     {isTL && (
-                      <th className="px-4 py-3 w-10">
+                      <th className="w-10">
                         <input
                           type="checkbox"
                           checked={selectedIds.size === filtered.length && filtered.length > 0}
@@ -661,15 +661,15 @@ export default function StudentsClient({
                         />
                       </th>
                     )}
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Student</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Course / Group</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Instructor</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Sessions</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Attendance</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Risk</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Parent Contacts</th>
-                    <th className="px-4 py-3" />
+                    <th>Student</th>
+                    <th>Course / Group</th>
+                    <th>Instructor</th>
+                    <th>Sessions</th>
+                    <th>Attendance</th>
+                    <th>Risk</th>
+                    <th>Status</th>
+                    <th>Parent Contacts</th>
+                    <th />
                   </tr>
                 </thead>
                 <tbody>
@@ -679,8 +679,8 @@ export default function StudentsClient({
                     return (
                       <tr
                         key={row.student_id}
-                        className={`cursor-pointer border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]
-                          ${selectedIds.has(row.student_id) ? 'bg-[#FFF7ED]' : ''}`}
+                        className={`cursor-pointer ds-table-row
+                          ${selectedIds.has(row.student_id) ? 'bg-[#FFF7ED] hover:bg-[#FFF7ED]' : ''}`}
                         onClick={() => setDrawerStudent(row)}
                       >
                         {/* Checkbox */}
@@ -728,7 +728,7 @@ export default function StudentsClient({
                         <td className="px-4 py-3">
                           {row.enrolled_sessions > 0 ? (
                             <>
-                              <p className={`font-medium ${row.remaining_sessions <= 2 ? 'text-red-600' : row.remaining_sessions <= 5 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                              <p className={`font-medium ${row.remaining_sessions <= 2 ? 'text-[#EF4444]' : row.remaining_sessions <= 5 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                                 {row.remaining_sessions} left
                               </p>
                               <p className="text-[11px] text-[#94A3B8]">{row.consumed_sessions}/{row.enrolled_sessions} used</p>
@@ -743,7 +743,7 @@ export default function StudentsClient({
                           <div className="flex items-center gap-2">
                             <div className="h-1.5 w-14 rounded-full bg-[#E2E8F0]">
                               <div
-                                className={`h-1.5 rounded-full ${row.attendance_pct >= 80 ? 'bg-emerald-400' : row.attendance_pct >= 60 ? 'bg-amber-400' : 'bg-red-400'}`}
+                                className={`h-1.5 rounded-full ${row.attendance_pct >= 80 ? 'bg-[#10B981]' : row.attendance_pct >= 60 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
                                 style={{ width: `${Math.min(row.attendance_pct, 100)}%` }}
                               />
                             </div>
@@ -758,7 +758,7 @@ export default function StudentsClient({
                             {row.risk_level}
                           </span>
                           {row.consecutive_absences >= 2 && (
-                            <p className="mt-0.5 text-[10px] text-red-500">{row.consecutive_absences} absent</p>
+                            <p className="mt-0.5 text-[10px] text-[#EF4444]">{row.consecutive_absences} absent</p>
                           )}
                         </td>
 
@@ -788,7 +788,7 @@ export default function StudentsClient({
                               )}
                             </>
                           ) : (
-                            <span className="text-[11px] text-red-400">No contact</span>
+                            <span className="text-[11px] text-[#F87171]">No contact</span>
                           )}
                         </td>
 
@@ -798,7 +798,7 @@ export default function StudentsClient({
                             {!row.group_id && isTL && (
                               <button
                                 onClick={() => setAssignStudent(row)}
-                                className="rounded-lg bg-amber-100 px-2.5 py-1 text-[11px] font-semibold text-amber-700 hover:bg-amber-200"
+                                className="rounded-lg bg-[#FFFBEB] px-2.5 py-1 text-[11px] font-semibold text-[#B45309] hover:bg-[#FEF3C7]"
                               >
                                 Assign
                               </button>
@@ -887,7 +887,7 @@ export default function StudentsClient({
               Selected students will be soft-deleted. Their attendance and payment history is preserved but they will be hidden from all views.
             </p>
             {bulkDeleteErr && (
-              <p className="mt-2 text-sm text-red-600">{bulkDeleteErr}</p>
+              <p className="mt-2 text-sm text-[#EF4444]">{bulkDeleteErr}</p>
             )}
             <div className="mt-5 flex gap-3">
               <button
@@ -899,7 +899,7 @@ export default function StudentsClient({
               <button
                 onClick={handleBulkDelete}
                 disabled={bulkDeleteLoading}
-                className="flex-1 rounded-lg bg-red-600 py-2.5 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
+                className="flex-1 rounded-lg bg-[#DC2626] py-2.5 text-sm font-medium text-white hover:bg-[#B91C1C] disabled:opacity-60"
               >
                 {bulkDeleteLoading ? 'Deleting…' : `Delete ${selectedIds.size}`}
               </button>

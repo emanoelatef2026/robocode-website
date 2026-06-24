@@ -1,4 +1,4 @@
-import { listBranches } from '@/modules/branches/queries'
+﻿import { listBranches } from '@/modules/branches/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
@@ -33,7 +33,7 @@ export default async function BranchesPage({ searchParams }: Props) {
         </Link>
       </TopbarAction>
 
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         {/* Toolbar */}
         <div className="flex items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search branches…" />
@@ -48,7 +48,7 @@ export default async function BranchesPage({ searchParams }: Props) {
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Type</th>
@@ -60,7 +60,7 @@ export default async function BranchesPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {result.data.map((branch) => (
-                    <tr key={branch.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={branch.id} className="ds-table-row">
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">{branch.name}</td>
                       <td className="px-4 py-3"><StatusBadge status={branch.type} /></td>
                       <td className="px-4 py-3 text-[#64748B]">{branch.location ?? '—'}</td>

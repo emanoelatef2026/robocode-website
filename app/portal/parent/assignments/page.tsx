@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getParentChildren,
   getChildAssignments,
@@ -20,12 +20,12 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 
 const STATUS_CONFIG: Record<string, { text: string; cls: string }> = {
   pending:                  { text: 'Pending',     cls: 'bg-yellow-100 text-yellow-700' },
-  submitted:                { text: 'Submitted',   cls: 'bg-blue-100   text-blue-700'   },
-  under_review:             { text: 'In Review',   cls: 'bg-blue-100   text-blue-700'   },
-  resubmitted:              { text: 'Resubmitted', cls: 'bg-blue-100   text-blue-700'   },
-  graded:                   { text: 'Graded',      cls: 'bg-green-100  text-green-700'  },
-  returned:                 { text: 'Returned',    cls: 'bg-red-100    text-red-700'    },
-  resubmission_requested:   { text: 'Revision',    cls: 'bg-red-100    text-red-700'    },
+  submitted:                { text: 'Submitted',   cls: 'bg-[#EFF6FF]   text-[#1D4ED8]'   },
+  under_review:             { text: 'In Review',   cls: 'bg-[#EFF6FF]   text-[#1D4ED8]'   },
+  resubmitted:              { text: 'Resubmitted', cls: 'bg-[#EFF6FF]   text-[#1D4ED8]'   },
+  graded:                   { text: 'Graded',      cls: 'bg-[#E7F8EE]  text-[#15803D]'  },
+  returned:                 { text: 'Returned',    cls: 'bg-[#FEE2E2]    text-[#DC2626]'    },
+  resubmission_requested:   { text: 'Revision',    cls: 'bg-[#FEE2E2]    text-[#DC2626]'    },
 }
 
 function getFilterKey(status: string | null): FilterKey {
@@ -111,7 +111,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
 
       {/* Assignments list */}
       {items.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+        <div className="ds-card px-6 py-12 text-center">
           <p className="text-sm text-[#64748B]">
             {filterKey === 'all' ? 'No assignments found.' : `No ${filterKey} assignments.`}
           </p>
@@ -120,10 +120,10 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
         <div className="space-y-3">
           {items.map(a => {
             const statusKey = a.submission_status ?? 'pending'
-            const cfg = STATUS_CONFIG[statusKey] ?? { text: statusKey, cls: 'bg-gray-100 text-gray-600' }
+            const cfg = STATUS_CONFIG[statusKey] ?? { text: statusKey, cls: 'bg-[#F3F4F6] text-[#4B5563]' }
 
             return (
-              <div key={a.id} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+              <div key={a.id} className="ds-card p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
@@ -132,7 +132,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
                         {cfg.text}
                       </span>
                       {a.is_late && (
-                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-600">
+                        <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-medium text-[#EF4444]">
                           Late
                         </span>
                       )}

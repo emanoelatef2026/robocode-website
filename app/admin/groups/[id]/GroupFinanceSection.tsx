@@ -1,4 +1,4 @@
-import { getGroupFinanceSummary } from '@/modules/finance/queries'
+﻿import { getGroupFinanceSummary } from '@/modules/finance/queries'
 import { getGroupPnLRows }        from '@/modules/finance/queries'
 import { STATUS_COLORS, STATUS_LABELS, PRIORITY_COLORS } from '@/modules/finance/types'
 import Link from 'next/link'
@@ -10,7 +10,7 @@ function fmt(n: number) {
 function PnLValue({ value, prefix = 'EGP ' }: { value: number; prefix?: string }) {
   const positive = value >= 0
   return (
-    <p className={`mt-0.5 text-sm font-bold ${positive ? 'text-emerald-700' : 'text-red-600'}`}>
+    <p className={`mt-0.5 text-sm font-bold ${positive ? 'text-[#15803D]' : 'text-[#EF4444]'}`}>
       {value < 0 ? '−' : '+'}{prefix}{fmt(Math.abs(value))}
     </p>
   )
@@ -29,7 +29,7 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
 
   if (student_accounts.length === 0 && !pnl) {
     return (
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         <div className="border-b border-[#E2E8F0] px-5 py-3">
           <p className="text-sm font-semibold text-[#0B1F3A]">Group Finance</p>
         </div>
@@ -44,7 +44,7 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
   }
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white">
+    <div className="ds-card">
       <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
         <p className="text-sm font-semibold text-[#0B1F3A]">Group Finance & P&L</p>
         <div className="flex items-center gap-2">
@@ -61,9 +61,9 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[#E2E8F0] border-b border-[#E2E8F0]">
         {[
           { l: 'Gross Expected', v: `EGP ${fmt(expected_revenue)}`, c: 'text-[#0B1F3A]' },
-          { l: 'Gross Collected', v: `EGP ${fmt(collected)}`,        c: 'text-emerald-600 font-bold' },
-          { l: 'Outstanding',      v: `EGP ${fmt(outstanding)}`,      c: outstanding > 0 ? 'text-red-500 font-bold' : 'text-[#94A3B8]' },
-          { l: 'Collection Rate',  v: `${collection_rate}%`,           c: collection_rate >= 80 ? 'text-emerald-600 font-bold' : collection_rate >= 50 ? 'text-amber-600 font-bold' : 'text-red-500 font-bold' },
+          { l: 'Gross Collected', v: `EGP ${fmt(collected)}`,        c: 'text-[#10B981] font-bold' },
+          { l: 'Outstanding',      v: `EGP ${fmt(outstanding)}`,      c: outstanding > 0 ? 'text-[#EF4444] font-bold' : 'text-[#94A3B8]' },
+          { l: 'Collection Rate',  v: `${collection_rate}%`,           c: collection_rate >= 80 ? 'text-[#10B981] font-bold' : collection_rate >= 50 ? 'text-[#F59E0B] font-bold' : 'text-[#EF4444] font-bold' },
         ].map(({ l, v, c }) => (
           <div key={l} className="bg-white px-4 py-3">
             <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">{l}</p>
@@ -77,7 +77,7 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
         <>
           <div className="border-b border-[#E2E8F0] px-5 py-3 flex items-center justify-between">
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#94A3B8]">Profit & Loss</p>
-            <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ${pnl.robocode_share_percent < 100 ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-[#64748B]'}`}>
+            <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ${pnl.robocode_share_percent < 100 ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#F1F5F9] text-[#64748B]'}`}>
               Share: {pnl.robocode_share_percent}%
             </span>
           </div>
@@ -85,11 +85,11 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[#E2E8F0] border-b border-[#E2E8F0]">
             <div className="bg-white px-4 py-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Net Expected</p>
-              <p className="mt-0.5 text-sm font-bold text-emerald-700">EGP {fmt(pnl.net_expected_revenue)}</p>
+              <p className="mt-0.5 text-sm font-bold text-[#15803D]">EGP {fmt(pnl.net_expected_revenue)}</p>
             </div>
             <div className="bg-white px-4 py-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Net Collected</p>
-              <p className="mt-0.5 text-sm font-bold text-emerald-700">EGP {fmt(pnl.net_collected_revenue)}</p>
+              <p className="mt-0.5 text-sm font-bold text-[#15803D]">EGP {fmt(pnl.net_collected_revenue)}</p>
             </div>
             <div className="bg-white px-4 py-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Future Liability</p>
@@ -111,7 +111,7 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
             </div>
             <div className="bg-white px-4 py-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Total Expenses</p>
-              <p className="mt-0.5 text-sm font-bold text-red-600">EGP {fmt(pnl.total_expenses)}</p>
+              <p className="mt-0.5 text-sm font-bold text-[#EF4444]">EGP {fmt(pnl.total_expenses)}</p>
             </div>
             <div className="bg-white px-4 py-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Expected Profit</p>
@@ -130,13 +130,13 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
         <div className="flex items-center gap-2">
           <div className="flex-1 h-2 rounded-full bg-[#F1F5F9] overflow-hidden">
             <div
-              className={`h-full rounded-full ${collection_rate >= 80 ? 'bg-emerald-400' : collection_rate >= 50 ? 'bg-amber-400' : 'bg-red-400'}`}
+              className={`h-full rounded-full ${collection_rate >= 80 ? 'bg-[#10B981]' : collection_rate >= 50 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
               style={{ width: `${collection_rate}%` }}
             />
           </div>
           <span className="text-xs text-[#64748B]">{collection_rate}% collected</span>
           {overdue_count > 0 && (
-            <span className="ml-2 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-semibold text-red-600">
+            <span className="ml-2 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#EF4444]">
               {overdue_count} overdue
             </span>
           )}
@@ -147,7 +147,7 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
       {student_accounts.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead>
+            <thead className="ds-table-head">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Student</th>
                 <th className="px-4 py-2.5 text-right text-xs font-medium text-[#64748B]">Total</th>
@@ -159,16 +159,16 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
             </thead>
             <tbody>
               {student_accounts.map(sa => (
-                <tr key={sa.student_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                <tr key={sa.student_id} className="ds-table-row">
                   <td className="px-4 py-2.5">
                     <Link href={`/admin/students/${sa.student_id}?tab=finance`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">
                       {sa.student_name}
                     </Link>
                   </td>
                   <td className="px-4 py-2.5 text-right text-[#64748B]">EGP {fmt(sa.net_amount)}</td>
-                  <td className="px-4 py-2.5 text-right font-semibold text-emerald-600">EGP {fmt(sa.paid_amount)}</td>
+                  <td className="px-4 py-2.5 text-right font-semibold text-[#10B981]">EGP {fmt(sa.paid_amount)}</td>
                   <td className="px-4 py-2.5 text-right">
-                    <span className={`font-bold ${sa.remaining_amount > 0 ? 'text-red-500' : 'text-[#94A3B8]'}`}>
+                    <span className={`font-bold ${sa.remaining_amount > 0 ? 'text-[#EF4444]' : 'text-[#94A3B8]'}`}>
                       EGP {fmt(sa.remaining_amount)}
                     </span>
                   </td>

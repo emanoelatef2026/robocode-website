@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { enrollStudentFull, cancelContract } from '@/modules/enrollments/actions'
@@ -160,11 +160,11 @@ function computeWarnings(s: StudentResult): string[] {
 // ── Status badge helpers ───────────────────────────────────────────────────────
 
 const FIN_BADGE: Record<string, string> = {
-  CURRENT:   'bg-emerald-100 text-emerald-700',
-  DUE_SOON:  'bg-amber-100 text-amber-700',
-  OVERDUE:   'bg-red-100 text-red-600',
-  BLOCKED:   'bg-red-100 text-red-700',
-  COMPLETED: 'bg-slate-100 text-slate-600',
+  CURRENT:   'bg-[#E7F8EE] text-[#15803D]',
+  DUE_SOON:  'bg-[#FFFBEB] text-[#B45309]',
+  OVERDUE:   'bg-[#FEE2E2] text-[#EF4444]',
+  BLOCKED:   'bg-[#FEE2E2] text-[#DC2626]',
+  COMPLETED: 'bg-[#F1F5F9] text-[#475569]',
 }
 const FIN_LABEL: Record<string, string> = {
   CURRENT: 'Current', DUE_SOON: 'Due Soon', OVERDUE: 'Overdue', BLOCKED: 'Blocked', COMPLETED: 'Completed',
@@ -392,7 +392,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5">
               {[1,2,3].map(n => (
-                <span key={n} className={`h-2 w-2 rounded-full ${n === state.step ? 'bg-[#FF8A1F]' : n < state.step ? 'bg-emerald-400' : 'bg-[#E2E8F0]'}`} />
+                <span key={n} className={`h-2 w-2 rounded-full ${n === state.step ? 'bg-[#FF8A1F]' : n < state.step ? 'bg-[#10B981]' : 'bg-[#E2E8F0]'}`} />
               ))}
             </div>
             <button onClick={onClose} className="rounded-lg p-1.5 text-[#64748B] hover:bg-[#F1F5F9]">
@@ -495,7 +495,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                       {/* Avatar */}
                       <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
                         isExhausted ? 'bg-purple-100 text-purple-700' :
-                        s.financial_status === 'OVERDUE' || s.financial_status === 'BLOCKED' ? 'bg-red-100 text-red-700' :
+                        s.financial_status === 'OVERDUE' || s.financial_status === 'BLOCKED' ? 'bg-[#FEE2E2] text-[#DC2626]' :
                         'bg-[#FF8A1F]/10 text-[#FF8A1F]'
                       }`}>
                         {s.name.charAt(0).toUpperCase()}
@@ -547,12 +547,12 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                             </span>
                           )}
                           {s.financial_status && (
-                            <span className={`rounded-full px-1.5 py-px text-[10px] font-semibold ${FIN_BADGE[s.financial_status] ?? 'bg-slate-100 text-slate-600'}`}>
+                            <span className={`rounded-full px-1.5 py-px text-[10px] font-semibold ${FIN_BADGE[s.financial_status] ?? 'bg-[#F1F5F9] text-[#475569]'}`}>
                               {FIN_LABEL[s.financial_status] ?? s.financial_status}
                             </span>
                           )}
                           {noPackage && (
-                            <span className="rounded-full bg-amber-50 px-1.5 py-px text-[10px] font-semibold text-amber-700">
+                            <span className="rounded-full bg-[#FFFBEB] px-1.5 py-px text-[10px] font-semibold text-[#B45309]">
                               No Package
                             </span>
                           )}
@@ -562,7 +562,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                             </span>
                           )}
                           {isCritical && !isExhausted && (
-                            <span className="rounded-full bg-red-50 px-1.5 py-px text-[10px] font-semibold text-red-600">
+                            <span className="rounded-full bg-[#FEE2E2] px-1.5 py-px text-[10px] font-semibold text-[#EF4444]">
                               {sessLeft} sess. left
                             </span>
                           )}
@@ -655,8 +655,8 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
             </div>
 
             {warnings.length > 0 && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 space-y-1">
-                {warnings.map((w, i) => <p key={i} className="text-xs font-medium text-amber-700">⚠ {w}</p>)}
+              <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 space-y-1">
+                {warnings.map((w, i) => <p key={i} className="text-xs font-medium text-[#B45309]">⚠ {w}</p>)}
               </div>
             )}
 
@@ -732,9 +732,9 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                         <div>
                           <span className="text-[#94A3B8]">Status</span>
                           <p className={`font-semibold ${
-                            selectedPkg.financial_status === 'BLOCKED' ? 'text-red-700' :
-                            selectedPkg.financial_status === 'OVERDUE'  ? 'text-amber-700' :
-                            selectedPkg.financial_status === 'CURRENT'  ? 'text-emerald-700' : 'text-[#64748B]'
+                            selectedPkg.financial_status === 'BLOCKED' ? 'text-[#DC2626]' :
+                            selectedPkg.financial_status === 'OVERDUE'  ? 'text-[#B45309]' :
+                            selectedPkg.financial_status === 'CURRENT'  ? 'text-[#15803D]' : 'text-[#64748B]'
                           }`}>{selectedPkg.financial_status ?? '—'}</p>
                         </div>
                       </div>
@@ -742,7 +742,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                     <div className="grid grid-cols-3 divide-x divide-[#F1F5F9] px-0">
                       <div className="px-4 py-2.5 text-center">
                         <p className="text-[10px] text-[#94A3B8]">Sessions Left</p>
-                        <p className={`text-sm font-bold ${selectedPkg.remaining_sessions <= 0 ? 'text-purple-700' : selectedPkg.remaining_sessions <= 3 ? 'text-red-600' : 'text-blue-700'}`}>
+                        <p className={`text-sm font-bold ${selectedPkg.remaining_sessions <= 0 ? 'text-purple-700' : selectedPkg.remaining_sessions <= 3 ? 'text-[#EF4444]' : 'text-[#1D4ED8]'}`}>
                           {selectedPkg.remaining_sessions <= 0 ? 'Exhausted' : selectedPkg.remaining_sessions}
                         </p>
                         {selectedPkg.enrolled_sessions > 0 && (
@@ -751,12 +751,12 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                       </div>
                       <div className="px-4 py-2.5 text-center">
                         <p className="text-[10px] text-[#94A3B8]">Paid</p>
-                        <p className="text-sm font-bold text-emerald-700">EGP {fmt(selectedPkg.paid_amount)}</p>
+                        <p className="text-sm font-bold text-[#15803D]">EGP {fmt(selectedPkg.paid_amount)}</p>
                         <p className="text-[10px] text-[#94A3B8]">of {fmt(selectedPkg.net_amount)}</p>
                       </div>
-                      <div className={`px-4 py-2.5 text-center ${selectedPkg.remaining_amount > 0 ? 'bg-red-50' : 'bg-emerald-50'}`}>
+                      <div className={`px-4 py-2.5 text-center ${selectedPkg.remaining_amount > 0 ? 'bg-[#FEE2E2]' : 'bg-[#E7F8EE]'}`}>
                         <p className="text-[10px] text-[#94A3B8]">Remaining</p>
-                        <p className={`text-sm font-bold ${selectedPkg.remaining_amount > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                        <p className={`text-sm font-bold ${selectedPkg.remaining_amount > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
                           {selectedPkg.remaining_amount > 0 ? `EGP ${fmt(selectedPkg.remaining_amount)}` : 'Paid ✓'}
                         </p>
                       </div>
@@ -789,7 +789,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                           ))}
                           <button type="button"
                             onClick={() => setQuickPayAmt(String(selectedPkg.remaining_amount))}
-                            className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${quickPayAmt === String(selectedPkg.remaining_amount) ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'}`}>
+                            className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${quickPayAmt === String(selectedPkg.remaining_amount) ? 'border-emerald-500 bg-[#E7F8EE] text-[#15803D]' : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'}`}>
                             Full ({fmt(selectedPkg.remaining_amount)})
                           </button>
                         </div>
@@ -831,7 +831,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                     </div>
 
                     {error && (
-                      <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">{error}</p>
+                      <p className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-xs font-medium text-[#EF4444]">{error}</p>
                     )}
 
                     <div className="flex justify-between gap-3 pt-1">
@@ -855,7 +855,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                       <button
                         type="button"
                         onClick={() => { setCancelConfirm(true); setCancelErr(null) }}
-                        className="w-full rounded-xl border border-red-200 bg-red-50 py-2 text-xs font-semibold text-red-600 hover:bg-red-100 transition-colors"
+                        className="w-full rounded-xl border border-[#FECACA] bg-[#FEE2E2] py-2 text-xs font-semibold text-[#EF4444] hover:bg-[#FEE2E2] transition-colors"
                       >
                         Cancel Contract
                       </button>
@@ -865,28 +865,28 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
 
                 {/* ── Cancel confirmation ────────────────────────────────────── */}
                 {cancelConfirm && !cancelReport && selectedPkg && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 p-4 space-y-3">
-                    <p className="text-sm font-bold text-red-700">Cancel this contract?</p>
-                    <div className="text-xs text-red-700 space-y-0.5">
+                  <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] p-4 space-y-3">
+                    <p className="text-sm font-bold text-[#DC2626]">Cancel this contract?</p>
+                    <div className="text-xs text-[#DC2626] space-y-0.5">
                       <p><span className="text-[#64748B]">Course:</span> {selectedPkg.course_name ?? '—'}</p>
                       <p><span className="text-[#64748B]">Group:</span> {selectedPkg.group_name ?? '—'}</p>
                       <p><span className="text-[#64748B]">Sessions remaining:</span> {selectedPkg.remaining_sessions} of {selectedPkg.enrolled_sessions}</p>
                       <p><span className="text-[#64748B]">Balance due:</span> EGP {fmt(selectedPkg.remaining_amount)}</p>
                     </div>
-                    <p className="text-[11px] text-red-600">
+                    <p className="text-[11px] text-[#EF4444]">
                       This action is irreversible. The contract will be archived and no new payments or sessions will be allowed.
                     </p>
-                    {cancelErr && <p className="rounded-lg bg-red-100 px-3 py-2 text-xs font-medium text-red-700">{cancelErr}</p>}
+                    {cancelErr && <p className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs font-medium text-[#DC2626]">{cancelErr}</p>}
                     <div className="flex gap-2">
                       <button type="button" onClick={() => { setCancelConfirm(false); setCancelErr(null) }}
-                        className="flex-1 rounded-xl border border-red-200 bg-white py-2 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1]">
+                        className="flex-1 rounded-xl border border-[#FECACA] bg-white py-2 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1]">
                         Go Back
                       </button>
                       <button
                         type="button"
                         onClick={handleCancelContract}
                         disabled={cancelling}
-                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-red-600 py-2 text-xs font-bold text-white hover:bg-red-700 disabled:opacity-40"
+                        className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#DC2626] py-2 text-xs font-bold text-white hover:bg-[#B91C1C] disabled:opacity-40"
                       >
                         {cancelling && <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />}
                         Confirm Cancellation
@@ -897,12 +897,12 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
 
                 {/* ── Cancellation report ────────────────────────────────────── */}
                 {cancelReport && (
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                  <div className="rounded-xl border border-slate-200 bg-[#F8FAFC] p-4 space-y-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-emerald-600 text-lg">✓</span>
+                      <span className="text-[#10B981] text-lg">✓</span>
                       <p className="text-sm font-bold text-[#0B1F3A]">Contract Cancelled</p>
                     </div>
-                    <div className="rounded-lg border border-[#E2E8F0] bg-white p-3 text-xs space-y-1.5">
+                    <div className="ds-card p-3 text-xs space-y-1.5">
                       <p className="font-semibold text-[#0B1F3A] mb-2">Cancellation Report</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                         <div><span className="text-[#94A3B8]">Student</span><p className="font-medium">{cancelReport.student_name}</p></div>
@@ -914,11 +914,11 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                       </div>
                       <div className="border-t border-[#F1F5F9] pt-2 mt-2 grid grid-cols-3 gap-1 text-center">
                         <div><p className="text-[#94A3B8]">Package</p><p className="font-bold text-[#0B1F3A]">{cancelReport.enrolled_sessions}</p></div>
-                        <div><p className="text-[#94A3B8]">Attended</p><p className="font-bold text-emerald-700">{cancelReport.sessions_attended}</p></div>
-                        <div><p className="text-[#94A3B8]">Absent</p><p className="font-bold text-red-600">{cancelReport.sessions_absent}</p></div>
+                        <div><p className="text-[#94A3B8]">Attended</p><p className="font-bold text-[#15803D]">{cancelReport.sessions_attended}</p></div>
+                        <div><p className="text-[#94A3B8]">Absent</p><p className="font-bold text-[#EF4444]">{cancelReport.sessions_absent}</p></div>
                         <div><p className="text-[#94A3B8]">Consumed</p><p className="font-bold text-[#0B1F3A]">{cancelReport.consumed_sessions}</p></div>
                         <div><p className="text-[#94A3B8]">Remaining</p><p className="font-bold text-purple-700">{cancelReport.remaining_sessions}</p></div>
-                        <div><p className="text-[#94A3B8]">Bal. Due</p><p className={`font-bold ${cancelReport.remaining_balance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>EGP {fmt(cancelReport.remaining_balance)}</p></div>
+                        <div><p className="text-[#94A3B8]">Bal. Due</p><p className={`font-bold ${cancelReport.remaining_balance > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>EGP {fmt(cancelReport.remaining_balance)}</p></div>
                       </div>
                       <div className="border-t border-[#F1F5F9] pt-2 flex justify-between">
                         <span className="text-[#94A3B8]">Total Paid / Contract</span>
@@ -952,7 +952,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                       <div className="ml-3 shrink-0 text-right">
                         {e.financial_status && (
                           <p className={`text-[10px] font-semibold ${
-                            { CURRENT:'text-emerald-600', DUE_SOON:'text-amber-600', OVERDUE:'text-red-600', BLOCKED:'text-red-700' }[e.financial_status] ?? 'text-slate-500'
+                            { CURRENT:'text-[#10B981]', DUE_SOON:'text-[#F59E0B]', OVERDUE:'text-[#EF4444]', BLOCKED:'text-[#DC2626]' }[e.financial_status] ?? 'text-[#64748B]'
                           }`}>{e.financial_status}</p>
                         )}
                         <p className="text-[11px] text-[#94A3B8]">{e.remaining_sessions} sess. left</p>
@@ -977,7 +977,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
             {/* Session Package */}
             <div>
               <label className="mb-2 block text-xs font-medium text-[#64748B]">
-                Session Package <span className="text-red-400">*</span>
+                Session Package <span className="text-[#F87171]">*</span>
               </label>
               <div className="mb-2 grid grid-cols-5 gap-1.5">
                 {[12, 24, 36, 48].map(n => {
@@ -1103,9 +1103,9 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
               </div>
             </div>
 
-            <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5">
-              <span className="text-sm font-medium text-emerald-700">Net Total</span>
-              <span className="text-lg font-bold text-emerald-700">EGP {fmt(net)}</span>
+            <div className="flex items-center justify-between rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] px-4 py-2.5">
+              <span className="text-sm font-medium text-[#15803D]">Net Total</span>
+              <span className="text-lg font-bold text-[#15803D]">EGP {fmt(net)}</span>
             </div>
 
             {/* Installments */}
@@ -1186,7 +1186,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                   </div>
                 )}
                 {instAmtTooSmall && (
-                  <div className="flex justify-between text-red-600">
+                  <div className="flex justify-between text-[#EF4444]">
                     <span>Installments too many</span>
                     <span>Each ≈ EGP {perInstAmt} — reduce count</span>
                   </div>
@@ -1194,12 +1194,12 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                 {initPay > 0 && (
                   <div className="flex justify-between">
                     <span className="text-[#94A3B8]">Paid Now</span>
-                    <span className="font-medium text-emerald-600">EGP {fmt(initPay)}</span>
+                    <span className="font-medium text-[#10B981]">EGP {fmt(initPay)}</span>
                   </div>
                 )}
                 <div className="flex justify-between border-t border-[#E2E8F0] pt-1.5">
                   <span className="text-[#94A3B8]">Remaining</span>
-                  <span className={`font-bold ${remaining > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                  <span className={`font-bold ${remaining > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                     EGP {fmt(remaining)}
                   </span>
                 </div>
@@ -1207,7 +1207,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
             )}
 
             {error && (
-              <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+              <p className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-sm text-[#EF4444]">{error}</p>
             )}
 
             <div className="flex gap-3 border-t border-[#E2E8F0] pt-4">

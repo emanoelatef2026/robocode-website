@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getInstructorByUserId,
   getGroupForInstructor,
@@ -13,11 +13,11 @@ import InstructorCoursePanel from './InstructorCoursePanel'
 interface Props { params: Promise<{ id: string }> }
 
 const SESSION_STATUS: Record<string, string> = {
-  scheduled:   'bg-blue-100 text-blue-700',
+  scheduled:   'bg-[#EFF6FF] text-[#1D4ED8]',
   in_progress: 'bg-yellow-100 text-yellow-700',
   ongoing:     'bg-yellow-100 text-yellow-700',
-  completed:   'bg-green-100 text-green-700',
-  cancelled:   'bg-red-100 text-red-700',
+  completed:   'bg-[#E7F8EE] text-[#15803D]',
+  cancelled:   'bg-[#FEE2E2] text-[#DC2626]',
 }
 
 const DAY_SHORT: Record<string, string> = {
@@ -74,11 +74,11 @@ export default async function GroupDetailPage({ params }: Props) {
             {group.group_name}
           </h1>
           {isActive ? (
-            <span className="inline-flex shrink-0 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+            <span className="inline-flex shrink-0 rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#15803D]">
               Active
             </span>
           ) : (
-            <span className="inline-flex shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700">
+            <span className="inline-flex shrink-0 rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#B45309]">
               Forming
             </span>
           )}
@@ -116,9 +116,9 @@ export default async function GroupDetailPage({ params }: Props) {
 
       {/* ── 2. NO-COURSE BANNER ──────────────────────────────────────────────── */}
       {!isActive && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3.5">
-          <p className="text-sm font-semibold text-amber-800">No course assigned yet</p>
-          <p className="mt-0.5 text-xs text-amber-700">
+        <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-3.5">
+          <p className="text-sm font-semibold text-[#92400E]">No course assigned yet</p>
+          <p className="mt-0.5 text-xs text-[#B45309]">
             Sessions can be started once a course is assigned. Contact your administrator.
           </p>
         </div>
@@ -145,7 +145,7 @@ export default async function GroupDetailPage({ params }: Props) {
             Students ({group.students.length})
           </h2>
           {hasAttentionFlag && (
-            <span className="text-xs text-red-600">⚠ attendance issues</span>
+            <span className="text-xs text-[#EF4444]">⚠ attendance issues</span>
           )}
         </div>
 
@@ -154,14 +154,14 @@ export default async function GroupDetailPage({ params }: Props) {
             No students enrolled.
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white divide-y divide-[#F1F5F9]">
+          <div className="overflow-hidden ds-card divide-y divide-[#F1F5F9]">
             {group.students.map((s) => {
               const att         = attMap.get(s.student_id)
               const initials    = (s.first_name?.[0] ?? s.email[0]).toUpperCase()
               const displayName = [s.first_name, s.last_name].filter(Boolean).join(' ') || s.email
               const pctColor    = !att || att.total === 0
                 ? ''
-                : att.pct >= 75 ? 'text-emerald-600' : att.pct >= 50 ? 'text-amber-500' : 'text-red-500'
+                : att.pct >= 75 ? 'text-[#10B981]' : att.pct >= 50 ? 'text-[#F59E0B]' : 'text-[#EF4444]'
 
               return (
                 <Link
@@ -178,7 +178,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-1.5">
                       {att?.attention && (
-                        <span className="shrink-0 text-[11px] text-red-500">⚠</span>
+                        <span className="shrink-0 text-[11px] text-[#EF4444]">⚠</span>
                       )}
                       <p className="truncate text-sm font-medium text-[#0B1F3A]">{displayName}</p>
                     </div>
@@ -186,11 +186,11 @@ export default async function GroupDetailPage({ params }: Props) {
                     {att && att.total > 0 ? (
                       /* Attendance stats inline */
                       <div className="mt-0.5 flex items-center gap-2 text-[11px]">
-                        <span className="font-semibold text-emerald-600">{att.present}P</span>
+                        <span className="font-semibold text-[#10B981]">{att.present}P</span>
                         <span className="text-[#E2E8F0]">·</span>
-                        <span className="font-semibold text-red-500">{att.absent}A</span>
+                        <span className="font-semibold text-[#EF4444]">{att.absent}A</span>
                         <span className="text-[#E2E8F0]">·</span>
-                        <span className="font-semibold text-amber-500">{att.late}L</span>
+                        <span className="font-semibold text-[#F59E0B]">{att.late}L</span>
                         <span className="text-[#E2E8F0]">·</span>
                         <span className={`font-bold ${pctColor}`}>{att.pct}%</span>
                       </div>
@@ -218,16 +218,16 @@ export default async function GroupDetailPage({ params }: Props) {
         <h2 className="mb-2 text-sm font-semibold text-[#0B1F3A]">Sessions</h2>
 
         {!isActive ? (
-          <div className="rounded-xl border border-dashed border-amber-200 bg-amber-50 px-4 py-4 text-center">
-            <p className="text-sm font-medium text-amber-800">Sessions unavailable</p>
-            <p className="mt-0.5 text-xs text-amber-700">Assign a course to this group first.</p>
+          <div className="rounded-xl border border-dashed border-[#FDE68A] bg-[#FFFBEB] px-4 py-4 text-center">
+            <p className="text-sm font-medium text-[#92400E]">Sessions unavailable</p>
+            <p className="mt-0.5 text-xs text-[#B45309]">Assign a course to this group first.</p>
           </div>
         ) : group.sessions.length === 0 ? (
           <div className="flex h-14 items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] text-sm text-[#94A3B8]">
             No sessions yet — use the form above to start one.
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white divide-y divide-[#F1F5F9]">
+          <div className="overflow-hidden ds-card divide-y divide-[#F1F5F9]">
             {group.sessions.map((s, idx) => (
               <Link
                 key={s.id}
@@ -255,7 +255,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   </p>
                 </div>
 
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${SESSION_STATUS[s.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${SESSION_STATUS[s.status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
                   {s.status}
                 </span>
               </Link>

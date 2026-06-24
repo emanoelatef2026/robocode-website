@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
@@ -27,11 +27,11 @@ function fmtDate(iso: string | null | undefined): string {
 
 function GroupCard({ group }: { group: GroupHealthRow }) {
   const { health_status, health_score } = group
-  const borderCls = health_status === 'danger'  ? 'border-red-200'   :
-                    health_status === 'warning' ? 'border-amber-200' : 'border-[#E2E8F0]'
+  const borderCls = health_status === 'danger'  ? 'border-[#FECACA]'   :
+                    health_status === 'warning' ? 'border-[#FDE68A]' : 'border-[#E2E8F0]'
 
   const attPct = group.avg_attendance_pct ?? 0
-  const attCls = attPct >= 75 ? 'text-emerald-600' : attPct >= 55 ? 'text-amber-600' : 'text-red-600'
+  const attCls = attPct >= 75 ? 'text-[#10B981]' : attPct >= 55 ? 'text-[#F59E0B]' : 'text-[#EF4444]'
 
   const schedule = [DAYS_SHORT[group.day_of_week ?? ''], fmt12(group.group_time)].filter(Boolean).join(' ')
 
@@ -67,7 +67,7 @@ function GroupCard({ group }: { group: GroupHealthRow }) {
           <span className="text-[11px] text-[#64748B] truncate">
             {group.instructor_name
               ? <span>👤 {group.instructor_name}</span>
-              : <span className="text-amber-600 font-medium">⚠ No instructor</span>}
+              : <span className="text-[#F59E0B] font-medium">⚠ No instructor</span>}
           </span>
           {group.course_name && <span className="text-[10px] text-[#94A3B8] truncate max-w-[100px]">{group.course_name}</span>}
         </div>
@@ -78,12 +78,12 @@ function GroupCard({ group }: { group: GroupHealthRow }) {
         {(group.unpaid_students > 0 || group.critical_sessions_count > 0 || group.sessions_missing_attendance > 0) && (
           <div className="flex flex-wrap gap-1 pt-0.5">
             {group.unpaid_students > 0 && (
-              <span className="rounded-full bg-red-50 px-2 py-0.5 text-[9px] font-semibold text-red-600">
+              <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[9px] font-semibold text-[#EF4444]">
                 {group.unpaid_students} unpaid
               </span>
             )}
             {group.critical_sessions_count > 0 && (
-              <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-semibold text-amber-700">
+              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[9px] font-semibold text-[#B45309]">
                 {group.critical_sessions_count} expiring
               </span>
             )}
@@ -98,7 +98,7 @@ function GroupCard({ group }: { group: GroupHealthRow }) {
         {/* Last / next session */}
         <div className="flex items-center justify-between text-[10px] text-[#94A3B8]">
           <span>Last: {fmtDate(group.last_session_date)}</span>
-          {group.next_session_at && <span className="text-blue-500">Next: {fmtDate(group.next_session_at)}</span>}
+          {group.next_session_at && <span className="text-[#3B82F6]">Next: {fmtDate(group.next_session_at)}</span>}
         </div>
       </div>
 
@@ -177,7 +177,7 @@ export default function GroupHealthBoardClient({ groups }: { groups: GroupHealth
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search groups..."
-            className="w-full rounded-xl border border-[#E2E8F0] bg-white py-2 pl-8 pr-3 text-[12px] text-[#0B1F3A] placeholder-[#CBD5E1] focus:border-[#FF8A1F] focus:outline-none"
+            className="w-full ds-card py-2 pl-8 pr-3 text-[12px] text-[#0B1F3A] placeholder-[#CBD5E1] focus:border-[#FF8A1F] focus:outline-none"
           />
         </div>
 
@@ -185,8 +185,8 @@ export default function GroupHealthBoardClient({ groups }: { groups: GroupHealth
         <div className="flex flex-wrap gap-1.5">
           {([
             { key: 'all',      label: 'All',        count: groups.length },
-            { key: 'danger',   label: 'At Risk',     count: dangerCount, cls: 'text-red-600' },
-            { key: 'warning',  label: 'Warning',     count: warningCount, cls: 'text-amber-600' },
+            { key: 'danger',   label: 'At Risk',     count: dangerCount, cls: 'text-[#EF4444]' },
+            { key: 'warning',  label: 'Warning',     count: warningCount, cls: 'text-[#F59E0B]' },
             { key: 'no_instructor', label: 'No Instructor', count: groups.filter(g => !g.instructor_name).length },
           ] as const).map(chip => (
             <button
@@ -212,7 +212,7 @@ export default function GroupHealthBoardClient({ groups }: { groups: GroupHealth
         <select
           value={sort}
           onChange={e => setSort(e.target.value as SortKey)}
-          className="rounded-xl border border-[#E2E8F0] bg-white py-2 pl-3 pr-7 text-[12px] text-[#64748B] focus:border-[#FF8A1F] focus:outline-none"
+          className="ds-card py-2 pl-3 pr-7 text-[12px] text-[#64748B] focus:border-[#FF8A1F] focus:outline-none"
         >
           <option value="health">Sort: Health</option>
           <option value="danger">Sort: Danger First</option>

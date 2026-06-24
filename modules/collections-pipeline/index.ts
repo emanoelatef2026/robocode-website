@@ -1,4 +1,4 @@
-import 'server-only'
+﻿import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { logTimelineEvent }    from '@/lib/timeline'
 
@@ -197,11 +197,11 @@ export const COLLECTION_STAGE_CONFIG: Record<CollectionStage, {
   label: string; color: string; text: string; description: string
 }> = {
   FRIENDLY_REMINDER: {
-    label: 'Friendly Reminder', color: 'bg-blue-100',   text: 'text-blue-700',
+    label: 'Friendly Reminder', color: 'bg-[#EFF6FF]',   text: 'text-[#1D4ED8]',
     description: 'First reminder — payment is due or slightly overdue.',
   },
   DUE_NOTICE: {
-    label: 'Due Notice',        color: 'bg-amber-100',  text: 'text-amber-700',
+    label: 'Due Notice',        color: 'bg-[#FFFBEB]',  text: 'text-[#B45309]',
     description: 'Payment is overdue — formal notice sent.',
   },
   OVERDUE_WARNING: {
@@ -209,7 +209,7 @@ export const COLLECTION_STAGE_CONFIG: Record<CollectionStage, {
     description: 'Significantly overdue — escalating to parent.',
   },
   CRITICAL_COLLECTION: {
-    label: 'Critical',          color: 'bg-red-100',    text: 'text-red-700',
+    label: 'Critical',          color: 'bg-[#FEE2E2]',    text: 'text-[#DC2626]',
     description: 'Critical collection situation — may restrict access.',
   },
   FINAL_ESCALATION: {

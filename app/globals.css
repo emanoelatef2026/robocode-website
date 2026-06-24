@@ -7,20 +7,50 @@
   --navy-light:  #163560;
   --orange:      #FF8A1F;
   --orange-soft: #FFB15A;
+  --cyan:        #38BDF8;
+
+  /* Status colours */
+  --green:       #10B981;
+  --green-soft:  #E7F8EE;
+  --green-dark:  #15803D;
+  --amber:       #F59E0B;
+  --amber-soft:  #FFFBEB;
+  --amber-dark:  #B45309;
+  --red:         #EF4444;
+  --red-soft:    #FEF2F2;
+  --red-dark:    #B91C1C;
 
   /* Surfaces */
   --bg:          #F8FAFC;
   --bg-card:     #FFFFFF;
+  --bg-muted:    #F1F5F9;
+
+  /* Borders */
   --border:      #E2E8F0;
+  --border-soft: #e7ebf1;
 
   /* Typography */
   --text:        #0F172A;
   --text-2:      #334155;
+  --text-3:      #475569;
   --muted:       #64748B;
+  --muted-soft:  #94A3B8;
 
   /* Legacy aliases kept for Tailwind var() usage */
   --background:  #F8FAFC;
   --foreground:  #0F172A;
+
+  /* Elevation */
+  --shadow-card:  0 1px 4px rgba(11,31,58,.06), 0 0 0 1px rgba(11,31,58,.04);
+  --shadow-sm:    0 1px 3px rgba(11,31,58,.08);
+  --shadow-md:    0 4px 16px rgba(11,31,58,.10);
+  --shadow-lg:    0 18px 50px rgba(11,31,58,.16);
+
+  /* Radius */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
 
   /* Navbar */
   --navbar-offset: 72px;
@@ -167,6 +197,115 @@ body.font-cairo {
 }
 @utility font-poppins {
   font-family: var(--font-poppins), 'Poppins', sans-serif;
+}
+
+/* ── Admin / LMS card primitives ─────────────────────────────────────────────── */
+
+/* Standard admin card */
+.ds-card {
+  background: #fff;
+  border: 1px solid #e7ebf1;
+  border-radius: 16px;
+  box-shadow: 0 1px 4px rgba(11,31,58,.05);
+}
+
+/* Admin input / select */
+.ds-input {
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  background: #fff;
+  color: #0F172A;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ds-input:focus {
+  border-color: #FF8A1F;
+  box-shadow: 0 0 0 3px rgba(255,138,31,.12);
+}
+
+/* Admin primary button */
+.ds-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 10px;
+  background: #0B1F3A;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+.ds-btn-primary:hover { background: #163560; box-shadow: 0 4px 14px rgba(11,31,58,.25); }
+.ds-btn-primary:active { transform: scale(0.98); }
+
+.ds-btn-orange {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 10px;
+  background: #FF8A1F;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.ds-btn-orange:hover { background: #e87c18; }
+
+.ds-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 10px;
+  background: transparent;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border: 1px solid #E2E8F0;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.ds-btn-ghost:hover { border-color: #94A3B8; color: #0B1F3A; background: #F8FAFC; }
+
+/* Table primitives */
+.ds-table-head th {
+  background: #F8FAFC;
+  border-bottom: 1px solid #e7ebf1;
+  padding: 10px 14px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: #64748B;
+  white-space: nowrap;
+  text-align: start;
+}
+.ds-table-row td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f4f8;
+  font-size: 13px;
+  color: #0F172A;
+  vertical-align: middle;
+}
+.ds-table-row:last-child td { border-bottom: none; }
+.ds-table-row:hover td { background: #F8FAFC; }
+
+/* Skeleton shimmer */
+@keyframes ds-shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+.ds-skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: ds-shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
 }
 
 /* ── Student portal animations ───────────────────────────────────────────────── */

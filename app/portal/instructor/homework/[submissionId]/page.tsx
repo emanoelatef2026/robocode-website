@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { getSubmission } from '@/modules/assignments/submissions/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -33,7 +33,7 @@ export default async function GradeSubmissionPage({ params }: Props) {
       </div>
 
       {/* Submission content */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-4">
+      <div className="ds-card p-5 space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-[#0B1F3A]">Submission</p>
           <p className="text-xs text-[#94A3B8]">
@@ -41,7 +41,7 @@ export default async function GradeSubmissionPage({ params }: Props) {
               day: 'numeric', month: 'short', year: 'numeric',
               hour: '2-digit', minute: '2-digit',
             } as Intl.DateTimeFormatOptions)}
-            {submission.is_late && <span className="ml-2 text-red-500">late</span>}
+            {submission.is_late && <span className="ml-2 text-[#EF4444]">late</span>}
           </p>
         </div>
 
@@ -64,7 +64,7 @@ export default async function GradeSubmissionPage({ params }: Props) {
                   href={url!}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-xs text-[#3B82F6] hover:bg-[#F8FAFC] transition"
+                  className="flex items-center gap-1.5 ds-card px-3 py-1.5 text-xs text-[#3B82F6] hover:bg-[#F8FAFC] transition"
                 >
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
                     <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
@@ -79,7 +79,7 @@ export default async function GradeSubmissionPage({ params }: Props) {
       </div>
 
       {/* Grade form */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <p className="mb-4 text-sm font-semibold text-[#0B1F3A]">Grade</p>
         <GradeForm submission={submission} />
       </div>

@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getStudentDashboardData,
   getStudentAttendanceHistory,
@@ -6,10 +6,10 @@ import {
 import Link from 'next/link'
 
 const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
-  present: { label: 'Present', cls: 'bg-green-100  text-green-700'  },
-  absent:  { label: 'Absent',  cls: 'bg-red-100    text-red-700'    },
+  present: { label: 'Present', cls: 'bg-[#E7F8EE]  text-[#15803D]'  },
+  absent:  { label: 'Absent',  cls: 'bg-[#FEE2E2]    text-[#DC2626]'    },
   late:    { label: 'Late',    cls: 'bg-yellow-100 text-yellow-700' },
-  excused: { label: 'Excused', cls: 'bg-blue-100   text-blue-700'   },
+  excused: { label: 'Excused', cls: 'bg-[#EFF6FF]   text-[#1D4ED8]'   },
   makeup:  { label: 'Makeup',  cls: 'bg-purple-100 text-purple-700' },
 }
 
@@ -45,12 +45,12 @@ export default async function StudentAttendancePage() {
       {/* Summary stat cards */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { label: 'Present', value: data.att_present, color: 'text-green-600' },
-          { label: 'Absent',  value: data.att_absent,  color: 'text-red-600'   },
+          { label: 'Present', value: data.att_present, color: 'text-[#10B981]' },
+          { label: 'Absent',  value: data.att_absent,  color: 'text-[#EF4444]'   },
           { label: 'Late',    value: data.att_late,    color: 'text-yellow-600' },
           { label: 'Total',   value: data.att_total,   color: 'text-[#0B1F3A]' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-3 text-center">
+          <div key={label} className="ds-card p-3 text-center">
             <p className={`text-xl font-bold leading-none ${color}`}>{value}</p>
             <p className="mt-1 text-[10px] text-[#94A3B8]">{label}</p>
           </div>
@@ -58,16 +58,16 @@ export default async function StudentAttendancePage() {
       </div>
 
       {/* Attendance rate bar */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3.5">
+      <div className="ds-card px-4 py-3.5">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-[#0B1F3A]">Attendance Rate</p>
-          <span className={`text-base font-bold ${attendancePct >= 75 ? 'text-green-600' : attendancePct >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
+          <span className={`text-base font-bold ${attendancePct >= 75 ? 'text-[#10B981]' : attendancePct >= 50 ? 'text-yellow-600' : 'text-[#EF4444]'}`}>
             {attendancePct}%
           </span>
         </div>
         <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#F1F5F9]">
           <div
-            className={`h-full rounded-full transition-all ${attendancePct >= 75 ? 'bg-green-500' : attendancePct >= 50 ? 'bg-yellow-500' : 'bg-red-500'}`}
+            className={`h-full rounded-full transition-all ${attendancePct >= 75 ? 'bg-[#10B981]' : attendancePct >= 50 ? 'bg-yellow-500' : 'bg-[#EF4444]'}`}
             style={{ width: `${attendancePct}%` }}
           />
         </div>
@@ -79,7 +79,7 @@ export default async function StudentAttendancePage() {
           No sessions recorded yet.
         </div>
       ) : (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+        <div className="ds-card overflow-hidden">
           <div className="border-b border-[#E2E8F0] px-4 py-2.5">
             <p className="text-sm font-semibold text-[#0B1F3A]">{records.length} session{records.length !== 1 ? 's' : ''}</p>
           </div>
@@ -94,7 +94,7 @@ export default async function StudentAttendancePage() {
 
           <div className="divide-y divide-[#F1F5F9]">
             {records.map((r) => {
-              const cfg = r.status ? (STATUS_CONFIG[r.status] ?? { label: r.status, cls: 'bg-gray-100 text-gray-600' }) : null
+              const cfg = r.status ? (STATUS_CONFIG[r.status] ?? { label: r.status, cls: 'bg-[#F3F4F6] text-[#4B5563]' }) : null
               return (
                 <div
                   key={`${r.session_num}-${r.date}`}

@@ -1,4 +1,4 @@
-interface RiskBadgeProps {
+﻿interface RiskBadgeProps {
   score: number
   label?: string
   size?: 'sm' | 'md'
@@ -17,9 +17,9 @@ export default function RiskBadge({ score, label, size = 'sm' }: RiskBadgeProps)
 
 export function HealthBadge({ status }: { status: 'healthy' | 'warning' | 'danger' }) {
   const map = {
-    healthy: 'bg-emerald-100 text-emerald-700',
-    warning: 'bg-amber-100 text-amber-700',
-    danger:  'bg-red-100 text-red-700',
+    healthy: 'bg-[#E7F8EE] text-[#15803D]',
+    warning: 'bg-[#FFFBEB] text-[#B45309]',
+    danger:  'bg-[#FEE2E2] text-[#DC2626]',
   }
   const labels = { healthy: 'Healthy', warning: 'Warning', danger: 'At Risk' }
   return (
@@ -31,7 +31,7 @@ export function HealthBadge({ status }: { status: 'healthy' | 'warning' | 'dange
 
 export function ScoreBar({ value, max = 100, colorClass }: { value: number; max?: number; colorClass?: string }) {
   const pct = Math.min(100, Math.max(0, (value / max) * 100))
-  const color = colorClass ?? (pct >= 75 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-500' : 'bg-red-500')
+  const color = colorClass ?? (pct >= 75 ? 'bg-[#10B981]' : pct >= 50 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]')
   return (
     <div className="h-1.5 w-full rounded-full bg-[#F1F5F9]">
       <div className={`h-1.5 rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
@@ -40,15 +40,15 @@ export function ScoreBar({ value, max = 100, colorClass }: { value: number; max?
 }
 
 function getRiskStyle(score: number) {
-  if (score >= 60) return { cls: 'bg-red-100 text-red-700',    text: 'Critical' }
-  if (score >= 35) return { cls: 'bg-amber-100 text-amber-700', text: 'Medium'  }
-  return              { cls: 'bg-emerald-100 text-emerald-700', text: 'Low'     }
+  if (score >= 60) return { cls: 'bg-[#FEE2E2] text-[#DC2626]',    text: 'Critical' }
+  if (score >= 35) return { cls: 'bg-[#FFFBEB] text-[#B45309]', text: 'Medium'  }
+  return              { cls: 'bg-[#E7F8EE] text-[#15803D]', text: 'Low'     }
 }
 
 function getDotColor(score: number) {
-  if (score >= 60) return 'bg-red-500'
-  if (score >= 35) return 'bg-amber-500'
-  return 'bg-emerald-500'
+  if (score >= 60) return 'bg-[#EF4444]'
+  if (score >= 35) return 'bg-[#F59E0B]'
+  return 'bg-[#10B981]'
 }
 
 function getRiskLabel(score: number) {
@@ -58,9 +58,9 @@ function getRiskLabel(score: number) {
 }
 
 export function InstructorScoreBadge({ score }: { score: number }) {
-  const cls = score >= 75 ? 'bg-emerald-100 text-emerald-700'
-            : score >= 55 ? 'bg-amber-100 text-amber-700'
-            :               'bg-red-100 text-red-700'
+  const cls = score >= 75 ? 'bg-[#E7F8EE] text-[#15803D]'
+            : score >= 55 ? 'bg-[#FFFBEB] text-[#B45309]'
+            :               'bg-[#FEE2E2] text-[#DC2626]'
   return (
     <span className={`rounded-lg px-2.5 py-1 text-[12px] font-bold tabular-nums ${cls}`}>
       {score}

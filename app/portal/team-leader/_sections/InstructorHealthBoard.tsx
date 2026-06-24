@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { getInstructorOpsData, type InstructorOpsRow } from '@/modules/tl-dashboard/queries'
 import { InstructorScoreBadge, ScoreBar } from '../_components/RiskBadge'
 import DashCard, { DashCardEmpty } from '../_components/DashCard'
@@ -21,13 +21,13 @@ function buildInstructorWa(phone: string | null | undefined, name: string): stri
 function InstructorRow({ instr }: { instr: InstructorOpsRow }) {
   const score = instr.health_score
 
-  const attColor = instr.attendance_rate >= 85 ? 'text-emerald-600'
-                 : instr.attendance_rate >= 70 ? 'text-amber-600'
-                 : 'text-red-600'
+  const attColor = instr.attendance_rate >= 85 ? 'text-[#10B981]'
+                 : instr.attendance_rate >= 70 ? 'text-[#F59E0B]'
+                 : 'text-[#EF4444]'
 
-  const hwColor  = instr.homework_review_pct >= 80 ? 'text-emerald-600'
-                 : instr.homework_review_pct >= 60 ? 'text-amber-600'
-                 : 'text-red-600'
+  const hwColor  = instr.homework_review_pct >= 80 ? 'text-[#10B981]'
+                 : instr.homework_review_pct >= 60 ? 'text-[#F59E0B]'
+                 : 'text-[#EF4444]'
 
   return (
     <div className="border-b border-[#F1F5F9] last:border-0">
@@ -48,7 +48,7 @@ function InstructorRow({ instr }: { instr: InstructorOpsRow }) {
             {instr.avg_student_rating != null && (
               <>
                 <span>·</span>
-                <span className="text-amber-500">{instr.avg_student_rating}★</span>
+                <span className="text-[#F59E0B]">{instr.avg_student_rating}★</span>
               </>
             )}
           </div>
@@ -73,8 +73,8 @@ function InstructorRow({ instr }: { instr: InstructorOpsRow }) {
         <div className="px-3 py-2">
           <p className="text-[12px] font-bold text-[#0B1F3A]">
             {instr.risk_students > 0
-              ? <span className="text-red-600">{instr.risk_students}</span>
-              : <span className="text-emerald-600">0</span>}
+              ? <span className="text-[#EF4444]">{instr.risk_students}</span>
+              : <span className="text-[#10B981]">0</span>}
           </p>
           <p className="text-[9px] text-[#94A3B8] uppercase tracking-wide">Risk Students</p>
         </div>
@@ -113,7 +113,7 @@ export default async function InstructorHealthBoard({ branchIds }: { branchIds: 
         <div className="flex items-center gap-2">
           <h2 className="text-[16px] font-bold text-[#0B1F3A]">Instructor Performance</h2>
           {atRisk > 0 && (
-            <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-semibold text-red-700">
+            <span className="rounded-full bg-[#FEE2E2] px-2.5 py-0.5 text-[11px] font-semibold text-[#DC2626]">
               {atRisk} need attention
             </span>
           )}
@@ -130,10 +130,10 @@ export default async function InstructorHealthBoard({ branchIds }: { branchIds: 
         title={`${instructors.length} Instructor${instructors.length !== 1 ? 's' : ''}`}
         badge={
           healthy > 0
-            ? <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">{healthy} healthy</span>
+            ? <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">{healthy} healthy</span>
             : undefined
         }
-        accent={atRisk > 0 ? 'border-amber-200' : 'border-[#E2E8F0]'}
+        accent={atRisk > 0 ? 'border-[#FDE68A]' : 'border-[#E2E8F0]'}
       >
         {instructors.length === 0
           ? <DashCardEmpty text="No active instructors found" emoji="👨‍🏫" />

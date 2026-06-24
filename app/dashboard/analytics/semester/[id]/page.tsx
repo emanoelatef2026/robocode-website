@@ -1,4 +1,4 @@
-import { getCurrentUser }      from '@/modules/rbac/guards'
+﻿import { getCurrentUser }      from '@/modules/rbac/guards'
 import { redirect, notFound }   from 'next/navigation'
 import {
   resolveGroupFilter,
@@ -8,7 +8,7 @@ import Link from 'next/link'
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+    <div className="ds-card p-5">
       <p className="text-xs text-[#94A3B8] uppercase tracking-wide">{label}</p>
       <p className="mt-1 text-3xl font-bold text-[#0B1F3A]">{value}</p>
       {sub && <p className="mt-0.5 text-xs text-[#94A3B8]">{sub}</p>}
@@ -18,9 +18,9 @@ function StatCard({ label, value, sub }: { label: string; value: string | number
 
 function ScoreBar({ label, value }: { label: string; value: number }) {
   const color =
-    value >= 75 ? 'bg-green-400' :
-    value >= 50 ? 'bg-amber-400' :
-                  'bg-red-400'
+    value >= 75 ? 'bg-[#10B981]' :
+    value >= 50 ? 'bg-[#F59E0B]' :
+                  'bg-[#EF4444]'
   return (
     <div>
       <div className="mb-1 flex items-center justify-between text-xs">
@@ -96,7 +96,7 @@ export default async function SemesterOverviewPage({
       {/* ── Average scores ─────────────────────────────────────────────────── */}
       <div>
         <h2 className="mb-3 text-base font-semibold text-[#0B1F3A]">Average Scores</h2>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-6 space-y-5">
+        <div className="ds-card p-6 space-y-5">
           <ScoreBar label="Completion"  value={overview.avg_completion}  />
           <ScoreBar label="Attendance"  value={overview.avg_attendance}  />
           <ScoreBar label="Assignments" value={overview.avg_assignment}  />
@@ -113,11 +113,11 @@ export default async function SemesterOverviewPage({
           { label: 'Avg Portfolio',   value: overview.avg_portfolio   },
         ].map(({ label, value }) => {
           const cls =
-            value >= 75 ? 'bg-green-50 text-green-700' :
-            value >= 50 ? 'bg-amber-50 text-amber-700' :
-                          'bg-red-50 text-red-600'
+            value >= 75 ? 'bg-[#E7F8EE] text-[#15803D]' :
+            value >= 50 ? 'bg-[#FFFBEB] text-[#B45309]' :
+                          'bg-[#FEE2E2] text-[#EF4444]'
           return (
-            <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+            <div key={label} className="ds-card p-5">
               <p className="text-xs text-[#94A3B8] uppercase tracking-wide">{label}</p>
               <p className={`mt-2 inline-block rounded-full px-3 py-1 text-sm font-bold ${cls}`}>
                 {value.toFixed(1)}%

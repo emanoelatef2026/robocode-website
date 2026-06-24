@@ -1,4 +1,4 @@
-import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
+﻿import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { listCertificates, listActiveTemplates } from '@/modules/certificates/queries'
 import { listCourses }                           from '@/modules/courses/queries'
 import { listSemesters }                         from '@/modules/semesters/queries'
@@ -72,7 +72,7 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
         />
       </div>
 
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         <div className="border-b border-[#E2E8F0] px-3 py-2 space-y-1.5 sm:px-4 sm:py-3 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
           <SearchInput placeholder="Search by title, name, or code…" />
           <div className="flex gap-2 overflow-x-auto no-scrollbar sm:contents">
@@ -148,7 +148,7 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
             {/* ── Desktop table ── */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Title</th>
@@ -161,7 +161,7 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {result.data.map(c => (
-                    <tr key={c.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={c.id} className="ds-table-row">
                       <td className="px-4 py-3 font-mono text-xs text-[#0B1F3A]">{c.certificate_code}</td>
                       <td className="px-4 py-3 font-medium text-[#0B1F3A] max-w-45 truncate">{c.title}</td>
                       <td className="px-4 py-3">

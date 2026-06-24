@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { changePassword } from '@/modules/auth/actions'
@@ -15,31 +15,31 @@ export default function ChangePasswordPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#F4F7FB] px-4">
       <div className="w-full max-w-sm">
-        <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-[#F1F5F9] bg-white p-8 shadow-sm">
           <div className="mb-8 flex justify-center">
             <Image src="/logo.png" alt="Robocode" width={140} height={60} className="h-auto w-28" />
           </div>
 
           <h1 className="mb-1 text-center text-lg font-bold text-[#0B132B]">Change Password</h1>
-          <p className="mb-7 text-center text-[13px] text-gray-400">
+          <p className="mb-7 text-center text-[13px] text-[#9CA3AF]">
             Update the password for your account
           </p>
 
           {state?.success && (
-            <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-[13px] text-green-700">
+            <div className="mb-4 rounded-lg bg-[#E7F8EE] px-4 py-3 text-[13px] text-[#15803D]">
               Password updated successfully.
             </div>
           )}
 
           {state?.error && (
-            <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-[13px] text-red-600">
+            <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#EF4444]">
               {state.error}
             </div>
           )}
 
           <form action={action} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-gray-400">
+              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
                 Current password
               </label>
               <input
@@ -48,12 +48,12 @@ export default function ChangePasswordPage() {
                 required
                 autoComplete="current-password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-gray-400">
+              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
                 New password
               </label>
               <input
@@ -62,12 +62,12 @@ export default function ChangePasswordPage() {
                 required
                 autoComplete="new-password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-gray-400">
+              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
                 Confirm new password
               </label>
               <input
@@ -76,7 +76,7 @@ export default function ChangePasswordPage() {
                 required
                 autoComplete="new-password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
               />
             </div>
 
@@ -95,7 +95,7 @@ export default function ChangePasswordPage() {
             </Link>
           </div>
         </div>
-        <p className="mt-4 text-center text-[12px] text-gray-400">Robocode School · LMS</p>
+        <p className="mt-4 text-center text-[12px] text-[#9CA3AF]">Robocode School · LMS</p>
       </div>
     </div>
   )

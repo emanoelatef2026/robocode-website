@@ -1,4 +1,4 @@
-import { createServiceClient }     from '@/lib/supabase/service'
+﻿import { createServiceClient }     from '@/lib/supabase/service'
 import { requireAuth }             from '@/modules/rbac/guards'
 import { redirect }                from 'next/navigation'
 import {
@@ -19,9 +19,9 @@ import type { CertReadinessStatus }from '@/modules/analytics/types'
 
 function scorePill(score: number) {
   const cls =
-    score >= 75 ? 'bg-emerald-50 text-emerald-700' :
-    score >= 50 ? 'bg-amber-50 text-amber-700'  :
-                  'bg-red-50 text-red-600'
+    score >= 75 ? 'bg-[#E7F8EE] text-[#15803D]' :
+    score >= 50 ? 'bg-[#FFFBEB] text-[#B45309]'  :
+                  'bg-[#FEE2E2] text-[#EF4444]'
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${cls}`}>
       {score.toFixed(1)}%
@@ -35,9 +35,9 @@ const READINESS_LABELS: Record<CertReadinessStatus, string> = {
   not_ready:    'Not Ready',
 }
 const READINESS_COLORS: Record<CertReadinessStatus, string> = {
-  ready:        'bg-emerald-50 text-emerald-700 border-emerald-200',
-  almost_ready: 'bg-amber-50  text-amber-700  border-amber-200',
-  not_ready:    'bg-red-50    text-red-600    border-red-200',
+  ready:        'bg-[#E7F8EE] text-[#15803D] border-[#A7F3D0]',
+  almost_ready: 'bg-[#FFFBEB]  text-[#B45309]  border-[#FDE68A]',
+  not_ready:    'bg-[#FEE2E2]    text-[#EF4444]    border-[#FECACA]',
 }
 
 // ── Additional academy-wide stats ─────────────────────────────────────────────
@@ -350,7 +350,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
         <div className="flex justify-end">
           <div className="flex items-center gap-2">
             <label className="text-xs text-[#64748B]">Semester:</label>
-            <div className="flex items-center gap-0.5 rounded-lg border border-[#E2E8F0] bg-white px-1">
+            <div className="flex items-center gap-0.5 ds-card px-1">
               <Link
                 href={filterHref({ semester: undefined })}
                 className={`rounded px-2 py-1 text-xs ${!semesterId ? 'font-semibold text-[#FF8A1F]' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
@@ -375,12 +375,12 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
       {academyStats && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
-            { label: 'Attendance Rate (30d)', value: `${academyStats.overall_attendance_rate}%`, sub: `${academyStats.attendance_sample_size} records sampled`, color: academyStats.overall_attendance_rate >= 75 ? 'bg-emerald-400' : 'bg-amber-400' },
+            { label: 'Attendance Rate (30d)', value: `${academyStats.overall_attendance_rate}%`, sub: `${academyStats.attendance_sample_size} records sampled`, color: academyStats.overall_attendance_rate >= 75 ? 'bg-[#10B981]' : 'bg-[#F59E0B]' },
             { label: 'Certificates Issued',   value: academyStats.total_certs_issued,   color: 'bg-sky-400' },
-            { label: 'At-Risk Students',      value: atRiskResult.total,                color: atRiskResult.total > 0 ? 'bg-red-400' : 'bg-emerald-400' },
-            { label: 'Missing Assignments',   value: missingResult.total,               color: missingResult.total > 0 ? 'bg-amber-400' : 'bg-emerald-400' },
+            { label: 'At-Risk Students',      value: atRiskResult.total,                color: atRiskResult.total > 0 ? 'bg-[#EF4444]' : 'bg-[#10B981]' },
+            { label: 'Missing Assignments',   value: missingResult.total,               color: missingResult.total > 0 ? 'bg-[#F59E0B]' : 'bg-[#10B981]' },
           ].map(stat => (
-            <div key={stat.label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+            <div key={stat.label} className="ds-card p-4">
               <div className={`mb-2 h-1.5 w-7 rounded-full ${stat.color} opacity-80`} />
               <p className="text-2xl font-bold text-[#0B1F3A]">{stat.value}</p>
               <p className="mt-0.5 text-xs text-[#64748B]">{stat.label}</p>
@@ -422,9 +422,9 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
           </div>
 
           {certReadiness.length > 0 && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+            <div className="ds-card overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Student</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Semester</th>
@@ -436,7 +436,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {certReadiness.map(s => (
-                    <tr key={`${s.student_id}::${s.semester_id}`} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={`${s.student_id}::${s.semester_id}`} className="ds-table-row">
                       <td className="px-4 py-2.5">
                         <div className="font-medium text-[#0B1F3A]">{s.student_name}</div>
                         <div className="text-[11px] text-[#94A3B8]">{s.student_email}</div>
@@ -470,20 +470,20 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
               <h2 className="text-sm font-semibold text-[#0B1F3A]">At-Risk Students</h2>
               <p className="text-xs text-[#94A3B8]">completion &lt; 70% or attendance &lt; 75% — {atRiskResult.total} found</p>
             </div>
-            <div className="flex items-center gap-0.5 rounded-lg border border-[#E2E8F0] bg-white px-1">
+            <div className="flex items-center gap-0.5 ds-card px-1">
               <Link href={filterHref({ sort: 'completion', page: '1' })} className={`rounded px-2 py-1 text-xs ${sort === 'completion' ? 'font-semibold text-[#FF8A1F]' : 'text-[#64748B]'}`}>Completion</Link>
               <Link href={filterHref({ sort: 'attendance', page: '1' })} className={`rounded px-2 py-1 text-xs ${sort === 'attendance' ? 'font-semibold text-[#FF8A1F]' : 'text-[#64748B]'}`}>Attendance</Link>
             </div>
           </div>
 
           {atRiskResult.data.length === 0 ? (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+            <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No at-risk students found.</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+            <div className="ds-card overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Student</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Group</th>
@@ -496,7 +496,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {atRiskResult.data.map(s => (
-                    <tr key={`${s.student_id}-${s.course_id}`} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={`${s.student_id}-${s.course_id}`} className="ds-table-row">
                       <td className="px-4 py-2.5">
                         <div className="font-medium text-[#0B1F3A]">{s.student_name}</div>
                         <div className="text-[11px] text-[#94A3B8]">{s.student_email}</div>
@@ -508,7 +508,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                       <td className="px-4 py-2.5">{scorePill(s.assignment_score)}</td>
                       <td className="px-4 py-2.5">
                         {s.risk_reasons.map(r => (
-                          <span key={r} className="mr-1 inline-block rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-600">
+                          <span key={r} className="mr-1 inline-block rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-medium text-[#EF4444]">
                             {r === 'low_completion' ? 'Low Overall' : 'Low Attendance'}
                           </span>
                         ))}
@@ -532,13 +532,13 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
           </div>
 
           {missingResult.data.length === 0 ? (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+            <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No missing assignments.</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+            <div className="ds-card overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Student</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Missing</th>
@@ -547,17 +547,17 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {missingResult.data.map(s => (
-                    <tr key={s.student_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={s.student_id} className="ds-table-row">
                       <td className="px-4 py-2.5">
                         <div className="font-medium text-[#0B1F3A]">{s.student_name}</div>
                         <div className="text-[11px] text-[#94A3B8]">{s.student_email}</div>
                       </td>
                       <td className="px-4 py-2.5">
-                        <span className="inline-block rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">{s.missing_count}</span>
+                        <span className="inline-block rounded-full bg-[#FFFBEB] px-2 py-0.5 text-xs font-semibold text-[#B45309]">{s.missing_count}</span>
                       </td>
                       <td className="px-4 py-2.5">
                         {s.overdue_count > 0 ? (
-                          <span className="inline-block rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600">{s.overdue_count} overdue</span>
+                          <span className="inline-block rounded-full bg-[#FEE2E2] px-2 py-0.5 text-xs font-semibold text-[#EF4444]">{s.overdue_count} overdue</span>
                         ) : (
                           <span className="text-xs text-[#94A3B8]">—</span>
                         )}
@@ -576,9 +576,9 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
       {tab === 'branches' && user.globalRole === 'super_admin' && (
         <section>
           <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Branch Performance</h2>
-          <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+          <div className="ds-card overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
                   <th className="px-4 py-3 text-right text-xs font-medium text-[#64748B]">Students</th>
@@ -592,7 +592,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                   const maxStudents = Math.max(...(branchPerf as any[]).map((x: any) => x.students), 1)
                   const pct = Math.round((b.students / maxStudents) * 100)
                   return (
-                    <tr key={b.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={b.id} className="ds-table-row">
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">
                         <Link href={`/admin/branches/${b.id}`} className="hover:text-[#FF8A1F]">{b.name}</Link>
                       </td>
@@ -624,13 +624,13 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
             <p className="text-xs text-[#94A3B8]">Sorted by overall completion — from student progress records</p>
           </div>
           {groupPerf.length === 0 ? (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+            <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No group progress data yet.</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+            <div className="ds-card overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Group</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Branch</th>
@@ -643,7 +643,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {groupPerf.map(g => (
-                    <tr key={g.group_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={g.group_id} className="ds-table-row">
                       <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">{g.group_name}</td>
                       <td className="px-4 py-2.5 text-[#64748B]">{g.branch_name ?? '—'}</td>
                       <td className="px-4 py-2.5 text-right text-[#64748B]">{g.student_count}</td>
@@ -670,13 +670,13 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
             <p className="text-xs text-[#94A3B8]">Average scores per course across all groups</p>
           </div>
           {coursePerf.length === 0 ? (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+            <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No course progress data yet.</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+            <div className="ds-card overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Course</th>
                     <th className="px-4 py-2.5 text-right text-xs font-medium text-[#64748B]">Students</th>
@@ -688,7 +688,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {coursePerf.map(c => (
-                    <tr key={c.course_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={c.course_id} className="ds-table-row">
                       <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">{c.course_title}</td>
                       <td className="px-4 py-2.5 text-right text-[#64748B]">{c.student_count}</td>
                       <td className="px-4 py-2.5">{scorePill(c.avg_completion)}</td>
@@ -713,16 +713,16 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { label: 'Active Students',   value: opsData.activeStudents,   color: 'bg-emerald-400' },
-              { label: 'Inactive Students', value: opsData.inactiveStudents, color: 'bg-slate-300' },
+              { label: 'Active Students',   value: opsData.activeStudents,   color: 'bg-[#10B981]' },
+              { label: 'Inactive Students', value: opsData.inactiveStudents, color: 'bg-[#CBD5E1]' },
               { label: 'New This Month',    value: opsData.newStudentsMonth, color: 'bg-teal-400' },
-              { label: 'Active Groups',     value: opsData.activeGroups,     color: 'bg-blue-400' },
-              { label: 'Empty Groups',      value: opsData.emptyGroups,      color: opsData.emptyGroups > 0 ? 'bg-amber-400' : 'bg-slate-300' },
-              { label: 'No Instructor',     value: opsData.noInstructor,     color: opsData.noInstructor > 0 ? 'bg-red-400' : 'bg-slate-300' },
-              { label: 'No Active Course',  value: opsData.noCourse,         color: opsData.noCourse > 0 ? 'bg-red-400' : 'bg-slate-300' },
+              { label: 'Active Groups',     value: opsData.activeGroups,     color: 'bg-[#38BDF8]' },
+              { label: 'Empty Groups',      value: opsData.emptyGroups,      color: opsData.emptyGroups > 0 ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]' },
+              { label: 'No Instructor',     value: opsData.noInstructor,     color: opsData.noInstructor > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]' },
+              { label: 'No Active Course',  value: opsData.noCourse,         color: opsData.noCourse > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]' },
               { label: 'Certificates',      value: opsData.activeCerts,      color: 'bg-sky-400' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+              <div key={label} className="ds-card p-4">
                 <div className={`mb-2 h-1.5 w-7 rounded-full ${color} opacity-80`} />
                 <p className="text-2xl font-bold text-[#0B1F3A]">{value}</p>
                 <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
@@ -731,7 +731,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
           </div>
 
           {(opsData.noInstructor > 0 || opsData.noCourse > 0 || opsData.emptyGroups > 0) && (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-sm text-[#B45309]">
               Operational issues detected.{' '}
               <Link href="/admin/system-health" className="font-semibold underline">View System Health →</Link>
             </div>
@@ -747,13 +747,13 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               { label: 'Total Leads',      value: marketingData.total,          color: 'bg-violet-400' },
-              { label: 'Active Leads',     value: marketingData.active,         color: 'bg-blue-400' },
-              { label: 'Converted',        value: marketingData.converted,      color: 'bg-emerald-400' },
-              { label: 'Conversion Rate',  value: `${marketingData.conversionRate}%`, color: marketingData.conversionRate >= 30 ? 'bg-emerald-400' : 'bg-amber-400' },
-              { label: 'Lost',             value: marketingData.lost,           color: 'bg-red-400' },
-              { label: 'Avg Days to Convert', value: marketingData.avgDaysToConvert !== null ? `${marketingData.avgDaysToConvert}d` : '—', color: 'bg-slate-300' },
+              { label: 'Active Leads',     value: marketingData.active,         color: 'bg-[#38BDF8]' },
+              { label: 'Converted',        value: marketingData.converted,      color: 'bg-[#10B981]' },
+              { label: 'Conversion Rate',  value: `${marketingData.conversionRate}%`, color: marketingData.conversionRate >= 30 ? 'bg-[#10B981]' : 'bg-[#F59E0B]' },
+              { label: 'Lost',             value: marketingData.lost,           color: 'bg-[#EF4444]' },
+              { label: 'Avg Days to Convert', value: marketingData.avgDaysToConvert !== null ? `${marketingData.avgDaysToConvert}d` : '—', color: 'bg-[#CBD5E1]' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+              <div key={label} className="ds-card p-4">
                 <div className={`mb-2 h-1.5 w-7 rounded-full ${color} opacity-80`} />
                 <p className="text-2xl font-bold text-[#0B1F3A]">{value}</p>
                 <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
@@ -762,7 +762,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
           </div>
 
           {marketingData.bySource.length > 0 && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+            <div className="ds-card p-4">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Leads by Source</p>
               <div className="space-y-2">
                 {marketingData.bySource.map(([source, count]) => {
@@ -782,13 +782,13 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
           )}
 
           {marketingData.lostReasons.length > 0 && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+            <div className="ds-card p-4">
               <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Top Lost Reasons</p>
               <div className="space-y-1.5">
                 {marketingData.lostReasons.map(([reason, count]) => (
                   <div key={reason} className="flex items-center justify-between rounded-lg bg-[#F8FAFC] px-3 py-2 text-xs">
                     <span className="text-[#64748B]">{reason}</span>
-                    <span className="font-semibold text-red-600">{count}</span>
+                    <span className="font-semibold text-[#EF4444]">{count}</span>
                   </div>
                 ))}
               </div>
@@ -806,13 +806,13 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
           </div>
 
           {(instructorData as any[]).length === 0 ? (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+            <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No active instructors found.</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+            <div className="ds-card overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">#</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Instructor</th>
@@ -823,13 +823,13 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {(instructorData as any[]).map((i: any, idx: number) => (
-                    <tr key={i.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={i.id} className="ds-table-row">
                       <td className="px-4 py-2.5 text-xs font-medium text-[#94A3B8]">#{idx + 1}</td>
                       <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">{i.name}</td>
                       <td className="px-4 py-2.5 text-[#64748B]">{i.branch}</td>
                       <td className="px-4 py-2.5 text-right">
                         <span className={`font-bold ${i.sessions > 0 ? 'text-[#0B1F3A]' : 'text-[#94A3B8]'}`}>{i.sessions}</span>
-                        {i.sessions === 0 && <span className="ml-1 text-[10px] text-amber-500">No sessions</span>}
+                        {i.sessions === 0 && <span className="ml-1 text-[10px] text-[#F59E0B]">No sessions</span>}
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         <Link href={`/admin/instructors/${i.id}`} className="text-xs text-[#FF8A1F] hover:underline">Profile</Link>
@@ -857,15 +857,15 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               { label: 'Expected This Month',  value: `EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeKpis.expected_this_month)}`,  color: 'bg-violet-400' },
-              { label: 'Collected This Month', value: `EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeKpis.collected_this_month)}`, color: 'bg-emerald-400' },
-              { label: 'Outstanding',          value: `EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeKpis.outstanding_total)}`,    color: financeKpis.outstanding_total > 0 ? 'bg-amber-400' : 'bg-emerald-400' },
-              { label: 'Collection Rate',      value: `${financeKpis.collection_rate_pct}%`,  color: financeKpis.collection_rate_pct >= 80 ? 'bg-emerald-400' : financeKpis.collection_rate_pct >= 50 ? 'bg-amber-400' : 'bg-red-400' },
-              { label: 'Overdue Students',     value: financeKpis.overdue_count,              color: financeKpis.overdue_count > 0 ? 'bg-red-400' : 'bg-slate-300' },
-              { label: 'Due This Week',        value: financeKpis.due_this_week,              color: financeKpis.due_this_week > 0 ? 'bg-amber-400' : 'bg-slate-300' },
+              { label: 'Collected This Month', value: `EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeKpis.collected_this_month)}`, color: 'bg-[#10B981]' },
+              { label: 'Outstanding',          value: `EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeKpis.outstanding_total)}`,    color: financeKpis.outstanding_total > 0 ? 'bg-[#F59E0B]' : 'bg-[#10B981]' },
+              { label: 'Collection Rate',      value: `${financeKpis.collection_rate_pct}%`,  color: financeKpis.collection_rate_pct >= 80 ? 'bg-[#10B981]' : financeKpis.collection_rate_pct >= 50 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]' },
+              { label: 'Overdue Students',     value: financeKpis.overdue_count,              color: financeKpis.overdue_count > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]' },
+              { label: 'Due This Week',        value: financeKpis.due_this_week,              color: financeKpis.due_this_week > 0 ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]' },
               { label: 'Students Paid',        value: financeKpis.paid_students,              color: 'bg-teal-400' },
-              { label: 'Total Accounts',       value: financeKpis.total_students,             color: 'bg-blue-400' },
+              { label: 'Total Accounts',       value: financeKpis.total_students,             color: 'bg-[#38BDF8]' },
             ].map(({ label, value, color }) => (
-              <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+              <div key={label} className="ds-card p-4">
                 <div className={`mb-2 h-1.5 w-7 rounded-full ${color} opacity-80`} />
                 <p className="text-2xl font-bold text-[#0B1F3A]">{value}</p>
                 <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
@@ -875,12 +875,12 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
 
           {/* Branch finance performance */}
           {(branchFinance as any[]).length > 0 && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+            <div className="ds-card overflow-x-auto">
               <div className="border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2.5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Branch Finance Performance</p>
               </div>
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Branch</th>
                     <th className="px-4 py-2.5 text-right text-xs font-medium text-[#64748B]">Net Total</th>
@@ -892,7 +892,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {(branchFinance as any[]).map((b: any) => (
-                    <tr key={b.branch_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={b.branch_id} className="ds-table-row">
                       <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
                         <Link href={`/admin/branches/${b.branch_id}`} className="hover:text-[#FF8A1F]">
                           {b.branch_name}
@@ -901,17 +901,17 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                       <td className="px-4 py-2.5 text-right text-[#64748B]">
                         EGP {new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(b.net_amount)}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-emerald-600">
+                      <td className="px-4 py-2.5 text-right font-semibold text-[#10B981]">
                         EGP {new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(b.paid_amount)}
                       </td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-red-500">
+                      <td className="px-4 py-2.5 text-right font-semibold text-[#EF4444]">
                         EGP {new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(b.outstanding)}
                       </td>
                       <td className="px-4 py-2.5 min-w-[120px]">
                         <div className="flex items-center gap-2">
                           <div className="flex-1 h-2 rounded-full bg-[#F1F5F9] overflow-hidden">
                             <div
-                              className={`h-full rounded-full ${b.collection_rate >= 80 ? 'bg-emerald-400' : b.collection_rate >= 50 ? 'bg-amber-400' : 'bg-red-400'}`}
+                              className={`h-full rounded-full ${b.collection_rate >= 80 ? 'bg-[#10B981]' : b.collection_rate >= 50 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
                               style={{ width: `${b.collection_rate}%` }}
                             />
                           </div>
@@ -920,7 +920,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                       </td>
                       <td className="px-4 py-2.5 text-right">
                         {b.overdue_count > 0 ? (
-                          <span className="inline-block rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600">
+                          <span className="inline-block rounded-full bg-[#FEE2E2] px-2 py-0.5 text-xs font-semibold text-[#EF4444]">
                             {b.overdue_count}
                           </span>
                         ) : (
@@ -935,7 +935,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
           )}
 
           {(branchFinance as any[]).length === 0 && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+            <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No financial accounts created yet. Go to Finance Center to add student accounts.</p>
             </div>
           )}
@@ -957,7 +957,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
               { label: 'New Students (month)',        value: opsData?.newStudentsMonth ?? '—', note: 'New enrollments' },
               { label: 'Active Groups',               value: opsData?.activeGroups ?? '—', note: 'Revenue-generating groups' },
             ].map(({ label, value, note }) => (
-              <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+              <div key={label} className="ds-card p-4">
                 <p className="text-2xl font-bold text-[#0B1F3A]">{value}</p>
                 <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
                 <p className="mt-1 text-[11px] text-[#94A3B8]">{note}</p>
@@ -965,9 +965,9 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
             ))}
           </div>
 
-          <div className="rounded-xl border border-blue-200 bg-blue-50 p-5">
+          <div className="rounded-xl border border-blue-200 bg-[#EFF6FF] p-5">
             <p className="text-sm font-semibold text-blue-800">Revenue Tracking Coming Soon</p>
-            <p className="mt-1 text-xs text-blue-600">
+            <p className="mt-1 text-xs text-[#2563EB]">
               The financial module (invoices, payments, subscriptions) is in the database schema
               but not yet connected to this dashboard. When payment processing is activated, this
               section will show: revenue by branch, by course, by student, monthly trends, and
@@ -975,7 +975,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
               {['Revenue by Branch', 'Revenue by Course', 'Monthly Trend', 'Outstanding Balances', 'Paid vs Unpaid', 'Per-Student Revenue'].map(m => (
-                <div key={m} className="rounded-lg bg-white/60 px-3 py-2 text-xs font-medium text-blue-700 opacity-60">
+                <div key={m} className="rounded-lg bg-white/60 px-3 py-2 text-xs font-medium text-[#1D4ED8] opacity-60">
                   {m}
                 </div>
               ))}

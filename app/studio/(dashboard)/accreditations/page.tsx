@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -31,8 +31,8 @@ interface Accreditation {
   created_at:   string;
 }
 
-const INPUT = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
-const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
+const INPUT = "w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]";
 
 const blank = { name: "", sort_order: "0", website_url: "" };
 
@@ -84,15 +84,15 @@ function SortableCard({
         "overflow-hidden rounded-xl border bg-white shadow-sm transition-all duration-200",
         isDragging
           ? "scale-[1.02] border-[#38BDF8]/40 shadow-xl ring-2 ring-[#38BDF8]/20"
-          : "border-gray-100",
+          : "border-[#F1F5F9]",
       ].join(" ")}
     >
-      <div className="flex h-28 items-center bg-gray-50 px-4 gap-3">
+      <div className="flex h-28 items-center bg-[#F9FAFB] px-4 gap-3">
         {/* Drag handle */}
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab touch-none select-none text-gray-300 transition hover:text-gray-400 active:cursor-grabbing"
+          className="cursor-grab touch-none select-none text-[#D1D5DB] transition hover:text-[#9CA3AF] active:cursor-grabbing"
           aria-label="Drag to reorder"
         >
           <GripIcon />
@@ -106,7 +106,7 @@ function SortableCard({
 
       <div className="p-3">
         <p className="truncate text-[12px] font-bold text-[#0B1F3A]">{item.name}</p>
-        <p className="text-[11px] text-gray-400">Order: {item.sort_order}</p>
+        <p className="text-[11px] text-[#9CA3AF]">Order: {item.sort_order}</p>
         {item.website_url && (
           <p className="mt-0.5 truncate text-[10px] text-[#38BDF8]">{item.website_url}</p>
         )}
@@ -118,7 +118,7 @@ function SortableCard({
               "flex-1 rounded-lg border py-1.5 text-[11px] font-semibold transition disabled:opacity-50",
               item.active
                 ? "border-[#38BDF8]/30 bg-[#38BDF8]/8 text-[#38BDF8] hover:bg-[#38BDF8]/15"
-                : "border-gray-200 text-gray-400 hover:border-[#38BDF8]/30 hover:text-[#38BDF8]",
+                : "border-[#E2E8F0] text-[#9CA3AF] hover:border-[#38BDF8]/30 hover:text-[#38BDF8]",
             ].join(" ")}
           >
             {toggling === item.id ? "…" : item.active ? "Active" : "Inactive"}
@@ -126,7 +126,7 @@ function SortableCard({
           <button
             onClick={() => onDelete(item.id)}
             disabled={deleting === item.id}
-            className="flex-1 rounded-lg border border-gray-200 py-1.5 text-[11px] font-semibold text-red-400 transition hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
+            className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#F87171] transition hover:border-[#FCA5A5] hover:bg-[#FEE2E2] disabled:opacity-50"
           >
             {deleting === item.id ? "…" : "Delete"}
           </button>
@@ -238,16 +238,16 @@ export default function AccreditationsPage() {
     <div className="space-y-6">
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-700">
+        <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] p-4 text-[13px] text-[#DC2626]">
           <strong>Connection error:</strong> {error}
           <button onClick={load} className="ml-3 underline hover:no-underline">Retry</button>
         </div>
       )}
 
       {/* Add form */}
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-[#F1F5F9] bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-[14px] font-semibold text-[#0B1F3A]">Add Accreditation</h2>
-        <p className="mb-4 text-[12px] text-gray-400">Upload logos in WebP/PNG format, transparent or white background, recommended height 60px.</p>
+        <p className="mb-4 text-[12px] text-[#9CA3AF]">Upload logos in WebP/PNG format, transparent or white background, recommended height 60px.</p>
 
         <form onSubmit={handleAdd} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
@@ -291,7 +291,7 @@ export default function AccreditationsPage() {
               accept="image/*"
               required
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="block w-full text-[13px] text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200"
+              className="block w-full text-[13px] text-[#6B7280] file:mr-2 file:rounded-lg file:border-0 file:bg-[#F3F4F6] file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-[#4B5563] hover:file:bg-gray-200"
             />
           </div>
 
@@ -316,9 +316,9 @@ export default function AccreditationsPage() {
         <>
           {items.length > 0 && (
             <div className="flex items-center justify-between">
-              <p className="text-[13px] text-gray-400">{items.length} accreditation{items.length !== 1 ? "s" : ""}</p>
+              <p className="text-[13px] text-[#9CA3AF]">{items.length} accreditation{items.length !== 1 ? "s" : ""}</p>
               {reordering && (
-                <span className="text-[12px] text-gray-400">Saving order…</span>
+                <span className="text-[12px] text-[#9CA3AF]">Saving order…</span>
               )}
             </div>
           )}

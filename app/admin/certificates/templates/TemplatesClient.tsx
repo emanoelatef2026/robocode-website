@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -54,7 +54,7 @@ export default function TemplatesClient({ templates }: Props) {
     <>
 
       {/* Table */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white mt-4">
+      <div className="ds-card mt-4">
         {templates.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="text-sm font-medium text-[#0B1F3A]">No templates yet</p>
@@ -63,7 +63,7 @@ export default function TemplatesClient({ templates }: Props) {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Type</th>
@@ -74,7 +74,7 @@ export default function TemplatesClient({ templates }: Props) {
               </thead>
               <tbody>
                 {templates.map((t) => (
-                  <tr key={t.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                  <tr key={t.id} className="ds-table-row">
                     <td className="px-4 py-3 font-medium text-[#0B1F3A]">{t.name}</td>
                     <td className="px-4 py-3 text-[#64748B]">{TYPE_LABELS[t.certificate_type] ?? t.certificate_type}</td>
                     <td className="px-4 py-3 text-[#64748B]">{t.branch_name ?? 'Global'}</td>

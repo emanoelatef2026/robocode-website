@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition } from 'react'
 import { updateMessageStatus }     from '@/modules/parent-messages/actions'
@@ -39,7 +39,7 @@ export default function MessageActions({ messageId, currentStatus, currentNote }
         <select
           value={status}
           onChange={e => { setStatus(e.target.value as MessageStatus); setSaved(false) }}
-          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-[13px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+          className="ds-card px-3 py-1.5 text-[13px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
         >
           {STATUS_OPTIONS.map(o => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -52,8 +52,8 @@ export default function MessageActions({ messageId, currentStatus, currentNote }
         >
           {pending ? 'Saving…' : 'Update Status'}
         </button>
-        {saved  && <span className="text-[12px] text-green-600">✓ Saved</span>}
-        {error  && <span className="text-[12px] text-red-500">{error}</span>}
+        {saved  && <span className="text-[12px] text-[#10B981]">✓ Saved</span>}
+        {error  && <span className="text-[12px] text-[#EF4444]">{error}</span>}
       </div>
       <textarea
         value={note}

@@ -1,4 +1,4 @@
-import Link                              from 'next/link'
+﻿import Link                              from 'next/link'
 import { getLiveDashboardPayrollSummary } from '@/modules/staff-finance/queries'
 import { fmtEGP }                         from '@/modules/staff-finance/types'
 
@@ -10,7 +10,7 @@ export default async function InstructorPayrollWidget({ branchIds }: { branchIds
   const summary = await getLiveDashboardPayrollSummary(branchIds)
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
+    <div className="ds-card p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-[12px] font-semibold text-[#0B1F3A]">Payroll — {label}</p>
         <Link

@@ -1,4 +1,4 @@
-// ─── Staff / Instructor Live Finance types ────────────────────────────────────
+﻿// ─── Staff / Instructor Live Finance types ────────────────────────────────────
 // Separate from modules/finance/ (which is student finance).
 // This module handles instructor session earnings and staff salaries — live, no runs.
 
@@ -37,12 +37,12 @@ export const ADJ_LABELS: Record<FinanceAdjType, string> = {
 }
 
 export const ADJ_COLOR: Record<FinanceAdjType, string> = {
-  bonus:         'text-emerald-700 bg-emerald-50',
-  reimbursement: 'text-blue-700 bg-blue-50',
-  penalty:       'text-red-700 bg-red-50',
-  advance:       'text-amber-700 bg-amber-50',
+  bonus:         'text-[#15803D] bg-[#E7F8EE]',
+  reimbursement: 'text-[#1D4ED8] bg-[#EFF6FF]',
+  penalty:       'text-[#DC2626] bg-[#FEE2E2]',
+  advance:       'text-[#B45309] bg-[#FFFBEB]',
   purchase:      'text-orange-700 bg-orange-50',
-  other:         'text-slate-700 bg-slate-50',
+  other:         'text-[#334155] bg-[#F8FAFC]',
 }
 
 export const INSTRUCTOR_PAYMENT_METHOD_LABELS: Record<InstructorPaymentMethod, string> = {
@@ -82,9 +82,9 @@ export const EMPLOYMENT_STATUS_LABELS: Record<EmploymentStatus, string> = {
 }
 
 export const EMPLOYMENT_STATUS_COLORS: Record<EmploymentStatus, string> = {
-  active:   'bg-emerald-50 text-emerald-700',
-  on_leave: 'bg-amber-50 text-amber-700',
-  inactive: 'bg-slate-100 text-slate-500',
+  active:   'bg-[#E7F8EE] text-[#15803D]',
+  on_leave: 'bg-[#FFFBEB] text-[#B45309]',
+  inactive: 'bg-[#F1F5F9] text-[#64748B]',
 }
 
 // Record<string, string> (not strict type) so unknown legacy values display gracefully
@@ -191,9 +191,9 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
 }
 
 export const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
-  paid:    'bg-emerald-50 text-emerald-700',
-  partial: 'bg-amber-50 text-amber-700',
-  unpaid:  'bg-red-50 text-red-600',
+  paid:    'bg-[#E7F8EE] text-[#15803D]',
+  partial: 'bg-[#FFFBEB] text-[#B45309]',
+  unpaid:  'bg-[#FEE2E2] text-[#EF4444]',
 }
 
 // ── Live instructor finance row ───────────────────────────────────────────────

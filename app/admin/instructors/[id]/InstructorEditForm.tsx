@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState, useTransition } from 'react'
 import {
@@ -119,11 +119,11 @@ export default function InstructorEditForm({
       )}
 
       {/* ── Profile & Settings ─────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+      <div className="ds-card p-6">
         <h2 className="mb-4 text-sm font-semibold text-[#0B1F3A]">Profile & Settings</h2>
 
         {editState && !editState.success && (
-          <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
             {editState.error.message}
           </div>
         )}
@@ -181,7 +181,7 @@ export default function InstructorEditForm({
           <PermissionsChecklist defaultPermissions={currentPermissions} />
 
           <div className="flex items-center justify-between pt-2">
-            <button type="button" onClick={handleDelete} className="text-sm font-medium text-red-500 hover:text-red-700">
+            <button type="button" onClick={handleDelete} className="text-sm font-medium text-[#EF4444] hover:text-[#DC2626]">
               Remove instructor
             </button>
             <div className="flex items-center gap-3">
@@ -195,14 +195,14 @@ export default function InstructorEditForm({
       </div>
 
       {/* ── Groups ─────────────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">
           Groups
           <span className="ml-2 rounded-full bg-[#F1F5F9] px-2 py-0.5 text-xs font-normal text-[#64748B]">{assignedGroups.length}</span>
         </h2>
 
         {groupError && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
             {groupError}
             <button onClick={() => setGroupError(null)} className="ml-2 underline">dismiss</button>
           </div>
@@ -241,7 +241,7 @@ export default function InstructorEditForm({
           <p className="text-sm text-[#94A3B8]">No groups assigned.</p>
         ) : (
           <table className="w-full text-sm">
-            <thead>
+            <thead className="ds-table-head">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                 <th className="px-3 py-2 text-left text-xs font-medium text-[#64748B]">Code</th>
                 <th className="px-3 py-2 text-left text-xs font-medium text-[#64748B]">Group</th>
@@ -253,7 +253,7 @@ export default function InstructorEditForm({
             </thead>
             <tbody>
               {assignedGroups.map((g) => (
-                <tr key={g.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                <tr key={g.id} className="ds-table-row">
                   <td className="px-3 py-2 font-mono text-xs text-[#94A3B8]">{g.code ?? '—'}</td>
                   <td className="px-3 py-2 font-medium text-[#0B1F3A]">
                     <Link href={`/admin/groups/${g.id}`} className="hover:text-[#FF8A1F]">{g.name}</Link>
@@ -266,7 +266,7 @@ export default function InstructorEditForm({
                       type="button"
                       disabled={isPending}
                       onClick={() => handleRemoveGroup(g.id)}
-                      className="text-xs font-medium text-red-400 hover:text-red-600 disabled:opacity-50"
+                      className="text-xs font-medium text-[#F87171] hover:text-[#EF4444] disabled:opacity-50"
                     >
                       Remove
                     </button>
@@ -279,7 +279,7 @@ export default function InstructorEditForm({
       </div>
 
       {/* ── Password Reset ─────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">Password Management</h2>
 
         <div className="space-y-3">
@@ -303,8 +303,8 @@ export default function InstructorEditForm({
                 Set Password
               </button>
             </div>
-            {pwError   && <p className="mt-1.5 text-xs text-red-600">{pwError}</p>}
-            {pwSuccess  && <p className="mt-1.5 text-xs text-emerald-600">{pwSuccess}</p>}
+            {pwError   && <p className="mt-1.5 text-xs text-[#EF4444]">{pwError}</p>}
+            {pwSuccess  && <p className="mt-1.5 text-xs text-[#10B981]">{pwSuccess}</p>}
           </div>
 
           <div className="relative flex items-center">
@@ -327,7 +327,7 @@ export default function InstructorEditForm({
               Send Reset Email
             </button>
             {emailMsg && (
-              <p className={`mt-1.5 text-xs ${emailMsg.includes('sent') ? 'text-emerald-600' : 'text-red-600'}`}>
+              <p className={`mt-1.5 text-xs ${emailMsg.includes('sent') ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
                 {emailMsg}
               </p>
             )}

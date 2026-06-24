@@ -1,4 +1,4 @@
-import { createServiceClient }     from '@/lib/supabase/service'
+﻿import { createServiceClient }     from '@/lib/supabase/service'
 import { requirePermission }        from '@/modules/rbac/guards'
 import { getBranch }                from '@/modules/branches/queries'
 import { getBranchFinanceSnapshot } from '@/modules/finance/queries'
@@ -150,14 +150,14 @@ async function getBranchPerformance(branchId: string): Promise<BranchPerformance
 // ── Components ────────────────────────────────────────────────────────────────
 
 function KPICard({
-  label, value, sub, color = 'bg-slate-300', alert = false,
+  label, value, sub, color = 'bg-[#CBD5E1]', alert = false,
 }: {
   label: string; value: number | string; sub?: string; color?: string; alert?: boolean
 }) {
   return (
-    <div className={`rounded-xl border p-4 ${alert && value !== 0 ? 'border-red-200 bg-red-50' : 'border-[#E2E8F0] bg-white'}`}>
+    <div className={`rounded-xl border p-4 ${alert && value !== 0 ? 'border-[#FECACA] bg-[#FEE2E2]' : 'border-[#E2E8F0] bg-white'}`}>
       <div className={`mb-2 h-1.5 w-7 rounded-full ${color} opacity-80`} />
-      <p className={`text-2xl font-bold ${alert && value !== 0 ? 'text-red-600' : 'text-[#0B1F3A]'}`}>{value}</p>
+      <p className={`text-2xl font-bold ${alert && value !== 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>{value}</p>
       <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
       {sub && <p className="mt-1 text-[11px] text-[#94A3B8]">{sub}</p>}
     </div>
@@ -189,7 +189,7 @@ export default async function BranchPerformancePage({ params }: Props) {
           ← {branch.name}
         </Link>
         <div className="text-right">
-          <p className={`text-3xl font-bold ${perf.healthScore >= 80 ? 'text-emerald-600' : perf.healthScore >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
+          <p className={`text-3xl font-bold ${perf.healthScore >= 80 ? 'text-[#10B981]' : perf.healthScore >= 50 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
             {perf.healthScore}
           </p>
           <p className="text-xs text-[#94A3B8]">Health Score</p>
@@ -200,9 +200,9 @@ export default async function BranchPerformancePage({ params }: Props) {
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">People</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <KPICard label="Active Students"   value={perf.activeStudents}   color="bg-emerald-400" />
+          <KPICard label="Active Students"   value={perf.activeStudents}   color="bg-[#10B981]" />
           <KPICard label="New This Month"    value={perf.newStudentsMonth} color="bg-teal-400"    sub="Students enrolled" />
-          <KPICard label="Active Groups"     value={perf.activeGroups}     color="bg-blue-400" />
+          <KPICard label="Active Groups"     value={perf.activeGroups}     color="bg-[#38BDF8]" />
           <KPICard label="Instructors"       value={perf.activeInstructors} color="bg-indigo-400" />
         </div>
       </section>
@@ -212,7 +212,7 @@ export default async function BranchPerformancePage({ params }: Props) {
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Academic</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <KPICard label="Sessions This Month"  value={perf.sessionsThisMonth} color="bg-violet-400" />
-          <KPICard label="Attendance Rate"      value={perf.attendancePct !== null ? `${perf.attendancePct}%` : '—'} color={perf.attendancePct !== null && perf.attendancePct >= 75 ? 'bg-emerald-400' : 'bg-amber-400'} />
+          <KPICard label="Attendance Rate"      value={perf.attendancePct !== null ? `${perf.attendancePct}%` : '—'} color={perf.attendancePct !== null && perf.attendancePct >= 75 ? 'bg-[#10B981]' : 'bg-[#F59E0B]'} />
           <KPICard label="Certificates Issued"  value={perf.certsIssued}       color="bg-sky-400" sub="This month" />
         </div>
       </section>
@@ -222,9 +222,9 @@ export default async function BranchPerformancePage({ params }: Props) {
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Lead Pipeline</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <KPICard label="Active Leads"      value={perf.leadsTotal}       color="bg-violet-400" />
-          <KPICard label="Converted (month)" value={perf.leadsConverted}   color="bg-emerald-400" />
-          <KPICard label="Conversion Rate"   value={`${perf.conversionRate}%`} color={perf.conversionRate >= 30 ? 'bg-emerald-400' : 'bg-amber-400'} />
-          <KPICard label="Overdue Follow-Ups" value={perf.overdueFollowUps} color="bg-red-400" alert />
+          <KPICard label="Converted (month)" value={perf.leadsConverted}   color="bg-[#10B981]" />
+          <KPICard label="Conversion Rate"   value={`${perf.conversionRate}%`} color={perf.conversionRate >= 30 ? 'bg-[#10B981]' : 'bg-[#F59E0B]'} />
+          <KPICard label="Overdue Follow-Ups" value={perf.overdueFollowUps} color="bg-[#EF4444]" alert />
         </div>
       </section>
 
@@ -235,21 +235,21 @@ export default async function BranchPerformancePage({ params }: Props) {
           <KPICard
             label="Groups Without Instructor"
             value={perf.groupsWithoutInstructor}
-            color="bg-red-400"
+            color="bg-[#EF4444]"
             alert
             sub={perf.groupsWithoutInstructor > 0 ? 'Needs immediate attention' : undefined}
           />
           <KPICard
             label="Groups Without Course"
             value={perf.groupsWithoutCourse}
-            color="bg-red-400"
+            color="bg-[#EF4444]"
             alert
             sub={perf.groupsWithoutCourse > 0 ? 'Cannot become active' : undefined}
           />
         </div>
 
         {perf.groupsWithoutInstructor === 0 && perf.groupsWithoutCourse === 0 && (
-          <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+          <div className="mt-3 rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] px-4 py-3 text-sm font-medium text-[#15803D]">
             All groups are properly configured.
           </div>
         )}
@@ -261,22 +261,22 @@ export default async function BranchPerformancePage({ params }: Props) {
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Finance Snapshot</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <KPICard label="Net Revenue"      value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.net_amount)}`}  color="bg-[#FF8A1F]" />
-            <KPICard label="Collected"        value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.paid_amount)}`} color="bg-emerald-400" />
-            <KPICard label="Outstanding"      value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.outstanding)}`} color={finance.outstanding > 0 ? 'bg-red-400' : 'bg-emerald-400'} />
-            <KPICard label="Collection Rate"  value={`${finance.collection_rate}%`} color={finance.collection_rate >= 80 ? 'bg-emerald-400' : finance.collection_rate >= 50 ? 'bg-amber-400' : 'bg-red-400'} />
-            <KPICard label="Overdue Students" value={finance.overdue_count}          color={finance.overdue_count > 0 ? 'bg-red-400' : 'bg-slate-300'} alert />
-            <KPICard label="Due This Week"    value={finance.due_this_week}          color={finance.due_this_week > 0 ? 'bg-amber-400' : 'bg-slate-300'} />
+            <KPICard label="Collected"        value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.paid_amount)}`} color="bg-[#10B981]" />
+            <KPICard label="Outstanding"      value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.outstanding)}`} color={finance.outstanding > 0 ? 'bg-[#EF4444]' : 'bg-[#10B981]'} />
+            <KPICard label="Collection Rate"  value={`${finance.collection_rate}%`} color={finance.collection_rate >= 80 ? 'bg-[#10B981]' : finance.collection_rate >= 50 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'} />
+            <KPICard label="Overdue Students" value={finance.overdue_count}          color={finance.overdue_count > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]'} alert />
+            <KPICard label="Due This Week"    value={finance.due_this_week}          color={finance.due_this_week > 0 ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]'} />
           </div>
 
           {/* Collection rate bar */}
-          <div className="mt-3 rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <div className="mt-3 ds-card p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-[#64748B]">Collection Progress</p>
               <p className="text-sm font-bold text-[#0B1F3A]">{finance.collection_rate}%</p>
             </div>
             <div className="h-3 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
               <div
-                className={`h-full rounded-full ${finance.collection_rate >= 80 ? 'bg-emerald-400' : finance.collection_rate >= 50 ? 'bg-amber-400' : 'bg-red-400'}`}
+                className={`h-full rounded-full ${finance.collection_rate >= 80 ? 'bg-[#10B981]' : finance.collection_rate >= 50 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
                 style={{ width: `${finance.collection_rate}%` }}
               />
             </div>
@@ -284,7 +284,7 @@ export default async function BranchPerformancePage({ params }: Props) {
 
           {/* Top outstanding */}
           {finance.top_outstanding.length > 0 && (
-            <div className="mt-3 rounded-xl border border-[#E2E8F0] bg-white">
+            <div className="mt-3 ds-card">
               <div className="border-b border-[#E2E8F0] px-4 py-2.5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Top Outstanding Accounts</p>
               </div>
@@ -296,9 +296,9 @@ export default async function BranchPerformancePage({ params }: Props) {
                       {s.parent_phone_1 && <p className="text-[11px] text-[#64748B]">{s.parent_phone_1}</p>}
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-red-500">EGP {new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(s.remaining_amount)}</p>
+                      <p className="font-bold text-[#EF4444]">EGP {new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(s.remaining_amount)}</p>
                       {s.days_overdue > 0 && (
-                        <p className="text-[11px] text-red-400">{s.days_overdue}d overdue</p>
+                        <p className="text-[11px] text-[#F87171]">{s.days_overdue}d overdue</p>
                       )}
                     </div>
                   </div>

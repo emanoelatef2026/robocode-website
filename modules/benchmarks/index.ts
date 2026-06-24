@@ -1,4 +1,4 @@
-import 'server-only'
+﻿import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { logSlowQuery }        from '@/modules/observability'
 
@@ -186,9 +186,9 @@ export async function runBenchmarks(branchIds: string[]): Promise<{
 export const BENCHMARK_STATUS_CONFIG: Record<BenchmarkResult['status'], {
   label: string; color: string; text: string; icon: string
 }> = {
-  fast:     { label: 'Fast',     color: 'bg-emerald-100', text: 'text-emerald-700', icon: '⚡' },
-  ok:       { label: 'OK',       color: 'bg-blue-100',    text: 'text-blue-700',    icon: '✓' },
-  slow:     { label: 'Slow',     color: 'bg-amber-100',   text: 'text-amber-700',   icon: '⚠' },
-  critical: { label: 'Critical', color: 'bg-red-100',     text: 'text-red-700',     icon: '🔴' },
-  error:    { label: 'Error',    color: 'bg-red-200',     text: 'text-red-800',     icon: '✗' },
+  fast:     { label: 'Fast',     color: 'bg-[#E7F8EE]', text: 'text-[#15803D]', icon: '⚡' },
+  ok:       { label: 'OK',       color: 'bg-[#EFF6FF]',    text: 'text-[#1D4ED8]',    icon: '✓' },
+  slow:     { label: 'Slow',     color: 'bg-[#FFFBEB]',   text: 'text-[#B45309]',   icon: '⚠' },
+  critical: { label: 'Critical', color: 'bg-[#FEE2E2]',     text: 'text-[#DC2626]',     icon: '🔴' },
+  error:    { label: 'Error',    color: 'bg-red-200',     text: 'text-[#991B1B]',     icon: '✗' },
 }

@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId, searchStudentsForInstructor } from '@/modules/instructor-portal/queries'
 import Link from 'next/link'
 
@@ -64,7 +64,7 @@ export default async function StudentSearchPage({ searchParams }: Props) {
           No students found for &ldquo;{query}&rdquo;.
         </div>
       ) : (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+        <div className="ds-card overflow-hidden">
           <div className="border-b border-[#E2E8F0] px-5 py-3">
             <p className="text-sm font-semibold text-[#0B1F3A]">
               {results.length} result{results.length !== 1 ? 's' : ''}

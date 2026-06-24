@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useEffect, useRef, useState, useTransition } from 'react'
 import { createGroupModal, updateGroupModal } from '@/modules/groups/modal-actions'
@@ -75,22 +75,22 @@ function phoneMatch(query: string, phone: string | null | undefined): boolean {
 
 function attColor(pct: number | null): string {
   if (pct == null) return 'text-[#94A3B8]'
-  return pct >= 75 ? 'text-green-600' : pct >= 60 ? 'text-yellow-600' : 'text-red-500'
+  return pct >= 75 ? 'text-[#10B981]' : pct >= 60 ? 'text-yellow-600' : 'text-[#EF4444]'
 }
 
 function sessColor(rem: number | null): string {
   if (rem == null) return 'text-[#64748B]'
-  return rem <= 2 ? 'text-red-500' : 'text-[#64748B]'
+  return rem <= 2 ? 'text-[#EF4444]' : 'text-[#64748B]'
 }
 
 // ── Allocation status chip ─────────────────────────────────────────────────────
 
 function AllocStatusChip({ status }: { status: string }) {
   const cls =
-    status === 'active'    ? 'bg-green-100 text-green-700'   :
-    status === 'completed' ? 'bg-slate-100 text-slate-500'   :
-    status === 'released'  ? 'bg-red-100 text-red-600'       :
-                             'bg-gray-100 text-gray-500'
+    status === 'active'    ? 'bg-[#E7F8EE] text-[#15803D]'   :
+    status === 'completed' ? 'bg-[#F1F5F9] text-[#64748B]'   :
+    status === 'released'  ? 'bg-[#FEE2E2] text-[#EF4444]'       :
+                             'bg-[#F3F4F6] text-[#6B7280]'
   return (
     <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${cls}`}>
       {status}
@@ -126,8 +126,8 @@ function AllocationTimeline({
           const width  = ((to - from + 1) / ceiling) * 100
           const bgCls  =
             a.allocation_status === 'active'    ? 'bg-green-400'  :
-            a.allocation_status === 'completed' ? 'bg-slate-400'  :
-            a.allocation_status === 'released'  ? 'bg-red-300'    :
+            a.allocation_status === 'completed' ? 'bg-[#94A3B8]'  :
+            a.allocation_status === 'released'  ? 'bg-[#FCA5A5]'    :
                                                   'bg-blue-300'
           return (
             <div
@@ -143,8 +143,8 @@ function AllocationTimeline({
         {allocations.map(a => {
           const dotCls =
             a.allocation_status === 'active'    ? 'bg-green-400'  :
-            a.allocation_status === 'completed' ? 'bg-slate-400'  :
-            a.allocation_status === 'released'  ? 'bg-red-300'    :
+            a.allocation_status === 'completed' ? 'bg-[#94A3B8]'  :
+            a.allocation_status === 'released'  ? 'bg-[#FCA5A5]'    :
                                                   'bg-blue-300'
           return (
             <span key={a.instructor_id} className="flex items-center gap-1 text-[10px] text-[#64748B]">
@@ -165,7 +165,7 @@ function LockStateBadge({ alloc }: { alloc: AllocationRow }) {
 
   if (alloc.lock_state === 'fully_locked') {
     return (
-      <span className="rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-700">
+      <span className="rounded bg-[#FEE2E2] px-1.5 py-0.5 text-[10px] font-medium text-[#DC2626]">
         Fully Locked
       </span>
     )
@@ -176,7 +176,7 @@ function LockStateBadge({ alloc }: { alloc: AllocationRow }) {
   const editableTo   = alloc.to_session ?? '∞'
   return (
     <span
-      className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700"
+      className="rounded bg-[#FFFBEB] px-1.5 py-0.5 text-[10px] text-[#B45309]"
       title={`Sessions ${alloc.from_session}–${alloc.highest_consumed_session} are immutable. Sessions ${editableFrom}–${editableTo} are editable.`}
     >
       Consumed through {alloc.highest_consumed_session} · Editable: {editableFrom}–{editableTo}
@@ -312,7 +312,7 @@ function AllocationRowCard({
                 <button
                   type="button"
                   onClick={handleRemove}
-                  className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-red-600 hover:bg-red-50 transition"
+                  className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-[#EF4444] hover:bg-[#FEE2E2] transition"
                 >
                   Confirm
                 </button>
@@ -328,7 +328,7 @@ function AllocationRowCard({
               <button
                 type="button"
                 onClick={() => setRemoving(true)}
-                className="rounded p-1 text-[#94A3B8] hover:bg-red-50 hover:text-red-500 transition"
+                className="rounded p-1 text-[#94A3B8] hover:bg-[#FEE2E2] hover:text-[#EF4444] transition"
                 title="Remove allocation"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
@@ -345,7 +345,7 @@ function AllocationRowCard({
         <div className="mt-2 space-y-2 border-t border-[#E2E8F0] pt-2">
           <p className="text-[11px] font-semibold text-[#374151]">Edit Future Ownership</p>
           {alloc.lock_state === 'partially_locked' && (
-            <p className="text-[11px] text-amber-700 bg-amber-50 rounded px-2 py-1">
+            <p className="text-[11px] text-[#B45309] bg-[#FFFBEB] rounded px-2 py-1">
               Sessions {alloc.from_session}–{alloc.highest_consumed_session} are immutable (already consumed).
               You are editing from session {alloc.highest_consumed_session + 1} onward.
             </p>
@@ -353,7 +353,7 @@ function AllocationRowCard({
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="mb-1 block text-[11px] font-medium text-[#374151]">From Session</label>
-              <div className="rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[#0B1F3A]">
+              <div className="ds-card px-2.5 py-1.5 text-[12px] font-semibold text-[#0B1F3A]">
                 {alloc.from_session}
               </div>
             </div>
@@ -368,7 +368,7 @@ function AllocationRowCard({
                 max={totalSessions != null ? totalSessions - alloc.from_session + 1 : undefined}
                 value={rangeSessions}
                 onChange={e => { setRangeSessions(e.target.value); setError(null) }}
-                className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+                className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
               />
             </div>
           </div>
@@ -384,16 +384,16 @@ function AllocationRowCard({
             </p>
           )}
           {rangeBelowMin && (
-            <p className="text-[11px] text-red-600">
+            <p className="text-[11px] text-[#EF4444]">
               Cannot reduce below consumed session {alloc.highest_consumed_session}.
             </p>
           )}
           {rangeOverTotal && totalSessions !== null && (
-            <p className="text-[11px] text-red-600">
+            <p className="text-[11px] text-[#EF4444]">
               Exceeds group planned sessions ({totalSessions}).
             </p>
           )}
-          {error && <p className="text-[11px] text-red-600">{error}</p>}
+          {error && <p className="text-[11px] text-[#EF4444]">{error}</p>}
           <div className="flex gap-2">
             <button
               type="button"
@@ -422,7 +422,7 @@ function AllocationRowCard({
             <select
               value={status}
               onChange={e => setStatus(e.target.value)}
-              className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+              className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
             >
               <option value="active">active</option>
               <option value="completed">completed</option>
@@ -436,10 +436,10 @@ function AllocationRowCard({
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="Optional handoff note…"
-              className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+              className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
             />
           </div>
-          {error && <p className="text-[11px] text-red-600">{error}</p>}
+          {error && <p className="text-[11px] text-[#EF4444]">{error}</p>}
           <div className="flex gap-2">
             <button
               type="button"
@@ -515,7 +515,7 @@ function AddAllocationForm({
             <select
               value={instrId}
               onChange={e => setInstrId(e.target.value)}
-              className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+              className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
             >
               <option value="">— Select instructor —</option>
               {available.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
@@ -528,7 +528,7 @@ function AddAllocationForm({
             From Session
             <span className="ml-1 text-[#94A3B8]">(computed)</span>
           </label>
-          <div className="rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] font-semibold text-[#0B1F3A]">
+          <div className="ds-card px-2.5 py-1.5 text-[12px] font-semibold text-[#0B1F3A]">
             {fromSession}
           </div>
         </div>
@@ -550,13 +550,13 @@ function AddAllocationForm({
             value={sessions}
             onChange={e => setSessions(e.target.value)}
             placeholder={ctx.open_ended ? 'Leave blank for unlimited' : (ctx.total_sessions != null ? `Max ${remaining}` : 'Leave blank for unlimited')}
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+            className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
           />
         </div>
       </div>
 
       {toSession != null && (
-        <p className={`text-[11px] font-medium ${overLimit ? 'text-red-500' : 'text-[#FF8A1F]'}`}>
+        <p className={`text-[11px] font-medium ${overLimit ? 'text-[#EF4444]' : 'text-[#FF8A1F]'}`}>
           {overLimit
             ? `Exceeds planned sessions (${ctx.total_sessions}). Max ${remaining} session${remaining !== 1 ? 's' : ''}.`
             : `Will teach sessions ${fromSession}–${toSession}`
@@ -571,11 +571,11 @@ function AddAllocationForm({
           value={notes}
           onChange={e => setNotes(e.target.value)}
           placeholder="Notes for the next instructor…"
-          className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+          className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
         />
       </div>
 
-      {error && <p className="text-[11px] text-red-600">{error}</p>}
+      {error && <p className="text-[11px] text-[#EF4444]">{error}</p>}
 
       <div className="flex gap-2">
         <button
@@ -846,9 +846,9 @@ export default function GroupFormModal({
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Basic Info</h3>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Name <span className="text-red-500">*</span></label>
+                <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Name <span className="text-[#EF4444]">*</span></label>
                 <input name="name" defaultValue={name} required
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
                   placeholder="e.g. Scratch Beginners – Batch 3" />
               </div>
 
@@ -862,13 +862,13 @@ export default function GroupFormModal({
                 </div>
               ) : (
                 <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Branch <span className="text-red-500">*</span></label>
+                  <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Branch <span className="text-[#EF4444]">*</span></label>
                   <select
                     name="branch_id"
                     value={selectedBranchId}
                     onChange={e => setSelectedBranchId(e.target.value)}
                     required
-                    className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                    className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
                   >
                     <option value="">— Select branch —</option>
                     {options.branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -877,9 +877,9 @@ export default function GroupFormModal({
               )}
 
               <div>
-                <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Type <span className="text-red-500">*</span></label>
+                <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Type <span className="text-[#EF4444]">*</span></label>
                 <select name="type" defaultValue={type}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20">
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20">
                   {TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
@@ -887,7 +887,7 @@ export default function GroupFormModal({
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Max Capacity</label>
                 <input name="capacity" type="number" min={1} max={500} defaultValue={capacity as string}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
                   placeholder="Optional" />
               </div>
 
@@ -895,7 +895,7 @@ export default function GroupFormModal({
                 <div>
                   <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Status</label>
                   <select name="status" defaultValue={status}
-                    className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20">
+                    className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20">
                     {STATUSES.map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
                   </select>
                 </div>
@@ -904,7 +904,7 @@ export default function GroupFormModal({
               <div className={mode === 'edit' ? '' : 'sm:col-span-2'}>
                 <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Notes</label>
                 <textarea name="notes" defaultValue={notes} rows={2}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20 resize-none"
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20 resize-none"
                   placeholder="Optional notes…" />
               </div>
 
@@ -920,7 +920,7 @@ export default function GroupFormModal({
                   max={100}
                   step={0.01}
                   defaultValue={sharePercent}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
                   placeholder="100"
                 />
                 <p className="mt-1 text-[11px] text-[#94A3B8]">
@@ -943,7 +943,7 @@ export default function GroupFormModal({
                   name="course_id"
                   value={selectedCourseId}
                   onChange={e => setSelectedCourseId(e.target.value)}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
                 >
                   <option value="">— No course —</option>
                   {options.courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
@@ -958,7 +958,7 @@ export default function GroupFormModal({
                     name="instructor_id"
                     value={initInstrId}
                     onChange={e => setInitInstrId(e.target.value)}
-                    className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                    className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
                   >
                     <option value="">— No instructor yet —</option>
                     {options.instructors.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
@@ -1020,13 +1020,13 @@ export default function GroupFormModal({
                   value={plannedSessions}
                   onChange={e => setPlannedSessions(e.target.value)}
                   placeholder={courseRecommendation != null ? `e.g. ${courseRecommendation}` : 'e.g. 12 for bootcamp, 24 for standard'}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
                 />
                 <p className="mt-1 text-[11px] text-[#94A3B8]">
                   Leave blank to set later. Instructor allocations cannot exceed this count.
                 </p>
                 {courseRecommendation != null && plannedSessions && parseInt(plannedSessions, 10) !== courseRecommendation && (
-                  <p className="mt-1 text-[11px] text-amber-600">
+                  <p className="mt-1 text-[11px] text-[#F59E0B]">
                     {parseInt(plannedSessions, 10) < courseRecommendation
                       ? `${courseRecommendation - parseInt(plannedSessions, 10)} fewer than the course recommendation — this group is a compressed track.`
                       : `${parseInt(plannedSessions, 10) - courseRecommendation} more than the course recommendation — extended track.`
@@ -1063,7 +1063,7 @@ export default function GroupFormModal({
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Day</label>
                 <select name="day_of_week" defaultValue={dayOfWeek}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20">
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20">
                   <option value="">—</option>
                   {DAYS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                 </select>
@@ -1072,32 +1072,32 @@ export default function GroupFormModal({
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Start Time</label>
                 <input name="start_time" type="time" defaultValue={startTime}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20" />
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20" />
               </div>
 
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Duration (min)</label>
                 <input name="duration_minutes" type="number" min={15} max={480} defaultValue={durationMin as string}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
                   placeholder="90" />
               </div>
 
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Start Date</label>
                 <input name="start_date" type="date" defaultValue={startDate}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20" />
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20" />
               </div>
 
               <div>
                 <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">End Date</label>
                 <input name="end_date" type="date" defaultValue={endDate}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20" />
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20" />
               </div>
 
               <div className="col-span-2 sm:col-span-3">
                 <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Meeting Link</label>
                 <input name="meeting_link" type="url" defaultValue={meetingLink}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
                   placeholder="https://meet.google.com/…" />
               </div>
             </div>
@@ -1187,10 +1187,10 @@ export default function GroupFormModal({
                 onChange={e => { setPickerQ(e.target.value); setShowPicker(true) }}
                 onFocus={() => setShowPicker(true)}
                 placeholder="Name, code, student phone, or parent phone…"
-                className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
+                className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
               />
               {showPicker && (
-                <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-y-auto rounded-xl border border-[#E2E8F0] bg-white shadow-lg">
+                <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-72 overflow-y-auto ds-card shadow-lg">
                   {filtered.length === 0 ? (
                     <p className="px-4 py-3 text-sm text-[#94A3B8]">{pickerQ ? 'No students found.' : 'Type to search…'}</p>
                   ) : filtered.map(s => (
@@ -1208,7 +1208,7 @@ export default function GroupFormModal({
                         </div>
                         <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-[#64748B]">
                           <span>{s.branch_name}</span>
-                          {s.group_name && <span className="rounded bg-amber-50 px-1 text-amber-700">in {s.group_name}</span>}
+                          {s.group_name && <span className="rounded bg-[#FFFBEB] px-1 text-[#B45309]">in {s.group_name}</span>}
                           <span>· {s.phone ?? '—'}</span>
                           <span>· P: {s.parent_phone ?? '—'}</span>
                         </div>
@@ -1231,7 +1231,7 @@ export default function GroupFormModal({
           </section>
 
           {state && !state.success && (
-            <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">{state.error.message}</p>
+            <p className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#EF4444]">{state.error.message}</p>
           )}
 
           <div className="flex items-center justify-end gap-3 border-t border-[#E2E8F0] pt-4">

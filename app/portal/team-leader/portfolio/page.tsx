@@ -1,4 +1,4 @@
-import { requirePermission } from '@/modules/rbac/guards'
+﻿import { requirePermission } from '@/modules/rbac/guards'
 import { listAllProjectsForTL } from '@/modules/portfolio/queries'
 import { PROJECT_STATUS_CONFIG, BADGE_EMOJIS } from '@/modules/portfolio/types'
 import { getPortfolioStatusCounts } from '@/modules/tl-dashboard/queries'
@@ -37,9 +37,9 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
         {[
-          { key: 'pending_review',    label: 'Pending Review',    color: 'text-amber-600'  },
-          { key: 'approved',          label: 'Approved',          color: 'text-green-600'  },
-          { key: 'needs_improvement', label: 'Needs Improvement', color: 'text-red-600'    },
+          { key: 'pending_review',    label: 'Pending Review',    color: 'text-[#F59E0B]'  },
+          { key: 'approved',          label: 'Approved',          color: 'text-[#10B981]'  },
+          { key: 'needs_improvement', label: 'Needs Improvement', color: 'text-[#EF4444]'    },
           { key: 'featured',          label: 'Featured',          color: 'text-[#FF8A1F]'  },
         ].map(({ key, label, color }) => (
           <Link
@@ -54,7 +54,7 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
       </div>
 
       {/* Status tabs */}
-      <div className="flex gap-1 rounded-xl border border-[#E2E8F0] bg-white p-1">
+      <div className="flex gap-1 ds-card p-1">
         {TABS.map((t) => (
           <Link
             key={t.key}
@@ -83,7 +83,7 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
               : PROJECT_STATUS_CONFIG.pending_review
 
             return (
-              <div key={p.id} className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+              <div key={p.id} className="ds-card overflow-hidden">
                 <div className="flex gap-4 p-4">
                   {/* Thumbnail */}
                   {p.thumbnail_url ? (
@@ -124,7 +124,7 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
                         </span>
                       )}
                       {p.final_score != null && (
-                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-medium text-green-700">
+                        <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-medium text-[#15803D]">
                           Score: {p.final_score}
                         </span>
                       )}
@@ -134,7 +134,7 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
                       )}
                       {p.video_url && (
                         <a href={p.video_url} target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-red-500 hover:underline">▶ Demo</a>
+                          className="text-xs text-[#EF4444] hover:underline">▶ Demo</a>
                       )}
                     </div>
 

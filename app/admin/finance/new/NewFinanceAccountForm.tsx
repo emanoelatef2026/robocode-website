@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useTransition, useState } from 'react'
 import { useRouter }                from 'next/navigation'
 import { createOrUpdateFinancialAccount } from '@/modules/finance/actions'
@@ -59,7 +59,7 @@ export default function NewFinanceAccountForm({ branches, groups, students, succ
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-[#E2E8F0] bg-white p-6 space-y-5">
+    <form onSubmit={handleSubmit} className="ds-card p-6 space-y-5">
 
       {/* Student */}
       <div>
@@ -138,7 +138,7 @@ export default function NewFinanceAccountForm({ branches, groups, students, succ
           className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20 resize-none" />
       </div>
 
-      {err && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{err}</p>}
+      {err && <p className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#EF4444]">{err}</p>}
 
       <div className="flex gap-3">
         <button type="submit" disabled={pending}

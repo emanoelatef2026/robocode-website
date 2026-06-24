@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState } from 'react'
 import { submitSessionFeedback } from '@/modules/feedback/actions'
@@ -63,20 +63,20 @@ export default function SessionFeedbackWidget({ sessions }: Props) {
   const session = remaining[0]
 
   return (
-    <div className="rounded-xl border-2 border-amber-200 bg-amber-50 p-5 space-y-4">
+    <div className="rounded-xl border-2 border-[#FDE68A] bg-[#FFFBEB] p-5 space-y-4">
       <div>
-        <p className="text-sm font-bold text-amber-900">Rate Your Session</p>
-        <p className="text-xs text-amber-700 mt-0.5">
+        <p className="text-sm font-bold text-[#78350F]">Rate Your Session</p>
+        <p className="text-xs text-[#B45309] mt-0.5">
           {session.topic
             ? session.topic
             : new Date(session.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
           {' · '}{session.group_name}
-          {remaining.length > 1 && <span className="ml-2 text-amber-600">({remaining.length} sessions waiting)</span>}
+          {remaining.length > 1 && <span className="ml-2 text-[#F59E0B]">({remaining.length} sessions waiting)</span>}
         </p>
       </div>
 
       {state && !state.success && (
-        <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{state.error.message}</div>
+        <div className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#DC2626]">{state.error.message}</div>
       )}
 
       <form action={formAction} className="space-y-4">
@@ -84,20 +84,20 @@ export default function SessionFeedbackWidget({ sessions }: Props) {
 
         {FEEDBACK_QUESTIONS.map((q) => (
           <div key={q.key}>
-            <p className="mb-0.5 text-sm font-medium text-amber-900">{q.english}</p>
-            <p className="mb-1.5 text-[11px] text-amber-700 rtl">{q.arabic}</p>
+            <p className="mb-0.5 text-sm font-medium text-[#78350F]">{q.english}</p>
+            <p className="mb-1.5 text-[11px] text-[#B45309] rtl">{q.arabic}</p>
             <StarPicker name={`${q.key}_score`} />
           </div>
         ))}
 
         <div>
-          <label className="mb-1 block text-xs font-medium text-amber-800">Comment (optional)</label>
+          <label className="mb-1 block text-xs font-medium text-[#92400E]">Comment (optional)</label>
           <textarea name="comment" rows={2} placeholder="Any thoughts about this session…"
-            className="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm focus:border-amber-400 focus:outline-none" />
+            className="w-full rounded-lg border border-[#FDE68A] bg-white px-3 py-2 text-sm focus:border-[#F59E0B] focus:outline-none" />
         </div>
 
         <button type="submit" disabled={pending}
-          className="w-full rounded-lg bg-amber-600 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-60 transition">
+          className="w-full rounded-lg bg-[#D97706] py-2.5 text-sm font-semibold text-white hover:bg-[#B45309] disabled:opacity-60 transition">
           {pending ? 'Submitting…' : 'Submit Feedback'}
         </button>
       </form>

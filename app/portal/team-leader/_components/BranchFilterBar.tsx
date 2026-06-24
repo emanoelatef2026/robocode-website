@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRouter, usePathname } from 'next/navigation'
 import { useTransition }          from 'react'
@@ -36,7 +36,7 @@ export default function BranchFilterBar({ branches, selected }: Props) {
         defaultValue={selected ?? ''}
         onChange={e => handleChange(e.target.value)}
         disabled={pending}
-        className={`rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none transition ${pending ? 'opacity-50 cursor-wait' : 'hover:border-[#CBD5E1]'}`}
+        className={`ds-card px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none transition ${pending ? 'opacity-50 cursor-wait' : 'hover:border-[#CBD5E1]'}`}
       >
         <option value="">All Branches</option>
         {branches.map(b => (

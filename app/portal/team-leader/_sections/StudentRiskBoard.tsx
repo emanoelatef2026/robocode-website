@@ -1,4 +1,4 @@
-import Link from 'next/link'
+﻿import Link from 'next/link'
 import { getStudentRiskData, type StudentRiskRow } from '@/modules/tl-dashboard/dashboard-v2-queries'
 import DashCard, { DashCardEmpty, DashRow } from '../_components/DashCard'
 import RiskBadge from '../_components/RiskBadge'
@@ -37,17 +37,17 @@ function RiskRow({ student }: { student: StudentRiskRow }) {
       right={
         <div className="text-right">
           {student.attendance_score > 0 && (
-            <p className={`text-[12px] font-bold ${student.attendance_score >= 75 ? 'text-emerald-600' : student.attendance_score >= 55 ? 'text-amber-600' : 'text-red-600'}`}>
+            <p className={`text-[12px] font-bold ${student.attendance_score >= 75 ? 'text-[#10B981]' : student.attendance_score >= 55 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
               {student.attendance_score}%
             </p>
           )}
           {student.remaining_sessions != null && (
-            <p className={`text-[10px] font-medium ${student.remaining_sessions <= 0 ? 'text-red-600' : student.remaining_sessions <= 2 ? 'text-amber-600' : 'text-[#94A3B8]'}`}>
+            <p className={`text-[10px] font-medium ${student.remaining_sessions <= 0 ? 'text-[#EF4444]' : student.remaining_sessions <= 2 ? 'text-[#F59E0B]' : 'text-[#94A3B8]'}`}>
               {student.remaining_sessions <= 0 ? 'Exhausted' : `${student.remaining_sessions} sess`}
             </p>
           )}
           {student.remaining_balance > 0 && (
-            <p className="text-[10px] text-red-500">
+            <p className="text-[10px] text-[#EF4444]">
               EGP {student.remaining_balance.toLocaleString()}
             </p>
           )}
@@ -85,12 +85,12 @@ export default async function StudentRiskBoard({ branchIds }: { branchIds: strin
         <div className="flex items-center gap-2">
           <h2 className="text-[16px] font-bold text-[#0B1F3A]">Student Risk Engine</h2>
           {critical > 0 && (
-            <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-[11px] font-semibold text-red-700">
+            <span className="rounded-full bg-[#FEE2E2] px-2.5 py-0.5 text-[11px] font-semibold text-[#DC2626]">
               {critical} critical
             </span>
           )}
           {medium > 0 && (
-            <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-700">
+            <span className="rounded-full bg-[#FFFBEB] px-2.5 py-0.5 text-[11px] font-semibold text-[#B45309]">
               {medium} medium
             </span>
           )}
@@ -103,7 +103,7 @@ export default async function StudentRiskBoard({ branchIds }: { branchIds: strin
       <DashCard
         title="At-Risk Students"
         count={students.length}
-        accent={critical > 0 ? 'border-red-200' : students.length > 0 ? 'border-amber-200' : 'border-[#E2E8F0]'}
+        accent={critical > 0 ? 'border-[#FECACA]' : students.length > 0 ? 'border-[#FDE68A]' : 'border-[#E2E8F0]'}
         action={
           <Link href="/portal/team-leader/students?filter=at-risk" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
             View all →

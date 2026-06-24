@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition, useEffect, useRef, useCallback } from 'react'
 import { useTopbarAction } from '@/components/admin/TopbarActionContext'
@@ -109,12 +109,12 @@ function applyFilters(groups: GroupOperationalRow[], f: Filters): GroupOperation
 
 function buildKpis(groups: GroupOperationalRow[]) {
   return [
-    { label: 'Active',         value: groups.filter(g => g.status === 'active').length,   color: 'bg-blue-400'   },
-    { label: 'Low Attendance', value: groups.filter(g => g.is_low_attendance).length,      color: 'bg-red-400'    },
-    { label: 'No Instructor',  value: groups.filter(g => !g.has_instructor).length,        color: 'bg-amber-400'  },
-    { label: 'Under Capacity', value: groups.filter(g => g.is_low_capacity).length,        color: 'bg-orange-400' },
-    { label: 'Overloaded',     value: groups.filter(g => g.is_overloaded).length,          color: 'bg-purple-400' },
-    { label: 'Starting Soon',  value: groups.filter(g => g.starts_soon).length,            color: 'bg-teal-400'   },
+    { label: 'Active',         value: groups.filter(g => g.status === 'active').length,   color: 'bg-[#38BDF8]'  },
+    { label: 'Low Attendance', value: groups.filter(g => g.is_low_attendance).length,      color: 'bg-[#EF4444]'  },
+    { label: 'No Instructor',  value: groups.filter(g => !g.has_instructor).length,        color: 'bg-[#F59E0B]'  },
+    { label: 'Under Capacity', value: groups.filter(g => g.is_low_capacity).length,        color: 'bg-[#FF8A1F]'  },
+    { label: 'Overloaded',     value: groups.filter(g => g.is_overloaded).length,          color: 'bg-[#7C3AED]'  },
+    { label: 'Starting Soon',  value: groups.filter(g => g.starts_soon).length,            color: 'bg-[#10B981]'  },
   ]
 }
 
@@ -123,17 +123,17 @@ function buildKpis(groups: GroupOperationalRow[]) {
 // ════════════════════════════════════════════════════════════════════
 
 function StatusChip({ status }: { status: string }) {
-  const cls = status === 'active'    ? 'bg-green-100 text-green-700'
-            : status === 'forming'   ? 'bg-blue-100 text-blue-700'
-            : status === 'completed' ? 'bg-slate-100 text-slate-500'
-                                     : 'bg-red-100 text-red-700'
+  const cls = status === 'active'    ? 'bg-[#E7F8EE] text-[#15803D]'
+            : status === 'forming'   ? 'bg-[#EFF6FF] text-[#1D4ED8]'
+            : status === 'completed' ? 'bg-[#F1F5F9] text-[#475569]'
+                                     : 'bg-[#FEE2E2] text-[#DC2626]'
   return <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${cls}`}>{status}</span>
 }
 
 function RiskBadge({ level }: { level: 'HIGH' | 'MEDIUM' | 'LOW' }) {
-  const cls = level === 'HIGH'   ? 'bg-red-100 text-red-700'
-            : level === 'MEDIUM' ? 'bg-amber-100 text-amber-700'
-                                 : 'bg-green-100 text-green-700'
+  const cls = level === 'HIGH'   ? 'bg-[#FEE2E2] text-[#DC2626]'
+            : level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]'
+                                 : 'bg-[#E7F8EE] text-[#15803D]'
   return <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${cls}`}>{level}</span>
 }
 
@@ -315,7 +315,7 @@ function GroupActionsDropdown({
         <>
           {/* Backdrop to close on outside click */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-50 mt-1 w-52 rounded-xl border border-[#E2E8F0] bg-white py-1 shadow-xl">
+          <div className="absolute right-0 top-full z-50 mt-1 w-52 ds-card py-1 shadow-xl">
 
             {/* Record Attendance — primary action */}
             <button
@@ -357,7 +357,7 @@ function GroupActionsDropdown({
             {/* Delete Group */}
             <button
               onClick={() => { setOpen(false); onDelete() }}
-              className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium text-red-600 hover:bg-red-50 transition"
+              className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium text-[#EF4444] hover:bg-[#FEE2E2] transition"
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -489,7 +489,7 @@ function GroupSummaryBar({
               href={group.meeting_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5 text-[11px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition"
+              className="flex items-center gap-1 ds-card px-2.5 py-1.5 text-[11px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition"
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#FF8A1F]">
                 <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
@@ -610,7 +610,7 @@ function StudentSelectionToolbar({
           target="_blank"
           rel="noopener noreferrer"
           title={selected.length > 1 ? `WhatsApp first (${selected.length} selected)` : 'WhatsApp'}
-          className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-green-700 hover:bg-green-50 transition"
+          className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-[#15803D] hover:bg-[#E7F8EE] transition"
         >
           <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5 shrink-0">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zm-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884zm8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
@@ -678,7 +678,7 @@ function StudentSelectionToolbar({
           <span className="flex items-center gap-1 ml-1">
             <button
               onClick={() => { setRemoveConfirm(false); onRemove(Array.from(selectedIds)) }}
-              className="rounded px-2 py-1 text-[11px] font-semibold text-white bg-red-500 hover:bg-red-600 transition"
+              className="rounded px-2 py-1 text-[11px] font-semibold text-white bg-[#EF4444] hover:bg-[#DC2626] transition"
             >
               Confirm Remove ({selectedIds.size})
             </button>
@@ -694,7 +694,7 @@ function StudentSelectionToolbar({
         ) : (
           <button
             onClick={() => setRemoveConfirm(true)}
-            className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-red-500 hover:bg-red-50 hover:text-red-700 transition"
+            className="flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium text-[#EF4444] hover:bg-[#FEE2E2] hover:text-[#DC2626] transition"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5 shrink-0">
               <path strokeLinecap="round" strokeLinejoin="round" d="M13 7a4 4 0 11-8 0 4 4 0 018 0zM9 14a6 6 0 00-6 6h7m5-5l4 4m0 0l4-4m-4 4V7" />
@@ -757,7 +757,7 @@ function GroupStudentsTable({
   return (
     <div className="overflow-x-auto h-full">
       <table className="w-full text-sm min-w-240">
-        <thead>
+        <thead className="ds-table-head">
           <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] sticky top-0 z-10">
             <th className="pl-3 pr-2 py-2 w-8">
               <input
@@ -785,9 +785,9 @@ function GroupStudentsTable({
           {sorted.map((s, idx) => {
             const isSelected = selectedIds.has(s.student_id)
 
-            const attColor = s.attendance_pct >= 75 ? 'text-green-600'
-                           : s.attendance_pct >= 60 ? 'text-amber-600'
-                           : s.attendance_pct > 0   ? 'text-red-600'
+            const attColor = s.attendance_pct >= 75 ? 'text-[#10B981]'
+                           : s.attendance_pct >= 60 ? 'text-[#F59E0B]'
+                           : s.attendance_pct > 0   ? 'text-[#EF4444]'
                                                     : 'text-[#CBD5E1]'
 
             const sessStat = s.sessions_used != null && s.sessions_total != null
@@ -796,7 +796,7 @@ function GroupStudentsTable({
 
             const sessLeft      = s.sessions_remaining
             const sessLeftColor = sessLeft != null && sessLeft <= 2
-              ? 'text-red-600 font-semibold'
+              ? 'text-[#EF4444] font-semibold'
               : 'text-[#374151]'
 
             return (
@@ -878,7 +878,7 @@ function GroupStudentsTable({
 
                 {/* Balance */}
                 <td className="px-3 py-1.5 text-right whitespace-nowrap">
-                  <span className={`text-[11px] ${s.remaining_balance > 0 ? 'text-red-600 font-semibold' : 'text-[#94A3B8]'}`}>
+                  <span className={`text-[11px] ${s.remaining_balance > 0 ? 'text-[#EF4444] font-semibold' : 'text-[#94A3B8]'}`}>
                     {s.remaining_balance > 0 ? fmtCurrency(s.remaining_balance) : '—'}
                   </span>
                 </td>
@@ -909,12 +909,12 @@ const WS_ATT_STATUSES = ['present', 'absent', 'late', 'excused', 'makeup'] as co
 type WsAttStatus = typeof WS_ATT_STATUSES[number]
 
 function wsAttCls(s: string): string {
-  if (s === 'present') return 'bg-emerald-100 text-emerald-700'
-  if (s === 'late')    return 'bg-amber-100 text-amber-700'
-  if (s === 'absent')  return 'bg-red-100 text-red-700'
-  if (s === 'excused') return 'bg-blue-100 text-blue-700'
-  if (s === 'makeup')  return 'bg-purple-100 text-purple-700'
-  return 'bg-slate-100 text-slate-500'
+  if (s === 'present') return 'bg-[#E7F8EE] text-[#15803D]'
+  if (s === 'late')    return 'bg-[#FFFBEB] text-[#B45309]'
+  if (s === 'absent')  return 'bg-[#FEE2E2] text-[#DC2626]'
+  if (s === 'excused') return 'bg-[#EFF6FF] text-[#1D4ED8]'
+  if (s === 'makeup')  return 'bg-[#F3E8FF] text-[#7C3AED]'
+  return 'bg-[#F1F5F9] text-[#475569]'
 }
 
 function WsSessionEditForm({
@@ -979,16 +979,16 @@ function WsSessionEditForm({
         <div>
           <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Date &amp; Time</label>
           <input type="datetime-local" value={datetime} onChange={e => setDatetime(e.target.value)}
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2 py-1.5 text-[11px] focus:border-[#FF8A1F] focus:outline-none" />
+            className="w-full ds-card px-2 py-1.5 text-[11px] focus:border-[#FF8A1F] focus:outline-none" />
           {datetime !== originalISO && (
-            <p className="mt-0.5 text-[9px] text-amber-600">⚠ Date change re-evaluates package eligibility</p>
+            <p className="mt-0.5 text-[9px] text-[#F59E0B]">⚠ Date change re-evaluates package eligibility</p>
           )}
         </div>
         <div>
           <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Duration (min)</label>
           <input type="number" value={duration} onChange={e => setDuration(e.target.value)}
             min={15} max={240} step={15}
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2 py-1.5 text-[11px] focus:border-[#FF8A1F] focus:outline-none" />
+            className="w-full ds-card px-2 py-1.5 text-[11px] focus:border-[#FF8A1F] focus:outline-none" />
         </div>
       </div>
 
@@ -996,7 +996,7 @@ function WsSessionEditForm({
         <div>
           <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Topic</label>
           <input type="text" value={topic} onChange={e => setTopic(e.target.value)} placeholder="e.g. CSS Selectors…"
-            className="w-full rounded-lg border border-[#E2E8F0] bg-white px-2 py-1.5 text-[11px] focus:border-[#FF8A1F] focus:outline-none" />
+            className="w-full ds-card px-2 py-1.5 text-[11px] focus:border-[#FF8A1F] focus:outline-none" />
         </div>
         <div>
           <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Delivery</label>
@@ -1020,7 +1020,7 @@ function WsSessionEditForm({
           <label className="block text-[10px] font-medium text-[#94A3B8] mb-1.5">Attendance Statuses</label>
           <div className="space-y-1 max-h-48 overflow-y-auto">
             {students.map(s => (
-              <div key={s.student_id} className="flex items-center justify-between gap-2 rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1.5">
+              <div key={s.student_id} className="flex items-center justify-between gap-2 ds-card px-2.5 py-1.5">
                 <span className="text-[11px] font-medium text-[#0B1F3A] truncate flex-1 min-w-0">{s.student_name}</span>
                 <div className="flex gap-1 shrink-0">
                   {WS_ATT_STATUSES.map(st => (
@@ -1042,12 +1042,12 @@ function WsSessionEditForm({
       )}
 
       {error && (
-        <p className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-[10px] text-red-700">{error}</p>
+        <p className="rounded-lg bg-[#FEE2E2] border border-[#FEE2E2] px-3 py-2 text-[10px] text-[#DC2626]">{error}</p>
       )}
 
       <div className="flex gap-2">
         <button onClick={onCancel} disabled={saving}
-          className="flex-1 rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition disabled:opacity-50">
+          className="flex-1 ds-card px-3 py-1.5 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition disabled:opacity-50">
           Cancel
         </button>
         <button onClick={handleSave} disabled={saving}
@@ -1079,8 +1079,8 @@ function WsSessionRow({
   const fmt        = new Date(session.scheduled_at).toLocaleDateString('en-US', {
     weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
   })
-  const statusCls  = session.status === 'completed' ? 'bg-green-100 text-green-700'
-                   : session.status === 'scheduled'  ? 'bg-blue-100 text-blue-700'
+  const statusCls  = session.status === 'completed' ? 'bg-[#E7F8EE] text-[#15803D]'
+                   : session.status === 'scheduled'  ? 'bg-[#EFF6FF] text-[#1D4ED8]'
                                                      : 'bg-[#F1F5F9] text-[#64748B]'
   const isConfirming = confirmId  === session.id
   const isDeleting   = deletingId === session.id
@@ -1097,7 +1097,7 @@ function WsSessionRow({
             <p className={`text-[13px] font-medium ${isPast ? 'text-[#0B1F3A]' : 'text-[#374151]'}`}>{fmt}</p>
             {session.delivery && (
               <span className={`text-[9px] font-medium rounded px-1.5 py-0.5 ${
-                session.delivery === 'online' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-500'
+                session.delivery === 'online' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-[#F1F5F9] text-[#475569]'
               }`}>{session.delivery}</span>
             )}
           </div>
@@ -1107,10 +1107,10 @@ function WsSessionRow({
           {session.status === 'completed' && (
             <div className="mt-1 flex items-center gap-2">
               {session.present_count > 0 && (
-                <span className="text-[10px] font-medium text-emerald-600">✓ {session.present_count} present</span>
+                <span className="text-[10px] font-medium text-[#10B981]">✓ {session.present_count} present</span>
               )}
               {session.absent_count > 0 && (
-                <span className="text-[10px] font-medium text-red-500">✗ {session.absent_count} absent</span>
+                <span className="text-[10px] font-medium text-[#EF4444]">✗ {session.absent_count} absent</span>
               )}
               {session.present_count === 0 && session.absent_count === 0 && (
                 <span className="text-[10px] text-[#94A3B8]">No attendance recorded</span>
@@ -1131,7 +1131,7 @@ function WsSessionRow({
               <button onClick={() => onEditOpen(session.id)}
                 className="text-[10px] text-[#64748B] hover:text-[#0B1F3A] transition">Edit</button>
               <button onClick={() => onConfirmOpen(session.id)}
-                className="text-[10px] text-red-400 hover:text-red-600 transition">Delete</button>
+                className="text-[10px] text-[#F87171] hover:text-[#EF4444] transition">Delete</button>
             </div>
           )}
         </div>
@@ -1147,14 +1147,14 @@ function WsSessionRow({
       )}
 
       {isConfirming && (
-        <div className="mt-2 flex items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 py-2">
-          <span className="flex-1 text-[11px] text-red-700">Delete session? This reverses all package consumptions.</span>
+        <div className="mt-2 flex items-center gap-2 rounded-lg border border-[#FEE2E2] bg-[#FEE2E2] px-3 py-2">
+          <span className="flex-1 text-[11px] text-[#DC2626]">Delete session? This reverses all package consumptions.</span>
           <button onClick={onConfirmClose}
             className="rounded border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition">
             Cancel
           </button>
           <button onClick={() => onDelete(session.id)} disabled={isDeleting}
-            className="rounded bg-red-500 px-2 py-1 text-[10px] font-medium text-white hover:bg-red-600 transition disabled:opacity-50">
+            className="rounded bg-[#EF4444] px-2 py-1 text-[10px] font-medium text-white hover:bg-[#DC2626] transition disabled:opacity-50">
             {isDeleting ? '…' : 'Confirm'}
           </button>
         </div>
@@ -1234,8 +1234,8 @@ function GroupAttendanceTab({
       {toast && (
         <div className={`rounded-lg border px-3 py-2 text-[11px] font-medium ${
           toast.type === 'success'
-            ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-            : 'bg-red-50 border-red-100 text-red-700'
+            ? 'bg-[#E7F8EE] border-[#A7F3D0] text-[#15803D]'
+            : 'bg-[#FEE2E2] border-[#FECACA] text-[#DC2626]'
         }`}>
           {toast.msg}
         </div>
@@ -1246,9 +1246,9 @@ function GroupAttendanceTab({
           {
             label: 'Avg Attendance',
             value: group.attendance_avg > 0 ? `${group.attendance_avg}%` : '—',
-            color: group.attendance_avg >= 75 ? 'text-green-600'
-                 : group.attendance_avg >= 60 ? 'text-amber-600'
-                 : group.attendance_avg  >  0 ? 'text-red-600'
+            color: group.attendance_avg >= 75 ? 'text-[#10B981]'
+                 : group.attendance_avg >= 60 ? 'text-[#F59E0B]'
+                 : group.attendance_avg  >  0 ? 'text-[#EF4444]'
                                               : 'text-[#0B1F3A]',
           },
           { label: 'Students',     value: String(group.student_count), color: 'text-[#0B1F3A]' },
@@ -1265,7 +1265,7 @@ function GroupAttendanceTab({
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] text-[#94A3B8]">
             {sessions.length} session{sessions.length !== 1 ? 's' : ''}
-            {past.length > 0 && <span className="ml-1 text-emerald-600">· {past.length} recorded</span>}
+            {past.length > 0 && <span className="ml-1 text-[#10B981]">· {past.length} recorded</span>}
           </p>
           <div className="flex gap-2">
             <button
@@ -1289,7 +1289,7 @@ function GroupAttendanceTab({
       {upcoming.length > 0 && (
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Upcoming</p>
-          <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0] bg-white">
+          <div className="divide-y divide-[#F1F5F9] ds-card">
             {upcoming.slice(0, 5).map(s => (
               <WsSessionRow
                 key={s.id} session={s} students={students}
@@ -1306,7 +1306,7 @@ function GroupAttendanceTab({
       {past.length > 0 && (
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Recorded Sessions</p>
-          <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0] bg-white">
+          <div className="divide-y divide-[#F1F5F9] ds-card">
             {past.map(s => (
               <WsSessionRow
                 key={s.id} session={s} students={students}
@@ -1364,14 +1364,14 @@ function GroupFinanceTab({ students, loading }: { students: GroupDetailStudent[]
         ].map(card => (
           <div key={card.label} className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
             <p className="text-[10px] text-[#94A3B8] uppercase tracking-wide">{card.label}</p>
-            <p className={`mt-1 text-lg font-bold ${card.alert ? 'text-red-600' : 'text-[#0B1F3A]'}`}>
+            <p className={`mt-1 text-lg font-bold ${card.alert ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
               {card.value}
             </p>
           </div>
         ))}
       </div>
 
-      <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="divide-y divide-[#F1F5F9] ds-card">
         {sorted.length === 0 ? (
           <p className="py-10 text-center text-sm text-[#94A3B8]">No finance data available.</p>
         ) : sorted.map(s => {
@@ -1383,7 +1383,7 @@ function GroupFinanceTab({ students, loading }: { students: GroupDetailStudent[]
                 <p className="text-[13px] font-semibold text-[#0B1F3A]">{s.student_name}</p>
                 <div className="flex items-center flex-wrap gap-2 mt-0.5">
                   {sessLeft != null && (
-                    <span className={`text-[11px] ${isExhausted ? 'text-red-600 font-semibold' : 'text-[#64748B]'}`}>
+                    <span className={`text-[11px] ${isExhausted ? 'text-[#EF4444] font-semibold' : 'text-[#64748B]'}`}>
                       {sessLeft} sess. left
                     </span>
                   )}
@@ -1391,10 +1391,10 @@ function GroupFinanceTab({ students, loading }: { students: GroupDetailStudent[]
                     <span className="text-[11px] text-[#64748B]">Pkg: {fmtCurrency(s.subscription_amount)}</span>
                   )}
                   {s.paid_amount > 0 && (
-                    <span className="text-[11px] text-green-600">Paid: {fmtCurrency(s.paid_amount)}</span>
+                    <span className="text-[11px] text-[#10B981]">Paid: {fmtCurrency(s.paid_amount)}</span>
                   )}
                   {s.remaining_balance > 0 && (
-                    <span className="text-[11px] text-red-600 font-medium">Due: {fmtCurrency(s.remaining_balance)}</span>
+                    <span className="text-[11px] text-[#EF4444] font-medium">Due: {fmtCurrency(s.remaining_balance)}</span>
                   )}
                 </div>
               </div>
@@ -1402,16 +1402,16 @@ function GroupFinanceTab({ students, loading }: { students: GroupDetailStudent[]
                 {s.payment_status && (
                   <span className={[
                     'rounded-full px-2 py-0.5 text-[10px] font-semibold',
-                    s.payment_status === 'PAID'     ? 'bg-green-100 text-green-700'
-                    : s.payment_status === 'OVERDUE'  ? 'bg-red-100 text-red-700'
-                    : s.payment_status === 'DUE_SOON' ? 'bg-amber-100 text-amber-700'
-                                                      : 'bg-blue-100 text-blue-700',
+                    s.payment_status === 'PAID'     ? 'bg-[#E7F8EE] text-[#15803D]'
+                    : s.payment_status === 'OVERDUE'  ? 'bg-[#FEE2E2] text-[#DC2626]'
+                    : s.payment_status === 'DUE_SOON' ? 'bg-[#FFFBEB] text-[#B45309]'
+                                                      : 'bg-[#EFF6FF] text-[#1D4ED8]',
                   ].join(' ')}>
                     {s.payment_status === 'DUE_SOON' ? 'Due Soon' : s.payment_status.charAt(0) + s.payment_status.slice(1).toLowerCase()}
                   </span>
                 )}
                 {isExhausted && (
-                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">EXHAUSTED</span>
+                  <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-bold text-[#DC2626]">EXHAUSTED</span>
                 )}
               </div>
             </div>
@@ -1445,12 +1445,12 @@ function GroupPerformanceTab({ group }: { group: GroupOperationalRow }) {
   return (
     <div className="p-4 space-y-4">
       {alerts.length > 0 && (
-        <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
-          <p className="mb-2 text-[12px] font-semibold text-amber-700">Active Alerts</p>
+        <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-4">
+          <p className="mb-2 text-[12px] font-semibold text-[#B45309]">Active Alerts</p>
           <ul className="space-y-1">
             {alerts.map(a => (
-              <li key={a} className="flex items-center gap-2 text-[12px] text-amber-700">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+              <li key={a} className="flex items-center gap-2 text-[12px] text-[#B45309]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B] shrink-0" />
                 {a}
               </li>
             ))}
@@ -1458,7 +1458,7 @@ function GroupPerformanceTab({ group }: { group: GroupOperationalRow }) {
         </div>
       )}
 
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-5">
+      <div className="ds-card p-4 space-y-5">
         {metrics.map(m => (
           <div key={m.label}>
             <div className="flex items-start justify-between mb-1.5">
@@ -1467,9 +1467,9 @@ function GroupPerformanceTab({ group }: { group: GroupOperationalRow }) {
                 <p className="text-[11px] text-[#94A3B8]">{m.desc}</p>
               </div>
               <span className={`text-[15px] font-bold ${
-                m.value >= 75 ? 'text-green-600' :
-                m.value >= 60 ? 'text-amber-600' :
-                m.value > 0   ? 'text-red-600'   : 'text-[#94A3B8]'
+                m.value >= 75 ? 'text-[#10B981]' :
+                m.value >= 60 ? 'text-[#F59E0B]' :
+                m.value > 0   ? 'text-[#EF4444]' : 'text-[#94A3B8]'
               }`}>
                 {m.value > 0 ? `${m.value}%` : '—'}
               </span>
@@ -1477,7 +1477,7 @@ function GroupPerformanceTab({ group }: { group: GroupOperationalRow }) {
             {m.value > 0 && (
               <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#E2E8F0]">
                 <div
-                  className={`h-full rounded-full ${m.value >= 75 ? 'bg-green-500' : m.value >= 60 ? 'bg-amber-400' : 'bg-red-500'}`}
+                  className={`h-full rounded-full ${m.value >= 75 ? 'bg-[#10B981]' : m.value >= 60 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
                   style={{ width: `${Math.min(100, m.value)}%` }}
                 />
               </div>
@@ -1487,7 +1487,7 @@ function GroupPerformanceTab({ group }: { group: GroupOperationalRow }) {
       </div>
 
       {alerts.length === 0 && group.health_score >= 75 && (
-        <div className="rounded-xl border border-green-100 bg-green-50 px-4 py-3 text-[13px] text-green-700 font-medium">
+        <div className="rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] px-4 py-3 text-[13px] text-[#15803D] font-medium">
           This group is performing well ✓
         </div>
       )}
@@ -1588,7 +1588,7 @@ function QuickAddStudentModal({
           <div className="mt-2 flex items-center justify-between text-[11px] text-[#64748B]">
             <span>{filtered.length} available</span>
             {group.capacity && (
-              <span className={isOverCapacity ? 'font-semibold text-red-600' : ''}>
+              <span className={isOverCapacity ? 'font-semibold text-[#EF4444]' : ''}>
                 Capacity: {newTotal} / {group.capacity}
               </span>
             )}
@@ -1631,13 +1631,13 @@ function QuickAddStudentModal({
                       {s.parent_phone && <span className="font-mono text-[11px] text-[#94A3B8]">P: {s.parent_phone}</span>}
                       <span className="text-[11px] text-[#94A3B8]">{s.branch_name}</span>
                       {s.sessions_remaining != null && (
-                        <span className={`text-[11px] ${s.sessions_remaining <= 2 ? 'font-medium text-red-600' : 'text-[#64748B]'}`}>
+                        <span className={`text-[11px] ${s.sessions_remaining <= 2 ? 'font-medium text-[#EF4444]' : 'text-[#64748B]'}`}>
                           {s.sessions_remaining} sess. left
                         </span>
                       )}
                     </div>
                     {s.group_name && (
-                      <p className="mt-0.5 text-[11px] text-amber-600">Currently in: {s.group_name}</p>
+                      <p className="mt-0.5 text-[11px] text-[#F59E0B]">Currently in: {s.group_name}</p>
                     )}
                   </div>
                 </div>
@@ -1648,7 +1648,7 @@ function QuickAddStudentModal({
 
         <div className="shrink-0 border-t border-[#E2E8F0] px-5 py-4">
           {error && (
-            <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-[12px] text-red-600">{error}</p>
+            <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{error}</p>
           )}
           <div className="flex gap-2">
             <button
@@ -1805,7 +1805,7 @@ function MoveGroupModal({
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {isOverCap && (
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Over cap</span>
+                      <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">Over cap</span>
                     )}
                     <span className="text-[11px] text-[#94A3B8]">{capDisplay}</span>
                     <StatusChip status={g.status} />
@@ -1818,10 +1818,10 @@ function MoveGroupModal({
 
         <div className="shrink-0 border-t border-[#E2E8F0] px-5 py-4">
           {error && (
-            <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-[12px] text-red-600">{error}</p>
+            <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{error}</p>
           )}
           {wouldOverfill && !error && (
-            <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+            <p className="mb-3 rounded-lg bg-[#FFFBEB] px-3 py-2 text-[12px] text-[#B45309]">
               Warning: this will exceed the target group&apos;s capacity.
             </p>
           )}
@@ -2191,7 +2191,7 @@ function GroupWorkspace({
                 <span className="font-semibold text-[#0B1F3A]">{sessionsCompleted}</span>
               </div>
               {(detailData?.students ?? []).some(s => s.paid_amount > 0) && (
-                <p className="mt-1 rounded-lg bg-amber-50 px-2 py-1.5 text-[11px] text-amber-700">
+                <p className="mt-1 rounded-lg bg-[#FFFBEB] px-2 py-1.5 text-[11px] text-[#B45309]">
                   This group has financial records. Payment history will be preserved.
                 </p>
               )}
@@ -2200,7 +2200,7 @@ function GroupWorkspace({
               The group will be archived. Student payment and attendance history are never deleted.
             </p>
             {deleteError && (
-              <p className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-[12px] text-red-600">{deleteError}</p>
+              <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{deleteError}</p>
             )}
             <div className="flex gap-2">
               <button
@@ -2211,7 +2211,7 @@ function GroupWorkspace({
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="flex-1 rounded-lg bg-red-500 py-2 text-[13px] font-semibold text-white hover:bg-red-600 transition"
+                className="flex-1 rounded-lg bg-[#EF4444] py-2 text-[13px] font-semibold text-white hover:bg-[#DC2626] transition"
               >
                 Delete Group
               </button>
@@ -2270,11 +2270,11 @@ function EmptyWorkspace() {
 function buildPageKpis(groups: GroupOperationalRow[]) {
   const totalStudents = groups.reduce((s, g) => s + (g.student_count ?? 0), 0)
   return [
-    { label: 'Total Groups', value: groups.length,                                                             dotColor: 'bg-slate-400',   bgColor: 'bg-white',         valueColor: 'text-[#0B1F3A]'  },
-    { label: 'Active',       value: groups.filter(g => g.status === 'active').length,                          dotColor: 'bg-emerald-400', bgColor: 'bg-emerald-50/60', valueColor: 'text-emerald-700' },
-    { label: 'Forming',      value: groups.filter(g => g.status === 'forming').length,                         dotColor: 'bg-blue-400',    bgColor: 'bg-blue-50/60',    valueColor: 'text-blue-700'    },
-    { label: 'Completed',    value: groups.filter(g => g.status === 'completed').length,                       dotColor: 'bg-slate-400',   bgColor: 'bg-slate-50',      valueColor: 'text-slate-600'   },
-    { label: 'Archived',     value: groups.filter(g => g.status === 'cancelled' || g.status === 'archived').length, dotColor: 'bg-red-300', bgColor: 'bg-red-50/60',    valueColor: 'text-red-600'     },
+    { label: 'Total Groups', value: groups.length,                                                             dotColor: 'bg-[#94A3B8]',   bgColor: 'bg-white',         valueColor: 'text-[#0B1F3A]'  },
+    { label: 'Active',       value: groups.filter(g => g.status === 'active').length,                          dotColor: 'bg-[#10B981]', bgColor: 'bg-[#E7F8EE]/60', valueColor: 'text-[#15803D]' },
+    { label: 'Forming',      value: groups.filter(g => g.status === 'forming').length,                         dotColor: 'bg-[#38BDF8]',    bgColor: 'bg-[#EFF6FF]/60',    valueColor: 'text-[#1D4ED8]'    },
+    { label: 'Completed',    value: groups.filter(g => g.status === 'completed').length,                       dotColor: 'bg-[#94A3B8]',   bgColor: 'bg-[#F8FAFC]',      valueColor: 'text-[#475569]'   },
+    { label: 'Archived',     value: groups.filter(g => g.status === 'cancelled' || g.status === 'archived').length, dotColor: 'bg-[#FCA5A5]', bgColor: 'bg-[#FEE2E2]/60',    valueColor: 'text-[#EF4444]'     },
     { label: 'Students',     value: totalStudents,                                                             dotColor: 'bg-violet-400',  bgColor: 'bg-violet-50/60',  valueColor: 'text-violet-700'  },
   ]
 }
@@ -2449,7 +2449,7 @@ export default function GroupsWorkspaceClient({
       )}
 
       {/* ── Split panel workspace ────────────────────────────────────── */}
-      <div ref={containerRef} className="flex-1 min-h-0 flex overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
+      <div ref={containerRef} className="flex-1 min-h-0 flex overflow-hidden ds-card">
 
         {/* Left panel — resizable on desktop */}
         <div

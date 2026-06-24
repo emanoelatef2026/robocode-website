@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   listLeads, getLeadKPIs, getLeadsBySource,
   getOwnershipKPIs, getAgingLeads, getFollowUpsDue,
@@ -30,14 +30,14 @@ interface Props {
 // ── Shared constants ──────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
-  NEW:            'bg-blue-100  text-blue-700',
+  NEW:            'bg-[#EFF6FF]  text-[#1D4ED8]',
   CONTACTED:      'bg-yellow-100 text-yellow-700',
   INTERESTED:     'bg-purple-100 text-purple-700',
   TRIAL_BOOKED:   'bg-indigo-100 text-indigo-700',
   TRIAL_ATTENDED: 'bg-cyan-100  text-cyan-700',
   FOLLOW_UP:      'bg-orange-100 text-orange-700',
-  CONVERTED:      'bg-green-100 text-green-700',
-  LOST:           'bg-red-100  text-red-700',
+  CONVERTED:      'bg-[#E7F8EE] text-[#15803D]',
+  LOST:           'bg-[#FEE2E2]  text-[#DC2626]',
 }
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -49,7 +49,7 @@ const SOURCE_LABELS: Record<string, string> = {
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[status] ?? 'bg-slate-100 text-slate-700'}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[status] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
       {status.replace(/_/g, ' ')}
     </span>
   )
@@ -59,7 +59,7 @@ function DaysBadge({ days, status }: { days: number; status: string }) {
   const threshold = AGING_THRESHOLDS[status as keyof typeof AGING_THRESHOLDS]
   const isAging   = threshold != null && days > threshold
   const cls = isAging
-    ? 'bg-red-100 text-red-700 font-semibold'
+    ? 'bg-[#FEE2E2] text-[#DC2626] font-semibold'
     : days > 0
       ? 'bg-[#F8FAFC] text-[#64748B]'
       : 'text-[#94A3B8]'
@@ -149,16 +149,16 @@ export default async function TLLeadsPage({ searchParams }: Props) {
       <div>
         <div className="mb-2"><SectionTitle title="Pipeline" /></div>
         <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4 xl:grid-cols-8">
-          <KPICard label="New"            value={kpis.new_leads}      color="text-blue-600"   href="?status=NEW" />
+          <KPICard label="New"            value={kpis.new_leads}      color="text-[#2563EB]"   href="?status=NEW" />
           <KPICard label="Contacted"      value={kpis.contacted}      color="text-yellow-600" href="?status=CONTACTED" />
           <KPICard label="Trial Booked"   value={kpis.trial_booked}   color="text-indigo-600" href="?status=TRIAL_BOOKED" />
           <KPICard label="Trial Attended" value={kpis.trial_attended} color="text-cyan-600"   href="?status=TRIAL_ATTENDED" />
-          <KPICard label="Converted"      value={kpis.converted}      color="text-green-600"  href="?status=CONVERTED" />
+          <KPICard label="Converted"      value={kpis.converted}      color="text-[#10B981]"  href="?status=CONVERTED" />
           <KPICard
             label="Conv. Rate"
             value={`${kpis.conversion_rate}%`}
             sub={`${kpis.converted} / ${kpis.total}`}
-            color={kpis.conversion_rate >= 30 ? 'text-green-600' : kpis.conversion_rate >= 15 ? 'text-yellow-600' : 'text-red-600'}
+            color={kpis.conversion_rate >= 30 ? 'text-[#10B981]' : kpis.conversion_rate >= 15 ? 'text-yellow-600' : 'text-[#EF4444]'}
           />
           <KPICard
             label="Avg Days to Convert"
@@ -166,8 +166,8 @@ export default async function TLLeadsPage({ searchParams }: Props) {
             sub={conversionSpeed.by_source[0] ? `Fastest: ${conversionSpeed.by_source[0].source.replace('_', ' ')} (${conversionSpeed.by_source[0].avg_days}d)` : undefined}
             color={
               conversionSpeed.overall == null ? 'text-[#94A3B8]' :
-              conversionSpeed.overall <= 14 ? 'text-green-600' :
-              conversionSpeed.overall <= 30 ? 'text-yellow-600' : 'text-red-600'
+              conversionSpeed.overall <= 14 ? 'text-[#10B981]' :
+              conversionSpeed.overall <= 30 ? 'text-yellow-600' : 'text-[#EF4444]'
             }
           />
           <KPICard
@@ -198,18 +198,18 @@ export default async function TLLeadsPage({ searchParams }: Props) {
           <KPICard
             label="Overdue Follow-Ups"
             value={ownerKpis.overdue_follow_ups}
-            color={ownerKpis.overdue_follow_ups > 0 ? 'text-red-600' : 'text-[#0B1F3A]'}
+            color={ownerKpis.overdue_follow_ups > 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}
             alert={ownerKpis.overdue_follow_ups > 0}
           />
           <KPICard
             label="Converted This Month"
             value={ownerKpis.converted_this_month}
-            color="text-green-600"
+            color="text-[#10B981]"
           />
           <KPICard
             label="My Conv. Rate"
             value={`${ownerKpis.my_conversion_rate}%`}
-            color={ownerKpis.my_conversion_rate >= 30 ? 'text-green-600' : ownerKpis.my_conversion_rate >= 15 ? 'text-yellow-600' : 'text-[#0B1F3A]'}
+            color={ownerKpis.my_conversion_rate >= 30 ? 'text-[#10B981]' : ownerKpis.my_conversion_rate >= 15 ? 'text-yellow-600' : 'text-[#0B1F3A]'}
           />
         </div>
       </div>
@@ -220,12 +220,12 @@ export default async function TLLeadsPage({ searchParams }: Props) {
 
           {/* Aging Alerts */}
           {agingLeads.length > 0 && (
-            <div className="rounded-xl border border-red-200 bg-red-50 p-5">
+            <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] p-5">
               <div className="mb-3 flex items-center gap-2">
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-red-500">
+                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#EF4444]">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
-                <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
+                <p className="text-xs font-semibold uppercase tracking-wide text-[#DC2626]">
                   Stage Alerts — {agingLeads.length} stuck lead{agingLeads.length !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -242,7 +242,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                       </p>
                     </div>
                     <StatusBadge status={l.status} />
-                    <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">
+                    <span className="shrink-0 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-semibold text-[#DC2626]">
                       {l.days_in_stage}d
                     </span>
                   </div>
@@ -274,7 +274,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                         {l.phone ? ` · ${l.phone}` : ''}
                       </p>
                     </div>
-                    <span className={`shrink-0 text-[11px] font-medium ${l.days_overdue > 0 ? 'text-red-600' : 'text-orange-600'}`}>
+                    <span className={`shrink-0 text-[11px] font-medium ${l.days_overdue > 0 ? 'text-[#EF4444]' : 'text-orange-600'}`}>
                       {l.days_overdue > 0 ? `${l.days_overdue}d overdue` : 'Due today'}
                     </span>
                     <StatusBadge status={l.status} />
@@ -291,7 +291,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
         <div className="grid gap-5 lg:grid-cols-2">
 
           {/* Workload Distribution */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+          <div className="ds-card p-5">
             <SectionTitle title="Workload Distribution" />
             <div className="mt-3 space-y-2.5">
               {workload.map(o => {
@@ -302,7 +302,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                       <span className="text-sm font-medium text-[#0B1F3A] truncate">{o.name}</span>
                       <div className="flex items-center gap-3 shrink-0 text-[11px] text-[#64748B]">
                         <span>{o.active} active</span>
-                        <span className="font-semibold text-green-600">{o.conversion_rate}%</span>
+                        <span className="font-semibold text-[#10B981]">{o.conversion_rate}%</span>
                         <span className="font-bold text-[#0B1F3A]">{o.total}</span>
                       </div>
                     </div>
@@ -320,7 +320,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
 
           {/* Source Analytics */}
           {bySource.length > 0 && (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+            <div className="ds-card p-5">
               <SectionTitle title="Leads by Source" />
               <div className="mt-3 space-y-2.5">
                 {bySource.map(s => {
@@ -349,7 +349,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
       )}
 
       {/* ── Lead Table ── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-3 py-2.5 sm:px-4 sm:py-3">
           <SearchInput placeholder="Search by name, phone, email…" />
           <FilterSelect name="status"  options={statusOptions} placeholder="All Statuses" value={status ?? ''} />
@@ -423,7 +423,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                     {/* Row 3: follow-up + manage */}
                     <div className="mt-2 flex items-center justify-between gap-2">
                       {followUpDate ? (
-                        <span className={`text-[11px] font-medium ${followUpOverdue ? 'text-red-600' : 'text-[#64748B]'}`}>
+                        <span className={`text-[11px] font-medium ${followUpOverdue ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
                           Follow-up: {followUpDate.toLocaleDateString('en-GB')}
                           {followUpOverdue && ' ⚠'}
                         </span>
@@ -445,7 +445,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
             {/* ── Desktop table (≥ md) ── */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Child</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Phone</th>
@@ -463,7 +463,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                     const followUpDate    = lead.next_follow_up_at ? new Date(lead.next_follow_up_at) : null
                     const followUpOverdue = followUpDate && followUpDate < new Date()
                     return (
-                      <tr key={lead.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                      <tr key={lead.id} className="ds-table-row">
                         <td className="px-4 py-3 font-medium text-[#0B1F3A]">
                           {lead.child_name}
                           {lead.parent_name && (
@@ -490,7 +490,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                         <td className="px-4 py-3 text-[#64748B]">{SOURCE_LABELS[lead.source] ?? lead.source}</td>
                         <td className="px-4 py-3">
                           {followUpDate ? (
-                            <span className={`text-xs font-medium ${followUpOverdue ? 'text-red-600' : 'text-[#64748B]'}`}>
+                            <span className={`text-xs font-medium ${followUpOverdue ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
                               {followUpDate.toLocaleDateString('en-GB')}
                               {followUpOverdue && ' ⚠'}
                             </span>

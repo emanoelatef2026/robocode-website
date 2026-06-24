@@ -1,4 +1,4 @@
-import { getCurrentUser }          from '@/modules/rbac/guards'
+﻿import { getCurrentUser }          from '@/modules/rbac/guards'
 import { redirect }                from 'next/navigation'
 import {
   resolveGroupFilter,
@@ -15,9 +15,9 @@ import type { CertReadinessStatus } from '@/modules/analytics/types'
 
 function scorePill(score: number) {
   const cls =
-    score >= 75 ? 'bg-green-50 text-green-700' :
-    score >= 50 ? 'bg-amber-50 text-amber-700' :
-                  'bg-red-50 text-red-600'
+    score >= 75 ? 'bg-[#E7F8EE] text-[#15803D]' :
+    score >= 50 ? 'bg-[#FFFBEB] text-[#B45309]' :
+                  'bg-[#FEE2E2] text-[#EF4444]'
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${cls}`}>
       {score.toFixed(1)}%
@@ -29,7 +29,7 @@ function riskBadge(reasons: string[]) {
   return reasons.map(r => (
     <span
       key={r}
-      className="inline-block rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-medium text-red-600 mr-1"
+      className="inline-block rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-medium text-[#EF4444] mr-1"
     >
       {r === 'low_completion' ? 'Low Overall' : 'Low Attendance'}
     </span>
@@ -43,9 +43,9 @@ const READINESS_LABELS: Record<CertReadinessStatus, string> = {
 }
 
 const READINESS_COLORS: Record<CertReadinessStatus, string> = {
-  ready:        'bg-green-50  text-green-700  border-green-200',
-  almost_ready: 'bg-amber-50  text-amber-700  border-amber-200',
-  not_ready:    'bg-red-50    text-red-600    border-red-200',
+  ready:        'bg-[#E7F8EE]  text-[#15803D]  border-[#A7F3D0]',
+  almost_ready: 'bg-[#FFFBEB]  text-[#B45309]  border-[#FDE68A]',
+  not_ready:    'bg-[#FEE2E2]    text-[#EF4444]    border-[#FECACA]',
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -109,7 +109,7 @@ export default async function AnalyticsOverviewPage({ searchParams }: Props) {
           {semesters.length > 0 && (
             <div className="flex items-center gap-2">
               <label className="text-xs text-[#64748B]">Semester:</label>
-              <div className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] bg-white px-2">
+              <div className="flex items-center gap-1 ds-card px-2">
                 <Link
                   href={filterHref({ semester: undefined })}
                   className={`px-2 py-1 text-xs rounded ${!semesterId ? 'font-semibold text-[#FF8A1F]' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
@@ -148,9 +148,9 @@ export default async function AnalyticsOverviewPage({ searchParams }: Props) {
 
         {/* Detailed list */}
         {certReadiness.length > 0 && (
-          <div className="mt-4 rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+          <div className="mt-4 ds-card overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Student</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Semester</th>
@@ -163,7 +163,7 @@ export default async function AnalyticsOverviewPage({ searchParams }: Props) {
               </thead>
               <tbody>
                 {certReadiness.map(s => (
-                  <tr key={`${s.student_id}::${s.semester_id}`} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                  <tr key={`${s.student_id}::${s.semester_id}`} className="ds-table-row">
                     <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
                       <div>{s.student_name}</div>
                       <div className="text-[11px] text-[#94A3B8]">{s.student_email}</div>
@@ -205,7 +205,7 @@ export default async function AnalyticsOverviewPage({ searchParams }: Props) {
             </p>
           </div>
           {/* Sort toggle */}
-          <div className="flex items-center gap-1 rounded-lg border border-[#E2E8F0] bg-white px-2">
+          <div className="flex items-center gap-1 ds-card px-2">
             <Link
               href={filterHref({ sort: 'completion', page: '1' })}
               className={`px-2 py-1 text-xs rounded ${sort === 'completion' ? 'font-semibold text-[#FF8A1F]' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
@@ -222,15 +222,15 @@ export default async function AnalyticsOverviewPage({ searchParams }: Props) {
         </div>
 
         {atRiskResult.data.length === 0 ? (
-          <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+          <div className="ds-card px-6 py-10 text-center">
             <p className="text-sm text-[#94A3B8]">
               {atRiskResult.total === 0 ? 'No at-risk students found.' : 'No results on this page.'}
             </p>
           </div>
         ) : (
-          <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+          <div className="ds-card overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Student</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Group</th>
@@ -245,7 +245,7 @@ export default async function AnalyticsOverviewPage({ searchParams }: Props) {
               </thead>
               <tbody>
                 {atRiskResult.data.map(s => (
-                  <tr key={`${s.student_id}-${s.course_id}`} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                  <tr key={`${s.student_id}-${s.course_id}`} className="ds-table-row">
                     <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
                       <div>{s.student_name}</div>
                       <div className="text-[11px] text-[#94A3B8]">{s.student_email}</div>
@@ -282,13 +282,13 @@ export default async function AnalyticsOverviewPage({ searchParams }: Props) {
         </div>
 
         {missingResult.data.length === 0 ? (
-          <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+          <div className="ds-card px-6 py-10 text-center">
             <p className="text-sm text-[#94A3B8]">No students with missing assignments.</p>
           </div>
         ) : (
-          <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+          <div className="ds-card overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Student</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Missing</th>
@@ -297,19 +297,19 @@ export default async function AnalyticsOverviewPage({ searchParams }: Props) {
               </thead>
               <tbody>
                 {missingResult.data.map(s => (
-                  <tr key={s.student_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                  <tr key={s.student_id} className="ds-table-row">
                     <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
                       <div>{s.student_name}</div>
                       <div className="text-[11px] text-[#94A3B8]">{s.student_email}</div>
                     </td>
                     <td className="px-4 py-2.5">
-                      <span className="inline-block rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                      <span className="inline-block rounded-full bg-[#FFFBEB] px-2 py-0.5 text-xs font-semibold text-[#B45309]">
                         {s.missing_count}
                       </span>
                     </td>
                     <td className="px-4 py-2.5">
                       {s.overdue_count > 0 ? (
-                        <span className="inline-block rounded-full bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-600">
+                        <span className="inline-block rounded-full bg-[#FEE2E2] px-2 py-0.5 text-xs font-semibold text-[#EF4444]">
                           {s.overdue_count} overdue
                         </span>
                       ) : (

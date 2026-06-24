@@ -1,4 +1,4 @@
-import { getTeamLeader }              from '@/modules/team-leaders/queries'
+﻿import { getTeamLeader }              from '@/modules/team-leaders/queries'
 import { getTeamLeaderResponsibilities, listTeamLeaders } from '@/modules/team-leaders/queries'
 import { requirePermission }            from '@/modules/rbac/guards'
 import { notFound }                     from 'next/navigation'
@@ -59,7 +59,7 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
       </div>
 
       {/* ── Action panel ───────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+      <div className="ds-card p-4">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Management Actions</p>
 
         {/* Responsibilities summary */}
@@ -99,7 +99,7 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
       </div>
 
       {/* ── Profile ────────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-4 text-sm font-semibold text-[#0B1F3A]">Profile</h2>
         <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
@@ -139,15 +139,15 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
 
       {/* ── Stats row ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 text-center">
+        <div className="ds-card p-4 text-center">
           <p className="text-2xl font-bold text-[#0B1F3A]">{tl.student_count}</p>
           <p className="mt-1 text-xs text-[#64748B]">Active Students</p>
         </div>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 text-center">
+        <div className="ds-card p-4 text-center">
           <p className="text-2xl font-bold text-[#0B1F3A]">{tl.groups.length}</p>
           <p className="mt-1 text-xs text-[#64748B]">Active Groups</p>
         </div>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 text-center">
+        <div className="ds-card p-4 text-center">
           <p className="text-2xl font-bold text-[#0B1F3A]">{tl.instructors.length}</p>
           <p className="mt-1 text-xs text-[#64748B]">Instructors</p>
         </div>
@@ -155,12 +155,12 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
 
       {/* ── Instructors table ──────────────────────────────────────────── */}
       {tl.instructors.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="ds-card">
           <div className="border-b border-[#E2E8F0] px-4 py-3">
             <h2 className="text-sm font-semibold text-[#0B1F3A]">Instructors</h2>
           </div>
           <table className="w-full text-sm">
-            <thead>
+            <thead className="ds-table-head">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                 <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Email</th>
@@ -170,7 +170,7 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
             </thead>
             <tbody>
               {tl.instructors.map(ins => (
-                <tr key={ins.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                <tr key={ins.id} className="ds-table-row">
                   <td className="px-4 py-3 font-medium text-[#0B1F3A]">
                     {ins.first_name && ins.last_name ? `${ins.first_name} ${ins.last_name}` : '—'}
                   </td>
@@ -188,12 +188,12 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
 
       {/* ── Groups table ───────────────────────────────────────────────── */}
       {tl.groups.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="ds-card">
           <div className="border-b border-[#E2E8F0] px-4 py-3">
             <h2 className="text-sm font-semibold text-[#0B1F3A]">Groups</h2>
           </div>
           <table className="w-full text-sm">
-            <thead>
+            <thead className="ds-table-head">
               <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                 <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
                 <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Type</th>
@@ -203,7 +203,7 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
             </thead>
             <tbody>
               {tl.groups.map(g => (
-                <tr key={g.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                <tr key={g.id} className="ds-table-row">
                   <td className="px-4 py-3 font-medium text-[#0B1F3A]">{g.name}</td>
                   <td className="px-4 py-3 capitalize text-[#64748B]">{g.type}</td>
                   <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{g.student_count}</td>

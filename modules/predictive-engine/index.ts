@@ -1,4 +1,4 @@
-// Predictive Retention Engine — computes dropout probability for a student enrollment.
+﻿// Predictive Retention Engine — computes dropout probability for a student enrollment.
 // Pure functions only (no DB calls). Used by automation engine, dashboards, and badges.
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -142,10 +142,10 @@ export function computeDropoutCategory(score: number): DropoutCategory {
 export const DROPOUT_CATEGORY_CONFIG: Record<DropoutCategory, {
   label: string; color: string; text: string; description: string
 }> = {
-  SAFE:      { label: 'Safe',      color: 'bg-emerald-100', text: 'text-emerald-700', description: 'Student is on track.' },
-  WATCH:     { label: 'Watch',     color: 'bg-amber-100',   text: 'text-amber-700',   description: 'Minor risk factors detected.' },
+  SAFE:      { label: 'Safe',      color: 'bg-[#E7F8EE]', text: 'text-[#15803D]', description: 'Student is on track.' },
+  WATCH:     { label: 'Watch',     color: 'bg-[#FFFBEB]',   text: 'text-[#B45309]',   description: 'Minor risk factors detected.' },
   HIGH_RISK: { label: 'High Risk', color: 'bg-orange-100',  text: 'text-orange-700',  description: 'Multiple risk factors — proactive action needed.' },
-  CRITICAL:  { label: 'Critical',  color: 'bg-red-100',     text: 'text-red-700',     description: 'Very likely to drop. Immediate intervention required.' },
+  CRITICAL:  { label: 'Critical',  color: 'bg-[#FEE2E2]',     text: 'text-[#DC2626]',     description: 'Very likely to drop. Immediate intervention required.' },
 }
 
 export const FACTOR_LABELS: Record<string, string> = {

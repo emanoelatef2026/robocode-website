@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
@@ -13,8 +13,8 @@ interface GalleryItem {
   created_at: string;
 }
 
-const INPUT = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
-const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
+const INPUT = "w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]";
 
 export default function GalleryPage() {
   const [items,     setItems]     = useState<GalleryItem[]>([]);
@@ -68,7 +68,7 @@ export default function GalleryPage() {
     <div className="space-y-6">
 
       {/* Upload form */}
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-[#F1F5F9] bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-[14px] font-semibold text-[#0B1F3A]">Upload New Image</h2>
         <div className="mb-4">
           <MediaRequirementsBadge type="image" />
@@ -83,7 +83,7 @@ export default function GalleryPage() {
               accept="image/*"
               required
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="block w-full text-[13px] text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200"
+              className="block w-full text-[13px] text-[#6B7280] file:mr-2 file:rounded-lg file:border-0 file:bg-[#F3F4F6] file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-[#4B5563] hover:file:bg-gray-200"
             />
           </div>
           <div>
@@ -123,11 +123,11 @@ export default function GalleryPage() {
         </div>
       ) : (
         <>
-          <p className="text-[13px] text-gray-400">{items.length} images</p>
+          <p className="text-[13px] text-[#9CA3AF]">{items.length} images</p>
           <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
             {items.map((item) => (
-              <div key={item.id} className="group relative overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-                <div className="relative h-40 w-full overflow-hidden bg-gray-100">
+              <div key={item.id} className="group relative overflow-hidden rounded-xl border border-[#F1F5F9] bg-white shadow-sm">
+                <div className="relative h-40 w-full overflow-hidden bg-[#F3F4F6]">
                   <Image
                     src={item.image_url}
                     alt={item.title ?? "Gallery image"}
@@ -140,12 +140,12 @@ export default function GalleryPage() {
                     <p className="truncate text-[13px] font-medium text-[#0B1F3A]">{item.title}</p>
                   )}
                   {item.category && (
-                    <p className="text-[11px] text-gray-400">{item.category}</p>
+                    <p className="text-[11px] text-[#9CA3AF]">{item.category}</p>
                   )}
                   <button
                     onClick={() => handleDelete(item.id)}
                     disabled={deleting === item.id}
-                    className="mt-2 w-full rounded-lg border border-gray-200 py-1 text-[11px] font-semibold text-red-400 transition hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
+                    className="mt-2 w-full rounded-lg border border-[#E2E8F0] py-1 text-[11px] font-semibold text-[#F87171] transition hover:border-[#FCA5A5] hover:bg-[#FEE2E2] disabled:opacity-50"
                   >
                     {deleting === item.id ? "Deleting…" : "Delete"}
                   </button>

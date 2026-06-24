@@ -1,4 +1,4 @@
-import { requirePermission }          from '@/modules/rbac/guards'
+﻿import { requirePermission }          from '@/modules/rbac/guards'
 import { listStudentOperations, getFilterOptions } from '@/modules/finance/queries'
 
 function fmt(n: number) {
@@ -10,7 +10,7 @@ export default async function StudentOperationsPage() {
 
   if (!user.branchIds.length) {
     return (
-      <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+      <div className="ds-card px-6 py-12 text-center">
         <p className="text-sm font-medium text-[#0B1F3A]">No branch assigned</p>
         <p className="mt-1 text-xs text-[#94A3B8]">Contact your administrator to assign a branch.</p>
       </div>
@@ -51,35 +51,35 @@ export default async function StudentOperationsPage() {
           {
             label: 'Total Students',
             value: totalStudents,
-            color: 'bg-blue-400',
+            color: 'bg-[#38BDF8]',
           },
           {
             label: 'Active Packages',
             value: activePackages,
-            color: activePackages > 0 ? 'bg-emerald-400' : 'bg-slate-300',
+            color: activePackages > 0 ? 'bg-[#10B981]' : 'bg-[#CBD5E1]',
           },
           {
             label: 'Exhausted Packages',
             value: exhaustedPackages,
-            color: exhaustedPackages > 0 ? 'bg-purple-400' : 'bg-slate-300',
+            color: exhaustedPackages > 0 ? 'bg-purple-400' : 'bg-[#CBD5E1]',
           },
           {
             label: 'Outstanding',
             value: `EGP ${fmt(totalRemaining)}`,
-            color: totalRemaining > 0 ? 'bg-amber-400' : 'bg-emerald-400',
+            color: totalRemaining > 0 ? 'bg-[#F59E0B]' : 'bg-[#10B981]',
           },
           {
             label: 'Collection Rate',
             value: `${collectionRate}%`,
-            color: collectionRate >= 80 ? 'bg-emerald-400' : collectionRate >= 60 ? 'bg-amber-400' : 'bg-red-400',
+            color: collectionRate >= 80 ? 'bg-[#10B981]' : collectionRate >= 60 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]',
           },
           {
             label: 'Avg Attendance',
             value: avgAttendance > 0 ? `${avgAttendance}%` : '—',
-            color: avgAttendance >= 75 ? 'bg-emerald-400' : avgAttendance >= 60 ? 'bg-amber-400' : avgAttendance > 0 ? 'bg-red-400' : 'bg-slate-300',
+            color: avgAttendance >= 75 ? 'bg-[#10B981]' : avgAttendance >= 60 ? 'bg-[#F59E0B]' : avgAttendance > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]',
           },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+          <div key={k.label} className="ds-card p-3">
             <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
             <p className="text-lg font-bold text-[#0B1F3A]">{k.value}</p>
             <p className="text-[11px] text-[#64748B]">{k.label}</p>
@@ -89,7 +89,7 @@ export default async function StudentOperationsPage() {
 
       {/* ── Operations table ─────────────────────────────────────────────────── */}
       {rows.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+        <div className="ds-card px-6 py-12 text-center">
           <p className="text-sm font-medium text-[#0B1F3A]">No active students found</p>
           <p className="mt-1 text-xs text-[#94A3B8]">Add students to your branch to begin tracking operations.</p>
         </div>

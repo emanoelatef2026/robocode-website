@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -13,8 +13,8 @@ interface Partner {
   sort_order:  number;
 }
 
-const INPUT = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
-const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400";
+const INPUT = "w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+const LABEL = "mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]";
 
 const blank = { name: "", website_url: "", sort_order: "0" };
 
@@ -96,16 +96,16 @@ export default function PartnersPage() {
 
       {/* Real error — only shown when API/DB actually fails */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-[13px] text-red-700">
+        <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] p-4 text-[13px] text-[#DC2626]">
           <strong>Connection error:</strong> {error}
           <button onClick={load} className="ml-3 underline hover:no-underline">Retry</button>
         </div>
       )}
 
       {/* Add form — always visible */}
-      <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-[#F1F5F9] bg-white p-6 shadow-sm">
         <h2 className="mb-1 text-[14px] font-semibold text-[#0B1F3A]">Add Partner</h2>
-        <p className="mb-4 text-[12px] text-gray-400">Upload partner logos. WebP/PNG with transparent background. Recommended: 200×80px.</p>
+        <p className="mb-4 text-[12px] text-[#9CA3AF]">Upload partner logos. WebP/PNG with transparent background. Recommended: 200×80px.</p>
 
         <form onSubmit={handleAdd} className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -122,7 +122,7 @@ export default function PartnersPage() {
             <div className="sm:col-span-2">
               <label className={LABEL}>Logo *</label>
               <input ref={fileRef} type="file" accept="image/*" required onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="block w-full text-[13px] text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200" />
+                className="block w-full text-[13px] text-[#6B7280] file:mr-2 file:rounded-lg file:border-0 file:bg-[#F3F4F6] file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-[#4B5563] hover:file:bg-gray-200" />
             </div>
             <div>
               <label className={LABEL}>Sort Order</label>
@@ -145,12 +145,12 @@ export default function PartnersPage() {
       ) : (
         <>
           {items.length > 0 && (
-            <p className="text-[13px] text-gray-400">{items.length} partner{items.length !== 1 ? "s" : ""}</p>
+            <p className="text-[13px] text-[#9CA3AF]">{items.length} partner{items.length !== 1 ? "s" : ""}</p>
           )}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {items.map((item) => (
-              <div key={item.id} className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
-                <div className="flex h-24 items-center justify-center bg-gray-50 p-4">
+              <div key={item.id} className="overflow-hidden rounded-xl border border-[#F1F5F9] bg-white shadow-sm">
+                <div className="flex h-24 items-center justify-center bg-[#F9FAFB] p-4">
                   <div className="relative h-12 w-28">
                     <Image src={item.logo_url} alt={item.name} fill className="object-contain" sizes="112px" />
                   </div>
@@ -163,7 +163,7 @@ export default function PartnersPage() {
                       <input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} className={INPUT} placeholder="Sort order" />
                       <div className="flex gap-2">
                         <button onClick={handleEditSave} disabled={saving} className="flex-1 rounded-lg bg-[#0B1F3A] py-1.5 text-[12px] font-semibold text-white transition hover:bg-[#38BDF8] disabled:opacity-50">{saving ? "…" : "Save"}</button>
-                        <button onClick={() => setEditing(null)} className="flex-1 rounded-lg border border-gray-200 py-1.5 text-[12px] font-semibold text-gray-500 hover:bg-gray-50">Cancel</button>
+                        <button onClick={() => setEditing(null)} className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[12px] font-semibold text-[#6B7280] hover:bg-[#F9FAFB]">Cancel</button>
                       </div>
                     </div>
                   ) : (
@@ -171,14 +171,14 @@ export default function PartnersPage() {
                       <p className="truncate text-[12px] font-bold text-[#0B1F3A]">{item.name}</p>
                       {item.website_url && <a href={item.website_url} target="_blank" rel="noopener noreferrer" className="truncate text-[11px] text-[#38BDF8] hover:underline">{item.website_url}</a>}
                       <div className="mt-2 flex gap-1.5">
-                        <button onClick={() => setEditing(item)} className="flex-1 rounded-lg border border-gray-200 py-1.5 text-[11px] font-semibold text-gray-600 hover:border-[#38BDF8] hover:text-[#38BDF8] transition">Edit</button>
+                        <button onClick={() => setEditing(item)} className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#4B5563] hover:border-[#38BDF8] hover:text-[#38BDF8] transition">Edit</button>
                         <button onClick={() => handleToggle(item)} disabled={toggling === item.id}
                           className={["flex-1 rounded-lg border py-1.5 text-[11px] font-semibold transition disabled:opacity-50",
-                            item.active ? "border-[#38BDF8]/30 bg-[#38BDF8]/8 text-[#38BDF8]" : "border-gray-200 text-gray-400 hover:border-[#38BDF8]/30 hover:text-[#38BDF8]"].join(" ")}>
+                            item.active ? "border-[#38BDF8]/30 bg-[#38BDF8]/8 text-[#38BDF8]" : "border-[#E2E8F0] text-[#9CA3AF] hover:border-[#38BDF8]/30 hover:text-[#38BDF8]"].join(" ")}>
                           {toggling === item.id ? "…" : item.active ? "Active" : "Inactive"}
                         </button>
                         <button onClick={() => handleDelete(item.id)} disabled={deleting === item.id}
-                          className="flex-1 rounded-lg border border-gray-200 py-1.5 text-[11px] font-semibold text-red-400 hover:border-red-300 hover:bg-red-50 transition disabled:opacity-50">
+                          className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#F87171] hover:border-[#FCA5A5] hover:bg-[#FEE2E2] transition disabled:opacity-50">
                           {deleting === item.id ? "…" : "Del"}
                         </button>
                       </div>

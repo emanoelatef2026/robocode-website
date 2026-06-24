@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId } from '@/modules/instructor-portal/queries'
 import { listProjectsForInstructorReview } from '@/modules/portfolio/queries'
 import { PROJECT_STATUS_CONFIG, BADGE_EMOJIS } from '@/modules/portfolio/types'
@@ -53,7 +53,7 @@ export default async function InstructorPortfolioPage({ searchParams }: Props) {
       </div>
 
       {/* Status tabs */}
-      <div className="flex gap-1 rounded-xl border border-[#E2E8F0] bg-white p-1">
+      <div className="flex gap-1 ds-card p-1">
         {tabs.map((t) => (
           <Link
             key={t.key}
@@ -81,7 +81,7 @@ export default async function InstructorPortfolioPage({ searchParams }: Props) {
               ? (PROJECT_STATUS_CONFIG[p.status] ?? PROJECT_STATUS_CONFIG.pending_review)
               : PROJECT_STATUS_CONFIG.pending_review
             return (
-              <div key={p.id} className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+              <div key={p.id} className="ds-card overflow-hidden">
                 <div className="flex gap-4 p-4">
                   {/* Thumbnail */}
                   {p.thumbnail_url ? (
@@ -119,7 +119,7 @@ export default async function InstructorPortfolioPage({ searchParams }: Props) {
                       )}
                       {p.video_url && (
                         <a href={p.video_url} target="_blank" rel="noopener noreferrer"
-                          className="text-xs text-red-500 hover:underline">▶ Demo</a>
+                          className="text-xs text-[#EF4444] hover:underline">▶ Demo</a>
                       )}
                     </div>
 

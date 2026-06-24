@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -65,7 +65,7 @@ function UploadCard({
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-[#F1F5F9] bg-white shadow-sm">
 
       {/* Current image preview */}
       <div className="relative h-52 w-full overflow-hidden bg-[#F8FAFC]">
@@ -130,7 +130,7 @@ function UploadCard({
             type="file"
             accept="image/*"
             required
-            className="block flex-1 text-[12px] text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-[#F1F5F9] file:px-3 file:py-2 file:text-[11px] file:font-semibold file:text-[#334155] hover:file:bg-[#E2E8F0]"
+            className="block flex-1 text-[12px] text-[#6B7280] file:mr-2 file:rounded-lg file:border-0 file:bg-[#F1F5F9] file:px-3 file:py-2 file:text-[11px] file:font-semibold file:text-[#334155] hover:file:bg-[#E2E8F0]"
           />
           <button
             type="submit"
@@ -142,7 +142,7 @@ function UploadCard({
         </form>
 
         {status === "success" && (
-          <p className="mt-2 flex items-center gap-1.5 text-[12px] font-semibold text-emerald-500">
+          <p className="mt-2 flex items-center gap-1.5 text-[12px] font-semibold text-[#10B981]">
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
@@ -150,7 +150,7 @@ function UploadCard({
           </p>
         )}
         {status === "error" && (
-          <p className="mt-2 text-[12px] font-semibold text-red-500">Upload failed — check storage bucket and table exist.</p>
+          <p className="mt-2 text-[12px] font-semibold text-[#EF4444]">Upload failed — check storage bucket and table exist.</p>
         )}
       </div>
     </div>
@@ -182,16 +182,16 @@ export default function SiteMediaPage() {
       {/* Header */}
       <div>
         <h1 className="text-[16px] font-bold text-[#0B132B]">Site Media</h1>
-        <p className="mt-0.5 text-[13px] text-gray-400">
+        <p className="mt-0.5 text-[13px] text-[#9CA3AF]">
           Manage hero and section images displayed on the public website.
         </p>
       </div>
 
       {/* Setup hint */}
-      <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-[12px] text-amber-700">
-        <strong>One-time setup:</strong> Create a <code className="rounded bg-amber-100 px-1 font-mono">site_media</code> table
-        (columns: <code className="rounded bg-amber-100 px-1 font-mono">id uuid pk</code>, <code className="rounded bg-amber-100 px-1 font-mono">key text unique</code>, <code className="rounded bg-amber-100 px-1 font-mono">image_url text</code>, <code className="rounded bg-amber-100 px-1 font-mono">updated_at timestamptz</code>)
-        and a <code className="rounded bg-amber-100 px-1 font-mono">site-media</code> storage bucket (public) in Supabase.
+      <div className="rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-[12px] text-[#B45309]">
+        <strong>One-time setup:</strong> Create a <code className="rounded bg-[#FFFBEB] px-1 font-mono">site_media</code> table
+        (columns: <code className="rounded bg-[#FFFBEB] px-1 font-mono">id uuid pk</code>, <code className="rounded bg-[#FFFBEB] px-1 font-mono">key text unique</code>, <code className="rounded bg-[#FFFBEB] px-1 font-mono">image_url text</code>, <code className="rounded bg-[#FFFBEB] px-1 font-mono">updated_at timestamptz</code>)
+        and a <code className="rounded bg-[#FFFBEB] px-1 font-mono">site-media</code> storage bucket (public) in Supabase.
       </div>
 
       {loading ? (

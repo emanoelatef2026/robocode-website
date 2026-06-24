@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { createGroup } from '@/modules/groups/actions'
@@ -20,9 +20,9 @@ export default function TLNewGroupForm({ branchId, branchIds, branches }: Props)
   )
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -32,7 +32,7 @@ export default function TLNewGroupForm({ branchId, branchIds, branches }: Props)
           <input type="hidden" name="branch_id" value={singleBranch} />
         ) : (
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Branch <span className="text-red-500">*</span></label>
+            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Branch <span className="text-[#EF4444]">*</span></label>
             <select name="branch_id" required className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
               <option value="">— Select branch —</option>
               {(branches ?? []).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -43,7 +43,7 @@ export default function TLNewGroupForm({ branchId, branchIds, branches }: Props)
 
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Group name <span className="text-red-500">*</span>
+            Group name <span className="text-[#EF4444]">*</span>
           </label>
           <input
             name="name"
@@ -55,7 +55,7 @@ export default function TLNewGroupForm({ branchId, branchIds, branches }: Props)
 
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Type <span className="text-red-500">*</span>
+            Type <span className="text-[#EF4444]">*</span>
           </label>
           <select
             name="type"

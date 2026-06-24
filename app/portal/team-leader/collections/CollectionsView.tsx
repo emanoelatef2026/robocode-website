@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -68,7 +68,7 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
   }
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+    <div className="ds-card p-4">
       {/* Top row */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -101,25 +101,25 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
           Phone: <strong className="text-[#0B1F3A]">{parentPhone ?? '—'}</strong>
         </span>
         <span>
-          Remaining: <strong className={remaining > 0 ? 'text-red-600' : 'text-emerald-600'}>
+          Remaining: <strong className={remaining > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}>
             {remaining > 0 ? `EGP ${fmt(remaining)}` : 'Paid ✓'}
           </strong>
         </span>
         <span>
           Attendance: <strong className={
-            row.attendance_pct >= 80 ? 'text-emerald-600' :
-            row.attendance_pct >= 60 ? 'text-amber-600' : 'text-red-600'
+            row.attendance_pct >= 80 ? 'text-[#10B981]' :
+            row.attendance_pct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'
           }>{row.sessions_attended > 0 ? `${row.attendance_pct}%` : '—'}</strong>
         </span>
         {row.next_due_date && (
           <span>
-            Due: <strong className={row.days_overdue > 0 ? 'text-red-600 font-semibold' : 'text-[#0B1F3A]'}>
+            Due: <strong className={row.days_overdue > 0 ? 'text-[#EF4444] font-semibold' : 'text-[#0B1F3A]'}>
               {fmtDate(row.next_due_date)}{row.days_overdue > 0 ? ` (${row.days_overdue}d)` : ''}
             </strong>
           </span>
         )}
         {row.consecutive_absences >= 2 && (
-          <span className="text-red-600 font-medium">{row.consecutive_absences} consecutive absences</span>
+          <span className="text-[#EF4444] font-medium">{row.consecutive_absences} consecutive absences</span>
         )}
       </div>
 
@@ -127,14 +127,14 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
       {row.risk_flags.filter(f => f !== 'session_milestone').length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {row.risk_flags.filter(f => f !== 'session_milestone').map(f => (
-            <span key={f} className="rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
+            <span key={f} className="rounded bg-[#FEE2E2] px-1.5 py-0.5 text-[10px] font-medium text-[#EF4444]">
               {RISK_FLAG_LABELS[f] ?? f}
             </span>
           ))}
         </div>
       )}
 
-      {err && <p className="mt-1 text-xs text-red-600">{err}</p>}
+      {err && <p className="mt-1 text-xs text-[#EF4444]">{err}</p>}
 
       {/* Action row */}
       <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-[#F1F5F9] pt-2">
@@ -155,7 +155,7 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
             <button
               onClick={() => handleQuick('full')}
               disabled={!!paying || isPending}
-              className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-emerald-700 disabled:opacity-40 flex items-center gap-1"
+              className="rounded-lg bg-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#047857] disabled:opacity-40 flex items-center gap-1"
             >
               {paying === 'full' ? <span className="h-2.5 w-2.5 animate-spin rounded-full border border-white border-t-transparent" /> : null}
               Full ({fmt(remaining)})
@@ -169,13 +169,13 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
             <a
               href={`https://wa.me/${parentPhone.replace(/\D/g, '')}`}
               target="_blank" rel="noopener noreferrer"
-              className="rounded-lg bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 hover:bg-emerald-100"
+              className="rounded-lg bg-[#E7F8EE] px-2.5 py-1 text-[11px] font-medium text-[#15803D] hover:bg-[#E7F8EE]"
             >
               WhatsApp
             </a>
             <a
               href={`tel:${parentPhone}`}
-              className="rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700 hover:bg-blue-100"
+              className="rounded-lg bg-[#EFF6FF] px-2.5 py-1 text-[11px] font-medium text-[#1D4ED8] hover:bg-[#EFF6FF]"
             >
               Call
             </a>
@@ -205,13 +205,13 @@ export default function CollectionsView({ sections, branchIds, stats }: Props) {
       {/* ── KPI strip ───────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
-          { label: 'Total Outstanding', value: `EGP ${fmt(stats.totalOutstanding)}`, color: 'bg-slate-400' },
-          { label: 'Due Today',         value: `EGP ${fmt(stats.totalDueToday)}`,    color: 'bg-blue-400'  },
-          { label: 'Overdue Amount',    value: `EGP ${fmt(stats.totalOverdue)}`,     color: 'bg-red-500'   },
-          { label: 'Overdue Count',     value: stats.overdueCount,                   color: stats.overdueCount > 0 ? 'bg-red-400' : 'bg-slate-300' },
-          { label: 'Milestone Alerts',  value: stats.milestoneCount,                 color: stats.milestoneCount > 0 ? 'bg-amber-400' : 'bg-slate-300' },
+          { label: 'Total Outstanding', value: `EGP ${fmt(stats.totalOutstanding)}`, color: 'bg-[#94A3B8]' },
+          { label: 'Due Today',         value: `EGP ${fmt(stats.totalDueToday)}`,    color: 'bg-[#38BDF8]'  },
+          { label: 'Overdue Amount',    value: `EGP ${fmt(stats.totalOverdue)}`,     color: 'bg-[#EF4444]'   },
+          { label: 'Overdue Count',     value: stats.overdueCount,                   color: stats.overdueCount > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]' },
+          { label: 'Milestone Alerts',  value: stats.milestoneCount,                 color: stats.milestoneCount > 0 ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+          <div key={k.label} className="ds-card p-3">
             <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
             <p className="text-sm font-bold text-[#0B1F3A]">{k.value}</p>
             <p className="text-[11px] text-[#64748B]">{k.label}</p>
@@ -259,7 +259,7 @@ export default function CollectionsView({ sections, branchIds, stats }: Props) {
 
           {current.rows.length === 0 ? (
             <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-6 py-10 text-center">
-              <p className="text-sm font-medium text-emerald-600">All clear</p>
+              <p className="text-sm font-medium text-[#10B981]">All clear</p>
               <p className="mt-1 text-xs text-[#94A3B8]">{current.emptyMsg}</p>
             </div>
           ) : (

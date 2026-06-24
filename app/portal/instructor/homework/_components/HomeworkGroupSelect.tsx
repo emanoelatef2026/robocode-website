@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRouter } from 'next/navigation'
 import type { InstructorGroup } from '@/modules/instructor-portal/types'
@@ -23,7 +23,7 @@ export function HomeworkGroupSelect({ groups, currentFilter, currentGroupId }: P
     <select
       value={currentGroupId ?? ''}
       onChange={handleChange}
-      className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+      className="ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
     >
       <option value="">All groups</option>
       {groups.map((g) => (

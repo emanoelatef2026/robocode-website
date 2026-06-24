@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import Link         from 'next/link'
 
@@ -15,11 +15,11 @@ interface OpCardProps {
 }
 
 function OpCard({ id, title, description, risk, onRun, result, running }: OpCardProps) {
-  const riskCls = risk === 'safe' ? 'border-emerald-200 bg-emerald-50' :
-                  risk === 'moderate' ? 'border-amber-200 bg-amber-50' :
+  const riskCls = risk === 'safe' ? 'border-[#A7F3D0] bg-[#E7F8EE]' :
+                  risk === 'moderate' ? 'border-[#FDE68A] bg-[#FFFBEB]' :
                   'border-orange-200 bg-orange-50'
   const riskLabel = risk === 'safe' ? 'Safe — idempotent' : risk === 'moderate' ? 'Moderate' : 'Caution'
-  const riskTextCls = risk === 'safe' ? 'text-emerald-700' : risk === 'moderate' ? 'text-amber-700' : 'text-orange-700'
+  const riskTextCls = risk === 'safe' ? 'text-[#15803D]' : risk === 'moderate' ? 'text-[#B45309]' : 'text-orange-700'
 
   return (
     <div className={`rounded-xl border p-4 ${riskCls}`}>
@@ -35,9 +35,9 @@ function OpCard({ id, title, description, risk, onRun, result, running }: OpCard
           onClick={() => onRun(id)}
           disabled={running}
           className={`shrink-0 rounded-lg px-4 py-2 text-[12px] font-semibold text-white transition-colors
-            ${running ? 'cursor-not-allowed bg-slate-300' :
-              risk === 'safe' ? 'bg-emerald-600 hover:bg-emerald-700' :
-              risk === 'moderate' ? 'bg-amber-500 hover:bg-amber-600' :
+            ${running ? 'cursor-not-allowed bg-[#CBD5E1]' :
+              risk === 'safe' ? 'bg-[#059669] hover:bg-[#047857]' :
+              risk === 'moderate' ? 'bg-[#F59E0B] hover:bg-[#D97706]' :
               'bg-orange-600 hover:bg-orange-700'
             }`}
         >
@@ -46,13 +46,13 @@ function OpCard({ id, title, description, risk, onRun, result, running }: OpCard
       </div>
 
       {result && (
-        <div className={`mt-3 rounded-lg p-3 text-sm ${result.success ? 'bg-white' : 'bg-red-50'}`}>
+        <div className={`mt-3 rounded-lg p-3 text-sm ${result.success ? 'bg-white' : 'bg-[#FEE2E2]'}`}>
           {result.success ? (
-            <p className="text-emerald-700 font-medium">
+            <p className="text-[#15803D] font-medium">
               ✓ Fixed {result.repaired} records in {result.duration_ms}ms
             </p>
           ) : (
-            <p className="text-red-700 font-medium">✗ Error: {result.error}</p>
+            <p className="text-[#DC2626] font-medium">✗ Error: {result.error}</p>
           )}
         </div>
       )}
@@ -155,7 +155,7 @@ export default function RecoveryPage() {
 
       {/* ── Recovery Summary ───────────────────────────────────────────── */}
       {summary && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+        <div className="ds-card overflow-hidden">
           <div className="border-b border-[#E2E8F0] px-4 py-3">
             <p className="text-[13px] font-semibold text-[#0B1F3A]">Current Recovery Needs</p>
           </div>
@@ -167,9 +167,9 @@ export default function RecoveryPage() {
                   <p className="text-[11px] text-[#94A3B8]">{item.check_name}</p>
                 </div>
                 <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold
-                  ${item.severity === 'critical' ? 'bg-red-100 text-red-700' :
-                    item.severity === 'warning'  ? 'bg-amber-100 text-amber-700' :
-                    'bg-emerald-100 text-emerald-700'}`}>
+                  ${item.severity === 'critical' ? 'bg-[#FEE2E2] text-[#DC2626]' :
+                    item.severity === 'warning'  ? 'bg-[#FFFBEB] text-[#B45309]' :
+                    'bg-[#E7F8EE] text-[#15803D]'}`}>
                   {item.count}
                 </span>
               </div>
@@ -198,7 +198,7 @@ export default function RecoveryPage() {
       </div>
 
       {/* ── Warning ────────────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+      <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-4 text-sm text-[#92400E]">
         <p className="font-semibold">⚠ Super Admin Only</p>
         <p className="mt-0.5">Recovery operations modify production data. Always check the summary before running. All actions are logged to the system event log.</p>
       </div>

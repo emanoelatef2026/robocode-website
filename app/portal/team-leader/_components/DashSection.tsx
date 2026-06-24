@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
@@ -28,7 +28,7 @@ export default function DashSection({
     <section id={id}>
       <button
         onClick={() => setOpen(v => !v)}
-        className="mb-2 md:mb-4 flex w-full items-center justify-between rounded-xl border border-[#E2E8F0] bg-white px-4 py-2.5 md:py-3 text-left transition hover:border-[#CBD5E1] hover:bg-[#F8FAFC] active:scale-[0.99]"
+        className="mb-2 md:mb-4 flex w-full items-center justify-between ds-card px-4 py-2.5 md:py-3 text-left transition hover:border-[#CBD5E1] hover:bg-[#F8FAFC] active:scale-[0.99]"
       >
         <div className="flex items-center gap-2.5">
           {icon && <span className="text-base leading-none">{icon}</span>}

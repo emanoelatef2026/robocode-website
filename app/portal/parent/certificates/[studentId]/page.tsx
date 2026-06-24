@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+﻿import { notFound } from 'next/navigation'
 import { requirePortalRole } from '@/modules/rbac/guards'
 import { getChildCertificates } from '@/modules/certificates/queries'
 
@@ -32,7 +32,7 @@ export default async function ParentChildCertificatesPage({ params }: Props) {
       </div>
 
       {certificates.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+        <div className="ds-card px-6 py-12 text-center">
           <p className="text-sm text-[#64748B]">No certificates yet.</p>
         </div>
       ) : (
@@ -41,14 +41,14 @@ export default async function ParentChildCertificatesPage({ params }: Props) {
             <div
               key={c.id}
               className={`rounded-xl border bg-white p-4 flex items-start justify-between gap-4 ${
-                c.status === 'revoked' ? 'border-red-200 opacity-60' : 'border-[#E2E8F0]'
+                c.status === 'revoked' ? 'border-[#FECACA] opacity-60' : 'border-[#E2E8F0]'
               }`}
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-[#0B1F3A] truncate">{c.title}</h3>
                   {c.status === 'revoked' && (
-                    <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-600">Revoked</span>
+                    <span className="shrink-0 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-xs font-medium text-[#EF4444]">Revoked</span>
                   )}
                 </div>
                 <p className="mt-0.5 text-sm text-[#64748B]">

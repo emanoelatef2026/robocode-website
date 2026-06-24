@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState, useRef } from 'react'
 import { issueCertificate } from '@/modules/certificates/actions'
@@ -100,9 +100,9 @@ export default function IssueCertificateForm({ templates, students, semesters, c
   }
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}
@@ -114,7 +114,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
         {/* Student */}
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Student <span className="text-red-500">*</span>
+            Student <span className="text-[#EF4444]">*</span>
           </label>
           <select name="student_id" required className={inputClass}>
             <option value="">Select student…</option>
@@ -128,7 +128,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
           {/* Type */}
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-              Type <span className="text-red-500">*</span>
+              Type <span className="text-[#EF4444]">*</span>
             </label>
             <select name="certificate_type" required className={inputClass}>
               {CERT_TYPES.map((t) => (
@@ -151,7 +151,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
         {/* Title */}
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Certificate Title <span className="text-red-500">*</span>
+            Certificate Title <span className="text-[#EF4444]">*</span>
           </label>
           <input
             name="title"
@@ -245,7 +245,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
                   <button
                     type="button"
                     onClick={() => removeProject(i)}
-                    className="shrink-0 text-xs text-red-400 hover:text-red-600"
+                    className="shrink-0 text-xs text-[#F87171] hover:text-[#EF4444]"
                     aria-label="Remove project"
                   >
                     ✕

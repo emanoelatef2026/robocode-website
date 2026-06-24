@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useTransition, useCallback } from 'react'
 import Link from 'next/link'
 import {
@@ -72,11 +72,11 @@ export default function FinanceClient({ mode, item, openAccountId }: Props) {
           <div className="mt-2 grid grid-cols-3 gap-2 text-[12px]">
             <div>
               <p className="text-[#94A3B8]">Paid</p>
-              <p className="font-semibold text-emerald-600">EGP {fmt(item.paid_amount)}</p>
+              <p className="font-semibold text-[#10B981]">EGP {fmt(item.paid_amount)}</p>
             </div>
             <div>
               <p className="text-[#94A3B8]">Remaining</p>
-              <p className={`font-semibold ${item.remaining_amount > 0 ? 'text-red-500' : 'text-[#0B1F3A]'}`}>
+              <p className={`font-semibold ${item.remaining_amount > 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
                 EGP {fmt(item.remaining_amount)}
               </p>
             </div>
@@ -112,7 +112,7 @@ export default function FinanceClient({ mode, item, openAccountId }: Props) {
       <>
         <tr
           onClick={() => openModal(item.account_id)}
-          className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC] cursor-pointer"
+          className="ds-table-row cursor-pointer"
         >
           <td className="px-4 py-3">
             <p className="font-medium text-[#0B1F3A]">{item.student_name}</p>
@@ -129,20 +129,20 @@ export default function FinanceClient({ mode, item, openAccountId }: Props) {
           <td className="px-4 py-3 text-right">
             <p className="font-medium text-[#0B1F3A]">EGP {fmt(item.net_amount)}</p>
             {item.discount_amount > 0 && (
-              <p className="text-[11px] text-emerald-600">-EGP {fmt(item.discount_amount)}</p>
+              <p className="text-[11px] text-[#10B981]">-EGP {fmt(item.discount_amount)}</p>
             )}
           </td>
-          <td className="px-4 py-3 text-right font-semibold text-emerald-600">
+          <td className="px-4 py-3 text-right font-semibold text-[#10B981]">
             EGP {fmt(item.paid_amount)}
           </td>
           <td className="px-4 py-3 text-right">
-            <span className={`font-bold ${item.remaining_amount > 0 ? 'text-red-500' : 'text-[#94A3B8]'}`}>
+            <span className={`font-bold ${item.remaining_amount > 0 ? 'text-[#EF4444]' : 'text-[#94A3B8]'}`}>
               EGP {fmt(item.remaining_amount)}
             </span>
           </td>
           <td className="px-4 py-3 text-[#64748B]">
             {item.next_due_date ? (
-              <span className={item.days_overdue > 0 ? 'text-red-500 font-medium' : ''}>
+              <span className={item.days_overdue > 0 ? 'text-[#EF4444] font-medium' : ''}>
                 {dateFmt(item.next_due_date)}
                 {item.days_overdue > 0 && <span className="ml-1 text-[11px]">({item.days_overdue}d)</span>}
               </span>
@@ -331,10 +331,10 @@ function SummaryTab({ detail }: { detail: StudentFinanceDetail }) {
         <div className="grid grid-cols-2 divide-x divide-[#E2E8F0]">
           {[
             { label: 'Total',         value: `EGP ${fmt(account.total_amount)}`,     cls: 'text-[#0B1F3A]' },
-            { label: 'Discount',      value: `-EGP ${fmt(account.discount_amount)}`, cls: 'text-emerald-600' },
+            { label: 'Discount',      value: `-EGP ${fmt(account.discount_amount)}`, cls: 'text-[#10B981]' },
             { label: 'Net Total',     value: `EGP ${fmt(account.net_amount)}`,       cls: 'font-bold text-[#0B1F3A]' },
-            { label: 'Paid',          value: `EGP ${fmt(account.paid_amount)}`,      cls: 'font-bold text-emerald-600' },
-            { label: 'Remaining',     value: `EGP ${fmt(account.remaining_amount)}`, cls: `font-bold ${account.remaining_amount > 0 ? 'text-red-500' : 'text-[#94A3B8]'}` },
+            { label: 'Paid',          value: `EGP ${fmt(account.paid_amount)}`,      cls: 'font-bold text-[#10B981]' },
+            { label: 'Remaining',     value: `EGP ${fmt(account.remaining_amount)}`, cls: `font-bold ${account.remaining_amount > 0 ? 'text-[#EF4444]' : 'text-[#94A3B8]'}` },
             { label: 'Next Due Date', value: dateFmt(account.next_due_date),         cls: 'text-[#0B1F3A]' },
           ].map(({ label, value, cls }, i) => (
             <div key={label} className={`px-4 py-3 ${i % 2 === 0 ? '' : ''}`}>
@@ -445,11 +445,11 @@ function InstallmentsTab({
                 </div>
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Paid</p>
-                  <p className="mt-0.5 font-medium text-emerald-600">EGP {fmt(inst.paid_amount)}</p>
+                  <p className="mt-0.5 font-medium text-[#10B981]">EGP {fmt(inst.paid_amount)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Remaining</p>
-                  <p className={`mt-0.5 font-medium ${inst.amount - inst.paid_amount > 0 ? 'text-red-500' : 'text-[#94A3B8]'}`}>
+                  <p className={`mt-0.5 font-medium ${inst.amount - inst.paid_amount > 0 ? 'text-[#EF4444]' : 'text-[#94A3B8]'}`}>
                     EGP {fmt(inst.amount - inst.paid_amount)}
                   </p>
                 </div>
@@ -487,7 +487,7 @@ function InstallmentsTab({
             <input name="notes"
               className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
           </div>
-          {err && <p className="text-xs text-red-500">{err}</p>}
+          {err && <p className="text-xs text-[#EF4444]">{err}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={pending}
               className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-sm font-medium text-white disabled:opacity-50">
@@ -552,7 +552,7 @@ function PaymentTab({
 
       <div className="rounded-xl bg-[#F8FAFC] p-3 text-sm">
         <span className="text-[#64748B]">Remaining: </span>
-        <span className="font-bold text-red-500">EGP {fmt(detail.account.remaining_amount)}</span>
+        <span className="font-bold text-[#EF4444]">EGP {fmt(detail.account.remaining_amount)}</span>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -609,8 +609,8 @@ function PaymentTab({
           className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20 resize-none" />
       </div>
 
-      {err     && <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-500">{err}</p>}
-      {success && <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-600">Payment recorded successfully.</p>}
+      {err     && <p className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#EF4444]">{err}</p>}
+      {success && <p className="rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#10B981]">Payment recorded successfully.</p>}
 
       <button type="submit" disabled={pending}
         className="w-full rounded-xl bg-[#FF8A1F] py-3 text-sm font-semibold text-white shadow-sm hover:bg-[#e87c18] disabled:opacity-50 transition-colors">
@@ -664,7 +664,7 @@ function NotesTab({
             {pending ? 'Adding…' : 'Add Note'}
           </button>
         </div>
-        {err && <p className="text-xs text-red-500">{err}</p>}
+        {err && <p className="text-xs text-[#EF4444]">{err}</p>}
       </form>
 
       {detail.notes.length === 0 ? (
@@ -676,7 +676,7 @@ function NotesTab({
               <div className="flex items-start justify-between gap-2">
                 <p className="text-sm text-[#0B1F3A]">{note.note_text}</p>
                 {note.is_internal && (
-                  <span className="shrink-0 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">Internal</span>
+                  <span className="shrink-0 rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-medium text-[#B45309]">Internal</span>
                 )}
               </div>
               <p className="mt-1.5 text-[11px] text-[#94A3B8]">
@@ -747,7 +747,7 @@ function ActivitiesTab({
               className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
           </div>
         </div>
-        {err && <p className="text-xs text-red-500">{err}</p>}
+        {err && <p className="text-xs text-[#EF4444]">{err}</p>}
         <button type="submit" disabled={pending}
           className="w-full rounded-lg bg-[#0B1F3A] py-2 text-sm font-medium text-white disabled:opacity-50">
           {pending ? 'Recording…' : 'Record Activity'}
@@ -835,7 +835,7 @@ function QuickActionsFooter({
           <a
             href={`tel:${student.parent_phone_1}`}
             onClick={() => handleQuickActivity('CALL')}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-600 transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#0B1F3A] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#1a3557] transition-colors"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
               <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
@@ -844,15 +844,15 @@ function QuickActionsFooter({
           </a>
         )}
         <button onClick={() => setTab('notes')}
-          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F] transition-colors">
+          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F] transition-colors">
           + Note
         </button>
         <button onClick={() => handleQuickActivity('PAYMENT_REMINDER')} disabled={pending}
-          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F] transition-colors disabled:opacity-50">
+          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F] transition-colors disabled:opacity-50">
           {pending ? '…' : 'Log Reminder'}
         </button>
         <button onClick={() => setTab('activities')}
-          className="rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F] transition-colors">
+          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F] transition-colors">
           Activities
         </button>
       </div>

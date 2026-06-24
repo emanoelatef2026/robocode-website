@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId, getSessionDetail } from '@/modules/instructor-portal/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -6,17 +6,17 @@ import Link from 'next/link'
 interface Props { params: Promise<{ sessionId: string }> }
 
 const STATUS_COLORS: Record<string, string> = {
-  completed: 'bg-green-100 text-green-700',
+  completed: 'bg-[#E7F8EE] text-[#15803D]',
   ongoing:   'bg-yellow-100 text-yellow-700',
-  scheduled: 'bg-blue-100 text-blue-700',
-  cancelled: 'bg-red-100 text-red-700',
+  scheduled: 'bg-[#EFF6FF] text-[#1D4ED8]',
+  cancelled: 'bg-[#FEE2E2] text-[#DC2626]',
 }
 
 const ATT_COLORS: Record<string, string> = {
-  present: 'text-green-600 bg-green-50',
-  absent:  'text-red-600 bg-red-50',
+  present: 'text-[#10B981] bg-[#E7F8EE]',
+  absent:  'text-[#EF4444] bg-[#FEE2E2]',
   late:    'text-yellow-700 bg-yellow-50',
-  excused: 'text-blue-600 bg-blue-50',
+  excused: 'text-[#2563EB] bg-[#EFF6FF]',
   makeup:  'text-purple-600 bg-purple-50',
 }
 
@@ -46,7 +46,7 @@ export default async function SessionHistoryDetailPage({ params }: Props) {
             Session {session.current_session_num}
             {session.topic && <span className="ml-2 font-normal text-[#64748B]">· {session.topic}</span>}
           </h1>
-          <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[session.status] ?? 'bg-gray-100 text-gray-600'}`}>
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[session.status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
             {session.status}
           </span>
         </div>
@@ -67,7 +67,7 @@ export default async function SessionHistoryDetailPage({ params }: Props) {
           { label: 'Duration', value: `${session.duration_minutes} min` },
           { label: 'Delivery', value: session.delivery ?? '—' },
         ].map(({ label, value }) => (
-          <div key={label} className="rounded-lg border border-[#E2E8F0] bg-white px-4 py-3">
+          <div key={label} className="ds-card px-4 py-3">
             <p className="text-xs text-[#94A3B8]">{label}</p>
             <p className="mt-0.5 text-sm font-medium text-[#0B1F3A]">{value}</p>
           </div>
@@ -76,7 +76,7 @@ export default async function SessionHistoryDetailPage({ params }: Props) {
 
       {/* Notes */}
       {(session.topic || session.notes) && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-3">
+        <div className="ds-card p-5 space-y-3">
           <h2 className="text-sm font-semibold text-[#0B1F3A]">Session Notes</h2>
           {session.topic && (
             <div>
@@ -94,7 +94,7 @@ export default async function SessionHistoryDetailPage({ params }: Props) {
       )}
 
       {/* Attendance Summary */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-4">
+      <div className="ds-card p-5 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-[#0B1F3A]">Attendance</h2>
           <p className="text-xs text-[#64748B]">{marked}/{session.student_count} recorded</p>
@@ -102,8 +102,8 @@ export default async function SessionHistoryDetailPage({ params }: Props) {
 
         <div className="grid grid-cols-4 gap-3">
           {[
-            { label: 'Present', value: present, cls: 'text-green-600' },
-            { label: 'Absent',  value: absent,  cls: 'text-red-600' },
+            { label: 'Present', value: present, cls: 'text-[#10B981]' },
+            { label: 'Absent',  value: absent,  cls: 'text-[#EF4444]' },
             { label: 'Late',    value: late,    cls: 'text-yellow-600' },
             { label: 'Total',   value: session.student_count, cls: 'text-[#0B1F3A]' },
           ].map(({ label, value, cls }) => (
@@ -123,7 +123,7 @@ export default async function SessionHistoryDetailPage({ params }: Props) {
                 </div>
                 <p className="flex-1 text-sm text-[#0B1F3A]">{r.student_name}</p>
                 {r.status ? (
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${ATT_COLORS[r.status] ?? 'bg-gray-100 text-gray-600'}`}>
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${ATT_COLORS[r.status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
                     {r.status}
                   </span>
                 ) : (
@@ -141,7 +141,7 @@ export default async function SessionHistoryDetailPage({ params }: Props) {
 
       {/* Resources */}
       {session.resources_links.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-3">
+        <div className="ds-card p-5 space-y-3">
           <h2 className="text-sm font-semibold text-[#0B1F3A]">Resources</h2>
           <div className="space-y-1.5">
             {session.resources_links.map((r, i) => (
@@ -165,7 +165,7 @@ export default async function SessionHistoryDetailPage({ params }: Props) {
 
       {/* Recordings */}
       {session.recordings.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-3">
+        <div className="ds-card p-5 space-y-3">
           <h2 className="text-sm font-semibold text-[#0B1F3A]">Recordings</h2>
           <div className="space-y-1.5">
             {session.recordings.map((rec) => (
@@ -193,7 +193,7 @@ export default async function SessionHistoryDetailPage({ params }: Props) {
           href={session.meeting_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-4 py-2 text-sm text-[#3B82F6] hover:bg-[#F8FAFC] transition"
+          className="inline-flex items-center gap-2 ds-card px-4 py-2 text-sm text-[#3B82F6] hover:bg-[#F8FAFC] transition"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />

@@ -1,4 +1,4 @@
-import { requirePortalRole }    from '@/modules/rbac/guards'
+﻿import { requirePortalRole }    from '@/modules/rbac/guards'
 import { getParentChildren }   from '@/modules/parents/parent-portal-queries'
 import { getChildPortfolioDetail } from '@/modules/portfolio/queries'
 import { PROJECT_STATUS_CONFIG }   from '@/modules/portfolio/types'
@@ -11,10 +11,10 @@ interface Props {
 const CATEGORY_COLORS: Record<string, string> = {
   Game:       'bg-purple-100  text-purple-700',
   AI:         'bg-indigo-100  text-indigo-700',
-  Website:    'bg-blue-100    text-blue-700',
+  Website:    'bg-[#EFF6FF]    text-[#1D4ED8]',
   Robotics:   'bg-teal-100    text-teal-700',
   'Mobile App': 'bg-pink-100  text-pink-700',
-  Other:      'bg-gray-100    text-gray-600',
+  Other:      'bg-[#F3F4F6]    text-[#4B5563]',
 }
 
 export default async function ParentPortfolioPage({ searchParams }: Props) {
@@ -59,18 +59,18 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
       </div>
 
       {!detail || activeProjects.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+        <div className="ds-card px-6 py-12 text-center">
           <p className="text-sm text-[#64748B]">No portfolio projects yet.</p>
         </div>
       ) : (
         <section>
           <div className="grid gap-5 sm:grid-cols-2">
             {activeProjects.map(p => {
-              const statusCfg = PROJECT_STATUS_CONFIG[p.status ?? 'pending_review'] ?? { label: p.status ?? '—', cls: 'bg-gray-100 text-gray-600' }
+              const statusCfg = PROJECT_STATUS_CONFIG[p.status ?? 'pending_review'] ?? { label: p.status ?? '—', cls: 'bg-[#F3F4F6] text-[#4B5563]' }
               const catCls    = CATEGORY_COLORS[p.category ?? 'Other'] ?? CATEGORY_COLORS.Other
 
               return (
-                <div key={p.id} className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+                <div key={p.id} className="ds-card overflow-hidden">
                   {p.thumbnail_url && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -188,7 +188,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
           </h2>
           <div className="space-y-3">
             {detail!.achievements.map(a => (
-              <div key={a.id} className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] bg-white p-4">
+              <div key={a.id} className="flex items-start gap-3 ds-card p-4">
                 {a.image_url && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={a.image_url} alt={a.title} className="h-10 w-10 rounded-lg object-cover" />

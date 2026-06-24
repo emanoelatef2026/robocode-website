@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { submitSessionFeedback } from '@/modules/feedback/actions'
@@ -44,12 +44,12 @@ export default function SessionFeedbackWidget({ sessions }: Props) {
     const next = idx + 1
     if (next < sessions.length) {
       return (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-          <p className="text-sm font-semibold text-emerald-800">Thank you for your feedback!</p>
+        <div className="rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] p-4">
+          <p className="text-sm font-semibold text-[#065F46]">Thank you for your feedback!</p>
           {next < sessions.length && (
             <button
               onClick={() => setIdx(next)}
-              className="mt-2 text-sm text-emerald-700 underline"
+              className="mt-2 text-sm text-[#15803D] underline"
             >
               Rate another session →
             </button>
@@ -58,14 +58,14 @@ export default function SessionFeedbackWidget({ sessions }: Props) {
       )
     }
     return (
-      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
-        <p className="text-sm font-semibold text-emerald-800">✓ All feedback submitted. Thank you!</p>
+      <div className="rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] p-4 text-center">
+        <p className="text-sm font-semibold text-[#065F46]">✓ All feedback submitted. Thank you!</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-5 space-y-4">
+    <div className="ds-card p-5 space-y-4">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-sm font-semibold text-[#0B1F3A]">Rate Your Session</p>
@@ -80,7 +80,7 @@ export default function SessionFeedbackWidget({ sessions }: Props) {
       </div>
 
       {state && !state.success && (
-        <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{state.error.message}</div>
+        <div className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#DC2626]">{state.error.message}</div>
       )}
 
       <form action={formAction} className="space-y-4">

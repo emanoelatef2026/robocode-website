@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition, useEffect, useRef } from 'react'
 import { createTemplate, updateTemplate, getTemplateForEdit } from '@/modules/certificates/actions'
@@ -120,13 +120,13 @@ export default function TemplateFormModal({ mode, templateId, onClose, onSuccess
           )}
 
           {loadError && (
-            <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{loadError}</div>
+            <div className="rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">{loadError}</div>
           )}
 
           {!loading && !loadError && (
             <>
               {error && (
-                <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+                <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">{error}</div>
               )}
 
               <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
@@ -135,7 +135,7 @@ export default function TemplateFormModal({ mode, templateId, onClose, onSuccess
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                      Template Name <span className="text-red-500">*</span>
+                      Template Name <span className="text-[#EF4444]">*</span>
                     </label>
                     <input
                       name="name"
@@ -146,7 +146,7 @@ export default function TemplateFormModal({ mode, templateId, onClose, onSuccess
                   </div>
                   <div>
                     <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                      Type <span className="text-red-500">*</span>
+                      Type <span className="text-[#EF4444]">*</span>
                     </label>
                     <select
                       name="certificate_type"

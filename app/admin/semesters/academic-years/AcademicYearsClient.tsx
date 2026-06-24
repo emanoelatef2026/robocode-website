@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -19,10 +19,10 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
   }, [state, onCreated])
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+    <div className="ds-card p-5">
       <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">Add Academic Year</h2>
       {state && !state.success && (
-        <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{state.error.message}</div>
+        <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">{state.error.message}</div>
       )}
       <form action={action} className="space-y-3">
         <div className="grid grid-cols-3 gap-3">
@@ -71,7 +71,7 @@ function YearRow({ year, onChanged }: { year: AcademicYearListItem; onChanged: (
   }
 
   return (
-    <li className="rounded-xl border border-[#E2E8F0] bg-white">
+    <li className="ds-card">
       {!editing ? (
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
@@ -93,7 +93,7 @@ function YearRow({ year, onChanged }: { year: AcademicYearListItem; onChanged: (
               Edit
             </button>
             <button type="button" onClick={handleDelete}
-              className="text-xs text-red-400 hover:text-red-600">
+              className="text-xs text-[#F87171] hover:text-[#EF4444]">
               Delete
             </button>
           </div>
@@ -101,7 +101,7 @@ function YearRow({ year, onChanged }: { year: AcademicYearListItem; onChanged: (
       ) : (
         <div className="p-4">
           {state && !state.success && (
-            <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{state.error.message}</div>
+            <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">{state.error.message}</div>
           )}
           <form action={action} className="space-y-3">
             <input type="hidden" name="id" value={year.id} />

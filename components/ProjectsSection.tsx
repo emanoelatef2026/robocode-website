@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -23,7 +23,7 @@ interface Project {
 // ── Difficulty style map ──────────────────────────────────────────────────────
 
 const DIFF_STYLE: Record<string, string> = {
-  Beginner:     "bg-emerald-50 text-emerald-700 border-emerald-200",
+  Beginner:     "bg-[#E7F8EE] text-[#15803D] border-[#A7F3D0]",
   Intermediate: "bg-sky-50 text-sky-700 border-sky-200",
   Advanced:     "bg-orange-50 text-orange-700 border-orange-200",
 };

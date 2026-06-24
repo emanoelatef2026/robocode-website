@@ -1,4 +1,4 @@
-import { getInstructor } from '@/modules/instructors/queries'
+﻿import { getInstructor } from '@/modules/instructors/queries'
 import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { notFound } from 'next/navigation'
 import StatusBadge from '@/components/admin/StatusBadge'
@@ -36,7 +36,7 @@ export default async function TLInstructorDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+      <div className="ds-card p-6">
         <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <dt className="text-xs font-medium text-[#64748B]">Email</dt>

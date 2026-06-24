@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getGroupLeaderboard } from '@/modules/gamification/queries'
 import Link from 'next/link'
@@ -54,8 +54,8 @@ export default async function StudentLeaderboardPage() {
   const selfEntry = entries.find(e => e.is_self)
 
   const medalColors: Record<number, string> = {
-    1: 'bg-amber-100 text-amber-700 border-amber-200',
-    2: 'bg-slate-100 text-slate-600 border-slate-200',
+    1: 'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]',
+    2: 'bg-[#F1F5F9] text-[#475569] border-slate-200',
     3: 'bg-orange-100 text-orange-700 border-orange-200',
   }
 
@@ -120,7 +120,7 @@ export default async function StudentLeaderboardPage() {
 
       {/* Rest of leaderboard */}
       {rest.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+        <div className="ds-card overflow-hidden">
           <div className="divide-y divide-[#F1F5F9]">
             {rest.map((entry) => (
               <div
@@ -151,7 +151,7 @@ export default async function StudentLeaderboardPage() {
       )}
 
       {/* XP earning tips */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+      <div className="ds-card p-4">
         <p className="mb-2.5 text-sm font-semibold text-[#0B1F3A]">How to earn XP</p>
         <div className="space-y-1.5 text-[11px] text-[#64748B]">
           <div className="flex justify-between"><span>✅ Attend a session</span><span className="font-semibold text-[#0B1F3A]">+25 XP</span></div>

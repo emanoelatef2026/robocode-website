@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -38,9 +38,9 @@ function HitRow({
     >
       <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold
         ${hit.type === 'student'    ? 'bg-orange-100 text-[#FF8A1F]' :
-          hit.type === 'instructor' ? 'bg-blue-100 text-blue-600'    :
+          hit.type === 'instructor' ? 'bg-[#EFF6FF] text-[#2563EB]'    :
           hit.type === 'course'     ? 'bg-purple-100 text-purple-600' :
-          'bg-slate-100 text-slate-600'}`}
+          'bg-[#F1F5F9] text-[#475569]'}`}
       >
         {hit.type === 'student'    ? 'S' :
          hit.type === 'instructor' ? 'I' :
@@ -52,8 +52,8 @@ function HitRow({
           {hit.student_code && <span className="shrink-0 font-mono text-[10px] text-[#94A3B8]">#{hit.student_code}</span>}
           {hit.quick_action && (
             <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-              hit.quick_action.includes('Blocked') ? 'bg-red-100 text-red-700' :
-              hit.quick_action.includes('Collect') ? 'bg-amber-100 text-amber-700' :
+              hit.quick_action.includes('Blocked') ? 'bg-[#FEE2E2] text-[#DC2626]' :
+              hit.quick_action.includes('Collect') ? 'bg-[#FFFBEB] text-[#B45309]' :
               'bg-orange-100 text-orange-700'
             }`}>
               {hit.quick_action}

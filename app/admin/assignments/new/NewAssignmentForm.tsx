@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState, useState } from 'react'
 import { createAssignment } from '@/modules/assignments/actions'
@@ -39,9 +39,9 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
     : modules
 
   return (
-    <div className="rounded-xl border border-[#E2E8F0] bg-white p-6">
+    <div className="ds-card p-6">
       {state && !state.success && (
-        <div className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
           {state.error.message}
         </div>
       )}

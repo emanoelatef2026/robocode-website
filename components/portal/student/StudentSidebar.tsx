@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import Link from "next/link"
 import Image from "next/image"
@@ -264,7 +264,7 @@ function NavContent({
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-2 rounded-[9px] px-[10px] py-2 text-[11.5px] font-medium text-red-400/60 transition hover:bg-white/5 hover:text-red-400"
+                  className="flex w-full items-center gap-2 rounded-[9px] px-[10px] py-2 text-[11.5px] font-medium text-[#F87171]/60 transition hover:bg-white/5 hover:text-[#F87171]"
                 >
                   {IC.logout}
                   Logout

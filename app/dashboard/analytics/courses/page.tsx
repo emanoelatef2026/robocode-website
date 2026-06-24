@@ -1,4 +1,4 @@
-import { getCurrentUser }      from '@/modules/rbac/guards'
+﻿import { getCurrentUser }      from '@/modules/rbac/guards'
 import { redirect }             from 'next/navigation'
 import {
   resolveGroupFilter,
@@ -8,9 +8,9 @@ import Link from 'next/link'
 
 function scorePill(score: number) {
   const cls =
-    score >= 75 ? 'bg-green-50 text-green-700' :
-    score >= 50 ? 'bg-amber-50 text-amber-700' :
-                  'bg-red-50 text-red-600'
+    score >= 75 ? 'bg-[#E7F8EE] text-[#15803D]' :
+    score >= 50 ? 'bg-[#FFFBEB] text-[#B45309]' :
+                  'bg-[#FEE2E2] text-[#EF4444]'
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${cls}`}>
       {score.toFixed(1)}%
@@ -20,9 +20,9 @@ function scorePill(score: number) {
 
 function PerformanceBar({ value }: { value: number }) {
   const color =
-    value >= 75 ? 'bg-green-400' :
-    value >= 50 ? 'bg-amber-400' :
-                  'bg-red-400'
+    value >= 75 ? 'bg-[#10B981]' :
+    value >= 50 ? 'bg-[#F59E0B]' :
+                  'bg-[#EF4444]'
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 rounded-full bg-[#F1F5F9] h-1.5">
@@ -70,15 +70,15 @@ export default async function CoursesAnalyticsPage() {
 
       {/* ── Summary stat cards ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <div className="ds-card p-5">
           <p className="text-xs text-[#94A3B8] uppercase tracking-wide">Total Courses</p>
           <p className="mt-1 text-3xl font-bold text-[#0B1F3A]">{totalCourses}</p>
         </div>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <div className="ds-card p-5">
           <p className="text-xs text-[#94A3B8] uppercase tracking-wide">Avg Completion</p>
           <p className="mt-1 text-3xl font-bold text-[#0B1F3A]">{avgCompletion}%</p>
         </div>
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <div className="ds-card p-5">
           <p className="text-xs text-[#94A3B8] uppercase tracking-wide">Total Students</p>
           <p className="mt-1 text-3xl font-bold text-[#0B1F3A]">
             {courses.reduce((s, c) => s + c.student_count, 0)}
@@ -87,7 +87,7 @@ export default async function CoursesAnalyticsPage() {
       </div>
 
       {courses.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-14 text-center">
+        <div className="ds-card px-6 py-14 text-center">
           <p className="text-sm text-[#94A3B8]">No course performance data available.</p>
         </div>
       ) : (
@@ -96,12 +96,12 @@ export default async function CoursesAnalyticsPage() {
           {/* ── Top Performing Courses ────────────────────────────────────── */}
           <section>
             <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-[#0B1F3A]">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-700 text-xs font-bold">↑</span>
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E7F8EE] text-[#15803D] text-xs font-bold">↑</span>
               Top Performing Courses
             </h2>
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+            <div className="ds-card overflow-hidden">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">#</th>
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Course</th>
@@ -113,7 +113,7 @@ export default async function CoursesAnalyticsPage() {
                 </thead>
                 <tbody>
                   {topCourses.map((c, i) => (
-                    <tr key={c.course_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={c.course_id} className="ds-table-row">
                       <td className="px-4 py-2.5 text-xs font-bold text-[#94A3B8]">{i + 1}</td>
                       <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">{c.course_title}</td>
                       <td className="px-4 py-2.5 text-[#64748B]">{c.student_count}</td>
@@ -133,12 +133,12 @@ export default async function CoursesAnalyticsPage() {
           {bottomCourses.length > 0 && (
             <section>
               <h2 className="mb-3 flex items-center gap-2 text-base font-semibold text-[#0B1F3A]">
-                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-red-600 text-xs font-bold">↓</span>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FEE2E2] text-[#EF4444] text-xs font-bold">↓</span>
                 Lowest Performing Courses
               </h2>
-              <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-hidden">
+              <div className="ds-card overflow-hidden">
                 <table className="w-full text-sm">
-                  <thead>
+                  <thead className="ds-table-head">
                     <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">#</th>
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Course</th>
@@ -150,7 +150,7 @@ export default async function CoursesAnalyticsPage() {
                   </thead>
                   <tbody>
                     {bottomCourses.map((c, i) => (
-                      <tr key={c.course_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                      <tr key={c.course_id} className="ds-table-row">
                         <td className="px-4 py-2.5 text-xs font-bold text-[#94A3B8]">{i + 1}</td>
                         <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">{c.course_title}</td>
                         <td className="px-4 py-2.5 text-[#64748B]">{c.student_count}</td>
@@ -173,9 +173,9 @@ export default async function CoursesAnalyticsPage() {
       {courses.length > TOP_N && (
         <section>
           <h2 className="mb-3 text-base font-semibold text-[#0B1F3A]">All Courses</h2>
-          <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+          <div className="ds-card overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Rank</th>
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Course</th>
@@ -187,7 +187,7 @@ export default async function CoursesAnalyticsPage() {
               </thead>
               <tbody>
                 {courses.map((c, i) => (
-                  <tr key={c.course_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                  <tr key={c.course_id} className="ds-table-row">
                     <td className="px-4 py-2.5 text-xs font-bold text-[#94A3B8]">{i + 1}</td>
                     <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">{c.course_title}</td>
                     <td className="px-4 py-2.5 text-[#64748B]">{c.student_count}</td>

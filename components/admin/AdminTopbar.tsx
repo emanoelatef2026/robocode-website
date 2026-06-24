@@ -46,7 +46,7 @@ const PATH_TITLES: Record<string, string> = {
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "Super Admin",
   team_leader: "Team Leader",
-  instructor: "Instructor",
+  instructor:  "Instructor",
 };
 
 function getPageTitle(pathname: string): string {
@@ -60,68 +60,58 @@ function getPageTitle(pathname: string): string {
 
 interface Props {
   onMenuClick: () => void;
-  role?: string;
+  role?:       string;
   branchName?: string;
 }
 
 export default function AdminTopbar({ onMenuClick, role = "super_admin", branchName }: Props) {
-  const pathname = usePathname();
+  const pathname  = usePathname();
   const { action } = useTopbarAction();
 
-  const pageTitle = getPageTitle(pathname);
-  const roleLabel = ROLE_LABELS[role] ?? "Admin";
+  const pageTitle   = getPageTitle(pathname);
+  const roleLabel   = ROLE_LABELS[role] ?? "Admin";
   const formattedDate = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
+    weekday: "long", month: "long", day: "numeric",
   });
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-4 border-b border-[#E2E8F0] bg-white px-4 md:px-7">
+    <header className="flex h-[60px] shrink-0 items-center gap-3 border-b border-[#E2E8F0] bg-white px-4 md:px-6">
       {/* Hamburger — mobile only */}
       <button
         onClick={onMenuClick}
-        className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#E2E8F0] md:hidden"
+        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E2E8F0] bg-white transition hover:border-[#94A3B8] md:hidden"
         aria-label="Open menu"
       >
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          className="h-5 w-5 text-[#64748B]"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-          />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4.5 w-4.5 text-[#64748B]">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
         </svg>
       </button>
 
       {/* Page title */}
-      <div>
-        <h1 className="font-poppins text-[20px] font-extrabold leading-tight text-[#0B1F3A]">
+      <div className="hidden md:block">
+        <h1 className="text-[17px] font-extrabold leading-tight text-[#0B1F3A] tracking-tight">
           {pageTitle}
         </h1>
-        <p className="text-[11px] text-[#64748B]">
+        <p className="text-[11px] text-[#94A3B8] leading-none mt-0.5">
           {formattedDate} · {roleLabel}
         </p>
+      </div>
+      {/* Mobile: just show title */}
+      <div className="block md:hidden">
+        <h1 className="text-[16px] font-extrabold text-[#0B1F3A]">{pageTitle}</h1>
       </div>
 
       <div className="flex-1" />
 
-      {/* Branch badge — desktop only, when branchName provided */}
+      {/* Branch badge */}
       {branchName && (
-        <div className="hidden items-center gap-2 rounded-[10px] border border-[#e4e9f0] bg-white px-3 py-2 md:flex">
-          <span className="h-2 w-2 rounded-full bg-[#FF8A1F]" />
-          <span className="text-[12px] font-semibold text-[#0B1F3A]">
-            {branchName}
-          </span>
+        <div className="hidden items-center gap-1.5 rounded-[10px] border border-[#e4e9f0] bg-white px-3 py-1.5 md:flex">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#FF8A1F]" />
+          <span className="text-[12px] font-semibold text-[#0B1F3A]">{branchName}</span>
         </div>
       )}
 
-      {/* Page action — injected by page content via TopbarActionContext */}
+      {/* Page action injected by page via TopbarActionContext */}
       {action && <div className="shrink-0">{action}</div>}
     </header>
   );

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -11,17 +11,17 @@ export interface ValidationIssue {
 
 const STYLES = {
   error: {
-    wrap:   "bg-red-50 border-red-200",
-    icon:   "text-red-500",
-    text:   "text-red-700",
-    label:  "text-red-600",
+    wrap:   "bg-[#FEE2E2] border-[#FECACA]",
+    icon:   "text-[#EF4444]",
+    text:   "text-[#DC2626]",
+    label:  "text-[#EF4444]",
     badge:  "Error",
   },
   warning: {
-    wrap:   "bg-amber-50 border-amber-200",
-    icon:   "text-amber-500",
-    text:   "text-amber-700",
-    label:  "text-amber-600",
+    wrap:   "bg-[#FFFBEB] border-[#FDE68A]",
+    icon:   "text-[#F59E0B]",
+    text:   "text-[#B45309]",
+    label:  "text-[#F59E0B]",
     badge:  "Warning",
   },
   info: {

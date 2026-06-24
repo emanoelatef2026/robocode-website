@@ -1,4 +1,4 @@
-import { listSemesters } from '@/modules/semesters/queries'
+﻿import { listSemesters } from '@/modules/semesters/queries'
 import { listAcademicYears } from '@/modules/academic-years/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import EmptyState from '@/components/admin/EmptyState'
@@ -14,14 +14,14 @@ interface Props {
 
 const STATUS_COLORS: Record<string, string> = {
   planned:   'bg-yellow-50 text-yellow-700 border-yellow-200',
-  active:    'bg-green-50 text-green-700 border-green-200',
-  completed: 'bg-blue-50 text-blue-700 border-blue-200',
-  archived:  'bg-gray-50 text-gray-500 border-gray-200',
+  active:    'bg-[#E7F8EE] text-[#15803D] border-[#A7F3D0]',
+  completed: 'bg-[#EFF6FF] text-[#1D4ED8] border-blue-200',
+  archived:  'bg-[#F9FAFB] text-[#6B7280] border-[#E2E8F0]',
 }
 
 function SemesterStatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium capitalize ${STATUS_COLORS[status] ?? 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium capitalize ${STATUS_COLORS[status] ?? 'bg-[#F9FAFB] text-[#6B7280] border-[#E2E8F0]'}`}>
       {status}
     </span>
   )
@@ -62,7 +62,7 @@ export default async function SemestersPage({ searchParams }: Props) {
         </Link>
       </div>
 
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search semesters…" />
           <FilterSelect
@@ -93,7 +93,7 @@ export default async function SemestersPage({ searchParams }: Props) {
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Semester</th>
@@ -106,7 +106,7 @@ export default async function SemestersPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {result.data.map((sem) => (
-                    <tr key={sem.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={sem.id} className="ds-table-row">
                       <td className="px-4 py-3">
                         <Link href={`/admin/semesters/${sem.id}`} className="font-mono text-xs font-semibold text-[#0B1F3A] hover:text-[#FF8A1F]">
                           {sem.slug}

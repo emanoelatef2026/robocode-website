@@ -3,15 +3,23 @@
 import { useFormStatus } from "react-dom";
 
 interface Props {
-  label?: string;
+  label?:       string;
   pendingLabel?: string;
-  className?: string;
+  className?:   string;
+  variant?:     "orange" | "primary" | "danger";
 }
+
+const VARIANT_CLS = {
+  orange:  "ds-btn-orange",
+  primary: "ds-btn-primary",
+  danger:  "inline-flex items-center gap-2 rounded-[10px] bg-[#DC2626] text-white text-[13px] font-semibold px-4 py-2 border-none cursor-pointer transition hover:bg-[#b91c1c]",
+};
 
 export default function SubmitButton({
   label = "Save",
   pendingLabel = "Saving…",
   className = "",
+  variant = "orange",
 }: Props) {
   const { pending } = useFormStatus();
   return (
@@ -19,7 +27,8 @@ export default function SubmitButton({
       type="submit"
       disabled={pending}
       className={[
-        "inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18] disabled:cursor-not-allowed disabled:opacity-60",
+        VARIANT_CLS[variant],
+        "disabled:cursor-not-allowed disabled:opacity-60",
         className,
       ].join(" ")}
     >

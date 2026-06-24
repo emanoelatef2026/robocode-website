@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Lead → Student Conversion Funnel
  *
  * Visualises the complete admissions pipeline from first contact to active student.
@@ -24,14 +24,14 @@ interface FunnelStage {
 }
 
 const FUNNEL_STAGES: FunnelStage[] = [
-  { status: 'ALL',            label: 'All Leads',       description: 'Total leads created',             color: 'bg-slate-400',   textColor: 'text-slate-700',   bgColor: 'bg-slate-50'   },
-  { status: 'NEW',            label: 'New',             description: 'Not yet contacted',               color: 'bg-slate-400',   textColor: 'text-slate-700',   bgColor: 'bg-slate-50'   },
-  { status: 'CONTACTED',      label: 'Contacted',       description: 'First contact made',              color: 'bg-blue-400',    textColor: 'text-blue-700',    bgColor: 'bg-blue-50'    },
+  { status: 'ALL',            label: 'All Leads',       description: 'Total leads created',             color: 'bg-[#94A3B8]',   textColor: 'text-[#334155]',   bgColor: 'bg-[#F8FAFC]'   },
+  { status: 'NEW',            label: 'New',             description: 'Not yet contacted',               color: 'bg-[#94A3B8]',   textColor: 'text-[#334155]',   bgColor: 'bg-[#F8FAFC]'   },
+  { status: 'CONTACTED',      label: 'Contacted',       description: 'First contact made',              color: 'bg-[#38BDF8]',    textColor: 'text-[#1D4ED8]',    bgColor: 'bg-[#EFF6FF]'    },
   { status: 'INTERESTED',     label: 'Interested',      description: 'Expressed interest',              color: 'bg-violet-400',  textColor: 'text-violet-700',  bgColor: 'bg-violet-50'  },
-  { status: 'TRIAL_BOOKED',   label: 'Trial Booked',    description: 'Trial session scheduled',         color: 'bg-amber-400',   textColor: 'text-amber-700',   bgColor: 'bg-amber-50'   },
+  { status: 'TRIAL_BOOKED',   label: 'Trial Booked',    description: 'Trial session scheduled',         color: 'bg-[#F59E0B]',   textColor: 'text-[#B45309]',   bgColor: 'bg-[#FFFBEB]'   },
   { status: 'TRIAL_ATTENDED', label: 'Trial Attended',  description: 'Attended trial session',          color: 'bg-orange-400',  textColor: 'text-orange-700',  bgColor: 'bg-orange-50'  },
   { status: 'FOLLOW_UP',      label: 'Follow-up',       description: 'Follow-up in progress',           color: 'bg-purple-400',  textColor: 'text-purple-700',  bgColor: 'bg-purple-50'  },
-  { status: 'CONVERTED',      label: 'Converted',       description: 'Enrolled as student',             color: 'bg-emerald-500', textColor: 'text-emerald-700', bgColor: 'bg-emerald-50' },
+  { status: 'CONVERTED',      label: 'Converted',       description: 'Enrolled as student',             color: 'bg-[#10B981]', textColor: 'text-[#15803D]', bgColor: 'bg-[#E7F8EE]' },
 ]
 
 // ── Funnel data ────────────────────────────────────────────────────────────────
@@ -182,12 +182,12 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
       {/* ── Summary KPIs ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { label: 'Total Leads',        value: data.totalLeads,           color: 'bg-slate-300' },
-          { label: 'Converted',          value: data.stages.find(s => s.status === 'CONVERTED')?.count ?? 0, color: 'bg-emerald-400' },
-          { label: 'Overall Conversion', value: `${data.overallConversion}%`, color: data.overallConversion >= 25 ? 'bg-emerald-400' : 'bg-amber-400' },
-          { label: 'Avg Days to Convert', value: data.avgDaysToConvert !== null ? `${data.avgDaysToConvert}d` : '—', color: 'bg-blue-400' },
+          { label: 'Total Leads',        value: data.totalLeads,           color: 'bg-[#CBD5E1]' },
+          { label: 'Converted',          value: data.stages.find(s => s.status === 'CONVERTED')?.count ?? 0, color: 'bg-[#10B981]' },
+          { label: 'Overall Conversion', value: `${data.overallConversion}%`, color: data.overallConversion >= 25 ? 'bg-[#10B981]' : 'bg-[#F59E0B]' },
+          { label: 'Avg Days to Convert', value: data.avgDaysToConvert !== null ? `${data.avgDaysToConvert}d` : '—', color: 'bg-[#38BDF8]' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <div key={label} className="ds-card p-4">
             <div className={`mb-2 h-1.5 w-7 rounded-full ${color} opacity-80`} />
             <p className="text-2xl font-bold text-[#0B1F3A]">{value}</p>
             <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
@@ -196,14 +196,14 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
       </div>
 
       {data.worstDropOff && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+        <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-sm text-[#B45309]">
           <span className="font-semibold">Worst drop-off point:</span> {data.worstDropOff} stage.
           Consider improving follow-up or qualification at this stage.
         </div>
       )}
 
       {/* ── Visual Funnel ──────────────────────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Pipeline Stages</p>
 
         <div className="space-y-1.5">
@@ -218,7 +218,7 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-bold text-[#0B1F3A]">{stage.count}</span>
                       {stage.dropOffRate !== null && stage.dropOffRate > 0 && (
-                        <span className="text-[11px] text-red-500">−{stage.dropOffRate}% drop</span>
+                        <span className="text-[11px] text-[#EF4444]">−{stage.dropOffRate}% drop</span>
                       )}
                     </div>
                   </div>
@@ -243,7 +243,7 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
         {/* Lost count */}
         {data.lost > 0 && (
           <div className="mt-3 flex items-center gap-2 text-xs text-[#94A3B8]">
-            <span className="h-2 w-2 rounded-full bg-red-400" />
+            <span className="h-2 w-2 rounded-full bg-[#EF4444]" />
             {data.lost} lead{data.lost !== 1 ? 's' : ''} marked as Lost
           </div>
         )}
@@ -251,11 +251,11 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
 
       {/* ── By Source ──────────────────────────────────────────────────── */}
       {data.bySource.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <div className="ds-card p-5">
           <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Performance by Source</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Source</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-[#64748B]">Total</th>
@@ -265,16 +265,16 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
               </thead>
               <tbody>
                 {data.bySource.map(s => (
-                  <tr key={s.source} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                  <tr key={s.source} className="ds-table-row">
                     <td className="px-4 py-2.5 font-medium capitalize text-[#0B1F3A]">{s.source.replace(/_/g, ' ')}</td>
                     <td className="px-4 py-2.5 text-right text-[#64748B]">{s.total}</td>
-                    <td className="px-4 py-2.5 text-right font-medium text-emerald-600">{s.converted}</td>
+                    <td className="px-4 py-2.5 text-right font-medium text-[#10B981]">{s.converted}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <div className="w-20 h-1.5 rounded-full bg-[#F1F5F9]">
-                          <div className={`h-1.5 rounded-full ${s.rate >= 30 ? 'bg-emerald-400' : s.rate >= 15 ? 'bg-amber-400' : 'bg-red-400'}`} style={{ width: `${s.rate}%` }} />
+                          <div className={`h-1.5 rounded-full ${s.rate >= 30 ? 'bg-[#10B981]' : s.rate >= 15 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`} style={{ width: `${s.rate}%` }} />
                         </div>
-                        <span className={`text-xs font-semibold ${s.rate >= 30 ? 'text-emerald-700' : s.rate >= 15 ? 'text-amber-700' : 'text-red-600'}`}>{s.rate}%</span>
+                        <span className={`text-xs font-semibold ${s.rate >= 30 ? 'text-[#15803D]' : s.rate >= 15 ? 'text-[#B45309]' : 'text-[#EF4444]'}`}>{s.rate}%</span>
                       </div>
                     </td>
                   </tr>
@@ -287,11 +287,11 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
 
       {/* ── By Assignee ────────────────────────────────────────────────── */}
       {data.byAssignee.length > 0 && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+        <div className="ds-card p-5">
           <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Team Leader Performance</p>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   <th className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">Owner</th>
                   <th className="px-4 py-2.5 text-right text-xs font-medium text-[#64748B]">Leads</th>
@@ -301,16 +301,16 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
               </thead>
               <tbody>
                 {data.byAssignee.map(a => (
-                  <tr key={a.name} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                  <tr key={a.name} className="ds-table-row">
                     <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">{a.name}</td>
                     <td className="px-4 py-2.5 text-right text-[#64748B]">{a.total}</td>
-                    <td className="px-4 py-2.5 text-right font-medium text-emerald-600">{a.converted}</td>
+                    <td className="px-4 py-2.5 text-right font-medium text-[#10B981]">{a.converted}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <div className="w-20 h-1.5 rounded-full bg-[#F1F5F9]">
-                          <div className={`h-1.5 rounded-full ${a.rate >= 30 ? 'bg-emerald-400' : a.rate >= 15 ? 'bg-amber-400' : 'bg-red-400'}`} style={{ width: `${a.rate}%` }} />
+                          <div className={`h-1.5 rounded-full ${a.rate >= 30 ? 'bg-[#10B981]' : a.rate >= 15 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`} style={{ width: `${a.rate}%` }} />
                         </div>
-                        <span className={`text-xs font-semibold ${a.rate >= 30 ? 'text-emerald-700' : a.rate >= 15 ? 'text-amber-700' : 'text-red-600'}`}>{a.rate}%</span>
+                        <span className={`text-xs font-semibold ${a.rate >= 30 ? 'text-[#15803D]' : a.rate >= 15 ? 'text-[#B45309]' : 'text-[#EF4444]'}`}>{a.rate}%</span>
                       </div>
                     </td>
                   </tr>

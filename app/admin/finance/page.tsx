@@ -1,4 +1,4 @@
-import { requirePermission }       from '@/modules/rbac/guards'
+﻿import { requirePermission }       from '@/modules/rbac/guards'
 import { listFinancialAccounts, getFinanceKPIs } from '@/modules/finance/queries'
 import { listBranches }            from '@/modules/branches/queries'
 import { listGroups }              from '@/modules/groups/queries'
@@ -66,12 +66,12 @@ export default async function AdminFinancePage({ searchParams }: Props) {
 
   const kpiCards = [
     { label: 'Expected This Month',  value: `EGP ${fmt(kpis.expected_this_month)}`,  color: 'bg-violet-400' },
-    { label: 'Collected This Month', value: `EGP ${fmt(kpis.collected_this_month)}`, color: 'bg-emerald-400' },
-    { label: 'Outstanding',          value: `EGP ${fmt(kpis.outstanding_total)}`,    color: kpis.outstanding_total > 0 ? 'bg-amber-400' : 'bg-emerald-400' },
-    { label: 'Collection Rate',      value: `${kpis.collection_rate_pct}%`,          color: kpis.collection_rate_pct >= 80 ? 'bg-emerald-400' : kpis.collection_rate_pct >= 50 ? 'bg-amber-400' : 'bg-red-400' },
-    { label: 'Overdue Students',     value: kpis.overdue_count,                      color: kpis.overdue_count > 0 ? 'bg-red-400' : 'bg-slate-300' },
-    { label: 'Due This Week',        value: kpis.due_this_week,                      color: kpis.due_this_week > 0 ? 'bg-amber-400' : 'bg-slate-300' },
-    { label: 'Due This Month',       value: kpis.due_this_month,                     color: 'bg-blue-400' },
+    { label: 'Collected This Month', value: `EGP ${fmt(kpis.collected_this_month)}`, color: 'bg-[#10B981]' },
+    { label: 'Outstanding',          value: `EGP ${fmt(kpis.outstanding_total)}`,    color: kpis.outstanding_total > 0 ? 'bg-[#F59E0B]' : 'bg-[#10B981]' },
+    { label: 'Collection Rate',      value: `${kpis.collection_rate_pct}%`,          color: kpis.collection_rate_pct >= 80 ? 'bg-[#10B981]' : kpis.collection_rate_pct >= 50 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]' },
+    { label: 'Overdue Students',     value: kpis.overdue_count,                      color: kpis.overdue_count > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]' },
+    { label: 'Due This Week',        value: kpis.due_this_week,                      color: kpis.due_this_week > 0 ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]' },
+    { label: 'Due This Month',       value: kpis.due_this_month,                     color: 'bg-[#38BDF8]' },
     { label: 'Students Paid',        value: `${kpis.paid_students} / ${kpis.total_students}`, color: 'bg-teal-400' },
   ]
 
@@ -94,7 +94,7 @@ export default async function AdminFinancePage({ searchParams }: Props) {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {kpiCards.map(k => (
-          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+          <div key={k.label} className="ds-card p-4">
             <div className={`mb-2 h-1.5 w-7 rounded-full ${k.color} opacity-80`} />
             <p className="text-2xl font-bold text-[#0B1F3A]">{k.value}</p>
             <p className="mt-0.5 text-xs text-[#64748B]">{k.label}</p>
@@ -103,7 +103,7 @@ export default async function AdminFinancePage({ searchParams }: Props) {
       </div>
 
       {/* Finance Table */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">

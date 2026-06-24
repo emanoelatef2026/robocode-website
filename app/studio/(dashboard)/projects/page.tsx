@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
@@ -31,12 +31,12 @@ const DESC_MAX  = 120;
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const INPUT = "w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
+const INPUT = "w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-3 py-2.5 text-[13px] text-[#0B1F3A] outline-none transition focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-gray-400">{label}</label>
+      <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">{label}</label>
       {children}
     </div>
   );
@@ -123,7 +123,7 @@ export default function ProjectsPage() {
     <>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-[13px] text-gray-400">{projects.length} projects</p>
+          <p className="text-[13px] text-[#9CA3AF]">{projects.length} projects</p>
           <button
             onClick={openAdd}
             className="flex items-center gap-2 rounded-lg bg-[#0B1F3A] px-4 py-2.5 text-[13px] font-semibold text-white transition hover:bg-[#38BDF8]"
@@ -137,9 +137,9 @@ export default function ProjectsPage() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (
-            <div key={p.id} className="group rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+            <div key={p.id} className="group rounded-xl border border-[#F1F5F9] bg-white shadow-sm overflow-hidden">
               {p.image_url ? (
-                <div className="relative h-40 w-full overflow-hidden bg-gray-100">
+                <div className="relative h-40 w-full overflow-hidden bg-[#F3F4F6]">
                   <Image src={p.image_url} alt={p.title} fill className="object-cover transition group-hover:scale-105" />
                 </div>
               ) : (
@@ -159,19 +159,19 @@ export default function ProjectsPage() {
                   )}
                 </div>
                 {p.description && (
-                  <p className="mt-1 line-clamp-2 text-[12px] text-gray-400">{p.description}</p>
+                  <p className="mt-1 line-clamp-2 text-[12px] text-[#9CA3AF]">{p.description}</p>
                 )}
                 <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => openEdit(p)}
-                    className="flex-1 rounded-lg border border-gray-200 py-1.5 text-[12px] font-medium text-gray-500 transition hover:border-[#38BDF8] hover:text-[#38BDF8]"
+                    className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[12px] font-medium text-[#6B7280] transition hover:border-[#38BDF8] hover:text-[#38BDF8]"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(p.id)}
                     disabled={deleting === p.id}
-                    className="rounded-lg border border-gray-200 px-3 py-1.5 text-[12px] font-medium text-red-400 transition hover:border-red-300 hover:bg-red-50 disabled:opacity-50"
+                    className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#F87171] transition hover:border-[#FCA5A5] hover:bg-[#FEE2E2] disabled:opacity-50"
                   >
                     {deleting === p.id ? "…" : "Delete"}
                   </button>
@@ -194,11 +194,11 @@ export default function ProjectsPage() {
       {modal && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 px-4 py-10">
           <div className="w-full max-w-lg rounded-2xl bg-white shadow-xl">
-            <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+            <div className="flex items-center justify-between border-b border-[#F1F5F9] px-6 py-4">
               <h2 className="text-[15px] font-semibold text-[#0B1F3A]">
                 {modal.mode === "add" ? "Add Project" : "Edit Project"}
               </h2>
-              <button onClick={() => setModal(null)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setModal(null)} className="text-[#9CA3AF] hover:text-[#4B5563]">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
@@ -271,7 +271,7 @@ export default function ProjectsPage() {
                   <MediaRequirementsBadge type="image" compact />
                 </div>
                 {form.image_url && !imageFile && (
-                  <div className="relative mb-2 h-28 w-full overflow-hidden rounded-lg bg-gray-100">
+                  <div className="relative mb-2 h-28 w-full overflow-hidden rounded-lg bg-[#F3F4F6]">
                     <Image src={form.image_url} alt="current" fill className="object-cover" />
                   </div>
                 )}
@@ -280,11 +280,11 @@ export default function ProjectsPage() {
                   type="file"
                   accept="image/*"
                   onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-                  className="block w-full text-[13px] text-gray-500 file:mr-3 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-gray-600 hover:file:bg-gray-200"
+                  className="block w-full text-[13px] text-[#6B7280] file:mr-3 file:rounded-lg file:border-0 file:bg-[#F3F4F6] file:px-3 file:py-2 file:text-[12px] file:font-semibold file:text-[#4B5563] hover:file:bg-gray-200"
                 />
               </Field>
 
-              <label className="flex items-center gap-2 text-[13px] text-gray-600">
+              <label className="flex items-center gap-2 text-[13px] text-[#4B5563]">
                 <input
                   type="checkbox"
                   checked={form.featured}
@@ -295,8 +295,8 @@ export default function ProjectsPage() {
               </label>
             </div>
 
-            <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
-              <button onClick={() => setModal(null)} className="rounded-lg px-4 py-2 text-[13px] text-gray-500 hover:bg-gray-100">
+            <div className="flex justify-end gap-3 border-t border-[#F1F5F9] px-6 py-4">
+              <button onClick={() => setModal(null)} className="rounded-lg px-4 py-2 text-[13px] text-[#6B7280] hover:bg-[#F3F4F6]">
                 Cancel
               </button>
               <button

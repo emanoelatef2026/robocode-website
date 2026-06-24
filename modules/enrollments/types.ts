@@ -1,4 +1,4 @@
-// Enrollment-centric architecture — the enrollment is the central operational unit.
+﻿// Enrollment-centric architecture — the enrollment is the central operational unit.
 // A student may have multiple enrollments (one per group/course they are in).
 
 export type EnrollmentStatus =
@@ -143,11 +143,11 @@ export const ENROLLMENT_STATUS_LABELS: Record<EnrollmentStatus, string> = {
 }
 
 export const ENROLLMENT_STATUS_COLORS: Record<EnrollmentStatus, string> = {
-  ACTIVE:      'bg-emerald-50 text-emerald-700 border-emerald-200',
-  PAUSED:      'bg-amber-50 text-amber-700 border-amber-200',
-  TRANSFERRED: 'bg-blue-50 text-blue-700 border-blue-200',
-  COMPLETED:   'bg-slate-50 text-slate-600 border-slate-200',
-  DROPPED:     'bg-red-50 text-red-600 border-red-200',
+  ACTIVE:      'bg-[#E7F8EE] text-[#15803D] border-[#A7F3D0]',
+  PAUSED:      'bg-[#FFFBEB] text-[#B45309] border-[#FDE68A]',
+  TRANSFERRED: 'bg-[#EFF6FF] text-[#1D4ED8] border-blue-200',
+  COMPLETED:   'bg-[#F8FAFC] text-[#475569] border-slate-200',
+  DROPPED:     'bg-[#FEE2E2] text-[#EF4444] border-[#FECACA]',
   CANCELLED:   'bg-rose-50 text-rose-700 border-rose-200',
 }
 

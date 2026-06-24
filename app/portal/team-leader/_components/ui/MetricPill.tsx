@@ -1,13 +1,13 @@
-'use client'
+﻿'use client'
 
 type Variant = 'green' | 'red' | 'amber' | 'blue' | 'slate' | 'purple'
 
 const CLASSES: Record<Variant, string> = {
-  green:  'bg-emerald-100 text-emerald-700',
-  red:    'bg-red-100 text-red-700',
-  amber:  'bg-amber-100 text-amber-700',
-  blue:   'bg-blue-100 text-blue-700',
-  slate:  'bg-slate-100 text-slate-600',
+  green:  'bg-[#E7F8EE] text-[#15803D]',
+  red:    'bg-[#FEE2E2] text-[#DC2626]',
+  amber:  'bg-[#FFFBEB] text-[#B45309]',
+  blue:   'bg-[#EFF6FF] text-[#1D4ED8]',
+  slate:  'bg-[#F1F5F9] text-[#475569]',
   purple: 'bg-purple-100 text-purple-700',
 }
 

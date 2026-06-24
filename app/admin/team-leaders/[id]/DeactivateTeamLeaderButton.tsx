@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { deactivateTeamLeader } from '@/modules/team-leaders/actions'
 import { useRouter } from 'next/navigation'
@@ -27,7 +27,7 @@ export default function DeactivateTeamLeaderButton({ userId }: Props) {
       type="button"
       onClick={handleClick}
       disabled={busy}
-      className="rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+      className="rounded-lg border border-[#FECACA] px-4 py-2 text-sm font-medium text-[#EF4444] transition hover:bg-[#FEE2E2] disabled:opacity-50"
     >
       {busy ? 'Deactivating…' : 'Deactivate'}
     </button>

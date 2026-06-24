@@ -1,4 +1,4 @@
-import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
+﻿import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { listAssignments }                      from '@/modules/assignments/queries'
 import { getTLAssignmentOverview }              from '@/modules/tl-analytics/queries'
 import SearchInput                              from '@/components/admin/SearchInput'
@@ -24,24 +24,24 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 const TYPE_COLORS: Record<string, string> = {
-  homework:     'bg-blue-50 text-blue-700',
+  homework:     'bg-[#EFF6FF] text-[#1D4ED8]',
   classwork:    'bg-sky-50 text-sky-700',
   project:      'bg-violet-50 text-violet-700',
-  quiz:         'bg-amber-50 text-amber-700',
-  exam:         'bg-red-50 text-red-700',
+  quiz:         'bg-[#FFFBEB] text-[#B45309]',
+  exam:         'bg-[#FEE2E2] text-[#DC2626]',
   presentation: 'bg-pink-50 text-pink-700',
   challenge:    'bg-orange-50 text-orange-700',
   competition:  'bg-teal-50 text-teal-700',
 }
 
 function pctBar(pct: number) {
-  const color = pct >= 70 ? 'bg-emerald-500' : pct >= 40 ? 'bg-amber-500' : 'bg-red-500'
+  const color = pct >= 70 ? 'bg-[#10B981]' : pct >= 40 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'
   return (
     <div className="flex items-center gap-2">
       <div className="h-1.5 w-16 rounded-full bg-[#F1F5F9]">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, pct)}%` }} />
       </div>
-      <span className={`text-xs font-medium ${pct >= 70 ? 'text-emerald-600' : pct >= 40 ? 'text-amber-600' : 'text-red-600'}`}>{pct}%</span>
+      <span className={`text-xs font-medium ${pct >= 70 ? 'text-[#10B981]' : pct >= 40 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>{pct}%</span>
     </div>
   )
 }
@@ -94,13 +94,13 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
-          { label: 'Published',        value: kpis.total_published,      color: 'bg-blue-400' },
-          { label: 'Overdue',          value: kpis.overdue_count,         color: kpis.overdue_count > 0 ? 'bg-amber-400' : 'bg-slate-300' },
-          { label: 'Avg Completion',   value: `${kpis.avg_completion_pct}%`, color: kpis.avg_completion_pct >= 70 ? 'bg-emerald-400' : 'bg-red-400' },
-          { label: 'Pending Review',   value: kpis.pending_review_count, color: kpis.pending_review_count > 0 ? 'bg-amber-400' : 'bg-slate-300' },
-          { label: 'Grading Delayed',  value: kpis.grading_delay_count,  color: kpis.grading_delay_count > 0 ? 'bg-red-400' : 'bg-slate-300' },
+          { label: 'Published',        value: kpis.total_published,      color: 'bg-[#38BDF8]' },
+          { label: 'Overdue',          value: kpis.overdue_count,         color: kpis.overdue_count > 0 ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]' },
+          { label: 'Avg Completion',   value: `${kpis.avg_completion_pct}%`, color: kpis.avg_completion_pct >= 70 ? 'bg-[#10B981]' : 'bg-[#EF4444]' },
+          { label: 'Pending Review',   value: kpis.pending_review_count, color: kpis.pending_review_count > 0 ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]' },
+          { label: 'Grading Delayed',  value: kpis.grading_delay_count,  color: kpis.grading_delay_count > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]' },
         ].map(k => (
-          <div key={k.label} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+          <div key={k.label} className="ds-card p-3">
             <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
             <p className="text-xl font-bold text-[#0B1F3A]">{k.value}</p>
             <p className="text-[11px] text-[#64748B]">{k.label}</p>
@@ -110,13 +110,13 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
 
       {/* Grading delays alert */}
       {kpis.grading_delay_count > 0 && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 flex items-start gap-3">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-red-500 mt-0.5">
+        <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] px-4 py-3 flex items-start gap-3">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 shrink-0 text-[#EF4444] mt-0.5">
             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clipRule="evenodd" />
           </svg>
           <div>
-            <p className="text-sm font-medium text-red-700">{kpis.grading_delay_count} submissions waiting for review for 3+ days</p>
-            <p className="text-xs text-red-600 mt-0.5">Contact instructors to complete pending grading.</p>
+            <p className="text-sm font-medium text-[#DC2626]">{kpis.grading_delay_count} submissions waiting for review for 3+ days</p>
+            <p className="text-xs text-[#EF4444] mt-0.5">Contact instructors to complete pending grading.</p>
           </div>
         </div>
       )}
@@ -142,7 +142,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
 
       {/* ── LIST VIEW ───────────────────────────────────────────────────────── */}
       {view === 'list' && (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white">
+        <div className="ds-card">
           <div className="flex flex-wrap items-center gap-2 border-b border-[#E2E8F0] px-4 py-3">
             <SearchInput placeholder="Search assignments…" />
             <select
@@ -177,7 +177,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
             <>
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead>
+                  <thead className="ds-table-head">
                     <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                       <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Title</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Type</th>
@@ -192,13 +192,13 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                     {result.data.map(a => {
                       const isOverdue = a.due_at && a.due_at < new Date().toISOString() && a.status === 'published'
                       return (
-                        <tr key={a.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                        <tr key={a.id} className="ds-table-row">
                           <td className="px-4 py-3">
                             <Link href={`/portal/team-leader/assignments/${a.id}`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">{a.title}</Link>
-                            {isOverdue && <span className="ml-2 inline-block rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">Overdue</span>}
+                            {isOverdue && <span className="ml-2 inline-block rounded-full bg-[#FEE2E2] px-1.5 py-0.5 text-[10px] font-medium text-[#EF4444]">Overdue</span>}
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${TYPE_COLORS[a.type] ?? 'bg-gray-100 text-gray-600'}`}>
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${TYPE_COLORS[a.type] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
                               {TYPE_LABELS[a.type] ?? a.type}
                             </span>
                           </td>
@@ -226,7 +226,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                       <div className="min-w-0 flex-1">
                         <Link href={`/portal/team-leader/assignments/${a.id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">{a.title}</Link>
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${TYPE_COLORS[a.type] ?? 'bg-gray-100 text-gray-600'}`}>{TYPE_LABELS[a.type] ?? a.type}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${TYPE_COLORS[a.type] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>{TYPE_LABELS[a.type] ?? a.type}</span>
                           <StatusBadge status={a.status} />
                         </div>
                       </div>
@@ -248,13 +248,13 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
       {view === 'groups' && (
         <div className="space-y-3">
           {by_group.length === 0 ? (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+            <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No assignment data for groups yet.</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+            <div className="ds-card overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Group</th>
                     {user.branchIds.length > 1 && <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>}
@@ -267,7 +267,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {by_group.map(g => (
-                    <tr key={g.group_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={g.group_id} className="ds-table-row">
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">
                         <Link href={`/portal/team-leader/groups/${g.group_id}`} className="hover:text-[#FF8A1F]">{g.group_name}</Link>
                       </td>
@@ -278,7 +278,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                       <td className="px-4 py-3">{pctBar(g.completion_pct)}</td>
                       <td className="px-4 py-3 text-right">
                         {g.overdue_count > 0
-                          ? <span className="inline-block rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">{g.overdue_count}</span>
+                          ? <span className="inline-block rounded-full bg-[#FFFBEB] px-2 py-0.5 text-xs font-medium text-[#B45309]">{g.overdue_count}</span>
                           : <span className="text-xs text-[#94A3B8]">0</span>}
                       </td>
                     </tr>
@@ -294,13 +294,13 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
       {view === 'instructors' && (
         <div className="space-y-3">
           {by_instructor.length === 0 ? (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+            <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No instructor assignment data yet.</p>
             </div>
           ) : (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white overflow-x-auto">
+            <div className="ds-card overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Instructor</th>
                     <th className="px-4 py-3 text-right text-xs font-medium text-[#64748B]">Assignments</th>
@@ -311,7 +311,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {by_instructor.map(i => (
-                    <tr key={i.instructor_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={i.instructor_id} className="ds-table-row">
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">
                         <Link href={`/portal/team-leader/instructors/${i.instructor_id}`} className="hover:text-[#FF8A1F]">{i.instructor_name}</Link>
                       </td>
@@ -319,12 +319,12 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                       <td className="px-4 py-3">{pctBar(i.avg_completion_pct)}</td>
                       <td className="px-4 py-3 text-right">
                         {i.pending_review > 0
-                          ? <span className="inline-block rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">{i.pending_review}</span>
+                          ? <span className="inline-block rounded-full bg-[#FFFBEB] px-2 py-0.5 text-xs font-medium text-[#B45309]">{i.pending_review}</span>
                           : <span className="text-xs text-[#94A3B8]">0</span>}
                       </td>
                       <td className="px-4 py-3 text-right">
                         {i.grading_delay > 0
-                          ? <span className="inline-block rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600">{i.grading_delay}</span>
+                          ? <span className="inline-block rounded-full bg-[#FEE2E2] px-2 py-0.5 text-xs font-medium text-[#EF4444]">{i.grading_delay}</span>
                           : <span className="text-xs text-[#94A3B8]">0</span>}
                       </td>
                     </tr>

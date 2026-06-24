@@ -1,4 +1,4 @@
-import { requirePortalRole }           from '@/modules/rbac/guards'
+﻿import { requirePortalRole }           from '@/modules/rbac/guards'
 import { getParentChildren }           from '@/modules/parents/parent-portal-queries'
 import { getChildSessionsProgress }    from '@/modules/parents/parent-portal-queries'
 import { getPendingFeedbackMilestone } from '@/modules/parent-feedback/queries'
@@ -111,7 +111,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
               />
             </>
           ) : (
-            <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+            <div className="ds-card px-6 py-12 text-center">
               <p className="text-sm text-[#64748B]">No session feedback pending at this time.</p>
               <p className="mt-1 text-xs text-[#94A3B8]">
                 Feedback is requested every 6 completed sessions · {completedSessions} completed so far.
@@ -125,7 +125,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
                 Previous Submissions ({milestoneHistory.length})
               </p>
               {milestoneHistory.map(fb => (
-                <div key={fb.id} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+                <div key={fb.id} className="ds-card p-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium text-[#0B1F3A]">
                       After {fb.session_milestone} Sessions
@@ -154,7 +154,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
         <div className="space-y-6">
 
           {/* Form */}
-          <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+          <div className="ds-card p-5">
             <p className="mb-4 text-sm font-semibold text-[#0B1F3A]">Send a Message</p>
             <ContactForm studentId={selected.student_id} studentName={selected.student_name} />
           </div>
@@ -165,13 +165,13 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
               My Messages {myMessages.length > 0 && `(${myMessages.length})`}
             </p>
             {myMessages.length === 0 ? (
-              <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-10 text-center">
+              <div className="ds-card px-6 py-10 text-center">
                 <p className="text-sm text-[#94A3B8]">No messages sent yet.</p>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-xl border border-[#E2E8F0] bg-white">
+              <div className="overflow-hidden ds-card">
                 <table className="w-full text-[13px]">
-                  <thead>
+                  <thead className="ds-table-head">
                     <tr className="border-b border-[#F1F5F9] text-left">
                       <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Date</th>
                       <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Category</th>

@@ -1,4 +1,4 @@
-import type { AchievementType } from '@/types/enums'
+﻿import type { AchievementType } from '@/types/enums'
 
 export interface StudentPortfolio {
   id: string
@@ -61,9 +61,9 @@ export interface PortfolioProjectListItem {
 }
 
 export const PROJECT_STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
-  pending_review:   { label: 'Pending Review',   cls: 'bg-amber-100  text-amber-700'  },
-  approved:         { label: 'Approved',          cls: 'bg-green-100  text-green-700'  },
-  needs_improvement:{ label: 'Needs Improvement', cls: 'bg-red-100    text-red-700'    },
+  pending_review:   { label: 'Pending Review',   cls: 'bg-[#FFFBEB]  text-[#B45309]'  },
+  approved:         { label: 'Approved',          cls: 'bg-[#E7F8EE]  text-[#15803D]'  },
+  needs_improvement:{ label: 'Needs Improvement', cls: 'bg-[#FEE2E2]    text-[#DC2626]'    },
   featured:         { label: 'Featured',          cls: 'bg-[#FFF7ED]  text-[#FF8A1F]'  },
 }
 

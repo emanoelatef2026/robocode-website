@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -33,10 +33,10 @@ function lifecycleHealth(active: number, dropout: number, retention: number): Li
 }
 
 const LIFECYCLE_CONFIG: Record<LifecycleHealth, { color: string; text: string }> = {
-  HEALTHY:   { color: 'bg-emerald-100', text: 'text-emerald-700' },
-  WATCH:     { color: 'bg-amber-100',   text: 'text-amber-700'   },
+  HEALTHY:   { color: 'bg-[#E7F8EE]', text: 'text-[#15803D]' },
+  WATCH:     { color: 'bg-[#FFFBEB]',   text: 'text-[#B45309]'   },
   DECLINING: { color: 'bg-orange-100',  text: 'text-orange-700'  },
-  CRITICAL:  { color: 'bg-red-100',     text: 'text-red-700'     },
+  CRITICAL:  { color: 'bg-[#FEE2E2]',     text: 'text-[#DC2626]'     },
 }
 
 function fmt(n: number) {
@@ -80,7 +80,7 @@ export default function TLCoursesListClient({
     <>
 
       {/* Table */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         <div className="border-b border-[#E2E8F0] px-3 py-2.5 sm:px-4 sm:py-3">
           <form method="get" className="flex gap-2">
             <input
@@ -134,7 +134,7 @@ export default function TLCoursesListClient({
                             {health}
                           </span>
                         )}
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${course.is_published ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${course.is_published ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#F1F5F9] text-[#64748B]'}`}>
                           {course.is_published ? 'Published' : 'Draft'}
                         </span>
                       </div>
@@ -150,7 +150,7 @@ export default function TLCoursesListClient({
                           <p className="text-[#94A3B8]">Revenue</p>
                         </div>
                         <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
-                          <p className={`font-bold ${m.retention < 60 ? 'text-red-600' : 'text-emerald-600'}`}>
+                          <p className={`font-bold ${m.retention < 60 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
                             {m.retention}%
                           </p>
                           <p className="text-[#94A3B8]">Retention</p>
@@ -172,7 +172,7 @@ export default function TLCoursesListClient({
             {/* Desktop table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left   text-xs font-medium text-[#64748B]">Course</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Active</th>
@@ -190,7 +190,7 @@ export default function TLCoursesListClient({
                     const health = m ? lifecycleHealth(m.active, m.dropout, m.retention) : null
                     const hCfg   = health ? LIFECYCLE_CONFIG[health] : null
                     return (
-                      <tr key={course.id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                      <tr key={course.id} className="ds-table-row">
                         <td className="px-4 py-3">
                           <p className="font-medium text-[#0B1F3A]">{course.title}</p>
                           <p className="text-[11px] text-[#94A3B8] capitalize">{course.level ?? '—'} · {course.scope}</p>
@@ -203,14 +203,14 @@ export default function TLCoursesListClient({
                         </td>
                         <td className="px-4 py-3 text-center">
                           {m ? (
-                            <span className={m.dropout >= 20 ? 'font-semibold text-red-600' : 'text-[#64748B]'}>
+                            <span className={m.dropout >= 20 ? 'font-semibold text-[#EF4444]' : 'text-[#64748B]'}>
                               {m.dropout}%
                             </span>
                           ) : <span className="text-[#94A3B8]">—</span>}
                         </td>
                         <td className="px-4 py-3 text-center">
                           {m ? (
-                            <span className={m.retention < 60 ? 'font-semibold text-red-600' : m.retention < 75 ? 'text-amber-600' : 'text-emerald-600'}>
+                            <span className={m.retention < 60 ? 'font-semibold text-[#EF4444]' : m.retention < 75 ? 'text-[#F59E0B]' : 'text-[#10B981]'}>
                               {m.retention}%
                             </span>
                           ) : <span className="text-[#94A3B8]">—</span>}
@@ -223,7 +223,7 @@ export default function TLCoursesListClient({
                           ) : <span className="text-[#94A3B8]">—</span>}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${course.is_published ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${course.is_published ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#F1F5F9] text-[#64748B]'}`}>
                             {course.is_published ? 'Published' : 'Draft'}
                           </span>
                         </td>

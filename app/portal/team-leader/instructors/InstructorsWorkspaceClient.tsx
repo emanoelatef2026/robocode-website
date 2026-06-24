@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useTransition, useCallback, useRef, useEffect } from 'react'
 import { buildWhatsAppUrl } from '@/lib/phone'
@@ -92,29 +92,29 @@ function isFuture(iso: string): boolean {
 }
 
 function attColor(rate: number) {
-  if (rate >= 75) return 'text-emerald-600'
-  if (rate >= 55) return 'text-amber-600'
-  return 'text-red-600'
+  if (rate >= 75) return 'text-[#10B981]'
+  if (rate >= 55) return 'text-[#F59E0B]'
+  return 'text-[#EF4444]'
 }
 
 function statusCls(status: string) {
-  if (status === 'active')   return 'bg-emerald-100 text-emerald-700'
-  if (status === 'inactive') return 'bg-slate-100 text-slate-500'
-  return 'bg-amber-100 text-amber-700'
+  if (status === 'active')   return 'bg-[#E7F8EE] text-[#15803D]'
+  if (status === 'inactive') return 'bg-[#F1F5F9] text-[#475569]'
+  return 'bg-[#FFFBEB] text-[#B45309]'
 }
 
 function sessionStatusMeta(status: string, attendance_submitted: boolean, scheduled_at: string) {
   if (status === 'completed' && !attendance_submitted)
-    return { label: 'Missing Att.', cls: 'bg-red-100 text-red-700', dot: 'bg-red-500' }
+    return { label: 'Missing Att.', cls: 'bg-[#FEE2E2] text-[#DC2626]', dot: 'bg-[#EF4444]' }
   if (status === 'completed')
-    return { label: 'Done',      cls: 'bg-green-100 text-green-700',  dot: 'bg-green-500' }
+    return { label: 'Done',      cls: 'bg-[#E7F8EE] text-[#15803D]',  dot: 'bg-[#10B981]' }
   if (status === 'ongoing')
-    return { label: 'Live',      cls: 'bg-blue-100 text-blue-700',    dot: 'bg-blue-500 animate-pulse' }
+    return { label: 'Live',      cls: 'bg-[#EFF6FF] text-[#1D4ED8]',  dot: 'bg-[#38BDF8] animate-pulse' }
   if (status === 'cancelled')
-    return { label: 'Cancelled', cls: 'bg-slate-100 text-slate-500',  dot: 'bg-slate-400' }
+    return { label: 'Cancelled', cls: 'bg-[#F1F5F9] text-[#475569]',  dot: 'bg-[#94A3B8]' }
   if (isFuture(scheduled_at))
-    return { label: 'Upcoming',  cls: 'bg-amber-100 text-amber-700',  dot: 'bg-amber-400' }
-  return { label: 'Scheduled', cls: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' }
+    return { label: 'Upcoming',  cls: 'bg-[#FFFBEB] text-[#B45309]',  dot: 'bg-[#F59E0B]' }
+  return { label: 'Scheduled', cls: 'bg-[#F1F5F9] text-[#475569]', dot: 'bg-[#94A3B8]' }
 }
 
 function filterInstructors(
@@ -167,10 +167,10 @@ function StatCard({ label, value, sub, accent, danger }: {
   label: string; value: string | number; sub?: string; accent?: boolean; danger?: boolean
 }) {
   return (
-    <div className={`min-w-0 rounded-xl border px-2 py-1.5 md:p-3 ${accent ? 'border-[#FF8A1F]/30 bg-[#FFF7ED]' : danger ? 'border-red-200 bg-red-50' : 'border-[#E2E8F0] bg-white'}`}>
-      <p className={`truncate text-[8px] font-medium leading-tight md:text-[11px] ${accent ? 'text-[#FF8A1F]/70' : danger ? 'text-red-400' : 'text-[#64748B]'}`}>{label}</p>
-      <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-[20px] ${accent ? 'text-[#FF8A1F]' : danger ? 'text-red-600' : 'text-[#0B1F3A]'}`}>{value}</p>
-      {sub && <p className={`mt-0.5 truncate text-[8px] leading-tight md:text-[10px] ${accent ? 'text-[#FF8A1F]/60' : danger ? 'text-red-400' : 'text-[#94A3B8]'}`}>{sub}</p>}
+    <div className={`min-w-0 rounded-xl border px-2 py-1.5 md:p-3 ${accent ? 'border-[#FF8A1F]/30 bg-[#FFF7ED]' : danger ? 'border-[#FECACA] bg-[#FEE2E2]' : 'border-[#E2E8F0] bg-white'}`}>
+      <p className={`truncate text-[8px] font-medium leading-tight md:text-[11px] ${accent ? 'text-[#FF8A1F]/70' : danger ? 'text-[#F87171]' : 'text-[#64748B]'}`}>{label}</p>
+      <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-[20px] ${accent ? 'text-[#FF8A1F]' : danger ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>{value}</p>
+      {sub && <p className={`mt-0.5 truncate text-[8px] leading-tight md:text-[10px] ${accent ? 'text-[#FF8A1F]/60' : danger ? 'text-[#F87171]' : 'text-[#94A3B8]'}`}>{sub}</p>}
     </div>
   )
 }
@@ -226,7 +226,7 @@ function InstructorGridCard({
           <div className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold ${selected ? 'bg-[#FF8A1F] text-white' : 'bg-[#0B1F3A] text-white'}`}>
             {ini}
           </div>
-          <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-white ${instructor.status === 'active' ? 'bg-emerald-500' : instructor.status === 'inactive' ? 'bg-slate-400' : 'bg-amber-400'}`} />
+          <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-white ${instructor.status === 'active' ? 'bg-[#10B981]' : instructor.status === 'inactive' ? 'bg-[#94A3B8]' : 'bg-[#F59E0B]'}`} />
         </div>
         {/* Name + branch/code */}
         <div className="flex-1 min-w-0">
@@ -247,7 +247,7 @@ function InstructorGridCard({
             <p className="text-[8px] text-[#94A3B8] mt-0.5">St</p>
           </div>
           {instructor.today_sessions_count > 0 ? (
-            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 shrink-0">
+            <span className="rounded-full bg-[#FFFBEB] px-1.5 py-0.5 text-[9px] font-bold text-[#B45309] shrink-0">
               {instructor.today_sessions_count}↑
             </span>
           ) : (
@@ -298,7 +298,7 @@ function InstructorGridCard({
         </div>
         <div className="flex items-center justify-between px-3 pb-2.5 text-[10px]">
           {instructor.today_sessions_count > 0
-            ? <span className="rounded bg-amber-50 px-2 py-0.5 font-semibold text-amber-700">{instructor.today_sessions_count} today</span>
+            ? <span className="rounded bg-[#FFFBEB] px-2 py-0.5 font-semibold text-[#B45309]">{instructor.today_sessions_count} today</span>
             : <span className="text-[#CBD5E1]">No sessions today</span>
           }
           {instructor.salary_per_session
@@ -321,14 +321,14 @@ function InstructorGridCard({
               Edit
             </button>
             <button onClick={onDelete}
-              className="flex-1 rounded-lg border border-red-200 py-1.5 text-[10px] font-medium text-red-500 hover:bg-red-500 hover:text-white transition">
+              className="flex-1 rounded-lg border border-[#FECACA] py-1.5 text-[10px] font-medium text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition">
               Delete
             </button>
             {waUrl && (
               <a href={waUrl} target="_blank" rel="noopener noreferrer"
                 onClick={e => e.stopPropagation()}
-                className="flex items-center justify-center rounded-lg bg-green-50 px-2 hover:bg-green-100 transition">
-                <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-green-600">
+                className="flex items-center justify-center rounded-lg bg-[#E7F8EE] px-2 hover:bg-[#E7F8EE] transition">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 text-[#10B981]">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                 </svg>
               </a>
@@ -388,7 +388,7 @@ function InstructorListRow({
       {/* Today sessions */}
       <td className="px-4 py-2.5 text-center">
         {instructor.today_sessions_count > 0
-          ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">{instructor.today_sessions_count}</span>
+          ? <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#B45309]">{instructor.today_sessions_count}</span>
           : <span className="text-[11px] text-[#CBD5E1]">—</span>
         }
       </td>
@@ -413,10 +413,10 @@ function InstructorListRow({
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button onClick={onAssign} className="rounded bg-[#FF8A1F] px-2 py-1 text-[10px] font-semibold text-white hover:bg-[#e87c18] transition">Assign</button>
             <button onClick={onEdit}   className="rounded border border-[#E2E8F0] px-2 py-1 text-[10px] text-[#374151] hover:bg-[#F1F5F9] transition">Edit</button>
-            <button onClick={onDelete} className="rounded border border-red-200 px-2 py-1 text-[10px] text-red-500 hover:bg-red-500 hover:text-white transition">Delete</button>
+            <button onClick={onDelete} className="rounded border border-[#FECACA] px-2 py-1 text-[10px] text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition">Delete</button>
             {wa && buildWhatsAppUrl(wa, null) && (
               <a href={buildWhatsAppUrl(wa, null)!} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                className="rounded border border-green-200 bg-green-50 px-2 py-1 text-[10px] text-green-600 hover:bg-green-100 transition">WA</a>
+                className="rounded border border-[#A7F3D0] bg-[#E7F8EE] px-2 py-1 text-[10px] text-[#10B981] hover:bg-[#E7F8EE] transition">WA</a>
             )}
           </div>
         </td>
@@ -509,7 +509,7 @@ function OverviewTab({ detail }: { detail: InstructorDetailData }) {
             {todaySessions.map(s => {
               const meta = sessionStatusMeta(s.status, s.attendance_submitted, s.scheduled_at)
               return (
-                <div key={s.id} className="flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-2.5">
+                <div key={s.id} className="flex items-center gap-3 ds-card px-4 py-2.5">
                   <div className={`h-2 w-2 shrink-0 rounded-full ${meta.dot}`} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-semibold text-[#0B1F3A]">{s.group_name}</p>
@@ -529,11 +529,11 @@ function OverviewTab({ detail }: { detail: InstructorDetailData }) {
           <SectionLabel>Missing Attendance ({missingAtt.length})</SectionLabel>
           <div className="space-y-1.5">
             {missingAtt.map(s => (
-              <div key={s.id} className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5">
-                <span className="text-red-500 shrink-0">⚠</span>
+              <div key={s.id} className="flex items-center gap-3 rounded-xl border border-[#FECACA] bg-[#FEE2E2] px-4 py-2.5">
+                <span className="text-[#EF4444] shrink-0">⚠</span>
                 <div>
-                  <p className="text-[13px] font-medium text-red-800">{s.group_name}</p>
-                  <p className="text-[11px] text-red-500">{fmtDate(s.scheduled_at)} · {fmtTime(s.scheduled_at)}</p>
+                  <p className="text-[13px] font-medium text-[#991B1B]">{s.group_name}</p>
+                  <p className="text-[11px] text-[#EF4444]">{fmtDate(s.scheduled_at)} · {fmtTime(s.scheduled_at)}</p>
                 </div>
               </div>
             ))}
@@ -547,12 +547,12 @@ function OverviewTab({ detail }: { detail: InstructorDetailData }) {
           <SectionLabel>Low Attendance Groups</SectionLabel>
           <div className="space-y-1.5">
             {lowAttGroups.map(g => (
-              <div key={g.id} className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5">
+              <div key={g.id} className="flex items-center justify-between rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-2.5">
                 <div>
-                  <p className="text-[13px] font-medium text-amber-900">{g.name}</p>
-                  <p className="text-[11px] text-amber-600">{g.course_name ?? 'No course'} · {g.student_count} students</p>
+                  <p className="text-[13px] font-medium text-[#78350F]">{g.name}</p>
+                  <p className="text-[11px] text-[#F59E0B]">{g.course_name ?? 'No course'} · {g.student_count} students</p>
                 </div>
-                <span className="text-[18px] font-bold text-amber-600">{g.attendance_rate}%</span>
+                <span className="text-[18px] font-bold text-[#F59E0B]">{g.attendance_rate}%</span>
               </div>
             ))}
           </div>
@@ -567,7 +567,7 @@ function OverviewTab({ detail }: { detail: InstructorDetailData }) {
             {upcoming.map(s => {
               const meta = sessionStatusMeta(s.status, s.attendance_submitted, s.scheduled_at)
               return (
-                <div key={s.id} className="flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-2.5">
+                <div key={s.id} className="flex items-center gap-3 ds-card px-4 py-2.5">
                   <div className={`h-2 w-2 shrink-0 rounded-full ${meta.dot}`} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-semibold text-[#0B1F3A]">{s.group_name}</p>
@@ -616,7 +616,7 @@ function GroupsTab({ groups, canManage, onAssignGroup, onRemoveGroup }: {
           {/* Mobile card list */}
           <div className="md:hidden space-y-2">
             {groups.map(g => (
-              <div key={g.id} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+              <div key={g.id} className="ds-card p-3">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="min-w-0">
                     <p className="text-[13px] font-semibold text-[#0B1F3A] truncate">{g.name}</p>
@@ -627,9 +627,9 @@ function GroupsTab({ groups, canManage, onAssignGroup, onRemoveGroup }: {
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${g.role === 'lead' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>{g.role}</span>
+                    <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold uppercase ${g.role === 'lead' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-[#F1F5F9] text-[#475569]'}`}>{g.role}</span>
                     {canManage && (
-                      <button onClick={() => onRemoveGroup(g)} className="text-[10px] text-red-400 active:text-red-600">Remove</button>
+                      <button onClick={() => onRemoveGroup(g)} className="text-[10px] text-[#F87171] active:text-[#EF4444]">Remove</button>
                     )}
                   </div>
                 </div>
@@ -652,18 +652,18 @@ function GroupsTab({ groups, canManage, onAssignGroup, onRemoveGroup }: {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block rounded-xl border border-[#E2E8F0] overflow-hidden">
+          <div className="hidden md:block ds-card overflow-hidden">
             <table className="w-full text-[12px]">
-              <thead>
-                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Group</th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Course</th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Branch</th>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B]">Students</th>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B]">Sessions</th>
-                  <th className="px-3 py-2.5 text-right text-[11px] font-semibold text-[#64748B]">Att.</th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-semibold text-[#64748B]">Role</th>
-                  {canManage && <th className="px-3 py-2.5" />}
+              <thead className="ds-table-head">
+                <tr>
+                  <th>Group</th>
+                  <th>Course</th>
+                  <th>Branch</th>
+                  <th>Students</th>
+                  <th>Sessions</th>
+                  <th>Att.</th>
+                  <th>Role</th>
+                  {canManage && <th />}
                 </tr>
               </thead>
               <tbody>
@@ -681,13 +681,13 @@ function GroupsTab({ groups, canManage, onAssignGroup, onRemoveGroup }: {
                       <span className={`font-bold ${attColor(g.attendance_rate)}`}>{g.attendance_rate}%</span>
                     </td>
                     <td className="px-3 py-2.5">
-                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${g.role === 'lead' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${g.role === 'lead' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-[#F1F5F9] text-[#475569]'}`}>
                         {g.role}
                       </span>
                     </td>
                     {canManage && (
                       <td className="px-3 py-2.5 text-right">
-                        <button onClick={() => onRemoveGroup(g)} className="text-[11px] text-red-400 hover:text-red-600 hover:underline">Remove</button>
+                        <button onClick={() => onRemoveGroup(g)} className="text-[11px] text-[#F87171] hover:text-[#EF4444] hover:underline">Remove</button>
                       </td>
                     )}
                   </tr>
@@ -726,7 +726,7 @@ function AttendanceTab({ stats, groups }: {
             <span className={`font-bold ${attColor(stats.compliance_rate)}`}>{stats.compliance_rate}%</span>
           </div>
           <div className="h-2.5 w-full rounded-full bg-[#E2E8F0] overflow-hidden">
-            <div className={`h-full rounded-full transition-all ${stats.compliance_rate >= 75 ? 'bg-emerald-500' : stats.compliance_rate >= 55 ? 'bg-amber-500' : 'bg-red-500'}`}
+            <div className={`h-full rounded-full transition-all ${stats.compliance_rate >= 75 ? 'bg-[#10B981]' : stats.compliance_rate >= 55 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
               style={{ width: `${stats.compliance_rate}%` }} />
           </div>
           <div className="mt-1.5 flex justify-between text-[10px] text-[#94A3B8]">
@@ -740,7 +740,7 @@ function AttendanceTab({ stats, groups }: {
           <SectionLabel>Per-Group Attendance</SectionLabel>
           <div className="space-y-2">
             {groups.map(g => (
-              <div key={g.id} className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+              <div key={g.id} className="ds-card p-3">
                 <div className="flex items-center justify-between mb-1.5">
                   <div>
                     <p className="text-[13px] font-semibold text-[#0B1F3A]">{g.name}</p>
@@ -749,7 +749,7 @@ function AttendanceTab({ stats, groups }: {
                   <span className={`text-[18px] font-bold ${attColor(g.attendance_rate)}`}>{g.attendance_rate}%</span>
                 </div>
                 <div className="h-1.5 w-full rounded-full bg-[#E2E8F0] overflow-hidden">
-                  <div className={`h-full rounded-full ${g.attendance_rate >= 75 ? 'bg-emerald-400' : g.attendance_rate >= 55 ? 'bg-amber-400' : 'bg-red-400'}`}
+                  <div className={`h-full rounded-full ${g.attendance_rate >= 75 ? 'bg-[#10B981]' : g.attendance_rate >= 55 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'}`}
                     style={{ width: `${g.attendance_rate}%` }} />
                 </div>
               </div>
@@ -849,12 +849,12 @@ function NotesTab({ instructorId, notes, onRefresh }: {
   }
 
   const catCls = (cat: string) => {
-    if (cat === 'strengths')            return 'bg-emerald-100 text-emerald-700'
-    if (cat === 'weaknesses')           return 'bg-red-100 text-red-700'
-    if (cat === 'communication')        return 'bg-blue-100 text-blue-700'
+    if (cat === 'strengths')            return 'bg-[#E7F8EE] text-[#15803D]'
+    if (cat === 'weaknesses')           return 'bg-[#FEE2E2] text-[#DC2626]'
+    if (cat === 'communication')        return 'bg-[#EFF6FF] text-[#1D4ED8]'
     if (cat === 'reliability')          return 'bg-purple-100 text-purple-700'
-    if (cat === 'classroom_management') return 'bg-amber-100 text-amber-700'
-    return 'bg-slate-100 text-slate-600'
+    if (cat === 'classroom_management') return 'bg-[#FFFBEB] text-[#B45309]'
+    return 'bg-[#F1F5F9] text-[#475569]'
   }
 
   return (
@@ -871,9 +871,9 @@ function NotesTab({ instructorId, notes, onRefresh }: {
         </div>
         <textarea value={content} onChange={e => setContent(e.target.value)} rows={3}
           placeholder="Write a note…"
-          className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] outline-none focus:border-[#FF8A1F] resize-none"
+          className="w-full ds-card px-3 py-2 text-[12px] outline-none focus:border-[#FF8A1F] resize-none"
         />
-        {error && <p className="text-[11px] text-red-500">{error}</p>}
+        {error && <p className="text-[11px] text-[#EF4444]">{error}</p>}
         <button onClick={handleAdd} disabled={isPending || !content.trim()}
           className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#e87c18] disabled:opacity-50 transition">
           {isPending ? 'Saving…' : 'Add Note'}
@@ -885,7 +885,7 @@ function NotesTab({ instructorId, notes, onRefresh }: {
       ) : (
         <div className="space-y-2.5">
           {notes.map(n => (
-            <div key={n.id} className="rounded-xl border border-[#E2E8F0] bg-white p-4">
+            <div key={n.id} className="ds-card p-4">
               <div className="flex items-start justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2">
                   <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${catCls(n.category)}`}>
@@ -893,7 +893,7 @@ function NotesTab({ instructorId, notes, onRefresh }: {
                   </span>
                   <span className="text-[10px] text-[#94A3B8]">{n.author_name ?? 'Admin'} · {fmtDate(n.created_at)}</span>
                 </div>
-                <button onClick={() => handleDelete(n.id)} className="text-[11px] text-red-400 hover:text-red-600 shrink-0">Delete</button>
+                <button onClick={() => handleDelete(n.id)} className="text-[11px] text-[#F87171] hover:text-[#EF4444] shrink-0">Delete</button>
               </div>
               <p className="text-[13px] text-[#374151] leading-relaxed whitespace-pre-wrap">{n.content}</p>
             </div>
@@ -1004,7 +1004,7 @@ function InstructorPopup({
                 {instructor.today_sessions_count > 0 && (
                   <>
                     <span className="text-[#E2E8F0]">·</span>
-                    <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[9px] font-bold text-amber-700">{instructor.today_sessions_count} today</span>
+                    <span className="rounded bg-[#FFFBEB] px-1.5 py-0.5 text-[9px] font-bold text-[#B45309]">{instructor.today_sessions_count} today</span>
                   </>
                 )}
               </div>
@@ -1013,7 +1013,7 @@ function InstructorPopup({
               <div className="flex items-center gap-1.5">
                 {waUrl && (
                   <a href={waUrl} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1 rounded-lg bg-green-500 px-2.5 py-1.5 text-[11px] font-medium text-white active:bg-green-600 transition">
+                    className="flex items-center gap-1 rounded-lg bg-[#10B981] px-2.5 py-1.5 text-[11px] font-medium text-white active:bg-[#059669] transition">
                     <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 shrink-0"><path d={WA_PATH}/></svg>
                     WA
                   </a>
@@ -1038,19 +1038,19 @@ function InstructorPopup({
                     {overflowOpen && (
                       <>
                         <div className="fixed inset-0 z-[51]" onClick={() => setOverflowOpen(false)} />
-                        <div className="absolute right-0 top-full mt-1 z-[52] w-36 rounded-xl border border-[#E2E8F0] bg-white shadow-xl overflow-hidden">
+                        <div className="absolute right-0 top-full mt-1 z-[52] w-36 ds-card shadow-xl overflow-hidden">
                           <button onClick={() => { setOverflowOpen(false); onEdit() }}
                             className="flex w-full items-center px-4 py-3 text-[12px] font-medium text-[#374151] active:bg-[#F8FAFC]">
                             Edit
                           </button>
                           <div className="h-px bg-[#F1F5F9]" />
                           <button onClick={() => { setOverflowOpen(false); onArchive() }}
-                            className="flex w-full items-center px-4 py-3 text-[12px] font-medium text-amber-600 active:bg-amber-50">
+                            className="flex w-full items-center px-4 py-3 text-[12px] font-medium text-[#F59E0B] active:bg-[#FFFBEB]">
                             Archive
                           </button>
                           <div className="h-px bg-[#F1F5F9]" />
                           <button onClick={() => { setOverflowOpen(false); onDelete() }}
-                            className="flex w-full items-center px-4 py-3 text-[12px] font-medium text-red-600 active:bg-red-50">
+                            className="flex w-full items-center px-4 py-3 text-[12px] font-medium text-[#EF4444] active:bg-[#FEE2E2]">
                             Delete
                           </button>
                         </div>
@@ -1094,7 +1094,7 @@ function InstructorPopup({
                     <span className="text-[#64748B]"><strong className="text-[#0B1F3A]">{instructor.group_count}</strong> groups</span>
                     <span className="text-[#64748B]"><strong className="text-[#0B1F3A]">{instructor.student_count}</strong> students</span>
                     {instructor.today_sessions_count > 0 && (
-                      <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                      <span className="rounded bg-[#FFFBEB] px-1.5 py-0.5 text-[10px] font-semibold text-[#B45309]">
                         {instructor.today_sessions_count} today
                       </span>
                     )}
@@ -1103,7 +1103,7 @@ function InstructorPopup({
                 <div className="flex shrink-0 items-center gap-1.5 flex-wrap justify-end">
                   {waUrl && (
                     <a href={waUrl} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1 rounded-lg bg-green-500 px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-green-600 transition">
+                      className="flex items-center gap-1 rounded-lg bg-[#10B981] px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-[#059669] transition">
                       <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3"><path d={WA_PATH}/></svg>
                       WA
                     </a>
@@ -1112,8 +1112,8 @@ function InstructorPopup({
                     <>
                       <button onClick={onAssignGroup} className="rounded-lg bg-[#FF8A1F] px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[#e87c18] transition">Assign Group</button>
                       <button onClick={onEdit} className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] text-[#374151] hover:bg-[#F8FAFC] transition">Edit</button>
-                      <button onClick={onArchive} className="rounded-lg border border-red-100 px-2.5 py-1.5 text-[11px] text-red-500 hover:bg-red-50 transition">Archive</button>
-                      <button onClick={onDelete} className="rounded-lg border border-red-500 px-2.5 py-1.5 text-[11px] font-semibold text-red-600 hover:bg-red-600 hover:text-white transition">Delete</button>
+                      <button onClick={onArchive} className="rounded-lg border border-[#FEE2E2] px-2.5 py-1.5 text-[11px] text-[#EF4444] hover:bg-[#FEE2E2] transition">Archive</button>
+                      <button onClick={onDelete} className="rounded-lg border border-red-500 px-2.5 py-1.5 text-[11px] font-semibold text-[#EF4444] hover:bg-[#DC2626] hover:text-white transition">Delete</button>
                     </>
                   )}
                   <button onClick={onClose} className="rounded-lg border border-[#E2E8F0] p-1.5 text-[#94A3B8] hover:bg-[#F1F5F9] transition">
@@ -1172,7 +1172,7 @@ function FormField({ label, value, onChange, type = 'text', placeholder, require
   return (
     <div>
       <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">
-        {label}{required && <span className="text-red-500 ml-0.5">*</span>}
+        {label}{required && <span className="text-[#EF4444] ml-0.5">*</span>}
       </label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
         className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F] transition"
@@ -1312,7 +1312,7 @@ function InstructorFormModal({ instructor, options, onClose, onSaved }: {
               {/* Multi-select branches */}
               <div>
                 <label className="mb-2 block text-[12px] font-medium text-[#374151]">
-                  Branches <span className="text-red-500">*</span>
+                  Branches <span className="text-[#EF4444]">*</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {options.branches.map(b => {
@@ -1326,7 +1326,7 @@ function InstructorFormModal({ instructor, options, onClose, onSaved }: {
                   })}
                 </div>
                 {branchIds.length === 0 && (
-                  <p className="mt-1 text-[11px] text-red-400">Select at least one branch</p>
+                  <p className="mt-1 text-[11px] text-[#F87171]">Select at least one branch</p>
                 )}
                 {branchIds.length > 0 && (
                   <p className="mt-1 text-[11px] text-[#94A3B8]">Primary branch: {options.branches.find(b => b.id === branchIds[0])?.name}</p>
@@ -1436,7 +1436,7 @@ function InstructorFormModal({ instructor, options, onClose, onSaved }: {
         </div>
 
         <div className="flex items-center justify-between border-t border-[#E2E8F0] px-4 md:px-6 py-3 md:py-4 shrink-0">
-          {error ? <p className="text-[12px] text-red-500 flex-1 mr-4">{error}</p> : <div />}
+          {error ? <p className="text-[12px] text-[#EF4444] flex-1 mr-4">{error}</p> : <div />}
           <div className="flex gap-2 shrink-0">
             <button onClick={onClose} className="rounded-lg border border-[#E2E8F0] px-3 md:px-4 py-2 text-[12px] md:text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition">Cancel</button>
             <button onClick={handleSubmit} disabled={isPending}
@@ -1528,7 +1528,7 @@ function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onA
                     </div>
                     <div className="text-right shrink-0 ml-3">
                       <p className="text-[12px] text-[#64748B]">{g.student_count} students</p>
-                      {g.has_instructor && <p className="text-[10px] text-amber-500">Has instructor</p>}
+                      {g.has_instructor && <p className="text-[10px] text-[#F59E0B]">Has instructor</p>}
                       {groupId === g.id && <div className="mt-0.5 h-2 w-2 rounded-full bg-[#FF8A1F] mx-auto" />}
                     </div>
                   </button>
@@ -1539,7 +1539,7 @@ function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onA
           {/* Session allocation — only shown after a group is selected */}
           {selectedGroup && (
             remaining <= 0 ? (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+              <div className="rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2 text-[12px] text-[#B45309]">
                 All {selectedGroup.total_sessions ?? '?'} sessions are already allocated to other instructors. Assigning this instructor will give them an open-ended range.
               </div>
             ) : (
@@ -1575,7 +1575,7 @@ function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onA
               </div>
             )
           )}
-          {error && <p className="text-[12px] text-red-500">{error}</p>}
+          {error && <p className="text-[12px] text-[#EF4444]">{error}</p>}
         </div>
 
         {/* Sticky footer — always visible */}
@@ -1619,7 +1619,7 @@ function ConfirmArchive({ name, onConfirm, onCancel, isPending }: {
         <div className="mt-5 flex gap-2">
           <button onClick={onCancel} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition">Cancel</button>
           <button onClick={onConfirm} disabled={isPending}
-            className="flex-1 rounded-lg bg-red-500 py-2 text-[13px] font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition">
+            className="flex-1 rounded-lg bg-[#EF4444] py-2 text-[13px] font-semibold text-white hover:bg-[#DC2626] disabled:opacity-50 transition">
             {isPending ? 'Archiving…' : 'Archive'}
           </button>
         </div>
@@ -1636,8 +1636,8 @@ function Toast({ msg, type }: { msg: string; type: 'success' | 'error' }) {
   return (
     <div className={`fixed top-6 right-6 z-[100] flex items-center gap-2 rounded-xl border px-4 py-3 text-[13px] font-medium shadow-lg ${
       type === 'success'
-        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-        : 'border-red-200 bg-red-50 text-red-700'
+        ? 'border-[#A7F3D0] bg-[#E7F8EE] text-[#15803D]'
+        : 'border-[#FECACA] bg-[#FEE2E2] text-[#DC2626]'
     }`}>
       {type === 'success' ? (
         <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
@@ -1681,16 +1681,16 @@ function ConfirmDelete({
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
-        <div className="border-b border-red-100 bg-red-50 px-6 py-4">
+        <div className="border-b border-[#FEE2E2] bg-[#FEE2E2] px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100">
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-red-600">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FEE2E2]">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-[#EF4444]">
                 <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd"/>
               </svg>
             </div>
             <div>
               <h2 className="text-[15px] font-bold text-[#0B1F3A]">Delete Instructor</h2>
-              <p className="text-[12px] text-red-500">This action cannot be undone</p>
+              <p className="text-[12px] text-[#EF4444]">This action cannot be undone</p>
             </div>
           </div>
         </div>
@@ -1715,26 +1715,26 @@ function ConfirmDelete({
           </div>
 
           {isBlocked ? (
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-1.5">
-              <p className="text-[12px] font-semibold text-amber-800">Cannot delete — active obligations remain:</p>
+            <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-4 space-y-1.5">
+              <p className="text-[12px] font-semibold text-[#92400E]">Cannot delete — active obligations remain:</p>
               {activeGroupCount > 0 && (
-                <p className="text-[12px] text-amber-700">• {activeGroupCount} active group(s) still assigned</p>
+                <p className="text-[12px] text-[#B45309]">• {activeGroupCount} active group(s) still assigned</p>
               )}
               {futureSessionCount > 0 && (
-                <p className="text-[12px] text-amber-700">• {futureSessionCount} upcoming session(s) scheduled</p>
+                <p className="text-[12px] text-[#B45309]">• {futureSessionCount} upcoming session(s) scheduled</p>
               )}
-              <p className="mt-1 text-[11px] text-amber-600">Remove from active groups and cancel upcoming sessions first, or archive to preserve the record.</p>
+              <p className="mt-1 text-[11px] text-[#F59E0B]">Remove from active groups and cancel upcoming sessions first, or archive to preserve the record.</p>
             </div>
           ) : (
             <>
-              <div className="rounded-xl border border-red-100 bg-red-50 p-3">
-                <p className="text-[12px] text-red-700">
+              <div className="rounded-xl border border-[#FEE2E2] bg-[#FEE2E2] p-3">
+                <p className="text-[12px] text-[#DC2626]">
                   This permanently removes the instructor and operational history links. The auth account will be disabled. Audit data is preserved.
                 </p>
               </div>
               <div>
                 <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">
-                  Type <strong className="font-mono text-red-600">DELETE</strong> to confirm
+                  Type <strong className="font-mono text-[#EF4444]">DELETE</strong> to confirm
                 </label>
                 <input
                   type="text"
@@ -1742,7 +1742,7 @@ function ConfirmDelete({
                   onChange={e => setConfirmText(e.target.value)}
                   placeholder="DELETE"
                   autoFocus
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 font-mono text-[13px] outline-none focus:border-red-400 transition"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 font-mono text-[13px] outline-none focus:border-[#F87171] transition"
                 />
               </div>
             </>
@@ -1754,14 +1754,14 @@ function ConfirmDelete({
             Cancel
           </button>
           {isBlocked ? (
-            <button onClick={onArchiveInstead} className="flex-1 rounded-lg bg-amber-500 py-2 text-[13px] font-semibold text-white hover:bg-amber-600 transition">
+            <button onClick={onArchiveInstead} className="flex-1 rounded-lg bg-[#F59E0B] py-2 text-[13px] font-semibold text-white hover:bg-[#D97706] transition">
               Archive Instead
             </button>
           ) : (
             <button
               onClick={onConfirm}
               disabled={!canConfirm}
-              className="flex-1 rounded-lg border border-red-500 bg-white py-2 text-[13px] font-semibold text-red-600 hover:bg-red-600 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition">
+              className="flex-1 rounded-lg border border-red-500 bg-white py-2 text-[13px] font-semibold text-[#EF4444] hover:bg-[#DC2626] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition">
               {isPending ? 'Deleting…' : 'Delete Permanently'}
             </button>
           )}
@@ -1826,7 +1826,7 @@ export default function InstructorsWorkspaceClient({
     setAction(
       <button
         onClick={openFormCreate}
-        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+        className="ds-btn-orange"
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
           <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -2059,17 +2059,17 @@ export default function InstructorsWorkspaceClient({
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[900px]">
-              <thead className="sticky top-0 z-10">
-                <tr className="border-b border-[#E2E8F0] bg-white">
-                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-[#64748B]">Instructor</th>
-                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-[#64748B]">Branches</th>
-                  <th className="px-4 py-3 text-center text-[11px] font-semibold text-[#64748B]">Groups</th>
-                  <th className="px-4 py-3 text-center text-[11px] font-semibold text-[#64748B]">Students</th>
-                  <th className="px-4 py-3 text-center text-[11px] font-semibold text-[#64748B]">Today</th>
-                  <th className="px-4 py-3 text-center text-[11px] font-semibold text-[#64748B]">Att.%</th>
-                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-[#64748B]">Salary/Sess</th>
-                  <th className="px-4 py-3 text-left text-[11px] font-semibold text-[#64748B]">Status</th>
-                  {canManage && <th className="px-3 py-3 text-[11px] font-semibold text-[#64748B]">Actions</th>}
+              <thead className="ds-table-head sticky top-0 z-10">
+                <tr>
+                  <th>Instructor</th>
+                  <th>Branches</th>
+                  <th>Groups</th>
+                  <th>Students</th>
+                  <th>Today</th>
+                  <th>Att.%</th>
+                  <th>Salary/Sess</th>
+                  <th>Status</th>
+                  {canManage && <th>Actions</th>}
                 </tr>
               </thead>
               <tbody>

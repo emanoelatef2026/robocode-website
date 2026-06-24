@@ -1,4 +1,4 @@
-import { requirePortalRole }          from '@/modules/rbac/guards'
+﻿import { requirePortalRole }          from '@/modules/rbac/guards'
 import { getParentChildren }          from '@/modules/parents/parent-portal-queries'
 import { getChildHistoryTimeline }    from '@/modules/parents/parent-portal-queries'
 import type { TimelineEvent }         from '@/modules/parents/parent-portal-queries'
@@ -12,12 +12,12 @@ const EVENT_CONFIG: Record<
   TimelineEvent['event_type'],
   { label: string; icon: string; cls: string; dotCls: string }
 > = {
-  attendance:          { label: 'Attendance',          icon: '📅', cls: 'bg-green-50  border-green-100',  dotCls: 'bg-green-400'   },
-  homework_submitted:  { label: 'Homework Submitted',  icon: '📄', cls: 'bg-blue-50   border-blue-100',   dotCls: 'bg-blue-400'    },
+  attendance:          { label: 'Attendance',          icon: '📅', cls: 'bg-[#E7F8EE]  border-green-100',  dotCls: 'bg-[#10B981]'   },
+  homework_submitted:  { label: 'Homework Submitted',  icon: '📄', cls: 'bg-[#EFF6FF]   border-blue-100',   dotCls: 'bg-[#38BDF8]'    },
   homework_graded:     { label: 'Homework Graded',     icon: '✦',  cls: 'bg-indigo-50 border-indigo-100', dotCls: 'bg-indigo-400'  },
   portfolio_uploaded:  { label: 'Portfolio Uploaded',  icon: '🖼', cls: 'bg-purple-50 border-purple-100', dotCls: 'bg-purple-400'  },
-  portfolio_approved:  { label: 'Portfolio Approved',  icon: '★',  cls: 'bg-emerald-50 border-emerald-100', dotCls: 'bg-emerald-400' },
-  certificate_earned:  { label: 'Certificate Earned',  icon: '🏆', cls: 'bg-amber-50  border-amber-100',  dotCls: 'bg-[#FF8A1F]'  },
+  portfolio_approved:  { label: 'Portfolio Approved',  icon: '★',  cls: 'bg-[#E7F8EE] border-emerald-100', dotCls: 'bg-[#10B981]' },
+  certificate_earned:  { label: 'Certificate Earned',  icon: '🏆', cls: 'bg-[#FFFBEB]  border-amber-100',  dotCls: 'bg-[#FF8A1F]'  },
 }
 
 export default async function ParentHistoryPage({ searchParams }: Props) {
@@ -69,7 +69,7 @@ export default async function ParentHistoryPage({ searchParams }: Props) {
       </div>
 
       {monthGroups.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-6 py-12 text-center">
+        <div className="ds-card px-6 py-12 text-center">
           <p className="text-sm text-[#64748B]">No activity recorded yet.</p>
           <p className="mt-1 text-xs text-[#94A3B8]">Activity will appear as sessions, assignments, and portfolio work progress.</p>
         </div>

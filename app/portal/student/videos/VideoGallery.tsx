@@ -1,4 +1,4 @@
-"use client"
+﻿"use client"
 
 import { useState } from "react"
 import Link from "next/link"
@@ -91,20 +91,20 @@ function getPlatformLabel(url: string): string {
 function getPlatformColor(url: string): string {
   try {
     const host = new URL(url).hostname.replace(/^www\./, '')
-    if (host === 'youtube.com' || host === 'youtu.be') return 'bg-red-100 text-red-700'
-    if (host === 'tiktok.com') return 'bg-slate-900 text-white'
+    if (host === 'youtube.com' || host === 'youtu.be') return 'bg-[#FEE2E2] text-[#DC2626]'
+    if (host === 'tiktok.com') return 'bg-[#0F172A] text-white'
     if (host === 'instagram.com') return 'bg-pink-100 text-pink-700'
-    if (host === 'facebook.com' || host === 'fb.watch') return 'bg-blue-100 text-blue-700'
-    if (host === 'drive.google.com') return 'bg-green-100 text-green-700'
-    return 'bg-slate-100 text-slate-700'
+    if (host === 'facebook.com' || host === 'fb.watch') return 'bg-[#EFF6FF] text-[#1D4ED8]'
+    if (host === 'drive.google.com') return 'bg-[#E7F8EE] text-[#15803D]'
+    return 'bg-[#F1F5F9] text-[#334155]'
   } catch {
-    return 'bg-slate-100 text-slate-700'
+    return 'bg-[#F1F5F9] text-[#334155]'
   }
 }
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
-  pending_review:   { label: 'Pending Review', cls: 'bg-amber-100 text-amber-700' },
-  approved:         { label: 'Approved',        cls: 'bg-green-100 text-green-700' },
+  pending_review:   { label: 'Pending Review', cls: 'bg-[#FFFBEB] text-[#B45309]' },
+  approved:         { label: 'Approved',        cls: 'bg-[#E7F8EE] text-[#15803D]' },
   featured:         { label: 'Featured',        cls: 'bg-purple-100 text-purple-700' },
   needs_improvement:{ label: 'Needs Work',      cls: 'bg-orange-100 text-orange-700' },
 }
@@ -120,7 +120,7 @@ function VideoCard({
 }) {
   const platform = getPlatformLabel(video.video_url)
   const platformCls = getPlatformColor(video.video_url)
-  const status = STATUS_LABEL[video.status] ?? { label: video.status, cls: 'bg-slate-100 text-slate-600' }
+  const status = STATUS_LABEL[video.status] ?? { label: video.status, cls: 'bg-[#F1F5F9] text-[#475569]' }
 
   return (
     <div className="group overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white transition hover:shadow-md">

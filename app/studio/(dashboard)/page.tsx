@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import StatCard    from "@/components/studio/StatCard";
@@ -101,8 +101,8 @@ export default async function DashboardPage() {
       </div>
 
       {/* Recent Bookings */}
-      <div className="rounded-xl border border-gray-100 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+      <div className="rounded-xl border border-[#F1F5F9] bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#F1F5F9] px-6 py-4">
           <h2 className="text-[15px] font-semibold text-[#0B132B]">Recent Bookings</h2>
           <Link href="/studio/bookings" className="text-[13px] font-medium text-[#19C6F4] hover:underline">
             View all
@@ -111,8 +111,8 @@ export default async function DashboardPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
-            <thead>
-              <tr className="border-b border-gray-50 text-left text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            <thead className="ds-table-head">
+              <tr className="border-b border-gray-50 text-left text-[11px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
                 <th className="px-6 py-3">Student</th>
                 <th className="px-6 py-3">Preferred Day</th>
                 <th className="px-6 py-3">Status</th>
@@ -121,13 +121,13 @@ export default async function DashboardPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {stats.recentBookings.map((b) => (
-                <tr key={b.id} className="hover:bg-gray-50/50">
+                <tr key={b.id} className="hover:bg-[#F9FAFB]/50">
                   <td className="px-6 py-3.5 font-medium text-[#0B132B]">{b.student_name}</td>
-                  <td className="px-6 py-3.5 text-gray-500">{b.preferred_day ?? "—"}</td>
+                  <td className="px-6 py-3.5 text-[#6B7280]">{b.preferred_day ?? "—"}</td>
                   <td className="px-6 py-3.5">
                     <StatusBadge status={b.status as "new" | "contacted" | "confirmed" | "cancelled"} />
                   </td>
-                  <td className="px-6 py-3.5 text-gray-400">
+                  <td className="px-6 py-3.5 text-[#9CA3AF]">
                     {new Date(b.created_at).toLocaleDateString("en-GB", {
                       day: "numeric", month: "short",
                     })}
@@ -136,7 +136,7 @@ export default async function DashboardPage() {
               ))}
               {stats.recentBookings.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-10 text-center text-gray-400">
+                  <td colSpan={4} className="px-6 py-10 text-center text-[#9CA3AF]">
                     No bookings yet
                   </td>
                 </tr>

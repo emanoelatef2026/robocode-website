@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useActionState } from 'react'
 import { updateModule } from '@/modules/courses/modules/actions'
@@ -41,16 +41,16 @@ export default function ModuleDetailView({ mod, lessons }: Props) {
   return (
     <div className="space-y-5">
       {/* Semester edit */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">Semester Settings</h2>
 
         {editState && !editState.success && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
             {editState.error.message}
           </div>
         )}
         {editState?.success && (
-          <div className="mb-3 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">
+          <div className="mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-sm text-[#15803D]">
             Changes saved.
           </div>
         )}
@@ -99,13 +99,13 @@ export default function ModuleDetailView({ mod, lessons }: Props) {
       </div>
 
       {/* Lessons */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white p-5">
+      <div className="ds-card p-5">
         <h2 className="mb-4 text-sm font-medium text-[#0B1F3A]">
           Lessons ({lessons.length})
         </h2>
 
         {addLsnState && !addLsnState.success && (
-          <div className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          <div className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#DC2626]">
             {addLsnState.error.message}
           </div>
         )}
@@ -163,7 +163,7 @@ export default function ModuleDetailView({ mod, lessons }: Props) {
                   <button
                     type="button"
                     onClick={() => handleDeleteLesson(lesson.id)}
-                    className="text-xs text-red-400 hover:text-red-600"
+                    className="text-xs text-[#F87171] hover:text-[#EF4444]"
                   >
                     Delete
                   </button>

@@ -1,4 +1,4 @@
-import { listTeamLeaders } from '@/modules/team-leaders/queries'
+﻿import { listTeamLeaders } from '@/modules/team-leaders/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
@@ -34,7 +34,7 @@ export default async function TeamLeadersPage({ searchParams }: Props) {
         </Link>
       </TopbarAction>
 
-      <div className="rounded-xl border border-[#E2E8F0] bg-white">
+      <div className="ds-card">
         <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
           <SearchInput placeholder="Search team leaders…" />
         </div>
@@ -48,7 +48,7 @@ export default async function TeamLeadersPage({ searchParams }: Props) {
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
+                <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Code</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Name</th>
@@ -62,7 +62,7 @@ export default async function TeamLeadersPage({ searchParams }: Props) {
                 </thead>
                 <tbody>
                   {result.data.map((tl) => (
-                    <tr key={tl.user_role_id} className="border-b border-[#E2E8F0] last:border-0 hover:bg-[#F8FAFC]">
+                    <tr key={tl.user_role_id} className="ds-table-row">
                       <td className="px-4 py-3">
                         {tl.tl_code
                           ? <Link href={`/admin/team-leaders/${tl.user_id}`} className="font-mono text-xs font-semibold text-[#0B1F3A] hover:text-[#FF8A1F]">{tl.tl_code}</Link>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useRef, useEffect, useActionState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -18,7 +18,7 @@ interface Props {
 }
 
 const cls =
-  'w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+  'w-full ds-card px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
 
 // ── Inner components ─────────────────────────────────────────────────────────
 
@@ -75,7 +75,7 @@ function Field({
     <div>
       <label className="mb-1.5 block text-xs font-medium text-[#64748B]">
         {label}
-        {required && <span className="ml-0.5 text-red-500">*</span>}
+        {required && <span className="ml-0.5 text-[#EF4444]">*</span>}
       </label>
       {children}
       {hint && <p className="mt-1 text-[10px] text-[#94A3B8]">{hint}</p>}
@@ -243,7 +243,7 @@ export default function CourseModal({ onClose, mode, courseId }: Props) {
           {loading ? (
             <Skeleton />
           ) : loadError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
               {loadError}
             </div>
           ) : (
@@ -263,7 +263,7 @@ export default function CourseModal({ onClose, mode, courseId }: Props) {
 
               {/* Error banner */}
               {errorMsg && (
-                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                <div className="mb-4 rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-4 py-3 text-sm text-[#DC2626]">
                   {errorMsg}
                 </div>
               )}
@@ -527,19 +527,19 @@ export default function CourseModal({ onClose, mode, courseId }: Props) {
 
               {/* ── Danger zone (edit mode only) ── */}
               {mode === 'edit' && course && (
-                <div className="mt-5 rounded-xl border border-red-100 bg-red-50 p-4">
-                  <p className="mb-1 text-sm font-semibold text-red-700">Danger Zone</p>
-                  <p className="mb-3 text-xs text-red-600">
+                <div className="mt-5 rounded-xl border border-[#FEE2E2] bg-[#FEE2E2] p-4">
+                  <p className="mb-1 text-sm font-semibold text-[#DC2626]">Danger Zone</p>
+                  <p className="mb-3 text-xs text-[#EF4444]">
                     Soft-deletes this course and removes it from all views.
                   </p>
                   {deleteError && (
-                    <p className="mb-2 text-xs font-medium text-red-700">{deleteError}</p>
+                    <p className="mb-2 text-xs font-medium text-[#DC2626]">{deleteError}</p>
                   )}
                   <button
                     type="button"
                     onClick={handleDelete}
                     disabled={deleting}
-                    className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                    className="rounded-lg border border-[#FECACA] bg-white px-4 py-2 text-sm font-medium text-[#EF4444] transition hover:bg-[#FEE2E2] disabled:opacity-50"
                   >
                     {deleting ? 'Deleting…' : 'Delete course'}
                   </button>
