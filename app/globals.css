@@ -161,14 +161,14 @@ body.font-cairo {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-<<<<<<< HEAD
 /* ── Font utilities ───────────────────────────────────────────────────────────── */
 @utility font-orbitron {
   font-family: var(--font-orbitron), 'Orbitron', sans-serif;
 }
 @utility font-poppins {
   font-family: var(--font-poppins), 'Poppins', sans-serif;
-=======
+}
+
 /* ── Student portal animations ───────────────────────────────────────────────── */
 @keyframes xpglow {
   0%, 100% { background-position: 0% 50%; }
@@ -178,5 +178,4 @@ body.font-cairo {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
->>>>>>> f71633c (student ui)
 }
