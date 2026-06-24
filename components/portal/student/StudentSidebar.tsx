@@ -6,58 +6,73 @@ import { usePathname, useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { useState } from "react"
 
-const Icons = {
+// ── Icons (20×20 Heroicons solid) ───────────────────────────────────────────
+
+const IC = {
   dashboard: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
       <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
     </svg>
   ),
+  sessions: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.5 2.5a1 1 0 001.414-1.414L11 9.586V6z" clipRule="evenodd" />
+    </svg>
+  ),
   assignments: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
       <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
       <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
     </svg>
   ),
-  portfolio: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+  attendance: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
     </svg>
   ),
   certificates: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
       <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
     </svg>
   ),
-  attendance: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-    </svg>
-  ),
-  history: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+  portfolio: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
     </svg>
   ),
   password: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
       <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
     </svg>
   ),
   logout: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
       <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+    </svg>
+  ),
+  chevron: (active: boolean) => (
+    <svg
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className={`h-3 w-3 shrink-0 transition-transform duration-200 ${active ? "rotate-180" : ""}`}
+    >
+      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
     </svg>
   ),
 }
 
+// ── Nav items ────────────────────────────────────────────────────────────────
+
 const NAV_ITEMS = [
-  { label: "Dashboard",    href: "/portal/student",              icon: Icons.dashboard,    exact: true },
-  { label: "Attendance",   href: "/portal/student/attendance",   icon: Icons.attendance },
-  { label: "Assignments",  href: "/portal/student/assignments",  icon: Icons.assignments },
-  { label: "Portfolio",    href: "/portal/student/portfolio",    icon: Icons.portfolio },
-  { label: "Certificates", href: "/portal/student/certificates", icon: Icons.certificates },
-  { label: "History",      href: "/portal/student/history",      icon: Icons.history },
+  { label: "Dashboard",    href: "/portal/student",             icon: IC.dashboard,    exact: true  },
+  { label: "Sessions",     href: "/portal/student/history",     icon: IC.sessions,     exact: false },
+  { label: "Assignments",  href: "/portal/student/assignments", icon: IC.assignments,  exact: false },
+  { label: "Attendance",   href: "/portal/student/attendance",  icon: IC.attendance,   exact: false },
+  { label: "Certificates", href: "/portal/student/certificates",icon: IC.certificates, exact: false },
+  { label: "Portfolio",    href: "/portal/student/portfolio",   icon: IC.portfolio,    exact: false },
 ]
+
+// ── Nav link ─────────────────────────────────────────────────────────────────
 
 function NavLink({
   href, label, icon, active, onClose,
@@ -69,22 +84,32 @@ function NavLink({
       href={href}
       onClick={onClose}
       className={[
-        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
+        "flex items-center gap-[10px] rounded-[9px] px-[10px] py-[9px] text-[12.5px] transition-all duration-150",
         active
-          ? "bg-[#FF8A1F]/15 text-[#FF8A1F]"
-          : "text-white/50 hover:bg-white/5 hover:text-white/80",
+          ? "bg-[rgba(255,138,31,.15)] font-bold text-[#FF8A1F]"
+          : "font-medium text-white/52 hover:bg-white/5 hover:text-white/80",
       ].join(" ")}
     >
       <span className={active ? "text-[#FF8A1F]" : "text-white/35"}>{icon}</span>
-      {label}
-      {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#FF8A1F]" />}
+      <span className="flex-1 leading-none">{label}</span>
+      {active && (
+        <span className="ms-auto h-1.5 w-1.5 rounded-full bg-[#FF8A1F]" />
+      )}
     </Link>
   )
 }
 
-function NavContent({ onClose }: { onClose?: () => void }) {
-  const pathname = usePathname()
-  const router   = useRouter()
+// ── Nav content (shared between desktop and mobile drawer) ───────────────────
+
+interface NavContentProps {
+  onClose?:     () => void
+  studentName?: string
+  groupName?:   string
+}
+
+function NavContent({ onClose, studentName, groupName }: NavContentProps) {
+  const pathname     = usePathname()
+  const router       = useRouter()
   const [accountOpen, setAccountOpen] = useState(false)
 
   const isActive = (href: string, exact?: boolean) =>
@@ -96,20 +121,33 @@ function NavContent({ onClose }: { onClose?: () => void }) {
     router.refresh()
   }
 
+  const initials = studentName
+    ? studentName.split(" ").slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("")
+    : "S"
+
   return (
     <div className="flex h-full min-h-0 flex-col">
+
       {/* Logo */}
-      <div className="flex h-14 shrink-0 items-center border-b border-white/8 px-5">
-        <Image src="/logo.png" alt="Robocode" width={120} height={52} className="h-auto w-24 brightness-0 invert" />
+      <div className="flex shrink-0 items-center gap-[9px] px-2 pb-5 pt-[18px]">
+        <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[8px] bg-white">
+          <Image src="/logo.png" alt="Robocode" width={23} height={23} className="h-[23px] w-[23px] object-contain" />
+        </div>
+        <span
+          className="text-[12px] font-bold tracking-[.04em] text-white"
+          style={{ fontFamily: "var(--font-orbitron)" }}
+        >
+          ROBOCODE
+        </span>
       </div>
 
-      {/* Role badge */}
-      <div className="shrink-0 px-5 pt-5 pb-2">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/25">Student</p>
-      </div>
+      {/* Section label */}
+      <p className="shrink-0 px-[8px] pb-[7px] text-[8.5px] font-bold uppercase tracking-[.2em] text-white/25">
+        Menu
+      </p>
 
       {/* Nav items */}
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-2">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 pb-3">
         {NAV_ITEMS.map(({ label, href, icon, exact }) => (
           <NavLink
             key={href}
@@ -122,49 +160,88 @@ function NavContent({ onClose }: { onClose?: () => void }) {
         ))}
       </nav>
 
-      {/* Footer — My Account collapsible */}
-      <div className="shrink-0 border-t border-white/8 p-3">
+      {/* XP widget + user footer */}
+      <div className="shrink-0 border-t border-white/8 px-3 pb-[18px] pt-3">
+
+        {/* XP mini-widget */}
+        <div className="mb-[10px] rounded-[10px] bg-white/5 px-[10px] py-[10px]">
+          <div className="mb-1.5 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[12px]">⭐</span>
+              <span className="text-[10px] font-bold text-[#FFB15A]">LV.5</span>
+            </div>
+            <span
+              className="text-[10px] font-bold text-[#FFB15A]"
+              style={{ fontFamily: "var(--font-orbitron)" }}
+            >
+              1,240 XP
+            </span>
+          </div>
+          <div className="h-[5px] overflow-hidden rounded-sm bg-white/10">
+            <div
+              className="h-full w-[82%] rounded-sm"
+              style={{
+                background: "linear-gradient(90deg, #FF8A1F, #FFD166, #FF8A1F)",
+                backgroundSize: "200%",
+                animation: "xpglow 3s ease infinite",
+              }}
+            />
+          </div>
+          <p className="mt-1 text-[9px] text-white/30">260 XP to next level</p>
+        </div>
+
+        {/* User row */}
+        <div className="flex items-center gap-[9px] px-1 py-1">
+          <div
+            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+            style={{ background: "linear-gradient(135deg, #FF8A1F, #0B1F3A)" }}
+          >
+            {initials}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[11.5px] font-semibold text-white">
+              {studentName ?? "Student"}
+            </p>
+            <p className="text-[9.5px] text-white/40">{groupName ?? "Student"}</p>
+          </div>
+        </div>
+
+        {/* Account collapsible */}
         <button
-          onClick={() => setAccountOpen(v => !v)}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/35 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
+          onClick={() => setAccountOpen((v) => !v)}
+          className="mt-1.5 flex w-full items-center gap-2 rounded-[9px] px-[10px] py-2 text-[11.5px] font-medium text-white/30 transition hover:bg-white/5 hover:text-white/60"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
           </svg>
-          <span className="flex-1 text-left">My Account</span>
-          <svg
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className={`h-3 w-3 shrink-0 transition-transform duration-200 ${accountOpen ? "rotate-180" : ""}`}
-          >
-            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
+          <span className="flex-1 text-start">My Account</span>
+          {IC.chevron(accountOpen)}
         </button>
 
         <AnimatePresence initial={false}>
           {accountOpen && (
             <motion.div
-              key="account-items"
+              key="account"
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.18, ease: "easeInOut" }}
               className="overflow-hidden"
             >
-              <div className="mt-0.5 space-y-0.5 pl-3">
+              <div className="mt-0.5 space-y-0.5 ps-3">
                 <Link
                   href="/account/password"
                   onClick={onClose}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-white/30 transition-all duration-150 hover:bg-white/5 hover:text-white/60"
+                  className="flex w-full items-center gap-2 rounded-[9px] px-[10px] py-2 text-[11.5px] font-medium text-white/30 transition hover:bg-white/5 hover:text-white/60"
                 >
-                  {Icons.password}
+                  {IC.password}
                   Change Password
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-red-400/60 transition-all duration-150 hover:bg-white/5 hover:text-red-400"
+                  className="flex w-full items-center gap-2 rounded-[9px] px-[10px] py-2 text-[11.5px] font-medium text-red-400/60 transition hover:bg-white/5 hover:text-red-400"
                 >
-                  {Icons.logout}
+                  {IC.logout}
                   Logout
                 </button>
               </div>
@@ -176,32 +253,36 @@ function NavContent({ onClose }: { onClose?: () => void }) {
   )
 }
 
+// ── Main export ──────────────────────────────────────────────────────────────
+
 interface Props {
-  isOpen:  boolean
-  onClose: () => void
+  isOpen:      boolean
+  onClose:     () => void
+  studentName?: string
+  groupName?:   string
 }
 
-export default function StudentSidebar({ isOpen, onClose }: Props) {
+export default function StudentSidebar({ isOpen, onClose, studentName, groupName }: Props) {
   return (
     <>
-      {/* Desktop permanent sidebar */}
-      <aside className="hidden w-56 shrink-0 bg-[#0B1F3A] md:flex md:flex-col">
-        <NavContent />
+      {/* Desktop permanent sidebar — fixed, 200px */}
+      <aside className="fixed bottom-0 start-0 top-0 z-30 hidden w-[200px] flex-col bg-[#0B1F3A] md:flex">
+        <NavContent studentName={studentName} groupName={groupName} />
       </aside>
 
-      {/* Mobile drawer — stops above bottom nav */}
+      {/* Mobile animated drawer */}
       <AnimatePresence>
         {isOpen && (
           <motion.aside
             key="student-mobile-sidebar"
-            initial={{ x: -224 }}
+            initial={{ x: -200 }}
             animate={{ x: 0 }}
-            exit={{ x: -224 }}
+            exit={{ x: -200 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed top-0 left-0 z-30 w-56 bg-[#0B1F3A] md:hidden"
+            className="fixed start-0 top-0 z-30 w-[200px] bg-[#0B1F3A] md:hidden"
             style={{ bottom: "calc(56px + max(8px, env(safe-area-inset-bottom)))" }}
           >
-            <NavContent onClose={onClose} />
+            <NavContent onClose={onClose} studentName={studentName} groupName={groupName} />
           </motion.aside>
         )}
       </AnimatePresence>

@@ -60,10 +60,10 @@ function deriveNextActions(data: StudentDashboardData): Array<{ label: string; h
     actions.push({ label: 'Download your certificate', href: '/portal/student/certificates', kind: 'certificate' })
   }
 
-  return actions.slice(0, 4)
+  return actions.slice(0, 3)
 }
 
-// ── Upcoming homework card ────────────────────────────────────────────────────
+// ── Secondary cards (desktop only) ───────────────────────────────────────────
 
 function UpcomingCard({ items }: { items: UpcomingHomework[] }) {
   return (
@@ -97,8 +97,6 @@ function UpcomingCard({ items }: { items: UpcomingHomework[] }) {
     </div>
   )
 }
-
-// ── Recent feedback card ──────────────────────────────────────────────────────
 
 function FeedbackCard({ items }: { items: RecentFeedbackItem[] }) {
   return (
@@ -168,51 +166,55 @@ export default async function StudentDashboardPage() {
     : null
 
   return (
-    <div className="mx-auto max-w-3xl space-y-3">
+    <div className="mx-auto max-w-3xl space-y-2.5 md:space-y-3">
 
-      {/* ── Hero + Session Progress (merged) ─────────────────────────────── */}
-      <div className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-3.5">
-        {/* Name row */}
-        <div className="flex items-center justify-between gap-3">
-          <h1 className="text-base font-bold text-[#0B1F3A] leading-tight">{data.student_name}</h1>
+      {/* ── Hero + Session Progress ───────────────────────────────────────── */}
+      <div className="rounded-xl border border-[#E2E8F0] bg-white px-3.5 py-3 md:px-4 md:py-3.5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[15px] font-bold leading-tight text-[#0B1F3A] md:text-base">
+              {data.student_name}
+            </p>
+            {!notEnrolled && (
+              <p className="mt-0.5 truncate text-[11px] text-[#64748B] md:text-xs">
+                {[data.group_name, data.course_title, data.instructor_name].filter(Boolean).join(' · ')}
+              </p>
+            )}
+          </div>
           {!notEnrolled && (
-            <span className="shrink-0 rounded-full bg-[#FF8A1F]/10 px-2.5 py-1 text-sm font-bold text-[#FF8A1F]">
+            <span className="shrink-0 rounded-full bg-[#FF8A1F]/10 px-2 py-0.5 text-xs font-bold text-[#FF8A1F]">
               {sessionPct}%
             </span>
           )}
         </div>
 
         {notEnrolled ? (
-          <p className="mt-1 text-xs text-[#94A3B8]">Not enrolled in any active group yet.</p>
+          <p className="mt-1 text-[11px] text-[#94A3B8]">Not enrolled in any active group yet.</p>
         ) : (
-          <>
-            {/* Identity row */}
-            <p className="mt-0.5 text-xs text-[#64748B] leading-relaxed">
-              {[data.group_name, data.course_title, data.instructor_name].filter(Boolean).join(' · ')}
-            </p>
-
-            {/* Progress row */}
-            <div className="mt-3">
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <span className="text-xl font-bold text-[#0B1F3A]">{data.consumed_sessions}</span>
-                <span className="text-sm text-[#64748B]">/ {data.enrolled_sessions} sessions</span>
-                {remaining > 0 && (
-                  <span className="text-xs text-[#94A3B8]">{remaining} remaining</span>
-                )}
-                {data.enrolled_sessions === 0 && (
-                  <span className="text-xs text-[#94A3B8]">No active package</span>
-                )}
-              </div>
-              <div className="mt-2">
-                <ProgressBar value={sessionPct} />
-              </div>
-              {nextClassLabel && (
-                <p className="mt-1.5 text-xs text-[#64748B]">
-                  Next class: <span className="font-semibold text-[#0B1F3A]">{nextClassLabel}</span>
-                </p>
+          <div className="mt-2 md:mt-3">
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+              <span className="text-[18px] font-bold leading-none text-[#0B1F3A] md:text-xl">
+                {data.consumed_sessions}
+              </span>
+              <span className="text-[11px] text-[#64748B] md:text-sm">
+                / {data.enrolled_sessions} sessions
+              </span>
+              {remaining > 0 && (
+                <span className="text-[10px] text-[#94A3B8]">{remaining} remaining</span>
+              )}
+              {data.enrolled_sessions === 0 && (
+                <span className="text-[10px] text-[#94A3B8]">No active package</span>
               )}
             </div>
-          </>
+            <div className="mt-1.5 md:mt-2">
+              <ProgressBar value={sessionPct} />
+            </div>
+            {nextClassLabel && (
+              <p className="mt-1 text-[11px] text-[#64748B] md:text-xs">
+                Next class: <span className="font-semibold text-[#0B1F3A]">{nextClassLabel}</span>
+              </p>
+            )}
+          </div>
         )}
       </div>
 
@@ -226,17 +228,17 @@ export default async function StudentDashboardPage() {
       ) : (
         <>
           {/* ── Stat cards ───────────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 md:gap-2.5 sm:grid-cols-4">
             {/* Attendance */}
             <Link
               href="/portal/student/attendance"
-              className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 transition hover:border-[#CBD5E1] hover:shadow-sm"
+              className="rounded-xl border border-[#E2E8F0] bg-white p-3 transition hover:border-[#CBD5E1] hover:shadow-sm md:p-3.5"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Attendance</p>
-              <p className={`mt-1 text-2xl font-bold leading-none ${data.att_pct >= 75 ? 'text-green-600' : data.att_pct >= 50 ? 'text-yellow-600' : 'text-[#0B1F3A]'}`}>
+              <p className="text-[9.5px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Attendance</p>
+              <p className={`mt-0.5 text-[20px] font-bold leading-none md:text-2xl ${data.att_pct >= 75 ? 'text-green-600' : data.att_pct >= 50 ? 'text-yellow-600' : 'text-[#0B1F3A]'}`}>
                 {data.att_pct}%
               </p>
-              <p className="mt-1 text-[11px] text-[#64748B]">
+              <p className="mt-0.5 text-[10px] text-[#64748B]">
                 {data.att_total > 0
                   ? `${data.att_present}P · ${data.att_absent}A · ${data.att_late}L`
                   : 'No records yet'}
@@ -246,13 +248,13 @@ export default async function StudentDashboardPage() {
             {/* Assignments */}
             <Link
               href="/portal/student/assignments"
-              className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 transition hover:border-[#CBD5E1] hover:shadow-sm"
+              className="rounded-xl border border-[#E2E8F0] bg-white p-3 transition hover:border-[#CBD5E1] hover:shadow-sm md:p-3.5"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Assignments</p>
-              <p className="mt-1 text-2xl font-bold leading-none text-[#0B1F3A]">
+              <p className="text-[9.5px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Assignments</p>
+              <p className="mt-0.5 text-[20px] font-bold leading-none text-[#0B1F3A] md:text-2xl">
                 {data.assignments_total === 0 ? '0' : `${data.assignments_submitted}/${data.assignments_total}`}
               </p>
-              <p className="mt-1 text-[11px] text-[#64748B]">
+              <p className="mt-0.5 text-[10px] text-[#64748B]">
                 {data.assignments_total === 0
                   ? 'None assigned yet'
                   : data.assignments_graded > 0
@@ -264,29 +266,29 @@ export default async function StudentDashboardPage() {
             {/* Portfolio */}
             <Link
               href="/portal/student/portfolio"
-              className="rounded-xl border border-[#E2E8F0] bg-white p-3.5 transition hover:border-[#CBD5E1] hover:shadow-sm"
+              className="rounded-xl border border-[#E2E8F0] bg-white p-3 transition hover:border-[#CBD5E1] hover:shadow-sm md:p-3.5"
             >
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Portfolio</p>
-              <p className="mt-1 text-2xl font-bold leading-none text-[#0B1F3A]">{data.portfolio_projects}</p>
-              <p className="mt-1 text-[11px] text-[#64748B]">
+              <p className="text-[9.5px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Portfolio</p>
+              <p className="mt-0.5 text-[20px] font-bold leading-none text-[#0B1F3A] md:text-2xl">{data.portfolio_projects}</p>
+              <p className="mt-0.5 text-[10px] text-[#64748B]">
                 {data.portfolio_projects === 0 ? 'No projects yet' : `${data.portfolio_reviewed} reviewed`}
               </p>
             </Link>
 
             {/* Overall */}
-            <div className="rounded-xl border border-[#E2E8F0] bg-white p-3.5">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Overall</p>
+            <div className="rounded-xl border border-[#E2E8F0] bg-white p-3 md:p-3.5">
+              <p className="text-[9.5px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">Overall</p>
               {data.overall_pct != null ? (
                 <>
-                  <p className={`mt-1 text-2xl font-bold leading-none ${data.overall_pct >= 75 ? 'text-green-600' : 'text-[#0B1F3A]'}`}>
+                  <p className={`mt-0.5 text-[20px] font-bold leading-none md:text-2xl ${data.overall_pct >= 75 ? 'text-green-600' : 'text-[#0B1F3A]'}`}>
                     {Math.round(data.overall_pct)}%
                   </p>
-                  <p className="mt-1 text-[11px] text-[#64748B]">composite score</p>
+                  <p className="mt-0.5 text-[10px] text-[#64748B]">composite score</p>
                 </>
               ) : (
                 <>
-                  <p className="mt-1 text-xl font-semibold leading-none text-[#94A3B8]">—</p>
-                  <p className="mt-1 text-[11px] text-[#94A3B8]">No grades yet</p>
+                  <p className="mt-0.5 text-xl font-semibold leading-none text-[#94A3B8]">—</p>
+                  <p className="mt-0.5 text-[10px] text-[#94A3B8]">No grades yet</p>
                 </>
               )}
             </div>
@@ -295,8 +297,10 @@ export default async function StudentDashboardPage() {
           {/* ── Next Actions ──────────────────────────────────────────────── */}
           {nextActions.length > 0 && (
             <section>
-              <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">Next Actions</h2>
-              <div className="space-y-1.5">
+              <h2 className="mb-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-[#94A3B8] md:mb-2 md:text-xs">
+                Next Actions
+              </h2>
+              <div className="space-y-1 md:space-y-1.5">
                 {nextActions.map((action, i) => {
                   const colors: Record<string, string> = {
                     homework:    'bg-amber-100 text-amber-700',
@@ -312,12 +316,12 @@ export default async function StudentDashboardPage() {
                     <Link
                       key={i}
                       href={action.href}
-                      className="flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 transition hover:border-[#FF8A1F]/50 hover:shadow-sm"
+                      className="flex items-center gap-2.5 rounded-xl border border-[#E2E8F0] bg-white px-3.5 py-2.5 transition hover:border-[#FF8A1F]/50 hover:shadow-sm md:gap-3 md:px-4 md:py-3"
                     >
-                      <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs ${colors[action.kind] ?? colors.info}`}>
+                      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] md:h-7 md:w-7 ${colors[action.kind] ?? colors.info}`}>
                         {icons[action.kind] ?? '→'}
                       </div>
-                      <p className="flex-1 text-sm font-medium text-[#0B1F3A]">{action.label}</p>
+                      <p className="flex-1 text-[12.5px] font-medium text-[#0B1F3A] md:text-sm">{action.label}</p>
                       <span className="shrink-0 text-xs text-[#FF8A1F]">→</span>
                     </Link>
                   )
@@ -331,8 +335,8 @@ export default async function StudentDashboardPage() {
             <SessionFeedbackWidget sessions={feedbackSessions} />
           )}
 
-          {/* ── Two-column content ────────────────────────────────────────── */}
-          <div className="grid gap-3 lg:grid-cols-2">
+          {/* ── Two-column content — desktop only ─────────────────────────── */}
+          <div className="hidden gap-3 md:grid md:grid-cols-2">
             <UpcomingCard items={data.upcoming_homework} />
             <FeedbackCard items={data.recent_feedback} />
           </div>

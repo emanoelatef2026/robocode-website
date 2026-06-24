@@ -1,81 +1,136 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
-import { getStudentTimeline } from '@/modules/student-portal/queries'
-import type { TimelineEvent } from '@/modules/student-portal/types'
+import {
+  getStudentDashboardData,
+  getStudentAttendanceHistory,
+} from '@/modules/student-portal/queries'
+import Link from 'next/link'
 
-const EVENT_CONFIG: Record<string, { icon: string; iconCls: string; lineCls: string }> = {
-  attended:    { icon: '✓', iconCls: 'bg-emerald-100 text-emerald-700', lineCls: 'bg-emerald-200' },
-  missed:      { icon: '✕', iconCls: 'bg-red-100 text-red-600',         lineCls: 'bg-red-200'     },
-  submitted:   { icon: '📝', iconCls: 'bg-blue-100 text-blue-700',      lineCls: 'bg-blue-200'    },
-  graded:      { icon: '⭐', iconCls: 'bg-green-100 text-green-700',    lineCls: 'bg-green-200'   },
-  portfolio:   { icon: '🖼', iconCls: 'bg-purple-100 text-purple-700',  lineCls: 'bg-purple-200'  },
-  certificate: { icon: '🏆', iconCls: 'bg-[#FFF7ED] text-[#FF8A1F]',   lineCls: 'bg-orange-200'  },
+const STATUS_CONFIG: Record<string, { label: string; emoji: string; tagBg: string; tagFg: string; iconBg: string }> = {
+  present: { label: 'Present', emoji: '✓',  tagBg: '#E7F8EE', tagFg: '#15803D', iconBg: '#E7F8EE' },
+  absent:  { label: 'Absent',  emoji: '✕',  tagBg: '#FEF2F2', tagFg: '#DC2626', iconBg: '#FEF2F2' },
+  late:    { label: 'Late',    emoji: '⏰', tagBg: '#FFF7E6', tagFg: '#B45309', iconBg: '#FEF3C7' },
+  excused: { label: 'Excused', emoji: '📋', tagBg: '#E6F6FE', tagFg: '#0369A1', iconBg: '#E6F6FE' },
+  makeup:  { label: 'Makeup',  emoji: '🔁', tagBg: '#F3E8FF', tagFg: '#7E22CE', iconBg: '#F3E8FF' },
 }
 
-function groupByDate(events: TimelineEvent[]): Map<string, TimelineEvent[]> {
-  const map = new Map<string, TimelineEvent[]>()
-  for (const e of events) {
-    const key = new Date(e.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-    if (!map.has(key)) map.set(key, [])
-    map.get(key)!.push(e)
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+export default async function StudentSessionsPage() {
+  const user = await requirePortalRole('student')
+
+  const [data, records] = await Promise.all([
+    getStudentDashboardData(user.id),
+    getStudentAttendanceHistory(user.id),
+  ])
+
+  if (!data) {
+    return (
+      <div className="flex h-48 items-center justify-center text-sm text-[#64748B]">
+        No student record found.
+      </div>
+    )
   }
-  return map
-}
 
-export default async function StudentHistoryPage() {
-  const user   = await requirePortalRole('student')
-  const events = await getStudentTimeline(user.id)
-  const groups = groupByDate(events)
+  const present = records.filter(r => r.status === 'present').length
+  const late    = records.filter(r => r.status === 'late').length
+  const absent  = records.filter(r => r.status === 'absent').length
 
   return (
-    <div className="mx-auto max-w-2xl space-y-3">
-      <div>
-        <h1 className="text-base font-bold text-[#0B1F3A]">Activity History</h1>
-        <p className="text-xs text-[#64748B]">Your journey — newest first</p>
+    <div className="mx-auto max-w-3xl space-y-4">
+
+      {/* Page header */}
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[17px] font-bold text-[#0B1F3A]">Sessions</p>
+          <p className="mt-0.5 text-[12px] text-[#64748B]">
+            {data.group_name ?? 'No group enrolled'}{data.course_title ? ` · ${data.course_title}` : ''}
+          </p>
+        </div>
+        <Link href="/portal/student/attendance" className="shrink-0 text-xs font-semibold text-[#FF8A1F] hover:underline">
+          View stats →
+        </Link>
       </div>
 
-      {events.length === 0 ? (
-        <div className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-10 text-center">
-          <p className="text-sm text-[#94A3B8]">No activity yet. Your history will appear here as you attend sessions and complete assignments.</p>
+      {/* KPI strip */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Present', value: present, iconBg: '#E7F8EE', valueFg: '#15803D', emoji: '✓' },
+          { label: 'Late',    value: late,    iconBg: '#FEF3C7', valueFg: '#B45309', emoji: '⏰' },
+          { label: 'Absent',  value: absent,  iconBg: '#FEF2F2', valueFg: '#DC2626', emoji: '✕' },
+        ].map(({ label, value, iconBg, valueFg, emoji }) => (
+          <div key={label} className="flex items-center gap-3 rounded-2xl border border-[#e7ebf1] bg-white p-4">
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[11px] text-lg"
+              style={{ background: iconBg }}
+            >
+              {emoji}
+            </div>
+            <div>
+              <p className="text-[10.5px] font-semibold text-[#64748B]">{label}</p>
+              <p
+                className="text-[22px] font-bold leading-tight"
+                style={{ fontFamily: 'var(--font-orbitron)', color: valueFg }}
+              >
+                {value}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Session list */}
+      {records.length === 0 ? (
+        <div className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-[#E2E8F0] text-sm text-[#64748B]">
+          No sessions recorded yet.
         </div>
       ) : (
-        <div className="space-y-5">
-          {[...groups.entries()].map(([dateLabel, dayEvents]) => (
-            <section key={dateLabel}>
-              {/* Date header */}
-              <div className="mb-2 flex items-center gap-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">{dateLabel}</p>
-                <div className="flex-1 h-px bg-[#F1F5F9]" />
-              </div>
+        <div className="overflow-hidden rounded-2xl border border-[#e7ebf1] bg-white">
+          <div className="border-b border-[#f1f4f8] px-5 py-4">
+            <p className="text-[14px] font-bold text-[#0B1F3A]">Session History</p>
+            <p className="mt-0.5 text-[11px] text-[#64748B]">{records.length} session{records.length !== 1 ? 's' : ''} total</p>
+          </div>
 
-              {/* Events for this day */}
-              <div className="relative space-y-2 pl-7">
-                {/* Vertical timeline line */}
-                <div className="absolute left-2.5 top-0 h-full w-px bg-[#E2E8F0]" />
+          <div className="divide-y divide-[#f1f4f8]">
+            {records.map((r) => {
+              const cfg = r.status ? (STATUS_CONFIG[r.status] ?? { label: r.status, emoji: '•', tagBg: '#F1F5F9', tagFg: '#475569', iconBg: '#F1F5F9' }) : null
+              return (
+                <div
+                  key={`${r.session_num}-${r.date}`}
+                  className="flex items-center gap-3 px-5 py-3.5"
+                >
+                  {/* Icon */}
+                  <div
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] text-base"
+                    style={{ background: cfg?.iconBg ?? '#F1F5F9' }}
+                  >
+                    {cfg?.emoji ?? '•'}
+                  </div>
 
-                {dayEvents.map((event) => {
-                  const cfg = EVENT_CONFIG[event.event_type] ?? EVENT_CONFIG.submitted
-                  return (
-                    <div key={event.id} className="relative">
-                      {/* Icon dot */}
-                      <div className={`absolute -left-[18px] flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${cfg.iconCls} border-2 border-white`}>
-                        {cfg.icon}
-                      </div>
+                  {/* Info */}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[12.5px] font-semibold text-[#0B1F3A]">
+                      {r.topic ?? <span className="italic text-[#94A3B8]">Session #{r.session_num}</span>}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-[#64748B]">
+                      #{r.session_num} · {formatDate(r.date)}
+                    </p>
+                  </div>
 
-                      <div className="rounded-lg border border-[#F1F5F9] bg-white px-3.5 py-2.5">
-                        <p className="text-sm font-medium text-[#0B1F3A]">{event.title}</p>
-                        {event.subtitle && (
-                          <p className="mt-0.5 text-xs text-[#64748B]">{event.subtitle}</p>
-                        )}
-                        <p className="mt-0.5 text-[10px] text-[#94A3B8]">
-                          {new Date(event.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </section>
-          ))}
+                  {/* Status badge */}
+                  {cfg && (
+                    <span
+                      className="shrink-0 rounded-full px-[11px] py-1 text-[10.5px] font-bold"
+                      style={{ background: cfg.tagBg, color: cfg.tagFg }}
+                    >
+                      {cfg.label}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
     </div>
