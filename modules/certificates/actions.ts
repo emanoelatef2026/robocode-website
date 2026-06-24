@@ -11,6 +11,9 @@ import {
 } from './schemas'
 import { generateCertificateCode, getCertificateTemplate } from './queries'
 import { checkCertificateEligibility } from '@/modules/progress/eligibility'
+import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
+import { checkAndUnlockAchievements, checkCourseAchievement } from '@/modules/gamification/achievement-service'
+import { checkAndAwardBadges } from '@/modules/gamification/badge-service'
 import type { ActionResult } from '@/types/app'
 import type { CertificateTemplate } from './types'
 
@@ -232,6 +235,20 @@ export async function issueCertificate(
     p_entity_id:    row.id,
     p_new_values:   { certificate_code: row.certificate_code, student_id: d.student_id },
   })
+
+  // ── XP for certificate (fire-and-forget) ─────────────────────────────────
+  void (async () => {
+    try {
+      await awardXP(d.student_id, XP_AWARDS.CERTIFICATE_EARNED, false)
+      // Course-specific specialization achievement
+      if (d.course_id) {
+        const { data: courseRow } = await db.from('courses').select('title').eq('id', d.course_id).maybeSingle()
+        await checkCourseAchievement(d.student_id, (courseRow as any)?.title ?? null)
+      }
+      await checkAndUnlockAchievements(d.student_id)
+      await checkAndAwardBadges(d.student_id)
+    } catch { /* XP is never critical */ }
+  })()
 
   revalidatePath('/admin/certificates')
   return { success: true, data: { id: row.id, certificate_code: row.certificate_code } }

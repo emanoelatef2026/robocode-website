@@ -41,6 +41,19 @@ export interface StudentDashboardData {
   // Lists
   upcoming_homework: UpcomingHomework[]
   recent_feedback:   RecentFeedbackItem[]
+  // ── Gamification (Phase XXXIII) ───────────────────────────────────────────
+  total_xp:           number
+  current_level:      number
+  xp_progress_pct:    number   // 0–100 within current level
+  xp_to_next_level:   number   // XP needed to reach next level (0 at max)
+  current_streak:     number
+  best_streak:        number
+  group_rank:         number | null   // 1-based rank within group (null if solo/unknown)
+  group_rank_total:   number | null   // total students in group
+  is_student_of_week: boolean
+  achievement_count:  number
+  badge_count:        number
+  certificates_count: number
 }
 
 // ─── Legacy granular types (kept for sub-pages) ───────────────────────────────

@@ -6,6 +6,9 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, requireAuth } from '@/modules/rbac/guards'
 import { resolveProgressFromSubmission, resolveProgressFromAssignment } from '@/modules/progress/resolve'
 import { safeRecalcProgress } from '@/modules/progress/safe-recalc'
+import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
+import { checkAndUnlockAchievements } from '@/modules/gamification/achievement-service'
+import { checkAndAwardBadges } from '@/modules/gamification/badge-service'
 import type { ActionResult } from '@/types/app'
 
 const gradeSchema = z.object({
@@ -98,6 +101,14 @@ export async function gradeSubmission(
     try { rubric_scores = JSON.parse(d.rubric_scores) } catch { /* keep empty */ }
   }
 
+  // Fetch previous status to guard against awarding XP on re-grading
+  const { data: prevSub } = await db
+    .from('submissions')
+    .select('status, student_id')
+    .eq('id', d.submission_id)
+    .maybeSingle()
+  const wasAlreadyGraded = (prevSub as any)?.status === 'graded'
+
   const { error } = await db
     .from('submissions')
     .update({
@@ -128,6 +139,29 @@ export async function gradeSubmission(
   // Here we push that change forward into student_course_progress.
   const tuple = await resolveProgressFromSubmission(d.submission_id)
   await safeRecalcProgress(tuple, 'gradeSubmission')
+
+  // ── XP for graded status (fire-and-forget) ────────────────────────────────
+  // Only award on first grading (wasAlreadyGraded prevents re-grading from doubling XP).
+  if (d.status === 'graded' && !wasAlreadyGraded) {
+    void (async () => {
+      try {
+        const db2 = createServiceClient()
+        const { data: subRow } = await db2
+          .from('submissions')
+          .select('student_id, score, assignments!submissions_assignment_id_fkey(max_score)')
+          .eq('id', d.submission_id)
+          .maybeSingle()
+        if (!subRow) return
+        const sid      = (subRow as any).student_id as string
+        const score    = Number((subRow as any).score ?? 0)
+        const maxScore = Number((subRow as any).assignments?.max_score ?? 0)
+        const isExcellent = maxScore > 0 && score / maxScore >= 0.9
+        await awardXP(sid, isExcellent ? XP_AWARDS.ASSIGNMENT_EXCELLENT : XP_AWARDS.ASSIGNMENT_SUBMITTED, true)
+        await checkAndUnlockAchievements(sid)
+        await checkAndAwardBadges(sid)
+      } catch { /* XP is never critical */ }
+    })()
+  }
 
   revalidatePath(`/admin/assignments/${d.assignment_id}`)
   revalidatePath(`/admin/assignments/${d.assignment_id}/submissions/${d.submission_id}`)

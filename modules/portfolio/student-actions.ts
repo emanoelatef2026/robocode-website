@@ -4,6 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePortalRole } from '@/modules/rbac/guards'
+import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
+import { checkAndUnlockAchievements } from '@/modules/gamification/achievement-service'
+import { checkAndAwardBadges } from '@/modules/gamification/badge-service'
 import type { ActionResult } from '@/types/app'
 
 const CATEGORIES = ['Game', 'AI', 'Website', 'Robotics', 'Mobile App', 'Other'] as const
@@ -104,6 +107,17 @@ export async function submitPortfolioProject(
   if (error || !project) {
     return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to create project.' } }
   }
+
+  // ── XP for portfolio project + optional video challenge bonus ─────────────
+  void (async () => {
+    try {
+      const hasVideo = !!(d.video_url)
+      const baseXp   = hasVideo ? XP_AWARDS.VIDEO_CHALLENGE : XP_AWARDS.PORTFOLIO_PROJECT
+      await awardXP(studentId, baseXp, false)
+      await checkAndUnlockAchievements(studentId)
+      await checkAndAwardBadges(studentId)
+    } catch { /* XP is never critical */ }
+  })()
 
   revalidatePath('/portal/student/portfolio')
   return { success: true, data: { projectId: (project as any).id } }

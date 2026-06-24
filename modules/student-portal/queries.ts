@@ -1,5 +1,7 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { getLevelProgress } from '@/modules/gamification/xp-service'
+import { getStudentGroupRank, getStudentOfTheWeek } from '@/modules/gamification/queries'
 import type {
   StudentEnrollment,
   StudentProgressStats,
@@ -54,6 +56,42 @@ export async function getStudentDashboardData(
     .maybeSingle()
   const groupId = (gsRow as any)?.group_id ?? null
 
+  // ── Gamification data (fetched early — independent of group) ─────────────────
+  const { data: gamRow } = await db
+    .from('students')
+    .select('total_xp, current_level, current_streak, best_streak')
+    .eq('id', studentId)
+    .is('deleted_at', null)
+    .maybeSingle()
+
+  const totalXp      = Number((gamRow as any)?.total_xp      ?? 0)
+  const currentLevel = Number((gamRow as any)?.current_level ?? 1)
+  const xpProgress   = getLevelProgress(totalXp)
+  const currentStreak = Number((gamRow as any)?.current_streak ?? 0)
+  const bestStreak    = Number((gamRow as any)?.best_streak    ?? 0)
+
+  // Achievement + badge counts
+  const [{ count: achievementCount }, { count: badgeCount }, { count: certCount }] = await Promise.all([
+    db.from('student_achievements').select('id', { count: 'exact', head: true }).eq('student_id', studentId),
+    db.from('student_badges').select('id', { count: 'exact', head: true }).eq('student_id', studentId),
+    db.from('certificates').select('id', { count: 'exact', head: true }).eq('student_id', studentId).eq('status', 'active'),
+  ])
+
+  const gamBase = {
+    total_xp:          totalXp,
+    current_level:     currentLevel,
+    xp_progress_pct:   xpProgress.progressPct,
+    xp_to_next_level:  xpProgress.nextLevelXp - xpProgress.levelStartXp,
+    current_streak:    currentStreak,
+    best_streak:       bestStreak,
+    group_rank:        null as number | null,
+    group_rank_total:  null as number | null,
+    is_student_of_week: false,
+    achievement_count: achievementCount ?? 0,
+    badge_count:       badgeCount       ?? 0,
+    certificates_count: certCount       ?? 0,
+  }
+
   const empty: Omit<StudentDashboardData, 'student_id' | 'student_name'> = {
     group_id: null, group_name: null, course_title: null, instructor_name: null,
     day_of_week: null, group_time: null,
@@ -62,6 +100,7 @@ export async function getStudentDashboardData(
     assignments_total: 0, assignments_submitted: 0, assignments_graded: 0, assignments_avg_score: null,
     portfolio_projects: 0, portfolio_reviewed: 0, overall_pct: null,
     upcoming_homework: [], recent_feedback: [],
+    ...gamBase,
   }
   if (!groupId) return { student_id: studentId, student_name: studentName, ...empty }
 
@@ -333,6 +372,12 @@ export async function getStudentDashboardData(
     submitted_at:     sub.submitted_at,
   }))
 
+  // ── Group rank + Student of the Week ─────────────────────────────────────────
+  const [rankResult, sotwResult] = await Promise.all([
+    getStudentGroupRank(studentId, groupId),
+    getStudentOfTheWeek(groupId),
+  ])
+
   const gRow = groupRes.data as any
   return {
     student_id:         studentId,
@@ -361,6 +406,19 @@ export async function getStudentDashboardData(
     overall_pct:           overallPct,
     upcoming_homework:     upcomingHomework,
     recent_feedback:       recentFeedback,
+    // Gamification
+    total_xp:           totalXp,
+    current_level:      currentLevel,
+    xp_progress_pct:    xpProgress.progressPct,
+    xp_to_next_level:   xpProgress.nextLevelXp - xpProgress.levelStartXp,
+    current_streak:     currentStreak,
+    best_streak:        bestStreak,
+    group_rank:         rankResult?.rank       ?? null,
+    group_rank_total:   rankResult?.total      ?? null,
+    is_student_of_week: sotwResult?.student_id === studentId,
+    achievement_count:  achievementCount ?? 0,
+    badge_count:        badgeCount       ?? 0,
+    certificates_count: certCount        ?? 0,
   }
 }
 

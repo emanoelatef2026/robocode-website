@@ -5,14 +5,16 @@ import StudentSidebar from "./StudentSidebar"
 import StudentBottomNav from "./StudentBottomNav"
 
 interface Props {
-  children:     React.ReactNode
-  studentName?: string
-  groupName?:   string
+  children:        React.ReactNode
+  studentName?:    string
+  groupName?:      string
+  currentStreak?:  number
+  groupRank?:      number | null
+  currentLevel?:   number
+  totalXp?:        number
+  xpProgressPct?:  number
+  xpToNextLevel?:  number
 }
-
-// Static placeholder values — wire to DB when gamification is built
-const STREAK = 12
-const RANK   = 3
 
 function BellIcon() {
   return (
@@ -30,7 +32,17 @@ function HamburgerIcon() {
   )
 }
 
-export default function StudentShell({ children, studentName, groupName }: Props) {
+export default function StudentShell({
+  children,
+  studentName,
+  groupName,
+  currentStreak = 0,
+  groupRank = null,
+  currentLevel = 1,
+  totalXp = 0,
+  xpProgressPct = 0,
+  xpToNextLevel = 500,
+}: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const firstName = studentName?.split(" ")[0] ?? "Student"
 
@@ -43,6 +55,10 @@ export default function StudentShell({ children, studentName, groupName }: Props
         onClose={() => setSidebarOpen(false)}
         studentName={studentName}
         groupName={groupName}
+        currentLevel={currentLevel}
+        totalXp={totalXp}
+        xpProgressPct={xpProgressPct}
+        xpToNextLevel={xpToNextLevel}
       />
 
       {/* Mobile overlay */}
@@ -93,7 +109,7 @@ export default function StudentShell({ children, studentName, groupName }: Props
                 className="text-[14px] font-bold leading-none text-[#B45309]"
                 style={{ fontFamily: "var(--font-orbitron)" }}
               >
-                {STREAK}
+                {currentStreak}
               </div>
               <div className="text-[9px] font-semibold tracking-[.05em] text-[#B45309]">
                 DAY STREAK
@@ -101,19 +117,21 @@ export default function StudentShell({ children, studentName, groupName }: Props
             </div>
           </div>
 
-          {/* Rank chip — desktop only */}
-          <div className="hidden items-center gap-[7px] rounded-[10px] bg-[#0B1F3A] px-3 py-[7px] md:flex">
-            <span className="text-[14px]" aria-hidden>🏆</span>
-            <div>
-              <div
-                className="text-[14px] font-bold leading-none text-[#FFB15A]"
-                style={{ fontFamily: "var(--font-orbitron)" }}
-              >
-                #{RANK}
+          {/* Rank chip — desktop only (hidden if no group rank) */}
+          {groupRank != null && (
+            <div className="hidden items-center gap-[7px] rounded-[10px] bg-[#0B1F3A] px-3 py-[7px] md:flex">
+              <span className="text-[14px]" aria-hidden>🏆</span>
+              <div>
+                <div
+                  className="text-[14px] font-bold leading-none text-[#FFB15A]"
+                  style={{ fontFamily: "var(--font-orbitron)" }}
+                >
+                  #{groupRank}
+                </div>
+                <div className="text-[9px] font-semibold text-white/50">IN GROUP</div>
               </div>
-              <div className="text-[9px] font-semibold text-white/50">IN GROUP</div>
             </div>
-          </div>
+          )}
 
           {/* Bell — desktop only */}
           <button

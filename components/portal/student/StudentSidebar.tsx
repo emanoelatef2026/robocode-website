@@ -40,6 +40,16 @@ const IC = {
       <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
     </svg>
   ),
+  videos: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+      <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+    </svg>
+  ),
+  leaderboard: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+      <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+    </svg>
+  ),
   password: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
       <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
@@ -70,6 +80,8 @@ const NAV_ITEMS = [
   { label: "Attendance",   href: "/portal/student/attendance",  icon: IC.attendance,   exact: false },
   { label: "Certificates", href: "/portal/student/certificates",icon: IC.certificates, exact: false },
   { label: "Portfolio",    href: "/portal/student/portfolio",   icon: IC.portfolio,    exact: false },
+  { label: "My Videos",    href: "/portal/student/videos",      icon: IC.videos,       exact: false },
+  { label: "Leaderboard",  href: "/portal/student/leaderboard", icon: IC.leaderboard,  exact: false },
 ]
 
 // ── Nav link ─────────────────────────────────────────────────────────────────
@@ -102,12 +114,24 @@ function NavLink({
 // ── Nav content (shared between desktop and mobile drawer) ───────────────────
 
 interface NavContentProps {
-  onClose?:     () => void
-  studentName?: string
-  groupName?:   string
+  onClose?:       () => void
+  studentName?:   string
+  groupName?:     string
+  currentLevel?:  number
+  totalXp?:       number
+  xpProgressPct?: number
+  xpToNextLevel?: number
 }
 
-function NavContent({ onClose, studentName, groupName }: NavContentProps) {
+function NavContent({
+  onClose,
+  studentName,
+  groupName,
+  currentLevel = 1,
+  totalXp = 0,
+  xpProgressPct = 0,
+  xpToNextLevel = 500,
+}: NavContentProps) {
   const pathname     = usePathname()
   const router       = useRouter()
   const [accountOpen, setAccountOpen] = useState(false)
@@ -168,26 +192,27 @@ function NavContent({ onClose, studentName, groupName }: NavContentProps) {
           <div className="mb-1.5 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="text-[12px]">⭐</span>
-              <span className="text-[10px] font-bold text-[#FFB15A]">LV.5</span>
+              <span className="text-[10px] font-bold text-[#FFB15A]">LV.{currentLevel}</span>
             </div>
             <span
               className="text-[10px] font-bold text-[#FFB15A]"
               style={{ fontFamily: "var(--font-orbitron)" }}
             >
-              1,240 XP
+              {totalXp.toLocaleString()} XP
             </span>
           </div>
           <div className="h-[5px] overflow-hidden rounded-sm bg-white/10">
             <div
-              className="h-full w-[82%] rounded-sm"
+              className="h-full rounded-sm"
               style={{
+                width: `${xpProgressPct}%`,
                 background: "linear-gradient(90deg, #FF8A1F, #FFD166, #FF8A1F)",
                 backgroundSize: "200%",
                 animation: "xpglow 3s ease infinite",
               }}
             />
           </div>
-          <p className="mt-1 text-[9px] text-white/30">260 XP to next level</p>
+          <p className="mt-1 text-[9px] text-white/30">{xpToNextLevel.toLocaleString()} XP to next level</p>
         </div>
 
         {/* User row */}
@@ -256,18 +281,32 @@ function NavContent({ onClose, studentName, groupName }: NavContentProps) {
 // ── Main export ──────────────────────────────────────────────────────────────
 
 interface Props {
-  isOpen:      boolean
-  onClose:     () => void
-  studentName?: string
-  groupName?:   string
+  isOpen:          boolean
+  onClose:         () => void
+  studentName?:    string
+  groupName?:      string
+  currentLevel?:   number
+  totalXp?:        number
+  xpProgressPct?:  number
+  xpToNextLevel?:  number
 }
 
-export default function StudentSidebar({ isOpen, onClose, studentName, groupName }: Props) {
+export default function StudentSidebar({
+  isOpen,
+  onClose,
+  studentName,
+  groupName,
+  currentLevel,
+  totalXp,
+  xpProgressPct,
+  xpToNextLevel,
+}: Props) {
+  const xpProps = { currentLevel, totalXp, xpProgressPct, xpToNextLevel }
   return (
     <>
       {/* Desktop permanent sidebar — fixed, 200px */}
       <aside className="fixed bottom-0 start-0 top-0 z-30 hidden w-[200px] flex-col bg-[#0B1F3A] md:flex">
-        <NavContent studentName={studentName} groupName={groupName} />
+        <NavContent studentName={studentName} groupName={groupName} {...xpProps} />
       </aside>
 
       {/* Mobile animated drawer */}
@@ -282,7 +321,7 @@ export default function StudentSidebar({ isOpen, onClose, studentName, groupName
             className="fixed start-0 top-0 z-30 w-[200px] bg-[#0B1F3A] md:hidden"
             style={{ bottom: "calc(56px + max(8px, env(safe-area-inset-bottom)))" }}
           >
-            <NavContent onClose={onClose} studentName={studentName} groupName={groupName} />
+            <NavContent onClose={onClose} studentName={studentName} groupName={groupName} {...xpProps} />
           </motion.aside>
         )}
       </AnimatePresence>

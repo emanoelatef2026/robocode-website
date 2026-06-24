@@ -14,6 +14,9 @@ import {
   type EnrollmentForConsumption,
   type StudentConsumptionResult,
 } from '@/modules/academic/contract-consumption'
+import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
+import { checkAndUnlockAchievements } from '@/modules/gamification/achievement-service'
+import { checkAndAwardBadges } from '@/modules/gamification/badge-service'
 import type { ActionResult } from '@/types/app'
 import type { AttendanceStatus } from '@/types/enums'
 
@@ -205,6 +208,19 @@ export async function recordAttendanceSession(
     scheduleId = (newSchedule as any).id as string
   }
 
+  // ── Pre-fetch which students already have attendance for this schedule ────────
+  // Used below to guard XP from firing again on re-recording (upsert updates, not inserts).
+  let existingAttendanceStudentIds = new Set<string>()
+  if (existingSchedule) {
+    const { data: existingAtts } = await db
+      .from('attendance_records')
+      .select('student_id')
+      .eq('schedule_id', scheduleId)
+    existingAttendanceStudentIds = new Set(
+      (existingAtts ?? []).map((r: any) => r.student_id as string)
+    )
+  }
+
   // ── Insert attendance records (upsert on schedule_id + student_id) ────────────
   const records = safeStudentIds.map((sid) => ({
     schedule_id:               scheduleId,
@@ -344,6 +360,27 @@ export async function recordAttendanceSession(
       'recordAttendanceSession'
     )
   }
+
+  // ── XP awards + achievements (fire-and-forget — never blocks the main flow) ──
+  // Only award XP for NEW attendance records — skip if TL is correcting an existing record.
+  void (async () => {
+    try {
+      for (const rec of (insertedRecords ?? []) as any[]) {
+        const sid    = rec.student_id as string
+        const status = rec.status as string
+        if (existingAttendanceStudentIds.has(sid)) continue
+        if (status === 'present' || status === 'makeup') {
+          await awardXP(sid, XP_AWARDS.ATTENDANCE_PRESENT, true)
+        } else if (status === 'late') {
+          await awardXP(sid, XP_AWARDS.ATTENDANCE_LATE, true)
+        } else {
+          continue
+        }
+        await checkAndUnlockAchievements(sid)
+        await checkAndAwardBadges(sid)
+      }
+    } catch { /* XP is never critical — swallow errors */ }
+  })()
 
   revalidatePath('/admin/attendance')
   revalidatePath('/portal/team-leader/attendance')

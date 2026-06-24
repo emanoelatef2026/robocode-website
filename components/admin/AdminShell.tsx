@@ -34,7 +34,7 @@ export default function AdminShell({ children, role, permissions }: Props) {
         </main>
       </div>
 
-      <AdminBottomNav />
+      <AdminBottomNav role={role} permissions={permissions} />
     </div>
     </TopbarActionProvider>
   );
