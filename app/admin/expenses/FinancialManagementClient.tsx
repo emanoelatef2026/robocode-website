@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useTransition, useMemo } from 'react'
+import { useState, useTransition, useMemo, useRef, useEffect } from 'react'
 import { useRouter }    from 'next/navigation'
 import * as XLSX from 'xlsx'
 import {
@@ -86,8 +86,6 @@ function exportGroupsExcel(rows: GroupPnL[]) {
     'Completed Sessions':      r.completed_sessions,
     'Remaining Sessions':      r.remaining_sessions,
     'Session Rate (EGP)':      r.session_rate,
-    'Gross Expected (EGP)':    r.gross_expected_revenue,
-    'Gross Collected (EGP)':   r.gross_collected_revenue,
     'Net Expected (EGP)':      r.net_expected_revenue,
     'Net Collected (EGP)':     r.net_collected_revenue,
     'Outstanding (EGP)':       r.outstanding,
@@ -114,8 +112,6 @@ function exportBranchesExcel(rows: BranchPnL[]) {
     'Branch':                  r.branch_name,
     'Groups':                  r.group_count,
     'Students':                r.student_count,
-    'Gross Expected (EGP)':    r.gross_expected_revenue,
-    'Gross Collected (EGP)':   r.gross_collected_revenue,
     'Net Expected (EGP)':      r.net_expected_revenue,
     'Net Collected (EGP)':     r.net_collected_revenue,
     'Outstanding (EGP)':       r.outstanding,
@@ -140,10 +136,6 @@ function exportBranchesExcel(rows: BranchPnL[]) {
 function exportAcademyExcel(academy: AcademyPnL) {
   const summary = [{
     'Metric': 'Academy P&L Summary', 'Value (EGP)': '',
-  }, {
-    'Metric': 'Gross Expected Revenue',   'Value (EGP)': academy.gross_expected_revenue,
-  }, {
-    'Metric': 'Gross Collected Revenue',  'Value (EGP)': academy.gross_collected_revenue,
   }, {
     'Metric': 'Net Expected Revenue',     'Value (EGP)': academy.net_expected_revenue,
   }, {
@@ -178,8 +170,6 @@ function exportAcademyExcel(academy: AcademyPnL) {
 
   const trend = academy.monthly_trend.map(m => ({
     'Month':                    m.label,
-    'Gross Expected (EGP)':     m.gross_expected_revenue,
-    'Gross Collected (EGP)':    m.gross_collected_revenue,
     'Net Collected (EGP)':      m.net_collected_revenue,
     'Instr. Earned (EGP)':      m.instructor_earned,
     'Other Exp (EGP)':          m.other_expenses,
@@ -735,7 +725,7 @@ function DeleteBtn({ id, onSuccess }: { id: string; onSuccess: () => void }) {
 // ── Live Filter Bar ────────────────────────────────────────────────────────────
 
 function LiveFilterBar({
-  branches, currentBranchId, currentDateFrom, currentDateTo, includeArchived, activeTab,
+  branches, currentBranchId, currentDateFrom, currentDateTo, includeArchived, activeTab, rightAction,
 }: {
   branches:        Branch[]
   currentBranchId: string
@@ -743,6 +733,7 @@ function LiveFilterBar({
   currentDateTo:   string
   includeArchived: boolean
   activeTab:       string
+  rightAction?:    React.ReactNode
 }) {
   const router = useRouter()
   const [from, setFrom] = useState(currentDateFrom)
@@ -792,13 +783,13 @@ function LiveFilterBar({
   if (hasDateFilter)  filterParts.push(`Period: ${currentDateFrom || '…'} → ${currentDateTo || '…'}`)
 
   return (
-    <div className="ds-card px-4 py-3 space-y-2.5">
-      <div className="flex flex-wrap items-center gap-2">
+    <div className="ds-card px-4 py-2.5">
+      <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
         {/* Branch — live on change */}
         <select
           value={currentBranchId}
           onChange={e => navigate({ branch: e.target.value })}
-          className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none min-w-[130px]"
+          className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none min-w-[130px] flex-shrink-0"
         >
           <option value="">All Branches</option>
           {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -811,7 +802,7 @@ function LiveFilterBar({
             p === 'year'  && currentDateFrom === `${new Date().getFullYear()}-01-01` ? true : false
           return (
             <button key={p} onClick={() => preset(p)}
-              className={`rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition ${
+              className={`rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition flex-shrink-0 ${
                 isActive
                   ? 'border-[#FF8A1F] bg-orange-50 text-[#FF8A1F]'
                   : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A]'
@@ -821,8 +812,8 @@ function LiveFilterBar({
           )
         })}
 
-        {/* Custom date range — live on blur (avoids mid-type navigations) */}
-        <div className="flex items-center gap-1">
+        {/* Custom date range — live on blur */}
+        <div className="flex items-center gap-1 flex-shrink-0">
           <input
             type="date" value={from}
             onChange={e => setFrom(e.target.value)}
@@ -839,19 +830,18 @@ function LiveFilterBar({
         </div>
 
         {hasFilters && (
-          <button onClick={clear} className="text-[11px] text-[#94A3B8] hover:text-[#EF4444] underline">
-            Clear filters
+          <button onClick={clear} className="text-[11px] text-[#94A3B8] hover:text-[#EF4444] underline flex-shrink-0">
+            Clear
           </button>
         )}
-      </div>
 
-      {/* Filter status indicator */}
-      <div className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-[11px] ${hasFilters ? 'bg-orange-50 text-[#FF8A1F]' : 'bg-[#F8FAFC] text-[#94A3B8]'}`}>
-        <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${hasFilters ? 'bg-[#FF8A1F]' : 'bg-[#CBD5E1]'}`} />
-        {hasFilters
-          ? <span><b>Filters Active:</b> {filterParts.join(' · ')}</span>
-          : <span>No filters applied — showing all data</span>
-        }
+        {rightAction && <div className="ml-auto flex-shrink-0">{rightAction}</div>}
+
+        {/* Inline filter status */}
+        <div className={`${rightAction ? '' : 'ml-auto'} flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] flex-shrink-0 ${hasFilters ? 'bg-orange-50 text-[#FF8A1F]' : 'bg-[#F8FAFC] text-[#94A3B8]'}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${hasFilters ? 'bg-[#FF8A1F]' : 'bg-[#CBD5E1]'}`} />
+          {hasFilters ? filterParts.join(' · ') : 'All data'}
+        </div>
       </div>
     </div>
   )
@@ -892,10 +882,22 @@ function GroupsTab({
 }) {
   const [search,       setSearch]       = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
-  const [sortCol,      setSortCol]      = useState<keyof GroupPnL>('gross_expected_revenue')
+  const [sortCol,      setSortCol]      = useState<keyof GroupPnL>('net_expected_revenue')
   const [sortAsc,      setSortAsc]      = useState(false)
   const [detailId,     setDetailId]     = useState<string | null>(null)
   const [addOpen,      setAddOpen]      = useState(false)
+
+  const headerScrollRef = useRef<HTMLDivElement>(null)
+  const bodyScrollRef   = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const body = bodyScrollRef.current
+    const head = headerScrollRef.current
+    if (!body || !head) return
+    const sync = () => { head.scrollLeft = body.scrollLeft }
+    body.addEventListener('scroll', sync, { passive: true })
+    return () => body.removeEventListener('scroll', sync)
+  }, [])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -918,7 +920,7 @@ function GroupsTab({
 
   const SortTh = ({ col, label }: { col: keyof GroupPnL; label: string }) => (
     <th
-      className="px-3 py-3 text-right text-[11px] font-medium text-[#64748B] whitespace-nowrap cursor-pointer hover:text-[#0B1F3A] select-none"
+      className="px-3 py-2.5 text-right text-[11px] font-medium text-[#64748B] whitespace-nowrap cursor-pointer hover:text-[#0B1F3A] select-none"
       onClick={() => toggleSort(col)}
     >
       {label}{sortCol === col ? (sortAsc ? ' ↑' : ' ↓') : ''}
@@ -927,19 +929,28 @@ function GroupsTab({
 
   const detailGroup = detailId ? rows.find(r => r.group_id === detailId) : null
 
-  // Summary KPIs (from filtered rows)
-  const totalGrossExpRev = filtered.reduce((s, r) => s + r.gross_expected_revenue, 0)
-  const totalNetColRev   = filtered.reduce((s, r) => s + r.net_collected_revenue,  0)
-  const totalEarned      = filtered.reduce((s, r) => s + r.instructor_earned,      0)
-  const totalFinalCost   = filtered.reduce((s, r) => s + r.final_instructor_cost,  0)
-  const totalProfit      = filtered.reduce((s, r) => s + r.actual_profit,          0)
+  const totalNetExpRev = filtered.reduce((s, r) => s + r.net_expected_revenue,  0)
+  const totalNetColRev = filtered.reduce((s, r) => s + r.net_collected_revenue, 0)
+  const totalEarned    = filtered.reduce((s, r) => s + r.instructor_earned,     0)
+  const totalFinalCost = filtered.reduce((s, r) => s + r.final_instructor_cost, 0)
+  const totalProfit    = filtered.reduce((s, r) => s + r.actual_profit,         0)
+
+  // Fixed column widths — keeps header & body tables perfectly aligned
+  const COL_W = [155,125,85,75,75,120,120,115,115,110,110,110,110,110,110,110,110,75,85]
+  const TABLE_W = COL_W.reduce((a, b) => a + b, 0)
+
+  const Colgroup = () => (
+    <colgroup>
+      {COL_W.map((w, i) => <col key={i} style={{ width: w }} />)}
+    </colgroup>
+  )
 
   return (
     <div className="space-y-4">
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {[
-          { label: 'Gross Expected',    value: fmtK(totalGrossExpRev), color: 'bg-[#94A3B8]' },
+          { label: 'Net Expected',      value: fmtK(totalNetExpRev),   color: 'bg-[#94A3B8]' },
           { label: 'Net Collected',     value: fmtK(totalNetColRev),   color: 'bg-[#10B981]' },
           { label: 'Instr. Earned',     value: fmtK(totalEarned),      color: 'bg-violet-400' },
           { label: 'Final Instr. Cost', value: fmtK(totalFinalCost),   color: 'bg-orange-400' },
@@ -953,134 +964,149 @@ function GroupsTab({
         ))}
       </div>
 
-      {/* Status filter pills */}
-      <div className="flex flex-wrap items-center gap-1.5">
-        {ALL_STATUSES.map(s => {
-          const count = s === 'all' ? rows.length : rows.filter(r => r.group_status === s).length
-          const isActive = statusFilter === s
-          return (
+      {/*
+        TABLE — sticky header and body are DOM siblings.
+        isolation:isolate creates an explicit stacking context so z-30 vs z-0
+        is always resolved inside this div.
+        transform:translateZ(0) promotes the sticky header to its own GPU
+        compositor layer, which always paints above the overflow-x body layer.
+      */}
+      <div style={{ isolation: 'isolate' }}>
+
+        {/* ── STICKY HEADER ── */}
+        <div
+          className="sticky top-0 z-30"
+          style={{ transform: 'translateZ(0)', background: '#fff', border: '1px solid #e7ebf1', borderBottom: 'none', borderRadius: '16px 16px 0 0', boxShadow: '0 -1px 3px rgba(11,31,58,.04)' }}
+        >
+          {/* Single header row: label · pills · search · excel · add */}
+          <div className="flex flex-nowrap items-center gap-2 px-4 py-2.5 border-b border-[#E2E8F0] overflow-hidden">
+            <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8] flex-shrink-0 mr-1">
+              {filtered.length} groups
+            </p>
+            <div className="w-px h-4 bg-[#E2E8F0] flex-shrink-0" />
+            {ALL_STATUSES.map(s => {
+              const count = s === 'all' ? rows.length : rows.filter(r => r.group_status === s).length
+              const isActive = statusFilter === s
+              return (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition border flex-shrink-0 ${
+                    isActive
+                      ? 'border-[#FF8A1F] bg-orange-50 text-[#FF8A1F]'
+                      : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
+                  }`}
+                >
+                  {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)} ({count})
+                </button>
+              )
+            })}
+            <div className="w-px h-4 bg-[#E2E8F0] flex-shrink-0" />
+            <input
+              type="text" placeholder="Search…"
+              value={search} onChange={e => setSearch(e.target.value)}
+              className="rounded-lg border border-[#E2E8F0] px-3 py-1 text-xs focus:border-[#FF8A1F] focus:outline-none w-32 flex-shrink-0"
+            />
             <button
-              key={s}
-              onClick={() => setStatusFilter(s)}
-              className={`rounded-full px-3 py-1 text-[11px] font-semibold transition border ${
-                isActive
-                  ? 'border-[#FF8A1F] bg-orange-50 text-[#FF8A1F]'
-                  : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
-              }`}
+              onClick={() => exportGroupsExcel(filtered)}
+              className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A] transition flex-shrink-0"
             >
-              {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)} ({count})
+              ↓ Excel
             </button>
-          )
-        })}
-      </div>
+            <button
+              onClick={() => setAddOpen(true)}
+              className="rounded-lg bg-[#FF8A1F] px-3 py-1 text-xs font-semibold text-white hover:bg-[#e07a1a] flex-shrink-0 ml-auto"
+            >
+              + Add Expense
+            </button>
+          </div>
 
-      {/* Search + actions */}
-      <div className="flex items-center gap-2">
-        <input
-          type="text" placeholder="Search groups…"
-          value={search} onChange={e => setSearch(e.target.value)}
-          className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none max-w-xs"
-        />
-        <button
-          onClick={() => exportGroupsExcel(filtered)}
-          className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A] transition"
-          title="Export visible rows to Excel"
-        >
-          ↓ Excel
-        </button>
-        <button
-          onClick={() => setAddOpen(true)}
-          className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-xs font-semibold text-white hover:bg-[#e07a1a]"
-        >
-          + Add Group Expense
-        </button>
-      </div>
-
-      {/* Table */}
-      <div className="ds-card overflow-x-auto">
-        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5">
-          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">
-            Group P&L Dashboard · {filtered.length} groups
-          </p>
+          {/* Column headers — overflow-hidden, synced with body scroll */}
+          <div ref={headerScrollRef} className="overflow-hidden bg-[#F8FAFC]">
+            <table className="text-sm" style={{ width: TABLE_W, tableLayout: 'fixed' }}>
+              <Colgroup />
+              <thead>
+                <tr>
+                  <th className="px-3 py-2.5 text-left text-[11px] font-medium text-[#64748B]">Group</th>
+                  <th className="px-3 py-2.5 text-left text-[11px] font-medium text-[#64748B]">Branch</th>
+                  <th className="px-3 py-2.5 text-center text-[11px] font-medium text-[#64748B]">Status</th>
+                  <th className="px-3 py-2.5 text-center text-[11px] font-medium text-[#64748B]">Students</th>
+                  <th className="px-3 py-2.5 text-center text-[11px] font-medium text-[#64748B]">Share %</th>
+                  <SortTh col="net_expected_revenue"   label="Net Expected" />
+                  <SortTh col="net_collected_revenue"  label="Net Collected" />
+                  <SortTh col="outstanding"            label="Outstanding" />
+                  <SortTh col="instructor_earned"      label="Instr. Earned" />
+                  <SortTh col="instructor_paid"        label="Instr. Paid" />
+                  <SortTh col="instructor_remaining"   label="Instr. Owing" />
+                  <SortTh col="future_liability"       label="Future Liab." />
+                  <SortTh col="final_instructor_cost"  label="Final Instr." />
+                  <SortTh col="manual_expenses"        label="Manual Exp" />
+                  <SortTh col="total_expenses"         label="Total Exp" />
+                  <SortTh col="expected_profit"        label="Exp. Profit" />
+                  <SortTh col="actual_profit"          label="Act. Profit" />
+                  <th className="px-3 py-2.5 text-center text-[11px] font-medium text-[#64748B]">Rate</th>
+                  <th className="px-3 py-2.5" />
+                </tr>
+              </thead>
+            </table>
+          </div>
         </div>
-        <table className="w-full text-sm min-w-[1600px]">
-          <thead className="ds-table-head">
-            <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-              <th className="px-3 py-3 text-left text-[11px] font-medium text-[#64748B]">Group</th>
-              <th className="px-3 py-3 text-left text-[11px] font-medium text-[#64748B]">Branch</th>
-              <th className="px-3 py-3 text-center text-[11px] font-medium text-[#64748B]">Status</th>
-              <th className="px-3 py-3 text-center text-[11px] font-medium text-[#64748B]">Students</th>
-              <th className="px-3 py-3 text-center text-[11px] font-medium text-[#64748B]">Share %</th>
-              <SortTh col="gross_expected_revenue" label="Gross Expected" />
-              <SortTh col="gross_collected_revenue" label="Gross Collected" />
-              <SortTh col="net_expected_revenue"   label="Net Expected" />
-              <SortTh col="net_collected_revenue"  label="Net Collected" />
-              <SortTh col="outstanding"          label="Outstanding" />
-              <SortTh col="instructor_earned"    label="Instr. Earned" />
-              <SortTh col="instructor_paid"      label="Instr. Paid" />
-              <SortTh col="instructor_remaining" label="Instr. Owing" />
-              <SortTh col="future_liability"     label="Future Liab." />
-              <SortTh col="final_instructor_cost" label="Final Instr." />
-              <SortTh col="manual_expenses"      label="Manual Exp" />
-              <SortTh col="total_expenses"       label="Total Exp" />
-              <SortTh col="expected_profit"      label="Exp. Profit" />
-              <SortTh col="actual_profit"        label="Act. Profit" />
-              <th className="px-3 py-3 text-center text-[11px] font-medium text-[#64748B]">Rate</th>
-              <th className="px-3 py-3" />
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(g => (
-              <tr
-                key={g.group_id}
-                className="ds-table-row cursor-pointer"
-                onClick={() => setDetailId(g.group_id)}
-              >
-                <td className="px-3 py-3 font-semibold text-[#0B1F3A] whitespace-nowrap max-w-[140px] truncate">
-                  {g.group_name}
-                </td>
-                <td className="px-3 py-3 text-[#64748B] whitespace-nowrap">{g.branch_name}</td>
-                <td className="px-3 py-3 text-center"><StatusBadge status={g.group_status} /></td>
-                <td className="px-3 py-3 text-center text-[#64748B]">{g.student_count}</td>
-                <td className="px-3 py-3 text-center">
-                  <span className={`font-semibold text-xs ${g.robocode_share_percent < 100 ? 'text-[#F59E0B]' : 'text-[#94A3B8]'}`}>
-                    {g.robocode_share_percent}%
-                  </span>
-                </td>
-                <td className="px-3 py-3 text-right text-[#0B1F3A]">{fmt(g.gross_expected_revenue)}</td>
-                <td className="px-3 py-3 text-right text-[#0B1F3A]">{fmt(g.gross_collected_revenue)}</td>
-                <td className="px-3 py-3 text-right font-medium text-[#15803D]">{fmt(g.net_expected_revenue)}</td>
-                <td className="px-3 py-3 text-right font-medium text-[#15803D]">{fmt(g.net_collected_revenue)}</td>
-                <td className="px-3 py-3 text-right text-[#F59E0B]">{fmt(g.outstanding)}</td>
-                <td className="px-3 py-3 text-right text-violet-700">{fmt(g.instructor_earned)}</td>
-                <td className="px-3 py-3 text-right text-[#15803D]">{fmt(g.instructor_paid)}</td>
-                <td className="px-3 py-3 text-right text-orange-600">{fmt(g.instructor_remaining)}</td>
-                <td className="px-3 py-3 text-right text-rose-600">{fmt(g.future_liability)}</td>
-                <td className="px-3 py-3 text-right font-semibold text-[#DC2626]">{fmt(g.final_instructor_cost)}</td>
-                <td className="px-3 py-3 text-right text-indigo-700">{fmt(g.manual_expenses)}</td>
-                <td className="px-3 py-3 text-right text-[#EF4444] font-medium">{fmt(g.total_expenses)}</td>
-                <td className="px-3 py-3 text-right"><ProfitBadge value={g.expected_profit} size="xs" /></td>
-                <td className="px-3 py-3 text-right"><ProfitBadge value={g.actual_profit}   size="xs" /></td>
-                <td className="px-3 py-3 text-center"><RateBadge rate={g.collection_rate} /></td>
-                <td className="px-3 py-3">
-                  <button
-                    onClick={ev => { ev.stopPropagation(); setDetailId(g.group_id) }}
-                    className="text-[11px] font-medium text-[#FF8A1F] hover:underline whitespace-nowrap"
-                  >
-                    Details →
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={22} className="px-4 py-10 text-center text-sm text-[#94A3B8]">
-                  No groups match your filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+
+        {/* ── BODY: z-index:0 keeps it below sticky header (z-30) in parent stacking context ── */}
+        <div style={{ position: 'relative', zIndex: 0, border: '1px solid #e7ebf1', borderTop: 'none', borderRadius: '0 0 16px 16px', overflow: 'hidden' }}>
+        <div ref={bodyScrollRef} className="overflow-x-auto">
+          <table className="text-sm" style={{ width: TABLE_W, tableLayout: 'fixed' }}>
+            <Colgroup />
+            <tbody>
+              {filtered.map(g => (
+                <tr
+                  key={g.group_id}
+                  className="ds-table-row cursor-pointer border-b border-[#F1F5F9] last:border-0"
+                  onClick={() => setDetailId(g.group_id)}
+                >
+                  <td className="px-3 py-3 font-semibold text-[#0B1F3A] truncate">{g.group_name}</td>
+                  <td className="px-3 py-3 text-[#64748B] truncate">{g.branch_name}</td>
+                  <td className="px-3 py-3 text-center"><StatusBadge status={g.group_status} /></td>
+                  <td className="px-3 py-3 text-center text-[#64748B]">{g.student_count}</td>
+                  <td className="px-3 py-3 text-center">
+                    <span className={`font-semibold text-xs ${g.robocode_share_percent < 100 ? 'text-[#F59E0B]' : 'text-[#94A3B8]'}`}>
+                      {g.robocode_share_percent}%
+                    </span>
+                  </td>
+                  <td className="px-3 py-3 text-right font-medium text-[#15803D]">{fmt(g.net_expected_revenue)}</td>
+                  <td className="px-3 py-3 text-right font-medium text-[#15803D]">{fmt(g.net_collected_revenue)}</td>
+                  <td className="px-3 py-3 text-right text-[#F59E0B]">{fmt(g.outstanding)}</td>
+                  <td className="px-3 py-3 text-right text-violet-700">{fmt(g.instructor_earned)}</td>
+                  <td className="px-3 py-3 text-right text-[#15803D]">{fmt(g.instructor_paid)}</td>
+                  <td className="px-3 py-3 text-right text-orange-600">{fmt(g.instructor_remaining)}</td>
+                  <td className="px-3 py-3 text-right text-rose-600">{fmt(g.future_liability)}</td>
+                  <td className="px-3 py-3 text-right font-semibold text-[#DC2626]">{fmt(g.final_instructor_cost)}</td>
+                  <td className="px-3 py-3 text-right text-indigo-700">{fmt(g.manual_expenses)}</td>
+                  <td className="px-3 py-3 text-right text-[#EF4444] font-medium">{fmt(g.total_expenses)}</td>
+                  <td className="px-3 py-3 text-right"><ProfitBadge value={g.expected_profit} size="xs" /></td>
+                  <td className="px-3 py-3 text-right"><ProfitBadge value={g.actual_profit}   size="xs" /></td>
+                  <td className="px-3 py-3 text-center"><RateBadge rate={g.collection_rate} /></td>
+                  <td className="px-3 py-3">
+                    <button
+                      onClick={ev => { ev.stopPropagation(); setDetailId(g.group_id) }}
+                      className="text-[11px] font-medium text-[#FF8A1F] hover:underline whitespace-nowrap"
+                    >
+                      Details →
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={19} className="px-4 py-10 text-center text-sm text-[#94A3B8]">
+                    No groups match your filters.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        </div>
       </div>
 
       {/* Group detail modal */}
@@ -1129,7 +1155,7 @@ function BranchesTab({
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { l: 'Gross Expected',  v: fmtK(rows.reduce((s,b) => s + b.gross_expected_revenue,  0)), c: 'bg-[#94A3B8]' },
+          { l: 'Net Expected',    v: fmtK(rows.reduce((s,b) => s + b.net_expected_revenue,    0)), c: 'bg-[#94A3B8]' },
           { l: 'Net Collected',   v: fmtK(rows.reduce((s,b) => s + b.net_collected_revenue,   0)), c: 'bg-[#10B981]' },
           { l: 'Total Expenses',  v: fmtK(rows.reduce((s,b) => s + b.total_expenses,          0)), c: 'bg-[#EF4444]' },
           { l: 'Actual Profit',   v: fmtK(rows.reduce((s,b) => s + b.actual_profit,           0)), c: rows.reduce((s,b) => s+b.actual_profit,0) >= 0 ? 'bg-[#10B981]' : 'bg-[#EF4444]' },
@@ -1140,16 +1166,6 @@ function BranchesTab({
             <p className="mt-0.5 text-xs text-[#64748B]">{k.l}</p>
           </div>
         ))}
-      </div>
-
-      {/* Export */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => exportBranchesExcel(rows)}
-          className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A] transition"
-        >
-          ↓ Export Excel
-        </button>
       </div>
 
       {/* Branch cards */}
@@ -1165,7 +1181,7 @@ function BranchesTab({
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <div><p className="text-[#94A3B8]">Gross Expected</p><p className="font-semibold text-[#0B1F3A]">{fmt(b.gross_expected_revenue)}</p></div>
+              <div><p className="text-[#94A3B8]">Net Expected</p><p className="font-semibold text-[#94A3B8]">{fmt(b.net_expected_revenue)}</p></div>
               <div><p className="text-[#94A3B8]">Net Collected</p><p className="font-semibold text-[#15803D]">{fmt(b.net_collected_revenue)}</p></div>
               <div><p className="text-[#94A3B8]">Outstanding</p><p className="font-semibold text-[#F59E0B]">{fmt(b.outstanding)}</p></div>
               <div><p className="text-[#94A3B8]">Total Expenses</p><p className="font-semibold text-[#EF4444]">{fmt(b.total_expenses)}</p></div>
@@ -1320,7 +1336,7 @@ function AcademyTab({
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {[
-          { l: 'Gross Expected',    v: fmtK(pnl.gross_expected_revenue),  c: 'bg-[#94A3B8]' },
+          { l: 'Net Expected',      v: fmtK(pnl.net_expected_revenue),    c: 'bg-[#94A3B8]' },
           { l: 'Net Collected',     v: fmtK(pnl.net_collected_revenue),   c: 'bg-[#10B981]' },
           { l: 'Outstanding',       v: fmtK(pnl.outstanding),             c: 'bg-[#F59E0B]' },
           { l: 'Total Expenses',    v: fmtK(pnl.total_expenses),          c: 'bg-[#EF4444]' },
@@ -1659,6 +1675,14 @@ export default function FinancialManagementClient({
         currentDateTo={currentDateTo}
         includeArchived={includeArchived}
         activeTab={activeTab}
+        rightAction={activeTab === 'branches' ? (
+          <button
+            onClick={() => exportBranchesExcel(branchRows)}
+            className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A] transition"
+          >
+            ↓ Excel
+          </button>
+        ) : undefined}
       />
 
       {/* Tab content */}

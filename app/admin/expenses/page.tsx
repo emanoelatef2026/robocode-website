@@ -4,7 +4,6 @@ import {
   getGroupPnLRows, getBranchPnLRows, getAcademyPnL,
   listExpenses, listRecurringExpenses,
 } from '@/modules/finance/queries'
-import Link from 'next/link'
 import FinancialManagementClient from './FinancialManagementClient'
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -86,23 +85,7 @@ export default async function FinancialManagementPage({
     ])
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-end gap-2">
-          <Link
-            href="/admin/revenue"
-            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1] transition"
-          >
-            P&L Overview →
-          </Link>
-          <Link
-            href="/admin/payroll"
-            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#CBD5E1] transition"
-          >
-            Payroll →
-          </Link>
-      </div>
-
+    <div className="space-y-4">
       {/* Client shell: all tabs, filters, and interactive management */}
       <FinancialManagementClient
         groupRows={groupRows}
