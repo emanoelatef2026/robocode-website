@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState, useTransition, useEffect, useRef, useCallback } from 'react'
+import { useState, useTransition, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useTopbarAction } from '@/components/admin/TopbarActionContext'
 import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
@@ -733,6 +733,11 @@ function GroupStudentsTable({
   onToggleStudent: (id: string) => void
   onToggleAll:     () => void
 }) {
+  const sorted = useMemo(() => [...students].sort((a, b) => {
+    const ro: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 }
+    return (ro[a.risk_level] ?? 3) - (ro[b.risk_level] ?? 3)
+  }), [students])
+
   if (loading && !students.length) return <LoadingSpinner />
 
   if (!students.length) {
@@ -746,11 +751,6 @@ function GroupStudentsTable({
       </div>
     )
   }
-
-  const sorted = [...students].sort((a, b) => {
-    const ro: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 }
-    return (ro[a.risk_level] ?? 3) - (ro[b.risk_level] ?? 3)
-  })
 
   const allSelected = sorted.length > 0 && sorted.every(s => selectedIds.has(s.student_id))
 
@@ -1722,9 +1722,7 @@ function MoveGroupModal({
     setLoading(true)
     setError(null)
     try {
-      for (const sid of Array.from(selectedIds)) {
-        await removeStudentFromGroupAction(currentGroup.group_id, sid)
-      }
+      await Promise.all(Array.from(selectedIds).map(sid => removeStudentFromGroupAction(currentGroup.group_id, sid)))
       const res = await addStudentsToGroupAction(targetGroupId, Array.from(selectedIds))
       if (!res.success) {
         setError(res.error?.message ?? 'Failed to add students to new group')
@@ -1987,9 +1985,7 @@ function GroupWorkspace({
   }
 
   async function handleRemoveStudents(ids: string[]) {
-    for (const id of ids) {
-      await removeStudentFromGroupAction(group.group_id, id)
-    }
+    await Promise.all(ids.map(id => removeStudentFromGroupAction(group.group_id, id)))
     setSelectedIds(new Set())
     onStudentsChanged()
   }
@@ -2356,8 +2352,8 @@ export default function GroupsWorkspaceClient({
     })
   }
 
-  const visible = applyFilters(groups, filters)
-  const kpis    = buildKpis(groups)
+  const visible = useMemo(() => applyFilters(groups, filters), [groups, filters])
+  const kpis    = useMemo(() => buildKpis(groups), [groups])
 
   const openCreate = useCallback(() => {
     setModalMode('create')

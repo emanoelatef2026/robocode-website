@@ -517,6 +517,19 @@ export async function getInstructorPerformance(branchIds: string[]): Promise<Ins
 
   // Session feedback averages per instructor
   const schedIds = completedScheds.map(s => s.id as string)
+
+  // Attendance counts per schedule — fetched once for all instructors to avoid N+1
+  const attCountMap = new Map<string, number>()
+  if (schedIds.length > 0) {
+    const { data: attRows } = await db
+      .from('attendance_records')
+      .select('schedule_id')
+      .in('schedule_id', schedIds)
+    for (const row of (attRows ?? []) as any[]) {
+      const sid = row.schedule_id as string
+      attCountMap.set(sid, (attCountMap.get(sid) ?? 0) + 1)
+    }
+  }
   const feedbackMap = new Map<string, number[]>() // gcId → ratings
   if (schedIds.length > 0) {
     const { data: fbRows } = await db
@@ -570,14 +583,8 @@ export async function getInstructorPerformance(branchIds: string[]): Promise<Ins
     // Attendance rate = sessions with any attendance recorded / completed sessions
     let attRate = 100
     if (instrSchedIds.length > 0) {
-      const { count: attSchedCount } = await db
-        .from('attendance_records')
-        .select('schedule_id', { count: 'exact', head: true })
-        .in('schedule_id', instrSchedIds)
-      const uniqueAttSched = attSchedCount ?? 0
-      attRate = instrSchedIds.length > 0
-        ? Math.round((uniqueAttSched / instrSchedIds.length) * 100)
-        : 100
+      const attCount = instrSchedIds.reduce((sum, sid) => sum + (attCountMap.get(sid) ?? 0), 0)
+      attRate = Math.round((attCount / instrSchedIds.length) * 100)
     }
 
     result.push({

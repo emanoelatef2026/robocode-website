@@ -36,19 +36,23 @@ export async function applyStudentChanges(
 ): Promise<void> {
   const now = new Date().toISOString()
 
-  for (const studentId of toRemove) {
-    await db.from('group_students')
-      .update({ status: 'dropped', left_at: now })
-      .eq('group_id', groupId)
-      .eq('student_id', studentId)
-  }
-
-  for (const studentId of toAdd) {
-    await db.from('group_students').upsert(
-      { group_id: groupId, student_id: studentId, enrollment_type: 'primary', status: 'active', joined_at: now },
-      { onConflict: 'group_id,student_id' },
-    )
-  }
+  await Promise.all([
+    toRemove.length > 0
+      ? db.from('group_students')
+          .update({ status: 'dropped', left_at: now })
+          .eq('group_id', groupId)
+          .in('student_id', toRemove)
+      : Promise.resolve(),
+    toAdd.length > 0
+      ? db.from('group_students').upsert(
+          toAdd.map(studentId => ({
+            group_id: groupId, student_id: studentId,
+            enrollment_type: 'primary', status: 'active', joined_at: now,
+          })),
+          { onConflict: 'group_id,student_id' },
+        )
+      : Promise.resolve(),
+  ])
 }
 
 // Assigns (or removes) a course + instructor pair to a group.
