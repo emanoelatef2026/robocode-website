@@ -18,7 +18,7 @@ import {
   addPayment, quickPayment, addFinanceNote,
   recordActivity, addPaymentPromise, createReversal,
 } from '@/modules/finance/actions'
-import { compressImage } from '@/lib/finance/compress-image'
+import { compressImage } from '@/lib/uploads/compressImage'
 import EnrollmentWizard, { type StudentResult, type PreselectedPackage } from './EnrollmentWizard'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
