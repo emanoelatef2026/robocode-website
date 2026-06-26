@@ -15,13 +15,46 @@ interface Props {
   searchParams: Promise<{ tab?: string }>
 }
 
+interface GroupHistoryItem {
+  id:              string
+  student_id:      string
+  status:          string
+  enrollment_type: 'primary' | 'secondary'
+  joined_at:       string | null
+  left_at:         string | null
+  groups: {
+    id:     string
+    name:   string
+    type:   string
+    code:   string | null
+    status: string
+    branches: { name: string } | null
+  } | null
+}
+
+interface SemesterHistoryItem {
+  id:           string
+  status:       string
+  enrolled_at:  string | null
+  dropped_at:   string | null
+  completed_at: string | null
+  notes:        string | null
+  semesters: {
+    id:         string
+    name:       string
+    status:     string
+    start_date: string
+    end_date:   string
+  } | null
+}
+
 async function getStudentFullHistory(studentId: string) {
   const db = createServiceClient()
   const [{ data: groups }, { data: semesters }] = await Promise.all([
     db
       .from('group_students')
       .select(`
-        id, status, enrollment_type, joined_at, left_at,
+        id, student_id, status, enrollment_type, joined_at, left_at,
         groups!group_students_group_id_fkey(
           id, name, type, code, status,
           branches!groups_branch_id_fkey(name)
@@ -39,8 +72,8 @@ async function getStudentFullHistory(studentId: string) {
       .order('enrolled_at', { ascending: false }),
   ])
   return {
-    groups:    (groups    ?? []) as any[],
-    semesters: (semesters ?? []) as any[],
+    groups:    (groups    ?? []) as unknown as GroupHistoryItem[],
+    semesters: (semesters ?? []) as unknown as SemesterHistoryItem[],
   }
 }
 
@@ -61,9 +94,9 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
     user.permissions.includes('manage_financials') ? getAccountByStudentId(id) : Promise.resolve(null),
   ])
 
-  const currentGroups  = history.groups.filter((h: any) => h.status === 'active')
-  const previousGroups = history.groups.filter((h: any) => h.status !== 'active')
-  const activeGroupIds = new Set(currentGroups.map((h: any) => h.groups?.id).filter(Boolean))
+  const currentGroups  = history.groups.filter(h => h.status === 'active')
+  const previousGroups = history.groups.filter(h => h.status !== 'active')
+  const activeGroupIds = new Set(currentGroups.map(h => h.groups?.id).filter(Boolean))
   const availableGroups = groupsResult.data.filter((g) => !activeGroupIds.has(g.id))
 
   const displayName = student.first_name && student.last_name
@@ -148,7 +181,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
               </tr>
             </thead>
             <tbody>
-              {currentGroups.map((h: any) => (
+              {currentGroups.map((h) => (
                 <tr key={h.id} className="border-b border-[#E2E8F0] last:border-0">
                   <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
                     {h.groups?.name ?? '—'}
@@ -165,7 +198,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
                     </span>
                   </td>
                   <td className="px-4 py-2.5 text-[#64748B]">
-                    {new Date(h.joined_at).toLocaleDateString('en-GB')}
+                    {h.joined_at ? new Date(h.joined_at).toLocaleDateString('en-GB') : '—'}
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     {h.groups?.id && (
@@ -202,7 +235,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
               </tr>
             </thead>
             <tbody>
-              {previousGroups.map((h: any) => (
+              {previousGroups.map((h) => (
                 <tr key={h.id} className="border-b border-[#E2E8F0] last:border-0">
                   <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
                     {h.groups?.name ?? '—'}
@@ -215,7 +248,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
                     </span>
                   </td>
                   <td className="px-4 py-2.5"><StatusBadge status={h.status} /></td>
-                  <td className="px-4 py-2.5 text-[#64748B]">{new Date(h.joined_at).toLocaleDateString('en-GB')}</td>
+                  <td className="px-4 py-2.5 text-[#64748B]">{h.joined_at ? new Date(h.joined_at).toLocaleDateString('en-GB') : '—'}</td>
                   <td className="px-4 py-2.5 text-[#64748B]">{h.left_at ? new Date(h.left_at).toLocaleDateString('en-GB') : '—'}</td>
                 </tr>
               ))}
@@ -243,7 +276,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
               </tr>
             </thead>
             <tbody>
-              {history.semesters.map((se: any) => (
+              {history.semesters.map((se) => (
                 <tr key={se.id} className="border-b border-[#E2E8F0] last:border-0">
                   <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">{se.semesters?.name ?? '—'}</td>
                   <td className="px-4 py-2.5 text-[#64748B]">

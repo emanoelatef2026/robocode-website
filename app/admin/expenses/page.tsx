@@ -25,13 +25,15 @@ async function loadMeta(branchIds: string[] | null) {
       .then(r => branchIds?.length ? db.from('groups').select('id, name, branch_id, status, branches!groups_branch_id_fkey(name)').in('branch_id', branchIds).is('deleted_at', null).order('name') : r),
   ])
 
-  const branches = ((branchRes.data ?? []) as any[]).map(b => ({
-    id: b.id as string, name: b.name as string,
+  type BranchMeta = { id: string; name: string }
+  type GroupMeta  = { id: string; name: string; branch_id: string; status: string; branches: { name: string } | null }
+  const branches = ((branchRes.data ?? []) as unknown as BranchMeta[]).map(b => ({
+    id: b.id, name: b.name,
   }))
-  const groups = ((groupRes.data ?? []) as any[]).map(g => ({
-    id: g.id as string, name: g.name as string,
-    branch_id: g.branch_id as string, status: g.status as string,
-    branch_name: (g.branches as any)?.name ?? '',
+  const groups = ((groupRes.data ?? []) as unknown as GroupMeta[]).map(g => ({
+    id: g.id, name: g.name,
+    branch_id: g.branch_id, status: g.status,
+    branch_name: g.branches?.name ?? '',
   }))
 
   return { branches, groups }

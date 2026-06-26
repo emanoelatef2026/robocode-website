@@ -28,7 +28,7 @@ export async function submitParentFeedback(
       .select('id')
       .eq('user_id', user.id)
       .maybeSingle()
-    const parentId = (parentRow as any)?.id ?? null
+    const parentId = (parentRow as { id: string } | null)?.id ?? null
     if (!parentId) return { success: false, error: 'Parent record not found.' }
 
     // Verify this parent is linked to the student
@@ -71,7 +71,7 @@ export async function submitParentFeedback(
     revalidatePath('/portal/parent')
     revalidatePath('/portal/parent/feedback')
     return { success: true }
-  } catch (e: any) {
-    return { success: false, error: e?.message ?? 'Unexpected error.' }
+  } catch (e: unknown) {
+    return { success: false, error: e instanceof Error ? e.message : 'Unexpected error.' }
   }
 }

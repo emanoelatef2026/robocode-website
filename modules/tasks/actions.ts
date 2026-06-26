@@ -36,7 +36,7 @@ export async function createTask(input: CreateTaskInput): Promise<{ id: string }
     await logTimelineEvent({
       student_id:    input.student_id,
       enrollment_id: input.enrollment_id ?? null,
-      event_type:    'TASK_CREATED' as any,
+      event_type:    'TASK_CREATED',
       notes:         `${input.type} task created`,
       created_by:    input.created_by ?? user?.id ?? null,
       branch_id:     input.branch_id ?? null,
@@ -93,7 +93,7 @@ export async function completeTask(id: string, notes?: string): Promise<void> {
     await logTimelineEvent({
       student_id:    task.student_id,
       enrollment_id: task.enrollment_id ?? null,
-      event_type:    'TASK_COMPLETED' as any,
+      event_type:    'TASK_COMPLETED',
       notes:         `${task.type} task completed${notes ? `: ${notes}` : ''}`,
       created_by:    user?.id ?? null,
       branch_id:     task.branch_id ?? null,

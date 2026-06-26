@@ -30,8 +30,8 @@ export default async function NewFinanceAccountPage() {
     <div className="mx-auto max-w-2xl space-y-5">
 
       <NewFinanceAccountForm
-        branches={(branchesRes.data as any[]).map((b: any) => ({ id: b.id, name: b.name }))}
-        groups={(groupsRes.data as any[]).map((g: any) => ({ id: g.id, name: g.name }))}
+        branches={branchesRes.data.map(b => ({ id: b.id, name: b.name }))}
+        groups={groupsRes.data.map(g => ({ id: g.id, name: g.name }))}
         students={students}
       />
     </div>

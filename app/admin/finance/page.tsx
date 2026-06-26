@@ -111,12 +111,12 @@ export default async function AdminFinancePage({ searchParams }: Props) {
           {isSA && (
             <AdminFilterSelect
               param="branch" placeholder="All branches"
-              options={(branchesRes.data as any[]).map((b: any) => ({ value: b.id, label: b.name }))}
+              options={branchesRes.data.map(b => ({ value: b.id, label: b.name }))}
             />
           )}
           <AdminFilterSelect
             param="group" placeholder="All groups"
-            options={(groupsRes.data as any[]).map((g: any) => ({ value: g.id, label: g.name }))}
+            options={groupsRes.data.map(g => ({ value: g.id, label: g.name }))}
           />
           <AdminFilterSelect
             param="status" placeholder="All statuses"

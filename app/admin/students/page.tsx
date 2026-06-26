@@ -22,7 +22,7 @@ export default async function AdminStudentsPage() {
 
   if (isSuperAdmin) {
     const { data } = await db.from('branches').select('id').eq('is_active', true)
-    branchIds = (data ?? []).map((b: any) => b.id as string)
+    branchIds = (data ?? [] as { id: string }[]).map(b => b.id)
   }
 
   if (!branchIds.length) {

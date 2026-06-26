@@ -268,7 +268,7 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
         {/* Current active groups */}
         {currentGroups.length > 0 && (
           <div className="mb-3 divide-y divide-[#F1F5F9] rounded-lg border border-[#E2E8F0]">
-            {currentGroups.map((g: any) => (
+            {currentGroups.map((g) => (
               <div key={g.id} className="flex items-center justify-between px-3 py-2">
                 <div>
                   <span className="text-sm font-medium text-[#0B1F3A]">{g.groups?.name ?? '—'}</span>

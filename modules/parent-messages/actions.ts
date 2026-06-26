@@ -1,9 +1,10 @@
 'use server'
 
-import { createServiceClient } from '@/lib/supabase/service'
-import { requirePortalRole }   from '@/modules/rbac/guards'
-import { revalidatePath }      from 'next/cache'
-import type { MessageStatus }  from './constants'
+import { createServiceClient }           from '@/lib/supabase/service'
+import { requirePortalRole }             from '@/modules/rbac/guards'
+import { revalidatePath }                from 'next/cache'
+import type { MessageStatus }            from './constants'
+import { submitParentMessageSchema, updateMessageStatusSchema } from './schemas'
 
 // ── Submit a new parent message (with optional image upload) ──────────────────
 
@@ -14,20 +15,22 @@ export async function submitParentMessage(
     const user = await requirePortalRole('parent')
     const db   = createServiceClient()
 
-    const category  = (formData.get('category')   as string | null)?.trim()
-    const message   = (formData.get('message')    as string | null)?.trim()
-    const studentId = (formData.get('student_id') as string | null)?.trim()
-    const file      = formData.get('image') as File | null
+    const parsed = submitParentMessageSchema.safeParse({
+      category:   (formData.get('category')   as string | null)?.trim(),
+      message:    (formData.get('message')    as string | null)?.trim(),
+      student_id: (formData.get('student_id') as string | null)?.trim(),
+    })
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message }
+    }
+    const { category, message, student_id: studentId } = parsed.data
 
-    // Validate
-    if (!category || !message) return { success: false, error: 'Category and message are required.' }
-    if (message.length < 10)   return { success: false, error: 'Message must be at least 10 characters.' }
-    if (!studentId)            return { success: false, error: 'Student not specified.' }
+    const file = formData.get('image') as File | null
 
     // Verify parent → student link
     const { data: parentRow } = await db
       .from('parents').select('id').eq('user_id', user.id).maybeSingle()
-    const parentId = (parentRow as any)?.id ?? null
+    const parentId = (parentRow as { id: string } | null)?.id ?? null
     if (!parentId) return { success: false, error: 'Parent record not found.' }
 
     const { data: link } = await db
@@ -41,7 +44,7 @@ export async function submitParentMessage(
     // Get student's branch
     const { data: studentRow } = await db
       .from('students').select('branch_id').eq('id', studentId).maybeSingle()
-    const branchId = (studentRow as any)?.branch_id ?? null
+    const branchId = (studentRow as { branch_id: string } | null)?.branch_id ?? null
     if (!branchId) return { success: false, error: 'Student branch not found.' }
 
     // Upload image if present
@@ -80,8 +83,8 @@ export async function submitParentMessage(
 
     revalidatePath('/portal/parent/feedback')
     return { success: true }
-  } catch (e: any) {
-    return { success: false, error: e?.message ?? 'Unexpected error.' }
+  } catch (e: unknown) {
+    return { success: false, error: e instanceof Error ? e.message : 'Unexpected error.' }
   }
 }
 
@@ -93,6 +96,11 @@ export async function updateMessageStatus(
   internalNote: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const parsed = updateMessageStatusSchema.safeParse({ messageId, status, internalNote })
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0].message }
+    }
+
     const user = await requirePortalRole('team_leader')
     const db   = createServiceClient()
 
@@ -100,28 +108,28 @@ export async function updateMessageStatus(
     const { data: msg } = await db
       .from('parent_messages')
       .select('branch_id')
-      .eq('id', messageId)
+      .eq('id', parsed.data.messageId)
       .maybeSingle()
 
     if (!msg) return { success: false, error: 'Message not found.' }
 
-    if (!user.branchIds.includes((msg as any).branch_id)) {
+    if (!user.branchIds.includes((msg as { branch_id: string }).branch_id)) {
       return { success: false, error: 'Not authorized for this message.' }
     }
 
     const { error } = await db
       .from('parent_messages')
       .update({
-        status,
-        internal_note: internalNote.trim() || null,
+        status:        parsed.data.status,
+        internal_note: parsed.data.internalNote.trim() || null,
       })
-      .eq('id', messageId)
+      .eq('id', parsed.data.messageId)
 
     if (error) return { success: false, error: error.message }
 
     revalidatePath('/portal/team-leader/parent-feedback')
     return { success: true }
-  } catch (e: any) {
-    return { success: false, error: e?.message ?? 'Unexpected error.' }
+  } catch (e: unknown) {
+    return { success: false, error: e instanceof Error ? e.message : 'Unexpected error.' }
   }
 }

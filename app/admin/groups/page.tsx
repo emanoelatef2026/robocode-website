@@ -17,7 +17,7 @@ export default async function AdminGroupsPage() {
   let branchIds: string[] = user.branchIds ?? []
   if (isSuperAdmin) {
     const { data } = await db.from('branches').select('id').eq('is_active', true)
-    branchIds = (data ?? []).map((b: any) => b.id as string)
+    branchIds = (data ?? [] as { id: string }[]).map(b => b.id)
   }
 
   const defaultBranchId = branchIds[0] ?? ''

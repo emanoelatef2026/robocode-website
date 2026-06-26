@@ -52,39 +52,42 @@ async function listMessages({
     const { data, count, error } = await q
     if (error) throw error
 
-    const rows = (data ?? []) as any[]
+    type RawRow = { id: string; parent_user_id: string; student_id: string | null; branch_id: string; category: string; message: string; status: string; internal_note: string | null; created_at: string }
+    const rows = (data ?? []) as RawRow[]
 
     // Batch-resolve parent names
-    const parentIds = [...new Set(rows.map(r => r.parent_user_id as string).filter(Boolean))]
+    const parentIds = [...new Set(rows.map(r => r.parent_user_id).filter(Boolean))]
     const parentMap = new Map<string, string | null>()
     if (parentIds.length > 0) {
       const { data: profs } = await db.from('profiles').select('user_id, first_name, last_name').in('user_id', parentIds)
-      for (const p of profs ?? []) {
+      type ProfRow = { user_id: string; first_name: string | null; last_name: string | null }
+      for (const p of (profs ?? []) as unknown as ProfRow[]) {
         const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || null
-        parentMap.set((p as any).user_id, name)
+        parentMap.set(p.user_id, name)
       }
     }
 
     // Batch-resolve student names
-    const studentIds = [...new Set(rows.map(r => r.student_id as string | null).filter(Boolean))] as string[]
+    const studentIds = [...new Set(rows.map(r => r.student_id).filter(Boolean))] as string[]
     const studentMap = new Map<string, string | null>()
     if (studentIds.length > 0) {
       const { data: studs } = await db
         .from('students')
         .select('id, users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
         .in('id', studentIds)
-      for (const s of studs ?? []) {
-        const prof = (s as any).users?.profiles
-        studentMap.set((s as any).id, prof ? [prof.first_name, prof.last_name].filter(Boolean).join(' ') || null : null)
+      type StudRow = { id: string; users: { profiles: { first_name: string | null; last_name: string | null } | null } | null }
+      for (const s of (studs ?? []) as unknown as StudRow[]) {
+        const prof = s.users?.profiles
+        studentMap.set(s.id, prof ? [prof.first_name, prof.last_name].filter(Boolean).join(' ') || null : null)
       }
     }
 
     // Batch-resolve branch names
-    const branchIdSet = [...new Set(rows.map(r => r.branch_id as string).filter(Boolean))]
+    const branchIdSet = [...new Set(rows.map(r => r.branch_id).filter(Boolean))]
     const branchMap   = new Map<string, string>()
     if (branchIdSet.length > 0) {
       const { data: brs } = await db.from('branches').select('id, name').in('id', branchIdSet)
-      for (const b of brs ?? []) branchMap.set((b as any).id, (b as any).name ?? '—')
+      for (const b of (brs ?? []) as unknown as { id: string; name: string }[]) branchMap.set(b.id, b.name ?? '—')
     }
 
     const items: MessageRow[] = rows.map(r => ({
@@ -100,9 +103,9 @@ async function listMessages({
     }))
 
     return { data: items, total: count ?? 0, page, perPage, totalPages: Math.ceil((count ?? 0) / perPage) }
-  } catch (err: any) {
+  } catch (err: unknown) {
     // Graceful fallback — table may not exist in older installs
-    console.error('[communications] listMessages error:', err?.message ?? err)
+    console.error('[communications] listMessages error:', err instanceof Error ? err.message : err)
     return { data: [], total: 0, page, perPage, totalPages: 0 }
   }
 }
@@ -116,9 +119,9 @@ async function getKPIs(branchIds?: string[]): Promise<{ open: number; under_revi
     }
     const [open, review, resolved] = await Promise.all([q('submitted'), q('under_review'), q('resolved')])
     return {
-      open:         (open as any).count     ?? 0,
-      under_review: (review as any).count   ?? 0,
-      resolved:     (resolved as any).count ?? 0,
+      open:         (open.count     ?? 0),
+      under_review: (review.count   ?? 0),
+      resolved:     (resolved.count ?? 0),
     }
   } catch {
     return { open: 0, under_review: 0, resolved: 0 }

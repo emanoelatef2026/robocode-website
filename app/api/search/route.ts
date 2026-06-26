@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   try {
     const results = await globalSearch(q, branchIds)
     return NextResponse.json(results)
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message ?? 'Search failed' }, { status: 500 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Search failed' }, { status: 500 })
   }
 }

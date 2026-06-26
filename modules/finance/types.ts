@@ -1,6 +1,8 @@
-﻿export type AccountStatus    = 'CURRENT' | 'DUE_SOON' | 'OVERDUE' | 'PAID'
-// Enrollment-level financial status (superset of AccountStatus: adds BLOCKED/COMPLETED, drops PAID)
-export type EnrollmentFinancialStatus = 'CURRENT' | 'DUE_SOON' | 'OVERDUE' | 'BLOCKED' | 'COMPLETED'
+﻿// Canonical definition lives in enrollments; re-exported here for backward compatibility.
+import type { EnrollmentFinancialStatus } from '@/modules/enrollments/types'
+export type { EnrollmentFinancialStatus }
+
+export type AccountStatus    = 'CURRENT' | 'DUE_SOON' | 'OVERDUE' | 'PAID'
 // Sprint 45: session exhaustion status (computed from remaining_sessions)
 export type SessionExhaustionStatus = 'HEALTHY' | 'WARNING' | 'CRITICAL' | 'EXHAUSTED'
 // Sprint 45: payment allocation strategy
