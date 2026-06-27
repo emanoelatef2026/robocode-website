@@ -3,6 +3,7 @@ import type { GroupDetailStudent } from '@/modules/groups/modal-actions'
 import type { StudentOperationsRow } from '@/modules/finance/types'
 import type { StudentResult } from '../../finance/EnrollmentWizard'
 import type { Filters } from './types'
+export { fmtDate, fmtCurrency } from '@/components/shared/workspace/utils'
 
 // ── Date / time formatters ───────────────────────────────────────────
 
@@ -26,22 +27,11 @@ export function parseLocalDate(iso: string): Date {
   return new Date(y, mo - 1, d)
 }
 
-export function fmtDate(iso: string | null): string {
-  if (!iso) return '—'
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
 export function fmtDateShort(iso: string | null | undefined): string {
   if (!iso) return '—'
   const clean = iso.slice(0, 10)
   const [y, m, d] = clean.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-}
-
-export function fmtCurrency(n: number): string {
-  if (!n) return '—'
-  return n.toLocaleString('en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 })
 }
 
 // ── Filter logic ─────────────────────────────────────────────────────
