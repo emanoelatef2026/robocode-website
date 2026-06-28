@@ -55,7 +55,7 @@ export function InstructorPayInfoModal({ target, onClose, onSuccess }: Props) {
               <label className="text-[12px] font-semibold text-[#0B1F3A]">Payment Method</label>
               <select
                 value={payMethod}
-                onChange={e => setPayMethod(e.target.value)}
+                onChange={e => setPayMethod(e.target.value as typeof payMethod)}
                 className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
               >
                 {Object.entries(INSTRUCTOR_PAYMENT_METHOD_LABELS).map(([v, l]) => (

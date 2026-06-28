@@ -13,6 +13,9 @@ import { useGroupPanel } from './workspace/hooks/useGroupPanel'
 import { applyFilters } from './workspace/utils'
 import { DEFAULT_FILTERS } from './workspace/types'
 import type { Filters } from './workspace/types'
+import { fetchGroupsExportData } from '@/modules/groups/export/queries'
+import { downloadGroupsWorkbook } from '@/modules/groups/export/workbook'
+import type { ExportRole }        from '@/modules/groups/export/workbook'
 
 interface Props {
   groups:          GroupOperationalRow[]
@@ -20,11 +23,12 @@ interface Props {
   studentOptions:  GroupStudentOption[]
   defaultBranchId: string
   isTL:            boolean
+  isSuperAdmin?:   boolean
   showPageHeader?: boolean
 }
 
 export default function GroupsWorkspaceClient({
-  groups, options, studentOptions, defaultBranchId, isTL, showPageHeader = false,
+  groups, options, studentOptions, defaultBranchId, isTL, isSuperAdmin = false, showPageHeader = false,
 }: Props) {
   const router = useRouter()
 
@@ -45,6 +49,29 @@ export default function GroupsWorkspaceClient({
 
   // Resizable panel
   const { containerRef, panelWidth, isDesktop, handleDividerMouseDown, handleDividerDoubleClick } = useGroupPanel()
+
+  // Export state
+  const [exporting, setExporting]     = useState(false)
+  const [exportToast, setExportToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
+
+  const exportRole: ExportRole = isSuperAdmin ? 'super_admin' : 'team_leader'
+
+  const handleExport = useCallback(async () => {
+    setExporting(true)
+    setExportToast(null)
+    try {
+      const groupIds  = visible.map(g => g.group_id)
+      const branchIds = [...new Set(groups.map(g => g.branch_id))]
+      const result    = await fetchGroupsExportData(groupIds, branchIds)
+      downloadGroupsWorkbook(visible, result.pnlRows, result.students, exportRole)
+      setExportToast({ type: 'success', msg: 'Excel exported successfully' })
+    } catch {
+      setExportToast({ type: 'error', msg: 'Export failed. Please try again.' })
+    } finally {
+      setExporting(false)
+      setTimeout(() => setExportToast(null), 4000)
+    }
+  }, [visible, groups, exportRole])
 
   const openCreate = useCallback(() => {
     setModalMode('create')
@@ -82,26 +109,67 @@ export default function GroupsWorkspaceClient({
     router.refresh()
   }
 
-  // Topbar "New Group" button
+  // Topbar buttons: Export Excel + New Group
   const { setAction } = useTopbarAction()
   useEffect(() => {
-    if (!isTL) return
     setAction(
-      <button
-        onClick={openCreate}
-        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
-      >
-        <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-          <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-        </svg>
-        New Group
-      </button>,
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#E2E8F0] bg-white px-3.5 text-[13px] font-medium text-[#374151] transition hover:border-[#CBD5E1] hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {exporting ? (
+            <svg className="h-4 w-4 animate-spin text-[#94A3B8]" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#64748B]">
+              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+          )}
+          {exporting ? 'Exporting…' : 'Export Excel'}
+        </button>
+
+        {isTL && (
+          <button
+            onClick={openCreate}
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+          >
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            New Group
+          </button>
+        )}
+      </div>,
     )
     return () => setAction(null)
-  }, [isTL, openCreate, setAction])
+  }, [isTL, openCreate, setAction, exporting, handleExport])
 
   return (
     <div className="flex flex-col h-full gap-3">
+
+      {/* Export toast */}
+      {exportToast && (
+        <div className={`fixed top-6 right-6 z-[100] flex items-center gap-2 rounded-xl border px-4 py-3 text-[13px] font-medium shadow-lg ${
+          exportToast.type === 'success'
+            ? 'border-[#A7F3D0] bg-[#E7F8EE] text-[#15803D]'
+            : 'border-[#FECACA] bg-[#FEE2E2] text-[#DC2626]'
+        }`}>
+          {exportToast.type === 'success' ? (
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+          )}
+          {exportToast.msg}
+        </div>
+      )}
 
       {/* KPI strip */}
       {showPageHeader ? (
