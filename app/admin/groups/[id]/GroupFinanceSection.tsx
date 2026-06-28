@@ -48,7 +48,7 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
       <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
         <p className="text-sm font-semibold text-[#0B1F3A]">Group Finance & P&L</p>
         <div className="flex items-center gap-2">
-          <Link href="/admin/expenses?scope=GROUP" className="text-xs font-medium text-[#94A3B8] hover:text-[#FF8A1F]">
+          <Link href="/admin/finance-center?tab=groups" className="text-xs font-medium text-[#94A3B8] hover:text-[#FF8A1F]">
             Add Expense →
           </Link>
           <Link href="/admin/finance" className="text-xs font-medium text-[#FF8A1F] hover:underline">

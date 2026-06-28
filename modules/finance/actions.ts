@@ -496,8 +496,7 @@ export async function addExpense(input: AddExpenseInput) {
 
   if (error) return { error: error.message }
 
-  revalidatePath('/admin/revenue')
-  revalidatePath('/admin/expenses')
+  revalidatePath('/admin/finance-center')
   revalidatePath('/admin/finance')
   return { ok: true, id: (data as any).id as string }
 }
@@ -522,8 +521,7 @@ export async function updateExpense(id: string, input: Partial<AddExpenseInput>)
 
   if (error) return { error: error.message }
 
-  revalidatePath('/admin/revenue')
-  revalidatePath('/admin/expenses')
+  revalidatePath('/admin/finance-center')
   return { ok: true }
 }
 
@@ -538,8 +536,7 @@ export async function deleteExpense(id: string) {
 
   if (error) return { error: error.message }
 
-  revalidatePath('/admin/revenue')
-  revalidatePath('/admin/expenses')
+  revalidatePath('/admin/finance-center')
   return { ok: true }
 }
 
@@ -567,8 +564,7 @@ export async function addRecurringExpense(input: AddRecurringExpenseInput) {
 
   if (error) return { error: error.message }
 
-  revalidatePath('/admin/revenue')
-  revalidatePath('/admin/expenses')
+  revalidatePath('/admin/finance-center')
   return { ok: true, id: (data as any).id as string }
 }
 
@@ -593,8 +589,7 @@ export async function updateRecurringExpense(id: string, input: Partial<AddRecur
 
   if (error) return { error: error.message }
 
-  revalidatePath('/admin/revenue')
-  revalidatePath('/admin/expenses')
+  revalidatePath('/admin/finance-center')
   return { ok: true }
 }
 
@@ -609,8 +604,7 @@ export async function toggleRecurringExpense(id: string, isActive: boolean) {
 
   if (error) return { error: error.message }
 
-  revalidatePath('/admin/revenue')
-  revalidatePath('/admin/expenses')
+  revalidatePath('/admin/finance-center')
   return { ok: true }
 }
 
@@ -622,8 +616,7 @@ export async function deleteRecurringExpense(id: string) {
 
   if (error) return { error: error.message }
 
-  revalidatePath('/admin/revenue')
-  revalidatePath('/admin/expenses')
+  revalidatePath('/admin/finance-center')
   return { ok: true }
 }
 

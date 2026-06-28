@@ -43,23 +43,21 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
     ? specializations.split(',').map((s) => s.trim()).filter(Boolean)
     : []
 
-  let authUserId: string
   const { data: listData } = await db.auth.admin.listUsers({ perPage: 1000 })
   const existing = listData?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())
-
   if (existing) {
-    authUserId = existing.id
-  } else {
-    const { data: created, error: createError } = await db.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    })
-    if (createError || !created?.user) {
-      return { success: false, error: { code: 'AUTH_ERROR', message: createError?.message ?? 'Failed to create user' } }
-    }
-    authUserId = created.user.id
+    return { success: false, error: { code: 'DUPLICATE', message: 'This email is already registered.' } }
   }
+
+  const { data: created, error: createError } = await db.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  })
+  if (createError || !created?.user) {
+    return { success: false, error: { code: 'AUTH_ERROR', message: createError?.message ?? 'Failed to create user' } }
+  }
+  const authUserId = created.user.id
 
   await db.from('users').upsert({ id: authUserId, email, phone: phone || null }, { onConflict: 'id' })
 

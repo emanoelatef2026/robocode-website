@@ -61,7 +61,7 @@ export default function NewInstructorForm({ branches, groups }: Props) {
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
             Email <span className="text-[#EF4444]">*</span>
           </label>
-          <input name="email" type="email" required className={cls} />
+          <input name="email" type="email" required autoComplete="off" className={cls} />
         </div>
 
         <div>

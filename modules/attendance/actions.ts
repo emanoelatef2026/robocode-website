@@ -327,6 +327,24 @@ export async function recordAttendanceSession(
     }
   })
 
+  // ── Record instructor participation (if submitter is an instructor) ──────────
+  // Upsert is idempotent — re-submitting attendance won't create duplicates.
+  {
+    const { data: instrRow } = await db
+      .from('instructors')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (instrRow) {
+      await db.from('session_instructors').upsert({
+        session_id:    scheduleId,
+        instructor_id: (instrRow as any).id,
+        submitted_at:  new Date().toISOString(),
+      }, { onConflict: 'session_id,instructor_id', ignoreDuplicates: false })
+    }
+  }
+
   // ── Overdraft timeline events (non-fatal) ─────────────────────────────────────
   const overdraftGrantedIds = consumptionResults
     .filter(r => r.reason === 'overdraft_allowed')

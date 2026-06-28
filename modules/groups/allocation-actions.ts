@@ -138,6 +138,7 @@ export async function addGroupAllocationAction(
   instructorId:      string,
   allocatedSessions: number | null,
   notes?:            string,
+  fromSession?:      number,
 ): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
@@ -160,26 +161,29 @@ export async function addGroupAllocationAction(
     }
   }
 
-  const canonicalFrom = await computeNextAllocationStart(groupId, db)
+  // Use caller-specified from_session, or fall back to computed next.
+  const canonicalFrom = fromSession ?? await computeNextAllocationStart(groupId, db)
 
-  // Overlap check (only when we know to_session)
+  // Validate to_session does not exceed planned sessions (open-ended groups exempt).
   if (allocatedSessions != null) {
     const toSession = canonicalFrom + allocatedSessions - 1
-    const { data: conflicts } = await db
-      .from('group_instructors')
-      .select('instructor_id, from_session, to_session')
+    const { data: gcRow } = await db
+      .from('group_courses')
+      .select('total_sessions, open_ended')
       .eq('group_id', groupId)
-      .not('to_session', 'is', null)
+      .eq('status', 'active')
+      .maybeSingle()
 
-    for (const c of (conflicts ?? []) as any[]) {
-      if (canonicalFrom <= (c.to_session as number) && toSession >= (c.from_session as number)) {
-        return {
-          success: false,
-          error: {
-            code:    'OVERLAP',
-            message: `Allocation would overlap with an existing range (sessions ${c.from_session}–${c.to_session}).`,
-          },
-        }
+    const totalSessions = (gcRow as any)?.total_sessions as number | null ?? null
+    const isOpenEnded   = (gcRow as any)?.open_ended as boolean ?? false
+
+    if (!isOpenEnded && totalSessions !== null && toSession > totalSessions) {
+      return {
+        success: false,
+        error: {
+          code:    'EXCEEDS_TOTAL',
+          message: `Allocation end (session ${toSession}) exceeds the group's planned sessions (${totalSessions}).`,
+        },
       }
     }
   }
@@ -325,11 +329,12 @@ export async function editGroupAllocationRangeAction(
   // Cannot exceed group total_sessions (skipped for open-ended groups)
   const { data: gcRow } = await db
     .from('group_courses')
-    .select('total_sessions, open_ended')
+    .select('id, total_sessions, open_ended')
     .eq('group_id', groupId)
     .eq('status', 'active')
     .maybeSingle()
 
+  const gcId          = (gcRow as any)?.id as string | null
   const totalSessions = (gcRow as any)?.total_sessions as number | null ?? null
   const isOpenEnded   = (gcRow as any)?.open_ended as boolean ?? false
   if (!isOpenEnded && totalSessions !== null && newToSession > totalSessions) {
@@ -342,24 +347,33 @@ export async function editGroupAllocationRangeAction(
     }
   }
 
-  // Cannot overlap with other allocations (excluding this instructor's own row)
-  const { data: others } = await db
-    .from('group_instructors')
-    .select('instructor_id, from_session, to_session')
-    .eq('group_id', groupId)
-    .neq('instructor_id', instructorId)
-    .not('to_session', 'is', null)
+  // Block shrinking if instructor has session_instructors records beyond the new range
+  const isShrinking = gi.to_session === null || newToSession < gi.to_session
+  if (isShrinking && gcId) {
+    const { data: futureScheds } = await db
+      .from('schedules')
+      .select('id')
+      .eq('group_course_id', gcId)
+      .gt('session_number', newToSession)
+      .eq('status', 'completed')
 
-  for (const other of (others ?? []) as any[]) {
-    const oFrom = other.from_session as number
-    const oTo   = other.to_session   as number
-    if (gi.from_session <= oTo && newToSession >= oFrom) {
-      return {
-        success: false,
-        error: {
-          code:    'OVERLAP',
-          message: `New range (${gi.from_session}–${newToSession}) overlaps with another allocation (sessions ${oFrom}–${oTo}).`,
-        },
+    const futureIds = (futureScheds ?? []).map((r: any) => r.id as string)
+
+    if (futureIds.length > 0) {
+      const { data: siRows } = await db
+        .from('session_instructors')
+        .select('id')
+        .eq('instructor_id', instructorId)
+        .in('session_id', futureIds)
+
+      if ((siRows ?? []).length > 0) {
+        return {
+          success: false,
+          error: {
+            code:    'HAS_ATTENDANCE_BEYOND_RANGE',
+            message: `Cannot shrink to session ${newToSession}: this instructor has attendance records in sessions beyond that point. Historical attendance data must be preserved.`,
+          },
+        }
       }
     }
   }
@@ -400,25 +414,6 @@ export async function removeGroupAllocationAction(
 ): Promise<ActionResult<void>> {
   await requirePermission('manage_groups')
   const db = createServiceClient()
-
-  // Safety: block if any completed sessions in range
-  const { data: summRow } = await db
-    .from('v_instructor_allocation_summary')
-    .select('sessions_completed_in_range')
-    .eq('group_id', groupId)
-    .eq('instructor_id', instructorId)
-    .maybeSingle()
-
-  const done = (summRow as any)?.sessions_completed_in_range ?? 0
-  if (done > 0) {
-    return {
-      success: false,
-      error: {
-        code:    'BLOCKED',
-        message: `Cannot remove: ${done} completed session(s) in this instructor's range. Change status to "released" instead.`,
-      },
-    }
-  }
 
   const { error } = await db
     .from('group_instructors')

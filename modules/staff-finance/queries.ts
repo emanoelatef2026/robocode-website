@@ -85,7 +85,22 @@ export async function getLiveInstructorFinance(
     overrideByKey.set(`${ov.instructor_id}:${ov.schedule_id}`, Number(ov.override_rate))
   }
 
-  // 5. Accumulate per-instructor: schedules + earnings (rate hierarchy applied per session)
+  // 5. Load session_instructors records — source of truth for who actually taught
+  //    each session. Falls back to group lead for sessions without a record.
+  const { data: siData } = await db
+    .from('session_instructors')
+    .select('session_id, instructor_id')
+    .in('session_id', allScheduleIds)
+
+  // Build set of session_ids that have session_instructors records
+  const siBySession = new Map<string, string[]>()
+  for (const si of (siData ?? []) as any[]) {
+    const list = siBySession.get(si.session_id as string) ?? []
+    list.push(si.instructor_id as string)
+    siBySession.set(si.session_id as string, list)
+  }
+
+  // Accumulate per-instructor: schedules + earnings (rate hierarchy applied per session)
   type SessionEntry = {
     schedule_ids: string[]
     group_ids:    Set<string>
@@ -93,18 +108,32 @@ export async function getLiveInstructorFinance(
   }
   const sessionMap = new Map<string, SessionEntry>()
 
+  function addToSession(instructorId: string, scheduleId: string, groupId: string, branchId: string) {
+    if (!sessionMap.has(instructorId)) {
+      sessionMap.set(instructorId, { schedule_ids: [], group_ids: new Set(), branch_id: branchId })
+    }
+    const entry = sessionMap.get(instructorId)!
+    entry.schedule_ids.push(scheduleId)
+    entry.group_ids.add(groupId)
+  }
+
   for (const s of schedules) {
     const gc = gcMap.get(s.group_course_id)
     if (!gc) continue
-    const instructorId: string | undefined = gc.instructor_id ?? groupLeadMap.get(gc.group_id)
-    if (!instructorId) continue
 
-    if (!sessionMap.has(instructorId)) {
-      sessionMap.set(instructorId, { schedule_ids: [], group_ids: new Set(), branch_id: s.branch_id })
+    const participating = siBySession.get(s.id)
+    if (participating && participating.length > 0) {
+      // Payroll from actual participants
+      for (const instructorId of participating) {
+        addToSession(instructorId, s.id, gc.group_id, s.branch_id)
+      }
+    } else {
+      // Historical fallback: attribute to group lead / group_courses.instructor_id
+      const instructorId: string | undefined = gc.instructor_id ?? groupLeadMap.get(gc.group_id)
+      if (instructorId) {
+        addToSession(instructorId, s.id, gc.group_id, s.branch_id)
+      }
     }
-    const entry = sessionMap.get(instructorId)!
-    entry.schedule_ids.push(s.id)
-    entry.group_ids.add(gc.group_id)
   }
 
   if (!sessionMap.size) return []

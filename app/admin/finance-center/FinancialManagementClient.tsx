@@ -749,7 +749,7 @@ function LiveFilterBar({
     if (f)        params.set('date_from',  f)
     if (t)        params.set('date_to',    t)
     if (archived) params.set('archived',   '1')
-    router.push(`/admin/expenses?${params.toString()}`)
+    router.push(`/admin/finance-center?${params.toString()}`)
   }
 
   function preset(p: string) {
@@ -771,7 +771,7 @@ function LiveFilterBar({
 
   function clear() {
     setFrom(''); setTo('')
-    router.push(`/admin/expenses?tab=${activeTab}`)
+    router.push(`/admin/finance-center?tab=${activeTab}`)
   }
 
   // Filter status labels for the indicator
@@ -1635,7 +1635,7 @@ export default function FinancialManagementClient({
     { key: 'groups',    label: 'Groups'    },
     { key: 'branches',  label: 'Branches'  },
     { key: 'academy',   label: 'Academy'   },
-    { key: 'recurring', label: 'Recurring' },
+    { key: 'recurring', label: 'Fixed Expenses' },
   ]
 
   function switchTab(key: string) {
@@ -1645,7 +1645,7 @@ export default function FinancialManagementClient({
     if (currentDateFrom) params.set('date_from',   currentDateFrom)
     if (currentDateTo)   params.set('date_to',     currentDateTo)
     if (includeArchived) params.set('archived',    '1')
-    router.push(`/admin/expenses?${params.toString()}`)
+    router.push(`/admin/finance-center?${params.toString()}`)
   }
 
   return (

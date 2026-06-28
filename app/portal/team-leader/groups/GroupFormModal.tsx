@@ -98,62 +98,30 @@ function AllocStatusChip({ status }: { status: string }) {
   )
 }
 
-// ── Timeline bar ───────────────────────────────────────────────────────────────
+// ── Allocation list (replaces merged progress bar — overlapping ranges allowed) ──
 
-function AllocationTimeline({
+function AllocationList({
   allocations,
-  totalSessions,
 }: {
-  allocations:   AllocationRow[]
-  totalSessions: number | null
+  allocations: AllocationRow[]
 }) {
   if (!allocations.length) return null
 
-  const ceiling = totalSessions ?? Math.max(...allocations.map(a => a.to_session ?? a.from_session))
-  if (ceiling <= 0) return null
-
   return (
-    <div className="mt-3">
-      <div className="mb-1 flex items-center justify-between text-[10px] text-[#94A3B8]">
-        <span>1</span>
-        <span>Session {ceiling}</span>
-      </div>
-      <div className="relative h-5 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
-        {allocations.map(a => {
-          const from   = a.from_session
-          const to     = a.to_session ?? ceiling
-          const left   = ((from - 1) / ceiling) * 100
-          const width  = ((to - from + 1) / ceiling) * 100
-          const bgCls  =
-            a.allocation_status === 'active'    ? 'bg-green-400'  :
-            a.allocation_status === 'completed' ? 'bg-[#94A3B8]'  :
-            a.allocation_status === 'released'  ? 'bg-[#FCA5A5]'    :
-                                                  'bg-blue-300'
-          return (
-            <div
-              key={a.instructor_id}
-              title={`${a.instructor_name}: sessions ${from}–${to}`}
-              className={`absolute top-0 h-full ${bgCls} opacity-80`}
-              style={{ left: `${left}%`, width: `${width}%` }}
-            />
-          )
-        })}
-      </div>
-      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
-        {allocations.map(a => {
-          const dotCls =
-            a.allocation_status === 'active'    ? 'bg-green-400'  :
-            a.allocation_status === 'completed' ? 'bg-[#94A3B8]'  :
-            a.allocation_status === 'released'  ? 'bg-[#FCA5A5]'    :
-                                                  'bg-blue-300'
-          return (
-            <span key={a.instructor_id} className="flex items-center gap-1 text-[10px] text-[#64748B]">
-              <span className={`inline-block h-2 w-2 rounded-full ${dotCls}`} />
-              {a.instructor_name} ({a.from_session}–{a.to_session ?? '∞'})
-            </span>
-          )
-        })}
-      </div>
+    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-0.5">
+      {allocations.map(a => {
+        const dotCls =
+          a.allocation_status === 'active'    ? 'bg-green-400'  :
+          a.allocation_status === 'completed' ? 'bg-[#94A3B8]'  :
+          a.allocation_status === 'released'  ? 'bg-[#FCA5A5]'  :
+                                                'bg-blue-300'
+        return (
+          <span key={a.instructor_id} className="flex items-center gap-1 text-[10px] text-[#64748B]">
+            <span className={`inline-block h-2 w-2 shrink-0 rounded-full ${dotCls}`} />
+            {a.instructor_name} ({a.from_session}–{a.to_session ?? '∞'})
+          </span>
+        )
+      })}
     </div>
   )
 }
@@ -480,23 +448,24 @@ function AddAllocationForm({
   const [, start]           = useTransition()
   const [instrId, setInstrId]   = useState('')
   const [sessions, setSessions] = useState('')
+  const [fromStr, setFromStr]   = useState('1')
   const [notes, setNotes]       = useState('')
   const [error, setError]       = useState<string | null>(null)
 
-  const existing     = new Set(ctx.allocations.map(a => a.instructor_id))
-  const available    = instructors.filter(i => !existing.has(i.id))
-  const fromSession  = ctx.next_from_session
-  const sessNum      = parseInt(sessions, 10)
-  const toSession    = sessions && !isNaN(sessNum) && sessNum > 0 ? fromSession + sessNum - 1 : null
-  const remaining    = !ctx.open_ended && ctx.total_sessions != null ? ctx.total_sessions - fromSession + 1 : null
-  const overLimit    = !ctx.open_ended && remaining != null && toSession != null && toSession > (ctx.total_sessions ?? Infinity)
+  const existing  = new Set(ctx.allocations.map(a => a.instructor_id))
+  const available = instructors.filter(i => !existing.has(i.id))
+
+  const fromSession = Math.max(1, parseInt(fromStr, 10) || 1)
+  const sessNum     = parseInt(sessions, 10)
+  const toSession   = sessions && !isNaN(sessNum) && sessNum > 0 ? fromSession + sessNum - 1 : null
+  const overLimit   = !ctx.open_ended && ctx.total_sessions != null && toSession != null && toSession > ctx.total_sessions
 
   function handleAdd() {
     if (!instrId) { setError('Select an instructor.'); return }
     setError(null)
-    const numSess = sessions && !isNaN(parseInt(sessions, 10)) ? parseInt(sessions, 10) : null
+    const numSess = sessions && !isNaN(sessNum) ? sessNum : null
     start(async () => {
-      const res = await addGroupAllocationAction(groupId, instrId, numSess, notes || undefined)
+      const res = await addGroupAllocationAction(groupId, instrId, numSess, notes || undefined, fromSession)
       if (!res.success) { setError(res.error.message); return }
       onDone()
     })
@@ -505,6 +474,7 @@ function AddAllocationForm({
   return (
     <div className="rounded-lg border border-[#FF8A1F]/30 bg-[#FFF7ED] px-3 py-3 space-y-2.5">
       <p className="text-[11px] font-semibold text-[#FF8A1F]">New Instructor Allocation</p>
+      <p className="text-[10px] text-[#94A3B8]">Overlapping ranges are allowed — multiple instructors may cover the same sessions.</p>
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         <div className="sm:col-span-2">
@@ -524,32 +494,34 @@ function AddAllocationForm({
         </div>
 
         <div>
-          <label className="mb-1 block text-[11px] font-medium text-[#374151]">
-            From Session
-            <span className="ml-1 text-[#94A3B8]">(computed)</span>
-          </label>
-          <div className="ds-card px-2.5 py-1.5 text-[12px] font-semibold text-[#0B1F3A]">
-            {fromSession}
-          </div>
+          <label className="mb-1 block text-[11px] font-medium text-[#374151]">From Session</label>
+          <input
+            type="number"
+            min={1}
+            max={ctx.total_sessions ?? undefined}
+            value={fromStr}
+            onChange={e => { setFromStr(e.target.value); setError(null) }}
+            className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+          />
         </div>
 
         <div>
           <label className="mb-1 block text-[11px] font-medium text-[#374151]">
             Sessions to Teach
-            {remaining != null && (
-              <span className="ml-1 text-[#94A3B8]">(max {remaining})</span>
+            {!ctx.open_ended && ctx.total_sessions != null && (
+              <span className="ml-1 text-[#94A3B8]">(max {ctx.total_sessions})</span>
             )}
             {ctx.open_ended && (
-              <span className="ml-1 text-[#94A3B8]">(open-ended group)</span>
+              <span className="ml-1 text-[#94A3B8]">(open-ended)</span>
             )}
           </label>
           <input
             type="number"
             min={1}
-            max={remaining ?? undefined}
+            max={!ctx.open_ended && ctx.total_sessions != null ? ctx.total_sessions - fromSession + 1 : undefined}
             value={sessions}
             onChange={e => setSessions(e.target.value)}
-            placeholder={ctx.open_ended ? 'Leave blank for unlimited' : (ctx.total_sessions != null ? `Max ${remaining}` : 'Leave blank for unlimited')}
+            placeholder={ctx.open_ended ? 'Leave blank for unlimited' : 'e.g. 12'}
             className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
           />
         </div>
@@ -558,7 +530,7 @@ function AddAllocationForm({
       {toSession != null && (
         <p className={`text-[11px] font-medium ${overLimit ? 'text-[#EF4444]' : 'text-[#FF8A1F]'}`}>
           {overLimit
-            ? `Exceeds planned sessions (${ctx.total_sessions}). Max ${remaining} session${remaining !== 1 ? 's' : ''}.`
+            ? `Exceeds planned sessions (${ctx.total_sessions}).`
             : `Will teach sessions ${fromSession}–${toSession}`
           }
         </p>
@@ -651,7 +623,7 @@ function InstructorAllocationsSection({
         />
       ))}
 
-      {ctx && <AllocationTimeline allocations={allocs} totalSessions={ctx.total_sessions} />}
+      {ctx && <AllocationList allocations={allocs} />}
 
       {showAdd && ctx ? (
         <AddAllocationForm

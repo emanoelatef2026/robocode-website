@@ -91,14 +91,11 @@ const I = {
       <path d="M2.25 18a.75.75 0 0 0 0 1.5c5.4 0 10.63.722 15.6 2.075 1.19.324 2.4-.558 2.4-1.82V18.75a.75.75 0 0 0-.75-.75H2.25Z" />
     </svg>
   ),
-  revenue: (
+  financeCenter: (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-      <path fillRule="evenodd" d="M15.22 6.268a.75.75 0 0 1 .968-.432l5.942 2.28a.75.75 0 0 1 .431.97l-2.28 5.94a.75.75 0 1 1-1.4-.537l1.63-4.251-1.086.483a15.743 15.743 0 0 0-6.479 5.862.75.75 0 0 1-1.233.15L9 13.5l-4.72 4.72a.75.75 0 0 1-1.06-1.061l5.25-5.25a.75.75 0 0 1 1.06 0l3.074 3.073a17.25 17.25 0 0 1 5.957-4.965l1.09-.485-4.252-1.631a.75.75 0 0 1-.432-.968Z" clipRule="evenodd" />
-    </svg>
-  ),
-  expenses: (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
-      <path fillRule="evenodd" d="M1.72 5.47a.75.75 0 0 1 1.06 0L9 11.69l3.756-3.756a.75.75 0 0 1 .985-.066 12.698 12.698 0 0 1 4.575 6.832l.308 1.149 2.277-3.943a.75.75 0 1 1 1.299.75l-3.182 5.51a.75.75 0 0 1-1.025.275l-5.511-3.181a.75.75 0 0 1 .75-1.3l3.943 2.277-.308-1.149a11.194 11.194 0 0 0-3.528-5.617l-3.809 3.81a.75.75 0 0 1-1.06 0L1.72 6.53a.75.75 0 0 1 0-1.061Z" clipRule="evenodd" />
+      <path d="M2.273 5.625A4.483 4.483 0 0 1 5.25 4.5h13.5c1.141 0 2.183.425 2.977 1.125A3 3 0 0 0 18.75 3H5.25a3 3 0 0 0-2.977 2.625Z" />
+      <path d="M2.273 8.625A4.483 4.483 0 0 1 5.25 7.5h13.5c1.141 0 2.183.425 2.977 1.125A3 3 0 0 0 18.75 6H5.25a3 3 0 0 0-2.977 2.625Z" />
+      <path fillRule="evenodd" d="M5.25 9a3 3 0 0 0-3 3v6a3 3 0 0 0 3 3h13.5a3 3 0 0 0 3-3v-6a3 3 0 0 0-3-3H5.25Zm7.5 5.25a.75.75 0 0 0-1.5 0v.75H9.75a.75.75 0 0 0 0 1.5h1.5v.75a.75.75 0 0 0 1.5 0V16.5h1.5a.75.75 0 0 0 0-1.5h-1.5v-.75Z" clipRule="evenodd" />
     </svg>
   ),
   analytics: (
@@ -161,9 +158,8 @@ const MORE_ITEMS: MoreItem[] = [
   { label: "Attendance",   href: "/admin/attendance",     icon: I.attendance,   permission: "manage_attendance"   },
   { label: "Assignments",  href: "/admin/assignments",    icon: I.assignments                                     },
   { label: "Payroll",      href: "/admin/payroll",        icon: I.payroll,      permission: "manage_financials"   },
-  { label: "Collections",  href: "/admin/finance",        icon: I.collections,  permission: "manage_financials"   },
-  { label: "Revenue",      href: "/admin/revenue",        icon: I.revenue,      superAdminOnly: true              },
-  { label: "Expenses",     href: "/admin/expenses",       icon: I.expenses,     superAdminOnly: true              },
+  { label: "Collections",    href: "/admin/finance",         icon: I.collections,   permission: "manage_financials" },
+  { label: "Finance Center", href: "/admin/finance-center",  icon: I.financeCenter, superAdminOnly: true            },
   { label: "Analytics",    href: "/admin/analytics",      icon: I.analytics                                       },
   { label: "Reports",      href: "/admin/executive",      icon: I.reports,      superAdminOnly: true              },
   { label: "Branches",     href: "/admin/branches",       icon: I.branches,     superAdminOnly: true              },

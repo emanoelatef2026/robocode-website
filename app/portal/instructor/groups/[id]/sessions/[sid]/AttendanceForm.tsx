@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState } from 'react'
 import { saveAttendance } from '@/modules/instructor-portal/actions'
@@ -13,15 +13,17 @@ interface Props {
 
 type AttStatus = 'present' | 'absent' | 'late' | 'excused' | 'makeup'
 
-const CYCLE: AttStatus[] = ['present', 'absent', 'late', 'excused', 'makeup']
+const STATUSES: AttStatus[] = ['present', 'absent', 'late', 'excused', 'makeup']
 
-const CHIP: Record<AttStatus, string> = {
-  present: 'bg-[#E7F8EE] text-[#15803D] ring-green-200',
-  absent:  'bg-[#FEE2E2] text-[#DC2626] ring-red-200',
-  late:    'bg-yellow-100 text-yellow-700 ring-yellow-200',
-  excused: 'bg-[#EFF6FF] text-[#1D4ED8] ring-blue-200',
-  makeup:  'bg-purple-100 text-purple-700 ring-purple-200',
+const CHIP_ACTIVE: Record<AttStatus, string> = {
+  present: 'bg-[#10B981] text-white',
+  absent:  'bg-[#EF4444] text-white',
+  late:    'bg-yellow-500 text-white',
+  excused: 'bg-[#3B82F6] text-white',
+  makeup:  'bg-purple-500 text-white',
 }
+
+const CHIP_INACTIVE = 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
 
 const LABEL: Record<AttStatus, string> = {
   present: 'Present',
@@ -31,15 +33,23 @@ const LABEL: Record<AttStatus, string> = {
   makeup:  'Makeup',
 }
 
+const SUMMARY_CHIP: Record<AttStatus, string> = {
+  present: 'bg-[#E7F8EE] text-[#15803D]',
+  absent:  'bg-[#FEE2E2] text-[#DC2626]',
+  late:    'bg-yellow-100 text-yellow-700',
+  excused: 'bg-[#EFF6FF] text-[#1D4ED8]',
+  makeup:  'bg-purple-100 text-purple-700',
+}
+
 function initStatus(r: SessionAttendanceRow): AttStatus {
-  if (r.status && CYCLE.includes(r.status as AttStatus)) return r.status as AttStatus
+  if (r.status && STATUSES.includes(r.status as AttStatus)) return r.status as AttStatus
   return 'present'
 }
 
 export default function AttendanceForm({ sessionId, groupId, rows, currentTopic }: Props) {
   const [state, action, pending] = useActionState(saveAttendance, null)
 
-  const [topic, setTopic]     = useState(currentTopic ?? '')
+  const [topic, setTopic]             = useState(currentTopic ?? '')
   const [topicTouched, setTopicTouched] = useState(false)
 
   const [statuses, setStatuses] = useState<Record<string, AttStatus>>(() =>
@@ -49,14 +59,6 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
     Object.fromEntries(rows.map((r) => [r.student_id, r.notes ?? '']))
   )
   const [expandedNote, setExpandedNote] = useState<string | null>(null)
-
-  const cycleStatus = (studentId: string) => {
-    setStatuses((prev) => {
-      const cur = prev[studentId] ?? 'present'
-      const idx = CYCLE.indexOf(cur)
-      return { ...prev, [studentId]: CYCLE[(idx + 1) % CYCLE.length] }
-    })
-  }
 
   const setStatus = (studentId: string, st: AttStatus) => {
     setStatuses((prev) => ({ ...prev, [studentId]: st }))
@@ -69,13 +71,10 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
   const trimmedTopic = topic.trim()
   const topicValid   = trimmedTopic.length > 0 && trimmedTopic.toLowerCase() !== 'no topic'
 
-  const presentCount = rows.filter((r) => statuses[r.student_id] === 'present').length
-  const absentCount  = rows.filter((r) => statuses[r.student_id] === 'absent').length
-  const lateCount    = rows.filter((r) => statuses[r.student_id] === 'late').length
-  const otherCount   = rows.filter((r) => {
-    const s = statuses[r.student_id]
-    return s === 'excused' || s === 'makeup'
-  }).length
+  const counts = STATUSES.reduce((acc, s) => {
+    acc[s] = rows.filter((r) => statuses[r.student_id] === s).length
+    return acc
+  }, {} as Record<AttStatus, number>)
 
   return (
     <form action={action} className="space-y-3">
@@ -84,7 +83,6 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
       {rows.map((r) => (
         <input key={r.student_id} type="hidden" name="student_ids[]" value={r.student_id} />
       ))}
-      {/* Submit the tracked statuses + notes */}
       {rows.map((r) => (
         <input key={`st_${r.student_id}`} type="hidden" name={`status_${r.student_id}`} value={statuses[r.student_id] ?? 'present'} />
       ))}
@@ -129,12 +127,13 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
       <div className="ds-card overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-2.5">
-          <div className="flex items-center gap-3 text-xs">
+          <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="font-semibold text-[#0B1F3A]">{rows.length} students</span>
-            {presentCount > 0 && <span className="text-[#10B981]">{presentCount} present</span>}
-            {absentCount  > 0 && <span className="text-[#EF4444]">{absentCount} absent</span>}
-            {lateCount    > 0 && <span className="text-yellow-600">{lateCount} late</span>}
-            {otherCount   > 0 && <span className="text-[#94A3B8]">{otherCount} other</span>}
+            {STATUSES.filter(s => counts[s] > 0).map(s => (
+              <span key={s} className={`rounded-full px-2 py-0.5 font-medium ${SUMMARY_CHIP[s]}`}>
+                {counts[s]} {LABEL[s].toLowerCase()}
+              </span>
+            ))}
           </div>
           {rows.length > 0 && (
             <div className="flex items-center gap-1">
@@ -143,7 +142,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
                   key={st}
                   type="button"
                   onClick={() => markAll(st)}
-                  className={`rounded px-2 py-0.5 text-[11px] font-medium ring-1 transition hover:opacity-80 ${CHIP[st]}`}
+                  className={`rounded px-2 py-0.5 text-[11px] font-medium transition hover:opacity-80 ${CHIP_ACTIVE[st]}`}
                 >
                   All {LABEL[st]}
                 </button>
@@ -164,61 +163,48 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
               const noteOpen = expandedNote === r.student_id
 
               return (
-                <div key={r.student_id}>
-                  <div className="flex items-center gap-3 px-4 py-2.5">
-                    {/* Avatar */}
+                <div key={r.student_id} className="px-4 py-3">
+                  {/* Row: avatar + name + note icon */}
+                  <div className="flex items-center gap-3 mb-2">
                     <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EFF6FF] text-[11px] font-bold text-[#3B82F6]">
                       {r.student_name[0]?.toUpperCase() ?? '?'}
                     </div>
-
-                    {/* Name */}
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#0B1F3A]">
                       {r.student_name}
                     </span>
-
-                    {/* Note toggle */}
                     <button
                       type="button"
                       title="Add note"
                       onClick={() => setExpandedNote(noteOpen ? null : r.student_id)}
-                      className={`shrink-0 rounded p-1 text-[#94A3B8] transition hover:text-[#64748B] ${noteOpen || noteVal ? 'text-[#64748B]' : ''}`}
+                      className={`shrink-0 rounded p-1 transition ${noteOpen || noteVal ? 'text-[#64748B]' : 'text-[#94A3B8] hover:text-[#64748B]'}`}
                     >
                       <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
                         <path d="M2.5 3A1.5 1.5 0 0 0 1 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0 1 15 5.293V4.5A1.5 1.5 0 0 0 13.5 3h-11Z" />
                         <path d="M15 6.954 8.978 9.86a2.25 2.25 0 0 1-1.956 0L1 6.954V11.5A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5V6.954Z" />
                       </svg>
                     </button>
-
-                    {/* Status chip — click to cycle, right-click for quick set */}
-                    <button
-                      type="button"
-                      onClick={() => cycleStatus(r.student_id)}
-                      title="Click to cycle status"
-                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 transition active:scale-95 ${CHIP[st]}`}
-                    >
-                      {LABEL[st]}
-                    </button>
                   </div>
 
-                  {/* Quick status buttons row (always visible as small dots under) */}
-                  <div className="flex gap-1 px-4 pb-2">
-                    {CYCLE.map((s) => (
+                  {/* Segmented status chips */}
+                  <div className="flex gap-1">
+                    {STATUSES.map((s) => (
                       <button
                         key={s}
                         type="button"
-                        title={LABEL[s]}
                         onClick={() => setStatus(r.student_id, s)}
                         className={[
-                          'h-2 flex-1 rounded-full transition',
-                          s === st ? CHIP[s].split(' ')[0] : 'bg-[#F1F5F9] hover:bg-[#E2E8F0]',
+                          'flex-1 rounded-md py-1 text-[11px] font-semibold transition active:scale-95',
+                          s === st ? CHIP_ACTIVE[s] : CHIP_INACTIVE,
                         ].join(' ')}
-                      />
+                      >
+                        {LABEL[s]}
+                      </button>
                     ))}
                   </div>
 
                   {/* Note input */}
                   {(noteOpen || noteVal) && (
-                    <div className="px-4 pb-3">
+                    <div className="mt-2">
                       <input
                         type="text"
                         value={noteVal}
