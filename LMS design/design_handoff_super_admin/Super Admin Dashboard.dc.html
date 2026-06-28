@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Orbitron:wght@500;600;700;800&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; }
+@keyframes rcpulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+</style>
+</helmet>
+
+<div dir="{{ dir }}" style="font-family: {{ rootFont }}; min-height: 100vh; background: #d8deea;">
+
+  <!-- ░░ Toolbar ░░ -->
+  <div dir="ltr" style="position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:18px;padding:11px 28px;background:rgba(11,31,58,.96);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.08);">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:30px;height:30px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;">
+        <img src="logo.png" style="width:24px;height:24px;object-fit:contain;">
+      </div>
+      <div style="line-height:1.1;">
+        <div style="font-family:'Orbitron',sans-serif;font-weight:800;font-size:12.5px;color:#fff;letter-spacing:.04em;">ROBOCODE</div>
+        <div style="font-size:9px;color:#7d93b3;letter-spacing:.14em;font-weight:600;">LMS · SUPER ADMIN</div>
+      </div>
+    </div>
+    <div style="width:1px;height:24px;background:rgba(255,255,255,.12);"></div>
+    <div style="font-size:12px;color:#aab9d0;font-weight:500;">{{ ui.toolbarHint }}</div>
+    <div style="flex:1;"></div>
+    <div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.06);padding:3px;border-radius:9px;">
+      <button onClick="{{ setEn }}" style="border:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:12px;padding:5px 13px;border-radius:7px;background:{{ tabEn.bg }};color:{{ tabEn.fg }};">EN</button>
+      <button onClick="{{ setAr }}" style="border:none;cursor:pointer;font-family:'Cairo',sans-serif;font-weight:700;font-size:13px;padding:5px 13px;border-radius:7px;background:{{ tabAr.bg }};color:{{ tabAr.fg }};">عربي</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.06);padding:3px;border-radius:9px;">
+      <button onClick="{{ setDesktop }}" style="border:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:12px;padding:5px 13px;border-radius:7px;background:{{ tabDesk.bg }};color:{{ tabDesk.fg }};">{{ ui.desktopLabel }}</button>
+      <button onClick="{{ setMobile }}" style="border:none;cursor:pointer;font-family:inherit;font-weight:600;font-size:12px;padding:5px 13px;border-radius:7px;background:{{ tabMob.bg }};color:{{ tabMob.fg }};">{{ ui.mobileLabel }}</button>
+    </div>
+  </div>
+
+  <!-- ░░ Frame area ░░ -->
+  <div style="display:flex;justify-content:center;padding:44px 24px 64px;">
+    <div style="width:{{ frameW }};background:#F8FAFC;border-radius:18px;box-shadow:0 20px 60px rgba(11,31,58,.18);border:1px solid #e3e8ef;display:flex;position:relative;min-height:820px;overflow:hidden;transition:width .28s cubic-bezier(.4,0,.2,1);">
+
+      <!-- ════ SIDEBAR ════ -->
+      <aside style="display:{{ sidebarDisp }};width:210px;flex:none;background:#0B1F3A;flex-direction:column;overflow:hidden;">
+        <!-- Logo -->
+        <div style="display:flex;align-items:center;gap:10px;padding:17px 14px 14px;border-bottom:1px solid rgba(255,255,255,.07);">
+          <div style="width:28px;height:28px;border-radius:7px;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;">
+            <img src="logo.png" style="width:22px;height:22px;object-fit:contain;">
+          </div>
+          <span style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:12px;color:#fff;letter-spacing:.04em;">ROBOCODE</span>
+        </div>
+        <!-- System status -->
+        <div style="display:flex;align-items:center;gap:7px;padding:8px 14px;background:rgba(16,185,129,.08);border-bottom:1px solid rgba(255,255,255,.05);">
+          <span style="width:6px;height:6px;border-radius:50%;background:#10B981;flex:none;animation:rcpulse 2s infinite;"></span>
+          <span style="font-size:9.5px;font-weight:600;color:rgba(255,255,255,.45);letter-spacing:.04em;">{{ ui.systemStatus }}</span>
+        </div>
+        <!-- Role -->
+        <div style="padding:10px 14px 4px;">
+          <span style="font-size:8.5px;font-weight:700;letter-spacing:.2em;color:rgba(255,255,255,.22);text-transform:uppercase;">{{ ui.role }}</span>
+        </div>
+        <!-- Nav -->
+        <nav style="flex:1;overflow-y:auto;padding:4px 8px 8px;">
+          <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="26">
+            <sc-if value="{{ n.isSection }}" hint-placeholder-val="{{ false }}">
+              <div style="font-size:8.5px;font-weight:700;letter-spacing:.2em;color:rgba(255,255,255,.22);text-transform:uppercase;padding:12px 8px 4px;">{{ n.label }}</div>
+            </sc-if>
+            <sc-if value="{{ n.isItem }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:8px;margin-bottom:1px;cursor:pointer;background:{{ n.bg }};color:{{ n.fg }};">
+                <svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px;flex:none;opacity:{{ n.iconOp }};"><path d="{{ n.icon }}"></path></svg>
+                <span style="font-size:12px;font-weight:{{ n.fw }};flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ n.label }}</span>
+                <sc-if value="{{ n.active }}" hint-placeholder-val="{{ false }}">
+                  <span style="width:5px;height:5px;border-radius:50%;background:#FF8A1F;flex:none;"></span>
+                </sc-if>
+              </div>
+            </sc-if>
+          </sc-for>
+        </nav>
+        <!-- User footer -->
+        <div style="padding:11px 10px;border-top:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px;">
+          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#FF8A1F,#163560);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:10.5px;flex:none;">{{ ui.initials }}</div>
+          <div style="min-width:0;flex:1;">
+            <div style="font-size:11.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ ui.userName }}</div>
+            <div style="font-size:9.5px;color:rgba(255,255,255,.38);">{{ ui.role }}</div>
+          </div>
+          <svg viewBox="0 0 20 20" fill="rgba(255,255,255,.25)" style="width:13px;height:13px;flex:none;"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path></svg>
+        </div>
+      </aside>
+
+      <!-- ════ MAIN ════ -->
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;">
+
+        <!-- Topbar -->
+        <header style="display:flex;align-items:center;gap:12px;padding:13px 20px;border-bottom:1px solid #e9edf3;background:#fff;flex:none;">
+          <!-- Mobile: hamburger + logo -->
+          <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+            <button style="border:none;background:none;cursor:pointer;padding:6px;color:#475569;flex:none;display:flex;align-items:center;justify-content:center;">
+              <svg viewBox="0 0 20 20" fill="currentColor" style="width:18px;height:18px;"><path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path></svg>
+            </button>
+            <div style="display:flex;align-items:center;gap:7px;">
+              <div style="width:22px;height:22px;border-radius:6px;background:#0B1F3A;display:flex;align-items:center;justify-content:center;flex:none;">
+                <img src="logo.png" style="width:16px;height:16px;object-fit:contain;">
+              </div>
+              <span style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;color:#0B1F3A;letter-spacing:.04em;">ROBOCODE</span>
+            </div>
+          </sc-if>
+          <!-- Desktop: greeting -->
+          <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <h1 style="margin:0;font-size:17px;font-weight:800;color:#0B1F3A;letter-spacing:-.01em;font-family:inherit;">{{ ui.greeting }}</h1>
+              <p style="margin:2px 0 0;font-size:12px;color:#64748B;">{{ ui.date }} · {{ ui.role }}</p>
+            </div>
+          </sc-if>
+          <div style="flex:1;"></div>
+          <!-- Search (desktop) -->
+          <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:8px;background:#F1F5F9;border:1px solid #e4e9f0;border-radius:10px;padding:8px 12px;width:200px;">
+              <svg viewBox="0 0 20 20" fill="#94A3B8" style="width:14px;height:14px;flex:none;"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"></path></svg>
+              <span style="font-size:12px;color:#94A3B8;">{{ ui.searchPh }}</span>
+            </div>
+          </sc-if>
+          <!-- Notification bell -->
+          <button style="position:relative;width:36px;height:36px;border-radius:10px;border:1px solid #e4e9f0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;">
+            <svg viewBox="0 0 20 20" fill="#475569" style="width:16px;height:16px;"><path d="M10 2a6 6 0 00-6 6c0 1.886-.454 3.665-1.257 5.234a.75.75 0 00.515 1.076 32.9 32.9 0 003.256.508 3.5 3.5 0 006.972 0 32.9 32.9 0 003.256-.508.75.75 0 00.515-1.076A11.448 11.448 0 0116 8a6 6 0 00-6-6z"></path></svg>
+            <span style="position:absolute;top:7px;right:8px;width:7px;height:7px;border-radius:50%;background:#DC2626;border:1.5px solid #fff;"></span>
+          </button>
+          <!-- Avatar -->
+          <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#FF8A1F,#163560);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;cursor:pointer;flex:none;">{{ ui.initials }}</div>
+        </header>
+
+        <!-- ── Content ── -->
+        <div style="flex:1;overflow-y:auto;padding:{{ contentPad }};">
+
+          <!-- Alert banner -->
+          <sc-if value="{{ hasAlerts }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;align-items:center;gap:10px;border-radius:13px;padding:11px 15px;background:#FEF2F2;border:1px solid #FECACA;margin-bottom:18px;cursor:pointer;">
+              <span style="width:8px;height:8px;border-radius:50%;background:#EF4444;flex:none;animation:rcpulse 1.6s infinite;"></span>
+              <span style="flex:1;font-size:13px;font-weight:500;color:#DC2626;">{{ ui.alertBanner }}</span>
+              <span style="font-size:12px;font-weight:700;color:#DC2626;white-space:nowrap;">{{ ui.viewAll }}</span>
+            </div>
+          </sc-if>
+
+          <!-- ── TODAY ── -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px;">
+            <span style="font-size:9.5px;font-weight:700;letter-spacing:.16em;color:#94A3B8;text-transform:uppercase;white-space:nowrap;">{{ ui.sToday }}</span>
+            <div style="flex:1;height:1px;background:#eef1f6;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:{{ kpiCols }};gap:8px;margin-bottom:16px;">
+            <sc-for list="{{ kpiToday }}" as="k" hint-placeholder-count="8">
+              <div style="background:{{ k.cardBg }};border:1px solid {{ k.cardBd }};border-radius:10px;padding:10px 11px;cursor:pointer;transition:box-shadow .15s;">
+                <div style="font-size:9.5px;font-weight:600;color:#64748B;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ k.label }}</div>
+                <div style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:19px;color:{{ k.valueFg }};line-height:1;">{{ k.value }}</div>
+                <div style="margin-top:7px;display:flex;align-items:flex-end;justify-content:space-between;">
+                  <div style="display:flex;align-items:flex-end;gap:2px;height:14px;">
+                    <sc-for list="{{ k.bars }}" as="b" hint-placeholder-count="7">
+                      <span style="width:3px;border-radius:1.5px;background:{{ k.barColor }};height:{{ b }}%;opacity:.65;display:block;"></span>
+                    </sc-for>
+                  </div>
+                  <span style="font-size:8.5px;font-weight:700;color:{{ k.deltaFg }};background:{{ k.deltaBg }};padding:2px 6px;border-radius:8px;">{{ k.delta }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- ── MONTH ── -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px;">
+            <span style="font-size:9.5px;font-weight:700;letter-spacing:.16em;color:#94A3B8;text-transform:uppercase;white-space:nowrap;">{{ ui.sMonth }}</span>
+            <div style="flex:1;height:1px;background:#eef1f6;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:{{ kpiCols }};gap:8px;margin-bottom:16px;">
+            <sc-for list="{{ kpiMonth }}" as="k" hint-placeholder-count="4">
+              <div style="background:#fff;border:1px solid #e7ebf1;border-radius:10px;padding:10px 11px;cursor:pointer;">
+                <div style="font-size:9.5px;font-weight:600;color:#64748B;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ k.label }}</div>
+                <div style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:19px;color:#0B1F3A;line-height:1;">{{ k.value }}</div>
+                <div style="font-size:9.5px;color:#94A3B8;margin-top:3px;">{{ k.sub }}</div>
+                <div style="margin-top:7px;display:flex;align-items:flex-end;justify-content:space-between;">
+                  <div style="display:flex;align-items:flex-end;gap:2px;height:14px;">
+                    <sc-for list="{{ k.bars }}" as="b" hint-placeholder-count="7">
+                      <span style="width:3px;border-radius:1.5px;background:{{ k.barColor }};height:{{ b }}%;opacity:.65;display:block;"></span>
+                    </sc-for>
+                  </div>
+                  <span style="font-size:8.5px;font-weight:700;color:{{ k.deltaFg }};background:{{ k.deltaBg }};padding:2px 6px;border-radius:8px;">{{ k.delta }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- ── ACADEMY OVERVIEW ── -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px;">
+            <span style="font-size:9.5px;font-weight:700;letter-spacing:.16em;color:#94A3B8;text-transform:uppercase;white-space:nowrap;">{{ ui.sAcademy }}</span>
+            <div style="flex:1;height:1px;background:#eef1f6;"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:{{ kpiCols }};gap:8px;margin-bottom:16px;">
+            <sc-for list="{{ kpiAcademy }}" as="k" hint-placeholder-count="4">
+              <div style="background:#fff;border:1px solid #e7ebf1;border-radius:10px;padding:10px 11px;cursor:pointer;display:flex;flex-direction:column;gap:7px;">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                  <span style="font-size:9.5px;font-weight:600;color:#64748B;">{{ k.label }}</span>
+                  <div style="width:22px;height:22px;border-radius:6px;background:{{ k.iconBg }};display:flex;align-items:center;justify-content:center;">
+                    <svg viewBox="0 0 20 20" fill="{{ k.iconFg }}" style="width:12px;height:12px;"><path d="{{ k.icon }}"></path></svg>
+                  </div>
+                </div>
+                <div style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:22px;color:#0B1F3A;line-height:1;">{{ k.value }}</div>
+                <div style="height:3px;background:#eef1f6;border-radius:3px;overflow:hidden;">
+                  <div style="width:{{ k.fill }}%;height:100%;background:{{ k.iconFg }};border-radius:3px;opacity:.8;"></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- ── FINANCE ── -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px;">
+            <span style="font-size:9.5px;font-weight:700;letter-spacing:.16em;color:#94A3B8;text-transform:uppercase;white-space:nowrap;">{{ ui.sFinance }}</span>
+            <div style="flex:1;height:1px;background:#eef1f6;"></div>
+          </div>
+          <div style="background:#fff;border:1px solid #e7ebf1;border-radius:16px;padding:18px;margin-bottom:22px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div>
+                <div style="font-size:14px;font-weight:700;color:#0B1F3A;">{{ ui.financeTitle }}</div>
+                <div style="font-size:11px;color:#94A3B8;margin-top:2px;">{{ ui.financeSub }}</div>
+              </div>
+              <span style="font-size:11.5px;font-weight:600;color:#FF8A1F;cursor:pointer;">{{ ui.viewAll }}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:{{ finCols }};gap:10px;margin-bottom:15px;">
+              <sc-for list="{{ finTiles }}" as="f" hint-placeholder-count="4">
+                <div style="background:{{ f.bg }};border:1px solid {{ f.bd }};border-radius:11px;padding:12px 13px;">
+                  <div style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:{{ f.fs }};color:{{ f.fg }};line-height:1;">{{ f.value }}</div>
+                  <div style="font-size:9.5px;color:#64748B;font-weight:600;margin-top:5px;">{{ f.label }}</div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:11px;color:#64748B;">{{ ui.collRate }}</span>
+              <span style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:12px;color:#15803D;">82%</span>
+            </div>
+            <div style="height:7px;background:#eef1f6;border-radius:5px;overflow:hidden;margin-bottom:14px;">
+              <div style="width:82%;height:100%;background:linear-gradient(90deg,#10B981,#38BDF8);border-radius:5px;"></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:7px;">
+              <sc-for list="{{ finAlerts }}" as="fa" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:11px;border-radius:10px;padding:10px 13px;background:{{ fa.bg }};border:1px solid {{ fa.bd }};cursor:pointer;">
+                  <span style="width:7px;height:7px;border-radius:50%;background:{{ fa.dot }};flex:none;"></span>
+                  <span style="flex:1;font-size:12px;font-weight:500;color:{{ fa.fg }};">{{ fa.label }}</span>
+                  <span style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:12px;color:{{ fa.fg }};">{{ fa.count }}</span>
+                  <svg viewBox="0 0 16 16" fill="currentColor" style="width:11px;height:11px;color:{{ fa.fg }};opacity:.45;flex:none;"><path fill-rule="evenodd" d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06L7.28 12.78a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z"></path></svg>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- ── BRANCH PERFORMANCE ── -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px;">
+            <span style="font-size:9.5px;font-weight:700;letter-spacing:.16em;color:#94A3B8;text-transform:uppercase;white-space:nowrap;">{{ ui.sBranches }}</span>
+            <div style="flex:1;height:1px;background:#eef1f6;"></div>
+          </div>
+          <div style="background:#fff;border:1px solid #e7ebf1;border-radius:16px;padding:16px 18px;margin-bottom:22px;">
+            <div style="display:flex;align-items:center;padding-bottom:9px;border-bottom:1px solid #f1f4f8;margin-bottom:3px;">
+              <span style="font-size:9.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.1em;flex:1;min-width:120px;">{{ ui.branchCol }}</span>
+              <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+                <span style="font-size:9.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.1em;width:120px;text-align:center;">{{ ui.rateCol }}</span>
+              </sc-if>
+              <span style="font-size:9.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.1em;width:60px;text-align:end;">{{ ui.studentsCol }}</span>
+              <span style="font-size:9.5px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.1em;width:68px;text-align:end;">{{ ui.statusCol }}</span>
+            </div>
+            <sc-for list="{{ branches }}" as="br" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;padding:11px 0;border-bottom:1px solid #f8fafc;">
+                <div style="flex:1;min-width:120px;">
+                  <div style="font-size:12.5px;font-weight:600;color:#0B1F3A;">{{ br.name }}</div>
+                  <div style="font-size:10.5px;color:#94A3B8;margin-top:1px;">{{ br.meta }}</div>
+                </div>
+                <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+                  <div style="width:120px;padding:0 12px;">
+                    <div style="height:5px;background:#eef1f6;border-radius:4px;overflow:hidden;">
+                      <div style="height:100%;border-radius:4px;background:{{ br.barColor }};width:{{ br.rate }}%;"></div>
+                    </div>
+                    <div style="font-size:10px;color:{{ br.rateFg }};font-weight:700;font-family:'Orbitron',sans-serif;margin-top:3px;text-align:center;">{{ br.rate }}%</div>
+                  </div>
+                </sc-if>
+                <div style="width:60px;text-align:end;font-family:'Orbitron',sans-serif;font-weight:700;font-size:14px;color:#0B1F3A;">{{ br.students }}</div>
+                <div style="width:68px;text-align:end;">
+                  <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:{{ br.tagBg }};color:{{ br.tagFg }};">{{ br.tag }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- ── TOP PERFORMERS ── -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px;">
+            <span style="font-size:9.5px;font-weight:700;letter-spacing:.16em;color:#94A3B8;text-transform:uppercase;white-space:nowrap;">{{ ui.sPerformers }}</span>
+            <div style="flex:1;height:1px;background:#eef1f6;"></div>
+            <span style="font-size:10.5px;color:#94A3B8;white-space:nowrap;">{{ ui.performersSub }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:{{ perfCols }};gap:12px;margin-bottom:22px;">
+            <sc-for list="{{ performers }}" as="p" hint-placeholder-count="2">
+              <div style="background:#fff;border:1px solid #e7ebf1;border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;">
+                <div style="width:42px;height:42px;border-radius:12px;background:{{ p.iconBg }};display:flex;align-items:center;justify-content:center;flex:none;">
+                  <svg viewBox="0 0 20 20" fill="{{ p.iconFg }}" style="width:18px;height:18px;"><path d="{{ p.icon }}"></path></svg>
+                </div>
+                <div style="min-width:0;flex:1;">
+                  <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#94A3B8;margin-bottom:3px;">{{ p.tag }}</div>
+                  <div style="font-size:14px;font-weight:700;color:#0B1F3A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.name }}</div>
+                  <div style="font-size:11.5px;color:#64748B;margin-top:2px;">{{ p.sub }}</div>
+                </div>
+                <svg viewBox="0 0 16 16" fill="#cbd5e1" style="width:12px;height:12px;flex:none;"><path fill-rule="evenodd" d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06L7.28 12.78a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z"></path></svg>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- ── SYSTEM ALERTS ── -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px;">
+            <span style="font-size:9.5px;font-weight:700;letter-spacing:.16em;color:#94A3B8;text-transform:uppercase;white-space:nowrap;">{{ ui.sAlerts }}</span>
+            <div style="flex:1;height:1px;background:#eef1f6;"></div>
+            <span style="font-size:10.5px;color:#94A3B8;white-space:nowrap;">{{ ui.alertsSub }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:22px;">
+            <sc-for list="{{ alertRows }}" as="a" hint-placeholder-count="5">
+              <div style="display:flex;align-items:center;gap:12px;border-radius:12px;padding:11px 15px;cursor:pointer;background:{{ a.bg }};border:1px solid {{ a.bd }};">
+                <span style="width:7px;height:7px;border-radius:50%;background:{{ a.dot }};flex:none;"></span>
+                <span style="flex:1;font-size:12.5px;font-weight:500;color:{{ a.fg }};">{{ a.label }}</span>
+                <span style="font-family:'Orbitron',sans-serif;font-weight:700;font-size:13px;color:{{ a.fg }};">{{ a.count }}</span>
+                <svg viewBox="0 0 16 16" fill="currentColor" style="width:11px;height:11px;color:{{ a.fg }};opacity:.4;flex:none;"><path fill-rule="evenodd" d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06L7.28 12.78a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z"></path></svg>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- ── QUICK ACTIONS ── -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:13px;">
+            <span style="font-size:9.5px;font-weight:700;letter-spacing:.16em;color:#94A3B8;text-transform:uppercase;white-space:nowrap;">{{ ui.sActions }}</span>
+            <div style="flex:1;height:1px;background:#eef1f6;"></div>
+          </div>
+          <div style="background:#fff;border:1px solid #e7ebf1;border-radius:16px;padding:16px 18px;">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <sc-for list="{{ quickActions }}" as="qa" hint-placeholder-count="9">
+                <div style="border:1px solid #E2E8F0;border-radius:10px;background:#FAFBFC;padding:8px 14px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;white-space:nowrap;">{{ qa }}</div>
+              </sc-for>
+            </div>
+          </div>
+
+        </div><!-- /content -->
+
+        <!-- Mobile bottom nav -->
+        <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e9edf3;display:flex;z-index:20;padding:8px 0 12px;">
+            <sc-for list="{{ bottomTabs }}" as="t" hint-placeholder-count="5">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;">
+                <svg viewBox="0 0 20 20" fill="{{ t.fg }}" style="width:20px;height:20px;"><path d="{{ t.icon }}"></path></svg>
+                <span style="font-size:9.5px;font-weight:600;color:{{ t.fg }};">{{ t.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+      </div><!-- /main -->
+    </div><!-- /frame -->
+  </div><!-- /frame area -->
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1400,&quot;height&quot;:900}}">
+
+class Component extends DCLogic {
+  state = { lang: 'en', device: 'desktop' };
+
+  renderVals() {
+    const ar = this.state.lang === 'ar';
+    const desktop = this.state.device === 'desktop';
+    const L = (e, a) => ar ? a : e;
+
+    // ── Icon paths ──────────────────────────────────────────────────────────
+    const IC = {
+      dash:        'M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z',
+      students:    'M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z',
+      instructors: 'M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z',
+      tl:          'M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z',
+      groups:      'M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 14.094A5.973 5.973 0 004 17v1H1v-1a3 3 0 013.75-2.906z',
+      courses:     'M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z',
+      certs:       'M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z',
+      payroll:     'M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z M10 18a8 8 0 100-16 8 8 0 000 16z',
+      collections: 'M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z',
+      attendance:  'M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z',
+      assignments: 'M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z',
+      analytics:   'M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z',
+      reports:     'M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z',
+      branches:    'M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z',
+      health:      'M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z',
+      leads:       'M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3z',
+      staff:       'M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1z',
+      finance:     'M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm6 3a3 3 0 100 6 3 3 0 000-6z',
+      bell:        'M10 2a6 6 0 00-6 6c0 1.886-.454 3.665-1.257 5.234a.75.75 0 00.515 1.076 32.9 32.9 0 003.256.508 3.5 3.5 0 006.972 0 32.9 32.9 0 003.256-.508.75.75 0 00.515-1.076A11.448 11.448 0 0116 8a6 6 0 00-6-6z',
+      more:        'M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z',
+    };
+
+    // ── UI strings ──────────────────────────────────────────────────────────
+    const ui = {
+      toolbarHint:   L('Super Admin dashboard · light identity', 'لوحة السوبر أدمن · الهوية الفاتحة'),
+      desktopLabel:  L('Desktop', 'ديسكتوب'),
+      mobileLabel:   L('Mobile', 'موبايل'),
+      greeting:      L('Good morning, Ahmed', 'صباح الخير يا أحمد'),
+      date:          L('Saturday, 28 June 2026', 'السبت، ٢٨ يونيو ٢٠٢٦'),
+      role:          L('Super Admin', 'سوبر أدمن'),
+      systemStatus:  L('All Systems Operational', 'كل الأنظمة تعمل'),
+      searchPh:      L('Search students, groups…', 'ابحث عن طالب أو مجموعة…'),
+      initials:      'AN',
+      userName:      L('Ahmed Nasser', 'أحمد ناصر'),
+      viewAll:       L('View all →', 'عرض الكل →'),
+      alertBanner:   L('6 items need your attention · tap to review', '٦ بنود تحتاج انتباهك · اضغط للمراجعة'),
+      // sections
+      sToday:        L('Today', 'اليوم'),
+      sMonth:        L('June — Monthly Indicators', 'يونيو · المؤشرات الشهرية'),
+      sAcademy:      L('Academy Overview', 'نظرة عامة على الأكاديمية'),
+      sFinance:      L('Finance', 'المالية'),
+      sBranches:     L('Branch Performance', 'أداء الفروع'),
+      sPerformers:   L('Top Performers', 'أفضل الأداء'),
+      performersSub: L('June highlights', 'أبرز يونيو'),
+      sAlerts:       L('System Alerts', 'تنبيهات النظام'),
+      alertsSub:     L('Items requiring action', 'بنود تحتاج إجراء'),
+      sActions:      L('Quick Actions', 'إجراءات سريعة'),
+      // finance
+      financeTitle:  L('Finance', 'المالية'),
+      financeSub:    L('Collections snapshot', 'لقطة التحصيل'),
+      collRate:      L('Collection rate this month', 'نسبة التحصيل هذا الشهر'),
+      // branch table headers
+      branchCol:     L('Branch', 'الفرع'),
+      rateCol:       L('Collection Rate', 'نسبة التحصيل'),
+      studentsCol:   L('Students', 'الطلاب'),
+      statusCol:     L('Status', 'الحالة'),
+      // nav
+      navPeople:     L('PEOPLE', 'الأشخاص'),
+      navAcademics:  L('ACADEMICS', 'الأكاديمي'),
+      navFinance:    L('FINANCE', 'المالية'),
+      navOps:        L('OPERATIONS', 'العمليات'),
+      navInsights:   L('INSIGHTS', 'التحليلات'),
+      navSystem:     L('SYSTEM', 'النظام'),
+    };
+
+    // ── Sidebar nav items ───────────────────────────────────────────────────
+    const item = (label, icon, active = false) => ({
+      isSection: false, isItem: true, label, icon, active,
+      bg:      active ? 'rgba(255,138,31,.14)' : 'transparent',
+      fg:      active ? '#FF8A1F' : 'rgba(255,255,255,.52)',
+      fw:      active ? 700 : 500,
+      iconOp:  active ? 1 : 0.55,
+    });
+    const sec = label => ({ isSection: true, isItem: false, label, icon: IC.dash, active: false, bg: 'transparent', fg: '', fw: 700, iconOp: 0 });
+
+    const navItems = [
+      item(L('Dashboard','الرئيسية'), IC.dash, true),
+      sec(ui.navPeople),
+      item(L('Leads','الليدز'), IC.leads),
+      item(L('Students','الطلاب'), IC.students),
+      item(L('Parents','الأولياء'), IC.staff),
+      item(L('Instructors','المدرسون'), IC.instructors),
+      item(L('Team Leaders','قادة الفريق'), IC.tl),
+      item(L('Staff','الموظفون'), IC.staff),
+      sec(ui.navAcademics),
+      item(L('Groups','المجموعات'), IC.groups),
+      item(L('Courses','الكورسات'), IC.courses),
+      item(L('Certificates','الشهادات'), IC.certs),
+      sec(ui.navFinance),
+      item(L('Payroll','الرواتب'), IC.payroll),
+      item(L('Collections','التحصيل'), IC.collections),
+      item(L('Finance Center','مركز المالية'), IC.finance),
+      sec(ui.navOps),
+      item(L('Attendance','الحضور'), IC.attendance),
+      item(L('Assignments','الواجبات'), IC.assignments),
+      sec(ui.navInsights),
+      item(L('Analytics','التحليلات'), IC.analytics),
+      item(L('Reports','التقارير'), IC.reports),
+      sec(ui.navSystem),
+      item(L('Branches','الفروع'), IC.branches),
+      item(L('System Health','صحة النظام'), IC.health),
+      item(L('Production Readiness','جاهزية الإنتاج'), IC.attendance),
+    ];
+
+    // ── KPIs — Today ────────────────────────────────────────────────────────
+    const kpiToday = [
+      { label:L('Sessions Scheduled','حصص مجدولة'), value:'24', delta:L('+5 vs yesterday','مقارنةً بالأمس'), up:true,  alert:false, bars:[42,55,50,65,60,72,78], color:'#38BDF8' },
+      { label:L('Attendance Recorded','حضور مسجّل'),  value:'18', delta:L('75% sessions','٧٥٪ من الحصص'), up:true,  alert:false, bars:[35,48,52,58,55,65,76], color:'#10B981' },
+      { label:L('Missing Attendance','حضور مفقود'),   value:'6',  delta:L('Needs action','تحتاج إجراء'),  up:false, alert:true,  bars:[8,6,9,7,10,8,6],    color:'#EF4444' },
+      { label:L('New Leads Today','ليدز جديدة'),      value:'8',  delta:L('+3 vs yesterday','مقارنةً بالأمس'), up:true,  alert:false, bars:[3,5,4,7,6,8,9],    color:'#A855F7' },
+      { label:L('Converted Today','محوّلون اليوم'),   value:'2',  delta:L('25% rate','نسبة ٢٥٪'),         up:true,  alert:false, bars:[1,2,1,3,2,3,2],    color:'#10B981' },
+      { label:L('Active Students','طلاب نشطون'),      value:'342',delta:L('+12 this month','هذا الشهر'),   up:true,  alert:false, bars:[60,62,65,68,70,73,76],color:'#FF8A1F'},
+      { label:L('Overdue Follow-ups','متابعات متأخرة'),value:'14', delta:L('Needs action','تحتاج إجراء'),  up:false, alert:true,  bars:[10,12,14,16,13,15,14],color:'#F59E0B'},
+      { label:L('Certs This Month','شهادات الشهر'),   value:'7',  delta:L('+3 vs last month','عن الشهر'),  up:true,  alert:false, bars:[2,4,3,5,4,6,7],    color:'#38BDF8' },
+    ].map(k => ({
+      ...k,
+      cardBg:   k.alert ? '#FEF2F2' : '#fff',
+      cardBd:   k.alert ? '#FECACA' : '#e7ebf1',
+      valueFg:  k.alert ? '#DC2626' : '#0B1F3A',
+      barColor: k.alert ? k.color : k.color,
+      deltaFg:  k.up ? '#15803D' : (k.alert ? '#DC2626' : '#475569'),
+      deltaBg:  k.up ? '#E7F8EE' : (k.alert ? '#FEE2E2' : '#F1F5F9'),
+    }));
+
+    // ── KPIs — Month ────────────────────────────────────────────────────────
+    const kpiMonth = [
+      { label:L('New Students','طلاب جدد'),       value:'28',  sub:L('+12 vs last month','عن الشهر الماضي'), delta:L('↑ Growing','↑ نامٍ'),   up:true,  bars:[40,44,48,52,56,60,68], color:'#10B981' },
+      { label:L('Total Leads','إجمالي الليدز'),   value:'94',  sub:L('+18 vs last month','عن الشهر الماضي'), delta:L('↑ Active','↑ نشط'),    up:true,  bars:[55,60,62,70,72,78,85], color:'#A855F7' },
+      { label:L('Converted','محوّلون'),            value:'31',  sub:L('of 94 leads','من ٩٤ ليد'),           delta:L('↑ Strong','↑ قوي'),    up:true,  bars:[35,42,45,50,55,58,62], color:'#10B981' },
+      { label:L('Conversion Rate','نسبة التحويل'), value:'33%', sub:L('31 of 94 leads','٣١ من ٩٤ ليد'),     delta:L('↑ On track','↑ على المسار'),up:true, bars:[25,28,30,32,30,33,35], color:'#38BDF8' },
+    ].map(k => ({
+      ...k,
+      barColor: k.color,
+      deltaFg: k.up ? '#15803D' : '#DC2626',
+      deltaBg: k.up ? '#E7F8EE' : '#FEE2E2',
+    }));
+
+    // ── KPIs — Academy ──────────────────────────────────────────────────────
+    const kpiAcademy = [
+      { label:L('Branches','الفروع'),          value:'5',   fill:100, icon:IC.branches,  iconBg:'#FFF1E2', iconFg:'#FF8A1F' },
+      { label:L('Active Groups','مجموعات نشطة'),value:'42',  fill:78,  icon:IC.groups,   iconBg:'#EFF6FF', iconFg:'#38BDF8' },
+      { label:L('Instructors','المدرسون'),      value:'18',  fill:65,  icon:IC.instructors,iconBg:'#EEF2FF',iconFg:'#6366F1' },
+      { label:L('Active Students','طلاب نشطون'), value:'342', fill:88,  icon:IC.students,  iconBg:'#F0FdF4', iconFg:'#10B981' },
+    ];
+
+    // ── Finance tiles ────────────────────────────────────────────────────────
+    const finTiles = [
+      { value:'EGP 124K', label:L('Outstanding','المتأخرات'),         fg:'#B45309', bg:'#FFFBEB', bd:'#f6e3c4', fs:'14px' },
+      { value:'82%',      label:L('Collection Rate','نسبة التحصيل'),  fg:'#15803D', bg:'#F0FdF4', bd:'#d6f0e0', fs:'20px' },
+      { value:'14',       label:L('Overdue Students','طلاب متأخرون'), fg:'#DC2626', bg:'#FEF2F2', bd:'#f7d4d4', fs:'20px' },
+      { value:'23',       label:L('Due This Week','مستحق الأسبوع'),   fg:'#B45309', bg:'#FFFBEB', bd:'#f6e3c4', fs:'20px' },
+    ];
+
+    // ── Finance alerts ───────────────────────────────────────────────────────
+    const finAlerts = [
+      { label:L('Overdue student balances — immediate follow-up needed','أرصدة طلاب متأخرة — تحتاج متابعة فورية'), count:14, bg:'#FEF2F2', bd:'#FECACA', dot:'#EF4444', fg:'#DC2626' },
+      { label:L('Broken payment promises — parents did not pay as agreed','وعود دفع مكسورة — الأولياء لم يدفعوا حسب الاتفاق'),    count:6,  bg:'#FFFBEB', bd:'#FDE68A', dot:'#F59E0B', fg:'#B45309' },
+    ];
+
+    // ── Branches ─────────────────────────────────────────────────────────────
+    const branchRaw = [
+      { name:L('Nasr City','مدينة نصر'),          meta:L('142 students','١٤٢ طالب'), students:142, rate:88, tone:'green'  },
+      { name:L('Maadi','المعادي'),                 meta:L('98 students','٩٨ طالب'),  students:98,  rate:76, tone:'watch'  },
+      { name:L('Heliopolis','مصر الجديدة'),        meta:L('87 students','٨٧ طالب'),  students:87,  rate:82, tone:'green'  },
+      { name:L("6th October",'السادس من أكتوبر'),  meta:L('56 students','٥٦ طالب'),  students:56,  rate:65, tone:'risk'   },
+      { name:L('New Cairo','القاهرة الجديدة'),     meta:L('34 students','٣٤ طالب'),  students:34,  rate:91, tone:'green'  },
+    ];
+    const toneMap = { green:{ bar:'#10B981', rateFg:'#15803D', tagBg:'#E7F8EE', tagFg:'#15803D', tag:L('Healthy','سليم') }, watch:{ bar:'#F59E0B', rateFg:'#B45309', tagBg:'#FFFBEB', tagFg:'#B45309', tag:L('Watch','مراقبة') }, risk:{ bar:'#EF4444', rateFg:'#DC2626', tagBg:'#FEF2F2', tagFg:'#DC2626', tag:L('At Risk','خطر') } };
+    const branches = branchRaw.map(b => ({ ...b, ...toneMap[b.tone], barColor: toneMap[b.tone].bar }));
+
+    // ── Top Performers ───────────────────────────────────────────────────────
+    const performers = [
+      { icon:IC.branches, iconBg:'#FFF1E2', iconFg:'#FF8A1F', tag:L('Top Branch','أفضل فرع'), name:L('Nasr City','مدينة نصر'), sub:L('142 active students','١٤٢ طالب نشط') },
+      { icon:IC.instructors, iconBg:'#EEF2FF', iconFg:'#6366F1', tag:L('Most Active Instructor','أكثر مدرّس نشاطاً'), name:L('Eng. Ahmed Sayed','م. أحمد سيد'), sub:L('24 sessions this month','٢٤ حصة هذا الشهر') },
+    ];
+
+    // ── System alerts ─────────────────────────────────────────────────────────
+    const alertRows = [
+      { label:L('Groups without instructor assigned','مجموعات بدون مدرّس'),              count:2,  level:'critical' },
+      { label:L('Groups without active course','مجموعات بدون كورس نشط'),                 count:1,  level:'critical' },
+      { label:L('Overdue lead follow-ups','متابعات ليدز متأخرة'),                         count:14, level:'warning'  },
+      { label:L('Leads stuck in pipeline (7+ days same stage)','ليدز متوقفة في المسار'), count:8,  level:'warning'  },
+      { label:L('Active students not enrolled in any group','طلاب نشطون بدون مجموعة'),   count:5,  level:'info'     },
+    ].map(a => ({
+      ...a,
+      bg:  a.level==='critical'?'#FEF2F2': a.level==='warning'?'#FFFBEB':'#EFF6FF',
+      bd:  a.level==='critical'?'#FECACA': a.level==='warning'?'#FDE68A':'#BFDBFE',
+      dot: a.level==='critical'?'#EF4444': a.level==='warning'?'#F59E0B':'#3B82F6',
+      fg:  a.level==='critical'?'#DC2626': a.level==='warning'?'#B45309':'#1D4ED8',
+    }));
+
+    // ── Quick actions ─────────────────────────────────────────────────────────
+    const quickActions = [
+      L('+ Branch','+ فرع'), L('+ Group','+ مجموعة'), L('+ Instructor','+ مدرّس'), L('+ Student','+ طالب'),
+      L('View Leads','الليدز'), L('Finance Center','مركز المالية'), L('Collections Queue','طابور التحصيل'),
+      L('System Health','صحة النظام'), L('Analytics','التحليلات'),
+    ];
+
+    // ── Mobile bottom tabs ────────────────────────────────────────────────────
+    const bottomTabs = [
+      { label:L('Home','الرئيسية'), icon:IC.dash,        active:true  },
+      { label:L('Students','الطلاب'), icon:IC.students,   active:false },
+      { label:L('Finance','المالية'), icon:IC.collections,active:false },
+      { label:L('Alerts','التنبيهات'), icon:IC.health,    active:false },
+      { label:L('More','المزيد'), icon:IC.more,          active:false },
+    ].map(t => ({ ...t, fg: t.active ? '#FF8A1F' : '#94A3B8' }));
+
+    const isMobile  = !desktop;
+    const isDesktop = desktop;
+    const hasAlerts = true;
+
+    return {
+      dir: ar ? 'rtl' : 'ltr',
+      rootFont: ar ? "'Cairo', sans-serif" : "'Poppins', sans-serif",
+      ui, navItems,
+      kpiToday, kpiMonth, kpiAcademy,
+      finTiles, finAlerts, branches, performers, alertRows, quickActions, bottomTabs,
+      hasAlerts, isMobile, isDesktop,
+
+      // handlers
+      setEn:      () => this.setState({ lang: 'en' }),
+      setAr:      () => this.setState({ lang: 'ar' }),
+      setDesktop: () => this.setState({ device: 'desktop' }),
+      setMobile:  () => this.setState({ device: 'mobile' }),
+
+      // toggle styles
+      tabEn:   !ar       ? { bg:'#fff', fg:'#0B1F3A' } : { bg:'transparent', fg:'rgba(255,255,255,.55)' },
+      tabAr:    ar       ? { bg:'#fff', fg:'#0B1F3A' } : { bg:'transparent', fg:'rgba(255,255,255,.55)' },
+      tabDesk:  desktop  ? { bg:'#FF8A1F', fg:'#fff' } : { bg:'transparent', fg:'rgba(255,255,255,.55)' },
+      tabMob:   isMobile ? { bg:'#FF8A1F', fg:'#fff' } : { bg:'transparent', fg:'rgba(255,255,255,.55)' },
+
+      // layout
+      frameW:      desktop ? '1300px' : '390px',
+      sidebarDisp: desktop ? 'flex' : 'none',
+      kpiCols:     desktop ? 'repeat(4,1fr)' : 'repeat(2,1fr)',
+      finCols:     desktop ? 'repeat(4,1fr)' : 'repeat(2,1fr)',
+      perfCols:    desktop ? 'repeat(2,1fr)' : '1fr',
+      contentPad:  desktop ? '22px 26px 48px' : '16px 14px 80px',
+    };
+  }
+}
+
+</script>
+</body>
+</html>

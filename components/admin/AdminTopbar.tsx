@@ -114,6 +114,23 @@ export default function AdminTopbar({ onMenuClick, role = "super_admin", branchN
 
       {/* Page action injected by page via TopbarActionContext */}
       {action && <div className="shrink-0">{action}</div>}
+
+      {/* Bell */}
+      <button className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] border border-[#E2E8F0] bg-white transition hover:border-[#94A3B8]" aria-label="Notifications">
+        <svg viewBox="0 0 20 20" fill="currentColor" className="h-[17px] w-[17px] text-[#64748B]">
+          <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-2.83-2h5.66A3 3 0 0110 18z" />
+        </svg>
+        <span className="absolute top-1.5 end-1.5 h-1.5 w-1.5 rounded-full bg-[#EF4444]" />
+      </button>
+
+      {/* Avatar */}
+      <div
+        className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[10px] font-bold text-white select-none"
+        style={{ background: 'linear-gradient(135deg,#FF8A1F,#163560)' }}
+        title={role}
+      >
+        {{ super_admin: 'SA', team_leader: 'TL', instructor: 'IN' }[role] ?? 'AD'}
+      </div>
     </header>
   );
 }

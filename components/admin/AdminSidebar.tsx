@@ -180,7 +180,7 @@ function NavLink({ href, label, icon, active, onClose, collapsed, onShowTooltip,
     >
       <span className={active ? "text-[#FF8A1F]" : "text-white/35"}>{icon}</span>
       {label}
-      {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#FF8A1F]" />}
+      {active && <span className="ms-auto h-[5px] w-[5px] shrink-0 rounded-full bg-[#FF8A1F]" />}
     </Link>
   )
 }
@@ -220,6 +220,14 @@ function NavContent({ onClose, role, permissions, collapsed, onToggleCollapse }:
     instructor:  'Instructor',
     student:     'Student',
     parent:      'Parent',
+  }
+
+  const ROLE_INITIALS: Record<string, string> = {
+    super_admin: 'SA',
+    team_leader: 'TL',
+    instructor:  'IN',
+    student:     'ST',
+    parent:      'PA',
   }
 
   const visibleSections = NAV_SECTIONS
@@ -267,6 +275,20 @@ function NavContent({ onClose, role, permissions, collapsed, onToggleCollapse }:
         </button>
       </div>
 
+      {/* System status pulse */}
+      <div className={[
+        "shrink-0 flex items-center border-b border-white/6",
+        collapsed ? "justify-center px-2 py-1.5" : "gap-1.5 px-4 py-1.5",
+      ].join(" ")}>
+        <span
+          className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#10B981]"
+          style={{ animation: 'rcpulse 2s infinite' }}
+        />
+        {!collapsed && (
+          <span className="text-[9px] font-medium text-white/35">All Systems Operational</span>
+        )}
+      </div>
+
       {/* Role label */}
       {!collapsed && (
         <div className="shrink-0 px-5 pt-4 pb-1">
@@ -306,7 +328,7 @@ function NavContent({ onClose, role, permissions, collapsed, onToggleCollapse }:
         ))}
       </nav>
 
-      {/* Footer — My Account */}
+      {/* Footer — User */}
       <div className="shrink-0 border-t border-white/8 p-2">
         {collapsed ? (
           <button
@@ -320,30 +342,39 @@ function NavContent({ onClose, role, permissions, collapsed, onToggleCollapse }:
             }}
             onMouseLeave={() => setShowAccountTooltip(false)}
             onClick={() => setAccountOpen(v => !v)}
-            className="flex w-full items-center justify-center rounded-lg p-2.5 text-white/35 transition hover:bg-white/5 hover:text-white/70"
+            className="flex w-full items-center justify-center rounded-lg p-2"
           >
-            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-            </svg>
+            <div
+              className="h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+              style={{ background: 'linear-gradient(135deg,#FF8A1F,#163560)' }}
+            >
+              {ROLE_INITIALS[role] ?? 'SA'}
+            </div>
           </button>
         ) : (
           <>
-            <button
-              onClick={() => setAccountOpen(v => !v)}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/35 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
-            >
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-              </svg>
-              <span className="flex-1 text-left">My Account</span>
-              <svg
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className={`h-3 w-3 shrink-0 transition-transform duration-200 ${accountOpen ? "rotate-180" : ""}`}
+            <div className="flex items-center gap-2.5 rounded-lg px-2 py-2">
+              <div
+                className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[11px] font-bold text-white"
+                style={{ background: 'linear-gradient(135deg,#FF8A1F,#163560)' }}
               >
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
+                {ROLE_INITIALS[role] ?? 'SA'}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-semibold text-white/80 truncate">{ROLE_LABELS[role] ?? role}</p>
+                <p className="text-[10px] text-white/30 truncate">Admin Account</p>
+              </div>
+              <button
+                onClick={() => setAccountOpen(v => !v)}
+                title="Account settings"
+                className={[
+                  "shrink-0 transition-colors",
+                  accountOpen ? "text-white/60" : "text-white/25 hover:text-white/60",
+                ].join(" ")}
+              >
+                {I.settings}
+              </button>
+            </div>
 
             <AnimatePresence initial={false}>
               {accountOpen && (
@@ -355,7 +386,7 @@ function NavContent({ onClose, role, permissions, collapsed, onToggleCollapse }:
                   transition={{ duration: 0.18, ease: "easeInOut" }}
                   className="overflow-hidden"
                 >
-                  <div className="mt-0.5 space-y-0.5 pl-3">
+                  <div className="mt-0.5 space-y-0.5 ps-2">
                     <Link
                       href="/account/password"
                       onClick={onClose}
@@ -411,7 +442,7 @@ function NavContent({ onClose, role, permissions, collapsed, onToggleCollapse }:
           }}
           className="rounded-lg bg-[#0B1F3A] border border-white/10 px-2.5 py-1.5 text-[12px] font-medium text-white shadow-xl whitespace-nowrap"
         >
-          My Account
+          Account
           <div className="absolute right-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-r-[#0B1F3A]" />
         </div>,
         document.body

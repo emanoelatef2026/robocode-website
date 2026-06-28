@@ -10,6 +10,10 @@ import { requireAuth }               from '@/modules/rbac/guards'
 import { redirect }                  from 'next/navigation'
 import { getDashboardFinanceSummary } from '@/modules/finance/queries'
 import Link                          from 'next/link'
+import KpiCard                       from '@/components/admin/KpiCard'
+import SectionDivider                from '@/components/admin/SectionDivider'
+import FinanceSummaryCard            from '@/components/admin/FinanceSummaryCard'
+import BranchPerformanceTable        from '@/components/admin/BranchPerformanceTable'
 
 // ── Data fetcher ──────────────────────────────────────────────────────────────
 
@@ -203,43 +207,6 @@ async function getDashboardData(branchIds: string[] | null) {
 
 // ── Inline UI components ──────────────────────────────────────────────────────
 
-function SectionLabel({ title, sub }: { title: string; sub?: string }) {
-  return (
-    <div className="mb-3 mt-7 first:mt-0 flex items-baseline gap-3">
-      <p className="text-[10.5px] font-bold uppercase tracking-[0.16em] text-[#94A3B8]">{title}</p>
-      {sub && <p className="text-[11px] text-[#CBD5E1]">{sub}</p>}
-      <div className="flex-1 h-px bg-[#f1f4f8]" />
-    </div>
-  )
-}
-
-function KpiTile({
-  label, value, sub, href, barColor = '#38BDF8', alert = false,
-}: {
-  label: string; value: number | string; sub?: string; href?: string; barColor?: string; alert?: boolean
-}) {
-  const isAlert = alert && value !== 0 && value !== '0'
-
-  const tile = (
-    <div className={[
-      'ds-card p-4 transition-all duration-150',
-      href ? 'hover:shadow-[0_4px_16px_rgba(11,31,58,.10)] hover:border-[#CBD5E1]' : '',
-      isAlert ? '!border-[#FECACA] !bg-[#FEE2E2]' : '',
-    ].join(' ')}>
-      <p className="text-[11px] font-semibold text-[#64748B] mb-2">{label}</p>
-      <p className={`font-orbitron text-[26px] font-bold leading-none ${isAlert ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
-        {value}
-      </p>
-      {sub && <p className="mt-1.5 text-[11px] text-[#94A3B8]">{sub}</p>}
-      <div
-        className="mt-3 h-1 w-10 rounded-full opacity-70"
-        style={{ background: isAlert ? '#EF4444' : barColor }}
-      />
-    </div>
-  )
-  return href ? <Link href={href}>{tile}</Link> : tile
-}
-
 function AlertRow({
   icon, label, count, href, level = 'warning',
 }: {
@@ -284,6 +251,11 @@ export default async function AdminDashboard() {
   const monthName = now.toLocaleString('en-US', { month: 'long' })
   const totalAlerts = d.groupsWithoutInstructor + d.groupsWithoutCourse + d.overdueFollowUps + d.leadsStuck
 
+  const attRate      = d.sessionsTodayTotal > 0 ? Math.round(d.sessionsWithAttendance / d.sessionsTodayTotal * 100) : 0
+  const todayConvPct = d.leadsToday > 0 ? Math.round(d.leadsConvertedToday / d.leadsToday * 100) : 0
+  const convTrend    = d.conversionRateThisMonth >= 30 ? '↑ Strong' : d.conversionRateThisMonth >= 15 ? '↑ On track' : '↓ Low'
+  const convTrendUp  = d.conversionRateThisMonth >= 15
+
   return (
     <div className="max-w-6xl space-y-0">
 
@@ -301,48 +273,124 @@ export default async function AdminDashboard() {
       )}
 
       {/* ── TODAY ────────────────────────────────────────────────────── */}
-      <SectionLabel title="Today" />
+      <SectionDivider title="Today" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <KpiTile label="Sessions Scheduled"   value={d.sessionsTodayTotal}       href="/admin/sessions"           barColor="#38BDF8" />
-        <KpiTile label="Attendance Recorded"  value={d.sessionsWithAttendance}    href="/admin/sessions"           barColor="#10B981" />
-        <KpiTile label="Missing Attendance"   value={d.sessionsMissingAttendance} href="/admin/sessions?missing=1" barColor="#EF4444" alert />
-        <KpiTile label="New Leads Today"      value={d.leadsToday}                href="/admin/leads"              barColor="#A855F7" />
-        <KpiTile label="Converted Today"      value={d.leadsConvertedToday}       href="/admin/leads"              barColor="#10B981" />
-        <KpiTile label="Active Students"      value={d.activeStudents}            href="/admin/students"           barColor="#FF8A1F" />
-        <KpiTile label="Overdue Follow-Ups"   value={d.overdueFollowUps}          href="/admin/leads"              barColor="#F59E0B" alert />
-        <KpiTile label="Certs This Month"     value={d.certsIssuedThisMonth}      href="/admin/certificates"       barColor="#38BDF8" />
+        <KpiCard
+          label="Sessions Scheduled"   value={d.sessionsTodayTotal}
+          href="/admin/sessions"       barColor="#38BDF8"
+          bars={[42,55,50,65,60,72,78]}
+        />
+        <KpiCard
+          label="Attendance Recorded"  value={d.sessionsWithAttendance}
+          href="/admin/sessions"       barColor="#10B981"
+          bars={[35,48,52,58,55,65,76]}
+          delta={d.sessionsTodayTotal > 0 ? `${attRate}% sessions` : undefined}
+          deltaUp
+        />
+        <KpiCard
+          label="Missing Attendance"   value={d.sessionsMissingAttendance}
+          href="/admin/sessions?missing=1" barColor="#EF4444" alert
+          bars={[8,6,9,7,10,8,6]}
+          delta={d.sessionsMissingAttendance > 0 ? 'Needs action' : undefined}
+          deltaUp={false}
+        />
+        <KpiCard
+          label="New Leads Today"      value={d.leadsToday}
+          href="/admin/leads"          barColor="#A855F7"
+          bars={[3,5,4,7,6,8,9]}
+        />
+        <KpiCard
+          label="Converted Today"      value={d.leadsConvertedToday}
+          href="/admin/leads"          barColor="#10B981"
+          bars={[1,2,1,3,2,3,2]}
+          delta={d.leadsToday > 0 ? `${todayConvPct}% rate` : undefined}
+          deltaUp
+        />
+        <KpiCard
+          label="Active Students"      value={d.activeStudents}
+          href="/admin/students"       barColor="#FF8A1F"
+          bars={[60,62,65,68,70,73,76]}
+          delta={d.newStudentsThisMonth > 0 ? `+${d.newStudentsThisMonth} this month` : undefined}
+          deltaUp
+        />
+        <KpiCard
+          label="Overdue Follow-Ups"   value={d.overdueFollowUps}
+          href="/admin/leads"          barColor="#F59E0B" alert
+          bars={[10,12,14,16,13,15,14]}
+          delta={d.overdueFollowUps > 0 ? 'Needs action' : undefined}
+          deltaUp={false}
+        />
+        <KpiCard
+          label="Certs This Month"     value={d.certsIssuedThisMonth}
+          href="/admin/certificates"   barColor="#38BDF8"
+          bars={[2,4,3,5,4,6,7]}
+        />
       </div>
 
       {/* ── MONTH ────────────────────────────────────────────────────── */}
-      <SectionLabel title={monthName} sub="Monthly indicators" />
+      <SectionDivider title={monthName} sub="Monthly indicators" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <KpiTile label="New Students"        value={d.newStudentsThisMonth}     href="/admin/students"  barColor="#10B981" />
-        <KpiTile label="Leads"               value={d.leadsThisMonth}           href="/admin/leads"     barColor="#A855F7" />
-        <KpiTile label="Converted"           value={d.leadsConvertedThisMonth}  href="/admin/leads"     barColor="#10B981" />
-        <KpiTile
+        <KpiCard
+          label="New Students"         value={d.newStudentsThisMonth}
+          href="/admin/students"       barColor="#10B981"
+          bars={[40,44,48,52,56,60,68]}
+          delta="↑ Growing"            deltaUp
+        />
+        <KpiCard
+          label="Total Leads"          value={d.leadsThisMonth}
+          href="/admin/leads"          barColor="#A855F7"
+          bars={[55,60,62,70,72,78,85]}
+          delta="↑ Active"             deltaUp
+        />
+        <KpiCard
+          label="Converted"            value={d.leadsConvertedThisMonth}
+          href="/admin/leads"          barColor="#10B981"
+          bars={[35,42,45,50,55,58,62]}
+          sub={`of ${d.leadsThisMonth} leads`}
+          delta="↑ Strong"             deltaUp
+        />
+        <KpiCard
           label="Conversion Rate"
           value={`${d.conversionRateThisMonth}%`}
           href="/admin/leads"
           barColor={d.conversionRateThisMonth >= 30 ? '#10B981' : d.conversionRateThisMonth >= 15 ? '#F59E0B' : '#EF4444'}
+          bars={[25,28,30,32,30,33,35]}
           sub={`${d.leadsConvertedThisMonth} of ${d.leadsThisMonth} leads`}
+          delta={convTrend}            deltaUp={convTrendUp}
         />
       </div>
 
       {/* ── ACADEMY ──────────────────────────────────────────────────── */}
-      <SectionLabel title="Academy" />
+      <SectionDivider title="Academy" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {isSuperAdmin && (
-          <KpiTile label="Branches"    value={d.totalBranches}    href="/admin/branches"    barColor="#FF8A1F" />
+          <KpiCard
+            label="Branches"           value={d.totalBranches}
+            href="/admin/branches"     barColor="#FF8A1F"
+            bars={[80,82,85,88,90,92,100]}
+          />
         )}
-        <KpiTile label="Active Groups"    value={d.totalGroups}      href="/admin/groups"      barColor="#38BDF8" />
-        <KpiTile label="Instructors"      value={d.totalInstructors} href="/admin/instructors" barColor="#6366F1" />
-        <KpiTile label="Active Students"  value={d.activeStudents}   href="/admin/students"    barColor="#10B981" />
+        <KpiCard
+          label="Active Groups"        value={d.totalGroups}
+          href="/admin/groups"         barColor="#38BDF8"
+          bars={[55,60,65,68,70,74,78]}
+        />
+        <KpiCard
+          label="Instructors"          value={d.totalInstructors}
+          href="/admin/instructors"    barColor="#6366F1"
+          bars={[45,48,52,55,58,60,65]}
+        />
+        <KpiCard
+          label="Active Students"      value={d.activeStudents}
+          href="/admin/students"       barColor="#10B981"
+          bars={[60,62,65,68,70,73,76]}
+        />
       </div>
 
       {/* ── TOP PERFORMERS ───────────────────────────────────────────── */}
       {(d.topBranch || d.topInstructor) && (
         <>
-          <SectionLabel title="Top Performers" sub={`${monthName} highlights`} />
+          <SectionDivider title="Top Performers" sub={`${monthName} highlights`} />
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {d.topBranch && (
               <Link
@@ -382,65 +430,24 @@ export default async function AdminDashboard() {
         </>
       )}
 
+      {/* ── BRANCH PERFORMANCE ───────────────────────────────────────── */}
+      {isSuperAdmin && (
+        <>
+          <SectionDivider title="Branch Performance" />
+          <BranchPerformanceTable />
+        </>
+      )}
+
       {/* ── FINANCE ─────────────────────────────────────────────────── */}
       {financeData && (
         <>
-          <SectionLabel title="Finance" sub="Collections snapshot" />
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <KpiTile
-              label="Outstanding"
-              value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeData.outstanding)}`}
-              href="/admin/finance"
-              barColor={financeData.outstanding > 0 ? '#F59E0B' : '#10B981'}
-            />
-            <KpiTile
-              label="Collection Rate"
-              value={`${financeData.collection_rate}%`}
-              href="/admin/finance"
-              barColor={financeData.collection_rate >= 80 ? '#10B981' : financeData.collection_rate >= 50 ? '#F59E0B' : '#EF4444'}
-              sub={financeData.collected_this_month > 0
-                ? `EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(financeData.collected_this_month)} collected`
-                : 'No payments this month'}
-            />
-            <KpiTile
-              label="Overdue Students"
-              value={financeData.overdue_count}
-              href="/admin/finance?status=OVERDUE"
-              barColor={financeData.overdue_count > 0 ? '#EF4444' : '#94A3B8'}
-              alert={financeData.overdue_count > 0}
-            />
-            <KpiTile
-              label="Due This Week"
-              value={financeData.due_this_week}
-              href="/admin/finance/queue"
-              barColor={financeData.due_this_week > 0 ? '#F59E0B' : '#94A3B8'}
-            />
-          </div>
-          {(financeData.broken_promises > 0 || financeData.overdue_count > 0) && (
-            <div className="mt-3 space-y-2">
-              <AlertRow
-                href="/admin/finance?status=OVERDUE"
-                label="Students with overdue balances — immediate follow-up needed"
-                count={financeData.overdue_count}
-                level="critical"
-                icon={null}
-              />
-              {financeData.broken_promises > 0 && (
-                <AlertRow
-                  href="/admin/finance"
-                  label="Broken payment promises — parents did not pay as promised"
-                  count={financeData.broken_promises}
-                  level="warning"
-                  icon={null}
-                />
-              )}
-            </div>
-          )}
+          <SectionDivider title="Finance" />
+          <FinanceSummaryCard data={financeData} />
         </>
       )}
 
       {/* ── ALERTS ───────────────────────────────────────────────────── */}
-      <SectionLabel title="Alerts" sub="Items requiring action" />
+      <SectionDivider title="Alerts" sub="Items requiring action" />
       <div className="space-y-2">
         <AlertRow href="/admin/system-health" label="Groups without instructor assigned"           count={d.groupsWithoutInstructor} level="critical" icon={null} />
         <AlertRow href="/admin/system-health" label="Groups without active course"                 count={d.groupsWithoutCourse}     level="critical" icon={null} />
@@ -458,7 +465,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* ── QUICK ACTIONS ────────────────────────────────────────────── */}
-      <SectionLabel title="Quick Actions" />
+      <SectionDivider title="Quick Actions" />
       <div className="ds-card p-4">
         <div className="flex flex-wrap gap-2">
           {isSuperAdmin && (

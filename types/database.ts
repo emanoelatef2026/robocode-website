@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -6754,6 +6754,94 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_student_risk"
             referencedColumns: ["student_id"]
+          },
+        ]
+      }
+      session_instructors: {
+        Row: {
+          created_at: string
+          id: string
+          instructor_id: string
+          session_id: string
+          submitted_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instructor_id: string
+          session_id: string
+          submitted_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instructor_id?: string
+          session_id?: string
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_instructors_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "instructors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_instructors_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_instructors_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_cancelled_sessions_with_consumption"
+            referencedColumns: ["schedule_id"]
+          },
+          {
+            foreignKeyName: "session_instructors_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_invalid_attendance_consumption"
+            referencedColumns: ["schedule_id"]
+          },
+          {
+            foreignKeyName: "session_instructors_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_orphan_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_instructors_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_session_consumption_status"
+            referencedColumns: ["schedule_id"]
+          },
+          {
+            foreignKeyName: "session_instructors_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_sessions_missing_topics"
+            referencedColumns: ["schedule_id"]
+          },
+          {
+            foreignKeyName: "session_instructors_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_sessions_without_number"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_instructors_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_package_ledger"
+            referencedColumns: ["schedule_id"]
           },
         ]
       }
