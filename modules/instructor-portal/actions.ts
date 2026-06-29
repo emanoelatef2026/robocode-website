@@ -21,6 +21,7 @@ import {
   type EnrollmentForConsumption,
 } from '@/modules/academic/contract-consumption'
 import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
+import { deleteSessionStartingNotification, readSessionStartingNotification } from '@/modules/notifications/actions'
 import { checkAndUnlockAchievements } from '@/modules/gamification/achievement-service'
 import { checkAndAwardBadges } from '@/modules/gamification/badge-service'
 import type { ActionResult } from '@/types/app'
@@ -377,7 +378,7 @@ export async function endSession(
 
   const { data: sessRow } = await db
     .from('schedules')
-    .select('id, status, topic, notes, branch_id, scheduled_at, group_courses!schedules_group_course_id_fkey(group_id)')
+    .select('id, status, topic, notes, branch_id, scheduled_at, group_course_id, group_courses!schedules_group_course_id_fkey(group_id)')
     .eq('id', sessionId)
     .single()
 
@@ -545,6 +546,12 @@ export async function endSession(
     if (allocRow && (allocRow as any).to_session === sessionNumber) {
       await completeInstructorAllocation(instructor.id, ctx.groupId, db)
     }
+  }
+
+  // Mark SESSION_STARTING notification as read — session is done (fire-and-forget)
+  const gcId = (sessRow as any).group_course_id as string | undefined
+  if (gcId) {
+    void readSessionStartingNotification(user.id, gcId).catch(() => { /* non-critical */ })
   }
 
   revalidatePath(`/portal/instructor/groups/${groupId}`)
@@ -995,6 +1002,9 @@ export async function cancelSession(
     p_branch_id:    ctx.branchId,
   })
 
+  // Remove SESSION_STARTING notification — cancelled session never happens (fire-and-forget)
+  void deleteSessionStartingNotification(user.id, (sessRow as any).group_course_id as string).catch(() => { /* non-critical */ })
+
   revalidatePath(`/portal/instructor/groups/${d.group_id}`)
   revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
   return { success: true, data: { makeupSessionId } }
@@ -1041,7 +1051,7 @@ export async function postponeSession(
 
   const { data: sessRow } = await db
     .from('schedules')
-    .select('status')
+    .select('status, group_course_id')
     .eq('id', d.session_id)
     .maybeSingle()
 
@@ -1075,6 +1085,12 @@ export async function postponeSession(
     p_branch_id:    ctx.branchId,
   })
 
+  // Remove SESSION_STARTING notification — postponed session is no longer imminent (fire-and-forget)
+  const pgcId = (sessRow as any)?.group_course_id as string | undefined
+  if (pgcId) {
+    void deleteSessionStartingNotification(user.id, pgcId).catch(() => { /* non-critical */ })
+  }
+
   revalidatePath(`/portal/instructor/groups/${d.group_id}`)
   revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
   return { success: true, data: undefined }
@@ -1082,10 +1098,15 @@ export async function postponeSession(
 
 // ── Student Notes ─────────────────────────────────────────────────────────────
 
+const NOTE_CATEGORIES = ['GENERAL', 'ACADEMIC', 'BEHAVIOR', 'PARENT_FOLLOWUP'] as const
+const NOTE_SEVERITIES  = ['LOW', 'MEDIUM', 'HIGH'] as const
+
 const noteSchema = z.object({
   student_id:  z.string().uuid(),
   group_id:    z.string().uuid(),
   content:     z.string().min(1, 'Note content is required'),
+  category:    z.enum(NOTE_CATEGORIES).default('GENERAL'),
+  severity:    z.enum(NOTE_SEVERITIES).default('LOW'),
   is_private:  z.string().optional().transform((v) => v !== 'false'),
   schedule_id: z.string().uuid().optional().or(z.literal('')),
 })
@@ -1101,6 +1122,8 @@ export async function createStudentNote(
     student_id:  formData.get('student_id'),
     group_id:    formData.get('group_id'),
     content:     formData.get('content'),
+    category:    formData.get('category') || 'GENERAL',
+    severity:    formData.get('severity') || 'LOW',
     is_private:  formData.get('is_private') as string | undefined,
     schedule_id: formData.get('schedule_id') || undefined,
   }
@@ -1144,6 +1167,8 @@ export async function createStudentNote(
       student_id:  d.student_id,
       author_id:   user.id,
       content:     d.content,
+      category:    d.category,
+      severity:    d.severity,
       is_private:  d.is_private,
       schedule_id: d.schedule_id || null,
     })

@@ -46,6 +46,20 @@ export interface TodayAction {
   href:   string
 }
 
+export interface TodaySession {
+  id:               string
+  group_id:         string
+  group_course_id:  string
+  group_name:       string
+  course_title:     string
+  branch_name:      string
+  scheduled_at:     string
+  duration_minutes: number
+  student_count:    number
+  session_number:   number | null
+  status:           string
+}
+
 export interface StudentAttentionItem {
   student_id:    string
   student_name:  string
@@ -149,9 +163,14 @@ export interface PendingSubmissionItem {
   resubmission_count: number
 }
 
+export type NoteCategory = 'GENERAL' | 'ACADEMIC' | 'BEHAVIOR' | 'PARENT_FOLLOWUP'
+export type NoteSeverity = 'LOW' | 'MEDIUM' | 'HIGH'
+
 export interface StudentNote {
   id:             string
   content:        string
+  category:       NoteCategory
+  severity:       NoteSeverity
   is_private:     boolean
   schedule_id:    string | null
   schedule_topic: string | null

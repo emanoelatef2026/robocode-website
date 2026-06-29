@@ -1,13 +1,9 @@
-﻿"use client"
+"use client"
 
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { usePathname, useRouter } from "next/navigation"
-import { motion, AnimatePresence } from "framer-motion"
+import PortalSidebar, { type PortalNavSection } from "@/components/shared/sidebar/PortalSidebar"
 import { INSTRUCTOR_NAV, INSTRUCTOR_NAV_SECTIONS } from "@/modules/instructor-portal/navigation"
 
-// ── Icons (16 px, fill="currentColor") ────────────────────────────────────────
+// ── Icons (20×20, fill="currentColor") ───────────────────────────────────────
 
 const ICONS: Record<string, React.ReactNode> = {
   dashboard: (
@@ -33,158 +29,22 @@ const ICONS: Record<string, React.ReactNode> = {
   ),
 }
 
-const I = {
-  password: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-      <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-    </svg>
-  ),
-  logout: (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-      <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
-    </svg>
-  ),
-}
+// ── Convert instructor nav config to shared format ────────────────────────────
 
-// ── NavLink ───────────────────────────────────────────────────────────────────
+const navByKey = Object.fromEntries(INSTRUCTOR_NAV.map(n => [n.key, n]))
 
-function NavLink({
-  href, label, icon, active, onClose,
-}: {
-  href: string; label: string; icon: React.ReactNode; active: boolean; onClose?: () => void
-}) {
-  return (
-    <Link
-      href={href}
-      onClick={onClose}
-      className={[
-        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
-        active
-          ? "bg-[#FF8A1F]/15 text-[#FF8A1F]"
-          : "text-white/50 hover:bg-white/5 hover:text-white/80",
-      ].join(" ")}
-    >
-      <span className={active ? "text-[#FF8A1F]" : "text-white/35"}>{icon}</span>
-      {label}
-      {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#FF8A1F]" />}
-    </Link>
-  )
-}
-
-// ── NavContent ────────────────────────────────────────────────────────────────
-
-function NavContent({ onClose }: { onClose?: () => void }) {
-  const pathname     = usePathname()
-  const router       = useRouter()
-  const [accountOpen, setAccountOpen] = useState(false)
-
-  const isActive = (href: string, exact?: boolean) =>
-    exact ? pathname === href : pathname === href || pathname.startsWith(href + "/")
-
-  const handleLogout = async () => {
-    await fetch("/api/lms/auth/signout", { method: "POST" })
-    router.push("/login")
-    router.refresh()
-  }
-
-  // Build a lookup for quick access
-  const navByKey = Object.fromEntries(INSTRUCTOR_NAV.map((n) => [n.key, n]))
-
-  return (
-    <div className="flex h-full min-h-0 flex-col">
-      {/* Logo */}
-      <div className="flex h-14 items-center border-b border-white/8 px-5">
-        <Image src="/logo.png" alt="Robocode" width={120} height={52} className="h-auto w-24 brightness-0 invert" />
-      </div>
-
-      {/* Role badge */}
-      <div className="px-5 pt-4 pb-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/25">Instructor</p>
-      </div>
-
-      {/* Grouped nav — derived from canonical config */}
-      <nav className="flex-1 overflow-y-auto px-3 pb-2">
-        {INSTRUCTOR_NAV_SECTIONS.map((section, idx) => (
-          <div key={section.title ?? "__top"} className={idx === 0 ? "mb-1" : "mt-5"}>
-            {section.title && (
-              <p className="mb-1.5 px-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/25">
-                {section.title}
-              </p>
-            )}
-            <div className="space-y-0.5">
-              {section.keys.map((key) => {
-                const item = navByKey[key]
-                if (!item) return null
-                return (
-                  <NavLink
-                    key={key}
-                    href={item.href}
-                    label={item.label}
-                    icon={ICONS[key]}
-                    active={isActive(item.href, item.exact)}
-                    onClose={onClose}
-                  />
-                )
-              })}
-            </div>
-          </div>
-        ))}
-      </nav>
-
-      {/* Footer */}
-      <div className="border-t border-white/8 p-3 shrink-0">
-        {/* My Account toggle */}
-        <button
-          onClick={() => setAccountOpen(v => !v)}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/35 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
-        >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
-            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
-          </svg>
-          <span className="flex-1 text-left">My Account</span>
-          <svg
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            className={`h-3 w-3 shrink-0 transition-transform duration-200 ${accountOpen ? "rotate-180" : ""}`}
-          >
-            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </button>
-
-        <AnimatePresence initial={false}>
-          {accountOpen && (
-            <motion.div
-              key="instr-account-items"
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.18, ease: "easeInOut" }}
-              className="overflow-hidden"
-            >
-              <div className="mt-0.5 space-y-0.5 pl-3">
-                <Link
-                  href="/account/password"
-                  onClick={onClose}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-white/30 transition-all duration-150 hover:bg-white/5 hover:text-white/60"
-                >
-                  {I.password}
-                  Change Password
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium text-[#F87171]/60 transition-all duration-150 hover:bg-white/5 hover:text-[#F87171]"
-                >
-                  {I.logout}
-                  Logout
-                </button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  )
-}
+const SECTIONS: PortalNavSection[] = INSTRUCTOR_NAV_SECTIONS.map(s => ({
+  title: s.title,
+  items: [...s.keys].map(key => {
+    const item = navByKey[key]!
+    return {
+      label: item.label,
+      href:  item.href,
+      icon:  ICONS[key],
+      exact: item.exact,
+    }
+  }),
+}))
 
 // ── InstructorSidebar ─────────────────────────────────────────────────────────
 
@@ -195,26 +55,14 @@ interface Props {
 
 export default function InstructorSidebar({ isOpen, onClose }: Props) {
   return (
-    <>
-      <aside className="hidden w-56 shrink-0 bg-[#0B1F3A] md:flex md:flex-col">
-        <NavContent />
-      </aside>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.aside
-            key="instr-mobile-sidebar"
-            initial={{ x: -224 }}
-            animate={{ x: 0 }}
-            exit={{ x: -224 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed top-0 left-0 z-30 w-56 bg-[#0B1F3A] md:hidden"
-            style={{ bottom: "calc(60px + max(8px, env(safe-area-inset-bottom)))" }}
-          >
-            <NavContent onClose={onClose} />
-          </motion.aside>
-        )}
-      </AnimatePresence>
-    </>
+    <PortalSidebar
+      sections={SECTIONS}
+      roleLabel="Instructor"
+      roleInitials="IN"
+      accountSubtitle="Instructor Portal"
+      isOpen={isOpen}
+      onClose={onClose}
+      mobileBottomOffset="calc(60px + max(8px, env(safe-area-inset-bottom)))"
+    />
   )
 }

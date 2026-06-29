@@ -1,21 +1,16 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getInstructorByUserId,
   listInboxSubmissions,
   listInstructorGroups,
 } from '@/modules/instructor-portal/queries'
 import Link from 'next/link'
+import EmptyState from '@/components/admin/EmptyState'
+import StatusBadge from '@/components/admin/StatusBadge'
 import { HomeworkGroupSelect } from './_components/HomeworkGroupSelect'
 
 interface Props {
   searchParams: Promise<Record<string, string | undefined>>
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  submitted:   'bg-[#FFFBEB] text-[#B45309]',
-  resubmitted: 'bg-purple-100 text-purple-700',
-  graded:      'bg-[#E7F8EE] text-[#15803D]',
-  returned:    'bg-[#EFF6FF] text-[#1D4ED8]',
 }
 
 export default async function HomeworkInboxPage({ searchParams }: Props) {
@@ -24,9 +19,10 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
 
   if (!instructor) {
     return (
-      <div className="flex h-64 items-center justify-center text-[#64748B]">
-        No instructor record found. Contact your team leader.
-      </div>
+      <EmptyState
+        title="No instructor record found"
+        description="Contact your team leader to link your account."
+      />
     )
   }
 
@@ -50,10 +46,6 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-[#0B1F3A]">Homework Inbox</h1>
-        <p className="mt-0.5 text-sm text-[#64748B]">Review and grade student submissions</p>
-      </div>
 
       {/* Filters row */}
       <div className="flex flex-wrap items-center gap-3">
@@ -87,9 +79,10 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
 
       {/* Table */}
       {submissions.length === 0 ? (
-        <div className="flex h-48 items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] text-sm text-[#64748B]">
-          No submissions found.
-        </div>
+        <EmptyState
+          title="No submissions found"
+          description={filter === 'pending' ? 'All caught up — no pending homework to review.' : 'No submissions match this filter.'}
+        />
       ) : (
         <div className="ds-card overflow-hidden">
           <div className="border-b border-[#E2E8F0] px-5 py-3">
@@ -126,11 +119,10 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
                   {new Date(s.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </p>
                 <div className="flex items-center gap-1 flex-wrap">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${STATUS_COLORS[s.status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
-                    {s.status}
-                  </span>
+                  <StatusBadge status={s.status} />
+                  {s.is_late && <StatusBadge status="late" />}
                   {s.resubmission_count > 0 && (
-                    <span className="rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-600">
+                    <span className="rounded-full bg-[#F3E8FF] px-1.5 py-0.5 text-[10px] font-medium text-[#6B21A8]">
                       resub {s.resubmission_count}
                     </span>
                   )}

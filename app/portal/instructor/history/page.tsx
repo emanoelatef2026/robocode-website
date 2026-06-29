@@ -1,21 +1,16 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getInstructorByUserId,
   listSessionHistory,
   listInstructorGroups,
 } from '@/modules/instructor-portal/queries'
 import Link from 'next/link'
+import EmptyState from '@/components/admin/EmptyState'
+import StatusBadge from '@/components/admin/StatusBadge'
 import HistoryFilterPanel from './_components/HistoryFilterPanel'
 
 interface Props {
   searchParams: Promise<Record<string, string | undefined>>
-}
-
-const STATUS_META: Record<string, { label: string; cls: string; dot: string }> = {
-  completed: { label: 'Completed', cls: 'bg-[#E7F8EE] text-[#15803D]', dot: 'bg-[#10B981]' },
-  ongoing:   { label: 'Ongoing',   cls: 'bg-[#EFF6FF] text-[#1D4ED8]',       dot: 'bg-[#3B82F6] animate-pulse' },
-  scheduled: { label: 'Scheduled', cls: 'bg-[#F1F5F9] text-[#475569]',     dot: 'bg-[#94A3B8]' },
-  cancelled: { label: 'Cancelled', cls: 'bg-[#FEE2E2] text-[#EF4444]',         dot: 'bg-[#EF4444]' },
 }
 
 export default async function SessionHistoryPage({ searchParams }: Props) {
@@ -24,9 +19,10 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
 
   if (!instructor) {
     return (
-      <div className="flex h-64 items-center justify-center text-[#64748B]">
-        No instructor record found. Contact your team leader.
-      </div>
+      <EmptyState
+        title="No instructor record found"
+        description="Contact your team leader to link your account."
+      />
     )
   }
 
@@ -47,12 +43,6 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
   return (
     <div className="space-y-3 md:space-y-4">
 
-      {/* Header */}
-      <div>
-        <h1 className="text-[18px] md:text-xl font-bold text-[#0B1F3A]">Session History</h1>
-        <p className="mt-0.5 text-[12px] md:text-sm text-[#64748B]">All sessions across your groups</p>
-      </div>
-
       {/* Filters */}
       <HistoryFilterPanel
         groups={activeGroups}
@@ -65,9 +55,10 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
 
       {/* Results */}
       {sessions.length === 0 ? (
-        <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] text-[13px] text-[#94A3B8]">
-          No sessions found
-        </div>
+        <EmptyState
+          title="No sessions found"
+          description="Try adjusting the filters above."
+        />
       ) : (
         <div className="overflow-hidden ds-card">
 
@@ -91,7 +82,6 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
 
           <div className="divide-y divide-[#F1F5F9]">
             {sessions.map(s => {
-              const meta      = STATUS_META[s.status] ?? { label: s.status, cls: 'bg-[#F1F5F9] text-[#475569]', dot: 'bg-[#94A3B8]' }
               const dateShort = new Date(s.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
               const dateFull  = new Date(s.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
@@ -104,7 +94,6 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
 
                   {/* ── Mobile card ── */}
                   <div className="px-4 py-3 lg:hidden">
-                    {/* Row 1: date + session# + status */}
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-[11px] text-[#94A3B8] shrink-0">{dateShort}</span>
@@ -112,21 +101,14 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
                           #{s.session_num}/{s.total_in_group}
                         </span>
                       </div>
-                      <span className={`shrink-0 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${meta.cls}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-                        {meta.label}
-                      </span>
+                      <StatusBadge status={s.status} dot />
                     </div>
-
-                    {/* Row 2: group name + course */}
                     <div className="mt-1 flex items-baseline gap-1.5 min-w-0">
                       <p className="text-[13px] font-bold text-[#0B1F3A] truncate leading-tight">{s.group_name}</p>
                       {s.course_title && (
                         <p className="text-[11px] text-[#64748B] truncate shrink-0 leading-tight">{s.course_title}</p>
                       )}
                     </div>
-
-                    {/* Row 3: topic + attendance */}
                     <div className="mt-1 flex items-center justify-between gap-2">
                       <p className={`text-[11px] truncate ${s.topic ? 'text-[#64748B]' : 'italic text-[#CBD5E1]'}`}>
                         {s.topic ?? 'No topic'}
@@ -167,10 +149,7 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
                     ) : (
                       <span className="text-[12px] text-[#CBD5E1]">—</span>
                     )}
-                    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold w-fit ${meta.cls}`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${meta.dot}`} />
-                      {meta.label}
-                    </span>
+                    <StatusBadge status={s.status} dot />
                   </div>
 
                 </Link>

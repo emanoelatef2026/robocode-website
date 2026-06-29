@@ -205,10 +205,19 @@ export default async function StudentProfilePage({ params }: Props) {
           <p className="mt-3 text-sm text-[#94A3B8]">No notes yet.</p>
         ) : (
           <div className="relative mt-4 space-y-3 pl-4 before:absolute before:left-1.5 before:top-0 before:h-full before:w-px before:bg-[#E2E8F0]">
-            {profile.notes.map((n) => (
-              <div key={n.id} className="relative rounded-lg border border-[#F1F5F9] bg-[#F8FAFC] px-3 py-2.5">
+            {profile.notes.map((n, idx) => {
+              const isPinned = idx === 0 && n.severity === 'HIGH'
+              return (
+              <div key={n.id} className={`relative rounded-lg border px-3 py-2.5 ${
+                isPinned ? 'border-[#FECACA] bg-[#FEF2F2]' : 'border-[#F1F5F9] bg-[#F8FAFC]'
+              }`}>
                 {/* Timeline dot */}
-                <div className="absolute -left-4.5 top-3.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#FF8A1F]" />
+                <div className={`absolute -left-4.5 top-3.5 h-2.5 w-2.5 rounded-full border-2 border-white ${
+                  isPinned ? 'bg-[#EF4444]' : 'bg-[#FF8A1F]'
+                }`} />
+                {isPinned && (
+                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-[#DC2626]">📌 Important Note</p>
+                )}
 
                 <div className="flex items-start justify-between gap-2">
                   <p className="flex-1 whitespace-pre-wrap text-sm text-[#0B1F3A]">{n.content}</p>
@@ -239,7 +248,8 @@ export default async function StudentProfilePage({ params }: Props) {
                   )}
                 </div>
               </div>
-            ))}
+            )})}
+
           </div>
         )}
       </div>

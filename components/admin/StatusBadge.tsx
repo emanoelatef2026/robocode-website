@@ -21,9 +21,11 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   on_leave:   { bg: "bg-[#FFF1E2]", text: "text-[#FF8A1F]", label: "On Leave",   dot: "bg-[#FF8A1F]" },
   dropped:    { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]", label: "Dropped",    dot: "bg-[#EF4444]" },
   waitlisted: { bg: "bg-[#F3E8FF]", text: "text-[#6B21A8]", label: "Waitlisted", dot: "bg-[#A855F7]" },
-  // Groups / Courses
+  // Groups / Courses / Sessions
   forming:    { bg: "bg-[#FFFBEB]", text: "text-[#B45309]", label: "Forming",    dot: "bg-[#F59E0B]" },
   completed:  { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Completed",  dot: "bg-[#10B981]" },
+  ongoing:    { bg: "bg-[#EFF6FF]", text: "text-[#1D4ED8]", label: "Ongoing",    dot: "bg-[#3B82F6]" },
+  scheduled:  { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "Scheduled",  dot: "bg-[#94A3B8]" },
   cancelled:  { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]", label: "Cancelled",  dot: "bg-[#EF4444]" },
   online:     { bg: "bg-[#E0F2FE]", text: "text-[#0369A1]", label: "Online",     dot: "bg-[#38BDF8]" },
   offline:    { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "Offline",    dot: "bg-[#94A3B8]" },

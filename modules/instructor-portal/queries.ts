@@ -18,6 +18,7 @@ import type {
   ResourceLink,
   CourseModuleItem,
   TodayAction,
+  TodaySession,
   StudentAttentionItem,
   SessionHistoryItem,
   SessionHistoryFilters,
@@ -1159,7 +1160,7 @@ export async function getStudentProfileForInstructor(
     // Fetch all non-private notes + current user's private notes for this student
     db.from('student_notes')
       .select(
-        `id, content, is_private, author_id, schedule_id, created_at, updated_at,
+        `id, content, category, severity, is_private, author_id, schedule_id, created_at, updated_at,
          schedules!student_notes_schedule_id_fkey(topic)`
       )
       .eq('student_id', studentId)
@@ -1205,12 +1206,16 @@ export async function getStudentProfileForInstructor(
     }
   }
 
+  const NOTE_SEVERITY_ORDER: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 }
+
   // Include notes visible to current user: own notes (public or private) + others' public notes
   const notes: StudentNote[] = (noteRes.data ?? [])
     .filter((n: any) => !n.is_private || n.author_id === userId)
     .map((n: any) => ({
       id:             n.id,
       content:        n.content,
+      category:       (n.category ?? 'GENERAL') as StudentNote['category'],
+      severity:       (n.severity ?? 'LOW')     as StudentNote['severity'],
       is_private:     n.is_private,
       schedule_id:    n.schedule_id   ?? null,
       schedule_topic: (n.schedules as any)?.topic ?? null,
@@ -1219,6 +1224,11 @@ export async function getStudentProfileForInstructor(
       author_name:    authorNameMap.get(n.author_id as string) ?? 'Instructor',
       is_own:         n.author_id === userId,
     }))
+    .sort((a, b) => {
+      const sev = (NOTE_SEVERITY_ORDER[a.severity] ?? 2) - (NOTE_SEVERITY_ORDER[b.severity] ?? 2)
+      if (sev !== 0) return sev
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
 
   return {
     student_id:         studentId,
@@ -1811,4 +1821,87 @@ export async function listInboxSubmissions(
       score:              row.score ?? null,
     }
   })
+}
+
+// ── Today's Sessions ──────────────────────────────────────────────────────────
+// Returns all schedules with scheduled_at = today for this instructor.
+// Excludes permanently cancelled sessions; postponed/ongoing/completed are included.
+
+export async function getTodaySessions(instructorId: string): Promise<TodaySession[]> {
+  const db = createServiceClient()
+  const { gcIds, gcToGroupId } = await resolveGcContext(instructorId, db)
+  if (gcIds.length === 0) return []
+
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const todayEnd = new Date()
+  todayEnd.setHours(23, 59, 59, 999)
+
+  const { data: scheduleRows } = await db
+    .from('schedules')
+    .select('id, group_course_id, scheduled_at, duration_minutes, status, session_number')
+    .in('group_course_id', gcIds)
+    .gte('scheduled_at', todayStart.toISOString())
+    .lte('scheduled_at', todayEnd.toISOString())
+    .not('status', 'in', '("cancelled","cancelled_with_makeup")')
+    .order('scheduled_at', { ascending: true })
+
+  if (!scheduleRows || scheduleRows.length === 0) return []
+
+  const groupIds = [...new Set((scheduleRows as any[]).map((r) => gcToGroupId.get(r.group_course_id)).filter(Boolean))] as string[]
+
+  const [groupRes, studentRes] = await Promise.all([
+    db.from('group_courses')
+      .select(
+        `id,
+         groups!group_courses_group_id_fkey(id, name, branches!groups_branch_id_fkey(name)),
+         courses!group_courses_course_id_fkey(title)`
+      )
+      .in('id', gcIds),
+    groupIds.length > 0
+      ? db.from('group_students').select('group_id').in('group_id', groupIds).eq('status', 'active')
+      : Promise.resolve({ data: [] }),
+  ])
+
+  const gcMeta = new Map<string, { group_id: string; group_name: string; course_title: string; branch_name: string }>()
+  for (const r of (groupRes.data ?? []) as any[]) {
+    gcMeta.set(r.id, {
+      group_id:     r.groups?.id         ?? gcToGroupId.get(r.id) ?? '',
+      group_name:   r.groups?.name        ?? '',
+      course_title: r.courses?.title      ?? '',
+      branch_name:  r.groups?.branches?.name ?? '',
+    })
+  }
+
+  const studentCountMap: Record<string, number> = {}
+  for (const gs of (studentRes as any).data ?? []) {
+    const gid = (gs as any).group_id as string
+    studentCountMap[gid] = (studentCountMap[gid] ?? 0) + 1
+  }
+
+  const SESSION_STATUS_ORDER: Record<string, number> = { ongoing: 0, scheduled: 1, completed: 2, postponed: 3 }
+
+  return (scheduleRows as any[])
+    .map((s) => {
+      const meta = gcMeta.get(s.group_course_id)
+      return {
+        id:               s.id,
+        group_id:         meta?.group_id     ?? gcToGroupId.get(s.group_course_id) ?? '',
+        group_course_id:  s.group_course_id,
+        group_name:       meta?.group_name   ?? '',
+        course_title:     meta?.course_title ?? '',
+        branch_name:      meta?.branch_name  ?? '',
+        scheduled_at:     s.scheduled_at,
+        duration_minutes: s.duration_minutes ?? 60,
+        student_count:    studentCountMap[meta?.group_id ?? ''] ?? 0,
+        session_number:   s.session_number   ?? null,
+        status:           s.status,
+      } satisfies TodaySession
+    })
+    .sort((a, b) => {
+      const ao = SESSION_STATUS_ORDER[a.status] ?? 99
+      const bo = SESSION_STATUS_ORDER[b.status] ?? 99
+      if (ao !== bo) return ao - bo
+      return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+    })
 }

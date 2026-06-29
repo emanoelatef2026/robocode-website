@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react'
 import { saveAttendance } from '@/modules/instructor-portal/actions'
 import type { SessionAttendanceRow } from '@/modules/instructor-portal/types'
+import StudentNoteModal from '@/components/portal/instructor/StudentNoteModal'
 
 interface Props {
   sessionId:    string
@@ -172,9 +173,10 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
                     <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#0B1F3A]">
                       {r.student_name}
                     </span>
+                    {/* Attendance note toggle */}
                     <button
                       type="button"
-                      title="Add note"
+                      title="Attendance note"
                       onClick={() => setExpandedNote(noteOpen ? null : r.student_id)}
                       className={`shrink-0 rounded p-1 transition ${noteOpen || noteVal ? 'text-[#64748B]' : 'text-[#94A3B8] hover:text-[#64748B]'}`}
                     >
@@ -183,6 +185,13 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
                         <path d="M15 6.954 8.978 9.86a2.25 2.25 0 0 1-1.956 0L1 6.954V11.5A1.5 1.5 0 0 0 2.5 13h11a1.5 1.5 0 0 0 1.5-1.5V6.954Z" />
                       </svg>
                     </button>
+                    {/* Student note modal */}
+                    <StudentNoteModal
+                      studentId={r.student_id}
+                      studentName={r.student_name}
+                      groupId={groupId}
+                      scheduleId={sessionId}
+                    />
                   </div>
 
                   {/* Segmented status chips */}
