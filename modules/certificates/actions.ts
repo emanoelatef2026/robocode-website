@@ -304,6 +304,43 @@ export async function revokeCertificate(
   return { success: true, data: undefined }
 }
 
+// ─── Load portfolio projects for certificate form ─────────────────────────────
+
+export async function loadStudentPortfolioProjects(
+  studentId: string
+): Promise<ActionResult<Array<{ id: string; title: string; course_title: string | null }>>> {
+  await requirePermission('manage_certificates')
+
+  const db = createServiceClient()
+
+  const { data: portfolio } = await db
+    .from('student_portfolios')
+    .select('id')
+    .eq('student_id', studentId)
+    .maybeSingle()
+
+  if (!portfolio) return { success: true, data: [] }
+
+  const { data: projects, error } = await db
+    .from('portfolio_projects')
+    .select(`id, title, courses!portfolio_projects_course_id_fkey(title)`)
+    .eq('portfolio_id', (portfolio as any).id)
+    .eq('is_archived', false)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  return {
+    success: true,
+    data: (projects ?? []).map((p: any) => ({
+      id:           p.id,
+      title:        p.title,
+      course_title: p.courses?.title ?? null,
+    })),
+  }
+}
+
 // ─── Reinstate ────────────────────────────────────────────────────────────────
 
 export async function reinstateCertificate(certificateId: string): Promise<ActionResult<void>> {

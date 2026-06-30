@@ -70,11 +70,13 @@ export default async function VerifyCertificatePage({ params }: Props) {
 
             <div className="px-6 py-5 space-y-4">
 
-              {/* Certificate title + recipient */}
+              {/* Course name — prominently shown; certificate.title is the immutable snapshot */}
               <div className="text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-[#94A3B8]">Certificate</p>
-                <h2 className="mt-0.5 text-[15px] font-bold text-[#0B1F3A]">{certificate.title}</h2>
-                <p className="text-[12px] text-[#64748B]">{TYPE_LABELS[certificate.certificate_type] ?? 'Certificate'}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-[#94A3B8]">Course Completed</p>
+                <h2 className="mt-1 text-[17px] font-bold uppercase tracking-wide text-[#0B1F3A]">
+                  {certificate.title || certificate.course_title || '—'}
+                </h2>
+                <p className="mt-0.5 text-[11px] text-[#64748B]">{TYPE_LABELS[certificate.certificate_type] ?? 'Certificate'}</p>
               </div>
 
               {/* Recipient name */}
@@ -94,7 +96,8 @@ export default async function VerifyCertificatePage({ params }: Props) {
                   </dd>
                 </div>
 
-                {certificate.course_title && (
+                {/* Course title shown in metadata only when it differs from the stored title snapshot */}
+                {certificate.course_title && certificate.course_title !== certificate.title && (
                   <div className="rounded-lg bg-[#F8FAFC] px-3 py-2.5">
                     <dt className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] mb-0.5">Course</dt>
                     <dd className="font-semibold text-[#0B1F3A]">{certificate.course_title}</dd>

@@ -7,8 +7,6 @@ import {
 import type { CertificateDetail } from './types'
 
 // ─── Fonts (Google Fonts gstatic TTF — compatible with react-pdf/fontkit) ────
-// URLs extracted from fonts.googleapis.com CSS2 API with a desktop User-Agent.
-// gstatic TTF URLs are stable: they are versioned by content hash, not date.
 Font.register({
   family: 'Cinzel',
   fonts: [
@@ -29,16 +27,16 @@ Font.register({
 })
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-const NAVY        = '#1a2754'
-const CYAN        = '#29b5e6'
-const ORANGE      = '#f5a623'
-const GOLD        = '#c9a84c'
-const MID_GRAY    = '#888888'
-const LIGHT_GRAY  = '#aaaaaa'
-const PALE_GRAY   = '#c0c0c0'
+const NAVY       = '#1a2754'
+const CYAN       = '#29b5e6'
+const ORANGE     = '#f5a623'
+const GOLD       = '#c9a84c'
+const MID_GRAY   = '#888888'
+const LIGHT_GRAY = '#aaaaaa'
+const PALE_GRAY  = '#c0c0c0'
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
-// All measurements are design px × 0.75 (96dpi → 72dpi/pt conversion).
+// All measurements: design px × 0.75 (96dpi → 72dpi/pt conversion).
 const s = StyleSheet.create({
   page: {
     backgroundColor: '#ffffff',
@@ -75,7 +73,7 @@ const s = StyleSheet.create({
     alignItems: 'stretch',
   },
 
-  // Header
+  // ── Header ──────────────────────────────────────────────────────────────────
   header: {
     flexDirection: 'column',
     alignItems: 'center',
@@ -89,8 +87,9 @@ const s = StyleSheet.create({
     height: 36,
     overflow: 'hidden',
   },
+  // 10–15% larger logos
   logo: {
-    height: 69,
+    height: 78,
     objectFit: 'contain',
   },
   certTitle: {
@@ -102,8 +101,20 @@ const s = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 5,
   },
+  // Course name — visually prominent: large, bold, centred above the body
+  courseNameLarge: {
+    fontFamily: 'Cinzel',
+    fontSize: 24,
+    fontWeight: 700,
+    color: NAVY,
+    textAlign: 'center',
+    letterSpacing: 4,
+    lineHeight: 1.25,
+    marginTop: 8,
+    marginBottom: 2,
+  },
 
-  // Body
+  // ── Body ────────────────────────────────────────────────────────────────────
   body: {
     flexDirection: 'column',
     alignItems: 'center',
@@ -118,33 +129,87 @@ const s = StyleSheet.create({
   },
   studentName: {
     fontFamily: 'Cinzel',
-    fontSize: 30,
+    fontSize: 34,
     fontWeight: 600,
     color: NAVY,
     textAlign: 'center',
     lineHeight: 1.2,
-    marginBottom: 4,
+    marginBottom: 5,
   },
-  completedText: {
-    fontFamily: 'Montserrat',
-    fontSize: 10,
-    color: MID_GRAY,
-    letterSpacing: 0.6,
+
+  // ── Projects section ─────────────────────────────────────────────────────────
+  projectsSection: {
+    width: '100%',
+    marginTop: 14,
+    alignItems: 'center',
+  },
+  projectsHeading: {
+    fontFamily: 'Cinzel',
+    fontSize: 13,
+    fontWeight: 600,
+    color: GOLD,
+    letterSpacing: 3,
+    textAlign: 'center',
     marginBottom: 6,
   },
-  courseName: {
+  projectsDivider: {
+    marginBottom: 8,
+  },
+  // Single-column container (≤4 projects)
+  projectsOneCol: {
+    flexDirection: 'column',
+    width: '60%',
+  },
+  // Two-column container (≥5 projects)
+  projectsTwoCol: {
+    flexDirection: 'row',
+    width: '90%',
+    gap: 8,
+  },
+  projectsColLeft: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  projectsColRight: {
+    flex: 1,
+    flexDirection: 'column',
+  },
+  projectItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 5,
+    marginBottom: 4,
+  },
+  projectBullet: {
     fontFamily: 'Montserrat',
-    fontSize: 15,
+    fontSize: 11,
     fontWeight: 600,
     color: CYAN,
-    textAlign: 'center',
-    letterSpacing: 1.5,
-    marginBottom: 10,
+    lineHeight: 1.35,
+    flexShrink: 0,
   },
+  projectTitle: {
+    fontFamily: 'Montserrat',
+    fontSize: 11,
+    color: NAVY,
+    lineHeight: 1.35,
+    flex: 1,
+  },
+  projectsExtra: {
+    fontFamily: 'Montserrat',
+    fontSize: 9,
+    fontStyle: 'italic',
+    color: MID_GRAY,
+    marginTop: 5,
+    textAlign: 'center',
+  },
+
+  // ── Meta row (date, hours) ──────────────────────────────────────────────────
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginTop: 10,
   },
   metaItem: {
     flexDirection: 'row',
@@ -162,7 +227,7 @@ const s = StyleSheet.create({
     color: NAVY,
   },
 
-  // Footer
+  // ── Footer ──────────────────────────────────────────────────────────────────
   footer: {
     flexDirection: 'column',
   },
@@ -216,7 +281,7 @@ const s = StyleSheet.create({
     fontStyle: 'italic',
   },
 
-  // Stamp overlay (large, absolutely positioned in certificate body)
+  // Stamp overlay — absolutely positioned in certificate body, unchanged
   stampOverlay: {
     position: 'absolute',
     bottom: 120,
@@ -228,13 +293,13 @@ const s = StyleSheet.create({
     objectFit: 'contain',
   },
 
-  // STEM block (footer centre — small accreditation icon)
+  // STEM block (footer centre)
   stemBlock: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   stemLogo: {
-    height: 58,
+    height: 66,
     objectFit: 'contain',
   },
 
@@ -355,7 +420,7 @@ function CyanAccentLine() {
 
 function GoldOrnamentBar({ width }: { width: number }) {
   const half = (width - 16) / 2
-  const sc   = half  // star center x offset from left
+  const sc   = half
 
   return (
     <Svg width={width} height={14} viewBox={`0 0 ${width} 14`}>
@@ -451,7 +516,69 @@ function SigLine() {
   )
 }
 
+// ─── Projects section component ───────────────────────────────────────────────
+
+interface ProjectItem { title: string; sort_order: number }
+
+function ProjectsSection({ projects }: { projects: ProjectItem[] }) {
+  const sorted  = [...projects].sort((a, b) => a.sort_order - b.sort_order)
+  const display = sorted.slice(0, 10)
+  const extra   = sorted.length > 10 ? sorted.length - 10 : 0
+
+  const isTwoCol = display.length >= 5
+
+  // Left-column-first split for two-column layout
+  const half  = Math.ceil(display.length / 2)
+  const left  = display.slice(0, half)
+  const right = display.slice(half)
+
+  return (
+    <View style={s.projectsSection}>
+      <Text style={s.projectsHeading}>PROJECTS COMPLETED</Text>
+
+      <View style={s.projectsDivider}>
+        <GoldUnderline width={220} />
+      </View>
+
+      {isTwoCol ? (
+        <View style={s.projectsTwoCol}>
+          <View style={s.projectsColLeft}>
+            {left.map((p, i) => (
+              <View key={i} style={s.projectItem}>
+                <Text style={s.projectBullet}>•</Text>
+                <Text style={s.projectTitle}>{p.title}</Text>
+              </View>
+            ))}
+          </View>
+          <View style={s.projectsColRight}>
+            {right.map((p, i) => (
+              <View key={i} style={s.projectItem}>
+                <Text style={s.projectBullet}>•</Text>
+                <Text style={s.projectTitle}>{p.title}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      ) : (
+        <View style={s.projectsOneCol}>
+          {display.map((p, i) => (
+            <View key={i} style={s.projectItem}>
+              <Text style={s.projectBullet}>•</Text>
+              <Text style={s.projectTitle}>{p.title}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {extra > 0 && (
+        <Text style={s.projectsExtra}>+ {extra} Additional Project{extra !== 1 ? 's' : ''}</Text>
+      )}
+    </View>
+  )
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
+
 interface Props {
   certificate: CertificateDetail
   qrDataUrl:   string
@@ -468,10 +595,12 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
 
   const certId      = certificate.certificate_code
   const studentName = certificate.recipient_name
-  const courseName  = certificate.course_title ?? certificate.title
+  // certificate.title is the immutable course-name snapshot stored at issuance.
+  // Falls back to course_title join for legacy records where title may differ.
+  const courseName  = certificate.title || certificate.course_title || '—'
   const dateStr     = formatDate(certificate.issued_at)
-  // course_hours is not yet joined — read if present, hide otherwise
   const hours       = (certificate as any).course_hours as number | null | undefined
+  const projects    = Array.isArray(certificate.projects) ? certificate.projects : []
 
   return (
     <Document>
@@ -488,7 +617,7 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
         <CornerBL />
         <CornerBR />
 
-        {/* ── Academy stamp overlay — large, in certificate body above footer ── */}
+        {/* ── Academy stamp overlay — position unchanged ── */}
         {stampUrl && (
           <View style={s.stampOverlay}>
             <Image src={stampUrl} style={s.stampOverlayImg} />
@@ -498,7 +627,7 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
         {/* ── Main content ── */}
         <View style={s.content}>
 
-          {/* HEADER */}
+          {/* ─ HEADER ─ */}
           <View style={s.header}>
             <View style={s.logoRow}>
               <View style={s.circuitWrapper}>
@@ -507,7 +636,7 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
               <View style={{ flexShrink: 0 }}>
                 {logoUrl
                   ? <Image src={logoUrl} style={s.logo} />
-                  : <View style={{ width: 90, height: 69 }} />
+                  : <View style={{ width: 100, height: 78 }} />
                 }
               </View>
               <View style={[s.circuitWrapper, { alignItems: 'flex-end' }]}>
@@ -522,22 +651,26 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
             <Text style={s.certTitle}>CERTIFICATE OF COMPLETION</Text>
 
             <GoldOrnamentBar width={420} />
+
+            {/* Course name — prominently displayed below the cert title */}
+            <Text style={s.courseNameLarge}>{courseName.toUpperCase()}</Text>
           </View>
 
-          {/* BODY */}
+          {/* ─ BODY ─ */}
           <View style={s.body}>
-            <Text style={s.certifyText}>This is to certify that</Text>
+            <Text style={s.certifyText}>This certificate is proudly presented to</Text>
 
             <Text style={s.studentName}>{studentName}</Text>
 
-            <View style={{ marginBottom: 9 }}>
-              <GoldUnderline width={345} />
+            <View style={{ marginBottom: projects.length > 0 ? 4 : 12 }}>
+              <GoldUnderline width={360} />
             </View>
 
-            <Text style={s.completedText}>has successfully completed the program</Text>
+            {projects.length > 0 && (
+              <ProjectsSection projects={projects} />
+            )}
 
-            <Text style={s.courseName}>{courseName}</Text>
-
+            {/* Completion date / hours — shown below projects */}
             <View style={s.metaRow}>
               {hours != null && (
                 <>
@@ -555,7 +688,7 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
             </View>
           </View>
 
-          {/* FOOTER */}
+          {/* ─ FOOTER ─ */}
           <View style={s.footer}>
             <View style={{ marginBottom: 10 }}>
               <GoldDivider width={793} />
@@ -575,15 +708,15 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
                 </View>
               </View>
 
-              {/* Centre: STEM accreditation logo */}
+              {/* Centre: STEM accreditation logo — slightly larger */}
               <View style={s.stemBlock}>
                 {stemLogoUrl
                   ? <Image src={stemLogoUrl} style={s.stemLogo} />
-                  : <View style={{ width: 58, height: 58 }} />
+                  : <View style={{ width: 66, height: 66 }} />
                 }
               </View>
 
-              {/* Right: Signature */}
+              {/* Right: Signature — position unchanged */}
               <View style={s.sigBlock}>
                 {signatureUrl
                   ? <Image src={signatureUrl} style={s.sigImageStyle} />

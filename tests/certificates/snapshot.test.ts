@@ -9,7 +9,8 @@ vi.mock('@/lib/supabase/service', () => ({
 }))
 
 vi.mock('@/modules/rbac/guards', () => ({
-  requirePermission: vi.fn().mockResolvedValue({ id: 'user-1', role: 'instructor' }),
+  requirePermission:   vi.fn().mockResolvedValue({ id: 'user-1', role: 'instructor' }),
+  isBranchAccessible:  vi.fn().mockReturnValue(true),
 }))
 
 vi.mock('@/modules/progress/eligibility', () => ({
