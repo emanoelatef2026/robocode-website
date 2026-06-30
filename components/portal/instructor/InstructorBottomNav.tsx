@@ -16,24 +16,24 @@ const ICONS: Record<string, React.ReactNode> = {
       <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
     </svg>
   ),
+  calendar: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5.5 w-5.5">
+      <path fillRule="evenodd" d="M6.75 2.25A.75.75 0 0 1 7.5 3v1.5h9V3A.75.75 0 0 1 18 3v1.5h.75a3 3 0 0 1 3 3v11.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V7.5a3 3 0 0 1 3-3H6V3a.75.75 0 0 1 .75-.75Zm13.5 9a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5v7.5a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5v-7.5Z" clipRule="evenodd" />
+    </svg>
+  ),
   homework: (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-5.5 w-5.5">
       <path fillRule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-6.75a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clipRule="evenodd" />
       <path d="M12.971 1.816A5.23 5.23 0 0 1 14.25 5.25v1.875c0 .207.168.375.375.375H16.5a5.23 5.23 0 0 1 3.434 1.279 9.768 9.768 0 0 0-6.963-6.963Z" />
     </svg>
   ),
-  history: (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-5.5 w-5.5">
-      <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
-    </svg>
-  ),
 }
 
 const TABS = [
-  { key: "dashboard", label: "Home",     href: "/portal/instructor",         exact: true  },
-  { key: "groups",    label: "My Groups", href: "/portal/instructor/groups",  exact: false },
-  { key: "homework",  label: "Homework",  href: "/portal/instructor/homework",exact: false },
-  { key: "history",   label: "History",   href: "/portal/instructor/history", exact: false },
+  { key: "dashboard", label: "Home",      href: "/portal/instructor",                  exact: true  },
+  { key: "groups",    label: "My Groups", href: "/portal/instructor/groups",           exact: false },
+  { key: "calendar",  label: "Calendar",  href: "/portal/instructor/calendar",         exact: false },
+  { key: "homework",  label: "Homework",  href: "/portal/instructor/homework",         exact: false },
 ] as const
 
 export default function InstructorBottomNav() {

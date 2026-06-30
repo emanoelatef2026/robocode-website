@@ -376,6 +376,219 @@ export async function searchStudentsForMakeupSession(
     .filter((r) => !query || r.name.toLowerCase().includes(query.toLowerCase()))
 }
 
+// ── getStudentTrialHistory ─────────────────────────────────────────────────────
+// Returns trial sessions a student attended (resolved via converted lead record).
+
+export async function getStudentTrialHistory(studentId: string): Promise<Array<{
+  session_id:        string
+  scheduled_at:      string
+  instructor_name:   string | null
+  branch_name:       string
+  status:            string
+  attendance_status: 'present' | 'absent' | null
+}>> {
+  const db = createServiceClient()
+
+  // Find leads that converted into this student
+  const { data: leadRows } = await db
+    .from('leads')
+    .select('id')
+    .eq('converted_student_id', studentId)
+
+  if (!leadRows || leadRows.length === 0) return []
+  const leadIds = (leadRows as any[]).map((r) => r.id as string)
+
+  const { data: tssRows } = await db
+    .from('trial_session_students')
+    .select('schedule_id, attendance_status')
+    .in('lead_id', leadIds)
+
+  if (!tssRows || tssRows.length === 0) return []
+  const scheduleIds = (tssRows as any[]).map((r) => r.schedule_id as string)
+
+  const [{ data: schedRows }, { data: siRows }] = await Promise.all([
+    db.from('schedules')
+      .select('id, scheduled_at, status, branches!schedules_branch_id_fkey(name)')
+      .in('id', scheduleIds)
+      .eq('type', 'trial')
+      .order('scheduled_at', { ascending: false }),
+    db.from('session_instructors')
+      .select('session_id, instructor_id')
+      .in('session_id', scheduleIds),
+  ])
+
+  const instrMap: Record<string, string> = {}
+  for (const r of (siRows ?? []) as any[]) instrMap[r.session_id] = r.instructor_id
+
+  const uniqueInstrIds = [...new Set(Object.values(instrMap))]
+  const instrNameMap: Record<string, string | null> = {}
+  if (uniqueInstrIds.length > 0) {
+    const { data: instrRows } = await db
+      .from('instructors')
+      .select('id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
+      .in('id', uniqueInstrIds)
+    for (const r of (instrRows ?? []) as any[]) {
+      const prof = (r as any).users?.profiles
+      instrNameMap[(r as any).id] = prof ? [prof.first_name, prof.last_name].filter(Boolean).join(' ') || null : null
+    }
+  }
+
+  const tssMap: Record<string, string | null> = {}
+  for (const r of (tssRows as any[])) tssMap[r.schedule_id] = r.attendance_status
+
+  return (schedRows ?? []).map((r: any) => ({
+    session_id:        r.id,
+    scheduled_at:      r.scheduled_at,
+    instructor_name:   instrMap[r.id] ? (instrNameMap[instrMap[r.id]] ?? null) : null,
+    branch_name:       (r.branches as any)?.name ?? '',
+    status:            r.status,
+    attendance_status: (tssMap[r.id] ?? null) as 'present' | 'absent' | null,
+  }))
+}
+
+// ── getLeadTrialHistory ────────────────────────────────────────────────────────
+// Returns trial sessions booked for a specific lead.
+
+export async function getLeadTrialHistory(leadId: string): Promise<Array<{
+  session_id:        string
+  scheduled_at:      string
+  instructor_name:   string | null
+  branch_name:       string
+  status:            string
+  attendance_status: 'present' | 'absent' | null
+}>> {
+  const db = createServiceClient()
+
+  const { data: tssRows } = await db
+    .from('trial_session_students')
+    .select('schedule_id, attendance_status')
+    .eq('lead_id', leadId)
+
+  if (!tssRows || tssRows.length === 0) return []
+  const scheduleIds = (tssRows as any[]).map((r) => r.schedule_id as string)
+
+  const [{ data: schedRows }, { data: siRows }] = await Promise.all([
+    db.from('schedules')
+      .select('id, scheduled_at, status, branches!schedules_branch_id_fkey(name)')
+      .in('id', scheduleIds)
+      .eq('type', 'trial')
+      .order('scheduled_at', { ascending: false }),
+    db.from('session_instructors')
+      .select('session_id, instructor_id')
+      .in('session_id', scheduleIds),
+  ])
+
+  const instrMap: Record<string, string> = {}
+  for (const r of (siRows ?? []) as any[]) instrMap[r.session_id] = r.instructor_id
+
+  const uniqueInstrIds = [...new Set(Object.values(instrMap))]
+  const instrNameMap: Record<string, string | null> = {}
+  if (uniqueInstrIds.length > 0) {
+    const { data: instrRows } = await db
+      .from('instructors')
+      .select('id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
+      .in('id', uniqueInstrIds)
+    for (const r of (instrRows ?? []) as any[]) {
+      const prof = (r as any).users?.profiles
+      instrNameMap[(r as any).id] = prof ? [prof.first_name, prof.last_name].filter(Boolean).join(' ') || null : null
+    }
+  }
+
+  const tssMap: Record<string, string | null> = {}
+  for (const r of (tssRows as any[])) tssMap[r.schedule_id] = r.attendance_status
+
+  return (schedRows ?? []).map((r: any) => ({
+    session_id:        r.id,
+    scheduled_at:      r.scheduled_at,
+    instructor_name:   instrMap[r.id] ? (instrNameMap[instrMap[r.id]] ?? null) : null,
+    branch_name:       (r.branches as any)?.name ?? '',
+    status:            r.status,
+    attendance_status: (tssMap[r.id] ?? null) as 'present' | 'absent' | null,
+  }))
+}
+
+// ── getTrialConversionAnalytics ────────────────────────────────────────────────
+// Returns trial-to-enrollment funnel metrics for the current calendar month.
+
+export async function getTrialConversionAnalytics(branchIds?: string[]): Promise<{
+  trials_this_month:    number
+  attended_trials:      number
+  converted_students:   number
+  conversion_rate:      number
+  top_trial_instructor: string | null
+}> {
+  const db         = createServiceClient()
+  const now        = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59).toISOString()
+
+  let q = db
+    .from('schedules')
+    .select('id')
+    .eq('type', 'trial')
+    .is('group_course_id', null)
+    .gte('scheduled_at', monthStart)
+    .lte('scheduled_at', monthEnd)
+
+  if (branchIds && branchIds.length > 0) {
+    q = (q as any).in('branch_id', branchIds)
+  }
+
+  const { data: trialRows } = await q
+  const sessionIds = (trialRows ?? []).map((r: any) => r.id as string)
+
+  if (sessionIds.length === 0) {
+    return { trials_this_month: 0, attended_trials: 0, converted_students: 0, conversion_rate: 0, top_trial_instructor: null }
+  }
+
+  const [{ data: attendedRows }, { data: siRows }] = await Promise.all([
+    db.from('trial_session_students')
+      .select('lead_id')
+      .in('schedule_id', sessionIds)
+      .eq('attendance_status', 'present'),
+    db.from('session_instructors')
+      .select('session_id, instructor_id')
+      .in('session_id', sessionIds),
+  ])
+
+  const attendedCount   = (attendedRows ?? []).length
+  const attendedLeadIds = (attendedRows ?? []).map((r: any) => r.lead_id as string).filter(Boolean)
+
+  let convertedCount = 0
+  if (attendedLeadIds.length > 0) {
+    const { data: convRows } = await db
+      .from('leads')
+      .select('id')
+      .in('id', attendedLeadIds)
+      .eq('status', 'CONVERTED')
+    convertedCount = (convRows ?? []).length
+  }
+
+  const conversionRate = attendedCount > 0 ? Math.round((convertedCount / attendedCount) * 100) : 0
+
+  // Top instructor by session count
+  const instrCounts: Record<string, number> = {}
+  for (const r of (siRows ?? []) as any[]) {
+    instrCounts[r.instructor_id] = (instrCounts[r.instructor_id] ?? 0) + 1
+  }
+
+  let topInstructorId: string | null = null
+  let maxCount = 0
+  for (const [id, count] of Object.entries(instrCounts)) {
+    if (count > maxCount) { maxCount = count; topInstructorId = id }
+  }
+
+  const topInstructorName = topInstructorId ? await resolveInstructorName(topInstructorId, db) : null
+
+  return {
+    trials_this_month:    sessionIds.length,
+    attended_trials:      attendedCount,
+    converted_students:   convertedCount,
+    conversion_rate:      conversionRate,
+    top_trial_instructor: topInstructorName,
+  }
+}
+
 // ── getSessionsForMakeupReplacement ───────────────────────────────────────────
 // Returns past sessions where the student was absent (for REPLACE_MISSED mode).
 

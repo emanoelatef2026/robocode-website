@@ -18,12 +18,18 @@ export default async function InstructorCalendarPage({ searchParams }: Props) {
   const db = createServiceClient()
   const sp = await searchParams
 
-  const now   = new Date()
-  const year  = Number(sp.year  ?? now.getFullYear())
-  const month = Number(sp.month ?? now.getMonth() + 1)
+  const now    = new Date()
+  const year   = Number(sp.year  ?? now.getFullYear())
+  const month  = Number(sp.month ?? now.getMonth() + 1)
+  const filter = (sp.filter === 'primary' || sp.filter === 'trial' || sp.filter === 'makeup') ? sp.filter : 'all'
 
   const monthStart = new Date(year, month - 1, 1)
   const monthEnd   = new Date(year, month, 0, 23, 59, 59)
+
+  const showPrimary = filter === 'all' || filter === 'primary'
+  const showTrial   = filter === 'all' || filter === 'trial'
+  const showMakeup  = filter === 'all' || filter === 'makeup'
+  const specialType = filter === 'trial' ? 'trial' : filter === 'makeup' ? 'makeup' : undefined
 
   // Primary sessions via group_courses
   const { data: gcIds } = await db
@@ -34,7 +40,7 @@ export default async function InstructorCalendarPage({ searchParams }: Props) {
   const myGcIds = (gcIds ?? []).map((r: any) => r.id as string)
 
   const [primaryRes, specialSessions] = await Promise.all([
-    myGcIds.length > 0
+    showPrimary && myGcIds.length > 0
       ? db.from('schedules')
           .select(
             `id, type, scheduled_at, status,
@@ -48,11 +54,14 @@ export default async function InstructorCalendarPage({ searchParams }: Props) {
           .not('status', 'in', '("cancelled","cancelled_with_makeup")')
           .order('scheduled_at')
       : Promise.resolve({ data: [] }),
-    listSpecialSessions({
-      instructorId: instructor.id,
-      fromDate:     monthStart.toISOString(),
-      toDate:       monthEnd.toISOString(),
-    }),
+    (showTrial || showMakeup)
+      ? listSpecialSessions({
+          instructorId: instructor.id,
+          fromDate:     monthStart.toISOString(),
+          toDate:       monthEnd.toISOString(),
+          type:         specialType,
+        })
+      : Promise.resolve([]),
   ])
 
   type CalEvent = { id: string; label: string; color: string; href: string; time: string }
@@ -90,25 +99,42 @@ export default async function InstructorCalendarPage({ searchParams }: Props) {
   const prevMonth = month === 1 ? { year: year - 1, month: 12 } : { year, month: month - 1 }
   const nextMonth = month === 12 ? { year: year + 1, month: 1 } : { year, month: month + 1 }
   const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const filterBase = `?year=${year}&month=${month}`
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Link href={`?year=${prevMonth.year}&month=${prevMonth.month}`}
+        <Link href={`?year=${prevMonth.year}&month=${prevMonth.month}&filter=${filter}`}
           className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] text-[#64748B] hover:bg-[#F8FAFC]">
           ← Prev
         </Link>
         <h1 className="text-[16px] font-bold text-[#0B1F3A]">{monthLabel}</h1>
-        <Link href={`?year=${nextMonth.year}&month=${nextMonth.month}`}
+        <Link href={`?year=${nextMonth.year}&month=${nextMonth.month}&filter=${filter}`}
           className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] text-[#64748B] hover:bg-[#F8FAFC]">
           Next →
         </Link>
       </div>
 
-      <div className="flex flex-wrap gap-3 text-[11px] font-semibold">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-blue-400 inline-block" /> 🔵 Primary</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-purple-400 inline-block" /> 🟣 Trial</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full bg-orange-400 inline-block" /> 🟠 Makeup</span>
+      {/* Type filters */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { key: 'all',     label: 'All'       },
+          { key: 'primary', label: '🔵 Primary' },
+          { key: 'trial',   label: '🟣 Trial'   },
+          { key: 'makeup',  label: '🟠 Makeup'  },
+        ].map(f => (
+          <Link
+            key={f.key}
+            href={`${filterBase}&filter=${f.key}`}
+            className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+              filter === f.key
+                ? 'border-[#0B1F3A] bg-[#0B1F3A] text-white'
+                : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
+            }`}
+          >
+            {f.label}
+          </Link>
+        ))}
       </div>
 
       <div className="ds-card overflow-hidden">

@@ -165,6 +165,36 @@ export async function seedMakeupSessionAssignedNotification(
     )
 }
 
+// Seeds a 30-minute reminder for a trial or makeup special session.
+// Idempotent — dedup_key prevents duplicates. Called from instructor layout on page load.
+export async function seedSpecialSessionReminderNotification(
+  recipientId: string,
+  sessionId:   string,
+  sessionType: 'trial' | 'makeup',
+  scheduledAt: string,
+): Promise<void> {
+  const minutesUntil = (new Date(scheduledAt).getTime() - Date.now()) / 60_000
+  if (minutesUntil < 0 || minutesUntil > 30) return
+
+  const db       = createServiceClient()
+  const label    = sessionType === 'trial' ? 'Trial' : 'Makeup'
+  const dedupKey = `special_session_reminder:${sessionId}`
+
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'TRIAL_SESSION_REMINDER',
+        title:        `${label} session starting soon`,
+        body:         `Starts in ${Math.round(minutesUntil)} minutes`,
+        href:         `/portal/instructor/special-sessions/${sessionId}`,
+        dedup_key:    dedupKey,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
 // Creates a HOMEWORK_NEEDS_GRADING notification (one per pending batch check).
 export async function seedHomeworkNotification(
   recipientId: string,

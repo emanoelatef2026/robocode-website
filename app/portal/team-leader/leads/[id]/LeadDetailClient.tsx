@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useEffect } from 'react'
 import { useRouter }                            from 'next/navigation'
+import Link                                     from 'next/link'
 import {
   updateLeadStatus,
   updateFollowUp,
@@ -11,6 +12,7 @@ import {
   convertLeadToStudent,
   assignLeadToGroup,
 } from '@/modules/leads/actions'
+import { bookTrialFromLead } from '@/modules/special-sessions/actions'
 import { LEAD_STATUSES, LEAD_SOURCES } from '@/modules/leads/schemas'
 import { AGING_THRESHOLDS }             from '@/modules/leads/types'
 import SubmitButton from '@/components/admin/SubmitButton'
@@ -25,7 +27,9 @@ interface Props {
   branches:      { id: string; name: string }[]
   groups:        { id: string; name: string; type: string }[]
   teamMembers:   BranchTeamMember[]
+  instructors:   { id: string; name: string }[]
   currentUserId: string
+  initialTab?:   string
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -67,6 +71,7 @@ const SOURCE_LABELS: Record<string, string> = {
 
 const TABS = [
   { id: 'status',   label: 'Status' },
+  { id: 'trial',    label: '🟣 Trial' },
   { id: 'followup', label: 'Follow-Up' },
   { id: 'reassign', label: 'Reassign' },
   { id: 'convert',  label: 'Convert' },
@@ -81,10 +86,11 @@ const labelCls = 'mb-1 block text-sm font-medium text-[#0B1F3A]'
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function LeadDetailClient({
-  lead, timeline, branches, groups, teamMembers, currentUserId,
+  lead, timeline, branches, groups, teamMembers, instructors, currentUserId, initialTab,
 }: Props) {
-  const router     = useRouter()
-  const [tab, setTab] = useState<TabId>('status')
+  const router       = useRouter()
+  const resolvedTab  = (TABS.some(t => t.id === initialTab) ? initialTab : 'status') as TabId
+  const [tab, setTab] = useState<TabId>(resolvedTab)
 
   const isConverted = lead.status === 'CONVERTED'
   const isLost      = lead.status === 'LOST'
@@ -104,6 +110,7 @@ export default function LeadDetailClient({
   const [reassignState, reassignAction] = useActionState<ActionResult<void> | null, FormData>(reassignLead, null)
   const [convertState,  convertAction]  = useActionState<ActionResult<{ student_id: string }> | null, FormData>(convertLeadToStudent, null)
   const [assignState,   assignAction]   = useActionState<ActionResult<void> | null, FormData>(assignLeadToGroup, null)
+  const [trialState,    trialAction]    = useActionState<ActionResult<{ sessionId: string }> | null, FormData>(bookTrialFromLead, null)
 
   useEffect(() => { if (convertState?.success)  { router.refresh(); setTab('assign') } }, [convertState, router])
   useEffect(() => { if (assignState?.success)   router.refresh() }, [assignState, router])
@@ -111,6 +118,11 @@ export default function LeadDetailClient({
   useEffect(() => { if (statusState?.success)   router.refresh() }, [statusState, router])
   useEffect(() => { if (followUpState?.success) router.refresh() }, [followUpState, router])
   useEffect(() => { if (reopenState?.success)   router.refresh() }, [reopenState, router])
+  useEffect(() => {
+    if (trialState?.success && trialState.data) {
+      router.push(`/portal/team-leader/special-sessions/${trialState.data.sessionId}`)
+    }
+  }, [trialState, router])
 
   return (
     <div className="grid gap-6 lg:grid-cols-3">
@@ -261,6 +273,97 @@ export default function LeadDetailClient({
                   </div>
                   <SubmitButton label="Update Status" pendingLabel="Updating…" />
                 </form>
+              </div>
+            )}
+
+            {/* TRIAL */}
+            {tab === 'trial' && (
+              <div>
+                {lead.status === 'TRIAL_BOOKED' || lead.status === 'TRIAL_ATTENDED' ? (
+                  <div className="space-y-3">
+                    <div className={`rounded-lg px-4 py-3 text-sm font-medium ${
+                      lead.status === 'TRIAL_ATTENDED'
+                        ? 'bg-cyan-50 text-cyan-800'
+                        : 'bg-indigo-50 text-indigo-800'
+                    }`}>
+                      {lead.status === 'TRIAL_BOOKED'
+                        ? '📅 Trial session already booked for this lead.'
+                        : '✅ This lead attended a trial session.'}
+                    </div>
+                    <Link
+                      href="/portal/team-leader/special-sessions"
+                      className="inline-flex items-center gap-1 text-sm font-semibold text-[#A855F7] hover:underline"
+                    >
+                      View Special Sessions →
+                    </Link>
+                  </div>
+                ) : isConverted ? (
+                  <div className="rounded-lg bg-[#E7F8EE] px-4 py-3 text-sm text-[#15803D]">
+                    This lead has been converted to a student.
+                  </div>
+                ) : instructors.length === 0 ? (
+                  <div className="rounded-lg bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+                    No active instructors found for this branch. Add an instructor first.
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-sm text-[#64748B]">
+                      Book a trial session for <span className="font-semibold text-[#0B1F3A]">{lead.child_name}</span>. A session will be created and this lead will be automatically added to it.
+                    </p>
+                    <Alert state={trialState} success="Trial session booked! Redirecting…" />
+                    <form action={trialAction} className="space-y-4">
+                      <input type="hidden" name="lead_id" value={lead.id} />
+                      <div>
+                        <label className={labelCls}>Instructor <span className="text-[#EF4444]">*</span></label>
+                        <select name="instructor_id" required className={inputCls}>
+                          <option value="">Select instructor…</option>
+                          {instructors.map(i => (
+                            <option key={i.id} value={i.id}>{i.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={labelCls}>Date &amp; Time <span className="text-[#EF4444]">*</span></label>
+                        <input
+                          type="datetime-local"
+                          name="scheduled_at"
+                          required
+                          className={inputCls}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Duration (minutes)</label>
+                        <input
+                          type="number"
+                          name="duration_minutes"
+                          defaultValue={60}
+                          min={15}
+                          max={480}
+                          className={inputCls}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Course (optional)</label>
+                        <input
+                          type="text"
+                          name="course_name"
+                          placeholder="e.g. Python for Kids"
+                          className={inputCls}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelCls}>Notes (optional)</label>
+                        <textarea
+                          name="notes"
+                          rows={2}
+                          className={`${inputCls} resize-none`}
+                          placeholder="Any special notes…"
+                        />
+                      </div>
+                      <SubmitButton label="Book Trial Session" pendingLabel="Booking…" />
+                    </form>
+                  </div>
+                )}
               </div>
             )}
 

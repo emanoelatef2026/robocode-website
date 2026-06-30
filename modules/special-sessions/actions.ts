@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
-import { getInstructorByUserId } from '@/modules/instructor-portal/queries'
 import {
   seedTrialSessionAssignedNotification,
   seedMakeupSessionAssignedNotification,
@@ -13,7 +12,7 @@ import type { ActionResult } from '@/types/app'
 
 // ── Permission helpers ─────────────────────────────────────────────────────────
 // Trial sessions: TL + Super Admin only (manage_schedule)
-// Makeup sessions: Instructor + TL + Super Admin (manage_attendance)
+// Makeup sessions: TL + Super Admin only (manage_schedule)
 
 // ── Create Trial Session ───────────────────────────────────────────────────────
 
@@ -120,16 +119,13 @@ export async function createMakeupSession(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<{ sessionId: string }>> {
-  const user = await requirePermission('manage_attendance')
+  // Makeup sessions are TL / Super Admin only
+  const user = await requirePermission('manage_schedule')
   const db   = createServiceClient()
-
-  // Instructor can only create makeup sessions for themselves
-  const instructor = await getInstructorByUserId(user.id)
-  const isInstructor = !!instructor
 
   const raw = {
     branch_id:        formData.get('branch_id'),
-    instructor_id:    formData.get('instructor_id') ?? (instructor?.id ?? ''),
+    instructor_id:    formData.get('instructor_id'),
     scheduled_at:     formData.get('scheduled_at'),
     duration_minutes: formData.get('duration_minutes') ?? 60,
     notes:            formData.get('notes') || undefined,
@@ -141,11 +137,6 @@ export async function createMakeupSession(
   }
 
   const d = parsed.data
-
-  // Instructor can only assign to themselves
-  if (isInstructor && instructor && d.instructor_id !== instructor.id) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructors can only create makeup sessions for themselves.' } }
-  }
 
   const { data: schedule, error: schedErr } = await db
     .from('schedules')
@@ -352,6 +343,21 @@ export async function addMakeupStudent(
 
   if (d.mode === 'REPLACE_MISSED' && !d.replaced_session_id) {
     return { success: false, error: { code: 'VALIDATION', message: 'A missed session must be selected for REPLACE_MISSED mode.' } }
+  }
+
+  // Block duplicate replacement: one absence can only be replaced once
+  if (d.mode === 'REPLACE_MISSED' && d.replaced_session_id) {
+    const { data: existing } = await db
+      .from('makeup_session_students')
+      .select('id')
+      .eq('student_id', d.student_id)
+      .eq('replaced_session_id', d.replaced_session_id)
+      .eq('mode', 'REPLACE_MISSED')
+      .maybeSingle()
+
+    if (existing) {
+      return { success: false, error: { code: 'DUPLICATE', message: 'This absence has already been replaced by a makeup session.' } }
+    }
   }
 
   const { data: inserted, error } = await db
@@ -654,6 +660,158 @@ export async function endMakeupSession(sessionId: string): Promise<ActionResult<
   return { success: true, data: undefined }
 }
 
+// ── Book Trial Session From Lead (create session + add lead in one step) ─────
+
+const bookTrialFromLeadSchema = z.object({
+  lead_id:          z.string().uuid(),
+  instructor_id:    z.string().uuid(),
+  scheduled_at:     z.string().min(1),
+  duration_minutes: z.coerce.number().int().min(15).max(480).default(60),
+  course_name:      z.string().max(200).optional().or(z.literal('')),
+  notes:            z.string().max(1000).optional().or(z.literal('')),
+})
+
+export async function bookTrialFromLead(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<{ sessionId: string }>> {
+  const user = await requirePermission('manage_schedule')
+  const db   = createServiceClient()
+
+  const parsed = bookTrialFromLeadSchema.safeParse({
+    lead_id:          formData.get('lead_id'),
+    instructor_id:    formData.get('instructor_id'),
+    scheduled_at:     formData.get('scheduled_at'),
+    duration_minutes: formData.get('duration_minutes') ?? 60,
+    course_name:      formData.get('course_name') || undefined,
+    notes:            formData.get('notes') || undefined,
+  })
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+  }
+
+  const d = parsed.data
+
+  const { data: lead } = await db
+    .from('leads')
+    .select('id, child_name, phone, whatsapp, branch_id')
+    .eq('id', d.lead_id)
+    .maybeSingle()
+
+  if (!lead) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Lead not found.' } }
+  }
+
+  const branchId = (lead as any).branch_id as string
+
+  const notesValue = [
+    d.course_name ? `Course: ${d.course_name}` : null,
+    d.notes || null,
+  ].filter(Boolean).join('\n') || null
+
+  const { data: schedule, error: schedErr } = await db
+    .from('schedules')
+    .insert({
+      group_course_id:  null,
+      branch_id:        branchId,
+      scheduled_at:     new Date(d.scheduled_at).toISOString(),
+      duration_minutes: d.duration_minutes,
+      type:             'trial',
+      status:           'scheduled',
+      notes:            notesValue,
+      created_by:       user.id,
+    })
+    .select('id')
+    .single()
+
+  if (schedErr || !schedule) {
+    return { success: false, error: { code: 'DB_ERROR', message: schedErr?.message ?? 'Failed to create trial session.' } }
+  }
+
+  const sessionId = (schedule as any).id as string
+
+  await db.from('session_instructors').upsert({
+    session_id:    sessionId,
+    instructor_id: d.instructor_id,
+    submitted_at:  null,
+  }, { onConflict: 'session_id,instructor_id', ignoreDuplicates: false })
+
+  await db.from('trial_session_students').insert({
+    schedule_id:  sessionId,
+    lead_id:      d.lead_id,
+    student_name: (lead as any).child_name,
+    parent_phone: (lead as any).phone ?? (lead as any).whatsapp ?? null,
+  })
+
+  await db.from('leads').update({ status: 'TRIAL_BOOKED' }).eq('id', d.lead_id)
+
+  const { data: instrUser } = await db
+    .from('instructors')
+    .select('user_id')
+    .eq('id', d.instructor_id)
+    .maybeSingle()
+
+  if (instrUser) {
+    void seedTrialSessionAssignedNotification(
+      (instrUser as any).user_id as string,
+      sessionId,
+      new Date(d.scheduled_at).toISOString()
+    ).catch(() => { /* non-critical */ })
+  }
+
+  revalidatePath('/portal/team-leader/leads')
+  revalidatePath('/portal/team-leader/special-sessions')
+  revalidatePath('/portal/instructor/special-sessions')
+  return { success: true, data: { sessionId } }
+}
+
+// ── Update Trial Session Student data ────────────────────────────────────────
+// Instructor or TL can fix name / phone / notes on any trial_session_students row.
+
+const updateTrialStudentSchema = z.object({
+  student_id:    z.string().uuid(),
+  student_name:  z.string().min(1, 'Name is required'),
+  parent_phone:  z.string().max(30).optional().or(z.literal('')),
+  student_phone: z.string().max(30).optional().or(z.literal('')),
+  notes:         z.string().max(500).optional().or(z.literal('')),
+})
+
+export async function updateTrialStudent(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<void>> {
+  await requirePermission('manage_attendance')
+  const db = createServiceClient()
+
+  const parsed = updateTrialStudentSchema.safeParse({
+    student_id:    formData.get('student_id'),
+    student_name:  formData.get('student_name'),
+    parent_phone:  formData.get('parent_phone')  || undefined,
+    student_phone: formData.get('student_phone') || undefined,
+    notes:         formData.get('notes')         || undefined,
+  })
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+  }
+
+  const d = parsed.data
+  const { error } = await db
+    .from('trial_session_students')
+    .update({
+      student_name:  d.student_name,
+      parent_phone:  d.parent_phone  || null,
+      student_phone: d.student_phone || null,
+      notes:         d.notes         || null,
+    })
+    .eq('id', d.student_id)
+
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  revalidatePath('/portal/team-leader/special-sessions')
+  revalidatePath('/portal/instructor/special-sessions')
+  return { success: true, data: undefined }
+}
+
 // ── Postpone Special Session ──────────────────────────────────────────────────
 
 const postponeSpecialSchema = z.object({
@@ -716,4 +874,117 @@ export async function postponeSpecialSession(
   revalidatePath('/portal/instructor/special-sessions')
   revalidatePath('/portal/team-leader/special-sessions')
   return { success: true, data: undefined }
+}
+
+// ── Bulk Book Trial Session From Leads ────────────────────────────────────────
+// Creates one trial session and attaches multiple leads in a single operation.
+
+const bulkBookTrialSchema = z.object({
+  instructor_id:    z.string().uuid(),
+  scheduled_at:     z.string().min(1),
+  duration_minutes: z.coerce.number().int().min(15).max(480).default(60),
+  branch_id:        z.string().uuid(),
+  notes:            z.string().max(1000).optional().or(z.literal('')),
+  lead_ids:         z.string().min(1),
+})
+
+export async function bulkBookTrialFromLeads(
+  _prev: unknown,
+  formData: FormData
+): Promise<ActionResult<{ sessionId: string; attachedCount: number }>> {
+  const user = await requirePermission('manage_schedule')
+  const db   = createServiceClient()
+
+  let rawLeadIds: unknown
+  try {
+    rawLeadIds = JSON.parse(formData.get('lead_ids') as string ?? '[]')
+  } catch {
+    rawLeadIds = []
+  }
+  const leadIds = Array.isArray(rawLeadIds) ? rawLeadIds.filter((x): x is string => typeof x === 'string') : []
+
+  if (leadIds.length === 0) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Select at least one lead.' } }
+  }
+
+  const parsed = bulkBookTrialSchema.safeParse({
+    instructor_id:    formData.get('instructor_id'),
+    scheduled_at:     formData.get('scheduled_at'),
+    duration_minutes: formData.get('duration_minutes') ?? 60,
+    branch_id:        formData.get('branch_id'),
+    notes:            formData.get('notes') || undefined,
+    lead_ids:         formData.get('lead_ids'),
+  })
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+  }
+
+  const d = parsed.data
+
+  const { data: schedule, error: schedErr } = await db
+    .from('schedules')
+    .insert({
+      group_course_id:  null,
+      branch_id:        d.branch_id,
+      scheduled_at:     new Date(d.scheduled_at).toISOString(),
+      duration_minutes: d.duration_minutes,
+      type:             'trial',
+      status:           'scheduled',
+      notes:            d.notes || null,
+      created_by:       user.id,
+    })
+    .select('id')
+    .single()
+
+  if (schedErr || !schedule) {
+    return { success: false, error: { code: 'DB_ERROR', message: schedErr?.message ?? 'Failed to create trial session.' } }
+  }
+
+  const sessionId = (schedule as any).id as string
+
+  await db.from('session_instructors').upsert({
+    session_id:    sessionId,
+    instructor_id: d.instructor_id,
+    submitted_at:  null,
+  }, { onConflict: 'session_id,instructor_id', ignoreDuplicates: false })
+
+  // Fetch all selected leads and attach them
+  const { data: leads } = await db
+    .from('leads')
+    .select('id, child_name, phone, whatsapp')
+    .in('id', leadIds)
+
+  let attachedCount = 0
+  for (const lead of (leads ?? []) as any[]) {
+    const { error } = await db.from('trial_session_students').insert({
+      schedule_id:  sessionId,
+      lead_id:      lead.id,
+      student_name: lead.child_name,
+      parent_phone: lead.phone ?? lead.whatsapp ?? null,
+    })
+    if (!error) {
+      attachedCount++
+      await db.from('leads').update({ status: 'TRIAL_BOOKED' }).eq('id', lead.id)
+    }
+  }
+
+  // Notify instructor
+  const { data: instrUser } = await db
+    .from('instructors')
+    .select('user_id')
+    .eq('id', d.instructor_id)
+    .maybeSingle()
+
+  if (instrUser) {
+    void seedTrialSessionAssignedNotification(
+      (instrUser as any).user_id as string,
+      sessionId,
+      new Date(d.scheduled_at).toISOString()
+    ).catch(() => { /* non-critical */ })
+  }
+
+  revalidatePath('/portal/team-leader/leads')
+  revalidatePath('/portal/team-leader/special-sessions')
+  revalidatePath('/portal/instructor/special-sessions')
+  return { success: true, data: { sessionId, attachedCount } }
 }

@@ -6,12 +6,14 @@ import LeadDetailClient               from './LeadDetailClient'
 import Link                           from 'next/link'
 
 interface Props {
-  params: Promise<{ id: string }>
+  params:       Promise<{ id: string }>
+  searchParams: Promise<{ tab?: string }>
 }
 
-export default async function LeadDetailPage({ params }: Props) {
-  const user    = await requirePortalRole('team_leader')
-  const { id }  = await params
+export default async function LeadDetailPage({ params, searchParams }: Props) {
+  const user       = await requirePortalRole('team_leader')
+  const { id }     = await params
+  const { tab }    = await searchParams
 
   const [lead, timeline, teamMembers] = await Promise.all([
     getLead(id),
@@ -27,10 +29,28 @@ export default async function LeadDetailPage({ params }: Props) {
     .in('id', user.branchIds).order('name')
 
   const branchId = lead.branch_id ?? user.branchIds[0] ?? null
-  const { data: groups } = branchId
-    ? await db.from('groups').select('id, name, type')
-        .eq('branch_id', branchId).eq('status', 'active').is('deleted_at', null).order('name')
-    : { data: [] }
+  const [{ data: groups }, { data: instructorRows }] = await Promise.all([
+    branchId
+      ? db.from('groups').select('id, name, type')
+          .eq('branch_id', branchId).eq('status', 'active').is('deleted_at', null).order('name')
+      : Promise.resolve({ data: [] as { id: string; name: string; type: string }[] }),
+    branchId
+      ? db.from('instructors')
+          .select('id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
+          .eq('branch_id', branchId)
+          .eq('status', 'active')
+          .is('deleted_at', null)
+          .order('created_at')
+      : Promise.resolve({ data: [] as any[] }),
+  ])
+
+  const instructors = (instructorRows ?? []).map((i: any) => {
+    const prof = i.users?.profiles
+    return {
+      id:   i.id as string,
+      name: prof ? [prof.first_name, prof.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown',
+    }
+  })
 
   return (
     <div>
@@ -46,7 +66,9 @@ export default async function LeadDetailPage({ params }: Props) {
         branches={branches ?? []}
         groups={(groups ?? []) as { id: string; name: string; type: string }[]}
         teamMembers={teamMembers}
+        instructors={instructors}
         currentUserId={user.id}
+        initialTab={tab}
       />
     </div>
   )

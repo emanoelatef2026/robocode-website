@@ -19,16 +19,10 @@ export default async function InstructorSpecialSessionsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-[18px] font-bold text-[#0B1F3A]">Special Sessions</h1>
-        <Link
-          href="/portal/instructor/special-sessions/new-makeup"
-          className="rounded-lg bg-[#F59E0B] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#D97706]"
-        >
-          + New Makeup
-        </Link>
       </div>
 
       {sessions.length === 0 ? (
-        <EmptyState title="No special sessions yet" description="Create a makeup session to get started." />
+        <EmptyState title="No special sessions" description="Your team leader will assign trial or makeup sessions here." />
       ) : (
         <div className="overflow-hidden ds-card">
           <div className="border-b border-[#E2E8F0] px-4 py-2.5">

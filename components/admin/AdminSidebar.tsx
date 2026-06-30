@@ -91,8 +91,9 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Operations',
     items: [
-      { label: 'Attendance',  href: '/admin/attendance',     icon: I.attendance,   permission: 'manage_attendance' },
-      { label: 'Assignments', href: '/admin/assignments',    icon: I.assignments                                    },
+      { label: 'Attendance',       href: '/admin/attendance',        icon: I.attendance,   permission: 'manage_attendance' },
+      { label: 'Assignments',      href: '/admin/assignments',       icon: I.assignments                                    },
+      { label: 'Special Sessions', href: '/admin/special-sessions',  icon: I.schedules,    permission: 'manage_schedule'   },
     ],
   },
   {

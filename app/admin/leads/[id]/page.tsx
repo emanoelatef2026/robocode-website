@@ -3,6 +3,7 @@ import { requireAuth }              from '@/modules/rbac/guards'
 import { notFound }                 from 'next/navigation'
 import Link                         from 'next/link'
 import type { LeadStatus }          from '@/modules/leads/types'
+import { getLeadTrialHistory }      from '@/modules/special-sessions/queries'
 
 const STATUS_META: Record<LeadStatus, { label: string; color: string }> = {
   NEW:           { label: 'New',            color: 'bg-[#F1F5F9] text-[#334155]' },
@@ -36,9 +37,10 @@ export default async function AdminLeadDetailPage({ params }: Props) {
   await requireAuth()
   const { id } = await params
 
-  const [lead, timeline] = await Promise.all([
+  const [lead, timeline, trialHistory] = await Promise.all([
     getLead(id),
     getLeadTimeline(id),
+    getLeadTrialHistory(id),
   ])
 
   if (!lead) notFound()
@@ -155,6 +157,39 @@ export default async function AdminLeadDetailPage({ params }: Props) {
           </div>
         )}
       </div>
+
+      {/* ── Trial Sessions ─────────────────────────────────────────────── */}
+      {trialHistory.length > 0 && (
+        <div className="ds-card p-5">
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+            Trial Sessions ({trialHistory.length})
+          </p>
+          <div className="space-y-2">
+            {trialHistory.map(t => (
+              <div key={t.session_id} className="flex items-center justify-between gap-3 rounded-lg border border-[#E2E8F0] px-3 py-2.5">
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold text-[#0B1F3A]">
+                    {new Date(t.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {' · '}
+                    {new Date(t.scheduled_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                  <p className="text-[11px] text-[#64748B]">
+                    {t.instructor_name ?? 'Unassigned'} · {t.branch_name}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {t.attendance_status === 'present' ? (
+                    <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">Present</span>
+                  ) : t.attendance_status === 'absent' ? (
+                    <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#DC2626]">Absent</span>
+                  ) : null}
+                  <span className="capitalize text-[11px] text-[#94A3B8]">{t.status}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Timeline ───────────────────────────────────────────────────── */}
       <div className="ds-card p-5">

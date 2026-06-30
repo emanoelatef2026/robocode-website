@@ -6,21 +6,22 @@ import { createTrialSession, createMakeupSession } from '@/modules/special-sessi
 import type { ActionResult } from '@/types/app'
 
 interface Branch      { id: string; name: string }
-interface InstructorOpt { id: string; branch_id: string; name: string }
+interface InstructorOpt { id: string; branch_ids: string[]; name: string }
 
 interface Props {
   branches:     Branch[]
   instructors:  InstructorOpt[]
+  defaultType?: 'trial' | 'makeup'
 }
 
 const INITIAL: ActionResult<{ sessionId: string }> = { success: false, error: { code: '', message: '' } }
 
-export default function NewSpecialSessionForm({ branches, instructors }: Props) {
+export default function NewSpecialSessionForm({ branches, instructors, defaultType = 'trial' }: Props) {
   const router = useRouter()
-  const [sessionType, setSessionType] = useState<'trial' | 'makeup'>('trial')
+  const [sessionType, setSessionType] = useState<'trial' | 'makeup'>(defaultType)
   const [selectedBranch, setSelectedBranch] = useState(branches[0]?.id ?? '')
 
-  const filteredInstructors = instructors.filter(i => i.branch_id === selectedBranch)
+  const filteredInstructors = instructors.filter(i => i.branch_ids.includes(selectedBranch))
 
   const action = sessionType === 'trial' ? createTrialSession : createMakeupSession
 
@@ -75,15 +76,21 @@ export default function NewSpecialSessionForm({ branches, instructors }: Props) 
         {/* Branch */}
         <div>
           <label className="block text-[12px] font-semibold text-[#0B1F3A] mb-1">Branch</label>
-          <select
-            name="branch_id"
-            value={selectedBranch}
-            onChange={e => setSelectedBranch(e.target.value)}
-            required
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#A855F7]"
-          >
-            {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
+          {branches.length === 0 ? (
+            <p className="rounded-lg bg-amber-50 px-3 py-2 text-[13px] text-amber-700">
+              No branches assigned to your account. Contact a super admin.
+            </p>
+          ) : (
+            <select
+              name="branch_id"
+              value={selectedBranch}
+              onChange={e => setSelectedBranch(e.target.value)}
+              required
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#A855F7]"
+            >
+              {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+          )}
         </div>
 
         {/* Instructor */}
@@ -92,7 +99,8 @@ export default function NewSpecialSessionForm({ branches, instructors }: Props) 
           <select
             name="instructor_id"
             required
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#A855F7]"
+            disabled={filteredInstructors.length === 0}
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#A855F7] disabled:bg-[#F8FAFC] disabled:text-[#94A3B8]"
           >
             {filteredInstructors.length === 0 ? (
               <option value="">No instructors in this branch</option>
@@ -151,7 +159,7 @@ export default function NewSpecialSessionForm({ branches, instructors }: Props) 
 
         <button
           type="submit"
-          disabled={pending || filteredInstructors.length === 0}
+          disabled={pending || filteredInstructors.length === 0 || branches.length === 0}
           className="w-full rounded-lg bg-[#A855F7] py-2.5 text-[14px] font-semibold text-white transition hover:bg-[#9333EA] disabled:opacity-60"
         >
           {pending ? 'Creating…' : `Create ${sessionType === 'trial' ? 'Trial' : 'Makeup'} Session`}

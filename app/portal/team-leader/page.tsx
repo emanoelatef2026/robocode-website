@@ -16,6 +16,7 @@ import StudentRiskBoard                 from './_sections/StudentRiskBoard'
 import ParentEscalation                 from './_sections/ParentEscalation'
 import AcademicQuality                  from './_sections/AcademicQuality'
 import InstructorPayrollWidget          from './_sections/InstructorPayrollWidget'
+import TrialConversionWidget            from './_sections/TrialConversionWidget'
 
 // ─── Page props ───────────────────────────────────────────────────────────────
 
@@ -132,6 +133,7 @@ function SectionNav() {
     { href: '#finance',            label: 'Finance'     },
     { href: '#student-risk',       label: 'Risk'        },
     { href: '#instructor-health',  label: 'Instructors' },
+    { href: '#trials',             label: 'Trials'      },
     { href: '#academic',           label: 'Academic'    },
     { href: '#parent-escalation',  label: 'Parents'     },
   ]
@@ -294,6 +296,13 @@ export default async function TLDashboardPage({ searchParams }: Props) {
           <div className="mt-4">
             <InstructorPayrollWidget branchIds={branchIds} />
           </div>
+        </Suspense>
+      </DashSection>
+
+      {/* ══ TRIALS ═══════════════════════════════════════════════════════ */}
+      <DashSection id="trials" label="Trial Conversion" icon="🟣" defaultOpen={false}>
+        <Suspense fallback={<SectionSkeleton />}>
+          <TrialConversionWidget branchIds={branchIds} />
         </Suspense>
       </DashSection>
 

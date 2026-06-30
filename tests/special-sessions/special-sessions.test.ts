@@ -38,6 +38,7 @@ import {
   endTrialSession,
   endMakeupSession,
   postponeSpecialSession,
+  bulkBookTrialFromLeads,
 } from '@/modules/special-sessions/actions'
 import { seedTrialSessionAssignedNotification, seedMakeupSessionAssignedNotification } from '@/modules/notifications/actions'
 
@@ -288,7 +289,7 @@ describe('Phase XL — Special Sessions System', () => {
     expect(requirePermission).toHaveBeenCalledWith('manage_schedule')
   })
 
-  it('TEST 9b — createMakeupSession calls requirePermission with manage_attendance', async () => {
+  it('TEST 9b — createMakeupSession calls requirePermission with manage_schedule (TL-only)', async () => {
     const { requirePermission } = await import('@/modules/rbac/guards')
 
     mockDb({
@@ -304,7 +305,7 @@ describe('Phase XL — Special Sessions System', () => {
       duration_minutes: '60',
     }))
 
-    expect(requirePermission).toHaveBeenCalledWith('manage_attendance')
+    expect(requirePermission).toHaveBeenCalledWith('manage_schedule')
   })
 
   // ─────────────────────────────────────────────────────────────────────────────
@@ -447,5 +448,147 @@ describe('Phase XL — Special Sessions System', () => {
 
     const calls = (db.from as ReturnType<typeof vi.fn>).mock.calls.map((c: any[]) => c[0])
     expect(calls).toContain('leads')
+  })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // XL.2 TEST A: bulkBookTrialFromLeads creates one session and attaches N leads
+  // ─────────────────────────────────────────────────────────────────────────────
+  it('XL.2 TEST A — bulkBookTrialFromLeads creates trial session and attaches multiple leads', async () => {
+    const LEAD_ID_2 = '00000000-0000-4000-8000-000000000007'
+
+    const db = mockDb({
+      schedules:              [{ data: { id: SESSION_ID }, error: null }],
+      session_instructors:    [{ data: null, error: null }],
+      instructors:            [{ data: { user_id: 'user-instr-001', users: { email: 'i@test.com' } }, error: null }],
+      leads:                  [
+        // .in() returns an array of all matching leads
+        { data: [
+            { id: LEAD_ID,   child_name: 'Ali Hassan',   phone: '01012345678', whatsapp: null },
+            { id: LEAD_ID_2, child_name: 'Sara Mohamed', phone: '01087654321', whatsapp: null },
+          ], error: null },
+        // Two lead .update() calls (one per lead)
+        { data: null, error: null },
+        { data: null, error: null },
+      ],
+      trial_session_students: [
+        { data: { id: 'tss-bulk-001' }, error: null },
+        { data: { id: 'tss-bulk-002' }, error: null },
+      ],
+    })
+
+    const result = await bulkBookTrialFromLeads(null, fd({
+      lead_ids:         JSON.stringify([LEAD_ID, LEAD_ID_2]),
+      branch_id:        BRANCH_ID,
+      instructor_id:    INSTR_ID,
+      scheduled_at:     '2026-07-20T09:00',
+      duration_minutes: '60',
+    }))
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.sessionId).toBe(SESSION_ID)
+      expect(result.data.attachedCount).toBeGreaterThanOrEqual(1)
+    }
+    // One schedules row created
+    expect(db.from).toHaveBeenCalledWith('schedules')
+    // Leads table accessed for status updates
+    expect(db.from).toHaveBeenCalledWith('leads')
+  })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // XL.2 TEST B: bulkBookTrialFromLeads validates required fields
+  // ─────────────────────────────────────────────────────────────────────────────
+  it('XL.2 TEST B — bulkBookTrialFromLeads returns VALIDATION error when lead_ids is empty', async () => {
+    mockDb({ schedules: [] })
+
+    const result = await bulkBookTrialFromLeads(null, fd({
+      lead_ids:      JSON.stringify([]),
+      branch_id:     BRANCH_ID,
+      instructor_id: INSTR_ID,
+      scheduled_at:  '2026-07-20T09:00',
+    }))
+
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error.code).toBe('VALIDATION')
+  })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // XL.2 TEST C: bulkBookTrialFromLeads calls manage_schedule permission
+  // ─────────────────────────────────────────────────────────────────────────────
+  it('XL.2 TEST C — bulkBookTrialFromLeads requires manage_schedule (TL only)', async () => {
+    const { requirePermission } = await import('@/modules/rbac/guards')
+
+    mockDb({
+      schedules:              [{ data: { id: SESSION_ID }, error: null }],
+      session_instructors:    [{ data: null, error: null }],
+      instructors:            [{ data: { user_id: 'user-instr-001', users: { email: 'i@test.com' } }, error: null }],
+      leads:                  [
+        { data: [{ id: LEAD_ID, child_name: 'Ali', phone: '010', whatsapp: null }], error: null },
+        { data: null, error: null },
+      ],
+      trial_session_students: [{ data: { id: 'tss-001' }, error: null }],
+    })
+
+    await bulkBookTrialFromLeads(null, fd({
+      lead_ids:      JSON.stringify([LEAD_ID]),
+      branch_id:     BRANCH_ID,
+      instructor_id: INSTR_ID,
+      scheduled_at:  '2026-07-20T09:00',
+    }))
+
+    expect(requirePermission).toHaveBeenCalledWith('manage_schedule')
+  })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // XL.2 TEST D: Instructor nav does NOT contain special-sessions route
+  // ─────────────────────────────────────────────────────────────────────────────
+  it('XL.2 TEST D — INSTRUCTOR_NAV does not contain special-sessions or makeup routes', async () => {
+    const { INSTRUCTOR_NAV } = await import('@/modules/instructor-portal/navigation')
+
+    const hrefs = INSTRUCTOR_NAV.map(n => n.href)
+    expect(hrefs.every(h => !h.includes('special-sessions'))).toBe(true)
+    expect(hrefs.every(h => !h.includes('makeup'))).toBe(true)
+  })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // XL.2 TEST E: Instructor nav contains dashboard, groups, calendar, students
+  // ─────────────────────────────────────────────────────────────────────────────
+  it('XL.2 TEST E — INSTRUCTOR_NAV contains required portal routes', async () => {
+    const { INSTRUCTOR_NAV } = await import('@/modules/instructor-portal/navigation')
+
+    const hrefs = INSTRUCTOR_NAV.map(n => n.href)
+    expect(hrefs.some(h => h === '/portal/instructor')).toBe(true)
+    expect(hrefs.some(h => h.includes('/portal/instructor/groups'))).toBe(true)
+    expect(hrefs.some(h => h.includes('/portal/instructor/calendar'))).toBe(true)
+    expect(hrefs.some(h => h.includes('/portal/instructor/students'))).toBe(true)
+  })
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // XL.2 TEST F: bulkBookTrialFromLeads seeds notification for instructor
+  // ─────────────────────────────────────────────────────────────────────────────
+  it('XL.2 TEST F — bulkBookTrialFromLeads seeds TRIAL_SESSION_ASSIGNED notification', async () => {
+    mockDb({
+      schedules:              [{ data: { id: SESSION_ID }, error: null }],
+      session_instructors:    [{ data: null, error: null }],
+      instructors:            [{ data: { user_id: 'user-instr-999', users: { email: 'i@test.com' } }, error: null }],
+      leads:                  [
+        { data: [{ id: LEAD_ID, child_name: 'Ali', phone: '010', whatsapp: null }], error: null },
+        { data: null, error: null },
+      ],
+      trial_session_students: [{ data: { id: 'tss-001' }, error: null }],
+    })
+
+    await bulkBookTrialFromLeads(null, fd({
+      lead_ids:      JSON.stringify([LEAD_ID]),
+      branch_id:     BRANCH_ID,
+      instructor_id: INSTR_ID,
+      scheduled_at:  '2026-07-20T09:00',
+    }))
+
+    expect(seedTrialSessionAssignedNotification).toHaveBeenCalledWith(
+      'user-instr-999',
+      SESSION_ID,
+      expect.any(String)
+    )
   })
 })

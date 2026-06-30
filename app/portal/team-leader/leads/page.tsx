@@ -4,15 +4,16 @@ import {
   getOwnershipKPIs, getAgingLeads, getFollowUpsDue,
   getWorkloadDistribution, getAvgDaysToConvert,
 } from '@/modules/leads/queries'
-import { assignLeadToMeFormAction } from '@/modules/leads/actions'
 import { LEAD_STATUSES, LEAD_SOURCES } from '@/modules/leads/schemas'
 import { AGING_THRESHOLDS } from '@/modules/leads/types'
-import EmptyState   from '@/components/admin/EmptyState'
-import Pagination   from '@/components/admin/Pagination'
-import SearchInput  from '@/components/admin/SearchInput'
-import FilterSelect from '@/components/admin/FilterSelect'
-import Link         from 'next/link'
+import { createServiceClient } from '@/lib/supabase/service'
+import EmptyState    from '@/components/admin/EmptyState'
+import Pagination    from '@/components/admin/Pagination'
+import SearchInput   from '@/components/admin/SearchInput'
+import FilterSelect  from '@/components/admin/FilterSelect'
+import Link          from 'next/link'
 import { TopbarAction } from '@/components/admin/TopbarActionContext'
+import LeadsTableClient from './_components/LeadsTableClient'
 
 interface Props {
   searchParams: Promise<{
@@ -111,7 +112,9 @@ export default async function TLLeadsPage({ searchParams }: Props) {
   const dateFrom       = params.date_from
   const dateTo         = params.date_to
 
-  const [result, kpis, ownerKpis, bySource, agingLeads, followUpsDue, workload, conversionSpeed] =
+  const db = createServiceClient()
+
+  const [result, kpis, ownerKpis, bySource, agingLeads, followUpsDue, workload, conversionSpeed, branchRows, instructorRows] =
     await Promise.all([
       listLeads({
         page, perPage: 25, search, branchIds: user.branchIds,
@@ -124,7 +127,22 @@ export default async function TLLeadsPage({ searchParams }: Props) {
       getFollowUpsDue(user.branchIds),
       getWorkloadDistribution(user.branchIds),
       getAvgDaysToConvert(user.branchIds),
+      db.from('branches').select('id, name').in('id', user.branchIds).order('name'),
+      db.from('instructors')
+        .select('id, branch_id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
+        .in('branch_id', user.branchIds)
+        .eq('status', 'active')
+        .is('deleted_at', null),
     ])
+
+  const branches    = (branchRows.data ?? []) as { id: string; name: string }[]
+  const instructors = (instructorRows.data ?? []).map((i: any) => {
+    const prof = i.users?.profiles
+    return {
+      id:   i.id as string,
+      name: prof ? [prof.first_name, prof.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown',
+    }
+  })
 
   const statusOptions = LEAD_STATUSES.map(s => ({ value: s, label: s.replace(/_/g, ' ') }))
   const sourceOptions = LEAD_SOURCES.map(s => ({ value: s, label: SOURCE_LABELS[s] ?? s }))
@@ -374,142 +392,12 @@ export default async function TLLeadsPage({ searchParams }: Props) {
           />
         ) : (
           <>
-            {/* ── Mobile cards (< md) ── */}
-            <div className="md:hidden divide-y divide-[#E2E8F0]">
-              {result.data.map(lead => {
-                const followUpDate    = lead.next_follow_up_at ? new Date(lead.next_follow_up_at) : null
-                const followUpOverdue = followUpDate && followUpDate < new Date()
-                return (
-                  <div key={lead.id} className="px-4 py-4">
-                    {/* Row 1: name + status + days */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <Link
-                          href={`/portal/team-leader/leads/${lead.id}`}
-                          className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight"
-                        >
-                          {lead.child_name}
-                        </Link>
-                        {lead.parent_name && (
-                          <p className="mt-0.5 text-[12px] text-[#64748B]">{lead.parent_name}</p>
-                        )}
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <DaysBadge days={lead.days_in_stage} status={lead.status} />
-                        <StatusBadge status={lead.status} />
-                      </div>
-                    </div>
-
-                    {/* Row 2: phone · source · owner */}
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748B]">
-                      {lead.phone && (
-                        <a href={`tel:${lead.phone}`} className="font-medium text-[#0B1F3A]">
-                          {lead.phone}
-                        </a>
-                      )}
-                      <span>{SOURCE_LABELS[lead.source] ?? lead.source}</span>
-                      {lead.assigned_name ? (
-                        <span className="text-[#64748B]">{lead.assigned_name}</span>
-                      ) : (
-                        <form action={assignLeadToMeFormAction} className="inline">
-                          <input type="hidden" name="lead_id" value={lead.id} />
-                          <button type="submit" className="font-medium text-[#FF8A1F]">
-                            Assign to me
-                          </button>
-                        </form>
-                      )}
-                    </div>
-
-                    {/* Row 3: follow-up + manage */}
-                    <div className="mt-2 flex items-center justify-between gap-2">
-                      {followUpDate ? (
-                        <span className={`text-[11px] font-medium ${followUpOverdue ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
-                          Follow-up: {followUpDate.toLocaleDateString('en-GB')}
-                          {followUpOverdue && ' ⚠'}
-                        </span>
-                      ) : (
-                        <span className="text-[11px] text-[#94A3B8]">No follow-up set</span>
-                      )}
-                      <Link
-                        href={`/portal/team-leader/leads/${lead.id}`}
-                        className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center"
-                      >
-                        Manage →
-                      </Link>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* ── Desktop table (≥ md) ── */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="ds-table-head">
-                  <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Child</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Phone</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Owner</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">In Stage</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Source</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Follow-Up</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Created</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.data.map(lead => {
-                    const followUpDate    = lead.next_follow_up_at ? new Date(lead.next_follow_up_at) : null
-                    const followUpOverdue = followUpDate && followUpDate < new Date()
-                    return (
-                      <tr key={lead.id} className="ds-table-row">
-                        <td className="px-4 py-3 font-medium text-[#0B1F3A]">
-                          {lead.child_name}
-                          {lead.parent_name && (
-                            <p className="text-[11px] font-normal text-[#94A3B8]">{lead.parent_name}</p>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-[#64748B]">{lead.phone ?? '—'}</td>
-                        <td className="px-4 py-3">
-                          {lead.assigned_name ? (
-                            <span className="text-sm text-[#0B1F3A]">{lead.assigned_name}</span>
-                          ) : (
-                            <form action={assignLeadToMeFormAction}>
-                              <input type="hidden" name="lead_id" value={lead.id} />
-                              <button type="submit" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
-                                Assign to me
-                              </button>
-                            </form>
-                          )}
-                        </td>
-                        <td className="px-4 py-3"><StatusBadge status={lead.status} /></td>
-                        <td className="px-4 py-3">
-                          <DaysBadge days={lead.days_in_stage} status={lead.status} />
-                        </td>
-                        <td className="px-4 py-3 text-[#64748B]">{SOURCE_LABELS[lead.source] ?? lead.source}</td>
-                        <td className="px-4 py-3">
-                          {followUpDate ? (
-                            <span className={`text-xs font-medium ${followUpOverdue ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
-                              {followUpDate.toLocaleDateString('en-GB')}
-                              {followUpOverdue && ' ⚠'}
-                            </span>
-                          ) : <span className="text-[#94A3B8]">—</span>}
-                        </td>
-                        <td className="px-4 py-3 text-[#94A3B8]">
-                          {new Date(lead.created_at).toLocaleDateString('en-GB')}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <Link href={`/portal/team-leader/leads/${lead.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
-                            Manage
-                          </Link>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <LeadsTableClient
+              leads={result.data}
+              instructors={instructors}
+              branches={branches}
+              basePath="/portal/team-leader/leads"
+            />
 
             {result.totalPages > 1 && (
               <div className="border-t border-[#E2E8F0] px-4 py-3">

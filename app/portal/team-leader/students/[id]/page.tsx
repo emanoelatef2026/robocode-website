@@ -3,6 +3,7 @@ import { createServiceClient }                  from '@/lib/supabase/service'
 import { notFound }                             from 'next/navigation'
 import Link                                     from 'next/link'
 import { evaluateActions }                      from '@/modules/actions-engine'
+import { getStudentTrialHistory }               from '@/modules/special-sessions/queries'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
@@ -39,6 +40,8 @@ export default async function TLStudentDetailPage({ params }: Props) {
   const user   = s.users ?? {}
   const prof   = user.profiles ?? {}
   const fullName = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || user.email || '—'
+
+  const trialHistory = await getStudentTrialHistory(studentId)
 
   // Load parent contacts
   const { data: contactRows } = await db
@@ -313,6 +316,49 @@ export default async function TLStudentDetailPage({ params }: Props) {
                     </td>
                     <td className="px-4 py-3 text-[11px] text-[#94A3B8]">
                       {fmtDate(e.start_date)} → {fmtDate(e.end_date)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* ── Trial Session History ────────────────────────────────────────── */}
+      {trialHistory.length > 0 && (
+        <div>
+          <h2 className="mb-3 text-base font-semibold text-[#0B1F3A]">Trial Session History</h2>
+          <div className="ds-card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Instructor</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Branch</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Attendance</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-[#64748B]">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {trialHistory.map(t => (
+                  <tr key={t.session_id} className="ds-table-row">
+                    <td className="px-4 py-3 text-[#0B1F3A]">
+                      {fmtDate(t.scheduled_at)}
+                    </td>
+                    <td className="px-4 py-3 text-[#64748B]">{t.instructor_name ?? '—'}</td>
+                    <td className="px-4 py-3 text-[#64748B]">{t.branch_name}</td>
+                    <td className="px-4 py-3">
+                      {t.attendance_status === 'present' ? (
+                        <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">Present</span>
+                      ) : t.attendance_status === 'absent' ? (
+                        <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#DC2626]">Absent</span>
+                      ) : (
+                        <span className="text-[11px] text-[#94A3B8]">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="capitalize text-[11px] text-[#64748B]">{t.status}</span>
                     </td>
                   </tr>
                 ))}

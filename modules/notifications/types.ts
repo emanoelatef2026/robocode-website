@@ -6,6 +6,9 @@ export type NotificationType =
   | 'STUDENT_PROJECT'
   | 'STUDENT_VIDEO'
   | 'ANNOUNCEMENT'
+  | 'TRIAL_SESSION_ASSIGNED'
+  | 'MAKEUP_SESSION_ASSIGNED'
+  | 'TRIAL_SESSION_REMINDER'
 
 export interface Notification {
   id:           string
