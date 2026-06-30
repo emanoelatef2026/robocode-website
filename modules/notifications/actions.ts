@@ -115,6 +115,56 @@ export async function readSessionStartingNotification(
     )
 }
 
+// Notifies instructor that a trial session was assigned to them.
+export async function seedTrialSessionAssignedNotification(
+  recipientId: string,
+  sessionId:   string,
+  scheduledAt: string,
+): Promise<void> {
+  const db       = createServiceClient()
+  const dateStr  = new Date(scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const dedupKey = `trial_assigned:${sessionId}`
+
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'TRIAL_SESSION_ASSIGNED',
+        title:        `Trial session assigned — ${dateStr}`,
+        body:         'A trial session has been assigned to you.',
+        href:         `/portal/instructor/special-sessions/${sessionId}`,
+        dedup_key:    dedupKey,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
+// Notifies instructor that a standalone makeup session was assigned to them.
+export async function seedMakeupSessionAssignedNotification(
+  recipientId: string,
+  sessionId:   string,
+  scheduledAt: string,
+): Promise<void> {
+  const db       = createServiceClient()
+  const dateStr  = new Date(scheduledAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const dedupKey = `makeup_assigned:${sessionId}`
+
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'MAKEUP_SESSION_ASSIGNED',
+        title:        `Makeup session assigned — ${dateStr}`,
+        body:         'A standalone makeup session has been assigned to you.',
+        href:         `/portal/instructor/special-sessions/${sessionId}`,
+        dedup_key:    dedupKey,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
 // Creates a HOMEWORK_NEEDS_GRADING notification (one per pending batch check).
 export async function seedHomeworkNotification(
   recipientId: string,

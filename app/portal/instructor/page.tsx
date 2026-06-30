@@ -114,11 +114,15 @@ export default async function InstructorDashboardPage() {
                     {quickStart.status === 'ongoing' ? 'Session in progress' : 'Ready to start?'}
                   </p>
                   <p className="mt-0.5 text-sm text-[#15803D]">
-                    {quickStart.group_name} — {quickStart.course_title}
+                    {quickStart.group_name}{quickStart.course_title ? ` — ${quickStart.course_title}` : ''}
                   </p>
                 </div>
                 <Link
-                  href={`/portal/instructor/groups/${quickStart.group_id}`}
+                  href={
+                    quickStart.session_type === 'primary'
+                      ? `/portal/instructor/groups/${quickStart.group_id}`
+                      : `/portal/instructor/special-sessions/${quickStart.id}`
+                  }
                   className="shrink-0 rounded-lg bg-[#10B981] px-5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
                 >
                   {quickStart.status === 'ongoing' ? 'Continue Session' : 'Start Session'}

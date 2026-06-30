@@ -49,7 +49,7 @@ export interface TodayAction {
 export interface TodaySession {
   id:               string
   group_id:         string
-  group_course_id:  string
+  group_course_id:  string | null    // null for standalone trial/makeup sessions
   group_name:       string
   course_title:     string
   branch_name:      string
@@ -58,6 +58,7 @@ export interface TodaySession {
   student_count:    number
   session_number:   number | null
   status:           string
+  session_type:     'primary' | 'trial' | 'makeup'  // badge color: blue/purple/orange
 }
 
 export interface StudentAttentionItem {

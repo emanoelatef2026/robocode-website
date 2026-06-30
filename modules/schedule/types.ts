@@ -2,13 +2,13 @@ import type { ScheduleStatus, ScheduleDelivery } from '@/types/enums'
 
 export type { ScheduleStatus, ScheduleDelivery }
 
-export type ScheduleType = 'regular' | 'makeup' | 'exam' | 'event'
+export type ScheduleType = 'regular' | 'makeup' | 'exam' | 'event' | 'trial'
 
 // ─── Core entity ─────────────────────────────────────────────────────────────
 
 export interface Schedule {
   id:                  string
-  group_course_id:     string
+  group_course_id:     string | null   // null for standalone trial/makeup sessions
   branch_id:           string
   scheduled_at:        string
   duration_minutes:    number
@@ -29,7 +29,7 @@ export interface Schedule {
 
 export interface ScheduleListItem {
   id:               string
-  group_course_id:  string
+  group_course_id:  string | null
   branch_id:        string
   scheduled_at:     string
   duration_minutes: number
@@ -59,7 +59,7 @@ export interface ScheduleDetail extends Schedule {
 // ─── Input types ─────────────────────────────────────────────────────────────
 
 export interface CreateScheduleInput {
-  group_course_id:  string
+  group_course_id:  string | null
   branch_id:        string
   scheduled_at:     string          // ISO timestamp
   duration_minutes: number

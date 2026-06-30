@@ -6217,7 +6217,7 @@ export type Database = {
           delivery: string | null
           duration_minutes: number
           ended_at: string | null
-          group_course_id: string
+          group_course_id: string | null
           id: string
           legacy_missing_topic: boolean
           makeup_of_session_nr: number | null
@@ -6245,7 +6245,7 @@ export type Database = {
           delivery?: string | null
           duration_minutes: number
           ended_at?: string | null
-          group_course_id: string
+          group_course_id?: string | null
           id?: string
           legacy_missing_topic?: boolean
           makeup_of_session_nr?: number | null
@@ -6273,7 +6273,7 @@ export type Database = {
           delivery?: string | null
           duration_minutes?: number
           ended_at?: string | null
-          group_course_id?: string
+          group_course_id?: string | null
           id?: string
           legacy_missing_topic?: boolean
           makeup_of_session_nr?: number | null
@@ -6396,6 +6396,109 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_student_package_ledger"
             referencedColumns: ["schedule_id"]
+          },
+        ]
+      }
+      trial_session_students: {
+        Row: {
+          attendance_status: string | null
+          created_at: string
+          id: string
+          lead_id: string | null
+          notes: string | null
+          parent_phone: string | null
+          schedule_id: string
+          student_name: string
+          student_phone: string | null
+        }
+        Insert: {
+          attendance_status?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          parent_phone?: string | null
+          schedule_id: string
+          student_name: string
+          student_phone?: string | null
+        }
+        Update: {
+          attendance_status?: string | null
+          created_at?: string
+          id?: string
+          lead_id?: string | null
+          notes?: string | null
+          parent_phone?: string | null
+          schedule_id?: string
+          student_name?: string
+          student_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_session_students_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trial_session_students_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      makeup_session_students: {
+        Row: {
+          attendance_status: string | null
+          created_at: string
+          id: string
+          mode: string
+          replaced_session_id: string | null
+          schedule_id: string
+          student_id: string
+        }
+        Insert: {
+          attendance_status?: string | null
+          created_at?: string
+          id?: string
+          mode: string
+          replaced_session_id?: string | null
+          schedule_id: string
+          student_id: string
+        }
+        Update: {
+          attendance_status?: string | null
+          created_at?: string
+          id?: string
+          mode?: string
+          replaced_session_id?: string | null
+          schedule_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "makeup_session_students_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "makeup_session_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "makeup_session_students_replaced_session_id_fkey"
+            columns: ["replaced_session_id"]
+            isOneToOne: false
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
           },
         ]
       }

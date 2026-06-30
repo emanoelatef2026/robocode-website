@@ -1825,83 +1825,132 @@ export async function listInboxSubmissions(
 
 // ── Today's Sessions ──────────────────────────────────────────────────────────
 // Returns all schedules with scheduled_at = today for this instructor.
+// Includes primary group sessions AND standalone trial/makeup sessions.
 // Excludes permanently cancelled sessions; postponed/ongoing/completed are included.
 
 export async function getTodaySessions(instructorId: string): Promise<TodaySession[]> {
   const db = createServiceClient()
-  const { gcIds, gcToGroupId } = await resolveGcContext(instructorId, db)
-  if (gcIds.length === 0) return []
 
   const todayStart = new Date()
   todayStart.setHours(0, 0, 0, 0)
   const todayEnd = new Date()
   todayEnd.setHours(23, 59, 59, 999)
 
-  const { data: scheduleRows } = await db
-    .from('schedules')
-    .select('id, group_course_id, scheduled_at, duration_minutes, status, session_number')
-    .in('group_course_id', gcIds)
-    .gte('scheduled_at', todayStart.toISOString())
-    .lte('scheduled_at', todayEnd.toISOString())
-    .not('status', 'in', '("cancelled","cancelled_with_makeup")')
-    .order('scheduled_at', { ascending: true })
+  const { gcIds, gcToGroupId } = await resolveGcContext(instructorId, db)
 
-  if (!scheduleRows || scheduleRows.length === 0) return []
+  // ── Path A: primary group sessions (existing behavior) ──────────────────
+  const primaryRows: TodaySession[] = []
 
-  const groupIds = [...new Set((scheduleRows as any[]).map((r) => gcToGroupId.get(r.group_course_id)).filter(Boolean))] as string[]
+  if (gcIds.length > 0) {
+    const { data: scheduleRows } = await db
+      .from('schedules')
+      .select('id, group_course_id, scheduled_at, duration_minutes, status, session_number')
+      .in('group_course_id', gcIds)
+      .gte('scheduled_at', todayStart.toISOString())
+      .lte('scheduled_at', todayEnd.toISOString())
+      .not('status', 'in', '("cancelled","cancelled_with_makeup")')
+      .order('scheduled_at', { ascending: true })
 
-  const [groupRes, studentRes] = await Promise.all([
-    db.from('group_courses')
-      .select(
-        `id,
-         groups!group_courses_group_id_fkey(id, name, branches!groups_branch_id_fkey(name)),
-         courses!group_courses_course_id_fkey(title)`
-      )
-      .in('id', gcIds),
-    groupIds.length > 0
-      ? db.from('group_students').select('group_id').in('group_id', groupIds).eq('status', 'active')
-      : Promise.resolve({ data: [] }),
-  ])
+    if (scheduleRows && scheduleRows.length > 0) {
+      const groupIds = [...new Set((scheduleRows as any[]).map((r) => gcToGroupId.get(r.group_course_id)).filter(Boolean))] as string[]
 
-  const gcMeta = new Map<string, { group_id: string; group_name: string; course_title: string; branch_name: string }>()
-  for (const r of (groupRes.data ?? []) as any[]) {
-    gcMeta.set(r.id, {
-      group_id:     r.groups?.id         ?? gcToGroupId.get(r.id) ?? '',
-      group_name:   r.groups?.name        ?? '',
-      course_title: r.courses?.title      ?? '',
-      branch_name:  r.groups?.branches?.name ?? '',
-    })
+      const [groupRes, studentRes] = await Promise.all([
+        db.from('group_courses')
+          .select(
+            `id,
+             groups!group_courses_group_id_fkey(id, name, branches!groups_branch_id_fkey(name)),
+             courses!group_courses_course_id_fkey(title)`
+          )
+          .in('id', gcIds),
+        groupIds.length > 0
+          ? db.from('group_students').select('group_id').in('group_id', groupIds).eq('status', 'active')
+          : Promise.resolve({ data: [] }),
+      ])
+
+      const gcMeta = new Map<string, { group_id: string; group_name: string; course_title: string; branch_name: string }>()
+      for (const r of (groupRes.data ?? []) as any[]) {
+        gcMeta.set(r.id, {
+          group_id:     r.groups?.id            ?? gcToGroupId.get(r.id) ?? '',
+          group_name:   r.groups?.name          ?? '',
+          course_title: r.courses?.title        ?? '',
+          branch_name:  r.groups?.branches?.name ?? '',
+        })
+      }
+
+      const studentCountMap: Record<string, number> = {}
+      for (const gs of (studentRes as any).data ?? []) {
+        const gid = (gs as any).group_id as string
+        studentCountMap[gid] = (studentCountMap[gid] ?? 0) + 1
+      }
+
+      for (const s of scheduleRows as any[]) {
+        const meta = gcMeta.get(s.group_course_id)
+        primaryRows.push({
+          id:               s.id,
+          group_id:         meta?.group_id     ?? gcToGroupId.get(s.group_course_id) ?? '',
+          group_course_id:  s.group_course_id,
+          group_name:       meta?.group_name   ?? '',
+          course_title:     meta?.course_title ?? '',
+          branch_name:      meta?.branch_name  ?? '',
+          scheduled_at:     s.scheduled_at,
+          duration_minutes: s.duration_minutes ?? 60,
+          student_count:    studentCountMap[meta?.group_id ?? ''] ?? 0,
+          session_number:   s.session_number   ?? null,
+          status:           s.status,
+          session_type:     'primary',
+        })
+      }
+    }
   }
 
-  const studentCountMap: Record<string, number> = {}
-  for (const gs of (studentRes as any).data ?? []) {
-    const gid = (gs as any).group_id as string
-    studentCountMap[gid] = (studentCountMap[gid] ?? 0) + 1
+  // ── Path B: standalone trial/makeup sessions ────────────────────────────
+  // Find sessions where this instructor is listed in session_instructors
+  const { data: siRows } = await db
+    .from('session_instructors')
+    .select('session_id')
+    .eq('instructor_id', instructorId)
+
+  const siSessionIds = (siRows ?? []).map((r: any) => r.session_id as string)
+
+  const standaloneRows: TodaySession[] = []
+
+  if (siSessionIds.length > 0) {
+    const { data: specialRows } = await db
+      .from('schedules')
+      .select('id, type, branch_id, scheduled_at, duration_minutes, status, branches!schedules_branch_id_fkey(name)')
+      .in('id', siSessionIds)
+      .is('group_course_id', null)
+      .in('type', ['trial', 'makeup'])
+      .gte('scheduled_at', todayStart.toISOString())
+      .lte('scheduled_at', todayEnd.toISOString())
+      .not('status', 'in', '("cancelled","cancelled_with_makeup")')
+
+    for (const s of (specialRows ?? []) as any[]) {
+      standaloneRows.push({
+        id:               s.id,
+        group_id:         '',
+        group_course_id:  null,
+        group_name:       s.type === 'trial' ? 'Trial Session' : 'Makeup Session',
+        course_title:     '',
+        branch_name:      s.branches?.name ?? '',
+        scheduled_at:     s.scheduled_at,
+        duration_minutes: s.duration_minutes ?? 60,
+        student_count:    0,
+        session_number:   null,
+        status:           s.status,
+        session_type:     s.type === 'trial' ? 'trial' : 'makeup',
+      })
+    }
   }
+
+  const allSessions = [...primaryRows, ...standaloneRows]
 
   const SESSION_STATUS_ORDER: Record<string, number> = { ongoing: 0, scheduled: 1, completed: 2, postponed: 3 }
 
-  return (scheduleRows as any[])
-    .map((s) => {
-      const meta = gcMeta.get(s.group_course_id)
-      return {
-        id:               s.id,
-        group_id:         meta?.group_id     ?? gcToGroupId.get(s.group_course_id) ?? '',
-        group_course_id:  s.group_course_id,
-        group_name:       meta?.group_name   ?? '',
-        course_title:     meta?.course_title ?? '',
-        branch_name:      meta?.branch_name  ?? '',
-        scheduled_at:     s.scheduled_at,
-        duration_minutes: s.duration_minutes ?? 60,
-        student_count:    studentCountMap[meta?.group_id ?? ''] ?? 0,
-        session_number:   s.session_number   ?? null,
-        status:           s.status,
-      } satisfies TodaySession
-    })
-    .sort((a, b) => {
-      const ao = SESSION_STATUS_ORDER[a.status] ?? 99
-      const bo = SESSION_STATUS_ORDER[b.status] ?? 99
-      if (ao !== bo) return ao - bo
-      return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
-    })
+  return allSessions.sort((a, b) => {
+    const ao = SESSION_STATUS_ORDER[a.status] ?? 99
+    const bo = SESSION_STATUS_ORDER[b.status] ?? 99
+    if (ao !== bo) return ao - bo
+    return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
+  })
 }

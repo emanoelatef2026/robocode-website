@@ -11,17 +11,25 @@ const STATUS_ACTION: Record<string, { label: string; style: string }> = {
   cancelled_with_makeup: { label: 'View Session',      style: 'bg-[#F1F5F9] text-[#94A3B8] hover:bg-[#E2E8F0]' },
 }
 
+const SESSION_TYPE_BADGE: Record<string, { label: string; style: string } | null> = {
+  primary: null,
+  trial:   { label: '🟣 Trial',  style: 'bg-purple-100 text-purple-700' },
+  makeup:  { label: '🟠 Makeup', style: 'bg-orange-100 text-orange-700' },
+}
+
 interface Props {
   session:  TodaySession
   groupId?: string
 }
 
 export default function TodaySessionCard({ session, groupId }: Props) {
-  const gid    = groupId ?? session.group_id
-  const href   = gid
-    ? `/portal/instructor/groups/${gid}`
-    : '/portal/instructor/groups'
-  const action = STATUS_ACTION[session.status] ?? STATUS_ACTION.scheduled
+  const isSpecial = session.session_type === 'trial' || session.session_type === 'makeup'
+  const gid       = groupId ?? session.group_id
+  const href      = isSpecial
+    ? `/portal/instructor/special-sessions/${session.id}`
+    : gid ? `/portal/instructor/groups/${gid}` : '/portal/instructor/groups'
+  const action    = STATUS_ACTION[session.status] ?? STATUS_ACTION.scheduled
+  const typeBadge = SESSION_TYPE_BADGE[session.session_type ?? 'primary']
 
   const time = new Date(session.scheduled_at).toLocaleTimeString('en-GB', {
     hour: '2-digit', minute: '2-digit',
@@ -32,11 +40,18 @@ export default function TodaySessionCard({ session, groupId }: Props) {
 
   return (
     <div className="ds-card flex flex-col gap-3 p-4">
-      {/* Top row: group + status */}
+      {/* Top row: group/type label + status */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
+          {typeBadge && (
+            <span className={`mb-1 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${typeBadge.style}`}>
+              {typeBadge.label}
+            </span>
+          )}
           <p className="truncate font-semibold text-[#0B1F3A]">{session.group_name}</p>
-          <p className="truncate text-xs text-[#64748B]">{session.course_title}</p>
+          {session.course_title && (
+            <p className="truncate text-xs text-[#64748B]">{session.course_title}</p>
+          )}
         </div>
         <StatusBadge status={session.status} />
       </div>
@@ -52,8 +67,12 @@ export default function TodaySessionCard({ session, groupId }: Props) {
         <span className="text-[#94A3B8]">Duration</span>
         <span className="font-medium text-[#0B1F3A]">{session.duration_minutes} min</span>
 
-        <span className="text-[#94A3B8]">Students</span>
-        <span className="font-medium text-[#0B1F3A]">{session.student_count}</span>
+        {!isSpecial && (
+          <>
+            <span className="text-[#94A3B8]">Students</span>
+            <span className="font-medium text-[#0B1F3A]">{session.student_count}</span>
+          </>
+        )}
 
         {session.session_number != null && (
           <>
