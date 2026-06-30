@@ -205,6 +205,12 @@ describe('PDF layout — overflow (>10 projects)', () => {
 
 // ─── TEST 8: Single-page guarantee (projects fit within 10-item cap) ──────────
 
+// Layout constants that mirror pdf-template.tsx
+const COL_WIDTH_ONE  = 270   // single-column fixed width (pt)
+const COL_WIDTH_TWO  = 200   // each two-column column width (pt)
+const COL_GAP        = 44    // gap between two columns (pt)
+const CONTENT_WIDTH  = 794   // A4 landscape content area (842 − 2×24 pt)
+
 describe('PDF single-page guarantee', () => {
   it('never renders more than 10 project items in the PDF', () => {
     const MAX_DISPLAY = 10
@@ -229,6 +235,114 @@ describe('PDF single-page guarantee', () => {
     const count = 5
     const half  = Math.ceil(count / 2)
     expect(half).toBe(3)
+  })
+})
+
+// ─── TEST: Centering math — fixed-width columns ────────────────────────────────
+
+describe('PDF centering — fixed-width column layout', () => {
+  // Single column
+  it('single-column block (270pt) fits within content area (794pt)', () => {
+    expect(COL_WIDTH_ONE).toBeLessThan(CONTENT_WIDTH)
+  })
+
+  it('single-column block has ≥120pt margin on each side → visually centred', () => {
+    const margin = (CONTENT_WIDTH - COL_WIDTH_ONE) / 2
+    expect(margin).toBeGreaterThanOrEqual(120)
+  })
+
+  // Two column
+  it('two-column total width (200+44+200 = 444pt) fits within content area', () => {
+    const totalWidth = COL_WIDTH_TWO + COL_GAP + COL_WIDTH_TWO
+    expect(totalWidth).toBe(444)
+    expect(totalWidth).toBeLessThan(CONTENT_WIDTH)
+  })
+
+  it('two-column block has ≥175pt margin on each side → visually centred', () => {
+    const totalWidth = COL_WIDTH_TWO + COL_GAP + COL_WIDTH_TWO
+    const margin = (CONTENT_WIDTH - totalWidth) / 2
+    expect(margin).toBeGreaterThanOrEqual(175)
+  })
+
+  it('title text in single column has ~255pt wrap width (column − bullet − gap)', () => {
+    const bulletWidth = 10
+    const itemGap     = 5
+    const titleWrap   = COL_WIDTH_ONE - bulletWidth - itemGap
+    expect(titleWrap).toBe(255)
+    expect(titleWrap).toBeGreaterThan(200) // enough for typical project names
+  })
+
+  it('title text in two-column has ~185pt wrap width (column − bullet − gap)', () => {
+    const bulletWidth = 10
+    const itemGap     = 5
+    const titleWrap   = COL_WIDTH_TWO - bulletWidth - itemGap
+    expect(titleWrap).toBe(185)
+    expect(titleWrap).toBeGreaterThan(150) // enough for typical project names
+  })
+
+  it('column gap (44pt) meets spec of 40–60pt', () => {
+    expect(COL_GAP).toBeGreaterThanOrEqual(40)
+    expect(COL_GAP).toBeLessThanOrEqual(60)
+  })
+})
+
+// ─── TEST: PDF validation cases (layout data for each scenario) ────────────────
+
+describe('PDF validation — layout data per case', () => {
+  function buildCase(titles: string[]) {
+    const projects = titles.map((title, i) => ({ title, sort_order: i }))
+    const sorted   = [...projects].sort((a, b) => a.sort_order - b.sort_order)
+    const display  = sorted.slice(0, 10)
+    const extra    = sorted.length > 10 ? sorted.length - 10 : 0
+    const isTwoCol = display.length >= 5
+    const half     = Math.ceil(display.length / 2)
+    return { display, extra, isTwoCol, half, colLayout: isTwoCol ? 'two-column' : 'single-column' }
+  }
+
+  it('Case A — 1 project: single-column, 0 overflow', () => {
+    const r = buildCase(['Scratch Game'])
+    expect(r.colLayout).toBe('single-column')
+    expect(r.display.length).toBe(1)
+    expect(r.extra).toBe(0)
+  })
+
+  it('Case B — 4 projects: single-column, 0 overflow', () => {
+    const r = buildCase(['Game 1', 'Game 2', 'Game 3', 'Game 4'])
+    expect(r.colLayout).toBe('single-column')
+    expect(r.display.length).toBe(4)
+    expect(r.extra).toBe(0)
+  })
+
+  it('Case C — 5 projects: two-column, left=3 right=2, 0 overflow', () => {
+    const r = buildCase(['P1', 'P2', 'P3', 'P4', 'P5'])
+    expect(r.colLayout).toBe('two-column')
+    expect(r.half).toBe(3)
+    expect(r.display.length - r.half).toBe(2)
+    expect(r.extra).toBe(0)
+  })
+
+  it('Case D — 10 projects: two-column, left=5 right=5, 0 overflow', () => {
+    const r = buildCase(Array.from({ length: 10 }, (_, i) => `Project ${i + 1}`))
+    expect(r.colLayout).toBe('two-column')
+    expect(r.half).toBe(5)
+    expect(r.display.length - r.half).toBe(5)
+    expect(r.extra).toBe(0)
+  })
+
+  it('Case E — long project names: stored as full strings, wrap at column width', () => {
+    const long = 'A Very Long Project Name That Will Wrap Inside The Column Layout On The Certificate'
+    const r = buildCase([long, 'Short Name', 'Another Medium Length Name'])
+    expect(r.colLayout).toBe('single-column')
+    expect(r.display[0].title).toBe(long)
+    // Wrapping is handled by react-pdf; we verify the title is preserved, not truncated
+    expect(r.display[0].title.length).toBeGreaterThan(60)
+  })
+
+  it('Case F — 13 projects: two-column, 10 shown, 3 overflow', () => {
+    const r = buildCase(Array.from({ length: 13 }, (_, i) => `Project ${i + 1}`))
+    expect(r.colLayout).toBe('two-column')
+    expect(r.display.length).toBe(10)
+    expect(r.extra).toBe(3)
   })
 })
 

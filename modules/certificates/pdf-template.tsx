@@ -138,6 +138,14 @@ const s = StyleSheet.create({
   },
 
   // ── Projects section ─────────────────────────────────────────────────────────
+  //
+  // Centering strategy:
+  //   • projectsSection fills body width (width: '100%') and sets alignItems: 'center'
+  //   • child containers (oneCol / twoCol) have FIXED pt widths so yoga can
+  //     compute their actual size and center them within the section
+  //   • percentage widths were removed — they created wide empty boxes that
+  //     made left-aligned text look off-center
+  //
   projectsSection: {
     width: '100%',
     marginTop: 14,
@@ -155,30 +163,35 @@ const s = StyleSheet.create({
   projectsDivider: {
     marginBottom: 8,
   },
-  // Single-column container (≤4 projects)
+  // Single-column container (≤4 projects).
+  // 270pt ≈ 360px — wide enough for ~30-char names on one line.
+  // Parent alignItems: 'center' centres this block horizontally.
   projectsOneCol: {
     flexDirection: 'column',
-    width: '60%',
+    width: 270,
   },
-  // Two-column container (≥5 projects)
+  // Two-column outer row (≥5 projects).
+  // No explicit width — yoga derives it from the two 200pt columns + 44pt gap
+  // = 444pt total, which is then centred by the parent alignItems: 'center'.
   projectsTwoCol: {
     flexDirection: 'row',
-    width: '90%',
-    gap: 8,
+    gap: 44,
   },
+  // Each column: fixed 200pt so text wraps at a consistent edge.
+  // flex: 1 on the title text fills (200 − bullet − 5pt gap) ≈ 185pt.
   projectsColLeft: {
-    flex: 1,
     flexDirection: 'column',
+    width: 200,
   },
   projectsColRight: {
-    flex: 1,
     flexDirection: 'column',
+    width: 200,
   },
   projectItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 5,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   projectBullet: {
     fontFamily: 'Montserrat',
@@ -188,6 +201,8 @@ const s = StyleSheet.create({
     lineHeight: 1.35,
     flexShrink: 0,
   },
+  // flex: 1 distributes remaining row width to the title text.
+  // Works correctly because the parent column now has a fixed width.
   projectTitle: {
     fontFamily: 'Montserrat',
     fontSize: 11,

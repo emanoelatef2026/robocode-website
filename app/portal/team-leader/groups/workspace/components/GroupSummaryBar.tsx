@@ -8,15 +8,16 @@ import { GroupActionsDropdown } from './GroupActionsDropdown'
 import { DAYS_FULL, fmt12, fmtDate } from '../utils'
 
 export function GroupSummaryBar({
-  group, sessionsCompleted, isTL, onEdit, onDelete, onRecordAttendance, onAddStudent,
+  group, sessionsCompleted, isTL, onEdit, onDelete, onRecordAttendance, onAddStudent, onIssueBulkCertificates,
 }: {
-  group:              GroupOperationalRow
-  sessionsCompleted:  number
-  isTL:               boolean
-  onEdit:             (g: GroupOperationalRow) => void
-  onDelete:           () => void
-  onRecordAttendance: () => void
-  onAddStudent:       () => void
+  group:                     GroupOperationalRow
+  sessionsCompleted:         number
+  isTL:                      boolean
+  onEdit:                    (g: GroupOperationalRow) => void
+  onDelete:                  () => void
+  onRecordAttendance:        () => void
+  onAddStudent:              () => void
+  onIssueBulkCertificates?:  () => void
 }) {
   const [infoOpen, setInfoOpen] = useState(false)
   const [popupPos, setPopupPos] = useState<{ top: number; left: number; width: number } | null>(null)
@@ -158,6 +159,7 @@ export function GroupSummaryBar({
               onAddStudent={onAddStudent}
               onEdit={() => onEdit(group)}
               onDelete={onDelete}
+              onIssueBulkCertificates={onIssueBulkCertificates}
             />
           )}
         </div>

@@ -22,6 +22,7 @@ import { GroupFinanceTab } from './components/GroupFinanceTab'
 import { GroupPerformanceTab } from './components/GroupPerformanceTab'
 import { QuickAddStudentModal } from './dialogs/QuickAddStudentModal'
 import { MoveGroupModal } from './dialogs/MoveGroupModal'
+import { BulkCertificatesModal } from './dialogs/BulkCertificatesModal'
 import { buildStudentResult, mapToOpsRow } from './utils'
 import type { WorkspaceTab } from './types'
 
@@ -56,6 +57,7 @@ export function GroupWorkspace({
   const [drawerOpsRow, setDrawerOpsRow]         = useState<StudentOperationsRow | null>(null)
   const [paymentStudent, setPaymentStudent]     = useState<GroupDetailStudent | null>(null)
   const [quickViewStudent, setQuickViewStudent] = useState<GroupDetailStudent | null>(null)
+  const [bulkCertOpen, setBulkCertOpen]         = useState(false)
   const [, startT]                              = useTransition()
 
   function reloadDetail() {
@@ -129,6 +131,7 @@ export function GroupWorkspace({
         onDelete={() => { setDeleteError(null); setDeleteConfirm(true) }}
         onRecordAttendance={() => setAttendanceOpen(true)}
         onAddStudent={() => setQuickAddOpen(true)}
+        onIssueBulkCertificates={() => setBulkCertOpen(true)}
       />
 
       {/* Tab bar */}
@@ -323,6 +326,18 @@ export function GroupWorkspace({
         currentStudentIds={currentStudentIds}
         onClose={() => setQuickAddOpen(false)}
         onAdded={onStudentsChanged}
+      />
+
+      {/* Bulk Certificates wizard */}
+      <BulkCertificatesModal
+        isOpen={bulkCertOpen}
+        group={group}
+        students={detailData?.students ?? []}
+        onClose={() => setBulkCertOpen(false)}
+        onSuccess={() => {
+          setBulkCertOpen(false)
+          reloadDetail()
+        }}
       />
 
       {/* Group Attendance modal */}

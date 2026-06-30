@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 export function GroupActionsDropdown({
-  onRecordAttendance, onAddStudent, onEdit, onDelete,
+  onRecordAttendance, onAddStudent, onEdit, onDelete, onIssueBulkCertificates,
 }: {
-  onRecordAttendance: () => void
-  onAddStudent:       () => void
-  onEdit:             () => void
-  onDelete:           () => void
+  onRecordAttendance:        () => void
+  onAddStudent:              () => void
+  onEdit:                    () => void
+  onDelete:                  () => void
+  onIssueBulkCertificates?:  () => void
 }) {
   const [open, setOpen] = useState(false)
 
@@ -71,6 +72,21 @@ export function GroupActionsDropdown({
               </svg>
               Delete Group
             </button>
+
+            {onIssueBulkCertificates && (
+              <>
+                <div className="my-1 border-t border-[#F1F5F9]" />
+                <button
+                  onClick={() => { setOpen(false); onIssueBulkCertificates() }}
+                  className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium text-[#374151] hover:bg-[#F8FAFC] transition"
+                >
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 text-[#FF8A1F] shrink-0">
+                    <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clipRule="evenodd" />
+                  </svg>
+                  Issue Group Certificates
+                </button>
+              </>
+            )}
           </div>
         </>
       )}
