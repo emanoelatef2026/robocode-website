@@ -85,7 +85,7 @@ export function StaffFormModal({
       {staffModal && (
         <Modal
           onClose={onClose}
-          title={staffModal.mode === "create" ? "Add Staff Member" : `Edit — ${row?.display_name}`}
+          title={staffModal.mode === "create" ? "Add Employee" : `Edit — ${row?.display_name}`}
           wide
         >
           <div className="space-y-3">
@@ -243,7 +243,7 @@ export function StaffFormModal({
             <div className="flex gap-2 pt-1">
               {staffModal.mode === "edit" && row && (
                 <button
-                  onClick={() => { onDelete(row.profile_id) }}
+                  onClick={() => { onClose(); onDelete(row.profile_id) }}
                   disabled={sfBusy}
                   className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-[12px] font-semibold text-[#EF4444] hover:bg-[#FEE2E2] transition disabled:opacity-50"
                 >
@@ -252,7 +252,7 @@ export function StaffFormModal({
               )}
               <button onClick={onClose} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">Cancel</button>
               <button onClick={submit} disabled={sfBusy} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[13px] font-semibold text-white hover:bg-[#1a2f4a] disabled:opacity-50">
-                {sfBusy ? "Saving…" : staffModal.mode === "create" ? "Add Staff" : "Save Changes"}
+                {sfBusy ? "Saving…" : staffModal.mode === "create" ? "Add Employee" : "Save Changes"}
               </button>
             </div>
           </div>

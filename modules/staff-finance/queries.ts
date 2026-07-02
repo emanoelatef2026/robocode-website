@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { calculateOutstanding } from '@/modules/finance/shared/calculations'
 import {
   computeAdjTotals,
   computeStaffNetAmount,
@@ -384,7 +385,7 @@ export async function getLiveStaffFinance(
 
     const payment_records = paymentsByProfile.get(p.id) ?? []
     const total_paid      = payment_records.reduce((sum, pr) => sum + pr.amount, 0)
-    const remaining       = Math.max(0, net_amount - total_paid)
+    const remaining       = calculateOutstanding(net_amount, total_paid)
     const payment_status  = derivePaymentStatus(total_paid, net_amount)
 
     return {
@@ -622,59 +623,84 @@ export async function getInstructorSessionsDetail(
   if (!branchIds.length) return []
   const db = createServiceClient()
 
-  const { data: gcDirect } = await db
-    .from('group_courses')
-    .select('id, group_id, course_id')
-    .eq('instructor_id', instructorId)
-
-  const { data: giData } = await db
-    .from('group_instructors')
-    .select('group_id, session_rate')
-    .eq('instructor_id', instructorId)
-
-  const giGroupIds = [...new Set((giData ?? []).map((g: any) => g.group_id as string))]
-
-  const groupRateMap = new Map<string, number | null>()
-  for (const gi of (giData ?? []) as any[]) {
-    groupRateMap.set(gi.group_id, gi.session_rate != null ? Number(gi.session_rate) : null)
-  }
-
-  let gcFromGroups: any[] = []
-  if (giGroupIds.length) {
-    const { data } = await db
-      .from('group_courses')
-      .select('id, group_id, course_id')
-      .in('group_id', giGroupIds)
-    gcFromGroups = data ?? []
-  }
-
-  const gcMap = new Map<string, { group_id: string; course_id: string | null }>()
-  for (const gc of [...(gcDirect ?? []), ...gcFromGroups] as any[]) {
-    gcMap.set(gc.id, { group_id: gc.group_id ?? '', course_id: gc.course_id ?? null })
-  }
-  if (!gcMap.size) return []
-
+  // 1. Completed schedules in range/branches — same source as getLiveInstructorFinance
   const { data: schedData } = await db
     .from('schedules')
     .select('id, group_course_id, scheduled_at, topic')
-    .in('group_course_id', [...gcMap.keys()])
     .in('branch_id', branchIds)
     .eq('status', 'completed')
     .gte('scheduled_at', `${dateFrom}T00:00:00`)
     .lte('scheduled_at', `${dateTo}T23:59:59`)
     .order('scheduled_at', { ascending: false })
 
-  const schedules = (schedData ?? []) as any[]
+  const allSchedules = (schedData ?? []) as any[]
+  if (!allSchedules.length) return []
+
+  const allScheduleIds = allSchedules.map((s: any) => s.id as string)
+
+  // 2. Resolve group_course_id → group_id/course_id/lead instructor_id
+  const groupCourseIds = [...new Set(allSchedules.map((s: any) => s.group_course_id as string))]
+  const { data: gcData } = await db
+    .from('group_courses')
+    .select('id, group_id, course_id, instructor_id')
+    .in('id', groupCourseIds)
+
+  const gcMap = new Map<string, { group_id: string; course_id: string | null; instructor_id: string | null }>()
+  for (const gc of (gcData ?? []) as any[]) {
+    gcMap.set(gc.id, { group_id: gc.group_id ?? '', course_id: gc.course_id ?? null, instructor_id: gc.instructor_id ?? null })
+  }
+
+  // 3. Group leads + rates, for fallback attribution and rate hierarchy
+  const allGroupIds = [...new Set([...gcMap.values()].map(v => v.group_id).filter(Boolean))]
+  const { data: giAllData } = await db
+    .from('group_instructors')
+    .select('group_id, instructor_id, role, session_rate')
+    .in('group_id', allGroupIds)
+
+  const groupLeadMap   = new Map<string, string>()
+  const groupRateByKey = new Map<string, number | null>()
+  for (const gi of (giAllData ?? []) as any[]) {
+    if (!groupLeadMap.has(gi.group_id) || gi.role === 'lead') {
+      groupLeadMap.set(gi.group_id, gi.instructor_id)
+    }
+    groupRateByKey.set(`${gi.instructor_id}:${gi.group_id}`, gi.session_rate != null ? Number(gi.session_rate) : null)
+  }
+
+  // 4. session_instructors — source of truth for who actually taught each session
+  const { data: siData } = await db
+    .from('session_instructors')
+    .select('session_id, instructor_id')
+    .in('session_id', allScheduleIds)
+
+  const siBySession = new Map<string, string[]>()
+  for (const si of (siData ?? []) as any[]) {
+    const list = siBySession.get(si.session_id as string) ?? []
+    list.push(si.instructor_id as string)
+    siBySession.set(si.session_id as string, list)
+  }
+
+  // 5. Keep only schedules actually attributed to this instructor (same rule as getLiveInstructorFinance)
+  const schedules = allSchedules.filter((s: any) => {
+    const gc = gcMap.get(s.group_course_id)
+    if (!gc) return false
+    const participating = siBySession.get(s.id)
+    if (participating && participating.length > 0) {
+      return participating.includes(instructorId)
+    }
+    const fallbackId = gc.instructor_id ?? groupLeadMap.get(gc.group_id)
+    return fallbackId === instructorId
+  })
+
   if (!schedules.length) return []
 
   const schedIds = schedules.map((s: any) => s.id as string)
 
-  const groupIds = [...new Set([...gcMap.values()].map(v => v.group_id).filter(Boolean))]
+  const groupIds = [...new Set(schedules.map((s: any) => gcMap.get(s.group_course_id)?.group_id).filter(Boolean) as string[])]
   const { data: groupData } = await db.from('groups').select('id, name').in('id', groupIds)
   const groupNames = new Map<string, string>()
   for (const g of (groupData ?? []) as any[]) groupNames.set(g.id, g.name)
 
-  const courseIds = [...new Set([...gcMap.values()].map(v => v.course_id).filter(Boolean) as string[])]
+  const courseIds = [...new Set(schedules.map((s: any) => gcMap.get(s.group_course_id)?.course_id).filter(Boolean) as string[])]
   const courseNames = new Map<string, string>()
   if (courseIds.length) {
     const { data: courseData } = await db.from('courses').select('id, title').in('id', courseIds)
@@ -715,10 +741,10 @@ export async function getInstructorSessionsDetail(
   }
 
   return schedules.map((s: any) => {
-    const gc        = gcMap.get(s.group_course_id) ?? { group_id: '', course_id: null }
+    const gc        = gcMap.get(s.group_course_id) ?? { group_id: '', course_id: null, instructor_id: null }
     const att       = attMap.get(s.id) ?? { total: 0, present: 0 }
     const override  = overrideMap.get(s.id) ?? null
-    const groupRate = groupRateMap.get(gc.group_id) ?? null
+    const groupRate = groupRateByKey.get(`${instructorId}:${gc.group_id}`) ?? null
     const finalRate = override?.rate ?? groupRate ?? baseRate
 
     return {

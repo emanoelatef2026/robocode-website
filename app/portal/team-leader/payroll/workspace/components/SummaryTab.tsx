@@ -20,10 +20,10 @@ export function SummaryTab({ summary, dateFrom, dateTo, monthLabel }: Props) {
 
       <div className="grid grid-cols-2 gap-3">
         <SummaryCard label="Instructors"           value={String(summary.instructor_count)} />
-        <SummaryCard label="Staff"                 value={String(summary.staff_count)} />
+        <SummaryCard label="Employees"              value={String(summary.staff_count)} />
         <SummaryCard label="Instructor Sessions"   value={fmtEGP(summary.total_session_earnings)} />
-        <SummaryCard label="Staff Salaries"        value={fmtEGP(summary.total_staff_salaries)} />
-        <SummaryCard label="Staff Sessions"        value={fmtEGP(summary.total_staff_session_earnings)} />
+        <SummaryCard label="Employee Salaries"      value={fmtEGP(summary.total_staff_salaries)} />
+        <SummaryCard label="Employee Sessions"      value={fmtEGP(summary.total_staff_session_earnings)} />
         <SummaryCard label="Total Bonuses"         value={fmtEGP(summary.total_bonus)} color="emerald" />
         <SummaryCard label="Total Penalties"       value={fmtEGP(summary.total_penalty)} color="red" />
         <SummaryCard label="Total Advances"        value={fmtEGP(summary.total_advance)} color="amber" />

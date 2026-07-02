@@ -94,8 +94,28 @@ export function DrawerContent({
                       : "Not set"
                   }
                 />
+                {(row as InstructorFinanceRow).wallet_number && (
+                  <DrawerRow label="Vodafone Cash" value={(row as InstructorFinanceRow).wallet_number!} />
+                )}
                 {(row as InstructorFinanceRow).instapay_number && (
-                  <DrawerRow label="Instapay" value={(row as InstructorFinanceRow).instapay_number!} />
+                  <DrawerRow label="Instapay Number" value={(row as InstructorFinanceRow).instapay_number!} />
+                )}
+                {(row as InstructorFinanceRow).payment_link && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-[#64748B]">Instapay Link</span>
+                    <a
+                      href={(row as InstructorFinanceRow).payment_link!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="truncate text-[12px] text-[#FF8A1F] hover:underline max-w-[160px]"
+                      title={(row as InstructorFinanceRow).payment_link!}
+                    >
+                      {(row as InstructorFinanceRow).payment_link}
+                    </a>
+                  </div>
+                )}
+                {(row as InstructorFinanceRow).bank_account_number && (
+                  <DrawerRow label="Bank Account" value={(row as InstructorFinanceRow).bank_account_number!} />
                 )}
                 {(row as InstructorFinanceRow).payment_notes && (
                   <DrawerRow label="Notes" value={(row as InstructorFinanceRow).payment_notes!} />

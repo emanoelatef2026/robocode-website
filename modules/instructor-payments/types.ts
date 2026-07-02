@@ -4,16 +4,19 @@
 // staff_payment_records (via a resolved staff_payroll_profiles row) for the
 // paid-amount ledger.
 
+import { fmtEGP } from '@/modules/finance/shared/formatters'
+import { MONTH_NAMES } from '@/modules/finance/shared/date'
+import type { InstructorPayoutMethod } from '@/modules/finance/shared/types'
+import { INSTRUCTOR_PAYOUT_METHOD_LABELS } from '@/modules/finance/shared/types'
+
+export { fmtEGP, MONTH_NAMES }
+
 export type SessionEarningType = 'primary' | 'trial' | 'makeup'
 
-export type InstructorPreferredMethod = 'vodafone_cash' | 'instapay' | 'bank_transfer' | 'cash'
+// Canonical definition lives in modules/finance/shared/types.ts.
+export type InstructorPreferredMethod = InstructorPayoutMethod
 
-export const PREFERRED_METHOD_LABELS: Record<InstructorPreferredMethod, string> = {
-  vodafone_cash: 'Vodafone Cash',
-  instapay:      'Instapay',
-  bank_transfer: 'Bank Transfer',
-  cash:          'Cash',
-}
+export const PREFERRED_METHOD_LABELS: Record<InstructorPreferredMethod, string> = INSTRUCTOR_PAYOUT_METHOD_LABELS
 
 export const PREFERRED_METHOD_OPTIONS: { value: InstructorPreferredMethod; label: string }[] = [
   { value: 'vodafone_cash', label: 'Vodafone Cash' },
@@ -146,17 +149,3 @@ export function isValidInstapayLink(link: string): boolean {
   }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-export function fmtEGP(amount: number): string {
-  return new Intl.NumberFormat('en-EG', {
-    style:    'currency',
-    currency: 'EGP',
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-export const MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]

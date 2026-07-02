@@ -2,11 +2,17 @@
 // Separate from modules/finance/ (which is student finance).
 // This module handles instructor session earnings and staff salaries — live, no runs.
 
+import { fmtEGP, fmtNum } from '@/modules/finance/shared/formatters'
+import type { InstructorPayoutMethod } from '@/modules/finance/shared/types'
+import { INSTRUCTOR_PAYOUT_METHOD_LABELS } from '@/modules/finance/shared/types'
+
+export { fmtEGP, fmtNum }
+
 export type FinanceAdjType =
   | 'bonus' | 'penalty' | 'advance' | 'purchase' | 'reimbursement' | 'other'
 
-export type InstructorPaymentMethod =
-  | 'instapay' | 'vodafone_cash' | 'bank_transfer' | 'cash'
+// Canonical definition lives in modules/finance/shared/types.ts.
+export type InstructorPaymentMethod = InstructorPayoutMethod
 
 export type EmploymentStatus = 'active' | 'on_leave' | 'inactive'
 
@@ -45,12 +51,8 @@ export const ADJ_COLOR: Record<FinanceAdjType, string> = {
   other:         'text-[#334155] bg-[#F8FAFC]',
 }
 
-export const INSTRUCTOR_PAYMENT_METHOD_LABELS: Record<InstructorPaymentMethod, string> = {
-  instapay:      'Instapay',
-  vodafone_cash: 'Vodafone Cash',
-  bank_transfer: 'Bank Transfer',
-  cash:          'Cash',
-}
+// Canonical definition lives in modules/finance/shared/types.ts.
+export const INSTRUCTOR_PAYMENT_METHOD_LABELS: Record<InstructorPaymentMethod, string> = INSTRUCTOR_PAYOUT_METHOD_LABELS
 
 export const STAFF_PAYMENT_METHOD_LABELS: Record<string, string> = {
   instapay:      'Instapay',
@@ -332,18 +334,6 @@ export interface UserPickerOption {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-export function fmtEGP(amount: number): string {
-  return new Intl.NumberFormat('en-EG', {
-    style:    'currency',
-    currency: 'EGP',
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-export function fmtNum(n: number): string {
-  return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
-}
 
 export function computeAdjTotals(adjustments: FinanceAdjustment[]) {
   let bonus_total    = 0

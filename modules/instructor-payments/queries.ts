@@ -2,6 +2,8 @@ import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { computeAdjTotals } from '@/modules/staff-finance/types'
 import type { FinanceAdjustment, StaffPaymentRecord } from '@/modules/staff-finance/types'
+import { getMonthRange } from '@/modules/finance/shared/date'
+import { calculateOutstanding } from '@/modules/finance/shared/calculations'
 import type {
   InstructorSessionEarning, SessionEarningFilters, SessionEarningType,
   InstructorPaymentOverview, InstructorMonthlyPaymentSummary, InstructorPaymentRecordRow,
@@ -18,10 +20,7 @@ function sessionType(type: string | null): SessionEarningType {
 }
 
 function monthBounds(year: number, month: number): { from: string; to: string } {
-  const from = `${year}-${String(month).padStart(2, '0')}-01`
-  const lastDay = new Date(year, month, 0).getDate()
-  const to = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
-  return { from, to }
+  return getMonthRange(month, year)
 }
 
 // ── Resolve the branches an instructor works at ────────────────────────────────
@@ -272,7 +271,7 @@ export async function getInstructorPaymentOverview(
     .filter(p => p.month === month && p.year === year)
     .reduce((s, r) => s + r.amount, 0)
 
-  const outstanding = Math.max(0, lifetimeApproved - lifetimePaid)
+  const outstanding = calculateOutstanding(lifetimeApproved, lifetimePaid)
 
   const { data: instrRow } = await createServiceClient()
     .from('instructors').select('currency').eq('id', instructorId).maybeSingle()
@@ -339,7 +338,7 @@ export async function getInstructorPaymentHistory(
       month, year,
       earned,
       paid,
-      outstanding: Math.max(0, earned - paid),
+      outstanding: calculateOutstanding(earned, paid),
       payments: monthPayments,
     })
   }

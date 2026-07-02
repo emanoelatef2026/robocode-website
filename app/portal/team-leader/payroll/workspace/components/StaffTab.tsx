@@ -41,7 +41,7 @@ export function StaffTab({
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
         {[
-          { label: "Staff",       value: String(rows.length),                   hi: false },
+          { label: "Employees",   value: String(rows.length),                   hi: false },
           { label: "Salaries",    value: fmtEGP(kpis.totalSalaries),            hi: false },
           { label: "Activities",  value: fmtEGP(kpis.totalActivityEarnings),    hi: false },
           { label: "Net Total",   value: fmtEGP(kpis.totalNet),                 hi: true  },
@@ -56,7 +56,7 @@ export function StaffTab({
       </div>
 
       {rows.length === 0 ? (
-        <EmptyState message="No staff profiles yet. Click &quot;Add Staff&quot; to get started." />
+        <EmptyState message="No employees yet. Click &quot;Add Employee&quot; to get started." />
       ) : (
         <>
           {/* Desktop */}

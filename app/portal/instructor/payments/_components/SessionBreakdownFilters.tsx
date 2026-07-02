@@ -3,11 +3,7 @@
 import Link from "next/link"
 import { useState } from "react"
 import type { SessionEarningFilters } from "@/modules/instructor-payments/types"
-
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December',
-]
+import { MONTH_NAMES as MONTHS } from "@/modules/finance/shared/date"
 
 export default function SessionBreakdownFilters({ filters }: { filters: SessionEarningFilters }) {
   const hasActive = !!(filters.month || filters.year || filters.from || filters.to || filters.status || filters.sessionType)

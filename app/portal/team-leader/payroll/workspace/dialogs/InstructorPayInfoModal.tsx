@@ -5,6 +5,7 @@ import { AnimatePresence } from "framer-motion"
 import { updateInstructorPaymentInfoAction } from "@/modules/staff-finance/actions"
 import type { InstructorFinanceRow } from "@/modules/staff-finance/types"
 import { INSTRUCTOR_PAYMENT_METHOD_LABELS } from "@/modules/staff-finance/types"
+import { validatePaymentMethodFields } from "@/modules/instructor-payments/types"
 import { Modal } from "../components/Modal"
 
 interface Props {
@@ -14,22 +15,37 @@ interface Props {
 }
 
 export function InstructorPayInfoModal({ target, onClose, onSuccess }: Props) {
-  const [payRate,   setPayRate]   = useState(String(target?.salary_per_session || ""))
-  const [payMethod, setPayMethod] = useState(target?.payment_method ?? "cash")
-  const [payRef,    setPayRef]    = useState(target?.instapay_number ?? "")
-  const [payNotes,  setPayNotes]  = useState(target?.payment_notes ?? "")
-  const [payBusy,   setPayBusy]   = useState(false)
-  const [payErr,    setPayErr]    = useState("")
+  const [payRate,       setPayRate]       = useState(String(target?.salary_per_session || ""))
+  const [payMethod,     setPayMethod]     = useState<string>(target?.payment_method ?? "cash")
+  const [payWallet,     setPayWallet]     = useState(target?.wallet_number ?? "")
+  const [payInstapayNo, setPayInstapayNo] = useState(target?.instapay_number ?? "")
+  const [payLink,       setPayLink]       = useState(target?.payment_link ?? "")
+  const [payBank,       setPayBank]       = useState(target?.bank_account_number ?? "")
+  const [payNotes,      setPayNotes]      = useState(target?.payment_notes ?? "")
+  const [payBusy,       setPayBusy]       = useState(false)
+  const [payErr,        setPayErr]        = useState("")
 
   async function submit() {
     if (!target) return
-    setPayBusy(true); setPayErr("")
+    const validationError = validatePaymentMethodFields({
+      payment_method:      payMethod,
+      wallet_number:       payWallet,
+      instapay_number:     payInstapayNo,
+      payment_link:        payLink,
+      bank_account_number: payBank,
+    })
+    if (validationError) { setPayErr(validationError); return }
+    setPayBusy(true)
+    setPayErr("")
     const result = await updateInstructorPaymentInfoAction({
-      instructor_id:      target.instructor_id,
-      salary_per_session: payRate ? Number(payRate) : null,
-      payment_method:     payMethod || null,
-      instapay_number:    payRef    || null,
-      payment_notes:      payNotes  || null,
+      instructor_id:       target.instructor_id,
+      salary_per_session:  payRate ? Number(payRate) : null,
+      payment_method:      payMethod || null,
+      wallet_number:       payWallet     || null,
+      instapay_number:     payInstapayNo || null,
+      payment_link:        payLink       || null,
+      bank_account_number: payBank       || null,
+      payment_notes:       payNotes  || null,
     })
     setPayBusy(false)
     if (!result.success) { setPayErr(result.error.message); return }
@@ -55,7 +71,7 @@ export function InstructorPayInfoModal({ target, onClose, onSuccess }: Props) {
               <label className="text-[12px] font-semibold text-[#0B1F3A]">Payment Method</label>
               <select
                 value={payMethod}
-                onChange={e => setPayMethod(e.target.value as typeof payMethod)}
+                onChange={e => setPayMethod(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
               >
                 {Object.entries(INSTRUCTOR_PAYMENT_METHOD_LABELS).map(([v, l]) => (
@@ -63,17 +79,50 @@ export function InstructorPayInfoModal({ target, onClose, onSuccess }: Props) {
                 ))}
               </select>
             </div>
-            <div>
-              <label className="text-[12px] font-semibold text-[#0B1F3A]">
-                {payMethod === "instapay" ? "Instapay Number" : "Payment Reference"}
-              </label>
-              <input
-                value={payRef}
-                onChange={e => setPayRef(e.target.value)}
-                placeholder="Account / phone / IBAN"
-                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
-              />
-            </div>
+            {payMethod === "vodafone_cash" && (
+              <div>
+                <label className="text-[12px] font-semibold text-[#0B1F3A]">Vodafone Cash Number <span className="text-[#EF4444]">*</span></label>
+                <input
+                  value={payWallet}
+                  onChange={e => setPayWallet(e.target.value)}
+                  placeholder="01xxxxxxxxx"
+                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                />
+              </div>
+            )}
+            {payMethod === "instapay" && (
+              <>
+                <div>
+                  <label className="text-[12px] font-semibold text-[#0B1F3A]">Instapay Number <span className="text-[#EF4444]">*</span></label>
+                  <input
+                    value={payInstapayNo}
+                    onChange={e => setPayInstapayNo(e.target.value)}
+                    placeholder="01xxxxxxxxx"
+                    className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                  />
+                </div>
+                <div>
+                  <label className="text-[12px] font-semibold text-[#0B1F3A]">Instapay Payment Link <span className="text-[#EF4444]">*</span></label>
+                  <input
+                    type="url"
+                    value={payLink}
+                    onChange={e => setPayLink(e.target.value)}
+                    placeholder="https://ipn.eg/S/..."
+                    className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                  />
+                </div>
+              </>
+            )}
+            {payMethod === "bank_transfer" && (
+              <div>
+                <label className="text-[12px] font-semibold text-[#0B1F3A]">Bank Account Number <span className="text-[#EF4444]">*</span></label>
+                <input
+                  value={payBank}
+                  onChange={e => setPayBank(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                />
+              </div>
+            )}
             <div>
               <label className="text-[12px] font-semibold text-[#0B1F3A]">Notes</label>
               <textarea

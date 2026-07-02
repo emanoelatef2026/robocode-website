@@ -11,10 +11,7 @@ import {
 } from "@/modules/staff-finance/types"
 import type { FinanceAdjType } from "@/modules/staff-finance/types"
 import { Modal } from "../components/Modal"
-
-const ADJ_TYPES: FinanceAdjType[] = [
-  "bonus", "penalty", "advance", "purchase", "reimbursement", "other",
-]
+import { ADJ_TYPES } from "../types"
 
 export interface AdjTarget {
   kind: "instructor" | "staff"
