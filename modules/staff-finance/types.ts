@@ -205,10 +205,13 @@ export interface InstructorFinanceRow {
   branch_id:          string
   branch_name:        string
   salary_per_session: number
-  payment_method:     InstructorPaymentMethod | null
-  instapay_number:    string | null
-  payment_notes:      string | null
-  currency:           string
+  payment_method:      InstructorPaymentMethod | null
+  wallet_number:       string | null
+  instapay_number:     string | null
+  payment_link:        string | null
+  bank_account_number: string | null
+  payment_notes:       string | null
+  currency:            string
   // Live session counts (from schedules)
   sessions_count:     number
   group_count:        number

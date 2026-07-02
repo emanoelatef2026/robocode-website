@@ -6,7 +6,7 @@ import { requireAuth }         from '@/modules/rbac/guards'
 import type { ActionResult }   from '@/types/app'
 import { getInstructorByUserId } from '@/modules/instructor-portal/queries'
 import {
-  isValidVodafoneCash, isValidInstapayLink,
+  validatePaymentMethodFields,
   type InstructorPreferredMethod,
   type InstructorPaymentMethods,
 } from './types'
@@ -63,26 +63,9 @@ export async function updateMyPaymentMethodsAction(
   if (!instructor) return { success: false, error: error! }
 
   // ── Validation ────────────────────────────────────────────────────────────
-  if (input.payment_method === 'vodafone_cash') {
-    const number = (input.wallet_number ?? '').trim()
-    if (!isValidVodafoneCash(number)) {
-      return { success: false, error: { code: 'INVALID', message: 'Vodafone Cash number must be exactly 11 digits.' } }
-    }
-  }
-  if (input.payment_method === 'instapay') {
-    const hasNumber = !!(input.instapay_number ?? '').trim()
-    const link      = (input.payment_link ?? '').trim()
-    if (!hasNumber && !link) {
-      return { success: false, error: { code: 'INVALID', message: 'Provide an Instapay number or payment link.' } }
-    }
-    if (link && !isValidInstapayLink(link)) {
-      return { success: false, error: { code: 'INVALID', message: 'Instapay payment link must be a valid URL.' } }
-    }
-  }
-  if (input.payment_method === 'bank_transfer') {
-    if (!(input.bank_account_number ?? '').trim()) {
-      return { success: false, error: { code: 'INVALID', message: 'Bank account number is required.' } }
-    }
+  const validationError = validatePaymentMethodFields(input)
+  if (validationError) {
+    return { success: false, error: { code: 'INVALID', message: validationError } }
   }
 
   const db = createServiceClient()

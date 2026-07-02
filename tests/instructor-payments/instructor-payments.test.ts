@@ -23,7 +23,7 @@ vi.mock('@/modules/instructor-portal/queries', () => ({
 
 import { createServiceClient } from '@/lib/supabase/service'
 import {
-  isValidVodafoneCash, isValidInstapayLink, isPaymentInfoComplete,
+  isValidVodafoneCash, isValidInstapayLink, isPaymentInfoComplete, validatePaymentMethodFields,
   type InstructorPaymentMethods,
 } from '@/modules/instructor-payments/types'
 import { applySessionEarningFilters, getInstructorPaymentOverview, getInstructorPaymentMethods } from '@/modules/instructor-payments/queries'
@@ -78,8 +78,56 @@ describe('Payment method validation', () => {
     expect(isPaymentInfoComplete({ ...base, payment_method: 'vodafone_cash' })).toBe(false)
     expect(isPaymentInfoComplete({ ...base, payment_method: 'vodafone_cash', wallet_number: '01012345678' })).toBe(true)
     expect(isPaymentInfoComplete({ ...base, payment_method: 'instapay' })).toBe(false)
-    expect(isPaymentInfoComplete({ ...base, payment_method: 'instapay', instapay_number: '01012345678' })).toBe(true)
+    // Instapay requires BOTH the number AND the payment link — number alone is incomplete.
+    expect(isPaymentInfoComplete({ ...base, payment_method: 'instapay', instapay_number: '01012345678' })).toBe(false)
+    expect(isPaymentInfoComplete({ ...base, payment_method: 'instapay', payment_link: 'https://ipn.eg/S/x' })).toBe(false)
+    expect(isPaymentInfoComplete({
+      ...base, payment_method: 'instapay',
+      instapay_number: '01012345678', payment_link: 'https://ipn.eg/S/x',
+    })).toBe(true)
     expect(isPaymentInfoComplete({ ...base, payment_method: 'bank_transfer', bank_account_number: 'EG123' })).toBe(true)
+  })
+})
+
+// ── Shared validation used by every write path (instructor / TL / admin / payroll) ──
+
+describe('validatePaymentMethodFields — shared write-path validation', () => {
+  it('rejects Instapay with number only (no link)', () => {
+    const err = validatePaymentMethodFields({ payment_method: 'instapay', instapay_number: '01012345678', payment_link: '' })
+    expect(err).toMatch(/payment link is required/i)
+  })
+
+  it('rejects Instapay with link only (no number)', () => {
+    const err = validatePaymentMethodFields({ payment_method: 'instapay', instapay_number: '', payment_link: 'https://ipn.eg/S/x' })
+    expect(err).toMatch(/instapay number is required/i)
+  })
+
+  it('accepts Instapay when both number and link are present and link is a valid URL', () => {
+    const err = validatePaymentMethodFields({
+      payment_method: 'instapay', instapay_number: '01012345678', payment_link: 'https://ipn.eg/S/x',
+    })
+    expect(err).toBeNull()
+  })
+
+  it('rejects an Instapay link that is not a valid URL', () => {
+    const err = validatePaymentMethodFields({
+      payment_method: 'instapay', instapay_number: '01012345678', payment_link: 'not-a-url',
+    })
+    expect(err).toMatch(/valid URL/i)
+  })
+
+  it('rejects Vodafone Cash numbers that are not exactly 11 digits', () => {
+    expect(validatePaymentMethodFields({ payment_method: 'vodafone_cash', wallet_number: '123' })).toMatch(/11 digits/)
+    expect(validatePaymentMethodFields({ payment_method: 'vodafone_cash', wallet_number: '01012345678' })).toBeNull()
+  })
+
+  it('rejects bank transfer with no account number', () => {
+    expect(validatePaymentMethodFields({ payment_method: 'bank_transfer', bank_account_number: '' })).toMatch(/bank account number/i)
+    expect(validatePaymentMethodFields({ payment_method: 'bank_transfer', bank_account_number: 'EG123' })).toBeNull()
+  })
+
+  it('requires nothing extra for cash', () => {
+    expect(validatePaymentMethodFields({ payment_method: 'cash' })).toBeNull()
   })
 })
 
@@ -235,6 +283,96 @@ describe('Single source of truth for payment info', () => {
     expect(methods.payment_method).toBe('bank_transfer')
     expect(methods.bank_account_number).toBe('EG123456789')
     expect(isPaymentInfoComplete(methods)).toBe(true)
+  })
+})
+
+// ── Instructor self-service: Instapay both-required rule ─────────────────────
+
+describe('updateMyPaymentMethodsAction — Instapay both-required rule', () => {
+  beforeEach(() => {
+    requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: [] })
+    getInstructorByUserIdMock.mockResolvedValue({ id: INSTRUCTOR_ID, user_id: USER_ID, branch_id: BRANCH_ID })
+  })
+
+  it('saves successfully when both Instapay number and link are provided', async () => {
+    const db = mockDb({ instructors: [{ data: null, error: null }] })
+    const res = await updateMyPaymentMethodsAction({
+      payment_method:  'instapay',
+      instapay_number: '01012345678',
+      payment_link:    'https://ipn.eg/S/example',
+    })
+    expect(res.success).toBe(true)
+    expect(db.from).toHaveBeenCalledWith('instructors')
+  })
+
+  it('rejects with a validation error when only the Instapay number is provided', async () => {
+    const res = await updateMyPaymentMethodsAction({
+      payment_method:  'instapay',
+      instapay_number: '01012345678',
+      payment_link:    '',
+    })
+    expect(res.success).toBe(false)
+    if (!res.success) expect(res.error.code).toBe('INVALID')
+  })
+
+  it('rejects with a validation error when only the Instapay link is provided', async () => {
+    const res = await updateMyPaymentMethodsAction({
+      payment_method:  'instapay',
+      instapay_number: '',
+      payment_link:    'https://ipn.eg/S/example',
+    })
+    expect(res.success).toBe(false)
+    if (!res.success) expect(res.error.code).toBe('INVALID')
+  })
+})
+
+// ── Payroll modal (TL / admin) ────────────────────────────────────────────────
+
+describe('Payroll modal — instructor payment write path (modules/staff-finance)', () => {
+  it('updateInstructorPaymentInfoAction writes all five payment columns to the instructors table only', async () => {
+    const { updateInstructorPaymentInfoAction } = await import('@/modules/staff-finance/actions')
+    requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: ['manage_payroll'] })
+    const db = mockDb({ instructors: [{ data: null, error: null }] })
+
+    const res = await updateInstructorPaymentInfoAction({
+      instructor_id:       INSTRUCTOR_ID,
+      salary_per_session:  100,
+      payment_method:      'instapay',
+      instapay_number:     '01012345678',
+      payment_link:        'https://ipn.eg/S/example',
+      payment_notes:       null,
+    })
+
+    expect(res.success).toBe(true)
+    // Single source of truth: the only table touched is `instructors` — no secondary table.
+    expect(db.from).toHaveBeenCalledWith('instructors')
+    expect(db.from).not.toHaveBeenCalledWith('instructor_payment_methods')
+  })
+
+  it('rejects Instapay with number only, from the payroll modal, the same as every other write path', async () => {
+    const { updateInstructorPaymentInfoAction } = await import('@/modules/staff-finance/actions')
+    requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: ['manage_payroll'] })
+
+    const res = await updateInstructorPaymentInfoAction({
+      instructor_id:      INSTRUCTOR_ID,
+      salary_per_session: 100,
+      payment_method:     'instapay',
+      instapay_number:    '01012345678',
+      payment_link:       null,
+      payment_notes:      null,
+    })
+
+    expect(res.success).toBe(false)
+    if (!res.success) expect(res.error.code).toBe('VALIDATION')
+  })
+
+  it('getLiveInstructorFinance selects wallet_number, instapay_number, payment_link and bank_account_number together (never instapay_number alone)', async () => {
+    const { getLiveInstructorFinance } = await import('@/modules/staff-finance/queries')
+    const src = getLiveInstructorFinance.toString()
+    expect(src).toMatch(/wallet_number/)
+    expect(src).toMatch(/instapay_number/)
+    expect(src).toMatch(/payment_link/)
+    expect(src).toMatch(/bank_account_number/)
   })
 })
 

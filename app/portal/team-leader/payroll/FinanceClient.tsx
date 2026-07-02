@@ -39,13 +39,13 @@ import {
 } from "@/modules/staff-finance/types"
 import { getInstructorPaymentMethodsAction } from "@/modules/instructor-payments/actions"
 import type { InstructorPaymentMethods } from "@/modules/instructor-payments/types"
-import { PREFERRED_METHOD_LABELS } from "@/modules/instructor-payments/types"
+import { PREFERRED_METHOD_LABELS, validatePaymentMethodFields } from "@/modules/instructor-payments/types"
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TABS = [
   { id: "instructors", label: "Instructors" },
-  { id: "staff",       label: "Staff"       },
+  { id: "staff",       label: "Employees"    },
   { id: "summary",     label: "Summary"     },
 ] as const
 
@@ -287,7 +287,10 @@ export default function FinanceClient({
   const [payModal, setPayModal] = useState<InstructorFinanceRow | null>(null)
   const [payRate,   setPayRate]   = useState("")
   const [payMethod, setPayMethod] = useState("")
-  const [payRef,    setPayRef]    = useState("")
+  const [payWallet, setPayWallet] = useState("")
+  const [payInstapayNo, setPayInstapayNo] = useState("")
+  const [payLink,   setPayLink]   = useState("")
+  const [payBank,   setPayBank]   = useState("")
   const [payNotes,  setPayNotes]  = useState("")
   const [payBusy,   setPayBusy]   = useState(false)
   const [payErr,    setPayErr]    = useState("")
@@ -296,21 +299,35 @@ export default function FinanceClient({
     setPayModal(row)
     setPayRate(String(row.salary_per_session || ""))
     setPayMethod(row.payment_method ?? "cash")
-    setPayRef(row.instapay_number ?? "")
+    setPayWallet(row.wallet_number ?? "")
+    setPayInstapayNo(row.instapay_number ?? "")
+    setPayLink(row.payment_link ?? "")
+    setPayBank(row.bank_account_number ?? "")
     setPayNotes(row.payment_notes ?? "")
     setPayErr("")
   }
 
   async function submitPaymentInfo() {
     if (!payModal) return
+    const validationError = validatePaymentMethodFields({
+      payment_method:      payMethod,
+      wallet_number:       payWallet,
+      instapay_number:     payInstapayNo,
+      payment_link:        payLink,
+      bank_account_number: payBank,
+    })
+    if (validationError) { setPayErr(validationError); return }
     setPayBusy(true)
     setPayErr("")
     const result = await updateInstructorPaymentInfoAction({
-      instructor_id:      payModal.instructor_id,
-      salary_per_session: payRate ? Number(payRate) : null,
-      payment_method:     payMethod || null,
-      instapay_number:    payRef    || null,
-      payment_notes:      payNotes  || null,
+      instructor_id:       payModal.instructor_id,
+      salary_per_session:  payRate ? Number(payRate) : null,
+      payment_method:      payMethod || null,
+      wallet_number:       payWallet     || null,
+      instapay_number:     payInstapayNo || null,
+      payment_link:        payLink       || null,
+      bank_account_number: payBank       || null,
+      payment_notes:       payNotes  || null,
     })
     setPayBusy(false)
     if (!result.success) { setPayErr(result.error.message); return }
@@ -506,7 +523,7 @@ export default function FinanceClient({
                 onClick={openCreateStaff}
                 className="flex items-center gap-1.5 rounded-lg bg-[#0B1F3A] px-3 py-2 text-[12px] font-semibold text-white hover:bg-[#1a2f4a] transition"
               >
-                <span className="text-lg leading-none">+</span> Add Staff
+                <span className="text-lg leading-none">+</span> Add Employee
               </button>
             )}
           </div>
@@ -645,7 +662,7 @@ export default function FinanceClient({
           {activeTab !== "summary" && (
             <div className="relative ml-auto">
               <input
-                placeholder={`Search ${activeTab}…`}
+                placeholder={`Search ${TABS.find(t => t.id === activeTab)?.label.toLowerCase() ?? activeTab}…`}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="rounded-lg border border-[#E2E8F0] pl-8 pr-3 py-1.5 text-[12px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 w-44"
@@ -921,17 +938,50 @@ export default function FinanceClient({
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="text-[12px] font-semibold text-[#0B1F3A]">
-                  {payMethod === "instapay" ? "Instapay Number" : "Payment Reference"}
-                </label>
-                <input
-                  value={payRef}
-                  onChange={e => setPayRef(e.target.value)}
-                  placeholder="Account / phone / IBAN"
-                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
-                />
-              </div>
+              {payMethod === "vodafone_cash" && (
+                <div>
+                  <label className="text-[12px] font-semibold text-[#0B1F3A]">Vodafone Cash Number <span className="text-[#EF4444]">*</span></label>
+                  <input
+                    value={payWallet}
+                    onChange={e => setPayWallet(e.target.value)}
+                    placeholder="01xxxxxxxxx"
+                    className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                  />
+                </div>
+              )}
+              {payMethod === "instapay" && (
+                <>
+                  <div>
+                    <label className="text-[12px] font-semibold text-[#0B1F3A]">Instapay Number <span className="text-[#EF4444]">*</span></label>
+                    <input
+                      value={payInstapayNo}
+                      onChange={e => setPayInstapayNo(e.target.value)}
+                      placeholder="01xxxxxxxxx"
+                      className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[12px] font-semibold text-[#0B1F3A]">Instapay Payment Link <span className="text-[#EF4444]">*</span></label>
+                    <input
+                      type="url"
+                      value={payLink}
+                      onChange={e => setPayLink(e.target.value)}
+                      placeholder="https://ipn.eg/S/..."
+                      className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                    />
+                  </div>
+                </>
+              )}
+              {payMethod === "bank_transfer" && (
+                <div>
+                  <label className="text-[12px] font-semibold text-[#0B1F3A]">Bank Account Number <span className="text-[#EF4444]">*</span></label>
+                  <input
+                    value={payBank}
+                    onChange={e => setPayBank(e.target.value)}
+                    className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                  />
+                </div>
+              )}
               <div>
                 <label className="text-[12px] font-semibold text-[#0B1F3A]">Notes</label>
                 <textarea
@@ -1013,7 +1063,7 @@ export default function FinanceClient({
         {staffModal && (
           <Modal
             onClose={() => setStaffModal(null)}
-            title={staffModal.mode === "create" ? "Add Staff Member" : `Edit — ${staffModal.row?.display_name}`}
+            title={staffModal.mode === "create" ? "Add Employee" : `Edit — ${staffModal.row?.display_name}`}
             wide
           >
             <div className="space-y-3">
@@ -1182,7 +1232,7 @@ export default function FinanceClient({
                 )}
                 <button onClick={() => setStaffModal(null)} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">Cancel</button>
                 <button onClick={submitStaffProfile} disabled={sfBusy} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[13px] font-semibold text-white hover:bg-[#1a2f4a] disabled:opacity-50">
-                  {sfBusy ? "Saving…" : staffModal.mode === "create" ? "Add Staff" : "Save Changes"}
+                  {sfBusy ? "Saving…" : staffModal.mode === "create" ? "Add Employee" : "Save Changes"}
                 </button>
               </div>
             </div>
@@ -1408,7 +1458,7 @@ function StaffTab({
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
         {[
-          { label: "Staff",             value: String(rows.length),           hi: false },
+          { label: "Employees",         value: String(rows.length),           hi: false },
           { label: "Salaries",          value: fmtEGP(totalSalaries),         hi: false },
           { label: "Activities",        value: fmtEGP(totalActivityEarnings), hi: false },
           { label: "Net Total",         value: fmtEGP(totalNet),              hi: true  },
@@ -1423,7 +1473,7 @@ function StaffTab({
       </div>
 
       {rows.length === 0 ? (
-        <EmptyState message="No staff profiles yet. Click &quot;Add Staff&quot; to get started." />
+        <EmptyState message="No employees yet. Click &quot;Add Employee&quot; to get started." />
       ) : (
         <>
           {/* Desktop */}
@@ -1608,10 +1658,10 @@ function SummaryTab({
 
       <div className="grid grid-cols-2 gap-3">
         <SummaryCard label="Instructors"           value={String(summary.instructor_count)} />
-        <SummaryCard label="Staff"                 value={String(summary.staff_count)} />
+        <SummaryCard label="Employees"              value={String(summary.staff_count)} />
         <SummaryCard label="Instructor Sessions"   value={fmtEGP(summary.total_session_earnings)} />
-        <SummaryCard label="Staff Salaries"        value={fmtEGP(summary.total_staff_salaries)} />
-        <SummaryCard label="Staff Sessions"        value={fmtEGP(summary.total_staff_session_earnings)} />
+        <SummaryCard label="Employee Salaries"      value={fmtEGP(summary.total_staff_salaries)} />
+        <SummaryCard label="Employee Sessions"      value={fmtEGP(summary.total_staff_session_earnings)} />
         <SummaryCard label="Total Bonuses"         value={fmtEGP(summary.total_bonus)} color="emerald" />
         <SummaryCard label="Total Penalties"       value={fmtEGP(summary.total_penalty)} color="red" />
         <SummaryCard label="Total Advances"        value={fmtEGP(summary.total_advance)} color="amber" />
@@ -1734,8 +1784,28 @@ function DrawerContent({
                       : "Not set"
                   }
                 />
+                {(row as InstructorFinanceRow).wallet_number && (
+                  <DrawerRow label="Vodafone Cash" value={(row as InstructorFinanceRow).wallet_number!} />
+                )}
                 {(row as InstructorFinanceRow).instapay_number && (
-                  <DrawerRow label="Instapay" value={(row as InstructorFinanceRow).instapay_number!} />
+                  <DrawerRow label="Instapay Number" value={(row as InstructorFinanceRow).instapay_number!} />
+                )}
+                {(row as InstructorFinanceRow).payment_link && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-[#64748B]">Instapay Link</span>
+                    <a
+                      href={(row as InstructorFinanceRow).payment_link!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="truncate text-[12px] text-[#FF8A1F] hover:underline max-w-[160px]"
+                      title={(row as InstructorFinanceRow).payment_link!}
+                    >
+                      {(row as InstructorFinanceRow).payment_link}
+                    </a>
+                  </div>
+                )}
+                {(row as InstructorFinanceRow).bank_account_number && (
+                  <DrawerRow label="Bank Account" value={(row as InstructorFinanceRow).bank_account_number!} />
                 )}
                 {(row as InstructorFinanceRow).payment_notes && (
                   <DrawerRow label="Notes" value={(row as InstructorFinanceRow).payment_notes!} />
@@ -1938,7 +2008,10 @@ function InstructorDetailModal({
   // Payments inline form
   const [payRate,   setPayRate]   = useState(String(row.salary_per_session || ""))
   const [payMethod, setPayMethod] = useState<string>(row.payment_method ?? "cash")
-  const [payRef,    setPayRef]    = useState(row.instapay_number ?? "")
+  const [payWallet, setPayWallet] = useState(row.wallet_number ?? "")
+  const [payInstapayNo, setPayInstapayNo] = useState(row.instapay_number ?? "")
+  const [payLink,   setPayLink]   = useState(row.payment_link ?? "")
+  const [payBank,   setPayBank]   = useState(row.bank_account_number ?? "")
   const [payNotes,  setPayNotes]  = useState(row.payment_notes ?? "")
   const [payBusy,   setPayBusy]   = useState(false)
   const [payErr,    setPayErr]    = useState("")
@@ -2063,13 +2136,24 @@ function InstructorDetailModal({
   }
 
   async function submitPayment() {
+    const validationError = validatePaymentMethodFields({
+      payment_method:      payMethod,
+      wallet_number:       payWallet,
+      instapay_number:     payInstapayNo,
+      payment_link:        payLink,
+      bank_account_number: payBank,
+    })
+    if (validationError) { setPayErr(validationError); setPayOk(false); return }
     setPayBusy(true); setPayErr(""); setPayOk(false)
     const res = await updateInstructorPaymentInfoAction({
-      instructor_id: row.instructor_id,
-      salary_per_session: payRate ? Number(payRate) : null,
-      payment_method: payMethod || null,
-      instapay_number: payRef || null,
-      payment_notes: payNotes || null,
+      instructor_id:       row.instructor_id,
+      salary_per_session:  payRate ? Number(payRate) : null,
+      payment_method:      payMethod || null,
+      wallet_number:       payWallet     || null,
+      instapay_number:     payInstapayNo || null,
+      payment_link:        payLink       || null,
+      bank_account_number: payBank       || null,
+      payment_notes:       payNotes || null,
     })
     setPayBusy(false)
     if (!res.success) { setPayErr(res.error.message); return }
@@ -2080,11 +2164,14 @@ function InstructorDetailModal({
   async function saveNotes() {
     setNotesBusy(true); setNotesOk(false)
     const res = await updateInstructorPaymentInfoAction({
-      instructor_id: row.instructor_id,
-      salary_per_session: row.salary_per_session || null,
-      payment_method: row.payment_method || null,
-      instapay_number: row.instapay_number || null,
-      payment_notes: notesText || null,
+      instructor_id:       row.instructor_id,
+      salary_per_session:  row.salary_per_session || null,
+      payment_method:      row.payment_method || null,
+      wallet_number:       row.wallet_number || null,
+      instapay_number:     row.instapay_number || null,
+      payment_link:        row.payment_link || null,
+      bank_account_number: row.bank_account_number || null,
+      payment_notes:       notesText || null,
     })
     setNotesBusy(false)
     if (res.success) { setNotesOk(true); onRefresh() }
@@ -2211,7 +2298,10 @@ function InstructorDetailModal({
                         ? (INSTRUCTOR_PAYMENT_METHOD_LABELS[row.payment_method] ?? row.payment_method)
                         : "Not set"
                     } />
-                    {row.instapay_number && <ModalRow label="Reference" right={row.instapay_number} />}
+                    {row.wallet_number       && <ModalRow label="Vodafone Cash" right={row.wallet_number} />}
+                    {row.instapay_number     && <ModalRow label="Instapay Number" right={row.instapay_number} />}
+                    {row.payment_link        && <ModalRow label="Instapay Link" right={row.payment_link} />}
+                    {row.bank_account_number && <ModalRow label="Bank Account" right={row.bank_account_number} />}
                   </div>
                 </div>
               </div>
@@ -2566,13 +2656,34 @@ function InstructorDetailModal({
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="text-[11px] font-semibold text-[#0B1F3A]">
-                      {payMethod === "instapay" ? "Instapay Number" : "Payment Reference"}
-                    </label>
-                    <input value={payRef} onChange={e => setPayRef(e.target.value)} placeholder="Account / phone / IBAN"
-                      className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
-                  </div>
+                  {payMethod === "vodafone_cash" && (
+                    <div>
+                      <label className="text-[11px] font-semibold text-[#0B1F3A]">Vodafone Cash Number <span className="text-[#EF4444]">*</span></label>
+                      <input value={payWallet} onChange={e => setPayWallet(e.target.value)} placeholder="01xxxxxxxxx"
+                        className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                    </div>
+                  )}
+                  {payMethod === "instapay" && (
+                    <>
+                      <div>
+                        <label className="text-[11px] font-semibold text-[#0B1F3A]">Instapay Number <span className="text-[#EF4444]">*</span></label>
+                        <input value={payInstapayNo} onChange={e => setPayInstapayNo(e.target.value)} placeholder="01xxxxxxxxx"
+                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-[#0B1F3A]">Instapay Payment Link <span className="text-[#EF4444]">*</span></label>
+                        <input type="url" value={payLink} onChange={e => setPayLink(e.target.value)} placeholder="https://ipn.eg/S/..."
+                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                      </div>
+                    </>
+                  )}
+                  {payMethod === "bank_transfer" && (
+                    <div>
+                      <label className="text-[11px] font-semibold text-[#0B1F3A]">Bank Account Number <span className="text-[#EF4444]">*</span></label>
+                      <input value={payBank} onChange={e => setPayBank(e.target.value)}
+                        className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                    </div>
+                  )}
                   <div>
                     <label className="text-[11px] font-semibold text-[#0B1F3A]">Notes</label>
                     <textarea rows={2} value={payNotes} onChange={e => setPayNotes(e.target.value)}
@@ -2597,7 +2708,7 @@ function InstructorDetailModal({
                   </div>
                 </div>
 
-                <InstructorPaymentMethodsPanel instructorId={row.instructor_id} />
+                <InstructorPaymentMethodsPanel instructorId={row.instructor_id} refreshKey={payOk ? 1 : 0} />
               </div>
             )}
 
@@ -2680,8 +2791,9 @@ function InstructorDetailModal({
 // the instructor's own "My Payments" portal and the admin instructor form).
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function InstructorPaymentMethodsPanel({ instructorId }: { instructorId: string }) {
+function InstructorPaymentMethodsPanel({ instructorId, refreshKey }: { instructorId: string; refreshKey?: number }) {
   const [methods, setMethods] = useState<InstructorPaymentMethods | null>(null)
+  const [copied,  setCopied]  = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -2689,7 +2801,14 @@ function InstructorPaymentMethodsPanel({ instructorId }: { instructorId: string 
       if (!cancelled && res.success) setMethods(res.data)
     })
     return () => { cancelled = true }
-  }, [instructorId])
+  }, [instructorId, refreshKey])
+
+  function copyLink() {
+    if (!methods?.payment_link) return
+    navigator.clipboard.writeText(methods.payment_link)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
 
   return (
     <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
@@ -2701,8 +2820,35 @@ function InstructorPaymentMethodsPanel({ instructorId }: { instructorId: string 
           <ModalRow label="Preferred" right={methods.payment_method ? PREFERRED_METHOD_LABELS[methods.payment_method] : "—"} />
           {methods.wallet_number       && <ModalRow label="Vodafone Cash" right={methods.wallet_number} />}
           {methods.instapay_number     && <ModalRow label="Instapay Number" right={methods.instapay_number} />}
-          {methods.payment_link        && <ModalRow label="Instapay Link" right={methods.payment_link} />}
+          {methods.payment_link        && (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[12px] text-[#64748B]">Instapay Link</span>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <a
+                  href={methods.payment_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate text-[12px] text-[#FF8A1F] hover:underline max-w-[140px]"
+                  title={methods.payment_link}
+                >
+                  {methods.payment_link}
+                </a>
+                <button
+                  onClick={copyLink}
+                  title="Copy link"
+                  className="shrink-0 rounded-md border border-[#E2E8F0] px-1.5 py-0.5 text-[10px] font-semibold text-[#64748B] hover:bg-[#F8FAFC]"
+                >
+                  {copied ? "✓" : "Copy"}
+                </button>
+              </div>
+            </div>
+          )}
           {methods.bank_account_number && <ModalRow label="Bank Account" right={methods.bank_account_number} />}
+          {methods.payment_method === "instapay" && (!methods.instapay_number || !methods.payment_link) && (
+            <p className="pt-1 text-[11px] font-semibold text-[#B45309]">
+              ⚠ Instapay is incomplete — both number and link are required.
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -3387,7 +3533,7 @@ function StaffDetailModal({
                     rows={6}
                     value={notesText}
                     onChange={e => setNotesText(e.target.value)}
-                    placeholder="Add notes about this staff member's payroll, payment preferences, or any relevant information…"
+                    placeholder="Add notes about this employee's payroll, payment preferences, or any relevant information…"
                     className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-[13px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 resize-none"
                   />
                   {notesOk && <p className="text-[12px] text-[#10B981] font-semibold">✓ Notes saved</p>}

@@ -143,7 +143,7 @@ export async function getLiveInstructorFinance(
   // 6. Instructor base info
   const { data: instrData } = await db
     .from('instructors')
-    .select('id, user_id, salary_per_session, currency, instapay_number, payment_notes, payment_method')
+    .select('id, user_id, salary_per_session, currency, payment_method, wallet_number, instapay_number, payment_link, bank_account_number, payment_notes')
     .in('id', instructorIds)
 
   // 7. Profiles
@@ -215,10 +215,13 @@ export async function getLiveInstructorFinance(
       branch_id:          entry.branch_id,
       branch_name:        branchNameMap.get(entry.branch_id) ?? '',
       salary_per_session: baseRate,
-      payment_method:     (inst?.payment_method ?? null) as any,
-      instapay_number:    inst?.instapay_number ?? null,
-      payment_notes:      inst?.payment_notes ?? null,
-      currency:           inst?.currency ?? 'EGP',
+      payment_method:      (inst?.payment_method ?? null) as any,
+      wallet_number:       inst?.wallet_number ?? null,
+      instapay_number:     inst?.instapay_number ?? null,
+      payment_link:        inst?.payment_link ?? null,
+      bank_account_number: inst?.bank_account_number ?? null,
+      payment_notes:       inst?.payment_notes ?? null,
+      currency:            inst?.currency ?? 'EGP',
       sessions_count,
       group_count,
       session_earnings,
@@ -258,16 +261,22 @@ export async function getLiveStaffFinance(
     branches!staff_payroll_profiles_branch_id_fkey(name)
   `
 
+  // Payroll (Employees) must never surface instructor profiles. `resolveInstructorStaffProfileId`
+  // (modules/instructor-payments/queries.ts) lazily creates `staff_payroll_profiles` rows with
+  // role='instructor' purely to key the shared staff_payment_records "paid" ledger for the
+  // instructor's own My Payments portal — those rows are not real employees.
   const [{ data: branchData, error: branchErr }, { data: globalData, error: globalErr }] =
     await Promise.all([
       db.from('staff_payroll_profiles')
         .select(SELECT_COLS)
         .in('branch_id', branchIds)
+        .neq('role', 'instructor')
         .order('employment_status', { ascending: true })
         .order('role',              { ascending: true }),
       db.from('staff_payroll_profiles')
         .select(SELECT_COLS)
         .eq('works_all_branches', true)
+        .neq('role', 'instructor')
         .order('employment_status', { ascending: true })
         .order('role',              { ascending: true }),
     ])

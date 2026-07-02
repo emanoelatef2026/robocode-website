@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { createInstructorModalAction, updateInstructorModalAction } from '@/modules/instructors/modal-actions'
+import { validatePaymentMethodFields } from '@/modules/instructor-payments/types'
 import type { FullInstructor, InstructorFormOptions } from '@/modules/instructors/types'
 import { FormField } from './FormField'
 import { SPECIALIZATIONS_LIST, WORKING_DAYS } from '../types'
@@ -66,6 +67,16 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
     if (!firstName.trim() || !lastName.trim()) { setError('Full name is required.'); return }
     if (!email.trim()) { setError('Email is required.'); return }
     if (branchIds.length === 0) { setError('Select at least one branch.'); return }
+    if (paymentMethod) {
+      const paymentError = validatePaymentMethodFields({
+        payment_method:      paymentMethod,
+        wallet_number:       wallet,
+        instapay_number:     instapay,
+        payment_link:        paymentLink,
+        bank_account_number: bankAccount,
+      })
+      if (paymentError) { setError(paymentError); return }
+    }
     setError(null)
 
     const fd = new FormData()
@@ -238,10 +249,13 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
                   <option value="cash">Cash</option>
                 </select>
               </div>
-              <FormField label="Instapay Number" value={instapay}      onChange={setInstapay}     placeholder="01X XXXX XXXX" />
-              <FormField label="Instapay Payment Link" value={paymentLink} onChange={setPaymentLink} placeholder="https://ipn.eg/S/..." />
-              <FormField label="Wallet Number"   value={wallet}        onChange={setWallet}       />
-              <FormField label="Bank Account Number" value={bankAccount} onChange={setBankAccount} />
+              <FormField label="Instapay Number" value={instapay}      onChange={setInstapay}     placeholder="01X XXXX XXXX" required={paymentMethod === 'instapay'} />
+              <FormField label="Instapay Payment Link" value={paymentLink} onChange={setPaymentLink} placeholder="https://ipn.eg/S/..." required={paymentMethod === 'instapay'} />
+              {paymentMethod === 'instapay' && (
+                <p className="-mt-2 text-[11px] text-[#94A3B8]">Both the Instapay number and payment link are required.</p>
+              )}
+              <FormField label="Wallet Number"   value={wallet}        onChange={setWallet}       required={paymentMethod === 'vodafone_cash'} />
+              <FormField label="Bank Account Number" value={bankAccount} onChange={setBankAccount} required={paymentMethod === 'bank_transfer'} />
               <div>
                 <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Payment Notes</label>
                 <textarea value={paymentNotes} onChange={e => setPaymentNotes(e.target.value)} rows={2}

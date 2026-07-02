@@ -89,11 +89,46 @@ export function isPaymentInfoComplete(m: InstructorPaymentMethods): boolean {
   if (!m.payment_method) return false
   switch (m.payment_method) {
     case 'vodafone_cash': return !!m.wallet_number
-    case 'instapay':      return !!m.instapay_number || !!m.payment_link
+    case 'instapay':      return !!m.instapay_number && !!m.payment_link
     case 'bank_transfer': return !!m.bank_account_number
     case 'cash':          return true
     default:               return false
   }
+}
+
+// ── Shared write-path validation (instructor self-service, TL forms, admin forms) ──
+// Single canonical rule set so every write path (instructor portal, TL instructor
+// forms, admin instructor forms, payroll modal) enforces the same requirements.
+
+export interface PaymentMethodFieldsInput {
+  payment_method:       InstructorPreferredMethod | string | null | undefined
+  wallet_number?:       string | null
+  instapay_number?:     string | null
+  payment_link?:        string | null
+  bank_account_number?: string | null
+}
+
+export function validatePaymentMethodFields(input: PaymentMethodFieldsInput): string | null {
+  const method = input.payment_method
+  if (method === 'vodafone_cash') {
+    const number = (input.wallet_number ?? '').trim()
+    if (!isValidVodafoneCash(number)) {
+      return 'Vodafone Cash number must be exactly 11 digits.'
+    }
+  }
+  if (method === 'instapay') {
+    const number = (input.instapay_number ?? '').trim()
+    const link   = (input.payment_link ?? '').trim()
+    if (!number) return 'Instapay number is required.'
+    if (!link)   return 'Instapay payment link is required.'
+    if (!isValidInstapayLink(link)) return 'Instapay payment link must be a valid URL.'
+  }
+  if (method === 'bank_transfer') {
+    if (!(input.bank_account_number ?? '').trim()) {
+      return 'Bank account number is required.'
+    }
+  }
+  return null
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────

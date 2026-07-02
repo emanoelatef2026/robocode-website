@@ -4,6 +4,7 @@ import { revalidatePath }      from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requireAuth }         from '@/modules/rbac/guards'
 import type { ActionResult }   from '@/types/app'
+import { validatePaymentMethodFields } from '@/modules/instructor-payments/types'
 import type {
   FinanceAdjustment, FinanceAdjType, UserPickerOption, InstructorSessionDetail,
   OverrideReason, StaffSession, StaffPaymentRecord, EmploymentStatus,
@@ -109,11 +110,14 @@ export async function deleteFinanceAdjustmentAction(
 // ── Update instructor payment info ────────────────────────────────────────────
 
 export interface UpdateInstructorPaymentInput {
-  instructor_id:      string
-  salary_per_session: number | null
-  payment_method:     string | null
-  instapay_number:    string | null
-  payment_notes:      string | null
+  instructor_id:        string
+  salary_per_session:   number | null
+  payment_method:       string | null
+  wallet_number?:       string | null
+  instapay_number:      string | null
+  payment_link?:        string | null
+  bank_account_number?: string | null
+  payment_notes:        string | null
 }
 
 export async function updateInstructorPaymentInfoAction(
@@ -122,16 +126,26 @@ export async function updateInstructorPaymentInfoAction(
   const user = await requireAuth()
   if (!hasAccess(user.permissions)) return FORBIDDEN
 
+  if (input.payment_method) {
+    const validationError = validatePaymentMethodFields(input)
+    if (validationError) {
+      return { success: false, error: { code: 'VALIDATION', message: validationError } }
+    }
+  }
+
   const db = createServiceClient()
 
   const { error } = await db
     .from('instructors')
     .update({
-      salary_per_session: input.salary_per_session,
-      payment_method:     input.payment_method     ?? null,
-      instapay_number:    input.instapay_number    ?? null,
-      payment_notes:      input.payment_notes      ?? null,
-      updated_at:         new Date().toISOString(),
+      salary_per_session:  input.salary_per_session,
+      payment_method:      input.payment_method      ?? null,
+      wallet_number:       input.wallet_number        ?? null,
+      instapay_number:     input.instapay_number     ?? null,
+      payment_link:        input.payment_link         ?? null,
+      bank_account_number: input.bank_account_number  ?? null,
+      payment_notes:       input.payment_notes       ?? null,
+      updated_at:          new Date().toISOString(),
     })
     .eq('id', input.instructor_id)
 

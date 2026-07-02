@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
+import { validatePaymentMethodFields } from '@/modules/instructor-payments/types'
 import { getInstructorDetailData, getInstructorFormOptions, listInstructorsOperational } from './operational'
 import { computeNextAllocationStart } from '@/modules/academic/session-ownership'
 import type {
@@ -62,6 +63,20 @@ export async function createInstructorModalAction(formData: FormData): Promise<A
   }
   if (password && password.length < 6) {
     return { success: false, error: { code: 'VALIDATION', message: 'Password must be at least 6 characters.' } }
+  }
+
+  const paymentMethod = (formData.get('payment_method') as string) || null
+  if (paymentMethod) {
+    const validationError = validatePaymentMethodFields({
+      payment_method:       paymentMethod,
+      wallet_number:        formData.get('wallet_number') as string,
+      instapay_number:      formData.get('instapay_number') as string,
+      payment_link:         formData.get('payment_link') as string,
+      bank_account_number:  formData.get('bank_account_number') as string,
+    })
+    if (validationError) {
+      return { success: false, error: { code: 'VALIDATION', message: validationError } }
+    }
   }
 
   // Auth user
@@ -177,6 +192,20 @@ export async function createInstructorModalAction(formData: FormData): Promise<A
 export async function updateInstructorModalAction(formData: FormData): Promise<ActionResult<void>> {
   const id = formData.get('id') as string
   if (!id) return { success: false, error: { code: 'VALIDATION', message: 'Instructor ID is required.' } }
+
+  const paymentMethod = (formData.get('payment_method') as string) || null
+  if (paymentMethod) {
+    const validationError = validatePaymentMethodFields({
+      payment_method:       paymentMethod,
+      wallet_number:        formData.get('wallet_number') as string,
+      instapay_number:      formData.get('instapay_number') as string,
+      payment_link:         formData.get('payment_link') as string,
+      bank_account_number:  formData.get('bank_account_number') as string,
+    })
+    if (validationError) {
+      return { success: false, error: { code: 'VALIDATION', message: validationError } }
+    }
+  }
 
   const user = await requirePermission('manage_instructors')
   const db   = createServiceClient()

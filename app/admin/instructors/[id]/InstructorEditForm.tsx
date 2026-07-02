@@ -172,7 +172,9 @@ export default function InstructorEditForm({
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Payment link</label>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                  Payment link {instructor.payment_method === 'instapay' && <span className="text-[#EF4444]">*</span>}
+                </label>
                 <input name="payment_link" defaultValue={instructor.payment_link ?? ''} className={cls} />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -181,10 +183,13 @@ export default function InstructorEditForm({
                   <input name="wallet_number" defaultValue={instructor.wallet_number ?? ''} className={cls} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Instapay number</label>
+                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                    Instapay number {instructor.payment_method === 'instapay' && <span className="text-[#EF4444]">*</span>}
+                  </label>
                   <input name="instapay_number" defaultValue={instructor.instapay_number ?? ''} className={cls} />
                 </div>
               </div>
+              <p className="text-xs text-[#94A3B8]">Instapay requires both the number and payment link to be considered complete.</p>
               <div>
                 <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Bank account</label>
                 <input name="bank_account_number" defaultValue={instructor.bank_account_number ?? ''} className={cls} />

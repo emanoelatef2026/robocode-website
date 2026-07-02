@@ -7,6 +7,7 @@ import { getSupabasePublic } from '@/lib/supabase/server'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createInstructorSchema, updateInstructorSchema } from './schemas'
 import { saveUserPermissions } from '@/modules/user-permissions/mutations'
+import { validatePaymentMethodFields } from '@/modules/instructor-payments/types'
 import type { ActionResult } from '@/types/app'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
@@ -162,6 +163,15 @@ export async function updateInstructor(_prev: unknown, formData: FormData): Prom
     id, status, employee_id, specializations, phone,
     payment_method, payment_link, wallet_number, instapay_number, bank_account_number,
   } = parsed.data
+
+  if (payment_method) {
+    const validationError = validatePaymentMethodFields({
+      payment_method, payment_link, wallet_number, instapay_number, bank_account_number,
+    })
+    if (validationError) {
+      return { success: false, error: { code: 'VALIDATION', message: validationError } }
+    }
+  }
   const specsArray = specializations
     ? specializations.split(',').map((s) => s.trim()).filter(Boolean)
     : undefined

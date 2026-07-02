@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import type { InstructorPaymentMethods, InstructorPreferredMethod } from "@/modules/instructor-payments/types"
-import { PREFERRED_METHOD_OPTIONS, isValidVodafoneCash, isValidInstapayLink } from "@/modules/instructor-payments/types"
+import { PREFERRED_METHOD_OPTIONS, validatePaymentMethodFields } from "@/modules/instructor-payments/types"
 import { updateMyPaymentMethodsAction } from "@/modules/instructor-payments/actions"
 
 function inferMethod(m: InstructorPaymentMethods): InstructorPreferredMethod {
@@ -26,17 +26,13 @@ export default function MethodsTab({ paymentMethods }: { paymentMethods: Instruc
   const router = useRouter()
 
   function validate(): string | null {
-    if (method === 'vodafone_cash' && !isValidVodafoneCash(wallet)) {
-      return 'Vodafone Cash number must be exactly 11 digits.'
-    }
-    if (method === 'instapay') {
-      if (!instapayNo.trim() && !payLink.trim()) return 'Provide an Instapay number or payment link.'
-      if (payLink.trim() && !isValidInstapayLink(payLink)) return 'Instapay payment link must be a valid URL.'
-    }
-    if (method === 'bank_transfer' && !bankAcct.trim()) {
-      return 'Bank account number is required.'
-    }
-    return null
+    return validatePaymentMethodFields({
+      payment_method:      method,
+      wallet_number:       wallet,
+      instapay_number:     instapayNo,
+      payment_link:        payLink,
+      bank_account_number: bankAcct,
+    })
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -94,7 +90,7 @@ export default function MethodsTab({ paymentMethods }: { paymentMethods: Instruc
         <>
           <div>
             <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
-              Instapay Number
+              Instapay Number <span className="text-[#EF4444]">*</span>
             </label>
             <input
               type="text" value={instapayNo}
@@ -105,7 +101,7 @@ export default function MethodsTab({ paymentMethods }: { paymentMethods: Instruc
           </div>
           <div>
             <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
-              Instapay Payment Link
+              Instapay Payment Link <span className="text-[#EF4444]">*</span>
             </label>
             <input
               type="url" value={payLink}
@@ -114,6 +110,7 @@ export default function MethodsTab({ paymentMethods }: { paymentMethods: Instruc
               className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
             />
           </div>
+          <p className="text-[11px] text-[#94A3B8]">Both the number and payment link are required for Instapay.</p>
         </>
       )}
 
