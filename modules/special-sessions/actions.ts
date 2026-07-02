@@ -479,13 +479,17 @@ export async function startSpecialSession(sessionId: string): Promise<ActionResu
   return { success: true, data: undefined }
 }
 
-// ── End Trial Session ─────────────────────────────────────────────────────────
+// ── End Trial Session (with atomic attendance save + lead creation) ───────────
 // Business rules:
-//   - No session consumption, no XP, no attendance rate impact for students
+//   - Saves attendance from the provided map before marking session complete
+//   - Lead-linked present students → status = TRIAL_ATTENDED
+//   - Ad-hoc present students (no lead_id) → create new lead with TRIAL_ATTENDED
 //   - Instructor: session counted in payroll (via session_instructors.submitted_at)
-//   - Update lead statuses to TRIAL_ATTENDED for present students
 
-export async function endTrialSession(sessionId: string): Promise<ActionResult<void>> {
+export async function endTrialSessionWithAttendance(
+  sessionId:  string,
+  attendance: Record<string, string>,   // { [trial_session_student.id]: 'present' | 'absent' }
+): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_attendance')
   const db   = createServiceClient()
 
@@ -500,46 +504,91 @@ export async function endTrialSession(sessionId: string): Promise<ActionResult<v
   if (!sess) return { success: false, error: { code: 'NOT_FOUND', message: 'Trial session not found.' } }
   if ((sess as any).status === 'completed') return { success: false, error: { code: 'VALIDATION', message: 'Session already completed.' } }
 
-  const now = new Date().toISOString()
+  const branchId = (sess as any).branch_id as string
+  const now      = new Date().toISOString()
 
-  await db.from('schedules').update({ status: 'completed', ended_at: now }).eq('id', sessionId)
-
-  // Mark instructor participation (stamps submitted_at for payroll)
-  const { data: siRow } = await db
-    .from('session_instructors')
-    .select('instructor_id')
-    .eq('session_id', sessionId)
-    .maybeSingle()
-
-  if (siRow) {
-    await db.from('session_instructors').update({ submitted_at: now }).eq('session_id', sessionId)
+  // 1. Save attendance statuses
+  for (const [studentRowId, status] of Object.entries(attendance)) {
+    await db
+      .from('trial_session_students')
+      .update({ attendance_status: status })
+      .eq('id', studentRowId)
   }
 
-  // Update present trial students' leads to TRIAL_ATTENDED
-  const { data: presentStudents } = await db
+  // 2. Fetch all students with their attendance (after update)
+  const { data: allStudents } = await db
     .from('trial_session_students')
-    .select('lead_id')
+    .select('id, lead_id, student_name, parent_phone, student_phone, attendance_status')
     .eq('schedule_id', sessionId)
-    .eq('attendance_status', 'present')
-    .not('lead_id', 'is', null)
 
-  const leadIds = (presentStudents ?? []).map((s: any) => s.lead_id as string).filter(Boolean)
+  const presentStudents = (allStudents ?? []).filter(
+    (s: any) => s.attendance_status === 'present'
+  )
+
+  // 3. Mark lead-linked present students as TRIAL_ATTENDED
+  const leadIds = presentStudents
+    .map((s: any) => s.lead_id as string | null)
+    .filter((id): id is string => id != null)
+
   if (leadIds.length > 0) {
     await db.from('leads').update({ status: 'TRIAL_ATTENDED' }).in('id', leadIds)
   }
+
+  // 4. Create new leads for ad-hoc present students (no lead_id)
+  const adHocPresent = presentStudents.filter((s: any) => !s.lead_id)
+  for (const s of adHocPresent as any[]) {
+    const { data: newLead, error: leadErr } = await db
+      .from('leads')
+      .insert({
+        child_name:        s.student_name,
+        phone:             s.parent_phone ?? null,
+        source:            'trial_session',
+        status:            'TRIAL_ATTENDED',
+        branch_id:         branchId,
+        stage_entered_at:  now,
+      })
+      .select('id')
+      .single()
+
+    if (!leadErr && newLead) {
+      // Link the lead back to the trial student row for TL visibility
+      await db
+        .from('trial_session_students')
+        .update({ lead_id: (newLead as any).id })
+        .eq('id', s.id)
+    }
+  }
+
+  // 5. Mark session complete
+  await db
+    .from('schedules')
+    .update({ status: 'completed', ended_at: now })
+    .eq('id', sessionId)
+
+  // 6. Stamp instructor payroll record
+  await db
+    .from('session_instructors')
+    .update({ submitted_at: now })
+    .eq('session_id', sessionId)
 
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,
     p_action:       'special_session.end_trial',
     p_entity_type:  'schedule',
     p_entity_id:    sessionId,
-    p_new_values:   { ended_at: now },
-    p_branch_id:    (sess as any).branch_id,
+    p_new_values:   { ended_at: now, present_count: presentStudents.length },
+    p_branch_id:    branchId,
   })
 
   revalidatePath('/portal/instructor/special-sessions')
   revalidatePath('/portal/team-leader/special-sessions')
+  revalidatePath('/portal/team-leader/leads')
   return { success: true, data: undefined }
+}
+
+// ── End Trial Session (legacy — kept for external callers) ───────────────────
+export async function endTrialSession(sessionId: string): Promise<ActionResult<void>> {
+  return endTrialSessionWithAttendance(sessionId, {})
 }
 
 // ── End Makeup Session ────────────────────────────────────────────────────────

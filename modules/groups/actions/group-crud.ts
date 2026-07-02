@@ -41,7 +41,7 @@ export async function createGroupModal(
 
   const processGroup = async (gid: string) => {
     await assignCourseAndInstructor(db, gid, course_id, instructor_id, asst_instructor_id, user.id)
-    if (course_id) await updateGroupCoursePlan(db, gid, planned_sessions, open_ended ?? false)
+    if (course_id) await updateGroupCoursePlan(db, gid, planned_sessions, open_ended ?? false, user.id)
     const toAdd = parseStudentIds(students_to_add_json)
     if (toAdd.length) await applyStudentChanges(db, user.id, gid, rest.branch_id, toAdd, [])
     await db.rpc('write_audit_log', {
@@ -113,7 +113,7 @@ export async function updateGroupModal(
   }
 
   await assignCourseAndInstructor(db, id, course_id, instructor_id, asst_instructor_id, user.id)
-  await updateGroupCoursePlan(db, id, planned_sessions, open_ended ?? false)
+  await updateGroupCoursePlan(db, id, planned_sessions, open_ended ?? false, user.id)
 
   const toAdd    = parseStudentIds(students_to_add_json)
   const toRemove = parseStudentIds(students_to_remove_json)

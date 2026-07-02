@@ -27,6 +27,7 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   ongoing:    { bg: "bg-[#EFF6FF]", text: "text-[#1D4ED8]", label: "Ongoing",    dot: "bg-[#3B82F6]" },
   scheduled:  { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "Scheduled",  dot: "bg-[#94A3B8]" },
   cancelled:  { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]", label: "Cancelled",  dot: "bg-[#EF4444]" },
+  postponed:  { bg: "bg-[#FFF7ED]", text: "text-[#C2410C]", label: "Postponed",  dot: "bg-[#FB923C]" },
   online:     { bg: "bg-[#E0F2FE]", text: "text-[#0369A1]", label: "Online",     dot: "bg-[#38BDF8]" },
   offline:    { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "Offline",    dot: "bg-[#94A3B8]" },
   hybrid:     { bg: "bg-[#F3E8FF]", text: "text-[#6B21A8]", label: "Hybrid",     dot: "bg-[#A855F7]" },

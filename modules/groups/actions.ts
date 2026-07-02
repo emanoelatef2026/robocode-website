@@ -489,7 +489,7 @@ export async function saveGroupAcademicConfig(
   await assignGroupCourseService(groupId, courseId, instructorId || null, user.id, db)
 
   // 2. Academic plan — explicit TL-defined session count (no hidden defaults)
-  if (courseId) await updateGroupCoursePlan(db, groupId, plannedSessions, openEnded)
+  if (courseId) await updateGroupCoursePlan(db, groupId, plannedSessions, openEnded, user.id)
 
   // 3. Lead instructor — upsert group_instructors with role='lead'
   if (instructorId) {

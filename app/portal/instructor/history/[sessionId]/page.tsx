@@ -39,7 +39,7 @@ export default async function SessionHistoryDetailPage({ params }: Props) {
       {/* Breadcrumb */}
       <div>
         <Link href="/portal/instructor/history" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
-          ← Session History
+          ← My Sessions
         </Link>
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <h1 className="text-xl font-bold text-[#0B1F3A]">

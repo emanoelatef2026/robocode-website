@@ -235,7 +235,7 @@ export interface SessionHistoryFilters {
   to?:      string
   groupId?: string
   topic?:   string
-  status?:  string
+  status?:  string | string[]
 }
 
 export interface AttendanceAnalyticsRow {

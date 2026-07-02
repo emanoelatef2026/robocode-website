@@ -15,11 +15,11 @@ interface Props {
   to?:       string
   groupId?:  string
   topic?:    string
-  status?:   string
+  tab?:      string
 }
 
-export default function HistoryFilterPanel({ groups, from, to, groupId, topic, status }: Props) {
-  const hasActive = !!(from || to || groupId || topic || status)
+export default function HistoryFilterPanel({ groups, from, to, groupId, topic, tab }: Props) {
+  const hasActive = !!(from || to || groupId || topic)
   const [expanded, setExpanded] = useState(hasActive)
 
   return (
@@ -51,8 +51,9 @@ export default function HistoryFilterPanel({ groups, from, to, groupId, topic, s
       {/* Filter form */}
       {expanded && (
         <form method="GET" className="border-t border-[#F1F5F9] px-3 pb-3 pt-2.5">
-          {/* Row 1: Group + Status */}
-          <div className="grid grid-cols-2 gap-2 md:grid-cols-5 md:gap-3">
+          {tab && tab !== 'done' && <input type="hidden" name="tab" value={tab} />}
+          {/* Row 1: Group + dates + topic */}
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
             <div className="col-span-2 md:col-span-1">
               <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Group</label>
               <select
@@ -64,21 +65,6 @@ export default function HistoryFilterPanel({ groups, from, to, groupId, topic, s
                 {groups.map(g => (
                   <option key={g.group_id} value={g.group_id}>{g.group_name}</option>
                 ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Status</label>
-              <select
-                name="status"
-                defaultValue={status ?? ""}
-                className={`w-full rounded-lg border px-2.5 py-1.5 text-[12px] outline-none transition ${status ? 'border-[#FF8A1F] bg-[#FFF7ED] text-[#FF8A1F]' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#374151] focus:border-[#FF8A1F] focus:bg-white'}`}
-              >
-                <option value="">All</option>
-                <option value="completed">Completed</option>
-                <option value="ongoing">Ongoing</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="cancelled">Cancelled</option>
               </select>
             </div>
 
@@ -124,7 +110,7 @@ export default function HistoryFilterPanel({ groups, from, to, groupId, topic, s
             </button>
             {hasActive && (
               <Link
-                href="/portal/instructor/history"
+                href={tab && tab !== 'done' ? `/portal/instructor/history?tab=${tab}` : '/portal/instructor/history'}
                 className="rounded-lg border border-[#E2E8F0] px-3.5 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#CBD5E1] transition"
               >
                 Clear

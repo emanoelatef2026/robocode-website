@@ -46,9 +46,10 @@ const PATH_TITLES: Record<string, string> = {
   "/portal/instructor": "Dashboard",
   "/portal/instructor/groups": "My Groups",
   "/portal/instructor/homework": "Homework",
-  "/portal/instructor/history": "Session History",
+  "/portal/instructor/history": "My Sessions",
   "/portal/instructor/students": "Students",
   "/portal/instructor/portfolio": "Portfolio",
+  "/portal/instructor/payments": "My Payments",
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -75,13 +76,14 @@ interface Props {
 
 export default function AdminTopbar({ onMenuClick, role = "super_admin", branchName, bellSlot }: Props) {
   const pathname  = usePathname();
-  const { action } = useTopbarAction();
+  const { action, titleOverride } = useTopbarAction();
 
-  const pageTitle   = getPageTitle(pathname);
+  const pageTitle   = titleOverride?.title ?? getPageTitle(pathname);
   const roleLabel   = ROLE_LABELS[role] ?? "Admin";
   const formattedDate = new Date().toLocaleDateString("en-US", {
     weekday: "long", month: "long", day: "numeric",
   });
+  const subtitle = titleOverride?.subtitle ?? `${formattedDate} · ${roleLabel}`;
 
   return (
     <header className="flex h-[60px] shrink-0 items-center gap-3 border-b border-[#E2E8F0] bg-white px-4 md:px-6">
@@ -102,7 +104,7 @@ export default function AdminTopbar({ onMenuClick, role = "super_admin", branchN
           {pageTitle}
         </h1>
         <p className="text-[11px] text-[#94A3B8] leading-none mt-0.5">
-          {formattedDate} · {roleLabel}
+          {subtitle}
         </p>
       </div>
       {/* Mobile: just show title */}

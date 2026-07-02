@@ -2,25 +2,37 @@ import 'server-only'
 import { createServiceClient }    from '@/lib/supabase/service'
 import { syncGroupStatus }         from '../lifecycle'
 import { assignGroupCourseService } from '../assignment-service'
+import { generateGroupSchedules }   from './schedule-generation'
 
 type DB = ReturnType<typeof createServiceClient>
 
-// Updates the group's academic plan on its active group_courses row.
+// Updates the group's academic plan on its active group_courses row, then
+// auto-fills the schedules table forward through the last planned session
+// (so the instructor calendar keeps showing sessions until the group ends).
 // Call this after assignCourseAndInstructor to persist TL-defined session count.
 export async function updateGroupCoursePlan(
   db:              DB,
   groupId:         string,
   plannedSessions: number | undefined,
   openEnded:       boolean,
+  createdBy:       string | null = null,
 ): Promise<void> {
-  await db
+  const totalSessions = openEnded ? null : (plannedSessions ?? null)
+
+  const { data: gcRow } = await db
     .from('group_courses')
     .update({
-      total_sessions: openEnded ? null : (plannedSessions ?? null),
+      total_sessions: totalSessions,
       open_ended:     openEnded,
     })
     .eq('group_id', groupId)
     .eq('status', 'active')
+    .select('id')
+    .maybeSingle()
+
+  if (gcRow && !openEnded) {
+    await generateGroupSchedules(db, groupId, (gcRow as { id: string }).id, totalSessions, createdBy)
+  }
 }
 
 // Applies student membership changes to a group.

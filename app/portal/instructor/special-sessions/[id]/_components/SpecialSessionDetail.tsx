@@ -4,7 +4,7 @@ import { useState, useTransition, useActionState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   startSpecialSession,
-  endTrialSession,
+  endTrialSessionWithAttendance,
   endMakeupSession,
   saveTrialAttendance,
   saveMakeupAttendance,
@@ -28,6 +28,7 @@ const INIT_VOID:    ActionResult<void>                   = { success: false, err
 export default function SpecialSessionDetail(props: Props) {
   const router  = useRouter()
   const [pending, startTransition] = useTransition()
+  const [endError, setEndError] = useState<string | null>(null)
 
   const session   = props.type === 'trial' ? props.trialSession! : props.makeupSession!
   const isTrial   = props.type === 'trial'
@@ -35,17 +36,38 @@ export default function SpecialSessionDetail(props: Props) {
   const isScheduled = session.status === 'scheduled'
   const isEditable  = isOngoing || isScheduled
 
+  // Attendance map lives here so handleEnd can read it before ending
+  const [attendanceMap, setAttendanceMap] = useState<Record<string, string>>(() => {
+    if (props.type !== 'trial') return {}
+    return Object.fromEntries(
+      props.trialSession!.students.map(s => [s.id, s.attendance_status ?? 'absent'])
+    )
+  })
+
   const badgeColor = isTrial ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
   const badgeLabel = isTrial ? 'Trial Session' : 'Standalone Makeup'
 
   function handleStart() {
     startTransition(async () => { await startSpecialSession(session.id); router.refresh() })
   }
+
   function handleEnd() {
+    setEndError(null)
     startTransition(async () => {
-      if (isTrial) await endTrialSession(session.id)
-      else         await endMakeupSession(session.id)
-      router.refresh()
+      let result: ActionResult<void>
+      if (isTrial) {
+        result = await endTrialSessionWithAttendance(session.id, attendanceMap)
+      } else {
+        result = await endMakeupSession(session.id)
+      }
+
+      if (!result.success) {
+        setEndError(result.error?.message ?? 'Failed to end session. Please try again.')
+        return
+      }
+
+      // Navigate back to sessions list so TL can see who attended
+      router.push('/portal/instructor/special-sessions')
     })
   }
 
@@ -75,17 +97,25 @@ export default function SpecialSessionDetail(props: Props) {
           {isScheduled && (
             <button onClick={handleStart} disabled={pending}
               className="rounded-lg bg-[#3B82F6] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60 hover:bg-[#2563EB]">
-              Start Session
+              {pending ? 'Starting…' : 'Start Session'}
             </button>
           )}
           {isOngoing && (
             <button onClick={handleEnd} disabled={pending}
               className="rounded-lg bg-[#10B981] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60 hover:bg-[#059669]">
-              End Session
+              {pending ? 'Ending…' : 'End Session'}
             </button>
           )}
         </div>
       </div>
+
+      {/* End session error feedback */}
+      {endError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-[13px] font-semibold text-red-700">Failed to end session</p>
+          <p className="text-[12px] text-red-600 mt-0.5">{endError}</p>
+        </div>
+      )}
 
       {session.notes && (
         <div className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-3">
@@ -101,6 +131,8 @@ export default function SpecialSessionDetail(props: Props) {
           leads={props.leads}
           isEditable={isEditable}
           isOngoing={isOngoing}
+          attendanceMap={attendanceMap}
+          onAttendanceChange={setAttendanceMap}
         />
       ) : (
         <MakeupStudentsPanel
@@ -115,21 +147,18 @@ export default function SpecialSessionDetail(props: Props) {
 // ── Trial Students Panel ──────────────────────────────────────────────────────
 
 function TrialStudentsPanel({
-  session, leads, isEditable, isOngoing,
+  session, leads, isEditable, isOngoing, attendanceMap, onAttendanceChange,
 }: {
-  session:    TrialSession
-  leads:      Lead[]
-  isEditable: boolean
-  isOngoing:  boolean
+  session:            TrialSession
+  leads:              Lead[]
+  isEditable:         boolean
+  isOngoing:          boolean
+  attendanceMap:      Record<string, string>
+  onAttendanceChange: React.Dispatch<React.SetStateAction<Record<string, string>>>
 }) {
   const router = useRouter()
-  const [addMode, setAddMode]   = useState<'none' | 'lead' | 'new'>('none')
+  const [addMode, setAddMode]     = useState<'none' | 'lead' | 'new'>('none')
   const [editingId, setEditingId] = useState<string | null>(null)
-
-  // Track attendance changes locally (controlled inputs)
-  const [attendanceMap, setAttendanceMap] = useState<Record<string, string>>(() =>
-    Object.fromEntries(session.students.map(s => [s.id, s.attendance_status ?? 'absent']))
-  )
   const [savePending, startSaveTransition] = useTransition()
 
   // Add from lead
@@ -283,7 +312,7 @@ function TrialStudentsPanel({
                   {/* Attendance toggle */}
                   <select
                     value={attendanceMap[s.id] ?? 'absent'}
-                    onChange={e => setAttendanceMap(prev => ({ ...prev, [s.id]: e.target.value }))}
+                    onChange={e => onAttendanceChange(prev => ({ ...prev, [s.id]: e.target.value }))}
                     disabled={!isOngoing}
                     className="rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#A855F7] disabled:opacity-60 disabled:bg-[#F8FAFC]"
                   >
@@ -319,7 +348,7 @@ function TrialStudentsPanel({
         </div>
       )}
 
-      {/* Save attendance */}
+      {/* Save attendance (intermediate save while session is live) */}
       {isOngoing && session.students.length > 0 && (
         <div className="border-t border-[#E2E8F0] px-4 py-3 flex items-center gap-3">
           <button
@@ -330,7 +359,7 @@ function TrialStudentsPanel({
           >
             {savePending ? 'Saving…' : 'Save Attendance'}
           </button>
-          <p className="text-[11px] text-[#64748B]">Mark each student then save.</p>
+          <p className="text-[11px] text-[#64748B]">Attendance is also saved automatically when you end the session.</p>
         </div>
       )}
     </div>

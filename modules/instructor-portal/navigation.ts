@@ -12,7 +12,8 @@ export const INSTRUCTOR_NAV: InstructorNavItem[] = [
   { key: 'calendar',  label: 'Calendar',        href: '/portal/instructor/calendar'                     },
   { key: 'students',  label: 'Students',        href: '/portal/instructor/students/search'              },
   { key: 'homework',  label: 'Homework',        href: '/portal/instructor/homework'                     },
-  { key: 'history',   label: 'Session History', href: '/portal/instructor/history'                      },
+  { key: 'history',   label: 'My Sessions',     href: '/portal/instructor/history'                      },
+  { key: 'payments',  label: 'My Payments',     href: '/portal/instructor/payments'                     },
 ]
 
 /** Desktop sidebar groups the nav into sections. */
@@ -24,5 +25,9 @@ export const INSTRUCTOR_NAV_SECTIONS = [
   {
     title: 'Teaching',
     keys: ['groups', 'calendar', 'students', 'homework', 'history'],
+  },
+  {
+    title: 'Finance',
+    keys: ['payments'],
   },
 ] as const

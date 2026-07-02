@@ -13,7 +13,22 @@ interface Props {
   searchParams: Promise<Record<string, string | undefined>>
 }
 
-export default async function SessionHistoryPage({ searchParams }: Props) {
+// Cancelled/postponed sessions are excluded from all system KPIs — these tabs
+// exist purely as an informational log for the instructor.
+const TAB_STATUSES: Record<string, string[]> = {
+  done:      ['completed'],
+  scheduled: ['scheduled', 'ongoing'],
+  postponed: ['postponed'],
+  cancelled: ['cancelled', 'cancelled_with_makeup'],
+}
+const TABS: { key: string; label: string }[] = [
+  { key: 'done',      label: 'Done' },
+  { key: 'scheduled', label: 'Scheduled' },
+  { key: 'postponed', label: 'Postponed' },
+  { key: 'cancelled', label: 'Cancelled' },
+]
+
+export default async function MySessionsPage({ searchParams }: Props) {
   const user       = await requirePortalRole('instructor')
   const instructor = await getInstructorByUserId(user.id)
 
@@ -31,17 +46,45 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
   const to      = sp.to      ?? undefined
   const groupId = sp.groupId ?? undefined
   const topic   = sp.topic   ?? undefined
-  const status  = sp.status  ?? undefined
+  const tab     = sp.tab && TAB_STATUSES[sp.tab] ? sp.tab : 'done'
 
   const [groups, sessions] = await Promise.all([
     listInstructorGroups(instructor.id),
-    listSessionHistory(instructor.id, { from, to, groupId, topic, status }),
+    listSessionHistory(instructor.id, { from, to, groupId, topic, status: TAB_STATUSES[tab] }),
   ])
 
   const activeGroups = groups.filter(g => !!g.course_title)
 
+  const tabHref = (key: string) => {
+    const params = new URLSearchParams()
+    if (from)    params.set('from', from)
+    if (to)      params.set('to', to)
+    if (groupId) params.set('groupId', groupId)
+    if (topic)   params.set('topic', topic)
+    if (key !== 'done') params.set('tab', key)
+    const qs = params.toString()
+    return `/portal/instructor/history${qs ? `?${qs}` : ''}`
+  }
+
   return (
     <div className="space-y-3 md:space-y-4">
+
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-[#E2E8F0]">
+        {TABS.map(t => (
+          <Link
+            key={t.key}
+            href={tabHref(t.key)}
+            className={`px-3.5 py-2 text-[13px] font-semibold transition ${
+              tab === t.key
+                ? 'border-b-2 border-[#FF8A1F] text-[#0B1F3A]'
+                : 'text-[#94A3B8] hover:text-[#0B1F3A]'
+            }`}
+          >
+            {t.label}
+          </Link>
+        ))}
+      </div>
 
       {/* Filters */}
       <HistoryFilterPanel
@@ -50,7 +93,7 @@ export default async function SessionHistoryPage({ searchParams }: Props) {
         to={to}
         groupId={groupId}
         topic={topic}
-        status={status}
+        tab={tab}
       />
 
       {/* Results */}

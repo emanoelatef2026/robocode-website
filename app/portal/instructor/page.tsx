@@ -10,6 +10,9 @@ import {
 import { getInstructorRatingSummary } from '@/modules/feedback/queries'
 import type { InstructorRatingSummary } from '@/modules/feedback/types'
 import { getUnreadNotificationCount } from '@/modules/notifications/queries'
+import { getInstructorPaymentOverview } from '@/modules/instructor-payments/queries'
+import { fmtEGP } from '@/modules/instructor-payments/types'
+import { TopbarTitle } from '@/components/admin/TopbarActionContext'
 import Link from 'next/link'
 import KpiCard        from '@/components/admin/KpiCard'
 import SectionDivider from '@/components/admin/SectionDivider'
@@ -50,6 +53,7 @@ export default async function InstructorDashboardPage() {
   let todaySessions: Awaited<ReturnType<typeof getTodaySessions>>           = []
   let rating: InstructorRatingSummary | null = null
   let unreadNotifications = 0
+  let thisMonthEarnings = 0
 
   await Promise.allSettled([
     listInstructorGroups(instructor.id).then((r)          => { groups    = r }),
@@ -59,6 +63,8 @@ export default async function InstructorDashboardPage() {
     getTodaySessions(instructor.id).then((r)              => { todaySessions = r }),
     getInstructorRatingSummary(instructor.id).then((r)    => { rating    = r }),
     getUnreadNotificationCount(user.id).then((r)          => { unreadNotifications = r }),
+    getInstructorPaymentOverview(instructor.id, user.id, instructor.branch_id)
+      .then((r) => { thisMonthEarnings = r.approved_this_month }),
   ])
 
   const activeGroups   = groups.filter((g) => !!g.course_title)
@@ -76,17 +82,14 @@ export default async function InstructorDashboardPage() {
   return (
     <div>
 
-      {/* ── GREETING ─────────────────────────────────────────────────────── */}
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-[18px] font-bold text-[#0B1F3A] md:text-xl">
-            Good morning, {name}
-          </h1>
-          <p className="mt-0.5 text-[12px] text-[#64748B] md:text-sm">
-            {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </p>
-        </div>
-        {rating != null && (
+      <TopbarTitle
+        title={`Good morning, ${name}`}
+        subtitle={new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+      />
+
+      {/* ── RATING BADGE ─────────────────────────────────────────────────── */}
+      {rating != null && (
+        <div className="mb-5 flex justify-end">
           <div className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[#FDE68A] bg-[#FFF1E2] px-3 py-1.5">
             <span className="text-[13px]">⭐</span>
             <span className="font-orbitron text-[13px] font-bold text-[#FF8A1F]">
@@ -94,8 +97,8 @@ export default async function InstructorDashboardPage() {
             </span>
             <span className="text-[10px] text-[#B45309]">avg</span>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ── TODAY'S SESSIONS ─────────────────────────────────────────────── */}
       <SectionDivider title="Today's Sessions" />
@@ -142,7 +145,14 @@ export default async function InstructorDashboardPage() {
 
       {/* ── OVERVIEW KPIs ────────────────────────────────────────────────── */}
       <SectionDivider title="Overview" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+        <KpiCard
+          label="This Month Earnings"
+          value={fmtEGP(thisMonthEarnings)}
+          href="/portal/instructor/payments"
+          barColor="#15803D"
+          bars={[35, 40, 48, 50, 55, 60, 65]}
+        />
         <KpiCard
           label="My Groups"
           value={stats.groupCount}

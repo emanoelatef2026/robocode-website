@@ -35,7 +35,7 @@ interface GcContext {
   gcToGroupId: Map<string, string>
 }
 
-async function resolveGcContext(
+export async function resolveGcContext(
   instructorId: string,
   db: ReturnType<typeof createServiceClient>
 ): Promise<GcContext> {
@@ -1399,7 +1399,11 @@ export async function listSessionHistory(
 
   if (filters?.from)   query = query.gte('scheduled_at', filters.from)
   if (filters?.to)     query = query.lte('scheduled_at', filters.to)
-  if (filters?.status) query = query.eq('status', filters.status)
+  if (filters?.status) {
+    query = Array.isArray(filters.status)
+      ? query.in('status', filters.status)
+      : query.eq('status', filters.status)
+  }
 
   const { data: baseSessions } = await query
 
@@ -1915,17 +1919,36 @@ export async function getTodaySessions(instructorId: string): Promise<TodaySessi
   const standaloneRows: TodaySession[] = []
 
   if (siSessionIds.length > 0) {
-    const { data: specialRows } = await db
-      .from('schedules')
-      .select('id, type, branch_id, scheduled_at, duration_minutes, status, branches!schedules_branch_id_fkey(name)')
-      .in('id', siSessionIds)
-      .is('group_course_id', null)
-      .in('type', ['trial', 'makeup'])
-      .gte('scheduled_at', todayStart.toISOString())
-      .lte('scheduled_at', todayEnd.toISOString())
-      .not('status', 'in', '("cancelled","cancelled_with_makeup")')
+    // Fetch: (a) sessions scheduled today + (b) any ongoing session (may have started yesterday)
+    const [todayRes, ongoingRes] = await Promise.all([
+      db.from('schedules')
+        .select('id, type, branch_id, scheduled_at, duration_minutes, status, branches!schedules_branch_id_fkey(name)')
+        .in('id', siSessionIds)
+        .is('group_course_id', null)
+        .in('type', ['trial', 'makeup'])
+        .gte('scheduled_at', todayStart.toISOString())
+        .lte('scheduled_at', todayEnd.toISOString())
+        .not('status', 'in', '("cancelled","cancelled_with_makeup")'),
+      db.from('schedules')
+        .select('id, type, branch_id, scheduled_at, duration_minutes, status, branches!schedules_branch_id_fkey(name)')
+        .in('id', siSessionIds)
+        .is('group_course_id', null)
+        .in('type', ['trial', 'makeup'])
+        .eq('status', 'ongoing'),
+    ])
 
-    for (const s of (specialRows ?? []) as any[]) {
+    // Merge + deduplicate by id
+    const seenIds = new Set<string>()
+    const specialRows = [
+      ...(todayRes.data   ?? []),
+      ...(ongoingRes.data ?? []),
+    ].filter((r: any) => {
+      if (seenIds.has(r.id)) return false
+      seenIds.add(r.id)
+      return true
+    })
+
+    for (const s of specialRows as any[]) {
       standaloneRows.push({
         id:               s.id,
         group_id:         '',

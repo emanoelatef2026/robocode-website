@@ -1,5 +1,5 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
-import { getInstructorByUserId } from '@/modules/instructor-portal/queries'
+import { getInstructorByUserId, resolveGcContext } from '@/modules/instructor-portal/queries'
 import { listSpecialSessions } from '@/modules/special-sessions/queries'
 import { createServiceClient } from '@/lib/supabase/service'
 import EmptyState from '@/components/admin/EmptyState'
@@ -31,13 +31,10 @@ export default async function InstructorCalendarPage({ searchParams }: Props) {
   const showMakeup  = filter === 'all' || filter === 'makeup'
   const specialType = filter === 'trial' ? 'trial' : filter === 'makeup' ? 'makeup' : undefined
 
-  // Primary sessions via group_courses
-  const { data: gcIds } = await db
-    .from('group_courses')
-    .select('id')
-    .eq('instructor_id', instructor.id)
-
-  const myGcIds = (gcIds ?? []).map((r: any) => r.id as string)
+  // Primary sessions via group_courses — resolved through both direct
+  // group_courses.instructor_id assignment and the group_instructors pivot,
+  // so co-taught / pivot-only groups still show on the calendar.
+  const { gcIds: myGcIds } = await resolveGcContext(instructor.id, db)
 
   const [primaryRes, specialSessions] = await Promise.all([
     showPrimary && myGcIds.length > 0
