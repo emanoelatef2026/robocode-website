@@ -37,14 +37,9 @@ import {
   PAYMENT_STATUS_LABELS, PAYMENT_STATUS_COLORS,
   fmtEGP, fmtNum, computeAdjTotals, computeStaffNetAmount,
 } from "@/modules/staff-finance/types"
-import {
-  getInstructorPaymentMethodsAction,
-  listInstructorPayoutRequestsForModalAction,
-  decidePayoutRequestAction,
-  markPayoutRequestPaidAction,
-} from "@/modules/instructor-payments/actions"
-import type { InstructorPaymentMethods, PayoutRequestListItem } from "@/modules/instructor-payments/types"
-import { PAYOUT_STATUS_LABELS, PAYOUT_STATUS_COLORS, PREFERRED_METHOD_LABELS } from "@/modules/instructor-payments/types"
+import { getInstructorPaymentMethodsAction } from "@/modules/instructor-payments/actions"
+import type { InstructorPaymentMethods } from "@/modules/instructor-payments/types"
+import { PREFERRED_METHOD_LABELS } from "@/modules/instructor-payments/types"
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -2602,7 +2597,7 @@ function InstructorDetailModal({
                   </div>
                 </div>
 
-                <InstructorPayoutPanel instructorId={row.instructor_id} branchId={row.branch_id} onRefresh={onRefresh} />
+                <InstructorPaymentMethodsPanel instructorId={row.instructor_id} />
               </div>
             )}
 
@@ -2680,50 +2675,21 @@ function InstructorDetailModal({
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// INSTRUCTOR PAYOUT PANEL — read-only payment methods + payout request decisions.
-// Reused as-is by both TL and Admin (FinanceClient.tsx is shared verbatim).
+// INSTRUCTOR PAYMENT METHODS PANEL — read-only view of the instructor's payment
+// info. Sourced from the instructors table (single source of truth, shared with
+// the instructor's own "My Payments" portal and the admin instructor form).
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function InstructorPayoutPanel({
-  instructorId, branchId, onRefresh,
-}: { instructorId: string; branchId: string; onRefresh: () => void }) {
-  const [methods, setMethods]   = useState<InstructorPaymentMethods | null>(null)
-  const [requests, setRequests] = useState<PayoutRequestListItem[] | null>(null)
-  const [busyId, setBusyId]     = useState<string | null>(null)
-  const [err, setErr]           = useState("")
+function InstructorPaymentMethodsPanel({ instructorId }: { instructorId: string }) {
+  const [methods, setMethods] = useState<InstructorPaymentMethods | null>(null)
 
   useEffect(() => {
     let cancelled = false
-    async function load() {
-      const [mRes, rRes] = await Promise.all([
-        getInstructorPaymentMethodsAction(instructorId),
-        listInstructorPayoutRequestsForModalAction([branchId]),
-      ])
-      if (cancelled) return
-      if (mRes.success) setMethods(mRes.data)
-      if (rRes.success) setRequests(rRes.data.filter(r => r.instructor_id === instructorId))
-    }
-    load()
+    getInstructorPaymentMethodsAction(instructorId).then(res => {
+      if (!cancelled && res.success) setMethods(res.data)
+    })
     return () => { cancelled = true }
-  }, [instructorId, branchId])
-
-  async function handleDecide(id: string, decision: "approved" | "rejected") {
-    setBusyId(id); setErr("")
-    const res = await decidePayoutRequestAction(id, decision)
-    setBusyId(null)
-    if (!res.success) { setErr(res.error.message); return }
-    setRequests(prev => prev?.map(r => r.id === id ? { ...r, status: decision } : r) ?? null)
-    onRefresh()
-  }
-
-  async function handleMarkPaid(id: string, method: string) {
-    setBusyId(id); setErr("")
-    const res = await markPayoutRequestPaidAction(id, method)
-    setBusyId(null)
-    if (!res.success) { setErr(res.error.message); return }
-    setRequests(prev => prev?.map(r => r.id === id ? { ...r, status: "paid" } : r) ?? null)
-    onRefresh()
-  }
+  }, [instructorId])
 
   return (
     <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
@@ -2737,53 +2703,6 @@ function InstructorPayoutPanel({
           {methods.instapay_number     && <ModalRow label="Instapay Number" right={methods.instapay_number} />}
           {methods.payment_link        && <ModalRow label="Instapay Link" right={methods.payment_link} />}
           {methods.bank_account_number && <ModalRow label="Bank Account" right={methods.bank_account_number} />}
-        </div>
-      )}
-
-      <p className="pt-2 text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider">Payout Requests</p>
-      {err && <p className="text-[12px] text-[#EF4444]">{err}</p>}
-      {requests === null ? (
-        <p className="text-[12px] text-[#94A3B8]">Loading…</p>
-      ) : requests.length === 0 ? (
-        <p className="text-[12px] text-[#94A3B8]">No payout requests.</p>
-      ) : (
-        <div className="space-y-2">
-          {requests.map(r => (
-            <div key={r.id} className="flex items-center justify-between gap-2 rounded-lg border border-[#F1F5F9] px-3 py-2">
-              <div>
-                <p className="text-[12px] font-semibold text-[#0B1F3A]">{fmtEGP(r.requested_amount)}</p>
-                <p className="text-[10px] text-[#94A3B8]">
-                  {new Date(r.requested_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${PAYOUT_STATUS_COLORS[r.status]}`}>
-                  {PAYOUT_STATUS_LABELS[r.status]}
-                </span>
-                {r.status === "pending" && (
-                  <>
-                    <button
-                      disabled={busyId === r.id}
-                      onClick={() => handleDecide(r.id, "approved")}
-                      className="rounded-md bg-[#10B981] px-2 py-1 text-[10px] font-bold text-white disabled:opacity-50"
-                    >Approve</button>
-                    <button
-                      disabled={busyId === r.id}
-                      onClick={() => handleDecide(r.id, "rejected")}
-                      className="rounded-md bg-[#EF4444] px-2 py-1 text-[10px] font-bold text-white disabled:opacity-50"
-                    >Reject</button>
-                  </>
-                )}
-                {r.status === "approved" && (
-                  <button
-                    disabled={busyId === r.id}
-                    onClick={() => handleMarkPaid(r.id, methods?.payment_method ?? "cash")}
-                    className="rounded-md bg-[#0B1F3A] px-2 py-1 text-[10px] font-bold text-white disabled:opacity-50"
-                  >Mark Paid</button>
-                )}
-              </div>
-            </div>
-          ))}
         </div>
       )}
     </div>

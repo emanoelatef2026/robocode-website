@@ -18,8 +18,10 @@ export const updateInstructorSchema = z.object({
   employee_id:         z.string().max(50).optional().or(z.literal('')),
   specializations:     z.string().optional().or(z.literal('')),
   phone:               z.string().max(30).optional().or(z.literal('')),
+  payment_method:      z.enum(['instapay', 'vodafone_cash', 'bank_transfer', 'cash']).optional().or(z.literal('')),
   payment_link:        z.string().max(500).optional().or(z.literal('')),
   wallet_number:       z.string().max(100).optional().or(z.literal('')),
+  instapay_number:     z.string().max(100).optional().or(z.literal('')),
   bank_account_number: z.string().max(100).optional().or(z.literal('')),
 })
 

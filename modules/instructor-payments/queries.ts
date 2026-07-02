@@ -5,7 +5,7 @@ import type { FinanceAdjustment, StaffPaymentRecord } from '@/modules/staff-fina
 import type {
   InstructorSessionEarning, SessionEarningFilters, SessionEarningType,
   InstructorPaymentOverview, InstructorMonthlyPaymentSummary, InstructorPaymentRecordRow,
-  InstructorPaymentMethods, InstructorPayoutRequest, PayoutRequestListItem, PayoutRequestStatus,
+  InstructorPaymentMethods,
 } from './types'
 
 const COMPLETING_STATUSES  = new Set(['completed'])
@@ -41,7 +41,7 @@ export async function getInstructorBranchIds(instructorId: string, primaryBranch
 // ── Resolve (or lazily create) the staff_payroll_profiles row backing         ──
 // ── this instructor's "paid" ledger (staff_payment_records).                 ──
 // One row per (user_id, branch_id) — reuses the primary branch for the profile
-// since staff_payment_records / payout requests are recorded per-branch.
+// since staff_payment_records is recorded per-branch.
 
 export async function resolveInstructorStaffProfileId(
   userId:   string,
@@ -277,8 +277,6 @@ export async function getInstructorPaymentOverview(
   const { data: instrRow } = await createServiceClient()
     .from('instructors').select('currency').eq('id', instructorId).maybeSingle()
 
-  const openRequest = await getOpenPayoutRequest(instructorId)
-
   return {
     estimated_this_month: estimatedThisMonth,
     approved_this_month:  approvedThisMonth,
@@ -286,7 +284,6 @@ export async function getInstructorPaymentOverview(
     outstanding,
     lifetime_earnings:    lifetimeApproved,
     currency:             (instrRow as any)?.currency ?? 'EGP',
-    can_request_payout:   outstanding > 0 && !openRequest,
   }
 }
 
@@ -369,66 +366,4 @@ export async function getInstructorPaymentMethods(instructorId: string): Promise
     payment_link:        row.payment_link ?? null,
     bank_account_number: row.bank_account_number ?? null,
   }
-}
-
-// ── Payout requests ─────────────────────────────────────────────────────────────
-
-export async function getOpenPayoutRequest(instructorId: string): Promise<InstructorPayoutRequest | null> {
-  const db = createServiceClient()
-  const { data } = await db
-    .from('instructor_payout_requests')
-    .select('*')
-    .eq('instructor_id', instructorId)
-    .in('status', ['pending', 'approved'])
-    .maybeSingle()
-  return data as InstructorPayoutRequest | null
-}
-
-export async function listInstructorPayoutRequests(instructorId: string): Promise<InstructorPayoutRequest[]> {
-  const db = createServiceClient()
-  const { data } = await db
-    .from('instructor_payout_requests')
-    .select('*')
-    .eq('instructor_id', instructorId)
-    .order('created_at', { ascending: false })
-  return (data ?? []) as InstructorPayoutRequest[]
-}
-
-export async function listPayoutRequestsForBranches(branchIds: string[]): Promise<PayoutRequestListItem[]> {
-  if (!branchIds.length) return []
-  const db = createServiceClient()
-
-  const { data } = await db
-    .from('instructor_payout_requests')
-    .select('*')
-    .in('branch_id', branchIds)
-    .order('created_at', { ascending: false })
-
-  const rows = (data ?? []) as any[]
-  if (!rows.length) return []
-
-  const instructorIds = [...new Set(rows.map(r => r.instructor_id as string))]
-  const { data: instrRows } = await db
-    .from('instructors')
-    .select('id, user_id, branch_id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
-    .in('id', instructorIds)
-
-  const nameMap   = new Map<string, string>()
-  const branchOfInstr = new Map<string, string>()
-  for (const i of (instrRows ?? []) as any[]) {
-    const p = i.users?.profiles
-    nameMap.set(i.id, [p?.first_name, p?.last_name].filter(Boolean).join(' ') || '—')
-    branchOfInstr.set(i.id, i.branch_id)
-  }
-
-  const branchIdsAll = [...new Set(rows.map(r => r.branch_id as string))]
-  const { data: branchRows } = await db.from('branches').select('id, name').in('id', branchIdsAll)
-  const branchNameMap = new Map<string, string>()
-  for (const b of (branchRows ?? []) as any[]) branchNameMap.set(b.id, b.name)
-
-  return rows.map(r => ({
-    ...r,
-    instructor_name: nameMap.get(r.instructor_id) ?? '—',
-    branch_name:      branchNameMap.get(r.branch_id) ?? '—',
-  })) as PayoutRequestListItem[]
 }

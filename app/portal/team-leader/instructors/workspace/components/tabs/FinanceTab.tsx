@@ -1,4 +1,5 @@
 import type { InstructorDetailData } from '@/modules/instructors/types'
+import { PREFERRED_METHOD_LABELS, type InstructorPreferredMethod } from '@/modules/instructor-payments/types'
 import { StatCard } from '../StatCard'
 import { SectionLabel } from '../SectionLabel'
 import { fmtCurrency } from '../../utils'
@@ -23,12 +24,26 @@ export function FinanceTab({ detail }: { detail: InstructorDetailData }) {
         <SectionLabel>Payment Details</SectionLabel>
         <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-3 text-[12px]">
           <div className="flex justify-between">
+            <span className="text-[#94A3B8]">Preferred Method</span>
+            <span className="font-medium text-[#0B1F3A]">
+              {instructor.payment_method ? PREFERRED_METHOD_LABELS[instructor.payment_method as InstructorPreferredMethod] : '—'}
+            </span>
+          </div>
+          <div className="flex justify-between">
             <span className="text-[#94A3B8]">Instapay</span>
             <span className="font-medium text-[#0B1F3A]">{instructor.instapay_number || '—'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-[#94A3B8]">Wallet</span>
             <span className="font-medium text-[#0B1F3A]">{instructor.wallet_number || '—'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#94A3B8]">Instapay Link</span>
+            <span className="font-medium text-[#0B1F3A] truncate max-w-[60%]">{instructor.payment_link || '—'}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-[#94A3B8]">Bank Account</span>
+            <span className="font-medium text-[#0B1F3A]">{instructor.bank_account_number || '—'}</span>
           </div>
           {instructor.payment_notes && (
             <div>

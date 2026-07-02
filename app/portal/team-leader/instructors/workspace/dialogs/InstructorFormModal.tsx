@@ -47,8 +47,11 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
   const [whatsapp, setWhatsapp]         = useState(instructor?.whatsapp_number ?? '')
   const [salary, setSalary]             = useState(instructor?.salary_per_session?.toString() ?? '')
   const [currency, setCurrency]         = useState(instructor?.currency ?? 'EGP')
+  const [paymentMethod, setPaymentMethod] = useState(instructor?.payment_method ?? '')
   const [wallet, setWallet]             = useState(instructor?.wallet_number ?? '')
   const [instapay, setInstapay]         = useState(instructor?.instapay_number ?? '')
+  const [paymentLink, setPaymentLink]   = useState(instructor?.payment_link ?? '')
+  const [bankAccount, setBankAccount]   = useState(instructor?.bank_account_number ?? '')
   const [paymentNotes, setPaymentNotes] = useState(instructor?.payment_notes ?? '')
   const [specs, setSpecs]               = useState(instructor?.specializations?.join(', ') ?? '')
   const [workingDays, setWorkingDays]   = useState<string[]>(instructor?.working_days ?? [])
@@ -83,8 +86,11 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
     fd.append('whatsapp_number', whatsapp)
     fd.append('salary_per_session', salary)
     fd.append('currency', currency)
+    fd.append('payment_method', paymentMethod)
     fd.append('wallet_number', wallet)
     fd.append('instapay_number', instapay)
+    fd.append('payment_link', paymentLink)
+    fd.append('bank_account_number', bankAccount)
     fd.append('payment_notes', paymentNotes)
     fd.append('specializations', specs)
     workingDays.forEach(d => fd.append('working_days', d))
@@ -222,8 +228,20 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
                   </select>
                 </div>
               </div>
+              <div>
+                <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Preferred Payment Method</label>
+                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F]">
+                  <option value="">— Select —</option>
+                  <option value="vodafone_cash">Vodafone Cash</option>
+                  <option value="instapay">Instapay</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="cash">Cash</option>
+                </select>
+              </div>
               <FormField label="Instapay Number" value={instapay}      onChange={setInstapay}     placeholder="01X XXXX XXXX" />
+              <FormField label="Instapay Payment Link" value={paymentLink} onChange={setPaymentLink} placeholder="https://ipn.eg/S/..." />
               <FormField label="Wallet Number"   value={wallet}        onChange={setWallet}       />
+              <FormField label="Bank Account Number" value={bankAccount} onChange={setBankAccount} />
               <div>
                 <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Payment Notes</label>
                 <textarea value={paymentNotes} onChange={e => setPaymentNotes(e.target.value)} rows={2}

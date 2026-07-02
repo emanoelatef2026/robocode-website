@@ -8,7 +8,6 @@ import {
   applySessionEarningFilters,
   getInstructorPaymentHistory,
   getInstructorPaymentMethods,
-  listInstructorPayoutRequests,
 } from '@/modules/instructor-payments/queries'
 import { isPaymentInfoComplete } from '@/modules/instructor-payments/types'
 import PaymentsTabs from './_components/PaymentsTabs'
@@ -44,12 +43,11 @@ export default async function InstructorPaymentsPage({ searchParams }: Props) {
 
   const branchIds = await getInstructorBranchIds(instructor.id, instructor.branch_id)
 
-  const [overview, allSessions, history, paymentMethods, payoutRequests] = await Promise.all([
+  const [overview, allSessions, history, paymentMethods] = await Promise.all([
     getInstructorPaymentOverview(instructor.id, user.id, instructor.branch_id),
     getInstructorSessionEarnings(instructor.id, branchIds),
     getInstructorPaymentHistory(instructor.id, user.id, instructor.branch_id),
     getInstructorPaymentMethods(instructor.id),
-    listInstructorPayoutRequests(instructor.id),
   ])
 
   const breakdown = applySessionEarningFilters(allSessions, filters)
@@ -64,7 +62,6 @@ export default async function InstructorPaymentsPage({ searchParams }: Props) {
         filters={filters}
         history={history}
         paymentMethods={paymentMethods}
-        payoutRequests={payoutRequests}
         infoComplete={infoComplete}
       />
     </div>

@@ -9,8 +9,6 @@ export type NotificationType =
   | 'TRIAL_SESSION_ASSIGNED'
   | 'MAKEUP_SESSION_ASSIGNED'
   | 'TRIAL_SESSION_REMINDER'
-  | 'PAYOUT_REQUEST_SUBMITTED'
-  | 'PAYOUT_REQUEST_DECIDED'
 
 export interface Notification {
   id:           string

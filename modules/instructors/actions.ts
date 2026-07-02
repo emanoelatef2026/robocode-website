@@ -146,8 +146,10 @@ export async function updateInstructor(_prev: unknown, formData: FormData): Prom
     employee_id:         formData.get('employee_id')         || undefined,
     specializations:     formData.get('specializations')     || undefined,
     phone:               formData.get('phone')               || undefined,
+    payment_method:      formData.get('payment_method')      || undefined,
     payment_link:        formData.get('payment_link')        || undefined,
     wallet_number:       formData.get('wallet_number')       || undefined,
+    instapay_number:     formData.get('instapay_number')     || undefined,
     bank_account_number: formData.get('bank_account_number') || undefined,
   }
 
@@ -156,7 +158,10 @@ export async function updateInstructor(_prev: unknown, formData: FormData): Prom
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { id, status, employee_id, specializations, phone, payment_link, wallet_number, bank_account_number } = parsed.data
+  const {
+    id, status, employee_id, specializations, phone,
+    payment_method, payment_link, wallet_number, instapay_number, bank_account_number,
+  } = parsed.data
   const specsArray = specializations
     ? specializations.split(',').map((s) => s.trim()).filter(Boolean)
     : undefined
@@ -177,8 +182,10 @@ export async function updateInstructor(_prev: unknown, formData: FormData): Prom
   if (status)                          updates.status              = status
   if (employee_id !== undefined)       updates.employee_id         = employee_id         || null
   if (specsArray)                      updates.specializations     = specsArray
+  if (payment_method !== undefined)    updates.payment_method      = payment_method      || null
   if (payment_link !== undefined)      updates.payment_link        = payment_link        || null
   if (wallet_number !== undefined)     updates.wallet_number       = wallet_number       || null
+  if (instapay_number !== undefined)   updates.instapay_number     = instapay_number     || null
   if (bank_account_number !== undefined) updates.bank_account_number = bank_account_number || null
 
   const { error } = await db.from('instructors').update(updates).eq('id', id)

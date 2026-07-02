@@ -2,11 +2,10 @@ import KpiCard from '@/components/admin/KpiCard'
 import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
 import type {
-  InstructorPaymentOverview, InstructorSessionEarning, SessionEarningFilters, InstructorPayoutRequest,
+  InstructorPaymentOverview, InstructorSessionEarning, SessionEarningFilters,
 } from '@/modules/instructor-payments/types'
 import { fmtEGP } from '@/modules/instructor-payments/types'
 import SessionBreakdownFilters from './SessionBreakdownFilters'
-import PayoutRequestPanel from './PayoutRequestPanel'
 
 const SESSION_TYPE_LABELS: Record<string, string> = {
   primary: 'Primary',
@@ -18,12 +17,9 @@ interface Props {
   overview:       InstructorPaymentOverview
   breakdown:      InstructorSessionEarning[]
   filters:        SessionEarningFilters
-  payoutRequests: InstructorPayoutRequest[]
 }
 
-export default function OverviewTab({ overview, breakdown, filters, payoutRequests }: Props) {
-  const openRequest = payoutRequests.find(r => r.status === 'pending' || r.status === 'approved')
-
+export default function OverviewTab({ overview, breakdown, filters }: Props) {
   return (
     <div className="space-y-4">
       {/* KPI cards */}
@@ -42,9 +38,6 @@ export default function OverviewTab({ overview, breakdown, filters, payoutReques
           <KpiCard label="Lifetime Earnings" value={fmtEGP(overview.lifetime_earnings)} barColor="#FF8A1F" bars={[50, 55, 60, 65, 70, 75, 80]} />
         </div>
       </div>
-
-      {/* Payout request */}
-      <PayoutRequestPanel overview={overview} openRequest={openRequest ?? null} />
 
       {/* Session breakdown */}
       <div>

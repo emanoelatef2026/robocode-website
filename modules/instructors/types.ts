@@ -11,8 +11,10 @@ export interface Instructor {
   instructor_code: string | null
   status: InstructorStatus
   specializations: string[]
+  payment_method: string | null
   payment_link: string | null
   wallet_number: string | null
+  instapay_number: string | null
   bank_account_number: string | null
   deleted_at: string | null
   created_at: string
@@ -58,8 +60,10 @@ export interface UpdateInstructorInput {
   employee_id?: string
   specializations?: string[]
   phone?: string
+  payment_method?: string
   payment_link?: string
   wallet_number?: string
+  instapay_number?: string
   bank_account_number?: string
 }
 
@@ -114,8 +118,11 @@ export interface FullInstructor {
   whatsapp_number: string | null
   salary_per_session: number | null
   currency: string
+  payment_method: string | null
   wallet_number: string | null
   instapay_number: string | null
+  payment_link: string | null
+  bank_account_number: string | null
   payment_notes: string | null
   working_days: string[]
   max_weekly_load: number | null

@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import type {
   InstructorPaymentOverview, InstructorSessionEarning, SessionEarningFilters,
-  InstructorMonthlyPaymentSummary, InstructorPaymentMethods, InstructorPayoutRequest,
+  InstructorMonthlyPaymentSummary, InstructorPaymentMethods,
 } from '@/modules/instructor-payments/types'
 import MissingPaymentInfoBanner from './MissingPaymentInfoBanner'
 import OverviewTab from './OverviewTab'
@@ -15,7 +15,6 @@ interface Props {
   filters:        SessionEarningFilters
   history:        InstructorMonthlyPaymentSummary[]
   paymentMethods: InstructorPaymentMethods
-  payoutRequests: InstructorPayoutRequest[]
   infoComplete:   boolean
 }
 
@@ -26,7 +25,7 @@ const TABS: { key: Props['tab']; label: string }[] = [
 ]
 
 export default function PaymentsTabs({
-  tab, overview, breakdown, filters, history, paymentMethods, payoutRequests, infoComplete,
+  tab, overview, breakdown, filters, history, paymentMethods, infoComplete,
 }: Props) {
   return (
     <div className="space-y-4">
@@ -50,7 +49,7 @@ export default function PaymentsTabs({
       </div>
 
       {tab === 'overview' && (
-        <OverviewTab overview={overview} breakdown={breakdown} filters={filters} payoutRequests={payoutRequests} />
+        <OverviewTab overview={overview} breakdown={breakdown} filters={filters} />
       )}
       {tab === 'history' && <HistoryTab history={history} />}
       {tab === 'methods' && <MethodsTab paymentMethods={paymentMethods} />}

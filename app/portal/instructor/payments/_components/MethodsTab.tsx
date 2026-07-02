@@ -6,8 +6,16 @@ import type { InstructorPaymentMethods, InstructorPreferredMethod } from "@/modu
 import { PREFERRED_METHOD_OPTIONS, isValidVodafoneCash, isValidInstapayLink } from "@/modules/instructor-payments/types"
 import { updateMyPaymentMethodsAction } from "@/modules/instructor-payments/actions"
 
+function inferMethod(m: InstructorPaymentMethods): InstructorPreferredMethod {
+  if (m.payment_method) return m.payment_method
+  if (m.wallet_number) return 'vodafone_cash'
+  if (m.instapay_number || m.payment_link) return 'instapay'
+  if (m.bank_account_number) return 'bank_transfer'
+  return 'cash'
+}
+
 export default function MethodsTab({ paymentMethods }: { paymentMethods: InstructorPaymentMethods }) {
-  const [method, setMethod]     = useState<InstructorPreferredMethod>(paymentMethods.payment_method ?? 'cash')
+  const [method, setMethod]     = useState<InstructorPreferredMethod>(inferMethod(paymentMethods))
   const [wallet, setWallet]     = useState(paymentMethods.wallet_number ?? '')
   const [instapayNo, setInstapayNo] = useState(paymentMethods.instapay_number ?? '')
   const [payLink, setPayLink]   = useState(paymentMethods.payment_link ?? '')

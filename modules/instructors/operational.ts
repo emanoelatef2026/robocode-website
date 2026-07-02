@@ -30,8 +30,9 @@ interface RawInstructorRow {
   bio: string | null; alt_phone: string | null
   instagram_url: string | null; facebook_url: string | null
   whatsapp_number: string | null; currency: string | null
+  payment_method: string | null
   wallet_number: string | null; bank_account_number: string | null
-  instapay_number: string | null; payment_notes: string | null
+  instapay_number: string | null; payment_link: string | null; payment_notes: string | null
   working_days: string[] | null; max_weekly_load: number | null
   internal_notes: string | null; created_at: string; updated_at: string
   users: RawUserJoin | null; branches: RawBranch | null
@@ -311,8 +312,8 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
     .select(
       `id, user_id, branch_id, employee_id, hire_date, instructor_code, status, specializations,
        bio, alt_phone, instagram_url, facebook_url, whatsapp_number,
-       salary_per_session, currency, wallet_number, bank_account_number,
-       instapay_number, payment_notes, working_days, max_weekly_load, internal_notes,
+       salary_per_session, currency, payment_method, wallet_number, bank_account_number,
+       instapay_number, payment_link, payment_notes, working_days, max_weekly_load, internal_notes,
        created_at, updated_at,
        users!instructors_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name)),
        branches!instructors_branch_id_fkey(name)`
@@ -369,8 +370,11 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
     whatsapp_number:    instrRow.whatsapp_number ?? null,
     salary_per_session: instrRow.salary_per_session ?? null,
     currency:           instrRow.currency ?? 'EGP',
+    payment_method:     instrRow.payment_method ?? null,
     wallet_number:      instrRow.wallet_number ?? null,
     instapay_number:    instrRow.instapay_number ?? null,
+    payment_link:       instrRow.payment_link ?? null,
+    bank_account_number: instrRow.bank_account_number ?? null,
     payment_notes:      instrRow.payment_notes ?? null,
     working_days:       instrRow.working_days ?? [],
     max_weekly_load:    instrRow.max_weekly_load ?? null,

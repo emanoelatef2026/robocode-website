@@ -1,7 +1,8 @@
 // ─── Instructor "My Payments" types ────────────────────────────────────────────
-// Reuses instructors table payment-method columns and staff_payment_records
-// (via a resolved staff_payroll_profiles row) for the paid-amount ledger.
-// Only the payout-request workflow is net-new (instructor_payout_requests).
+// Reuses instructors table payment-method columns (single source of truth,
+// shared with the Team Leader and Admin instructor forms) and
+// staff_payment_records (via a resolved staff_payroll_profiles row) for the
+// paid-amount ledger.
 
 export type SessionEarningType = 'primary' | 'trial' | 'makeup'
 
@@ -52,7 +53,6 @@ export interface InstructorPaymentOverview {
   outstanding:           number
   lifetime_earnings:     number
   currency:              string
-  can_request_payout:    boolean
 }
 
 // ── Payment history (monthly summaries) ────────────────────────────────────────
@@ -94,44 +94,6 @@ export function isPaymentInfoComplete(m: InstructorPaymentMethods): boolean {
     case 'cash':          return true
     default:               return false
   }
-}
-
-// ── Payout requests ─────────────────────────────────────────────────────────────
-
-export type PayoutRequestStatus = 'pending' | 'approved' | 'rejected' | 'paid'
-
-export const PAYOUT_STATUS_LABELS: Record<PayoutRequestStatus, string> = {
-  pending:  'Pending',
-  approved: 'Approved',
-  rejected: 'Rejected',
-  paid:     'Paid',
-}
-
-export const PAYOUT_STATUS_COLORS: Record<PayoutRequestStatus, string> = {
-  pending:  'bg-[#FFFBEB] text-[#B45309]',
-  approved: 'bg-[#EFF6FF] text-[#1D4ED8]',
-  rejected: 'bg-[#FEE2E2] text-[#EF4444]',
-  paid:     'bg-[#E7F8EE] text-[#15803D]',
-}
-
-export interface InstructorPayoutRequest {
-  id:                string
-  instructor_id:     string
-  branch_id:          string
-  requested_amount:  number
-  status:            PayoutRequestStatus
-  requested_at:      string
-  decided_by:        string | null
-  decided_at:        string | null
-  decision_notes:    string | null
-  payment_record_id: string | null
-  created_at:        string
-}
-
-// TL/Admin-facing row with resolved instructor display info.
-export interface PayoutRequestListItem extends InstructorPayoutRequest {
-  instructor_name:  string
-  branch_name:      string
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────

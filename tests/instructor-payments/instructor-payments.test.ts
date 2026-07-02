@@ -19,11 +19,6 @@ vi.mock('@/modules/instructor-portal/queries', () => ({
   getInstructorByUserId: (...args: any[]) => getInstructorByUserIdMock(...args),
 }))
 
-vi.mock('@/modules/notifications/actions', () => ({
-  seedPayoutRequestSubmittedNotification: vi.fn().mockResolvedValue(undefined),
-  seedPayoutRequestDecidedNotification:   vi.fn().mockResolvedValue(undefined),
-}))
-
 // ── Imports (after mocks) ──────────────────────────────────────────────────────
 
 import { createServiceClient } from '@/lib/supabase/service'
@@ -31,12 +26,11 @@ import {
   isValidVodafoneCash, isValidInstapayLink, isPaymentInfoComplete,
   type InstructorPaymentMethods,
 } from '@/modules/instructor-payments/types'
-import { applySessionEarningFilters, getInstructorPaymentOverview } from '@/modules/instructor-payments/queries'
+import { applySessionEarningFilters, getInstructorPaymentOverview, getInstructorPaymentMethods } from '@/modules/instructor-payments/queries'
 import type { InstructorSessionEarning } from '@/modules/instructor-payments/types'
 import {
-  decidePayoutRequestAction, markPayoutRequestPaidAction,
-  getInstructorPaymentMethodsAction, listInstructorPayoutRequestsForModalAction,
-  updateMyPaymentMethodsAction, requestPayoutAction,
+  getInstructorPaymentMethodsAction,
+  updateMyPaymentMethodsAction,
 } from '@/modules/instructor-payments/actions'
 
 function mockDb(queues: Record<string, MockResult[]>) {
@@ -127,45 +121,11 @@ describe('applySessionEarningFilters', () => {
 // ── Permissions ───────────────────────────────────────────────────────────────
 
 describe('Permissions', () => {
-  it('decidePayoutRequestAction rejects a caller without payroll access', async () => {
-    requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: [] })
-    const res = await decidePayoutRequestAction('req-1', 'approved')
-    expect(res.success).toBe(false)
-    if (!res.success) expect(res.error.code).toBe('FORBIDDEN')
-  })
-
-  it('markPayoutRequestPaidAction rejects a caller without payroll access', async () => {
-    requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: [] })
-    const res = await markPayoutRequestPaidAction('req-1', 'cash')
-    expect(res.success).toBe(false)
-    if (!res.success) expect(res.error.code).toBe('FORBIDDEN')
-  })
-
   it('getInstructorPaymentMethodsAction rejects a caller without payroll access', async () => {
     requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: [] })
     const res = await getInstructorPaymentMethodsAction(INSTRUCTOR_ID)
     expect(res.success).toBe(false)
     if (!res.success) expect(res.error.code).toBe('FORBIDDEN')
-  })
-
-  it('listInstructorPayoutRequestsForModalAction rejects a caller without payroll access', async () => {
-    requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: [] })
-    const res = await listInstructorPayoutRequestsForModalAction([BRANCH_ID])
-    expect(res.success).toBe(false)
-    if (!res.success) expect(res.error.code).toBe('FORBIDDEN')
-  })
-
-  it('decidePayoutRequestAction succeeds through the guard for a user with manage_payroll', async () => {
-    requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: ['manage_payroll'] })
-    mockDb({
-      instructor_payout_requests: [
-        { data: { id: 'req-1', instructor_id: INSTRUCTOR_ID, requested_amount: 500, status: 'pending' }, error: null },
-        { data: null, error: null }, // update
-      ],
-      instructors: [{ data: { user_id: USER_ID }, error: null }],
-    })
-    const res = await decidePayoutRequestAction('req-1', 'approved')
-    expect(res.success).toBe(true)
   })
 
   it('updateMyPaymentMethodsAction rejects a caller with no instructor record', async () => {
@@ -174,52 +134,6 @@ describe('Permissions', () => {
     const res = await updateMyPaymentMethodsAction({ payment_method: 'cash' })
     expect(res.success).toBe(false)
     if (!res.success) expect(res.error.code).toBe('NOT_FOUND')
-  })
-})
-
-// ── Payout requests ───────────────────────────────────────────────────────────
-
-describe('requestPayoutAction', () => {
-  it('rejects when there is no outstanding balance', async () => {
-    requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: [] })
-    getInstructorByUserIdMock.mockResolvedValue({
-      id: INSTRUCTOR_ID, user_id: USER_ID, branch_id: BRANCH_ID,
-      email: 'i@x.com', first_name: 'Test', last_name: 'Instructor',
-    })
-
-    mockDb({
-      instructor_payout_requests: [{ data: null, error: null }], // getOpenPayoutRequest → none
-      instructor_branches:        [{ data: [], error: null }],
-      instructors:                [{ data: { salary_per_session: 0 }, error: null }, { data: { currency: 'EGP' }, error: null }],
-      group_courses:               [{ data: [], error: null }],
-      group_instructors:           [{ data: [], error: null }],
-      session_instructors:         [{ data: [], error: null }],
-      finance_adjustments:         [{ data: [], error: null }, { data: [], error: null }],
-      staff_payroll_profiles:      [{ data: null, error: null }, { data: { id: 'sp-1' }, error: null }],
-      staff_payment_records:       [{ data: [], error: null }],
-    })
-
-    const res = await requestPayoutAction()
-    expect(res.success).toBe(false)
-    if (!res.success) expect(res.error.code).toBe('INVALID')
-  })
-
-  it('rejects when an open payout request already exists', async () => {
-    requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: [] })
-    getInstructorByUserIdMock.mockResolvedValue({
-      id: INSTRUCTOR_ID, user_id: USER_ID, branch_id: BRANCH_ID,
-      email: 'i@x.com', first_name: 'Test', last_name: 'Instructor',
-    })
-
-    mockDb({
-      instructor_payout_requests: [
-        { data: { id: 'req-existing', instructor_id: INSTRUCTOR_ID, status: 'pending' }, error: null },
-      ],
-    })
-
-    const res = await requestPayoutAction()
-    expect(res.success).toBe(false)
-    if (!res.success) expect(res.error.code).toBe('CONFLICT')
   })
 })
 
@@ -236,7 +150,6 @@ describe('getInstructorPaymentOverview', () => {
       finance_adjustments:    [{ data: [], error: null }, { data: [], error: null }],
       staff_payroll_profiles: [{ data: null, error: null }, { data: { id: 'sp-1' }, error: null }],
       staff_payment_records:  [{ data: [], error: null }],
-      instructor_payout_requests: [{ data: null, error: null }],
     })
 
     const overview = await getInstructorPaymentOverview(INSTRUCTOR_ID, USER_ID, BRANCH_ID)
@@ -248,7 +161,104 @@ describe('getInstructorPaymentOverview', () => {
       outstanding:          0,
       lifetime_earnings:    0,
       currency:             'EGP',
-      can_request_payout:   false,
     })
+  })
+
+  it('does not reference the removed payout-request workflow', () => {
+    // No `can_request_payout` field, no instructor_payout_requests dependency —
+    // guards against the field/table being reintroduced.
+    expect(getInstructorPaymentOverview.toString()).not.toMatch(/instructor_payout_requests/)
+    expect(getInstructorPaymentOverview.toString()).not.toMatch(/can_request_payout/)
+  })
+})
+
+// ── Single source of truth: payment info read/write ──────────────────────────
+
+describe('Single source of truth for payment info', () => {
+  it('instructor self-service write updates the instructors table directly', async () => {
+    requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: [] })
+    getInstructorByUserIdMock.mockResolvedValue({ id: INSTRUCTOR_ID, user_id: USER_ID, branch_id: BRANCH_ID })
+
+    const db = mockDb({
+      instructors: [{ data: null, error: null }], // update
+    })
+
+    const res = await updateMyPaymentMethodsAction({
+      payment_method:  'vodafone_cash',
+      wallet_number:   '01012345678',
+    })
+
+    expect(res.success).toBe(true)
+    expect(db.from).toHaveBeenCalledWith('instructors')
+  })
+
+  it('team leader / admin read wrapper reads the same instructors-table columns instructor writes wrote', async () => {
+    requireAuthMock.mockResolvedValue({ id: USER_ID, permissions: ['manage_payroll'] })
+    mockDb({
+      instructors: [{
+        data: {
+          id: INSTRUCTOR_ID,
+          payment_method: 'vodafone_cash',
+          wallet_number: '01012345678',
+          instapay_number: null,
+          payment_link: null,
+          bank_account_number: null,
+        },
+        error: null,
+      }],
+    })
+
+    const res = await getInstructorPaymentMethodsAction(INSTRUCTOR_ID)
+    expect(res.success).toBe(true)
+    if (res.success) {
+      expect(res.data.payment_method).toBe('vodafone_cash')
+      expect(res.data.wallet_number).toBe('01012345678')
+    }
+  })
+
+  it('existing payment data preloads correctly (non-empty instructors row round-trips through getInstructorPaymentMethods)', async () => {
+    mockDb({
+      instructors: [{
+        data: {
+          id: INSTRUCTOR_ID,
+          payment_method: 'bank_transfer',
+          wallet_number: null,
+          instapay_number: null,
+          payment_link: null,
+          bank_account_number: 'EG123456789',
+        },
+        error: null,
+      }],
+    })
+
+    const methods = await getInstructorPaymentMethods(INSTRUCTOR_ID)
+    expect(methods.payment_method).toBe('bank_transfer')
+    expect(methods.bank_account_number).toBe('EG123456789')
+    expect(isPaymentInfoComplete(methods)).toBe(true)
+  })
+})
+
+// ── Payout requests removed ───────────────────────────────────────────────────
+
+describe('Payout request functionality removal', () => {
+  it('no payout-request actions are exported from instructor-payments/actions', async () => {
+    const actions = await import('@/modules/instructor-payments/actions')
+    expect((actions as Record<string, unknown>).requestPayoutAction).toBeUndefined()
+    expect((actions as Record<string, unknown>).decidePayoutRequestAction).toBeUndefined()
+    expect((actions as Record<string, unknown>).markPayoutRequestPaidAction).toBeUndefined()
+    expect((actions as Record<string, unknown>).listInstructorPayoutRequestsForModalAction).toBeUndefined()
+  })
+
+  it('no payout-request queries are exported from instructor-payments/queries', async () => {
+    const queries = await import('@/modules/instructor-payments/queries')
+    expect((queries as Record<string, unknown>).getOpenPayoutRequest).toBeUndefined()
+    expect((queries as Record<string, unknown>).listInstructorPayoutRequests).toBeUndefined()
+    expect((queries as Record<string, unknown>).listPayoutRequestsForBranches).toBeUndefined()
+  })
+
+  it('no payout-request notification seeders are exported from notifications/actions', async () => {
+    const notifActions = await import('@/modules/notifications/actions')
+    expect((notifActions as Record<string, unknown>).seedPayoutRequestSubmittedNotification).toBeUndefined()
+    expect((notifActions as Record<string, unknown>).seedPayoutRequestDecidedNotification).toBeUndefined()
   })
 })

@@ -162,6 +162,16 @@ export default function InstructorEditForm({
             <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">Payment Info</p>
             <div className="space-y-3">
               <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Preferred payment method</label>
+                <select name="payment_method" defaultValue={instructor.payment_method ?? ''} className={cls}>
+                  <option value="">— Select —</option>
+                  <option value="vodafone_cash">Vodafone Cash</option>
+                  <option value="instapay">Instapay</option>
+                  <option value="bank_transfer">Bank Transfer</option>
+                  <option value="cash">Cash</option>
+                </select>
+              </div>
+              <div>
                 <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Payment link</label>
                 <input name="payment_link" defaultValue={instructor.payment_link ?? ''} className={cls} />
               </div>
@@ -171,9 +181,13 @@ export default function InstructorEditForm({
                   <input name="wallet_number" defaultValue={instructor.wallet_number ?? ''} className={cls} />
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Bank account</label>
-                  <input name="bank_account_number" defaultValue={instructor.bank_account_number ?? ''} className={cls} />
+                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Instapay number</label>
+                  <input name="instapay_number" defaultValue={instructor.instapay_number ?? ''} className={cls} />
                 </div>
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Bank account</label>
+                <input name="bank_account_number" defaultValue={instructor.bank_account_number ?? ''} className={cls} />
               </div>
             </div>
           </div>
