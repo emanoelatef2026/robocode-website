@@ -3,7 +3,7 @@
 import { createServiceClient } from '@/lib/supabase/service'
 import { getGroupSchedules }   from '../queries'
 import type { RiskLevel }      from '@/modules/operational-engine'
-import type { GroupDetailData, GroupDetailSession, GroupDetailStudent, SessionAttendanceRecord } from './types'
+import type { GroupDetailData, GroupDetailSession, GroupDetailStudent, GroupDetailParentInfo, SessionAttendanceRecord } from './types'
 
 // ── Row shapes (Supabase query return types) ───────────────────────────────────
 
@@ -26,8 +26,13 @@ interface GroupStudentRow {
 
 interface ProgressRow   { student_id: string; attendance_score?: number | null }
 interface EnrollmentRow { id: string; student_id: string; remaining_sessions?: number | null; consumed_sessions?: number | null; enrolled_sessions?: number | null; start_date?: string | null }
-interface GuardianRow   { student_id: string; phone1?: string | null }
+interface GuardianRow   { student_id: string; parent_group_id: string; name: string | null; phone1?: string | null; is_primary: boolean }
 interface FinanceRow    { id: string; student_id: string; paid_amount?: number | null; remaining_amount?: number | null; status?: string | null }
+interface ParentPortalRow {
+  student_id: string
+  is_primary: boolean
+  parents: { user_id: string; users: { email: string | null } | null } | null
+}
 
 // ── Action ────────────────────────────────────────────────────────────────────
 
@@ -89,7 +94,7 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
 
   const none = Promise.resolve({ data: [] as never[] })
 
-  const [progRes, enrollRes, guardianRes, financeRes] = await Promise.all([
+  const [progRes, enrollRes, guardianRes, financeRes, parentPortalRes] = await Promise.all([
     studentIds.length
       ? db.from('student_course_progress')
           .select('student_id, attendance_score')
@@ -107,14 +112,24 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       : none,
     studentIds.length
       ? db.from('student_parent_contacts')
-          .select('student_id, phone1')
+          .select('student_id, parent_group_id, name, phone1, is_primary')
           .in('student_id', studentIds)
-          .not('phone1', 'is', null)
+          .eq('status', 'active')
+          .order('is_primary', { ascending: false })
       : none,
     studentIds.length
       ? db.from('student_financial_accounts')
           .select('id, student_id, paid_amount, remaining_amount, status')
           .in('student_id', studentIds)
+      : none,
+    // Parent portal accounts — separate legacy system (parents/users), not linked to
+    // student_parent_contacts. Only populated when a portal login was created via the
+    // student modal (modules/students/modal-actions.ts syncParentContacts).
+    studentIds.length
+      ? db.from('parent_students')
+          .select('student_id, is_primary, parents!parent_students_parent_id_fkey(user_id, users!parents_user_id_fkey(email))')
+          .in('student_id', studentIds)
+          .order('is_primary', { ascending: false })
       : none,
   ])
 
@@ -122,6 +137,7 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
   const progMap     = new Map<string, number>()
   const sessMap     = new Map<string, { remaining: number; used: number | null; total: number | null; enrollment_id: string | null; start_date: string | null }>()
   const guardianMap = new Map<string, string>()
+  const parentMap   = new Map<string, GroupDetailParentInfo>()
   const financeMap  = new Map<string, { paid: number; balance: number; status: string | null; account_id: string | null }>()
 
   for (const p of (progRes.data ?? []) as ProgressRow[]) {
@@ -142,6 +158,33 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
   for (const g of (guardianRes.data ?? []) as GuardianRow[]) {
     if (!guardianMap.has(g.student_id) && g.phone1) {
       guardianMap.set(g.student_id, g.phone1)
+    }
+    // First row per student is the primary contact (query ordered by is_primary desc)
+    if (!parentMap.has(g.student_id)) {
+      parentMap.set(g.student_id, {
+        id:           g.parent_group_id,
+        full_name:    g.name ?? null,
+        email:        null,
+        portal_email: null,
+        phone:        g.phone1 ?? null,
+      })
+    }
+  }
+  for (const pp of (parentPortalRes.data ?? []) as unknown as ParentPortalRow[]) {
+    const email = pp.parents?.users?.email ?? null
+    if (!email) continue
+    const existing = parentMap.get(pp.student_id)
+    if (existing) {
+      if (!existing.portal_email) existing.portal_email = email
+    } else {
+      // Portal account exists but no structured contact row for this student
+      parentMap.set(pp.student_id, {
+        id:           pp.student_id,
+        full_name:    null,
+        email:        null,
+        portal_email: email,
+        phone:        null,
+      })
     }
   }
   for (const f of (financeRes.data ?? []) as FinanceRow[]) {
@@ -186,6 +229,7 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       age,
       phone:               s.users?.phone ?? null,
       parent_phone:        guardianMap.get(r.student_id) ?? null,
+      parent:              parentMap.get(r.student_id) ?? null,
       joined_at:           r.joined_at,
       attendance_pct:      att,
       sessions_remaining:  sessLeft,

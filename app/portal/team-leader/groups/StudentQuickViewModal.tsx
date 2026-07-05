@@ -21,6 +21,7 @@ import {
   type StudentCourseTimelineEntry,
 } from '@/modules/groups/modal-actions'
 import type { GroupOperationalRow } from '@/modules/groups/operational'
+import { getWelcomeMessageStatusAction, sendWelcomeWhatsAppAction } from '@/modules/students/welcome-message'
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -134,6 +135,26 @@ function Skeleton({ className }: { className?: string }) {
   return <div className={`animate-pulse rounded bg-[#F1F5F9] ${className ?? 'h-4 w-full'}`} />
 }
 
+function WelcomeMessageButton({
+  disabled, tooltip, sending, onClick,
+}: {
+  disabled: boolean
+  tooltip:  string | null
+  sending:  boolean
+  onClick:  () => void
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled || sending}
+      title={tooltip ?? undefined}
+      className="flex items-center gap-1.5 rounded-lg bg-[#25D366] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#1FB855] disabled:cursor-not-allowed disabled:opacity-40 transition"
+    >
+      🚀 {sending ? 'Sending…' : 'Send Welcome Message'}
+    </button>
+  )
+}
+
 // ─── Attendance ring ──────────────────────────────────────────────────────────
 
 function AttRing({ pct }: { pct: number }) {
@@ -241,6 +262,19 @@ function OverviewTab({
         <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2">
           <InfoRow label="Student phone" value={s.phone ?? <span className="text-[#CBD5E1]">—</span>} />
           <InfoRow label="Parent phone"  value={s.parent_phone ?? <span className="text-[#CBD5E1]">—</span>} />
+        </div>
+      </div>
+
+      {/* Parent Information */}
+      <div>
+        <SectionLabel>Parent Information</SectionLabel>
+        <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2">
+          <InfoRow label="Parent Name"   value={s.parent?.full_name    ?? <span className="text-[#CBD5E1]">—</span>} />
+          <InfoRow label="Parent Email"  value={s.parent?.email        ?? <span className="text-[#CBD5E1]">—</span>} />
+          {s.parent?.portal_email && s.parent.portal_email !== s.parent.email && (
+            <InfoRow label="Portal Email" value={s.parent.portal_email} />
+          )}
+          <InfoRow label="Parent Phone"  value={s.parent?.phone ?? s.parent_phone ?? <span className="text-[#CBD5E1]">—</span>} />
         </div>
       </div>
 
@@ -757,9 +791,10 @@ interface Props {
   onClose:              () => void
   onStudentUpdated?:    () => void
   onOpenFullFinance?:   () => void
+  canSendWelcome?:      boolean
 }
 
-export default function StudentQuickViewModal({ student: s, group, onClose, onStudentUpdated, onOpenFullFinance }: Props) {
+export default function StudentQuickViewModal({ student: s, group, onClose, onStudentUpdated, onOpenFullFinance, canSendWelcome = false }: Props) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
@@ -784,6 +819,12 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
 
   // Overlay modals
   const [wizardOpen, setWizardOpen] = useState(false)
+
+  // Welcome WhatsApp message
+  const [welcomeEligible, setWelcomeEligible] = useState(false)
+  const [welcomeTooltip,  setWelcomeTooltip]  = useState<string | null>('Loading…')
+  const [welcomeLastSent, setWelcomeLastSent] = useState<string | null>(null)
+  const [welcomeSending,  setWelcomeSending]  = useState(false)
 
   // ESC to close (but not if the enrollment wizard is open)
   useEffect(() => {
@@ -885,6 +926,37 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     onStudentUpdated?.()
   }
 
+  // Welcome message eligibility (only relevant for TL/super_admin)
+  useEffect(() => {
+    if (!canSendWelcome) return
+    let cancelled = false
+    getWelcomeMessageStatusAction(s.student_id)
+      .then(status => {
+        if (cancelled) return
+        setWelcomeEligible(status.eligibility.eligible)
+        setWelcomeTooltip(status.eligibility.reason)
+        setWelcomeLastSent(status.lastSentAt)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setWelcomeEligible(false)
+        setWelcomeTooltip('Unable to check eligibility.')
+      })
+    return () => { cancelled = true }
+  }, [canSendWelcome, s.student_id])
+
+  async function handleSendWelcomeMessage() {
+    setWelcomeSending(true)
+    const result = await sendWelcomeWhatsAppAction(s.student_id)
+    setWelcomeSending(false)
+    if ('error' in result) {
+      alert(result.error)
+      return
+    }
+    window.open(result.url, '_blank')
+    setWelcomeLastSent(new Date().toISOString())
+  }
+
   function handleEnrollmentWizardSuccess() {
     setWizardOpen(false)
     getStudentAttendanceSummaryAction(s.student_id).then(d => setAttSummary(d)).catch(() => {})
@@ -966,11 +1038,22 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
             </div>
 
             {/* Quick contact */}
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               {waUrl  && <WaButton  url={waUrl}  label={s.parent_phone ? 'WhatsApp Parent' : 'WhatsApp'} />}
               {telUrl && <CallButton url={telUrl} label={s.parent_phone ? 'Call Parent'    : 'Call'} />}
               {s.parent_phone && stuTel && <CallButton url={stuTel} label="Call Student" />}
+              {canSendWelcome && (
+                <WelcomeMessageButton
+                  disabled={!welcomeEligible}
+                  tooltip={welcomeTooltip}
+                  sending={welcomeSending}
+                  onClick={handleSendWelcomeMessage}
+                />
+              )}
             </div>
+            {canSendWelcome && welcomeLastSent && (
+              <p className="mt-1.5 text-[10px] text-[#94A3B8]">Last sent: {fmtDate(welcomeLastSent)}</p>
+            )}
           </div>
 
           {/* ── Tab bar ───────────────────────────────────────────────── */}

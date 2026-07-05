@@ -137,7 +137,9 @@ export async function createParentContactAction(
         { user_id: uid, first_name: nameParts[0] ?? '', last_name: nameParts.slice(1).join(' ') || null },
         { onConflict: 'user_id' }
       )
-      const { data: parentRow } = await db.from('parents').insert({ user_id: uid }).select('id').single()
+      // Store plain text for internal ops visibility (intentional — internal system,
+      // mirrors students.portal_password) so the welcome-message feature can surface it.
+      const { data: parentRow } = await db.from('parents').insert({ user_id: uid, portal_password: password }).select('id').single()
       if (parentRow) {
         await db.from('parent_students').insert(
           studentIds.map(sid => ({
@@ -241,6 +243,9 @@ export async function updateParentContactAction(
     if (Object.keys(updates).length) {
       await db.auth.admin.updateUserById(existingUserId, updates)
       if (email) await db.from('users').update({ email }).eq('id', existingUserId)
+      // Store plain text for internal ops visibility (intentional — internal system,
+      // mirrors students.portal_password) so the welcome-message feature can surface it.
+      if (password) await db.from('parents').update({ portal_password: password }).eq('user_id', existingUserId)
     }
   } else if (email && password) {
     // Create new portal account for this parent
@@ -263,7 +268,9 @@ export async function updateParentContactAction(
         .eq('status', 'active')
       const studentIds = (spcRows ?? []).map((r: any) => r.student_id as string)
       if (studentIds.length) {
-        const { data: parentRow } = await db.from('parents').insert({ user_id: uid }).select('id').single()
+        // Store plain text for internal ops visibility (intentional — internal system,
+        // mirrors students.portal_password) so the welcome-message feature can surface it.
+        const { data: parentRow } = await db.from('parents').insert({ user_id: uid, portal_password: password }).select('id').single()
         if (parentRow) {
           await db.from('parent_students').insert(
             studentIds.map(sid => ({

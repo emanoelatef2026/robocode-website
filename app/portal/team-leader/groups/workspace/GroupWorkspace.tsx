@@ -258,6 +258,7 @@ export function GroupWorkspace({
         <StudentQuickViewModal
           student={quickViewStudent}
           group={group}
+          canSendWelcome={isTL}
           onClose={() => setQuickViewStudent(null)}
           onStudentUpdated={() => {
             setQuickViewStudent(null)

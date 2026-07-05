@@ -170,9 +170,11 @@ export async function createParentModal(
   }
 
   // 4. parent record (insert only — duplicate email already blocked above)
+  // Store plain text for internal ops visibility (intentional — internal system,
+  // mirrors students.portal_password) so the welcome-message feature can surface it.
   const { data: parent, error: parentErr } = await db
     .from('parents')
-    .insert({ user_id: authUserId })
+    .insert({ user_id: authUserId, portal_password: password })
     .select('id')
     .single()
   if (parentErr) {
@@ -273,6 +275,9 @@ export async function updateParentModal(
     if (pwErr) {
       return { success: false, error: { code: 'AUTH_ERROR', message: pwErr.message } }
     }
+    // Store plain text for internal ops visibility (intentional — internal system,
+    // mirrors students.portal_password) so the welcome-message feature can surface it.
+    await db.from('parents').update({ portal_password: new_password }).eq('id', id)
   }
 
   // Profile update
@@ -417,6 +422,10 @@ export async function resetParentPassword(
   if (pwErr) {
     return { success: false, error: { code: 'AUTH_ERROR', message: pwErr.message } }
   }
+
+  // Store plain text for internal ops visibility (intentional — internal system,
+  // mirrors students.portal_password) so the welcome-message feature can surface it.
+  await db.from('parents').update({ portal_password: tempPassword }).eq('id', parentId)
 
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,

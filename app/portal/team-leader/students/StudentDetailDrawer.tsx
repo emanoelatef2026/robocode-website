@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { StudentOperationalRow } from '@/modules/students/operational'
 import { getStudentGroupHistory, type GroupHistoryEntry } from '@/modules/students/group-history'
+import { getWelcomeMessageStatusAction, sendWelcomeWhatsAppAction } from '@/modules/students/welcome-message'
 
 interface Props {
   student:  StudentOperationalRow
@@ -27,12 +28,44 @@ const OP_STATUS_CONFIG: Record<string, { label: string; color: string; text: str
 export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit, onAssign }: Props) {
   const [tab, setTab] = useState<Tab>('overview')
 
+  const [welcomeEligible, setWelcomeEligible] = useState(false)
+  const [welcomeTooltip,  setWelcomeTooltip]  = useState<string | null>('Loading…')
+  const [welcomeSending,  setWelcomeSending]  = useState(false)
+
   // Close on ESC
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+
+  useEffect(() => {
+    if (!isTL) return
+    let cancelled = false
+    getWelcomeMessageStatusAction(s.student_id)
+      .then(status => {
+        if (cancelled) return
+        setWelcomeEligible(status.eligibility.eligible)
+        setWelcomeTooltip(status.eligibility.reason)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setWelcomeEligible(false)
+        setWelcomeTooltip('Unable to check eligibility.')
+      })
+    return () => { cancelled = true }
+  }, [isTL, s.student_id])
+
+  async function handleSendWelcomeMessage() {
+    setWelcomeSending(true)
+    const result = await sendWelcomeWhatsAppAction(s.student_id)
+    setWelcomeSending(false)
+    if ('error' in result) {
+      alert(result.error)
+      return
+    }
+    window.open(result.url, '_blank')
+  }
 
   const opCfg   = OP_STATUS_CONFIG[s.op_status] ?? OP_STATUS_CONFIG.ACTIVE
   const riskClr = s.risk_level === 'HIGH' ? 'bg-[#FEE2E2] text-[#EF4444]' : s.risk_level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#E7F8EE] text-[#15803D]'
@@ -90,6 +123,14 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
                 Assign Group
               </button>
             )}
+            <button
+              onClick={handleSendWelcomeMessage}
+              disabled={!welcomeEligible || welcomeSending}
+              title={welcomeTooltip ?? undefined}
+              className="flex-1 rounded-lg bg-[#25D366] py-2 text-sm font-medium text-white hover:bg-[#1FB855] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              🚀 {welcomeSending ? 'Sending…' : 'Send Welcome Message'}
+            </button>
           </div>
         )}
 

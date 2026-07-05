@@ -29,6 +29,14 @@ export interface GroupDetailSession {
   student_attendance: SessionAttendanceRecord[]
 }
 
+export interface GroupDetailParentInfo {
+  id:           string          // parent_group_id — stable identity across a parent's contact rows
+  full_name:    string | null
+  email:        string | null   // parent contact email — not currently captured on the contact form
+  portal_email: string | null   // login email for the parent portal account, when one exists
+  phone:        string | null
+}
+
 export interface GroupDetailStudent {
   student_id:          string
   student_name:        string
@@ -36,6 +44,7 @@ export interface GroupDetailStudent {
   age:                 number | null
   phone:               string | null
   parent_phone:        string | null
+  parent:              GroupDetailParentInfo | null
   joined_at:           string
   attendance_pct:      number
   sessions_remaining:  number | null

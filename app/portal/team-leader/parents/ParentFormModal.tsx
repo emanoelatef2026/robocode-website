@@ -435,6 +435,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                       onChange={e => setEmail(e.target.value)}
                       placeholder={hasPortal ? 'New email (leave blank to keep current)' : 'parent@email.com'}
                       type="email"
+                      autoComplete="off"
                       className="w-full ds-card px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
                     />
                   </div>
@@ -447,6 +448,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                       onChange={e => setPassword(e.target.value)}
                       placeholder={hasPortal ? 'Leave blank to keep current password' : 'Min. 6 characters'}
                       type="password"
+                      autoComplete="new-password"
                       className="w-full ds-card px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
                     />
                   </div>

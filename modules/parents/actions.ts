@@ -70,9 +70,11 @@ export async function createParent(_prev: unknown, formData: FormData): Promise<
   if (existingParent) {
     parentId = existingParent.id
   } else {
+    // Store plain text for internal ops visibility (intentional — internal system,
+    // mirrors students.portal_password) so the welcome-message feature can surface it.
     const { data: parent, error: parentError } = await db
       .from('parents')
-      .insert({ user_id: authUserId })
+      .insert({ user_id: authUserId, portal_password: password })
       .select('id')
       .single()
 
