@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/finance-maintenance",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}
