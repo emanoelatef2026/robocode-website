@@ -21,7 +21,11 @@ import {
   type StudentCourseTimelineEntry,
 } from '@/modules/groups/modal-actions'
 import type { GroupOperationalRow } from '@/modules/groups/operational'
-import { getWelcomeMessageStatusAction, sendWelcomeWhatsAppAction } from '@/modules/students/welcome-message'
+import {
+  getWelcomeMessageStatusAction,
+  sendWelcomeWhatsAppAction,
+  generateMissingWelcomeCredentialsAction,
+} from '@/modules/students/welcome-message'
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -151,6 +155,19 @@ function WelcomeMessageButton({
       className="flex items-center gap-1.5 rounded-lg bg-[#25D366] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#1FB855] disabled:cursor-not-allowed disabled:opacity-40 transition"
     >
       🚀 {sending ? 'Sending…' : 'Send Welcome Message'}
+    </button>
+  )
+}
+
+function GenerateCredentialsButton({ generating, onClick }: { generating: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={generating}
+      title="Generate a new portal password for the account(s) missing one"
+      className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-[#FFFBEB] px-3 py-1.5 text-[11px] font-semibold text-[#B45309] hover:bg-[#FEF3C7] disabled:cursor-not-allowed disabled:opacity-50 transition"
+    >
+      ⚠ {generating ? 'Generating…' : 'Generate Credentials'}
     </button>
   )
 }
@@ -821,10 +838,12 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   const [wizardOpen, setWizardOpen] = useState(false)
 
   // Welcome WhatsApp message
-  const [welcomeEligible, setWelcomeEligible] = useState(false)
-  const [welcomeTooltip,  setWelcomeTooltip]  = useState<string | null>('Loading…')
-  const [welcomeLastSent, setWelcomeLastSent] = useState<string | null>(null)
-  const [welcomeSending,  setWelcomeSending]  = useState(false)
+  const [welcomeEligible,      setWelcomeEligible]      = useState(false)
+  const [welcomeTooltip,       setWelcomeTooltip]       = useState<string | null>('Loading…')
+  const [welcomeCanRegenerate, setWelcomeCanRegenerate] = useState(false)
+  const [welcomeLastSent,      setWelcomeLastSent]      = useState<string | null>(null)
+  const [welcomeSending,       setWelcomeSending]       = useState(false)
+  const [welcomeRegenerating,  setWelcomeRegenerating]  = useState(false)
 
   // ESC to close (but not if the enrollment wizard is open)
   useEffect(() => {
@@ -935,12 +954,14 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
         if (cancelled) return
         setWelcomeEligible(status.eligibility.eligible)
         setWelcomeTooltip(status.eligibility.reason)
+        setWelcomeCanRegenerate(status.eligibility.canRegenerate)
         setWelcomeLastSent(status.lastSentAt)
       })
       .catch(() => {
         if (cancelled) return
         setWelcomeEligible(false)
         setWelcomeTooltip('Unable to check eligibility.')
+        setWelcomeCanRegenerate(false)
       })
     return () => { cancelled = true }
   }, [canSendWelcome, s.student_id])
@@ -955,6 +976,22 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     }
     window.open(result.url, '_blank')
     setWelcomeLastSent(new Date().toISOString())
+  }
+
+  async function handleGenerateCredentials() {
+    setWelcomeRegenerating(true)
+    const result = await generateMissingWelcomeCredentialsAction(s.student_id)
+    setWelcomeRegenerating(false)
+    if (!result.success) {
+      alert(result.error)
+      return
+    }
+    const status = await getWelcomeMessageStatusAction(s.student_id)
+    setWelcomeEligible(status.eligibility.eligible)
+    setWelcomeTooltip(status.eligibility.reason)
+    setWelcomeCanRegenerate(status.eligibility.canRegenerate)
+    router.refresh()
+    onStudentUpdated?.()
   }
 
   function handleEnrollmentWizardSuccess() {
@@ -1050,8 +1087,18 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                   onClick={handleSendWelcomeMessage}
                 />
               )}
+              {canSendWelcome && !welcomeEligible && welcomeCanRegenerate && (
+                <GenerateCredentialsButton
+                  generating={welcomeRegenerating}
+                  onClick={handleGenerateCredentials}
+                />
+              )}
             </div>
-            {canSendWelcome && welcomeLastSent && (
+            {/* Explicit reason text — never leave the disabled button unexplained */}
+            {canSendWelcome && !welcomeEligible && welcomeTooltip && (
+              <p className="mt-1.5 text-[10px] font-medium text-[#B45309]">⚠ {welcomeTooltip}</p>
+            )}
+            {canSendWelcome && welcomeEligible && welcomeLastSent && (
               <p className="mt-1.5 text-[10px] text-[#94A3B8]">Last sent: {fmtDate(welcomeLastSent)}</p>
             )}
           </div>

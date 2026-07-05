@@ -29,14 +29,17 @@ import {
   canSendWelcomeMessage,
   type WelcomeMessagePayload,
 } from '@/modules/messages/welcome'
-import { getWelcomeMessageStatusAction, sendWelcomeWhatsAppAction } from '@/modules/students/welcome-message'
+import {
+  getWelcomeMessageStatusAction,
+  sendWelcomeWhatsAppAction,
+  generateMissingWelcomeCredentialsAction,
+} from '@/modules/students/welcome-message'
 
 const STUDENT_ID = 'stu-001'
 
 const FULL_PAYLOAD: WelcomeMessagePayload = {
   student_name:      'Ali Ahmed',
   course_name:       'Scratch Level 1',
-  branch_name:       'Maadi',
   parent_email:      'parent@example.com',
   parent_password:   'Parent123',
   student_email:     'ali@example.com',
@@ -45,9 +48,7 @@ const FULL_PAYLOAD: WelcomeMessagePayload = {
 
 function studentRow() {
   return {
-    branch_id: 'branch-1',
     users: { profiles: { first_name: 'Ali', last_name: 'Ahmed' } },
-    branches: { name: 'Maadi' },
   }
 }
 
@@ -98,7 +99,8 @@ describe('buildWelcomeMessage / URL generation', () => {
     expect(decoded).toContain(FULL_PAYLOAD.parent_password)
     expect(decoded).toContain(FULL_PAYLOAD.student_email)
     expect(decoded).toContain(FULL_PAYLOAD.student_password)
-    expect(decoded).toContain('https://portal.robocodeschool.com')
+    expect(decoded).toContain('https://robocodeschools.com')
+    expect(decoded).not.toContain('https://portal.robocodeschool.com')
   })
 })
 
@@ -117,26 +119,42 @@ describe('canSendWelcomeMessage — eligibility rules', () => {
     expect(result.reason).toBe('Parent phone number is missing.')
   })
 
-  it('TEST 4 — missing parent account (email or password) blocks send', () => {
+  it('TEST 4 — missing parent account (no email at all) blocks send, not regenerable', () => {
     const noEmail = canSendWelcomeMessage({ ...base, parentEmail: null })
-    const noPassword = canSendWelcomeMessage({ ...base, parentPassword: null })
     expect(noEmail.eligible).toBe(false)
     expect(noEmail.reason).toBe('Parent portal account has not been created yet.')
-    expect(noPassword.eligible).toBe(false)
-    expect(noPassword.reason).toBe('Parent portal account has not been created yet.')
+    expect(noEmail.canRegenerate).toBe(false)
   })
 
-  it('TEST 5 — missing student account (email or password) blocks send', () => {
+  it('TEST 4b — parent account exists but password missing: distinct message, regenerable', () => {
+    // Root cause of the reported bug: an existing account (email present) with no
+    // password must NOT be reported as "account has not been created yet" — that
+    // message is false and blocks TLs from understanding the real, fixable issue.
+    const noPassword = canSendWelcomeMessage({ ...base, parentPassword: null })
+    expect(noPassword.eligible).toBe(false)
+    expect(noPassword.reason).toBe('Parent portal password has not been set yet.')
+    expect(noPassword.reason).not.toContain('has not been created')
+    expect(noPassword.canRegenerate).toBe(true)
+  })
+
+  it('TEST 5 — missing student account (no email at all) blocks send, not regenerable', () => {
     const noEmail = canSendWelcomeMessage({ ...base, studentEmail: null })
-    const noPassword = canSendWelcomeMessage({ ...base, studentPassword: null })
     expect(noEmail.eligible).toBe(false)
     expect(noEmail.reason).toBe('Student portal account has not been created yet.')
+    expect(noEmail.canRegenerate).toBe(false)
+  })
+
+  it('TEST 5b — student account exists but password missing: distinct message, regenerable', () => {
+    const noPassword = canSendWelcomeMessage({ ...base, studentPassword: null })
     expect(noPassword.eligible).toBe(false)
-    expect(noPassword.reason).toBe('Student portal account has not been created yet.')
+    expect(noPassword.reason).toBe('Student portal password has not been set yet.')
+    expect(noPassword.canRegenerate).toBe(true)
   })
 
   it('fully eligible input passes', () => {
-    expect(canSendWelcomeMessage(base).eligible).toBe(true)
+    const result = canSendWelcomeMessage(base)
+    expect(result.eligible).toBe(true)
+    expect(result.canRegenerate).toBe(false)
   })
 })
 
@@ -233,5 +251,130 @@ describe('getWelcomeMessageStatusAction', () => {
     expect(status.eligibility.eligible).toBe(false)
     expect(status.eligibility.reason).toBe('Parent portal account has not been created yet.')
     expect(status.lastSentAt).toBe('2026-07-01T10:00:00.000Z')
+  })
+
+  it('TEST 12 — historical account (email exists, password_missing) surfaces regenerable reason, not "not created"', () => {
+    mockDb({
+      students:                [{ data: studentRow(), error: null }],
+      group_students:          [{ data: { group_id: 'grp-1' }, error: null }],
+      group_courses:           [{ data: { courses: { title: 'Scratch Level 1' } }, error: null }],
+      student_parent_contacts: [{ data: { phone1: '01012345678' }, error: null }],
+      welcome_message_logs:    [{ data: null, error: null }],
+    })
+    getParentPortalCredentialsMock.mockResolvedValue({
+      email: 'parent@example.com', portal_password: null, has_portal_access: true, status: 'password_missing',
+    })
+
+    return getWelcomeMessageStatusAction(STUDENT_ID).then(status => {
+      expect(status.eligibility.eligible).toBe(false)
+      expect(status.eligibility.reason).toBe('Parent portal password has not been set yet.')
+      expect(status.eligibility.canRegenerate).toBe(true)
+    })
+  })
+})
+
+describe('generateMissingWelcomeCredentialsAction — historical record repair', () => {
+  function withAuthAdmin(db: ReturnType<typeof createMockDb>, updateResult: MockResult = { data: {}, error: null }) {
+    ;(db as any).auth = { admin: { updateUserById: vi.fn().mockResolvedValue(updateResult) } }
+    return db
+  }
+
+  it('TEST 13 — regenerates the student password when student status is password_missing', async () => {
+    requirePermissionMock.mockResolvedValue({ id: 'user-tl-001', globalRole: 'team_leader' })
+    getStudentPortalCredentialsMock.mockResolvedValue({
+      email: 'ali@example.com', portal_password: null, has_portal_access: true, status: 'password_missing',
+    })
+    getParentPortalCredentialsMock.mockResolvedValue({
+      email: 'parent@example.com', portal_password: 'Parent123', has_portal_access: true, status: 'active',
+    })
+    const db = withAuthAdmin(mockDb({
+      students: [{ data: { user_id: 'auth-student-1' }, error: null }],
+    }))
+
+    const result = await generateMissingWelcomeCredentialsAction(STUDENT_ID)
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.studentRegenerated).toBe(true)
+      expect(result.data.parentRegenerated).toBe(false)
+    }
+    expect((db as any).auth.admin.updateUserById).toHaveBeenCalledWith('auth-student-1', { password: expect.any(String) })
+  })
+
+  it('TEST 14 — regenerates the parent password when parent status is password_missing', async () => {
+    requirePermissionMock.mockResolvedValue({ id: 'user-tl-001', globalRole: 'team_leader' })
+    getStudentPortalCredentialsMock.mockResolvedValue({
+      email: 'ali@example.com', portal_password: 'Ali123', has_portal_access: true, status: 'active',
+    })
+    getParentPortalCredentialsMock.mockResolvedValue({
+      email: 'parent@example.com', portal_password: null, has_portal_access: true, status: 'password_missing',
+    })
+    const db = withAuthAdmin(mockDb({
+      parent_students: [{ data: [{ parents: { id: 'parent-1', user_id: 'auth-parent-1' } }], error: null }],
+    }))
+
+    const result = await generateMissingWelcomeCredentialsAction(STUDENT_ID)
+
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.parentRegenerated).toBe(true)
+      expect(result.data.studentRegenerated).toBe(false)
+    }
+    expect((db as any).auth.admin.updateUserById).toHaveBeenCalledWith('auth-parent-1', { password: expect.any(String) })
+  })
+
+  it('TEST 15 — no-op with an error when nothing is actually missing a password', async () => {
+    requirePermissionMock.mockResolvedValue({ id: 'user-tl-001', globalRole: 'team_leader' })
+    getStudentPortalCredentialsMock.mockResolvedValue({
+      email: 'ali@example.com', portal_password: 'Ali123', has_portal_access: true, status: 'active',
+    })
+    getParentPortalCredentialsMock.mockResolvedValue({
+      email: 'parent@example.com', portal_password: 'Parent123', has_portal_access: true, status: 'active',
+    })
+    withAuthAdmin(mockDb({}))
+
+    const result = await generateMissingWelcomeCredentialsAction(STUDENT_ID)
+
+    expect(result.success).toBe(false)
+    if (!result.success) {
+      expect(result.error).toBe('No missing passwords could be regenerated for this student.')
+    }
+  })
+
+  it('TEST 16 — instructor is forbidden from regenerating credentials (redirected)', async () => {
+    requirePermissionMock.mockResolvedValue({ id: 'user-inst-001', globalRole: 'instructor' })
+    getStudentPortalCredentialsMock.mockResolvedValue({
+      email: 'ali@example.com', portal_password: null, has_portal_access: true, status: 'password_missing',
+    })
+    getParentPortalCredentialsMock.mockResolvedValue({
+      email: 'parent@example.com', portal_password: 'Parent123', has_portal_access: true, status: 'active',
+    })
+    withAuthAdmin(mockDb({
+      students: [{ data: { user_id: 'auth-student-1' }, error: null }],
+    }))
+
+    await generateMissingWelcomeCredentialsAction(STUDENT_ID)
+
+    expect(redirect).toHaveBeenCalledTimes(1)
+    expect(vi.mocked(redirect).mock.calls[0][0]).toContain('error=forbidden')
+  })
+
+  it('TEST 17 — Super Admin is allowed to regenerate credentials', async () => {
+    requirePermissionMock.mockResolvedValue({ id: 'user-sa-001', globalRole: 'super_admin' })
+    getStudentPortalCredentialsMock.mockResolvedValue({
+      email: 'ali@example.com', portal_password: null, has_portal_access: true, status: 'password_missing',
+    })
+    getParentPortalCredentialsMock.mockResolvedValue({
+      email: 'parent@example.com', portal_password: 'Parent123', has_portal_access: true, status: 'active',
+    })
+    const db = withAuthAdmin(mockDb({
+      students: [{ data: { user_id: 'auth-student-1' }, error: null }],
+    }))
+
+    const result = await generateMissingWelcomeCredentialsAction(STUDENT_ID)
+
+    expect(result.success).toBe(true)
+    expect(redirect).not.toHaveBeenCalled()
+    expect((db as any).auth.admin.updateUserById).toHaveBeenCalled()
   })
 })

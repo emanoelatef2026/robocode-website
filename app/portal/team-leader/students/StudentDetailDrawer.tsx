@@ -3,7 +3,11 @@
 import { useEffect, useState } from 'react'
 import type { StudentOperationalRow } from '@/modules/students/operational'
 import { getStudentGroupHistory, type GroupHistoryEntry } from '@/modules/students/group-history'
-import { getWelcomeMessageStatusAction, sendWelcomeWhatsAppAction } from '@/modules/students/welcome-message'
+import {
+  getWelcomeMessageStatusAction,
+  sendWelcomeWhatsAppAction,
+  generateMissingWelcomeCredentialsAction,
+} from '@/modules/students/welcome-message'
 
 interface Props {
   student:  StudentOperationalRow
@@ -28,9 +32,11 @@ const OP_STATUS_CONFIG: Record<string, { label: string; color: string; text: str
 export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit, onAssign }: Props) {
   const [tab, setTab] = useState<Tab>('overview')
 
-  const [welcomeEligible, setWelcomeEligible] = useState(false)
-  const [welcomeTooltip,  setWelcomeTooltip]  = useState<string | null>('Loading…')
-  const [welcomeSending,  setWelcomeSending]  = useState(false)
+  const [welcomeEligible,      setWelcomeEligible]      = useState(false)
+  const [welcomeTooltip,       setWelcomeTooltip]       = useState<string | null>('Loading…')
+  const [welcomeCanRegenerate, setWelcomeCanRegenerate] = useState(false)
+  const [welcomeSending,       setWelcomeSending]       = useState(false)
+  const [welcomeRegenerating,  setWelcomeRegenerating]  = useState(false)
 
   // Close on ESC
   useEffect(() => {
@@ -47,11 +53,13 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
         if (cancelled) return
         setWelcomeEligible(status.eligibility.eligible)
         setWelcomeTooltip(status.eligibility.reason)
+        setWelcomeCanRegenerate(status.eligibility.canRegenerate)
       })
       .catch(() => {
         if (cancelled) return
         setWelcomeEligible(false)
         setWelcomeTooltip('Unable to check eligibility.')
+        setWelcomeCanRegenerate(false)
       })
     return () => { cancelled = true }
   }, [isTL, s.student_id])
@@ -65,6 +73,20 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
       return
     }
     window.open(result.url, '_blank')
+  }
+
+  async function handleGenerateCredentials() {
+    setWelcomeRegenerating(true)
+    const result = await generateMissingWelcomeCredentialsAction(s.student_id)
+    setWelcomeRegenerating(false)
+    if (!result.success) {
+      alert(result.error)
+      return
+    }
+    const status = await getWelcomeMessageStatusAction(s.student_id)
+    setWelcomeEligible(status.eligibility.eligible)
+    setWelcomeTooltip(status.eligibility.reason)
+    setWelcomeCanRegenerate(status.eligibility.canRegenerate)
   }
 
   const opCfg   = OP_STATUS_CONFIG[s.op_status] ?? OP_STATUS_CONFIG.ACTIVE
@@ -110,27 +132,44 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
 
         {/* Quick actions */}
         {isTL && (
-          <div className="flex gap-2 border-b border-[#E2E8F0] px-5 py-3">
-            {onEdit && (
-              <button onClick={onEdit}
-                className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]">
-                Edit Student
-              </button>
+          <div className="border-b border-[#E2E8F0] px-5 py-3">
+            <div className="flex gap-2">
+              {onEdit && (
+                <button onClick={onEdit}
+                  className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-sm font-medium text-[#64748B] hover:border-[#CBD5E1]">
+                  Edit Student
+                </button>
+              )}
+              {onAssign && (
+                <button onClick={onAssign}
+                  className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-sm font-medium text-white hover:bg-[#e87c18]">
+                  Assign Group
+                </button>
+              )}
+              {!welcomeEligible && welcomeCanRegenerate ? (
+                <button
+                  onClick={handleGenerateCredentials}
+                  disabled={welcomeRegenerating}
+                  title="Generate a new portal password for the account(s) missing one"
+                  className="flex-1 rounded-lg border border-amber-200 bg-[#FFFBEB] py-2 text-sm font-medium text-[#B45309] hover:bg-[#FEF3C7] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  ⚠ {welcomeRegenerating ? 'Generating…' : 'Generate Credentials'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleSendWelcomeMessage}
+                  disabled={!welcomeEligible || welcomeSending}
+                  title={welcomeTooltip ?? undefined}
+                  className="flex-1 rounded-lg bg-[#25D366] py-2 text-sm font-medium text-white hover:bg-[#1FB855] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  🚀 {welcomeSending ? 'Sending…' : 'Send Welcome Message'}
+                </button>
+              )}
+            </div>
+            {/* Explicit reason — never leave the disabled button unexplained */}
+            {!welcomeEligible && welcomeTooltip && (
+              <p className="mt-1.5 text-[10px] font-medium text-[#B45309]">⚠ {welcomeTooltip}</p>
             )}
-            {onAssign && (
-              <button onClick={onAssign}
-                className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-sm font-medium text-white hover:bg-[#e87c18]">
-                Assign Group
-              </button>
-            )}
-            <button
-              onClick={handleSendWelcomeMessage}
-              disabled={!welcomeEligible || welcomeSending}
-              title={welcomeTooltip ?? undefined}
-              className="flex-1 rounded-lg bg-[#25D366] py-2 text-sm font-medium text-white hover:bg-[#1FB855] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              🚀 {welcomeSending ? 'Sending…' : 'Send Welcome Message'}
-            </button>
           </div>
         )}
 

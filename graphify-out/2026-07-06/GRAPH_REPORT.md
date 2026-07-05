@@ -1,16 +1,16 @@
 # Graph Report - robocode-new  (2026-07-06)
 
 ## Corpus Check
-- 1033 files · ~792,987 words
+- 1031 files · ~792,515 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 5061 nodes · 11355 edges · 333 communities (302 shown, 31 thin omitted)
+- 5028 nodes · 11324 edges · 317 communities (283 shown, 34 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 51 edges (avg confidence: 0.74)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `105f8e3e`
+- Built from commit: `5e9fb3e2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -205,15 +205,11 @@
 - [[_COMMUNITY_StudentSidebar.tsx|StudentSidebar.tsx]]
 - [[_COMMUNITY_ProgramsSection.tsx|ProgramsSection.tsx]]
 - [[_COMMUNITY_MediaValidationMessage.tsx|MediaValidationMessage.tsx]]
-- [[_COMMUNITY_NotesTab.tsx|NotesTab.tsx]]
 - [[_COMMUNITY_TLAssignCourseForm.tsx|TLAssignCourseForm.tsx]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
-- [[_COMMUNITY_Super Admin OS — Delivery Report|Super Admin OS — Delivery Report]]
 - [[_COMMUNITY_AdminButton.tsx|AdminButton.tsx]]
 - [[_COMMUNITY_workbook.ts|workbook.ts]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
-- [[_COMMUNITY_page.tsx|page.tsx]]
-- [[_COMMUNITY_contact-actions.ts|contact-actions.ts]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
@@ -232,7 +228,6 @@
 - [[_COMMUNITY_route.ts|route.ts]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
-- [[_COMMUNITY_LeadsTableClient.tsx|LeadsTableClient.tsx]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
 - [[_COMMUNITY_DataCard.tsx|DataCard.tsx]]
@@ -252,17 +247,14 @@
 - [[_COMMUNITY_schemas.ts|schemas.ts]]
 - [[_COMMUNITY_queries.ts|queries.ts]]
 - [[_COMMUNITY_types.ts|types.ts]]
-- [[_COMMUNITY_page.tsx|page.tsx]]
 - [[_COMMUNITY_QuickActionDock.tsx|QuickActionDock.tsx]]
 - [[_COMMUNITY_graphify reference add a URL and watch a folder|graphify reference: add a URL and watch a folder]]
 - [[_COMMUNITY_graphify reference commit hook and native CLAUDE.md integration|graphify reference: commit hook and native CLAUDE.md integration]]
 - [[_COMMUNITY_graphify reference incremental update and cluster-only|graphify reference: incremental update and cluster-only]]
-- [[_COMMUNITY_index.ts|index.ts]]
 - [[_COMMUNITY_ProgressBar.tsx|ProgressBar.tsx]]
 - [[_COMMUNITY_13. Student Progress System|13. Student Progress System]]
 - [[_COMMUNITY_14. Parent Portal Architecture|14. Parent Portal Architecture]]
 - [[_COMMUNITY_16. Analytics Architecture|16. Analytics Architecture]]
-- [[_COMMUNITY_actions.ts|actions.ts]]
 - [[_COMMUNITY_20. AI Integration Points|20. AI Integration Points]]
 - [[_COMMUNITY_23. Scalability Concerns|23. Scalability Concerns]]
 - [[_COMMUNITY_10. Server Actions Strategy|10. Server Actions Strategy]]
@@ -280,14 +272,9 @@
 - [[_COMMUNITY_route.ts|route.ts]]
 - [[_COMMUNITY_route.ts|route.ts]]
 - [[_COMMUNITY_InstructorBottomNav.tsx|InstructorBottomNav.tsx]]
-- [[_COMMUNITY_page.tsx|page.tsx]]
 - [[_COMMUNITY_route.ts|route.ts]]
 - [[_COMMUNITY_route.ts|route.ts]]
 - [[_COMMUNITY_page.tsx|page.tsx]]
-- [[_COMMUNITY_EditProjectForm.tsx|EditProjectForm.tsx]]
-- [[_COMMUNITY_useFinanceFilters.ts|useFinanceFilters.ts]]
-- [[_COMMUNITY_TLSpecialSessionDetail.tsx|TLSpecialSessionDetail.tsx]]
-- [[_COMMUNITY_queries.ts|queries.ts]]
 - [[_COMMUNITY_global-error.tsx|global-error.tsx]]
 - [[_COMMUNITY_GroupHealthBoard.tsx|GroupHealthBoard.tsx]]
 - [[_COMMUNITY_graphify reference GitHub clone and cross-repo merge|graphify reference: GitHub clone and cross-repo merge]]
@@ -307,9 +294,6 @@
 - [[_COMMUNITY_schemas.ts|schemas.ts]]
 - [[_COMMUNITY_next.config.ts|next.config.ts]]
 - [[_COMMUNITY_postcss.config.mjs|postcss.config.mjs]]
-- [[_COMMUNITY_page.tsx|page.tsx]]
-- [[_COMMUNITY_queries.ts|queries.ts]]
-- [[_COMMUNITY_page.tsx|page.tsx]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `createServiceClient()` - 754 edges
@@ -338,7 +322,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (333 total, 31 thin omitted)
+## Communities (317 total, 34 thin omitted)
 
 ### Community 0 - "types.ts"
 Cohesion: 0.12
@@ -346,119 +330,119 @@ Nodes (18): Avatar(), DrawerContent(), Props, DrawerRow(), EmptyState(), Instruc
 
 ### Community 1 - "actions.ts"
 Cohesion: 0.05
-Nodes (47): NewTemplatePage(), PortfolioListPage(), Props, NewAchievementPage(), Props, NewBadgePage(), Props, INITIAL (+39 more)
+Nodes (41): INIT_STUDENT, INIT_VOID, Lead, Props, INITIAL, Props, INITIAL, Lead (+33 more)
 
 ### Community 2 - "createServiceClient"
 Cohesion: 0.12
 Nodes (32): addFinanceAdjustmentAction(), AddStaffPaymentInput, AddStaffSessionInput, deleteFinanceAdjustmentAction(), deleteStaffPaymentAction(), deleteStaffSessionAction(), FORBIDDEN, getAdjustmentsAction() (+24 more)
 
 ### Community 3 - "ActionResult"
-Cohesion: 0.17
-Nodes (12): Props, STATUSES, INSTRUCTOR_STATUSES, Props, assignGroupToInstructor(), createInstructor(), deleteInstructor(), removeGroupFromInstructor() (+4 more)
+Cohesion: 0.18
+Nodes (13): Props, STATUSES, INSTRUCTOR_STATUSES, Props, assignGroupToInstructor(), createInstructor(), deleteInstructor(), removeGroupFromInstructor() (+5 more)
 
 ### Community 4 - "modal-actions.ts"
-Cohesion: 0.09
-Nodes (25): Props, TYPE_LABELS, EditTemplatePage(), Props, CERT_TYPES, Props, createTemplate(), deleteCertificate() (+17 more)
+Cohesion: 0.11
+Nodes (21): TYPE_LABELS, CERT_TYPES, Props, createTemplate(), deleteCertificate(), deleteTemplate(), getTemplateForEdit(), issueCertificate() (+13 more)
 
 ### Community 5 - "queries.ts"
-Cohesion: 0.12
-Nodes (15): CourseOption, Props, SemesterOption, StudentOption, CERT_TYPES, CourseOption, IssueCertificateForm(), PortfolioProject (+7 more)
+Cohesion: 0.10
+Nodes (24): Props, CourseOption, Props, SemesterOption, StudentOption, CERT_TYPES, CourseOption, IssueCertificateForm() (+16 more)
 
 ### Community 6 - "StudentOpsDrawer.tsx"
-Cohesion: 0.06
-Nodes (43): CollectionRow(), CollectionsView(), fmt(), fmtDate(), Props, Section, Stats, buildTimeline() (+35 more)
+Cohesion: 0.08
+Nodes (35): CollectionRow(), CollectionsView(), fmt(), fmtDate(), Props, Section, Stats, buildTimeline() (+27 more)
 
 ### Community 7 - "actions.ts"
-Cohesion: 0.10
-Nodes (30): AdminDashboard(), getDashboardData(), StudentLeaderboardPage(), Props, TYPE_ICON, createServiceClient(), EnrollmentProgress, getRemainingStudentSessions() (+22 more)
+Cohesion: 0.08
+Nodes (28): AccountLayout(), AdminLayout(), AdminNewLeadPage(), Check, CheckCategory, CheckStatus, ProductionReadinessPage(), runProductionChecks() (+20 more)
 
 ### Community 8 - "actions.ts"
-Cohesion: 0.08
-Nodes (36): Props, Props, PROVIDER_LABELS, STATUS_BADGE, SLOT_CONSUMING_STATUSES, addRecordingSchema, addSessionRecording(), cancelSession() (+28 more)
+Cohesion: 0.09
+Nodes (37): Props, Props, PROVIDER_LABELS, STATUS_BADGE, addRecordingSchema, addSessionRecording(), ATTENDANCE_PRESENCE_STATUSES, cancelSession() (+29 more)
 
 ### Community 9 - "queries.ts"
 Cohesion: 0.09
-Nodes (34): Props, RecordAttendancePage(), BranchEditPage(), Props, NewFinanceAccountPage(), AdminFinancePage(), fmt(), Props (+26 more)
+Nodes (34): Props, RecordAttendancePage(), BranchEditPage(), Props, BranchesPage(), NewFinanceAccountPage(), AdminFinancePage(), fmt() (+26 more)
 
 ### Community 10 - "StatusBadge.tsx"
-Cohesion: 0.10
-Nodes (18): AdminAssignmentsPage(), Props, TYPE_COLORS, TYPE_LABELS, BranchesPage(), Props, CertificateTemplatesPage(), Props (+10 more)
+Cohesion: 0.06
+Nodes (38): AdminAssignmentsPage(), Props, TYPE_COLORS, TYPE_LABELS, Props, CertificateTemplatesPage(), Props, Props (+30 more)
 
 ### Community 11 - "NotFound"
-Cohesion: 0.10
-Nodes (20): GET(), ALLOWED_MIMES, POST(), GET(), GET(), GET(), GET(), egPhonePatterns() (+12 more)
+Cohesion: 0.17
+Nodes (15): GET(), ALLOWED_MIMES, POST(), GET(), GET(), GET(), egPhonePatterns(), GET() (+7 more)
 
 ### Community 12 - "listCourses"
-Cohesion: 0.11
-Nodes (30): NewAssignmentPage(), NewCertificatePage(), CertificatesPage(), Props, TYPE_LABELS, AdminCoursesPage(), Props, NewProjectPage() (+22 more)
+Cohesion: 0.10
+Nodes (37): NewCertificatePage(), CertificatesPage(), Props, TYPE_LABELS, AdminCoursesPage(), Props, NewProjectPage(), Props (+29 more)
 
 ### Community 13 - "requirePermission"
-Cohesion: 0.12
-Nodes (22): Props, Props, Props, Props, Props, PermissionsChecklist(), Props, BranchListItem (+14 more)
+Cohesion: 0.09
+Nodes (26): DAYS, Props, Props, Props, Props, assignmentAge(), Props, TLAssignCourseForm() (+18 more)
 
 ### Community 14 - "navigation.ts"
 Cohesion: 0.04
-Nodes (10): Props, Props, Props, ICONS, navByKey, Props, SECTIONS, INSTRUCTOR_NAV (+2 more)
+Nodes (15): Props, Props, Options, getMonthRange(), getPreset(), INITIAL, Props, Props (+7 more)
 
 ### Community 15 - "actions.ts"
-Cohesion: 0.12
-Nodes (30): archiveProject(), assertStudentBranchAccess(), createAchievement(), createBadge(), createProject(), deleteAchievement(), deleteBadge(), Denied (+22 more)
+Cohesion: 0.10
+Nodes (36): Props, CourseOption, Props, SemesterOption, archiveProject(), assertStudentBranchAccess(), createAchievement(), createBadge() (+28 more)
 
 ### Community 16 - "requirePortalRole"
 Cohesion: 0.08
-Nodes (32): MyVideosPage(), TeamLeaderLayout(), EVENT_ICONS, SOURCE_LABELS, STATUS_COLORS, TabId, TABS, Branch (+24 more)
+Nodes (33): MyVideosPage(), TeamLeaderLayout(), EVENT_ICONS, SOURCE_LABELS, STATUS_COLORS, TabId, TABS, Branch (+25 more)
 
 ### Community 17 - "FinanceClient.tsx"
 Cohesion: 0.09
 Nodes (19): ADJ_TYPES, DETAIL_TABS, DetailTabId, DrawerContent(), FinanceClient(), InstructorDetailModal(), InstructorsTab(), MONTHS (+11 more)
 
 ### Community 18 - "group-crud.ts"
-Cohesion: 0.09
-Nodes (31): applyStudentChanges(), assignCourseAndInstructor(), DB, updateGroupCoursePlan(), createGroupModal(), deleteGroupAction(), updateGroupModal(), buildGroupInsert() (+23 more)
+Cohesion: 0.08
+Nodes (34): addGroupInstructor(), assignCourseAndInstructor(), DB, updateGroupCoursePlan(), archiveGroupAction(), createGroupModal(), updateGroupModal(), buildGroupInsert() (+26 more)
 
 ### Community 19 - "actions.ts"
-Cohesion: 0.07
-Nodes (31): ACTIVITY_ICONS, dateFmt(), fmt(), ModalTab, PaymentTab(), SummaryTab(), Props, addExpense() (+23 more)
+Cohesion: 0.05
+Nodes (48): ACTIVITY_ICONS, dateFmt(), fmt(), ModalTab, PaymentTab(), SummaryTab(), Props, dateFmt() (+40 more)
 
 ### Community 20 - "queries.ts"
-Cohesion: 0.12
-Nodes (21): Props, TeamLeaderEditPage(), Props, TeamLeaderDetailPage(), getTLPerformance(), Props, TLPerformanceData, TLPerformancePage() (+13 more)
+Cohesion: 0.19
+Nodes (14): Props, TeamLeaderEditPage(), Props, TeamLeaderDetailPage(), getTLPerformance(), Props, TLPerformanceData, TLPerformancePage() (+6 more)
 
 ### Community 21 - "queries.ts"
 Cohesion: 0.10
-Nodes (30): HomeworkGroupSelect(), Props, Props, SESSION_TYPE_BADGE, STATUS_ACTION, GcContext, AttendanceAnalyticsRow, CourseModuleItem (+22 more)
+Nodes (30): Props, StudentSearchPage(), Props, SESSION_TYPE_BADGE, STATUS_ACTION, GcContext, searchStudentsForInstructor(), AttendanceAnalyticsRow (+22 more)
 
 ### Community 22 - "FinancialManagementClient.tsx"
-Cohesion: 0.07
-Nodes (31): AcademyTab(), ALL_STATUSES, Branch, BranchesTab(), downloadWorkbook(), exportAcademyExcel(), exportBranchesExcel(), exportGroupsExcel() (+23 more)
+Cohesion: 0.04
+Nodes (54): AcademyTab(), ALL_STATUSES, Branch, BranchesTab(), downloadWorkbook(), exportAcademyExcel(), exportBranchesExcel(), exportGroupsExcel() (+46 more)
 
 ### Community 23 - "bulk-actions.ts"
-Cohesion: 0.11
-Nodes (27): CATEGORIES, ExistingProject, Props, checkAndUnlockAchievements(), checkCourseAchievement(), checkPerfectAttendanceAchievement(), resolvePortfolioId(), unlockAchievement() (+19 more)
+Cohesion: 0.24
+Nodes (15): checkAndUnlockAchievements(), checkCourseAchievement(), checkPerfectAttendanceAchievement(), resolvePortfolioId(), unlockAchievement(), ACHIEVEMENT_DEFS, AchievementDef, LEVEL_THRESHOLDS (+7 more)
 
 ### Community 24 - "FinanceTableClient.tsx"
-Cohesion: 0.44
-Nodes (8): CreateScheduleInput, Schedule, ScheduleDetail, ScheduleListItem, ScheduleType, UpdateScheduleInput, ScheduleDelivery, ScheduleStatus
+Cohesion: 0.22
+Nodes (14): DashboardStats, getDashboardStats(), getSchedule(), getUpcomingSchedules(), GroupDetail, listSchedules(), CreateScheduleInput, Schedule (+6 more)
 
 ### Community 25 - "operational.ts"
-Cohesion: 0.08
-Nodes (30): AdminInstructorsPage(), TLInstructorsPage(), computeHealthScore(), getInstructorDetailData(), getInstructorFormOptions(), healthLabel(), listInstructorsOperational(), RawAttendanceRow (+22 more)
+Cohesion: 0.07
+Nodes (32): AdminInstructorsPage(), TLInstructorsPage(), ACADEMICALLY_CONSUMING_SESSION_STATUSES, isAcademicallyConsumingSession(), computeHealthScore(), getInstructorDetailData(), getInstructorFormOptions(), healthLabel() (+24 more)
 
 ### Community 26 - "ModuleDetailView.tsx"
-Cohesion: 0.11
-Nodes (21): Props, ModuleDetailPage(), Props, getLesson(), listLessons(), Lesson, LessonListItem, LessonType (+13 more)
+Cohesion: 0.09
+Nodes (28): LESSON_TYPES, Props, ModuleDetailPage(), Props, createLesson(), deleteLesson(), updateLesson(), getLesson() (+20 more)
 
 ### Community 27 - "app.ts"
-Cohesion: 0.18
-Nodes (7): Props, Session, Props, Session, feedbackSchema, submitSessionFeedback(), FEEDBACK_QUESTIONS
+Cohesion: 0.13
+Nodes (12): Props, Session, Props, Session, feedbackSchema, submitSessionFeedback(), getSessionFeedbackAggregate(), hasStudentSubmittedFeedback() (+4 more)
 
 ### Community 28 - "queries.ts"
-Cohesion: 0.05
-Nodes (59): FinanceCenterPage(), loadMeta(), fmt(), GroupFinanceSection(), PnLValue(), GET(), CollectionsPage(), fmt() (+51 more)
+Cohesion: 0.10
+Nodes (28): FinanceCenterPage(), loadMeta(), BranchPerformanceTable(), getAcademyPnL(), getAccountPromises(), getBranchFinanceStats(), getBranchPnLRows(), getGroupExpenseDetail() (+20 more)
 
 ### Community 29 - "types.ts"
-Cohesion: 0.15
-Nodes (23): GradingView(), CourseDetailView(), GroupFormModal(), gradeSchema, gradeSubmission(), submitAssignment(), submitSchema, bulkEnrollStudents() (+15 more)
+Cohesion: 0.09
+Nodes (34): RubricBuilder(), GradingView(), CourseDetailView(), GroupFormModal(), gradeSchema, gradeSubmission(), submitAssignment(), submitSchema (+26 more)
 
 ### Community 30 - "guards.ts"
 Cohesion: 0.06
@@ -466,19 +450,19 @@ Nodes (32): 1. الملخص التنفيذي, 2.1 جداول بدون RLS ومك
 
 ### Community 31 - "getSupabaseAdmin"
 Cohesion: 0.04
-Nodes (60): GET(), GET(), GET(), POST(), GET(), GET(), GET(), GET() (+52 more)
+Nodes (59): GET(), GET(), GET(), GET(), GET(), GET(), GET(), GET() (+51 more)
 
 ### Community 32 - "page.tsx"
-Cohesion: 0.13
-Nodes (26): ALERT_SEVERITY_STYLES, fmt(), Props, TabKey, TABS, TLAnalyticsPage(), listAtRiskStudents(), getBrokenPromises() (+18 more)
+Cohesion: 0.22
+Nodes (7): LEVEL_LABELS, Props, LIFECYCLE_CONFIG, LifecycleHealth, Props, TLCoursesListClient(), CourseListItem
 
 ### Community 33 - "actions.ts"
-Cohesion: 0.10
-Nodes (18): ROUTE_ERROR_MESSAGES, ROUTE_ERROR_MESSAGES, ROUTE_SUCCESS_MESSAGES, getSupabasePublic(), changePassword(), ChangePasswordState, signIn(), SignInState (+10 more)
+Cohesion: 0.09
+Nodes (23): POST(), POST(), POST(), POST(), GET(), ROUTE_ERROR_MESSAGES, ROUTE_ERROR_MESSAGES, ROUTE_SUCCESS_MESSAGES (+15 more)
 
 ### Community 34 - "page.tsx"
-Cohesion: 0.07
-Nodes (40): AcademicYearsPage(), Props, SemesterDetailPage(), Props, STATUS_COLORS, Props, NewSemesterPage(), Props (+32 more)
+Cohesion: 0.20
+Nodes (11): STATUS_COLORS, addCourseToSemester(), deleteSemester(), dropStudentFromSemester(), enrollStudentInSemester(), removeCourseFromSemester(), updateSemester(), CreateSemesterSchema (+3 more)
 
 ### Community 35 - "index.ts"
 Cohesion: 0.08
@@ -490,35 +474,35 @@ Nodes (16): EnrollmentWizard(), FIN_BADGE, FIN_LABEL, GroupContext, normaliseEgP
 
 ### Community 37 - "GroupWorkspace.tsx"
 Cohesion: 0.10
-Nodes (16): AttendanceStatus, ConsumptionReasonLabel(), fmtDate(), GroupAttendanceModal(), nowLocalDatetime(), Props, STATUS_LABELS, STATUS_STYLES (+8 more)
+Nodes (20): Props, GroupAttendanceTab(), WS_ATT_STATUSES, WsAttStatus, GroupFinanceTab(), GroupPerformanceTab(), GroupStudentsTable(), RiskBadge() (+12 more)
 
 ### Community 38 - "actions.ts"
-Cohesion: 0.18
-Nodes (12): Props, SOURCE_LABELS, STATUS_COLORS, TLLeadsPage(), getAgingLeads(), getAvgDaysToConvert(), getFollowUpsDue(), getLeadsBySource() (+4 more)
+Cohesion: 0.07
+Nodes (46): AdminLeadDetailPage(), PIPELINE_ORDER, Props, STATUS_META, AdminLeadsPage(), LEAD_SOURCES, LEAD_STATUSES, Props (+38 more)
 
 ### Community 39 - "SectionEmptyState.tsx"
 Cohesion: 0.06
 Nodes (14): Accreditation, blank, blankForm, BlogPost, CATEGORIES, EditForm, blank, FAQ_CATEGORIES (+6 more)
 
 ### Community 40 - "queries.ts"
-Cohesion: 0.07
-Nodes (26): ExecutiveOpsDashboard(), fmt(), fmt(), InstructorOperationsPage(), InstructorHealthBoard(), AtRiskStudent, BranchPerfRow, CertReadyStudent (+18 more)
+Cohesion: 0.09
+Nodes (22): ExecutiveOpsDashboard(), fmt(), AtRiskStudent, BranchPerfRow, CertReadyStudent, getAtRiskStudents(), getBranchPerformance(), getCertReadyStudents() (+14 more)
 
 ### Community 41 - "page.tsx"
-Cohesion: 0.07
-Nodes (56): inferMethod(), MethodsTab(), MissingPaymentInfoBanner(), OverviewTab(), Props, SESSION_TYPE_LABELS, Props, TABS (+48 more)
+Cohesion: 0.06
+Nodes (61): inferMethod(), MethodsTab(), MissingPaymentInfoBanner(), OverviewTab(), Props, SESSION_TYPE_LABELS, Props, TABS (+53 more)
 
 ### Community 42 - "actions.ts"
-Cohesion: 0.07
-Nodes (26): CERT_TYPES, DAYS, Props, Props, ACHIEVEMENT_TYPES, Props, Props, CourseOption (+18 more)
+Cohesion: 0.05
+Nodes (39): TIMEZONES, CERT_TYPES, Props, Props, ACHIEVEMENT_TYPES, Props, Props, CourseOption (+31 more)
 
 ### Community 43 - "index.ts"
-Cohesion: 0.11
-Nodes (22): ACTION_DEFS, ActionCode, AttendanceTrend, COLLECTION_PRIORITY_CONFIG, CollectionPriority, computeAttendanceHealth(), computeCollectionPriority(), computeOperationalStatus() (+14 more)
+Cohesion: 0.06
+Nodes (43): GET(), GET(), GET(), POST(), HitRow(), hitUrl(), Props, ConsistencyReport (+35 more)
 
 ### Community 44 - "AdminTopbar.tsx"
-Cohesion: 0.16
-Nodes (18): Props, TemplatesClient(), TYPE_LABELS, Props, TYPE_LABELS, Props, TYPE_LABELS, VerifyCertificatePage() (+10 more)
+Cohesion: 0.22
+Nodes (10): TemplatesClient(), ParentsClient(), StudentsClient(), AdminTopbar(), getPageTitle(), PATH_TITLES, Props, ROLE_LABELS (+2 more)
 
 ### Community 45 - "Design Handoff: Super Admin Dashboard — RoboCode LMS"
 Cohesion: 0.06
@@ -530,54 +514,54 @@ Nodes (33): 1. `components/admin/AdminShell.tsx`, 1. الـ Orbitron font للأ
 
 ### Community 47 - "GroupDetailDrawer.tsx"
 Cohesion: 0.08
-Nodes (20): ATT_STATUSES, AttStatus, DAY_INDEX, DAYS_FULL, estimateTotalSessions(), fmt12(), fmtDate(), fmtDateTime() (+12 more)
+Nodes (19): ATT_STATUSES, AttStatus, DAY_INDEX, DAYS_FULL, estimateTotalSessions(), fmt12(), fmtDate(), fmtDateTime() (+11 more)
 
 ### Community 48 - "createMockDb"
-Cohesion: 0.08
-Nodes (19): loadStudentPortfolioProjects(), getCertificateSnapshot(), checkCertificateEligibility(), DEFAULT_THRESHOLDS, CertificateEligibilityResult, CertificateThresholds, closeSemester(), makeIssuanceDb() (+11 more)
+Cohesion: 0.10
+Nodes (19): getCertificateSnapshot(), checkCertificateEligibility(), DEFAULT_THRESHOLDS, CertificateEligibilityResult, CertificateThresholds, closeSemester(), makeIssuanceDb(), fakeEligibility (+11 more)
 
 ### Community 49 - "queries.ts"
-Cohesion: 0.22
-Nodes (14): Props, SpecialSessionPage(), Props, TrialConversionWidget(), Props, TLSpecialSessionPage(), getAbsentSessionsForStudent(), getMakeupSession() (+6 more)
+Cohesion: 0.10
+Nodes (28): Props, SpecialSessionPage(), Props, TrialConversionWidget(), Props, TLSpecialSessionPage(), fmtDate(), Props (+20 more)
 
 ### Community 50 - "enums.ts"
-Cohesion: 0.10
-Nodes (19): Props, RubricBuilder(), SUBMISSION_TYPES, TYPES, Props, SUBMISSION_TYPES, TYPES, LESSON_TYPES (+11 more)
+Cohesion: 0.19
+Nodes (11): ROLE_DEFAULT_PERMISSIONS, refreshUserPermissions(), resolveUserPermissions(), isHigherRole(), ROLE_LABELS, ROLE_PRIORITY, PermissionCheckOptions, PermissionName (+3 more)
 
 ### Community 51 - "InstructorsWorkspaceClient.tsx"
-Cohesion: 0.11
-Nodes (20): InstructorsWorkspaceClient(), InstructorFiltersBar(), InstructorTopBar(), AssignGroupModal(), ConfirmArchive(), ConfirmDelete(), Toast(), useInstructorFilters() (+12 more)
+Cohesion: 0.13
+Nodes (17): InstructorsWorkspaceClient(), InstructorFiltersBar(), InstructorTopBar(), ConfirmArchive(), ConfirmDelete(), Toast(), useInstructorFilters(), useInstructorState() (+9 more)
 
 ### Community 52 - "actions.ts"
-Cohesion: 0.06
-Nodes (36): CourseModal(), Props, LEVEL_LABELS, Props, Props, InstructorCoursePanel(), Props, LIFECYCLE_CONFIG (+28 more)
+Cohesion: 0.19
+Nodes (13): CourseModal(), Props, friendlyDbError(), createCourse(), deleteCourse(), flinks(), fstr(), loadCourseForEdit() (+5 more)
 
 ### Community 53 - "actions.ts"
-Cohesion: 0.09
-Nodes (21): 1. `gs.created_at` و `gs.notes` مش موجودين في `group_students`, 1. شغّل sprint44, 2. `user_branch_assignments` مش موجود, 2. شغّل sprint45, 3. `JOIN` على الجدول المستهدف في `UPDATE`, 3. شغّل sprint46, 4. تحقق من الشغل, Git Branch (+13 more)
+Cohesion: 0.14
+Nodes (15): GROUP_STATUSES, Props, Props, Props, Props, deleteGroup(), CreateGroupInput, EnrollStudentInput (+7 more)
 
 ### Community 54 - "types.ts"
-Cohesion: 0.13
-Nodes (19): InstructorGroupsPage(), HomeworkInboxPage(), Props, InstructorLayout(), InstructorDashboardPage(), Props, InstructorGroupCard(), InstructorGroupCardData (+11 more)
+Cohesion: 0.19
+Nodes (15): InstructorCalendarPage(), InstructorGroupsPage(), InstructorLayout(), InstructorDashboardPage(), InstructorGroupCard(), calcNextOccurrence(), getInstructorDashboardStats(), getStudentsRequiringAttention() (+7 more)
 
 ### Community 55 - "GroupsWorkspaceClient.tsx"
-Cohesion: 0.09
-Nodes (39): Props, GroupsWorkspaceClient(), Props, EmptyWorkspace(), GroupActionsDropdown(), GroupListItem(), GroupPerformanceTab(), GroupSidebar() (+31 more)
+Cohesion: 0.15
+Nodes (21): Props, GroupsWorkspaceClient(), Props, EmptyWorkspace(), GroupSidebar(), QUICK_FILTER_OPTIONS, CompactKpiStrip(), PageHeaderKpiStrip() (+13 more)
 
 ### Community 56 - "modal-actions.ts"
-Cohesion: 0.13
-Nodes (24): AttendanceRow, getStudentAttendanceHistoryAction(), EnrollmentRow, FinanceRow, getGroupDetailDataAction(), GroupStudentRow, GuardianRow, ProgressRow (+16 more)
+Cohesion: 0.14
+Nodes (22): AttendanceRow, getStudentAttendanceHistoryAction(), EnrollmentRow, FinanceRow, getGroupDetailDataAction(), GroupStudentRow, GuardianRow, ProgressRow (+14 more)
 
 ### Community 57 - "queries.ts"
 Cohesion: 0.12
 Nodes (21): AdminPayrollPage(), defaultDateFrom(), defaultDateTo(), fetchAllBranches(), Props, defaultDateFrom(), defaultDateTo(), fetchAllBranches() (+13 more)
 
 ### Community 58 - "queries.ts"
-Cohesion: 0.12
-Nodes (20): InstructorEditPage(), Props, Props, TLInstructorEditPage(), Props, TLInstructorDetailPage(), getInstructor(), getInstructorGroups() (+12 more)
+Cohesion: 0.09
+Nodes (25): NewGroupPage(), InstructorEditPage(), Props, ParentDetailPage(), Props, NewParentPage(), StudentPortfolioDetailPage(), NotFound() (+17 more)
 
 ### Community 59 - "lms-session.ts"
-Cohesion: 0.13
+Cohesion: 0.12
 Nodes (20): LoginPage(), WORKSPACE_PICKER_ROLES, ADMIN_WORKSPACES, SelectWorkspacePage(), TL_WORKSPACES, Workspace, WORKSPACE_PICKER_ROLES, DashboardLayout() (+12 more)
 
 ### Community 60 - "parent-portal-queries.ts"
@@ -593,12 +577,12 @@ Cohesion: 0.36
 Nodes (7): canInstructorCreateNextSession(), completeInstructorAllocation(), InstructorAllocation, OwnershipCheckResult, peekNextSessionNumber(), resolveInstructorSessionOwnership(), validateSessionOwnership()
 
 ### Community 63 - "DashCard.tsx"
-Cohesion: 0.16
-Nodes (9): DashCardEmptyProps, DashCardProps, DashRow(), DashRowProps, SkeletonCard(), SkeletonRowsProps, StudentRiskBoard(), getStudentRiskData() (+1 more)
+Cohesion: 0.13
+Nodes (13): DashCardEmpty(), DashCardEmptyProps, DashCardProps, DashRow(), DashRowProps, SkeletonCard(), SkeletonRowsProps, FinanceCenter() (+5 more)
 
 ### Community 64 - "dashboard-v2-queries.ts"
-Cohesion: 0.11
-Nodes (22): GroupHealthBoard(), ALERT_TYPE_LABEL, CollectRow(), fmtEGP(), fmtTime(), Props, SessionCard(), SEVERITY_CLS (+14 more)
+Cohesion: 0.12
+Nodes (21): ALERT_TYPE_LABEL, CollectRow(), fmtEGP(), fmtTime(), Props, SessionCard(), SEVERITY_CLS, TodayActionCenter() (+13 more)
 
 ### Community 65 - "page.tsx"
 Cohesion: 0.09
@@ -609,16 +593,16 @@ Cohesion: 0.07
 Nodes (26): For /graphify add and --watch, For /graphify query, For the commit hook and native CLAUDE.md integration, For --update and --cluster-only, /graphify, Honesty Rules, Interpreter guard for subcommands, Part A - Structural extraction for code files (+18 more)
 
 ### Community 67 - "InstructorPopup.tsx"
-Cohesion: 0.19
-Nodes (12): Props, CreateInstructorInput, FullInstructor, Instructor, InstructorAttendanceStats, InstructorCertification, InstructorFinanceSummary, InstructorPerformanceMetrics (+4 more)
+Cohesion: 0.12
+Nodes (17): Empty(), GroupsTab(), NotesTab(), deleteNoteAction(), saveNoteAction(), CreateInstructorInput, FullInstructor, InstructorAttendanceStats (+9 more)
 
 ### Community 68 - "server.ts"
 Cohesion: 0.12
 Nodes (18): Modal(), Props, QuickActModal(), Props, QuickPayModal(), Props, ADJ_TYPES, MONTHS (+10 more)
 
 ### Community 69 - "actions.ts"
-Cohesion: 0.18
-Nodes (10): Props, TIMEZONES, TIMEZONES, createBranch(), deleteBranch(), slugify(), updateBranch(), CreateBranchSchema (+2 more)
+Cohesion: 0.23
+Nodes (9): Props, TIMEZONES, createBranch(), deleteBranch(), slugify(), updateBranch(), CreateBranchSchema, UpdateBranchSchema (+1 more)
 
 ### Community 70 - "getParentChildren"
 Cohesion: 0.20
@@ -629,28 +613,28 @@ Cohesion: 0.11
 Nodes (17): DAYS, normalizeEgyptianPhone(), phoneMatch(), STATUSES, StudentLink, TYPES, computeNextAllocationStart(), addGroupAllocationAction() (+9 more)
 
 ### Community 72 - "page.tsx"
-Cohesion: 0.09
-Nodes (30): CATEGORIES, CommunicationsPage(), getKPIs(), listMessages(), MessageRow, Props, STATUSES, CATEGORIES (+22 more)
+Cohesion: 0.08
+Nodes (35): CATEGORIES, CommunicationsPage(), getKPIs(), listMessages(), MessageRow, Props, STATUSES, CATEGORIES (+27 more)
 
 ### Community 73 - "4. Existing Problems"
 Cohesion: 0.08
 Nodes (23): 1. Existing Tables, 2. Missing Table, 3. Existing Logic, 4. Existing Problems, 5. Component Classification, 6. Migration Safety Plan, Adjustment Flow, Approval Flow (+15 more)
 
 ### Community 74 - "GradingView.tsx"
-Cohesion: 0.14
-Nodes (16): NewParentPage(), AssignmentHistory(), HistoryRow, Props, TLGroupDetailPage(), Props, TLNewSessionPage(), UnenrollButton() (+8 more)
+Cohesion: 0.19
+Nodes (10): GroupActionsDropdown(), GroupListItem(), GroupSummaryBar(), StatusChip(), MoveGroupModal(), DAYS_FULL, fmt12(), applyStudentChanges() (+2 more)
 
 ### Community 75 - "AttendanceRecordForm.tsx"
-Cohesion: 0.12
-Nodes (20): Props, STATUSES, BADGE, Props, STATUSES, _doReconcileStudent(), EnrollmentBucket, _internalReconcileEnrollment() (+12 more)
+Cohesion: 0.15
+Nodes (15): Props, STATUSES, BADGE, Props, STATUSES, AttendanceListItem, AttendanceRecord, RecordSessionInput (+7 more)
 
 ### Community 76 - "isBranchAccessible"
-Cohesion: 0.17
-Nodes (10): FormSection, InstructorFormModal(), SECTIONS, archiveInstructorAction(), createInstructorModalAction(), deleteInstructorAction(), getInstructorDetailAction(), refreshInstructorListAction() (+2 more)
+Cohesion: 0.19
+Nodes (8): AssignGroupModal(), archiveInstructorAction(), assignGroupModalAction(), deleteInstructorAction(), getInstructorDetailAction(), refreshInstructorListAction(), removeGroupModalAction(), InstructorFormOptions
 
 ### Community 77 - "page.tsx"
-Cohesion: 0.09
-Nodes (28): dateFmt(), fmt(), ParentFinancePage(), Props, getStudentLearningHistory(), PackageHistory, SessionRecord, StudentLearningHistory (+20 more)
+Cohesion: 0.11
+Nodes (24): dateFmt(), fmt(), ParentFinancePage(), Props, getActiveGroupCourseId(), getEnrollmentById(), getEnrollmentTransferHistory(), listStudentEnrollments() (+16 more)
 
 ### Community 78 - "PortalSidebar.tsx"
 Cohesion: 0.09
@@ -665,20 +649,20 @@ Cohesion: 0.11
 Nodes (10): BaseRepository, RepositoryError, ApiResult, DateRange, FilterOption, ListFilters, Option, PaginatedResult (+2 more)
 
 ### Community 81 - "page.tsx"
-Cohesion: 0.08
-Nodes (33): AdminAnalyticsPage(), getAcademyStats(), getBranchPerformance(), getInstructorData(), getMarketingData(), getOperationsData(), Props, READINESS_COLORS (+25 more)
+Cohesion: 0.05
+Nodes (58): AdminAnalyticsPage(), getAcademyStats(), getBranchPerformance(), getInstructorData(), getMarketingData(), getOperationsData(), Props, READINESS_COLORS (+50 more)
 
 ### Community 82 - "queries.ts"
-Cohesion: 0.06
-Nodes (39): getStudentTimeline(), logTimelineEvent(), logTimelineEvents(), SEVERITY_MAP, TIMELINE_EVENT_LABELS, TIMELINE_SEVERITY_COLORS, TimelineEventInput, TimelineEventSeverity (+31 more)
+Cohesion: 0.09
+Nodes (26): AutomationContext, AutomationResult, AutomationTriggerType, checkAndLogExecution(), evaluateTriggers(), computeDropoutCategory(), computeDropoutScore(), DROPOUT_CATEGORY_CONFIG (+18 more)
 
 ### Community 83 - "AttendanceForm.tsx"
 Cohesion: 0.17
 Nodes (7): CATEGORIES, Props, SEVERITIES, CATEGORIES, Props, SEVERITIES, createStudentNote()
 
 ### Community 84 - "queries.ts"
-Cohesion: 0.11
-Nodes (15): INIT_STUDENT, INIT_VOID, Lead, Props, AddMakeupStudentInput, AddTrialStudentFromLeadInput, AddTrialStudentNewInput, CreateMakeupSessionInput (+7 more)
+Cohesion: 0.13
+Nodes (13): fmt(), GroupFinanceSection(), PnLValue(), getActionBadge(), Props, rowPriority(), SortField, getGroupFinanceSummary() (+5 more)
 
 ### Community 85 - "BranchesSection.tsx"
 Cohesion: 0.10
@@ -701,28 +685,28 @@ Cohesion: 0.12
 Nodes (19): ActiveStatusSchema, DateFilterInput, DateFilterSchema, GroupStatusSchema, ListFiltersInput, ListFiltersSchema, MoneySchema, MoneyStringSchema (+11 more)
 
 ### Community 90 - "index.ts"
-Cohesion: 0.10
-Nodes (28): Props, StudentPortfolioDetailPage(), Props, BADGE_TYPES, CATEGORY_ICONS, InstructorPortfolioPage(), Props, CATEGORY_COLORS (+20 more)
+Cohesion: 0.08
+Nodes (36): BADGE_TYPES, CATEGORY_ICONS, InstructorPortfolioPage(), Props, CATEGORY_COLORS, ParentPortfolioPage(), Props, ParentChildPortfolioPage() (+28 more)
 
 ### Community 91 - "actions.ts"
-Cohesion: 0.21
-Nodes (11): getCanonicalGroupPlannedSessions(), getCanonicalGroupProgress(), getCanonicalInstructorRange(), getCanonicalInstructorSessionProgress(), getCanonicalStudentConsumedSessions(), getCanonicalStudentContract(), getCanonicalStudentRemainingSessions(), GroupProgress (+3 more)
+Cohesion: 0.05
+Nodes (51): POST(), ParentProgressPage(), StudentLeaderboardPage(), Props, TLCalendarPage(), AssignmentHistory(), createServiceClient(), getCanonicalGroupPlannedSessions() (+43 more)
 
 ### Community 92 - "Payroll System — Phase XXII Handoff"
 Cohesion: 0.10
 Nodes (19): 3 Tabs, Add Staff Modal (UUID bug fixed), Architecture, Constants (types.ts), Database Tables, Files Changed, `finance_adjustments`, FinanceClient.tsx — Key Components (+11 more)
 
 ### Community 93 - "actions.ts"
-Cohesion: 0.13
-Nodes (4): HEALTH_CONFIG, RISK_CLR, RISK_ORDER, Tab
+Cohesion: 0.12
+Nodes (5): HEALTH_CONFIG, Props, RISK_CLR, RISK_ORDER, Tab
 
 ### Community 94 - "compilerOptions"
 Cohesion: 0.10
 Nodes (19): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+11 more)
 
 ### Community 95 - "index.ts"
-Cohesion: 0.17
-Nodes (10): AccountLayout(), AdminLayout(), AdminNewLeadPage(), AdminStaffPage(), getStaffList(), ALLOWED, DashboardLayout(), ROLE_LABELS (+2 more)
+Cohesion: 0.40
+Nodes (3): AdminStaffPage(), getStaffList(), Props
 
 ### Community 96 - "page.tsx"
 Cohesion: 0.12
@@ -741,12 +725,12 @@ Cohesion: 0.11
 Nodes (5): CertificatePDF(), formatDate(), ProjectItem, Props, s
 
 ### Community 100 - "index.ts"
-Cohesion: 0.16
-Nodes (17): Props, SystemEventsPage(), getSystemEvents(), logAutomationFailure(), logError(), logNotificationFailure(), logRealtimeError(), logSecurityDenial() (+9 more)
+Cohesion: 0.12
+Nodes (30): Props, SystemEventsPage(), GET(), POST(), getSystemEvents(), logAutomationFailure(), logError(), logNotificationFailure() (+22 more)
 
 ### Community 101 - "queries.test.ts"
-Cohesion: 0.22
-Nodes (12): AdminAttendancePage(), Props, STATUS_PILL, Props, STATUS_PILL, TLAttendancePage(), AttendanceReconciliationStatus, getAttendanceReconciliationStatus() (+4 more)
+Cohesion: 0.13
+Nodes (21): AdminAttendancePage(), Props, STATUS_PILL, GET(), Props, STATUS_PILL, TLAttendancePage(), CollectionsPage() (+13 more)
 
 ### Community 102 - "useRealtimeSync.ts"
 Cohesion: 0.15
@@ -761,12 +745,12 @@ Cohesion: 0.21
 Nodes (10): FUNNEL_STAGES, FunnelData, FunnelStage, getFunnelData(), LeadFunnelPage(), Props, AdminFilterSelect(), Option (+2 more)
 
 ### Community 105 - "StudentEditForm.tsx"
-Cohesion: 0.11
-Nodes (27): Props, age(), CurrentGroup, STUDENT_STATUSES, StudentEditForm(), Props, UnenrollProps, changeEnrollmentType() (+19 more)
+Cohesion: 0.13
+Nodes (21): Props, STATUS_COLORS, TYPE_LABELS, age(), CurrentGroup, STUDENT_STATUSES, StudentEditForm(), changeEnrollmentType() (+13 more)
 
 ### Community 106 - "actions.ts"
-Cohesion: 0.21
-Nodes (13): BulkCertificatesModal(), CERT_TYPES, Step, BulkIssueInput, BulkIssueResult, BulkPreviewStudent, BulkWizardOptions, issueBulkGroupCertificates() (+5 more)
+Cohesion: 0.23
+Nodes (12): CERT_TYPES, Step, BulkIssueInput, BulkIssueResult, BulkPreviewStudent, BulkWizardOptions, issueBulkGroupCertificates(), loadBulkCertificateWizardOptions() (+4 more)
 
 ### Community 107 - "LoadingSkeleton.tsx"
 Cohesion: 0.16
@@ -781,28 +765,28 @@ Cohesion: 0.10
 Nodes (20): 18. Audit Logs, 1. System Overview, 22. Permission Matrix, 2. Technology Stack, 3. Database Architecture, 4. Entity Relationship Design (ERD), 7. Ownership Model, Architecture (+12 more)
 
 ### Community 110 - "queries.ts"
-Cohesion: 0.16
-Nodes (17): newContact(), ParentContactBlock, RELATIONS, STATUSES, StudentFormModal(), ageSchema, applyGroupAssignments(), createSchema (+9 more)
+Cohesion: 0.38
+Nodes (5): BranchPerformanceData, BranchPerformancePage(), getBranchPerformance(), Props, getBranchFinanceSnapshot()
 
 ### Community 111 - "LanguageContext.tsx"
 Cohesion: 0.19
 Nodes (12): cairo, metadata, orbitron, poppins, viewport, LanguageContext, LanguageContextValue, LanguageProvider() (+4 more)
 
 ### Community 112 - "RiskBadge.tsx"
-Cohesion: 0.18
-Nodes (13): ParentFeedbackPage(), Props, Tab, ParentSatisfactionPage(), getParentFeedbackAnalytics(), getParentFeedbackHistory(), getPendingFeedbackMilestone(), getSubmittedMilestones() (+5 more)
+Cohesion: 0.21
+Nodes (5): InstructorScoreBadge(), fmt(), InstructorOperationsPage(), InstructorHealthBoard(), getInstructorOpsData()
 
 ### Community 113 - "page.tsx"
-Cohesion: 0.28
-Nodes (5): Props, ActionCode, ActionEngineInput, ACTIONS, RecommendedAction
+Cohesion: 0.24
+Nodes (6): Props, ActionCode, ActionEngineInput, ACTIONS, evaluateActions(), RecommendedAction
 
 ### Community 114 - "ParentSidebar.tsx"
 Cohesion: 0.15
 Nodes (8): I, MORE_ITEMS, PRIMARY, Props, Icons, NAV_ITEMS, Props, ParentChildSummary
 
 ### Community 115 - "actions.ts"
-Cohesion: 0.11
-Nodes (25): Props, Props, STATUSES, INITIAL_STATE, Props, SubmitForm(), UploadedImage, Submission (+17 more)
+Cohesion: 0.06
+Nodes (42): Props, SUBMISSION_TYPES, TYPES, Props, Props, SUBMISSION_TYPES, TYPES, Props (+34 more)
 
 ### Community 116 - "page.tsx"
 Cohesion: 0.33
@@ -813,8 +797,8 @@ Cohesion: 0.31
 Nodes (9): WaCallButtons(), WaCallButtonsProps, StudentSelectionToolbar(), buildTelUrl(), buildWhatsAppUrl(), buildWhatsAppUrlWithContext(), formatPhoneDisplay(), getContactPhone() (+1 more)
 
 ### Community 119 - "ParentDetailDrawer.tsx"
-Cohesion: 0.18
-Nodes (10): AdminSpecialSessionsPage(), Props, InstructorCalendarPage(), Props, InstructorSpecialSessionsPage(), Props, TLCalendarPage(), TLSpecialSessionsPage() (+2 more)
+Cohesion: 0.21
+Nodes (8): Props, STATUS_OPTIONS, submitParentMessage(), updateMessageStatus(), SubmitParentMessageInput, submitParentMessageSchema, UpdateMessageStatusInput, updateMessageStatusSchema
 
 ### Community 120 - "Payroll Refactor Audit — Phase 21"
 Cohesion: 0.13
@@ -829,16 +813,16 @@ Cohesion: 0.13
 Nodes (14): 10. Ownership Model, 11. RLS / Grants Policy, 12. Schema Drift Prevention, 1. Migration Naming, 2. Idempotency Policy, 3. No Destructive Migration Policy, 4. Soft Delete Policy, 5. View Naming Standards (+6 more)
 
 ### Community 123 - "AssignmentDetailView.tsx"
-Cohesion: 0.09
-Nodes (21): devDependencies, eslint, eslint-config-next, tailwindcss, @tailwindcss/postcss, @types/node, @types/qrcode, @types/react (+13 more)
+Cohesion: 0.05
+Nodes (36): dependencies, @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, framer-motion, jose, next, qrcode (+28 more)
 
 ### Community 124 - "page.tsx"
-Cohesion: 0.15
-Nodes (11): ACT_ICONS, dateFmt(), DiscountTab(), fmt(), PaymentTab(), Props, StudentFinanceWidget(), SummaryTab() (+3 more)
+Cohesion: 0.26
+Nodes (6): DatabaseError, ForbiddenError, fromPostgrestError(), NotFoundError, ACTIVE, PROFILE_SELECT
 
 ### Community 125 - "index.ts"
-Cohesion: 0.11
-Nodes (22): CheckSection, getHealthData(), IssueItem, Severity, SystemHealthPage(), POST(), GET(), POST() (+14 more)
+Cohesion: 0.12
+Nodes (20): CheckSection, getHealthData(), IssueItem, Severity, SystemHealthPage(), GET(), POST(), claimNextJob() (+12 more)
 
 ### Community 126 - "page.tsx"
 Cohesion: 0.27
@@ -849,24 +833,24 @@ Cohesion: 0.32
 Nodes (14): Avatar(), InstructorGridCard(), InstructorListRow(), AttendanceTab(), FinanceTab(), OverviewTab(), InstructorPopup(), attColor() (+6 more)
 
 ### Community 128 - "queries.ts"
-Cohesion: 0.26
-Nodes (12): getRecentFeedback(), getStudentEnrollment(), getStudentProgressStats(), getStudentTimeline(), resolveStudentId(), CertificateEligibility, RecentFeedbackItem, StudentAttendanceRecord (+4 more)
+Cohesion: 0.19
+Nodes (16): StudentCertificatesPage(), TYPE_LABELS, getOwnCertificates(), getCertificateEligibility(), getRecentFeedback(), getStudentEnrollment(), getStudentProgressStats(), getStudentTimeline() (+8 more)
 
 ### Community 129 - "Migration Rules — Robocode Platform"
 Cohesion: 0.14
 Nodes (13): 10. History Repair Procedure, 11. Schema Verification After Any Repair, 1. Immutable Version Numbers, 2. File Naming Convention, 3. One Concern Per Migration, 4. Always Idempotent, 5. No Manual DB Edits Without a Migration File, 6. Never Repurpose a Version Number (+5 more)
 
 ### Community 130 - "operational.ts"
-Cohesion: 0.38
-Nodes (7): AdminGroupsPage(), TLGroupsPage(), getGroupFormOptions(), getGroupStudentOptions(), listGroupsOperational(), getInstructorFilterOptions(), getGroupMetrics()
+Cohesion: 0.35
+Nodes (9): AdminGroupsPage(), TLGroupsPage(), ActiveAllocation, EnrolledStudentBasic, getGroupFormOptions(), getGroupStudentOptions(), listGroupsOperational(), getInstructorFilterOptions() (+1 more)
 
 ### Community 131 - "EmptyState.tsx"
-Cohesion: 0.13
-Nodes (20): AdminStudentsPage(), Props, Props, TLStudentsPage(), Props, Props, OP_STATUS_CONFIG, Props (+12 more)
+Cohesion: 0.06
+Nodes (40): AdminStudentsPage(), Props, Props, TLStudentsPage(), OP_STATUS_CONFIG, Props, Tab, newContact() (+32 more)
 
 ### Community 132 - "GroupHealthBoardClient.tsx"
-Cohesion: 0.17
-Nodes (10): DashCardEmpty(), getDotColor(), getRiskLabel(), getRiskStyle(), InstructorScoreBadge(), RiskBadge(), RiskBadgeProps, ScoreBar() (+2 more)
+Cohesion: 0.24
+Nodes (8): getDotColor(), getRiskLabel(), getRiskStyle(), RiskBadge(), RiskBadgeProps, ScoreBar(), AcademicQuality(), getAcademicQualityData()
 
 ### Community 133 - "ParentsClient.tsx"
 Cohesion: 0.24
@@ -889,12 +873,12 @@ Cohesion: 0.15
 Nodes (12): Claude Code Prompt — Super Admin Dashboard, Codebase context, Important rules, PROMPT (paste below this line), Quick design reference (key numbers), Sprint 1 — Shell polish, Sprint 2 — KPI Cards, Sprint 3 — Academy Overview + Finance (+4 more)
 
 ### Community 138 - "queries.ts"
-Cohesion: 0.21
-Nodes (9): POST(), POST(), POST(), POST(), GET(), deleteSessionCookie(), createServerClient(), getSupabaseSession() (+1 more)
+Cohesion: 0.29
+Nodes (6): AcademicYearsPage(), NewSemesterPage(), Props, SemestersPage(), STATUS_COLORS, listAcademicYears()
 
 ### Community 139 - "dependencies"
-Cohesion: 0.20
-Nodes (10): getInstructorWorkload(), InstructorWorkloadCard(), Props, WorkloadData, getInstructorRatingSummary(), getSessionFeedbackAggregate(), hasStudentSubmittedFeedback(), InstructorRatingSummary (+2 more)
+Cohesion: 0.24
+Nodes (10): Props, EnrollmentStatus, PaymentStatus, Semester, SemesterCourse, SemesterDashboard, SemesterEnrollment, SemesterGroup (+2 more)
 
 ### Community 140 - "finance-stress.ts"
 Cohesion: 0.38
@@ -913,20 +897,20 @@ Cohesion: 0.22
 Nodes (8): DAY_SHORT, GroupDetailPage(), Props, SESSION_STATUS, Props, startGroupSession(), getGroupAttendanceAnalytics(), getGroupForInstructor()
 
 ### Community 144 - "index.ts"
-Cohesion: 0.14
-Nodes (11): AttStatus, CHIP_ACTIVE, LABEL, Props, STATUSES, SUMMARY_CHIP, Props, STATUS_COLORS (+3 more)
+Cohesion: 0.10
+Nodes (17): AttStatus, CHIP_ACTIVE, LABEL, Props, STATUSES, SUMMARY_CHIP, Props, SessionDetailPage() (+9 more)
 
 ### Community 145 - "canonical-counts.ts"
-Cohesion: 0.23
-Nodes (8): Props, Props, RELATIONS, HEALTH_CONFIG, ParentsClient(), Props, ParentOperationalRow, StudentPickerOption
+Cohesion: 0.29
+Nodes (6): Props, RELATIONS, HEALTH_CONFIG, Props, ParentOperationalRow, StudentPickerOption
 
 ### Community 146 - "reconciliation.ts"
-Cohesion: 0.23
-Nodes (11): AdminLeadDetailPage(), PIPELINE_ORDER, Props, STATUS_META, LeadDetailPage(), Props, daysAgo(), getBranchTeamMembers() (+3 more)
+Cohesion: 0.25
+Nodes (6): Props, InstructorCoursePanel(), Props, Course, CourseLevel, CourseScope
 
 ### Community 147 - "modal-actions.ts"
-Cohesion: 0.17
-Nodes (14): Props, OtherTL, Props, archiveTeamLeader(), createTeamLeader(), deactivateTeamLeader(), deleteTeamLeader(), enableTeamLeader() (+6 more)
+Cohesion: 0.06
+Nodes (42): NewTemplatePage(), EditTemplatePage(), Props, PortfolioListPage(), Props, NewAchievementPage(), Props, NewBadgePage() (+34 more)
 
 ### Community 148 - "devDependencies"
 Cohesion: 0.18
@@ -953,8 +937,8 @@ Cohesion: 0.24
 Nodes (8): Group, HistoryFilterPanel(), Props, MySessionsPage(), Props, TAB_STATUSES, TABS, listSessionHistory()
 
 ### Community 154 - "getStudentDashboardData"
-Cohesion: 0.29
-Nodes (7): STATUS_CONFIG, StudentAttendancePage(), STATUS_CONFIG, StudentSessionsPage(), StudentLayout(), getStudentAttendanceHistory(), getStudentDashboardData()
+Cohesion: 0.17
+Nodes (12): STATUS_CONFIG, StudentAttendancePage(), STATUS_CONFIG, StudentSessionsPage(), StudentLayout(), getStudentGroupRank(), getStudentOfTheWeek(), getTopStudentsByXP() (+4 more)
 
 ### Community 155 - "VideoGallery.tsx"
 Cohesion: 0.33
@@ -985,28 +969,28 @@ Cohesion: 0.20
 Nodes (9): CompositeTypes, Constants, Database, DatabaseWithoutInternals, DefaultSchema, Enums, Tables, TablesInsert (+1 more)
 
 ### Community 162 - "GroupHealthCard.tsx"
-Cohesion: 0.27
-Nodes (8): computeGroupHealth(), GroupHealthCard(), GroupHealthResult, HealthFactor, HealthStatus, Props, statusColor(), statusLabel()
+Cohesion: 0.16
+Nodes (13): computeGroupHealth(), GroupHealthCard(), GroupHealthResult, HealthFactor, HealthStatus, Props, statusColor(), statusLabel() (+5 more)
 
 ### Community 163 - "page.tsx"
-Cohesion: 0.26
-Nodes (12): Props, checkDuplicateLead(), AGING_THRESHOLDS, AgingLead, BranchTeamMember, FollowUpDueLead, Lead, LeadKPIs (+4 more)
+Cohesion: 0.19
+Nodes (11): SLOT_CONSUMING_STATUSES, _doReconcileStudent(), EnrollmentBucket, _internalReconcileEnrollment(), reconcileAllAttendance(), reconcileAttendanceRecord(), reconcileEnrollment(), reconcileStudentAttendance() (+3 more)
 
 ### Community 164 - "TrialForm.tsx"
 Cohesion: 0.22
 Nodes (6): metadata, DAYS, EMPTY, FormData, TIMES, TrialForm()
 
 ### Community 165 - "instructor-actions.ts"
-Cohesion: 0.23
-Nodes (11): ParentDetailPage(), Props, Props, getParent(), listParents(), CreateParentInput, LinkStudentInput, Parent (+3 more)
+Cohesion: 0.43
+Nodes (6): listParents(), CreateParentInput, LinkStudentInput, ParentChild, ParentListItem, ParentRelationship
 
 ### Community 166 - "GroupAttendanceModal.tsx"
-Cohesion: 0.41
-Nodes (11): POST(), cleanupOrphanTasks(), rebuildMissingContractCodes(), recomputeSessionConsumption(), RecoveryResult, RecoverySummaryItem, regenerateTasksForBranch(), repairFinanceBalances() (+3 more)
+Cohesion: 0.28
+Nodes (7): AttendanceStatus, ConsumptionReasonLabel(), fmtDate(), GroupAttendanceModal(), nowLocalDatetime(), STATUS_LABELS, STATUS_STYLES
 
 ### Community 167 - "actions.ts"
-Cohesion: 0.31
-Nodes (6): Props, createSchedule(), updateSchedule(), validReturnTo(), createScheduleSchema, updateScheduleSchema
+Cohesion: 0.48
+Nodes (5): createSchedule(), updateSchedule(), validReturnTo(), createScheduleSchema, updateScheduleSchema
 
 ### Community 168 - "PartnersSection.tsx"
 Cohesion: 0.22
@@ -1017,48 +1001,48 @@ Cohesion: 0.20
 Nodes (8): GIF_GUIDELINES, Guideline, GUIDELINES, IMAGE_GUIDELINES, MediaType, TITLES, UploadGuidelinesCardProps, VIDEO_GUIDELINES
 
 ### Community 170 - "queries.ts"
-Cohesion: 0.07
-Nodes (33): AssignmentDetailPage(), Props, GradingPage(), Props, BranchPerformanceData, BranchPerformancePage(), getBranchPerformance(), Props (+25 more)
+Cohesion: 0.17
+Nodes (15): AssignmentDetailPage(), Props, GradingPage(), Props, NewAssignmentPage(), GradeSubmissionPage(), Props, Props (+7 more)
 
 ### Community 171 - "index.ts"
-Cohesion: 0.31
-Nodes (9): advanceCollectionStage(), COLLECTION_STAGE_CONFIG, CollectionPipelineRow, CollectionStage, computeCollectionStage(), computePromiseReliability(), nextStage(), processCollectionPipeline() (+1 more)
+Cohesion: 0.13
+Nodes (19): POST(), getStudentTimeline(), logTimelineEvents(), SEVERITY_MAP, TIMELINE_EVENT_LABELS, TIMELINE_SEVERITY_COLORS, TimelineEventInput, TimelineEventSeverity (+11 more)
 
 ### Community 172 - "contact-actions.ts"
 Cohesion: 0.33
 Nodes (7): POST(), bench(), BENCHMARK_STATUS_CONFIG, BenchmarkResult, runBenchmarks(), status(), TARGETS
 
 ### Community 173 - "package.json"
-Cohesion: 0.47
-Nodes (4): FinanceSummaryCard(), fmt(), Props, DashboardFinanceSummary
+Cohesion: 0.15
+Nodes (9): AdminDashboard(), getDashboardData(), FinanceSummaryCard(), fmt(), Props, Props, Props, getDashboardFinanceSummary() (+1 more)
 
 ### Community 174 - "database.ts"
-Cohesion: 0.08
-Nodes (29): CourseOption, InstructorOption, Props, GROUP_STATUSES, Props, Props, STATUS_COLORS, TYPE_LABELS (+21 more)
+Cohesion: 0.25
+Nodes (5): CourseOption, InstructorOption, Props, removeGroupInstructor(), GroupAcademicConfig
 
 ### Community 175 - "checks.ts"
-Cohesion: 0.10
-Nodes (22): CertificateDetailPage(), Props, GET(), Props, TLCertificateDetailPage(), getCertificateByCode(), getCertificateDetail(), dependencies (+14 more)
+Cohesion: 0.29
+Nodes (7): CertificateDetailPage(), Props, GET(), Props, TLCertificateDetailPage(), getCertificateByCode(), getCertificateDetail()
 
 ### Community 176 - "LeadsTableClient.tsx"
-Cohesion: 0.24
-Nodes (8): CollectionsQueuePage(), dateFmt(), fmt(), Props, QueueClient(), recordActivity(), getCollectionQueue(), CollectionQueueItem
+Cohesion: 0.32
+Nodes (4): Props, AcademicYear, AcademicYearListItem, createSemester()
 
 ### Community 177 - "graphify reference: extra exports and benchmark"
 Cohesion: 0.22
 Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000)
 
 ### Community 178 - "compressImage.ts"
-Cohesion: 0.23
-Nodes (7): ParentProgressPage(), getProgressForGroup(), getProgressForParent(), getStudentProgressByUserId(), getStudentSessionCounts(), ProgressSummary, StudentCourseProgress
+Cohesion: 0.15
+Nodes (12): CATEGORIES, ExistingProject, Props, awardBadge(), checkAndAwardBadges(), BADGE_DEFS, BadgeDef, CATEGORIES (+4 more)
 
 ### Community 179 - "StudentShell.tsx"
 Cohesion: 0.12
 Nodes (8): MAIN_ITEMS, MORE_ITEMS, Props, IC, NAV_ITEMS, NavContent(), NavContentProps, Props
 
 ### Community 180 - "enrollment-ledger.ts"
-Cohesion: 0.20
-Nodes (4): OP_STATUS_CONFIG, Tab, getStudentGroupHistory(), GroupHistoryEntry
+Cohesion: 0.25
+Nodes (4): TopbarActionProvider(), I, MORE_ITEMS, PRIMARY
 
 ### Community 181 - "page.tsx"
 Cohesion: 0.25
@@ -1069,8 +1053,8 @@ Cohesion: 0.18
 Nodes (10): 1. Code fixes (deployed to `main`, commits `57dbd99`, `aaa7735`, `f2c00b4`), 2. Data fixes (re-verified against live DB before touching anything — all numbers matched the 2026-07-05 diagnosis exactly), 3. Before / after summary, 4. Not done in this pass (out of scope / deferred), a) Corrupted installment account (`8946c26b-c0b1-4014-a810-9e8c22c50277`, contract `CNT-2026-000021`), b) 3 missing financial accounts, c) Attendance consumption reconciliation, d) Overdue installments / broken promises (+2 more)
 
 ### Community 183 - "page.tsx"
-Cohesion: 0.13
-Nodes (21): ACADEMICALLY_CONSUMING_SESSION_STATUSES, INVALID_TOPIC_MARKERS, NON_CONSUMING_SESSION_STATUSES, validateAcademicTopic(), checkConsumptionEligibility(), ConsumptionCheck, ConsumptionReason, EnrollmentForConsumption (+13 more)
+Cohesion: 0.23
+Nodes (13): INVALID_TOPIC_MARKERS, NON_CONSUMING_SESSION_STATUSES, validateAcademicTopic(), checkConsumptionEligibility(), ConsumptionCheck, ConsumptionReason, EnrollmentForConsumption, makeCheck() (+5 more)
 
 ### Community 184 - "route.ts"
 Cohesion: 0.50
@@ -1088,10 +1072,6 @@ Nodes (5): Props, QKey, QUESTIONS, submitParentFeedback(), SubmitParentFeedbackI
 Cohesion: 0.25
 Nodes (5): blank, Review, Status, STATUS_BADGE, STATUS_LABEL
 
-### Community 188 - "StudentSidebar.tsx"
-Cohesion: 0.22
-Nodes (8): AdminLeadsPage(), LEAD_SOURCES, LEAD_STATUSES, Props, STATUS_META, Props, getLeadKPIs(), listLeads()
-
 ### Community 189 - "ProgramsSection.tsx"
 Cohesion: 0.25
 Nodes (5): ACCENT, AccentColor, ProgramData, PROGRAMS, ProgramsSection()
@@ -1100,41 +1080,25 @@ Nodes (5): ACCENT, AccentColor, ProgramData, PROGRAMS, ProgramsSection()
 Cohesion: 0.25
 Nodes (3): MediaValidationMessageProps, STYLES, ValidationIssue
 
-### Community 191 - "NotesTab.tsx"
-Cohesion: 0.22
-Nodes (7): Empty(), GroupsTab(), NotesTab(), deleteNoteAction(), saveNoteAction(), InstructorGroupDetail, InstructorNote
-
 ### Community 192 - "TLAssignCourseForm.tsx"
-Cohesion: 0.27
-Nodes (10): GroupPnL, fetchGroupsExportData(), BatchStudentRow, ExportServerResult, autoWidth(), buildGroupsWorkbook(), downloadGroupsWorkbook(), ExportRole (+2 more)
+Cohesion: 0.48
+Nodes (6): autoWidth(), buildGroupsWorkbook(), downloadGroupsWorkbook(), ExportRole, fmtEGP(), freezeHeader()
 
 ### Community 193 - "page.tsx"
 Cohesion: 0.29
 Nodes (4): OpCardProps, OPERATIONS, OpResult, OpResults
-
-### Community 194 - "Super Admin OS — Delivery Report"
-Cohesion: 0.18
-Nodes (10): Analytics Domains (8 tabs), Build Status, Funnel Page Details, How to Deploy, Key Actions Added, Pages Delivered, Role Boundaries Enforced, Schema Changes (+2 more)
 
 ### Community 195 - "AdminButton.tsx"
 Cohesion: 0.29
 Nodes (4): ButtonProps, LinkProps, Variant, VARIANTS
 
 ### Community 196 - "workbook.ts"
-Cohesion: 0.20
-Nodes (10): getUnsentNotifications(), markNotificationFailed(), markNotificationSent(), NOTIFICATION_TYPE_LABELS, NotificationChannel, NotificationInput, NotificationPriority, NotificationType (+2 more)
-
-### Community 197 - "page.tsx"
-Cohesion: 0.27
-Nodes (8): Check, CheckCategory, CheckStatus, ProductionReadinessPage(), runProductionChecks(), STATUS_STYLE, GET(), getRecoverySummary()
+Cohesion: 0.36
+Nodes (6): HomeworkGroupSelect(), Props, HomeworkInboxPage(), Props, listInboxSubmissions(), InstructorGroup
 
 ### Community 198 - "page.tsx"
 Cohesion: 0.40
 Nodes (5): BlogPage(), formatDate(), metadata, Post, PostCard()
-
-### Community 199 - "contact-actions.ts"
-Cohesion: 0.27
-Nodes (9): archiveParentContactAction(), createParentContactAction(), createSchema, lookupGroupId(), parseIds(), RELATIONS, restoreParentContactAction(), updateParentContactAction() (+1 more)
 
 ### Community 203 - "page.tsx"
 Cohesion: 0.33
@@ -1181,8 +1145,8 @@ Cohesion: 0.33
 Nodes (5): 15. File-by-File Migration Map, 1. Strategic Context, 3. Target Structure, Robocode — Project Structure Refactor Plan, Table of Contents
 
 ### Community 214 - "route.ts"
-Cohesion: 0.29
-Nodes (5): I, MORE_ITEMS, MoreItem, PRIMARY, Props
+Cohesion: 0.20
+Nodes (6): I, MORE_ITEMS, MoreItem, PRIMARY, Props, Props
 
 ### Community 215 - "route.ts"
 Cohesion: 0.50
@@ -1195,10 +1159,6 @@ Nodes (4): BlogPost, BlogPostPage(), generateMetadata(), getPost()
 ### Community 217 - "page.tsx"
 Cohesion: 0.33
 Nodes (4): AT_RISK_ROW, COURSE_PROGRESS_ROWS, GROUP_PROGRESS_ROWS, SEMESTER_ROWS
-
-### Community 218 - "LeadsTableClient.tsx"
-Cohesion: 0.25
-Nodes (5): AGING_THRESHOLDS, Props, SOURCE_LABELS, STATUS_COLORS, LeadListItem
 
 ### Community 219 - "page.tsx"
 Cohesion: 0.40
@@ -1260,10 +1220,6 @@ Nodes (4): ParentChildCertificatesPage(), Props, TYPE_LABELS, getChildCertificat
 Cohesion: 0.50
 Nodes (4): CreateStudentNoteInput, StudentNote, StudentNoteListItem, UpdateStudentNoteInput
 
-### Community 238 - "page.tsx"
-Cohesion: 0.32
-Nodes (7): CATEGORY_ICONS, Props, TabKey, TABS, TLPortfolioPage(), listAllProjectsForTL(), getPortfolioStatusCounts()
-
 ### Community 240 - "graphify reference: add a URL and watch a folder"
 Cohesion: 0.50
 Nodes (3): For /graphify add, For --watch, graphify reference: add a URL and watch a folder
@@ -1275,10 +1231,6 @@ Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify refer
 ### Community 242 - "graphify reference: incremental update and cluster-only"
 Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
-
-### Community 243 - "index.ts"
-Cohesion: 0.50
-Nodes (7): ConsistencyReport, runConsistencyChecks(), verifyFinanceConsistency(), verifyPaymentTotals(), verifyRiskScoreConsistency(), logConsistencyMismatch(), computeStudentRisk()
 
 ### Community 244 - "ProgressBar.tsx"
 Cohesion: 0.67
@@ -1295,10 +1247,6 @@ Nodes (4): 14. Parent Portal Architecture, Parent-Child Linking, Parent Registra
 ### Community 247 - "16. Analytics Architecture"
 Cohesion: 0.50
 Nodes (4): 16. Analytics Architecture, Analytics Tables, Event-Driven Architecture, Key Metrics by Domain
-
-### Community 248 - "actions.ts"
-Cohesion: 0.36
-Nodes (6): createLesson(), deleteLesson(), updateLesson(), getNextLessonOrder(), CreateLessonSchema, UpdateLessonSchema
 
 ### Community 249 - "20. AI Integration Points"
 Cohesion: 0.50
@@ -1348,73 +1296,33 @@ Nodes (4): 9. RBAC Middleware Placement, Middleware Responsibilities (`middlewar
 Cohesion: 0.50
 Nodes (3): Deploy on Vercel, Getting Started, Learn More
 
-### Community 262 - "route.ts"
-Cohesion: 0.43
-Nodes (4): FinanceCenter(), fmtEGP(), getFinanceDailyData(), getOverdueCollections()
-
-### Community 264 - "route.ts"
-Cohesion: 0.29
-Nodes (4): fetchBranches(), GET(), GET(), SectionUpdate
-
 ### Community 265 - "InstructorBottomNav.tsx"
-Cohesion: 0.08
-Nodes (20): StudentsClient(), Props, AdminTopbar(), getPageTitle(), PATH_TITLES, Props, ROLE_LABELS, TopbarActionContext (+12 more)
-
-### Community 266 - "page.tsx"
-Cohesion: 0.38
-Nodes (5): fmtDate(), Props, TLStudentDetailPage(), evaluateActions(), getStudentTrialHistory()
-
-### Community 269 - "page.tsx"
-Cohesion: 0.33
-Nodes (4): HitRow(), hitUrl(), Props, GlobalSearchResponse
-
-### Community 270 - "EditProjectForm.tsx"
-Cohesion: 0.40
-Nodes (4): CourseOption, Props, SemesterOption, PortfolioProject
-
-### Community 271 - "useFinanceFilters.ts"
-Cohesion: 0.47
-Nodes (3): Options, getMonthRange(), getPreset()
-
-### Community 273 - "queries.ts"
-Cohesion: 0.33
-Nodes (5): getStudentGroupRank(), getStudentOfTheWeek(), getTopStudentsByXP(), LeaderboardEntry, StudentOfWeek
+Cohesion: 0.20
+Nodes (4): ICONS, TABS, ACTIONS, Props
 
 ### Community 275 - "GroupHealthBoard.tsx"
-Cohesion: 0.24
-Nodes (8): HealthBadge(), DAYS_SHORT, FilterKey, fmt12(), fmtDate(), GroupCard(), SortKey, GroupHealthRow
-
-### Community 330 - "page.tsx"
-Cohesion: 0.60
-Nodes (4): StudentCertificatesPage(), TYPE_LABELS, getOwnCertificates(), getCertificateEligibility()
-
-### Community 331 - "queries.ts"
-Cohesion: 0.60
-Nodes (4): searchCertificates(), searchPortfolioProjects(), searchAll(), SearchResult
-
-### Community 332 - "page.tsx"
-Cohesion: 0.67
-Nodes (3): Props, StudentSearchPage(), searchStudentsForInstructor()
+Cohesion: 0.19
+Nodes (10): HealthBadge(), GroupHealthBoard(), DAYS_SHORT, FilterKey, fmt12(), fmtDate(), GroupCard(), SortKey (+2 more)
 
 ## Knowledge Gaps
-- **1566 isolated node(s):** `الوضع الحالي`, `المايجريشنز — الحالة`, `1. `gs.created_at` و `gs.notes` مش موجودين في `group_students``, `2. `user_branch_assignments` مش موجود`, `3. `JOIN` على الجدول المستهدف في `UPDATE`` (+1561 more)
+- **1541 isolated node(s):** `1. Cron route verification & hardening`, `2. Environment variable`, `3. Generated secret`, `4. New issue discovered during verification (not fixed — out of scope for Phase 2 finance work)`, `5. Manual verification checklist` (+1536 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **31 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **34 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `createServiceClient()` connect `actions.ts` to `actions.ts`, `modal-actions.ts`, `actions.ts`, `queries.ts`, `StatusBadge.tsx`, `NotFound`, `listCourses`, `actions.ts`, `requirePortalRole`, `group-crud.ts`, `queries.ts`, `queries.ts`, `bulk-actions.ts`, `operational.ts`, `ModuleDetailView.tsx`, `app.ts`, `queries.ts`, `types.ts`, `getSupabaseAdmin`, `page.tsx`, `actions.ts`, `page.tsx`, `actions.ts`, `queries.ts`, `page.tsx`, `actions.ts`, `index.ts`, `AdminTopbar.tsx`, `GroupDetailDrawer.tsx`, `createMockDb`, `queries.ts`, `enums.ts`, `actions.ts`, `types.ts`, `GroupsWorkspaceClient.tsx`, `modal-actions.ts`, `queries.ts`, `queries.ts`, `parent-portal-queries.ts`, `types.ts`, `DashCard.tsx`, `dashboard-v2-queries.ts`, `actions.ts`, `getParentChildren`, `GroupFormModal.tsx`, `page.tsx`, `GradingView.tsx`, `AttendanceRecordForm.tsx`, `page.tsx`, `page.tsx`, `queries.ts`, `AttendanceForm.tsx`, `page.tsx`, `index.ts`, `actions.ts`, `index.ts`, `page.tsx`, `index.ts`, `queries.test.ts`, `page.tsx`, `StudentEditForm.tsx`, `actions.ts`, `queries.ts`, `RiskBadge.tsx`, `ParentDetailDrawer.tsx`, `index.ts`, `page.tsx`, `queries.ts`, `operational.ts`, `EmptyState.tsx`, `GroupHealthBoardClient.tsx`, `ParentsClient.tsx`, `queries.ts`, `dependencies`, `queries.ts`, `reconciliation.ts`, `modal-actions.ts`, `index.ts`, `actions.ts`, `queries.ts`, `getStudentDashboardData`, `index.ts`, `operational.ts`, `GroupHealthCard.tsx`, `page.tsx`, `instructor-actions.ts`, `GroupAttendanceModal.tsx`, `actions.ts`, `queries.ts`, `index.ts`, `contact-actions.ts`, `database.ts`, `checks.ts`, `LeadsTableClient.tsx`, `compressImage.ts`, `enrollment-ledger.ts`, `page.tsx`, `route.ts`, `FeedbackForm.tsx`, `StudentSidebar.tsx`, `TLAssignCourseForm.tsx`, `workbook.ts`, `page.tsx`, `contact-actions.ts`, `queries.ts`, `page.tsx`, `index.ts`, `actions.ts`, `route.ts`, `page.tsx`, `queries.ts`, `page.tsx`, `queries.ts`, `page.tsx`?**
-  _High betweenness centrality (0.234) - this node is a cross-community bridge._
-- **Why does `requirePermission()` connect `actions.ts` to `operational.ts`, `EmptyState.tsx`, `modal-actions.ts`, `ParentsClient.tsx`, `actions.ts`, `queries.ts`, `StatusBadge.tsx`, `page.tsx`, `listCourses`, `queries.ts`, `actions.ts`, `group-crud.ts`, `modal-actions.ts`, `queries.ts`, `index.ts`, `operational.ts`, `ModuleDetailView.tsx`, `queries.ts`, `types.ts`, `operational.ts`, `page.tsx`, `instructor-actions.ts`, `actions.ts`, `queries.ts`, `actions.ts`, `database.ts`, `checks.ts`, `LeadsTableClient.tsx`, `createMockDb`, `enums.ts`, `GroupDetailDrawer.tsx`, `actions.ts`, `page.tsx`, `modal-actions.ts`, `queries.ts`, `actions.ts`, `GroupFormModal.tsx`, `contact-actions.ts`, `GradingView.tsx`, `AttendanceRecordForm.tsx`, `index.ts`, `index.ts`, `queries.test.ts`, `StudentEditForm.tsx`, `actions.ts`, `page.tsx`, `queries.ts`, `actions.ts`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `createServiceClient()` connect `actions.ts` to `actions.ts`, `modal-actions.ts`, `actions.ts`, `actions.ts`, `queries.ts`, `StatusBadge.tsx`, `NotFound`, `listCourses`, `requirePermission`, `actions.ts`, `requirePortalRole`, `group-crud.ts`, `queries.ts`, `queries.ts`, `bulk-actions.ts`, `FinanceTableClient.tsx`, `operational.ts`, `ModuleDetailView.tsx`, `app.ts`, `queries.ts`, `types.ts`, `actions.ts`, `page.tsx`, `GroupWorkspace.tsx`, `actions.ts`, `queries.ts`, `page.tsx`, `actions.ts`, `index.ts`, `GroupDetailDrawer.tsx`, `createMockDb`, `queries.ts`, `enums.ts`, `actions.ts`, `actions.ts`, `types.ts`, `modal-actions.ts`, `queries.ts`, `queries.ts`, `parent-portal-queries.ts`, `types.ts`, `DashCard.tsx`, `dashboard-v2-queries.ts`, `actions.ts`, `getParentChildren`, `GroupFormModal.tsx`, `page.tsx`, `GradingView.tsx`, `AttendanceRecordForm.tsx`, `page.tsx`, `page.tsx`, `queries.ts`, `AttendanceForm.tsx`, `queries.ts`, `page.tsx`, `index.ts`, `index.ts`, `page.tsx`, `index.ts`, `queries.test.ts`, `page.tsx`, `StudentEditForm.tsx`, `actions.ts`, `queries.ts`, `RiskBadge.tsx`, `actions.ts`, `ParentDetailDrawer.tsx`, `index.ts`, `page.tsx`, `queries.ts`, `operational.ts`, `EmptyState.tsx`, `GroupHealthBoardClient.tsx`, `ParentsClient.tsx`, `queries.ts`, `queries.ts`, `index.ts`, `modal-actions.ts`, `index.ts`, `actions.ts`, `queries.ts`, `getStudentDashboardData`, `index.ts`, `operational.ts`, `GroupHealthCard.tsx`, `page.tsx`, `instructor-actions.ts`, `actions.ts`, `queries.ts`, `index.ts`, `contact-actions.ts`, `package.json`, `database.ts`, `checks.ts`, `LeadsTableClient.tsx`, `compressImage.ts`, `page.tsx`, `route.ts`, `FeedbackForm.tsx`, `StudentSidebar.tsx`, `workbook.ts`, `queries.ts`, `page.tsx`, `GroupHealthBoard.tsx`?**
+  _High betweenness centrality (0.218) - this node is a cross-community bridge._
 - **Why does `useLanguage()` connect `useLanguage` to `HomeSections.tsx`, `PartnersSection.tsx`, `LanguageContext.tsx`, `BranchesSection.tsx`, `FAQSection.tsx`, `page.tsx`, `ProgramsSection.tsx`, `ReviewsSection.tsx`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
-- **What connects `الوضع الحالي`, `المايجريشنز — الحالة`, `1. `gs.created_at` و `gs.notes` مش موجودين في `group_students`` to the rest of the system?**
-  _1566 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+- **Why does `requirePermission()` connect `modal-actions.ts` to `actions.ts`, `operational.ts`, `EmptyState.tsx`, `modal-actions.ts`, `ParentsClient.tsx`, `actions.ts`, `actions.ts`, `queries.ts`, `StatusBadge.tsx`, `queries.ts`, `listCourses`, `requirePermission`, `NotFound`, `actions.ts`, `queries.ts`, `group-crud.ts`, `queries.ts`, `index.ts`, `operational.ts`, `ModuleDetailView.tsx`, `queries.ts`, `types.ts`, `operational.ts`, `page.tsx`, `page.tsx`, `GroupWorkspace.tsx`, `actions.ts`, `queries.ts`, `actions.ts`, `database.ts`, `checks.ts`, `GroupDetailDrawer.tsx`, `queries.ts`, `createMockDb`, `LeadsTableClient.tsx`, `actions.ts`, `actions.ts`, `page.tsx`, `modal-actions.ts`, `queries.ts`, `StudentSidebar.tsx`, `actions.ts`, `GroupFormModal.tsx`, `GradingView.tsx`, `page.tsx`, `index.ts`, `queries.test.ts`, `StudentEditForm.tsx`, `actions.ts`, `queries.ts`, `actions.ts`?**
+  _High betweenness centrality (0.034) - this node is a cross-community bridge._
+- **What connects `1. Cron route verification & hardening`, `2. Environment variable`, `3. Generated secret` to the rest of the system?**
+  _1541 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `types.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.1225071225071225 - nodes in this community are weakly interconnected._
 - **Should `actions.ts` be split into smaller, more focused modules?**
-  _Cohesion score 0.052600818234950324 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.050072568940493466 - nodes in this community are weakly interconnected._
 - **Should `createServiceClient` be split into smaller, more focused modules?**
   _Cohesion score 0.12121212121212122 - nodes in this community are weakly interconnected._

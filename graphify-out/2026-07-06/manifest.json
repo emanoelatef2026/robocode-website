@@ -2844,6 +2844,91 @@
     "ast_hash": "14bff16d5570cce39a2c8516002f2e5a",
     "semantic_hash": ""
   },
+  "migrations/sprint32-1_lead_ownership.sql": {
+    "mtime": 1780237456.8626413,
+    "ast_hash": "e8459395988c9f261335ce99a67928a4",
+    "semantic_hash": ""
+  },
+  "migrations/sprint32-2_lost_reason.sql": {
+    "mtime": 1780238628.9969049,
+    "ast_hash": "3a141d6e7aa0505cc9c43b4d9a013f2f",
+    "semantic_hash": ""
+  },
+  "migrations/sprint32_leads.sql": {
+    "mtime": 1780235747.7595918,
+    "ast_hash": "be7a1c76ddf919397d2ac5215313de6b",
+    "semantic_hash": ""
+  },
+  "migrations/sprint33_34_super_admin_os_FINAL.sql": {
+    "mtime": 1780343208.9445999,
+    "ast_hash": "a87b1e840e03a6c6694a0a15085d4e8e",
+    "semantic_hash": ""
+  },
+  "migrations/sprint33_super_admin_os.sql": {
+    "mtime": 1780337435.575342,
+    "ast_hash": "4ce1e3073726f36a26dc995c980ba268",
+    "semantic_hash": ""
+  },
+  "migrations/sprint34_super_admin_complete.sql": {
+    "mtime": 1780339175.335151,
+    "ast_hash": "8f2bc98a219a4c43db10698c9bc853da",
+    "semantic_hash": ""
+  },
+  "migrations/sprint34b_finalization.sql": {
+    "mtime": 1780340998.7518964,
+    "ast_hash": "65e3b57d14b4db31172d9e42c7c51fe7",
+    "semantic_hash": ""
+  },
+  "migrations/sprint38_integrity_audit.sql": {
+    "mtime": 1780568172.5034454,
+    "ast_hash": "f480bcf2d5f3a4bd973a22e54d92f7eb",
+    "semantic_hash": ""
+  },
+  "migrations/sprint39_5_integrity_audit.sql": {
+    "mtime": 1780569971.2653651,
+    "ast_hash": "72b20abeb99f2ffb7ac6a92cdd508bb0",
+    "semantic_hash": ""
+  },
+  "migrations/sprint39_operational_finalization.sql": {
+    "mtime": 1780569246.048794,
+    "ast_hash": "0cbe4baa669efaa9e0d7fd74cd100b65",
+    "semantic_hash": ""
+  },
+  "migrations/sprint41_enrollment_centric.sql": {
+    "mtime": 1780594678.3215723,
+    "ast_hash": "37ac92f33415f68f7a99f3edcf3bba50",
+    "semantic_hash": ""
+  },
+  "migrations/sprint42_enrollment_snapshots.sql": {
+    "mtime": 1780576993.4036007,
+    "ast_hash": "2d3da04baac61ba8c4598cbf77efe5f6",
+    "semantic_hash": ""
+  },
+  "migrations/sprint43_operations_hardening.sql": {
+    "mtime": 1780588953.7702339,
+    "ast_hash": "3982b3ee1a696f8d21fa28c5e210709e",
+    "semantic_hash": ""
+  },
+  "migrations/sprint44_session_contract.sql": {
+    "mtime": 1780590618.8672836,
+    "ast_hash": "63fc1e8b48d5f7f363055e10ac458c61",
+    "semantic_hash": ""
+  },
+  "migrations/sprint45_operational_finance_finalization.sql": {
+    "mtime": 1780591876.6194758,
+    "ast_hash": "07ee85c146b7003c282f250cff45db0a",
+    "semantic_hash": ""
+  },
+  "migrations/sprint46_operations_center_finalization.sql": {
+    "mtime": 1780593282.0997772,
+    "ast_hash": "bbaf67e00f6da5d85acb4f1a4de65fec",
+    "semantic_hash": ""
+  },
+  "migrations/studio_schema_fix.sql": {
+    "mtime": 1780253922.33897,
+    "ast_hash": "54586f62e8b98e755385632cf67d1329",
+    "semantic_hash": ""
+  },
   "modules/academic-years/actions.ts": {
     "mtime": 1779798590.297981,
     "ast_hash": "2b1089d0bf00bd0b77ea37650e963ff5",
@@ -4629,6 +4714,76 @@
     "ast_hash": "ae26b5576fccc6a22be0158b2e214837",
     "semantic_hash": ""
   },
+  "supabase/migrations/0114_staff_crm_rebuild.sql": {
+    "mtime": 1781942148.1758027,
+    "ast_hash": "0eedb81c96d6ff7d14ccbe759d6135b2",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0115_drop_legacy_payroll_tables.sql": {
+    "mtime": 1781945469.871618,
+    "ast_hash": "9eda3f442bf7dd8960e7a941a620258e",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0116_payroll_schema_hardening.sql": {
+    "mtime": 1781964244.8262675,
+    "ast_hash": "cae82079f26d964874de59f75c89be86",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0117_financial_expenses.sql": {
+    "mtime": 1782056577.3126252,
+    "ast_hash": "e26a97810b9e93207dc53ef4c6a7b299",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0118_financial_expenses_v2.sql": {
+    "mtime": 1782056577.3126252,
+    "ast_hash": "52d0558f75f18fb69f87bf590b78c1bf",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0119_certificate_assets_bucket.sql": {
+    "mtime": 1782143881.3019264,
+    "ast_hash": "9455d74c94783640970aca64c4c5a22f",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0120_certificate_stamp_url.sql": {
+    "mtime": 1782147747.794243,
+    "ast_hash": "b242604746cd628f9c7fef3e831562b5",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0121_revenue_share.sql": {
+    "mtime": 1782228149.0847435,
+    "ast_hash": "2f8c4402b0efb0930eece5e91dc4b605",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0122_gamification.sql": {
+    "mtime": 1782331441.4518607,
+    "ast_hash": "71579aa5649c5214d19503d144cd1690",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0123_award_xp_fn.sql": {
+    "mtime": 1782331441.4518607,
+    "ast_hash": "9df9f1099b7081e8de986d5d96d8284e",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0124_multi_instructor_sessions.sql": {
+    "mtime": 1782664413.0096364,
+    "ast_hash": "27b32ccdd61f4508ee5b84637f783d50",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0125_note_category_severity.sql": {
+    "mtime": 1782838454.9559882,
+    "ast_hash": "378b6480d36e4b794dc246f384b7e363",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0126_notifications.sql": {
+    "mtime": 1782838454.9559882,
+    "ast_hash": "00cb794fa4640c56ff7204107eb4543a",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/0127_special_sessions.sql": {
+    "mtime": 1782838454.9569595,
+    "ast_hash": "f3fc6e0e8c7422f0d6fba87f5483bca1",
+    "semantic_hash": ""
+  },
   "supabase/migrations/20260614115641_fix_instructor_status_constraint.sql": {
     "mtime": 1781466176.2451162,
     "ast_hash": "4621f15bcd042acceb62a42a32861645",
@@ -4637,6 +4792,16 @@
   "supabase/migrations/20260702093000_instructor_payout_requests.sql": {
     "mtime": 1782984399.5451891,
     "ast_hash": "9a5f667fef1ea143967998d5a8b286d9",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260702120000_leads_trial_session_source.sql": {
+    "mtime": 1782986987.8082044,
+    "ast_hash": "95b5b94c6b593a138e98877b7239ff6a",
+    "semantic_hash": ""
+  },
+  "supabase/migrations/20260702150000_cancelled_sessions_dont_consume_numbers.sql": {
+    "mtime": 1782987334.4229612,
+    "ast_hash": "60d7354c6826a2f7780efa7a830c356a",
     "semantic_hash": ""
   },
   "supabase/seed/001_roles.sql": {
@@ -4824,6 +4989,11 @@
     "ast_hash": "b0517ee048d45b5cd5463430230eb52f",
     "semantic_hash": ""
   },
+  "HANDOFF.md": {
+    "mtime": 1780606634.6227717,
+    "ast_hash": "7db0dea3a957dc220636e949a1314cd2",
+    "semantic_hash": ""
+  },
   "LMS Design files/Claude Code Prompt - LMS Redesign.md": {
     "mtime": 1782236052.6161485,
     "ast_hash": "975f1e3603f5f3112c612d606cebf715",
@@ -4927,6 +5097,11 @@
   "docs/payroll-refactor-audit.md": {
     "mtime": 1781865098.3284402,
     "ast_hash": "c04ebede81cc3d75973999402701c40b",
+    "semantic_hash": ""
+  },
+  "migrations/DELIVERY_REPORT_super_admin_os.md": {
+    "mtime": 1780343236.6923182,
+    "ast_hash": "2daa93c903c93da6027ffa7ac8c39d9b",
     "semantic_hash": ""
   },
   "supabase/ARCHITECTURE_RULES.md": {
@@ -5059,6 +5234,11 @@
     "ast_hash": "d7108e17109220d3b3ca24bed6bf346d",
     "semantic_hash": ""
   },
+  "supabase/migrations/20260706120000_fix_reconcile_ambiguous_enrollment_id.sql": {
+    "mtime": 1783286003.9275825,
+    "ast_hash": "367e69b1116ace84585f50af70ca80e2",
+    "semantic_hash": ""
+  },
   "vercel.json": {
     "mtime": 1783286199.6317713,
     "ast_hash": "9a5b62fb34d070f1e203dd5ff60befa1",
@@ -5072,196 +5252,6 @@
   "docs/PHASE2_FINAL_CLOSURE_REPORT.md": {
     "mtime": 1783287104.3977559,
     "ast_hash": "78a50e86640fb9d4a972fae6f96496d6",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint32-1_lead_ownership.sql": {
-    "mtime": 1780237456.8626413,
-    "ast_hash": "e8459395988c9f261335ce99a67928a4",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint32-2_lost_reason.sql": {
-    "mtime": 1780238628.9969049,
-    "ast_hash": "3a141d6e7aa0505cc9c43b4d9a013f2f",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint32_leads.sql": {
-    "mtime": 1780235747.7595918,
-    "ast_hash": "be7a1c76ddf919397d2ac5215313de6b",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint33_34_super_admin_os_FINAL.sql": {
-    "mtime": 1780343208.9445999,
-    "ast_hash": "a87b1e840e03a6c6694a0a15085d4e8e",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint33_super_admin_os.sql": {
-    "mtime": 1780337435.575342,
-    "ast_hash": "4ce1e3073726f36a26dc995c980ba268",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint34_super_admin_complete.sql": {
-    "mtime": 1780339175.335151,
-    "ast_hash": "8f2bc98a219a4c43db10698c9bc853da",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint34b_finalization.sql": {
-    "mtime": 1780340998.7518964,
-    "ast_hash": "65e3b57d14b4db31172d9e42c7c51fe7",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint38_integrity_audit.sql": {
-    "mtime": 1780568172.5034454,
-    "ast_hash": "f480bcf2d5f3a4bd973a22e54d92f7eb",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint39_5_integrity_audit.sql": {
-    "mtime": 1780569971.2653651,
-    "ast_hash": "72b20abeb99f2ffb7ac6a92cdd508bb0",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint39_operational_finalization.sql": {
-    "mtime": 1780569246.048794,
-    "ast_hash": "0cbe4baa669efaa9e0d7fd74cd100b65",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint41_enrollment_centric.sql": {
-    "mtime": 1780594678.3215723,
-    "ast_hash": "37ac92f33415f68f7a99f3edcf3bba50",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint42_enrollment_snapshots.sql": {
-    "mtime": 1780576993.4036007,
-    "ast_hash": "2d3da04baac61ba8c4598cbf77efe5f6",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint43_operations_hardening.sql": {
-    "mtime": 1780588953.7702339,
-    "ast_hash": "3982b3ee1a696f8d21fa28c5e210709e",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint44_session_contract.sql": {
-    "mtime": 1780590618.8672836,
-    "ast_hash": "63fc1e8b48d5f7f363055e10ac458c61",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint45_operational_finance_finalization.sql": {
-    "mtime": 1780591876.6194758,
-    "ast_hash": "07ee85c146b7003c282f250cff45db0a",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/sprint46_operations_center_finalization.sql": {
-    "mtime": 1780593282.0997772,
-    "ast_hash": "bbaf67e00f6da5d85acb4f1a4de65fec",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/studio_schema_fix.sql": {
-    "mtime": 1780253922.33897,
-    "ast_hash": "54586f62e8b98e755385632cf67d1329",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260620082552_staff_crm_rebuild.sql": {
-    "mtime": 1781942148.1758027,
-    "ast_hash": "0eedb81c96d6ff7d14ccbe759d6135b2",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260620085117_drop_legacy_payroll_tables.sql": {
-    "mtime": 1781945469.871618,
-    "ast_hash": "9eda3f442bf7dd8960e7a941a620258e",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260620141947_payroll_schema_hardening.sql": {
-    "mtime": 1781964244.8262675,
-    "ast_hash": "cae82079f26d964874de59f75c89be86",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260621085328_financial_expenses.sql": {
-    "mtime": 1782056577.3126252,
-    "ast_hash": "e26a97810b9e93207dc53ef4c6a7b299",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260622130039_certificate_assets_bucket.sql": {
-    "mtime": 1782143881.3019264,
-    "ast_hash": "9455d74c94783640970aca64c4c5a22f",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260622171526_certificate_stamp_url.sql": {
-    "mtime": 1782147747.794243,
-    "ast_hash": "b242604746cd628f9c7fef3e831562b5",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260623082636_revenue_share.sql": {
-    "mtime": 1782228149.0847435,
-    "ast_hash": "2f8c4402b0efb0930eece5e91dc4b605",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260624080336_gamification.sql": {
-    "mtime": 1782331441.4518607,
-    "ast_hash": "71579aa5649c5214d19503d144cd1690",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260624083735_award_xp_fn.sql": {
-    "mtime": 1782331441.4518607,
-    "ast_hash": "9df9f1099b7081e8de986d5d96d8284e",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260628163955_multi_instructor_sessions.sql": {
-    "mtime": 1782664413.0096364,
-    "ast_hash": "27b32ccdd61f4508ee5b84637f783d50",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260629103945_note_category_severity.sql": {
-    "mtime": 1782838454.9559882,
-    "ast_hash": "378b6480d36e4b794dc246f384b7e363",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260629104107_notifications_extend.sql": {
-    "mtime": 1782838454.9559882,
-    "ast_hash": "00cb794fa4640c56ff7204107eb4543a",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260630194544_special_sessions.sql": {
-    "mtime": 1782838454.9569595,
-    "ast_hash": "f3fc6e0e8c7422f0d6fba87f5483bca1",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260702100930_add_trial_session_lead_source.sql": {
-    "mtime": 1782986987.8082044,
-    "ast_hash": "95b5b94c6b593a138e98877b7239ff6a",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260702101548_cancelled_sessions_dont_consume_numbers.sql": {
-    "mtime": 1782987334.4229612,
-    "ast_hash": "60d7354c6826a2f7780efa7a830c356a",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260705211352_fix_reconcile_ambiguous_enrollment_id.sql": {
-    "mtime": 1783286003.9275825,
-    "ast_hash": "367e69b1116ace84585f50af70ca80e2",
-    "semantic_hash": ""
-  },
-  "supabase/migrations/20260705213158_financial_expenses_v2.sql": {
-    "mtime": 1782056577.3126252,
-    "ast_hash": "52d0558f75f18fb69f87bf590b78c1bf",
-    "semantic_hash": ""
-  },
-  "docs/MIGRATIONS.md": {
-    "mtime": 1783287335.3746686,
-    "ast_hash": "cfa87657d9d8a8c2a1d0a2da2cc5508c",
-    "semantic_hash": ""
-  },
-  "docs/archive/HANDOFF.md": {
-    "mtime": 1780606634.6227717,
-    "ast_hash": "7db0dea3a957dc220636e949a1314cd2",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/DELIVERY_REPORT_super_admin_os.md": {
-    "mtime": 1780343236.6923182,
-    "ast_hash": "2daa93c903c93da6027ffa7ac8c39d9b",
-    "semantic_hash": ""
-  },
-  "docs/legacy-migrations/README.md": {
-    "mtime": 1783287318.9474466,
-    "ast_hash": "362c8d3d028993737f2526a0c9b1abde",
     "semantic_hash": ""
   }
 }

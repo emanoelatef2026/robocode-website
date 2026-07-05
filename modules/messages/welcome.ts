@@ -5,7 +5,6 @@
 export interface WelcomeMessagePayload {
   student_name:      string
   course_name:       string
-  branch_name:       string
   parent_email:      string
   parent_password:   string
   student_email:      string
@@ -13,8 +12,12 @@ export interface WelcomeMessagePayload {
 }
 
 export interface WelcomeMessageEligibility {
-  eligible: boolean
-  reason:   string | null
+  eligible:      boolean
+  reason:        string | null
+  // True when the only blocking issue is a missing portal password on an
+  // account that already exists (email present) — recoverable via credential
+  // regeneration, unlike a genuinely missing account which needs full setup.
+  canRegenerate: boolean
 }
 
 export interface WelcomeMessageLog {
@@ -28,8 +31,6 @@ export interface WelcomeMessageLog {
   created_at:   string | null
 }
 
-const PORTAL_URL = 'https://portal.robocodeschool.com'
-
 export function buildWelcomeMessage(payload: WelcomeMessagePayload): string {
   return `🌟 أهلاً بحضرتك في Robocode School
 
@@ -37,7 +38,6 @@ export function buildWelcomeMessage(payload: WelcomeMessagePayload): string {
 
 👦 الطالب: ${payload.student_name}
 📚 الكورس: ${payload.course_name}
-🏫 الفرع: ${payload.branch_name}
 
 يمكنكم الآن متابعة رحلة الطالب التعليمية بالكامل من خلال منصة Robocode School.
 
@@ -50,9 +50,6 @@ ${payload.parent_email}
 🔐 كلمة المرور:
 ${payload.parent_password}
 
-🔗 رابط البورتال:
-${PORTAL_URL}
-
 ━━━━━━━━━━━━━━
 👨‍💻 حساب الطالب
 
@@ -61,9 +58,6 @@ ${payload.student_email}
 
 🔐 كلمة المرور:
 ${payload.student_password}
-
-🔗 رابط البورتال:
-${PORTAL_URL}
 
 ━━━━━━━━━━━━━━
 
@@ -90,13 +84,22 @@ export function canSendWelcomeMessage(input: {
   studentPassword: string | null
 }): WelcomeMessageEligibility {
   if (!input.parentPhone) {
-    return { eligible: false, reason: 'Parent phone number is missing.' }
+    return { eligible: false, reason: 'Parent phone number is missing.', canRegenerate: false }
   }
-  if (!input.parentEmail || !input.parentPassword) {
-    return { eligible: false, reason: 'Parent portal account has not been created yet.' }
+  // Email and password are checked separately — an account with an email but
+  // no password is a DIFFERENT failure than no account at all, and only the
+  // former is safely recoverable (regenerate password vs. create account).
+  if (!input.parentEmail) {
+    return { eligible: false, reason: 'Parent portal account has not been created yet.', canRegenerate: false }
   }
-  if (!input.studentEmail || !input.studentPassword) {
-    return { eligible: false, reason: 'Student portal account has not been created yet.' }
+  if (!input.parentPassword) {
+    return { eligible: false, reason: 'Parent portal password has not been set yet.', canRegenerate: true }
   }
-  return { eligible: true, reason: null }
+  if (!input.studentEmail) {
+    return { eligible: false, reason: 'Student portal account has not been created yet.', canRegenerate: false }
+  }
+  if (!input.studentPassword) {
+    return { eligible: false, reason: 'Student portal password has not been set yet.', canRegenerate: true }
+  }
+  return { eligible: true, reason: null, canRegenerate: false }
 }
