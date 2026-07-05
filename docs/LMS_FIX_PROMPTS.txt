@@ -1,0 +1,519 @@
+========================================================================
+ برومبتات تنفيذ خطة إصلاح Robocode LMS — مرحلة بمرحلة
+ المرجع: docs/LMS_FULL_REVIEW_2026-07-05.md
+ الاستخدام: انسخ برومبت المرحلة والصقه في شات جديد (Sonnet 5)
+ مهم: اشتغل المراحل بالترتيب، وراجع نتيجة كل مرحلة قبل اللي بعدها
+========================================================================
+
+
+────────────────────────────────────────────────────────────────────────
+ المرحلة 1 — إغلاق الثغرات الأمنية في قاعدة البيانات
+────────────────────────────────────────────────────────────────────────
+
+اشتغل على مشروع Robocode LMS في d:\Robocode\robocode-new — مشروع Next.js متوصل بـ Supabase (project id: fkqwafedruparlqjiprq). اقرأ الأول docs/LMS_FULL_REVIEW_2026-07-05.md قسم 2 (الأمان).
+
+معلومة أساسية: التطبيق كله بيستخدم service-role client (lib/supabase/service.ts) في 186 ملف، فأي تقييد على anon/authenticated مش هيكسر التطبيق. الـ anon key معروض للعامة، والمطلوب قفل الـ PostgREST API المكشوف.
+
+المطلوب — اعمل migration واحد جديد في supabase/migrations/ باسم timestamp (زي 20260706100000_security_hardening.sql) يعمل الآتي:
+
+1. تفعيل RLS على الـ 12 جدول المكشوفين:
+   trial_bookings, gallery, subscription_plans, installment_plans,
+   announcement_reads, analytics_events_default, ai_interactions,
+   session_instructors, notification_reads, trial_session_students,
+   makeup_session_students, welcome_message_logs
+   - لكل جدول ضيف policy تسمح للـ service_role بكل حاجة.
+   - استثناء واحد: trial_bookings محتاج يفضل يقبل INSERT من الـ anon
+     (فورم حجز الحصة التجريبية العام في app/api/book-session/route.ts —
+     افحص الـ route الأول: لو بيستخدم service client فمفيش حاجة للـ
+     anon INSERT policy أصلاً، ولو بيستخدم anon client سيبله INSERT فقط).
+
+2. سحب صلاحية التنفيذ من anon و authenticated على الدوال دي كلها:
+   audit_student_note_change, award_xp, cancel_schedule_with_cascade,
+   consume_attendance_sessions_batch, full_recompute_all_consumption,
+   get_user_role, handle_new_auth_user, increment_consumed_sessions_batch,
+   is_feature_enabled, recompute_group_completed_sessions,
+   recompute_schedule_consumptions, recompute_session_consumption,
+   recompute_student_consumed_sessions, reconcile_all_session_counts,
+   reconcile_all_unmatched_sql, reconcile_cancelled_session_attendance,
+   reconcile_student_attendance_sql, reconcile_student_consumption,
+   refresh_grade_summary, refresh_student_progress,
+   remove_student_consumption, repair_student_portal_accounts,
+   search_entities, sync_enrollment_financial_status,
+   trg_sync_consumed_sessions, trg_sync_enrollment_fin_status,
+   user_has_permission, write_audit_log
+   ملاحظة: هات التواقيع (argument types) الصحيحة من pg_proc الأول لأن
+   REVOKE محتاج التوقيع الكامل. دوال الـ triggers الـ REVOKE عليها آمن.
+   استثناء محتمل: user_has_permission و get_user_role لو مستخدمين جوه
+   RLS policies قائمة — افحص pg_policies الأول قبل ما تسحب منهم.
+
+3. تحويل كل الـ views اللي بادئة v_ + search_index لـ security invoker:
+   ALTER VIEW ... SET (security_invoker = true);
+   هات القائمة الكاملة بـ:
+   SELECT viewname FROM pg_views WHERE schemaname='public';
+   (المفروض حوالي 44 view)
+
+4. تثبيت search_path لكل الدوال اللي معندهاش:
+   اعمل DO block يلف على pg_proc في public schema ويعمل
+   ALTER FUNCTION ... SET search_path = '' لكل دالة مش مظبوطة.
+   (حوالي 55 دالة — أسهل بلوب من كتابتهم واحدة واحدة)
+
+5. تضييق سياسة الـ SELECT على bucket اسمه portfolio-images في
+   storage.objects بحيث الـ listing ميبقاش مفتوح.
+
+خطوات التنفيذ:
+- اكتب الـ migration محلياً الأول واعرضه عليا قبل التطبيق.
+- بعد موافقتي طبّقه بـ mcp apply_migration على المشروع.
+- بعد التطبيق شغّل get_advisors (type: security) وقارن: المفروض
+  أخطاء rls_disabled_in_public تبقى 0 و security_definer_view تبقى 0
+  و anon_security_definer_function_executable تقرب من 0.
+- اختبار سموك: شغّل npx tsc --noEmit و npx vitest run وتأكد إن مفيش
+  حاجة اتكسرت، وجرب صفحة book-session لو ينفع.
+
+حاجتين يدويين قولّي أعملهم من Supabase Dashboard (مش migration):
+- تفعيل Leaked password protection من Auth settings.
+- تفعيل TOTP MFA.
+
+ممنوع: متعملش أي تعديل في بيانات الجداول نفسها في المرحلة دي —
+دي مرحلة صلاحيات بس.
+
+
+────────────────────────────────────────────────────────────────────────
+ المرحلة 2 — إصلاح البيانات المالية ونظام استهلاك الحصص
+ (التشخيص خلص بالكامل في شات سابق — الأقسام دي جاهزة للتنفيذ مباشرة،
+ متعملش إعادة تشخيص إلا لو رقم مختلف عن اللي مكتوب هنا)
+────────────────────────────────────────────────────────────────────────
+
+اشتغل على مشروع Robocode LMS في d:\Robocode\robocode-new — Next.js متوصل
+بـ Supabase (project id: fkqwafedruparlqjiprq). التشخيص الكامل للمشاكل
+كلها اتعمل خلاص (موثّق تحت) والموافقة على خطة التنفيذ صدرت — ابدأ التنفيذ
+مباشرة بالترتيب، وسيب فقط الخطوات اللي فيها DELETE/UPDATE جماعي على
+بيانات حقيقية معروضة عليّا قبل التنفيذ (مع عدد الصفوف المتأثرة).
+
+════════════════════════════════════════════════════════════════════
+ التشخيص المؤكد (متعملش إعادة فحص لو الأرقام دي لسه صحيحة)
+════════════════════════════════════════════════════════════════════
+
+أ) كارثة الأقساط — الحساب المتضرر محدد بالكامل:
+   account_id = 8946c26b-c0b1-4014-a810-9e8c22c50277
+   student_id = e7f9fe40-ac82-4cf8-b169-7d5bfcc6ed0e
+   enrollment_id = 1a9cbc7c-b751-4be0-a559-59fd7e3472e2 (contract_code
+   CNT-2026-000021, status ACTIVE, net_amount = 3400.00, enrolled_sessions=12)
+   عليه 3,400 قسط (installment_number 1→3400)، كل واحد amount=1.00،
+   كلهم created_at = 2026-06-06 23:37:59.791407 (نفس اللحظة بالظبط).
+
+   السبب الجذري (اتأكد منه بقراءة الكود فعليًا):
+   - modules/enrollments/actions.ts سطر 237-267 (دالة _finishEnrollment):
+     count = Math.floor(input.installment_count)
+     perInst = Math.floor(net / count)
+     if (perInst < 1) { return error }   ← الحارس الوحيد الموجود
+     الحارس بيتأكد بس إن perInst >= 1، ومفيش أي سقف على count نفسه.
+     لو count == net (3400/3400) فـ perInst=1 وبيعدي الحارس ويطلع 3400 صف.
+   - app/portal/team-leader/finance/EnrollmentWizard.tsx سطر 1115:
+     <input type="number" min="0" max="24"> — الـ max ده HTML hint بس،
+     مش clamp حقيقي، بيتجاوز بالكتابة اليدوية. التحقق في سطر 306-319
+     (instAmtTooSmall) بردو بس بيفحص perInstAmt < 1، مفيش سقف على العدد.
+   - الاستنتاج: حد كتب سعر الكورس (3400) في خانة "عدد الأقساط" غلط،
+     ومفيش أي حماية (فورم ولا سيرفر) وقفت الحالة الشاذة.
+
+ب) 65 قسط due_date فات وحالته لسه PENDING — دالة mark_overdue_installments()
+   موجودة وصحيحة. فحصت pg_extension: **pg_cron مش متفعل على المشروع خالص**
+   (مفيش صف ليه في pg_extension). البديل: Vercel cron route.
+
+ج) 526 attendance_records مقابل 20 attendance_consumptions بس (506 ناقص).
+   مهم: تتبعت modules/attendance/actions.ts سطر 283-288 —
+   consume_attendance_sessions_batch **بيتنده صح دلوقتي** في recordAttendanceSession
+   الحالية. الـ 506 دول دين تاريخي (حضور اتسجل قبل ما آلية الـ ledger تكتمل
+   في سبرينت سابق)، مش bug نشط. فحصت reconcile_all_unmatched_sql() و
+   reconcile_student_attendance_sql() بالكامل — الدالتين آمنتين للتشغيل:
+   FIFO بترتيب session_date، بتحترم enrollment start/end date وcapacity،
+   وبتعمل INSERT ... ON CONFLICT (attendance_record_id) DO NOTHING
+   (idempotent، تقدر تشغلها أكتر من مرة من غير ضرر). مفيش p_dry_run
+   parameter على reconcile_all_unmatched_sql نفسها (بس منطقها آمن زي
+   ما فوق) — اعرض النتيجة المتوقعة (SELECT ... بدون تنفيذ فعلي، محاكاة
+   يدوية) لو حبيت تتأكد قبل ما تنده الدالة الحقيقية.
+
+د) الرقم الحقيقي مش 64 — من الـ 64 طالب من غير student_financial_accounts:
+   - 16 منهم soft-deleted (deleted_at IS NOT NULL) — سيبهم.
+   - من الـ 48 الفعّالين، **3 بس عندهم enrollment فعلي** (دي الـ bug
+     الحقيقية — تعاقد من غير حساب مالي). الـ 61 الباقيين معندهمش أي
+     enrollment أصلاً (طلبة مسجلين بس لسه ملتحقوش)، وإنشاء حساب مالي
+     فاضي (net_amount=0) ليهم هيكون نمط جديد غير موجود في الداتا حاليًا
+     (اتأكدت: مفيش ولا صف حالي بـ net_amount=0 أو من غير enrollment_id).
+   القرار: اعمل حسابات للـ 3 دول بس، من بيانات enrollment بتاعهم:
+   1) student_id 1e4c4d5f-7b3f-4190-8546-7ff8c2b3b6b7 → enrollment
+      6a68d6fa-52fa-41a5-939b-248bdc73baec (CNT-2026-6a68d6, total/net=0)
+   2) student_id 0df5ea9b-49b1-45b4-9ff4-9934c57afdc4 → enrollment
+      3936c3d1-8b4c-42da-8f63-3e2485fb945b (CNT-2026-3936c3, total/net=0)
+   3) student_id 15179c59-abf2-42ca-a3f5-be9ea8189483 → enrollment
+      3120e0af-53fe-4a3e-83e3-aa22f107b340 (CNT-2026-3120e0, total/net=0)
+   الثلاثة دول total_amount=net_amount=0 (تعاقدات مجانية/legacy)، يبقى
+   الحساب المالي remaining=0, status='PAID'. الـ 61 الباقيين اسكيبهم.
+
+هـ) 42 حصة v_orphan_sessions — migration 0088_allocation_backfill.sql
+   **كانت اتطبقت قبل كده فعلاً** (موجودة في supabase_migrations.schema_migrations
+   بـ version='0088'). يبقى الـ 42 دول drift جديد بعد الـ backfill ده،
+   مش backlog قديم. هات القائمة الكاملة (SELECT * FROM v_orphan_sessions)
+   واعرضها بالتفصيل (group + course + تاريخ) لأنها محتاجة قرار مين
+   الـ instructor المفروض يتوزع على كل حصة — متحطش أي حد أوتوماتيك.
+
+و) 0 قسط اتعلّم paid رغم 112 دفعة — السبب الجذري:
+   - الـ trigger trg_sync_account_on_payment_insert (migration 0047)
+     شغال صح وبينده sync_installment_paid_amount(NEW.installment_id)
+     لما installment_id يبقى مش NULL.
+   - المشكلة: finance_payments.installment_id عمود موجود، بس
+     **0 من أصل 112 دفعة عندها قيمة فيه** (اتأكدت بالعدّ).
+   - modules/finance/actions.ts: addPayment() (سطر ~104-119) بتقبل
+     installment_id اختياري بس محدش بيبعته من الفورم. quickPayment()
+     (سطر ~193-203) مش بتحط installment_id في الـ insert خالص.
+   - الإصلاح: في addPayment و quickPayment، لو input.installment_id
+     مش موجود، اعمل auto-resolve بمنطق FIFO (هات أقدم قسط
+     PENDING/PARTIAL/OVERDUE للحساب بترتيب due_date ASC) واربط الدفعة
+     بيه قبل الـ insert، عشان الـ trigger الموجود يشتغل لوحده.
+
+اختبارات فاشلة (5 من 244) — التشخيص الكامل:
+1. tests/analytics/queries.test.ts › resolveGroupFilter (instructor) —
+   **الاختبار غلط**: mock الـ `instructors:` قوائم راجعة data:{id:'ins-1'}
+   (object) بدل [{id:'ins-1'}] (array). كود الإنتاج (modules/analytics/queries.ts
+   سطر 34-39) بيستخدم .select('id') من غير .single()، يعني بيرجع array
+   دايمًا من Supabase. صلّح الـ mock في tests/analytics/queries.test.ts
+   سطر ~294 يرجع array.
+2. tests/progress/wiring.test.ts › recordAttendanceSession —
+   **الاختبار غلط**: attendanceFormData() fixture (سطر ~164-174) مش حاطّة
+   حقل 'topic'، وكود recordAttendanceSession (modules/attendance/actions.ts
+   سطر 49-53) بيرفض من غير topic (اتضافت في Phase 18.8 بعد كتابة
+   الاختبار). ضيف fd.set('topic', 'Test topic') للـ fixture. الـ wiring
+   نفسه (consume_attendance_sessions_batch + safeRecalcProgressBatch)
+   شغال صح فعليًا — تأكدت بقراءة الكود سطر 283-288 و376-379.
+3+4. tests/progress/wiring.test.ts › enrollStudent (الاختبارين) —
+   **الاختبار غلط**: vi.mock('@/modules/rbac/guards') في أول الملف
+   (سطر 14-17) ناقص export اسمه isBranchAccessible اللي modules/groups/actions.ts
+   سطر 213 بيستخدمه فعليًا. ضيف isBranchAccessible: vi.fn().mockReturnValue(true)
+   لل mock factory.
+5. tests/special-sessions/special-sessions.test.ts › TEST 15b (endTrialSession
+   TRIAL_ATTENDED) — **bug حقيقي في الإنتاج + الاختبار ناقص جزئيًا**:
+   قارنت app/portal/team-leader/special-sessions/[id]/_components/TLSpecialSessionDetail.tsx
+   بـ app/portal/instructor/special-sessions/[id]/_components/SpecialSessionDetail.tsx:
+   - صفحة الـ instructor فيها select present/absent لكل طالب + زرار
+     "Save Attendance" (بينده saveTrialAttendance) + handleEnd بينده
+     endTrialSessionWithAttendance(session.id, attendanceMap) بالخريطة
+     الفعلية.
+   - صفحة الـ TL (TLSpecialSessionDetail.tsx سطر 37-43) بتعرض حالة
+     الحضور كـ badge للقراءة بس، ومفيش أي إمكانية إن الـ TL يعلّم طالب
+     "حاضر"، وhandleEnd بينده endTrialSession(session.id) (بدون
+     attendance map) — يعني attendance_status فاضل null للأبد لأي trial
+     session اتقفلت من بورتال الـ TL، فـ endTrialSessionWithAttendance
+     (modules/special-sessions/actions.ts سطر 489-560) بيلاقي presentStudents
+     فاضية دايمًا وميعلّمش أي lead كـ TRIAL_ATTENDED.
+   - الإصلاح المطلوب: ضيف نفس الـ UI (select present/absent لكل طالب)
+     لـ TLSpecialSessionDetail.tsx، خزّن attendanceMap في state، وخلّي
+     handleEnd ينده endTrialSessionWithAttendance(session.id, attendanceMap)
+     بدل endTrialSession(session.id) الفاضية — طابق نفس النمط الموجود
+     في نسخة الـ instructor بالظبط.
+   - وبعد كده صلّح فحص الاختبار نفسه (تست 15b سطر ~436-451): الـ mock
+     الحالي لصف trial_session_students فيه {lead_id: LEAD_ID} بس من غير
+     attendance_status، فمحتاج تضيف attendance_status:'present' للصف
+     المتخيّل عشان يحاكي حالة إن الطالب اتسجل حاضر فعلاً قبل الإغلاق
+     (مطابق للـ flow الصح بعد الإصلاح).
+
+════════════════════════════════════════════════════════════════════
+ ترتيب التنفيذ
+════════════════════════════════════════════════════════════════════
+
+1. كود — سقف على مولّد الأقساط:
+   - modules/enrollments/actions.ts: ضيف MAX_INSTALLMENTS (مقترح 36،
+     يعني لغاية 3 سنين بالتقسيط الشهري) وارفض لو count > الحد ده، برسالة
+     خطأ واضحة. وامنع due_date يعدي سنة من تاريخ اليوم × عدد الأقساط
+     (احسب آخر due_date المتوقع وارفضه لو عدى سقف معقول، مثلاً 5 سنين).
+   - app/portal/team-leader/finance/EnrollmentWizard.tsx: ضيف نفس الفحص
+     في الـ client قبل الإرسال (سطر ~306-319) بحيث instAmtTooSmall
+     يتحول instCountInvalid ويشمل الحالتين (صغير جدًا أو كبير جدًا).
+
+2. كود — إصلاح مزامنة الدفعات بالأقساط:
+   - modules/finance/actions.ts: في addPayment() و quickPayment()، لو
+     مفيش input.installment_id، اعمل query على finance_installments
+     WHERE account_id=... AND status IN ('PENDING','PARTIAL','OVERDUE')
+     ORDER BY due_date ASC LIMIT 1، واربط الدفعة بيه.
+
+3. كود — إصلاح TL trial-session attendance UI (تفصيل فوق في بند 5 من
+   الاختبارات) + صلّح الاختبارات الأربعة التانية (fixtures بس).
+
+4. بيانات — تنظيف الحساب المتضرر (اعرض عليّا قبل التنفيذ مع عدد الصفوف):
+   - Backup: CREATE TABLE finance_installments_backup_20260706 AS
+     SELECT * FROM finance_installments WHERE account_id =
+     '8946c26b-c0b1-4014-a810-9e8c22c50277';
+   - DELETE FROM finance_installments WHERE account_id =
+     '8946c26b-c0b1-4014-a810-9e8c22c50277'; (هيمسح 3,400 صف بالظبط)
+   - أعد توليد قسط واحد صحيح: amount=3400.00, due_date = أقرب تاريخ
+     معقول (استخدم next_due_date الحالي بتاع الحساب أو تاريخ اليوم+30
+     يوم لو مفيش)، status='PENDING', installment_number=1.
+
+5. بيانات — إنشاء 3 حسابات مالية ناقصة (القائمة فوق في بند د) —
+   INSERT مباشر بـ net_amount=0, status='PAID', remaining_amount=0،
+   مربوطين بـ enrollment_id بتاعهم.
+
+6. بيانات — تشغيل reconcile_all_unmatched_sql() على الـ 506 سجل حضور
+   الناقصين. اعرض عليّا عدد السجلات المتوقع يتأثر قبل التشغيل (تقدر
+   تحاكيها بـ SELECT من غير تنفيذ الدالة، أو تشغلها مباشرة بما إنها
+   idempotent وآمنة زي ما اتأكد فوق — إنت تقرر). بعدها اتحقق:
+   SELECT count(*) FROM v_consumption_integrity WHERE ledger_state='MISSING'
+   (المفروض يقرب من 0)، وv_contract_consumption_mismatch وv_attendance_drift.
+
+7. Cron — pg_cron مش متاح (اتأكد تاني لو حابب، بس فحصت واتأكدت إنه
+   مش مفعّل). اعمل بديل Vercel cron:
+   - app/api/cron/finance-maintenance/route.ts يعمل:
+     mark_overdue_installments(), auto_fulfill_promises(),
+     mark_broken_promises() (لو الدالتين التانيين موجودين — تأكد بـ
+     pg_proc الأول).
+   - أمّن الـ route بـ CRON_SECRET header (افحص أي نمط موجود في
+     app/api/cron/ حاليًا لو فيه ونمشي عليه).
+   - ضيفه في vercel.json schedule يومي.
+
+8. الـ 42 orphan session — اعرض القائمة الكاملة (من v_orphan_sessions)
+   بالتفصيل واستنى قراري قبل أي allocation.
+
+9. التحقق النهائي: npx tsc --noEmit = 0 أخطاء، npx vitest run = كله
+   أخضر (244/244)، وكل استعلامات الـ integrity views ترجع أرقام سليمة.
+   اكتب ملخص كامل بكل حاجة اتعملت (بما فيها الأرقام قبل/بعد) في
+   docs/PHASE2_DATA_FIX_REPORT.md.
+
+قواعد: أي DELETE أو UPDATE جماعي على بيانات حقيقية (بند 4 تحديدًا)
+لازم يتعرض عليّا الأول ومعاه عدد الصفوف المتأثرة بالظبط. خد backup قبل
+أي تعديل جماعي. لو أي رقم من التشخيص فوق طلع مختلف لما تتأكد بنفسك،
+وقّف واعرض عليّا الفرق قبل ما تكمل.
+
+
+────────────────────────────────────────────────────────────────────────
+ المرحلة 3 — توحيد الـ Migrations
+────────────────────────────────────────────────────────────────────────
+
+اشتغل على مشروع Robocode LMS في d:\Robocode\robocode-new — متوصل بـ Supabase (project id: fkqwafedruparlqjiprq). اقرأ docs/LMS_FULL_REVIEW_2026-07-05.md قسم 4.
+
+الوضع الحالي:
+- supabase/migrations/ فيه 133 ملف (مرقّمين 0001→0127 + timestamped)
+  وده المصدر الرسمي.
+- مجلد migrations/ في الروت فيه 17 ملف (sprint32→46) اتشغلوا يدوياً
+  في SQL Editor من غير تسجيل في supabase_migrations.schema_migrations.
+- فيه drift: ملفات محلية مش في سجل الداتابيز والعكس. أمثلة مؤكدة:
+  * 0118_financial_expenses_v2.sql محلي ومش في السجل.
+  * 20260702093000_instructor_payout_requests.sql و
+    20260702142545_drop_instructor_payout_requests.sql محليين ومش
+    في السجل.
+  * السجل فيه 20260702100930 (add_trial_session_lead_source) و
+    20260702101548 و 20260705072242 بأسماء/أرقام مختلفة عن الملفات
+    المحلية المقابلة (20260702120000_leads_trial_session_source.sql،
+    20260702150000_...، 20260705180000_...).
+- مفيش ملف 0059 (فجوة ترقيم — مش مشكلة، بس وثّقها).
+
+المطلوب:
+1. هات السجل الفعلي: SELECT version, name FROM
+   supabase_migrations.schema_migrations ORDER BY version;
+   واعمل مقارنة كاملة ملف-بملف مع supabase/migrations/ واعرض جدول
+   الفروقات عليّا.
+2. لكل فرق، حدد العلاج:
+   - ملف محلي متطبق فعلاً بس مش مسجل → سجّله بـ INSERT في
+     schema_migrations بنفس version الملف (ده اللي supabase migration
+     repair بيعمله — لو الـ CLI مش متسطب اعمل الـ INSERT مباشرة بعد
+     التأكد إن محتوى الملف متطبق فعلاً بفحص وجود الجداول/الأعمدة).
+   - سجل في الداتابيز من غير ملف محلي → اعمل ملف محلي بنفس الاسم
+     والمحتوى الفعلي (استرجع الـ DDL من الداتابيز) أو لو مطابق لملف
+     محلي باسم تاني، وحّد الاسم.
+3. مجلد migrations/ القديم: انقله بالكامل لـ docs/legacy-migrations/
+   مع ملف README.md صغير جواه يشرح إن دي سبرينتات 32-46 اتطبقت يدوي
+   قبل اعتماد supabase/migrations.
+4. أرشف HANDOFF.md القديم (بتاع سبرينت 46) → docs/archive/.
+5. اكتب في docs/MIGRATIONS.md الـ convention الجديد: كل migration
+   جديد يتعمل بـ timestamp (YYYYMMDDHHMMSS_name.sql) في
+   supabase/migrations/ ويتطبق بـ mcp apply_migration بس، ممنوع
+   SQL Editor اليدوي.
+6. التحقق: بعد التوحيد، عدد الملفات المحلية = عدد صفوف السجل،
+   والأسماء متطابقة. اعرض النتيجة النهائية.
+
+قواعد: متطبقش أي migration قديم تاني (كله متطبق فعلاً) — الشغل ده
+كله تسجيل ومطابقة بس. أي INSERT في schema_migrations اعرضه عليّا قبل
+التنفيذ.
+
+
+────────────────────────────────────────────────────────────────────────
+ المرحلة 4 — تحسين أداء قاعدة البيانات
+────────────────────────────────────────────────────────────────────────
+
+اشتغل على مشروع Robocode LMS في d:\Robocode\robocode-new — متوصل بـ Supabase (project id: fkqwafedruparlqjiprq). اقرأ docs/LMS_FULL_REVIEW_2026-07-05.md قسم 5. المفروض المراحل 1-3 خلصت (الأمان اتقفل والبيانات اتصلحت).
+
+شغّل الأول get_advisors (type: performance) عشان تجيب القائمة المحدثة، وبعدين اعمل migrations بالترتيب ده (كل بند migration منفصل عشان لو حاجة بازت نرجع فيها لوحدها):
+
+1. مسح الفهارس المكررة (سريع وآمن) — امسح واحد من كل زوج:
+   - attendance_records: {idx_attendance_records_student_recorded,
+     idx_attendance_student_recorded} و {idx_att_records_student_status,
+     idx_attendance_student_status} و
+     {attendance_records_schedule_id_student_id_key,
+     attendance_records_schedule_student_unique}
+     تنبيه: الزوج الأخير ده UNIQUE constraints — شوف مين فيهم constraint
+     ومين index عادي، وامسح الـ index العادي، ولو الاتنين constraints
+     شوف الـ FKs اللي معتمدة عليهم الأول.
+   - blog_posts: {blog_posts_slug_unique, idx_blog_posts_slug}
+   - finance_payments: {idx_finance_payments_account_month, idx_fp_account_date}
+   - student_enrollments: {idx_enrollments_student_fifo,
+     idx_enrollments_student_start} و {idx_enrollment_student,
+     idx_student_enrollments_student_status}
+   - student_financial_accounts: {idx_sfa_student, idx_sfa_student_id}
+
+2. auth_rls_initplan (160 policy): كل policy فيها auth.uid() أو
+   auth.jwt() مباشرة تتغلف بـ (SELECT auth.uid()). اكتب سكريبت يقرأ
+   pg_policies ويولّد ALTER POLICY / DROP+CREATE لكل واحدة أوتوماتيك
+   بدل ما تكتبهم يدوي. اعرض السكريبت المتولد عليّا قبل التطبيق.
+
+3. multiple_permissive_policies (321 حالة): ابدأ بالجداول الساخنة بس
+   في المرحلة دي: attendance_records, student_enrollments,
+   finance_payments, finance_installments, students, groups, schedules,
+   certificate_templates (×24), student_projects (×24),
+   portfolio_projects (×18), submissions (×12), session_feedback (×12),
+   student_portfolios (×12).
+   لكل جدول: اعرض السياسات الحالية، وادمج السياسات المتعددة لنفس
+   (role, action) في policy واحدة بـ OR بين الشروط. حافظ على نفس
+   السلوك بالظبط — ده دمج مش تغيير صلاحيات.
+
+4. unindexed_foreign_keys: ضيف فهارس للـ FKs في الجداول اللي بتتعمل
+   عليها JOINs فعلاً: student_enrollments (5 FKs),
+   student_timeline_events (4), attendance_records (2),
+   collection_activities (2), finance_notes (2), certificates (3),
+   finance_payment_reversals (3). الباقي (جداول فاضية زي invoices,
+   payments, instructor_payouts) سيبه دلوقتي.
+
+5. unused_index (156): متمسحش حاجة أوتوماتيك. طلّع قائمة مرتبة
+   بالحجم واعرضها عليّا في ملف docs/UNUSED_INDEXES.md مع توصية لكل
+   واحد (الداتابيز لسه صغيرة والـ usage stats مش ناضجة — القرار يتأجل).
+
+بعد كل migration: شغّل npx vitest run سريعاً، وفي الآخر شغّل
+get_advisors تاني وقارن الأرقام قبل/بعد واكتبها في
+docs/PHASE4_PERF_REPORT.md.
+
+قواعد: كل التعديلات دي schema-level — ممنوع أي تعديل data. الدمج في
+البند 3 لازم يحافظ على السلوك الحالي حرفياً.
+
+
+────────────────────────────────────────────────────────────────────────
+ المرحلة 5 — تنظيف الكود وإزالة التكرارات
+────────────────────────────────────────────────────────────────────────
+
+اشتغل على مشروع Robocode LMS في d:\Robocode\robocode-new (Next.js App Router). اقرأ docs/LMS_FULL_REVIEW_2026-07-05.md قسم 6. اشتغل على branch جديد اسمه cleanup/phase5 واعمل commit منفصل لكل بند عشان المراجعة تبقى سهلة.
+
+1. مسح الـ modules الميتة (اتأكد بنفسك الأول إن مفيش أي import ليها
+   خارج نفسها بـ grep على "modules/<name>"):
+   - modules/financials/  (هيكل فاضي، اتلغى لصالح modules/finance)
+   - modules/notification-engine/
+   - modules/videos/
+   - modules/media/
+   - modules/announcements/
+   - modules/ai/
+   لو لقيت أي import فعلي لواحدة منهم، وقّف واعرض عليّا.
+
+2. مسح صفحات instructor الـ legacy (مذكورة في SPRINT_61_HANDOFF.md
+   إنها اتحلت محلها workspace):
+   - app/portal/team-leader/instructors/[id]/page.tsx
+   - app/portal/team-leader/instructors/[id]/edit/ (كامل)
+   قبل المسح: grep على أي Link أو redirect أو router.push بيوصل
+   للمسارات دي وحوّله للـ workspace الجديد.
+
+3. الصفحات الـ orphan (مش موصولة بأي sidebar): اعرض عليّا قائمة
+   بكل صفحة منهم + آخر تعديل ليها في git + هل فيه أي Link ليها من
+   أي حتة، وأنا هقرر واحدة واحدة (امسح / وصّل في الـ nav):
+   admin: communications, revenue, expenses, recovery, semesters,
+   sessions, system-events, portfolio
+   team-leader: attendance, assignments, collections, instructor-payroll,
+   instructor-performance, parent-feedback, parent-satisfaction, portfolio
+   متمسحش منهم حاجة من غير ما أرد عليك.
+
+4. توحيد الـ helpers المتكررة:
+   - اعمل lib/whatsapp.ts فيه دالة واحدة لبناء لينكات wa.me
+     (normalize للرقم المصري: يشيل المسافات والشرط، يضيف كود الدولة 20
+     لو ناقص) وبدّل الـ 20+ استخدام المتفرق بيها. شوف الاستخدامات بـ
+     grep على "wa.me" في app/ و components/ و modules/.
+   - اعمل lib/status.ts (أو modules/shared) يجمع تعريفات
+     getStatusColor/status maps المكررة 12 مرة — وحّد الألوان
+     والليبلات وبدّل الاستخدامات.
+   - وحّد الـ 3 نسخ من formatDate في util واحد.
+
+5. تفكيك أكبر ملفين (بس دول في المرحلة دي):
+   - app/portal/team-leader/payroll/FinanceClient.tsx (2,120 سطر)
+   - app/admin/finance-center/FinancialManagementClient.tsx (1,729 سطر)
+   فكّك كل واحد لمكونات في مجلد فرعي (زي payroll/components/) —
+   استخرج التابات/المودالات/الجداول الكبيرة كل واحد في ملف. من غير
+   أي تغيير سلوكي — refactor خالص. فيه نمط جاهز تمشي عليه في
+   app/portal/team-leader/groups/workspace/ و instructors/workspace/.
+
+6. تنظيف روت المشروع:
+   - انقل "تحسين تصميم نظام LMS.zip" و "LMS design" و "LMS Design files"
+     لـ docs/design/ (أو اعرض عليّا لو تفتكر يتشالوا من الريبو خالص
+     ويتضافوا لـ .gitignore).
+
+7. ازدواجية admin/TL المالية: متعملش دمج دلوقتي — بس اكتب تحليل
+   قصير في docs/FINANCE_SURFACES.md: مين بيستخدم إيه (admin/finance،
+   admin/finance-center، admin/payroll، admin/revenue، admin/expenses،
+   TL/finance، TL/collections، TL/payroll، TL/instructor-payroll)،
+   إيه المكرر فعلاً، وتوصية بالسطح الرسمي لكل دومين. القرار ليّا.
+
+التحقق بعد كل بند: npx tsc --noEmit = 0 أخطاء و npx vitest run كله
+أخضر و npm run build ينجح في الآخر خالص.
+
+قواعد: ممنوع تغيير أي سلوك — المرحلة دي حذف ونقل وتوحيد بس. أي حاجة
+فيها شك اعرضها عليّا قبل ما تتصرف.
+
+
+────────────────────────────────────────────────────────────────────────
+ المرحلة 6 — الحوكمة المستمرة (CI + مراقبة)
+────────────────────────────────────────────────────────────────────────
+
+اشتغل على مشروع Robocode LMS في d:\Robocode\robocode-new — Next.js + Supabase (project id: fkqwafedruparlqjiprq) + Vercel. اقرأ docs/LMS_FULL_REVIEW_2026-07-05.md قسم 8 (المرحلة 6). المفروض المراحل 1-5 خلصت.
+
+المطلوب:
+
+1. CI بـ GitHub Actions: اعمل .github/workflows/ci.yml يشتغل على كل
+   push و pull_request على main:
+   - npm ci
+   - npx tsc --noEmit
+   - npx vitest run
+   - npx next lint (أو eslint . حسب إعداد المشروع — افحص package.json)
+   - npm run build
+   استخدم Node 20 + cache للـ node_modules. لو الـ build محتاج env
+   vars بتوع Supabase، حط placeholders في الـ workflow وقولّي أضيف
+   الـ secrets الحقيقية فين.
+   ملاحظة: اتأكد الأول إن الريبو على GitHub أصلاً (git remote -v) —
+   لو مفيش remote قولّي.
+
+2. مراقبة دورية للـ data integrity: اعمل API route محمي
+   app/api/cron/integrity-check/route.ts:
+   - يعمل استعلام counts على: v_consumption_integrity (WHERE
+     ledger_state='MISSING'), v_orphan_sessions, v_orphan_attendance,
+     v_contract_consumption_mismatch, v_group_count_drift (WHERE
+     delivery_status='OVER_DELIVERED'), v_attendance_drift،
+     وكمان: أقساط past-due لسه PENDING، وطلبة من غير حساب مالي،
+     وأقساط due_date بعد سنة من دلوقتي (early warning من runaway loop).
+   - يقارن بالـ thresholds (المفروض كلها 0 أو قريبة) ويسجل النتيجة
+     في جدول جديد integrity_check_runs (اعمله بـ migration — RLS
+     enabled + service_role policy، التزم بـ convention بتاع
+     docs/MIGRATIONS.md).
+   - لو فيه تجاوز، يبعت تنبيه واتساب/إيميل لو فيه آلية جاهزة في
+     المشروع (دور في modules/notifications و lib/ الأول) — لو مفيش،
+     يكفي status غير 200 عشان Vercel cron monitoring يعلّم عليها.
+   - أمّن الـ route بـ CRON_SECRET header (نفس نمط أي cron routes
+     موجودة — افحص vercel.json و app/api/cron/ لو موجودين).
+   - ضيفه في vercel.json schedule يومي.
+
+3. صفحة صحة داخلية: لو admin/system-health موجودة وشغالة، ضيف عليها
+   نتائج آخر integrity_check_runs. لو الصفحة orphan/ميتة (حسب قرار
+   المرحلة 5)، اعمل عرض بسيط جديد.
+
+4. حذف جدول student_certificates الـ deprecated:
+   - اتأكد إنه فاضي: SELECT count(*) FROM student_certificates;
+   - اتأكد مفيش أي reference ليه في الكود (grep) ولا FKs عليه.
+   - لو فاضي ونضيف: migration بـ DROP TABLE. لو فيه صفوف، وقّف
+     واعرض عليّا.
+
+5. حدّث CLAUDE.md (أو AGENTS.md) بقواعد الشغل الجديدة باختصار:
+   - migrations بـ timestamps في supabase/migrations بس.
+   - شغّل get_advisors بعد كل migration.
+   - service-role للسيرفر بس، وأي جدول جديد لازم RLS + policy من أول يوم.
+   - الاختبارات لازم تعدي قبل أي merge.
+
+التحقق: الـ CI يعدي أخضر على أول run، والـ cron route يشتغل محلياً
+بـ curl مع الـ secret ويرجع JSON بالأرقام.

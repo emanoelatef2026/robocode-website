@@ -12,6 +12,9 @@ import type {
 } from './types'
 import type { PaymentMethod } from '@/modules/finance/types'
 
+const MAX_INSTALLMENTS = 36               // up to 3 years of monthly installments
+const MAX_INSTALLMENT_HORIZON_YEARS = 5   // last due date must fall within 5 years
+
 // ── Full enrollment creation (Sprint 42) ─────────────────────────────────────
 // Single atomic action that creates:
 //   1. group_students row
@@ -236,6 +239,14 @@ async function _finishEnrollment(
   // ── 5. Create installment plan ─────────────────────────────────────────────
   if (input.installment_count > 0 && net > 0) {
     const count    = Math.floor(input.installment_count)  // ensure integer
+
+    // Guard: hard cap on installment count regardless of amount
+    if (count > MAX_INSTALLMENTS) {
+      return {
+        error: `Installment count too high: ${count}. Maximum ${MAX_INSTALLMENTS} installments allowed.`,
+      }
+    }
+
     const perInst  = Math.floor(net / count)
     const lastAmt  = net - perInst * (count - 1)
 
@@ -244,6 +255,17 @@ async function _finishEnrollment(
       return {
         error: `Installment amount too small: EGP ${net} ÷ ${count} installments = EGP ${perInst.toFixed(2)}. ` +
                `Maximum ${Math.floor(net)} installments allowed for this total.`,
+      }
+    }
+
+    // Guard: last due date must not extend beyond a sane horizon
+    const lastDue = new Date(input.first_due_date)
+    lastDue.setMonth(lastDue.getMonth() + (count - 1))
+    const maxHorizon = new Date()
+    maxHorizon.setFullYear(maxHorizon.getFullYear() + MAX_INSTALLMENT_HORIZON_YEARS)
+    if (lastDue > maxHorizon) {
+      return {
+        error: `Installment plan too long: last due date ${lastDue.toISOString().slice(0, 10)} exceeds the ${MAX_INSTALLMENT_HORIZON_YEARS}-year limit.`,
       }
     }
 

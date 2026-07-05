@@ -291,7 +291,7 @@ describe('resolveGroupFilter', () => {
   it('returns group ids for instructor with assignments', async () => {
     const user = { globalRole: 'instructor', id: 'u1', branchIds: [] } as any
     mockDb({
-      instructors:       [{ data: { id: 'ins-1' }, error: null }],
+      instructors:       [{ data: [{ id: 'ins-1' }], error: null }],
       group_instructors: [{ data: [{ group_id: 'grp-1' }], error: null }],
     })
     const result = await resolveGroupFilter(user)

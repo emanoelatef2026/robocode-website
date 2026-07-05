@@ -30,6 +30,20 @@ async function getStudentBranchId(db: ReturnType<typeof createServiceClient>, st
   return (data as any)?.branch_id ?? null
 }
 
+async function resolveFifoInstallmentId(
+  db: ReturnType<typeof createServiceClient>,
+  accountId: string
+): Promise<string | null> {
+  const { data } = await db
+    .from('finance_installments')
+    .select('id')
+    .eq('account_id', accountId)
+    .in('status', ['PENDING', 'PARTIAL', 'OVERDUE'])
+    .order('due_date', { ascending: true })
+    .limit(1)
+  return (data as any[])?.[0]?.id ?? null
+}
+
 async function resolveBranchIdForNote(
   db: ReturnType<typeof createServiceClient>,
   accountId: string | undefined,
@@ -101,11 +115,14 @@ export async function addPayment(
   const strategy: import('./types').AllocationStrategy =
     input.enrollment_id ? 'MANUAL' : (input.allocation_strategy ?? 'AUTO_FIFO')
 
+  // Auto-link to the oldest outstanding installment (FIFO) when not explicit
+  const installmentId = input.installment_id ?? await resolveFifoInstallmentId(db, input.account_id)
+
   const { error } = await db.from('finance_payments').insert({
     student_id:          input.student_id,
     account_id:          input.account_id,
     enrollment_id:       enrollmentId,
-    installment_id:      input.installment_id ?? null,
+    installment_id:      installmentId,
     amount:              input.amount,
     payment_date:        input.payment_date,
     payment_method:      input.payment_method,
@@ -190,10 +207,14 @@ export async function quickPayment(
 
   const today = new Date().toISOString().slice(0, 10)
 
+  // Auto-link to the oldest outstanding installment (FIFO)
+  const installmentId = await resolveFifoInstallmentId(db, input.account_id)
+
   const { error: payErr } = await db.from('finance_payments').insert({
     student_id:          input.student_id,
     account_id:          input.account_id,
     enrollment_id:       enrollmentId,
+    installment_id:      installmentId,
     amount,
     payment_date:        today,
     payment_method:      input.method ?? 'cash',

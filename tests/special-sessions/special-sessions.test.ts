@@ -439,7 +439,7 @@ describe('Phase XL — Special Sessions System', () => {
                                 { data: null, error: null }],
       session_instructors:     [{ data: { instructor_id: INSTR_ID }, error: null },
                                 { data: null, error: null }],
-      trial_session_students:  [{ data: [{ lead_id: LEAD_ID }], error: null },
+      trial_session_students:  [{ data: [{ lead_id: LEAD_ID, attendance_status: 'present' }], error: null },
                                 { data: null, error: null }],
       leads:                   [{ data: null, error: null }],
     })

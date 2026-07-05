@@ -7,8 +7,9 @@ import {
   addTrialStudentNew,
   addMakeupStudent,
   startSpecialSession,
-  endTrialSession,
+  endTrialSessionWithAttendance,
   endMakeupSession,
+  saveTrialAttendance,
   postponeSpecialSession,
 } from '@/modules/special-sessions/actions'
 import type { TrialSession, MakeupSession } from '@/modules/special-sessions/types'
@@ -24,9 +25,19 @@ const INITIAL: ActionResult<{ studentId: string }> = { success: false, error: { 
 export default function TLSpecialSessionDetail(props: Props) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
+  const [endError, setEndError] = useState<string | null>(null)
   const isTrial  = props.type === 'trial'
   const session  = isTrial ? props.trialSession! : props.makeupSession!
   const isActive = session.status === 'ongoing' || session.status === 'scheduled'
+  const isOngoing = session.status === 'ongoing'
+
+  // Attendance map lives here so handleEnd can read it before ending
+  const [attendanceMap, setAttendanceMap] = useState<Record<string, string>>(() => {
+    if (!isTrial) return {}
+    return Object.fromEntries(
+      props.trialSession!.students.map(s => [s.id, s.attendance_status ?? 'absent'])
+    )
+  })
 
   const badgeColor = isTrial ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700'
   const badgeLabel = isTrial ? '🟣 Trial Session' : '🟠 Makeup Session'
@@ -35,9 +46,16 @@ export default function TLSpecialSessionDetail(props: Props) {
     startTransition(async () => { await startSpecialSession(session.id); router.refresh() })
   }
   function handleEnd() {
+    setEndError(null)
     startTransition(async () => {
-      if (isTrial) await endTrialSession(session.id)
-      else await endMakeupSession(session.id)
+      const result = isTrial
+        ? await endTrialSessionWithAttendance(session.id, attendanceMap)
+        : await endMakeupSession(session.id)
+
+      if (!result.success) {
+        setEndError(result.error?.message ?? 'Failed to end session. Please try again.')
+        return
+      }
       router.refresh()
     })
   }
@@ -78,6 +96,14 @@ export default function TLSpecialSessionDetail(props: Props) {
         </div>
       </div>
 
+      {/* End session error feedback */}
+      {endError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-[13px] font-semibold text-red-700">Failed to end session</p>
+          <p className="text-[12px] text-red-600 mt-0.5">{endError}</p>
+        </div>
+      )}
+
       {session.notes && (
         <div className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-3">
           <p className="text-[11px] font-semibold text-[#64748B] mb-1">Notes</p>
@@ -87,7 +113,14 @@ export default function TLSpecialSessionDetail(props: Props) {
 
       {/* Student panels */}
       {isTrial ? (
-        <TrialStudentsPanel session={props.trialSession!} leads={props.leads} isActive={isActive} />
+        <TrialStudentsPanel
+          session={props.trialSession!}
+          leads={props.leads}
+          isActive={isActive}
+          isOngoing={isOngoing}
+          attendanceMap={attendanceMap}
+          onAttendanceChange={setAttendanceMap}
+        />
       ) : (
         <MakeupStudentsPanel session={props.makeupSession!} isActive={isActive} />
       )}
@@ -98,14 +131,30 @@ export default function TLSpecialSessionDetail(props: Props) {
 // ── Trial Students Panel ──────────────────────────────────────────────────────
 
 function TrialStudentsPanel({
-  session, leads, isActive,
+  session, leads, isActive, isOngoing, attendanceMap, onAttendanceChange,
 }: {
-  session: TrialSession
-  leads: { id: string; child_name: string; parent_name: string | null; phone: string | null; status: string }[]
-  isActive: boolean
+  session:            TrialSession
+  leads:              { id: string; child_name: string; parent_name: string | null; phone: string | null; status: string }[]
+  isActive:           boolean
+  isOngoing:          boolean
+  attendanceMap:      Record<string, string>
+  onAttendanceChange: React.Dispatch<React.SetStateAction<Record<string, string>>>
 }) {
   const router = useRouter()
   const [addMode, setAddMode] = useState<'none' | 'lead' | 'new'>('none')
+  const [savePending, startSaveTransition] = useTransition()
+
+  function handleSaveAttendance() {
+    const fd = new FormData()
+    fd.set('schedule_id', session.id)
+    for (const [sid, status] of Object.entries(attendanceMap)) {
+      fd.set(`status_${sid}`, status)
+    }
+    startSaveTransition(async () => {
+      await saveTrialAttendance(null, fd)
+      router.refresh()
+    })
+  }
 
   const [fromLeadState, fromLeadAction, fromLeadPending] = useActionState(
     async (_prev: ActionResult<{ studentId: string }>, formData: FormData) => {
@@ -208,23 +257,40 @@ function TrialStudentsPanel({
       ) : (
         <div className="divide-y divide-[#F1F5F9]">
           {session.students.map(s => (
-            <div key={s.id} className="flex items-center justify-between px-4 py-3">
-              <div>
-                <p className="text-[13px] font-semibold text-[#0B1F3A]">{s.student_name}</p>
+            <div key={s.id} className="flex items-center justify-between px-4 py-3 gap-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-semibold text-[#0B1F3A] truncate">{s.student_name}</p>
                 <p className="text-[11px] text-[#64748B]">
                   {s.parent_phone ? `Parent: ${s.parent_phone}` : ''}
                   {s.lead_id ? ' · Linked to lead' : ' · Ad-hoc'}
                 </p>
               </div>
-              {s.attendance_status && (
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                  s.attendance_status === 'present' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                }`}>
-                  {s.attendance_status === 'present' ? 'Present' : 'Absent'}
-                </span>
-              )}
+              <select
+                value={attendanceMap[s.id] ?? 'absent'}
+                onChange={e => onAttendanceChange(prev => ({ ...prev, [s.id]: e.target.value }))}
+                disabled={!isOngoing}
+                className="rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#A855F7] disabled:opacity-60 disabled:bg-[#F8FAFC] shrink-0"
+              >
+                <option value="present">Present</option>
+                <option value="absent">Absent</option>
+              </select>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Save attendance (intermediate save while session is live) */}
+      {isOngoing && session.students.length > 0 && (
+        <div className="border-t border-[#E2E8F0] px-4 py-3 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleSaveAttendance}
+            disabled={savePending}
+            className="rounded-lg bg-[#A855F7] px-4 py-2 text-[13px] font-semibold text-white disabled:opacity-60 hover:bg-[#9333EA]"
+          >
+            {savePending ? 'Saving…' : 'Save Attendance'}
+          </button>
+          <p className="text-[11px] text-[#64748B]">Attendance is also saved automatically when you end the session.</p>
         </div>
       )}
     </div>

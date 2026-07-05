@@ -12,8 +12,9 @@ vi.mock('@/lib/supabase/service', () => ({
 }))
 
 vi.mock('@/modules/rbac/guards', () => ({
-  requirePermission: vi.fn().mockResolvedValue({ id: 'user-1', role: 'instructor' }),
-  requireAuth:       vi.fn().mockResolvedValue({ id: 'user-2' }),
+  requirePermission:    vi.fn().mockResolvedValue({ id: 'user-1', role: 'instructor' }),
+  requireAuth:          vi.fn().mockResolvedValue({ id: 'user-2' }),
+  isBranchAccessible:   vi.fn().mockReturnValue(true),
 }))
 
 vi.mock('@/modules/progress/resolve', () => ({
@@ -168,6 +169,7 @@ describe('recordAttendanceSession', () => {
     fd.set('session_date',     '2026-05-01T10:00:00Z')
     fd.set('duration_minutes', '60')
     fd.set('delivery',         'offline')
+    fd.set('topic',            'Test topic')
     fd.append('student_ids[]', 'sid1')
     fd.set('status_sid1',      'present')
     return fd

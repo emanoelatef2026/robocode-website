@@ -303,13 +303,20 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
   const net             = Math.max(0, (parseFloat(state.totalAmount) || 0) - (parseFloat(state.discountAmount) || 0))
   const initPay         = parseFloat(state.initPayAmount) || 0
   const remaining       = Math.max(0, net - initPay)
+  const MAX_INSTALLMENTS = 36
   const instCount       = Math.max(0, parseInt(state.installmentCount) || 0)
   const perInstAmt      = instCount > 0 && net > 0 ? Math.floor(net / instCount) : 0
   const instAmtTooSmall = instCount > 0 && net > 0 && perInstAmt < 1
+  const instCountTooHigh = instCount > MAX_INSTALLMENTS
+  const instCountInvalid = instAmtTooSmall || instCountTooHigh
 
   async function handleSubmit() {
     if (!state.student) { setError('Please select a student'); return }
     if (!state.totalAmount || net <= 0)  { setError('Please enter a valid total amount'); return }
+    if (instCountTooHigh) {
+      setError(`Installment count too high: ${instCount}. Max ${MAX_INSTALLMENTS} installments allowed.`)
+      return
+    }
     if (instAmtTooSmall) {
       setError(
         `Installment amount too small: EGP ${net} ÷ ${instCount} = EGP ${perInstAmt}. ` +
@@ -1111,9 +1118,14 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
             {/* Installments */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#64748B]">Installments (0 = no plan)</label>
-                <input type="number" min="0" max="24" value={state.installmentCount}
-                  onChange={e => setState(prev => ({ ...prev, installmentCount: e.target.value }))}
+                <label className="mb-1.5 block text-xs font-medium text-[#64748B]">Installments (0 = no plan, max 36)</label>
+                <input type="number" min="0" max="36" value={state.installmentCount}
+                  onChange={e => {
+                    const raw = e.target.value
+                    const n = parseInt(raw)
+                    const clamped = raw === '' ? '' : String(Math.min(Math.max(n || 0, 0), 36))
+                    setState(prev => ({ ...prev, installmentCount: clamped }))
+                  }}
                   className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none" />
               </div>
               <div>
@@ -1174,7 +1186,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                     <span className="font-medium text-[#0B1F3A]">{state.enrolledSessions} sessions</span>
                   </div>
                 )}
-                {instCount > 0 && !instAmtTooSmall && (
+                {instCount > 0 && !instCountInvalid && (
                   <div className="flex justify-between">
                     <span className="text-[#94A3B8]">Installment Plan</span>
                     <span className="font-medium text-[#0B1F3A]">
@@ -1185,7 +1197,13 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                     </span>
                   </div>
                 )}
-                {instAmtTooSmall && (
+                {instCountTooHigh && (
+                  <div className="flex justify-between text-[#EF4444]">
+                    <span>Too many installments</span>
+                    <span>Max {MAX_INSTALLMENTS} allowed</span>
+                  </div>
+                )}
+                {instAmtTooSmall && !instCountTooHigh && (
                   <div className="flex justify-between text-[#EF4444]">
                     <span>Installments too many</span>
                     <span>Each ≈ EGP {perInstAmt} — reduce count</span>
