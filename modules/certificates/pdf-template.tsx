@@ -5,6 +5,7 @@ import {
   StyleSheet,
 } from '@react-pdf/renderer'
 import type { CertificateDetail } from './types'
+import { formatDateLong } from '@/lib/format-date'
 
 // ─── Fonts (Google Fonts gstatic TTF — compatible with react-pdf/fontkit) ────
 Font.register({
@@ -349,11 +350,6 @@ const s = StyleSheet.create({
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-}
-
 // ─── SVG subcomponents ────────────────────────────────────────────────────────
 
 function CornerBase({ primaryDot, secondaryDot }: { primaryDot: string; secondaryDot: string }) {
@@ -613,7 +609,7 @@ export function CertificatePDF({ certificate, qrDataUrl }: Props) {
   // certificate.title is the immutable course-name snapshot stored at issuance.
   // Falls back to course_title join for legacy records where title may differ.
   const courseName  = certificate.title || certificate.course_title || '—'
-  const dateStr     = formatDate(certificate.issued_at)
+  const dateStr     = formatDateLong(certificate.issued_at)
   const hours       = (certificate as any).course_hours as number | null | undefined
   const projects    = Array.isArray(certificate.projects) ? certificate.projects : []
 

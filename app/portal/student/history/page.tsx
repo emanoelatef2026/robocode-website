@@ -4,6 +4,7 @@ import {
   getStudentAttendanceHistory,
 } from '@/modules/student-portal/queries'
 import Link from 'next/link'
+import { formatDateWithWeekday } from '@/lib/format-date'
 
 const STATUS_CONFIG: Record<string, { label: string; emoji: string; tagBg: string; tagFg: string; iconBg: string }> = {
   present: { label: 'Present', emoji: '✓',  tagBg: '#E7F8EE', tagFg: '#15803D', iconBg: '#E7F8EE' },
@@ -11,10 +12,6 @@ const STATUS_CONFIG: Record<string, { label: string; emoji: string; tagBg: strin
   late:    { label: 'Late',    emoji: '⏰', tagBg: '#FFF7E6', tagFg: '#B45309', iconBg: '#FEF3C7' },
   excused: { label: 'Excused', emoji: '📋', tagBg: '#E6F6FE', tagFg: '#0369A1', iconBg: '#E6F6FE' },
   makeup:  { label: 'Makeup',  emoji: '🔁', tagBg: '#F3E8FF', tagFg: '#7E22CE', iconBg: '#F3E8FF' },
-}
-
-function formatDate(d: string) {
-  return new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 export default async function StudentSessionsPage() {
@@ -114,7 +111,7 @@ export default async function StudentSessionsPage() {
                       {r.topic ?? <span className="italic text-[#94A3B8]">Session #{r.session_num}</span>}
                     </p>
                     <p className="mt-0.5 text-[11px] text-[#64748B]">
-                      #{r.session_num} · {formatDate(r.date)}
+                      #{r.session_num} · {formatDateWithWeekday(r.date)}
                     </p>
                   </div>
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { formatDateUS } from "@/lib/format-date";
 
 export const dynamic = "force-dynamic";
 
@@ -31,11 +32,6 @@ interface Post {
   category:       string;
   author:         string;
   published_at:   string | null;
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
 // ── Blog card ─────────────────────────────────────────────────────────────────
@@ -71,7 +67,7 @@ function PostCard({ post, featured = false }: { post: Post; featured?: boolean }
       {/* Content */}
       <div className="flex flex-1 flex-col p-5">
         <p className="mb-1.5 text-[11px] font-semibold text-[#94A3B8]">
-          {formatDate(post.published_at)} · {post.author}
+          {formatDateUS(post.published_at)} · {post.author}
         </p>
         <h2 className={`font-extrabold leading-snug text-[#0F172A] group-hover:text-[#0B1F3A] ${featured ? "text-xl" : "text-[15px]"}`}>
           {post.title}
