@@ -19,6 +19,7 @@ import {
   recordActivity, addPaymentPromise, createReversal,
 } from '@/modules/finance/actions'
 import { compressImage } from '@/lib/uploads/compressImage'
+import { buildWhatsAppUrl } from '@/lib/contact-utils'
 import EnrollmentWizard, { type StudentResult, type PreselectedPackage } from './EnrollmentWizard'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -515,7 +516,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
             <div className="flex shrink-0 items-center gap-1.5">
               {parentPhone && (
                 <>
-                  <a href={`https://wa.me/${parentPhone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"
+                  <a href={buildWhatsAppUrl(parentPhone, null) ?? '#'} target="_blank" rel="noopener noreferrer"
                     onClick={() => handleLogActivity('WHATSAPP')}
                     title="WhatsApp (logs activity)"
                     className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E7F8EE] text-[#15803D] hover:bg-[#E7F8EE]">

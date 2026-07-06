@@ -9,6 +9,7 @@ import {
 } from '@/modules/finance/types'
 import StudentOpsDrawer from './StudentOpsDrawer'
 import EnrollmentWizard from './EnrollmentWizard'
+import { buildWhatsAppUrl } from '@/lib/contact-utils'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
@@ -434,7 +435,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                             {row.parent_phone_1 && (
                               <>
                                 <a
-                                  href={`https://wa.me/${row.parent_phone_1.replace(/\D/g, '')}`}
+                                  href={buildWhatsAppUrl(row.parent_phone_1, null) ?? '#'}
                                   target="_blank" rel="noopener noreferrer"
                                   title="WhatsApp parent"
                                   className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#10B981] hover:bg-[#E7F8EE]"
@@ -549,7 +550,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                     <div className="mt-3 flex items-center gap-2 border-t border-[#E2E8F0] pt-2">
                       {row.parent_phone_1 && (
                         <>
-                          <a href={`https://wa.me/${row.parent_phone_1.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+                          <a href={buildWhatsAppUrl(row.parent_phone_1, null) ?? '#'} target="_blank" rel="noopener noreferrer"
                             className="rounded-lg bg-[#E7F8EE] px-2.5 py-1 text-xs font-medium text-[#15803D]">
                             WhatsApp
                           </a>

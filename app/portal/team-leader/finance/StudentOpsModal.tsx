@@ -9,6 +9,7 @@ import {
   INSTALLMENT_STATUS_COLORS,
 } from '@/modules/finance/types'
 import { addPayment } from '@/modules/finance/actions'
+import { buildWhatsAppUrl } from '@/lib/contact-utils'
 
 type Tab = 'overview' | 'payments' | 'attendance' | 'installments' | 'followup'
 
@@ -144,7 +145,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
           <div className="flex items-center gap-2">
             {student.parent_phone_1 && (
               <a
-                href={`https://wa.me/${student.parent_phone_1.replace(/\D/g, '')}`}
+                href={buildWhatsAppUrl(student.parent_phone_1, null) ?? '#'}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 rounded-lg bg-[#E7F8EE] px-3 py-1.5 text-xs font-medium text-[#15803D] hover:bg-[#E7F8EE]"
@@ -531,7 +532,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                 {student.parent_phone_1 && (
                   <>
                     <a
-                      href={`https://wa.me/${student.parent_phone_1.replace(/\D/g, '')}`}
+                      href={buildWhatsAppUrl(student.parent_phone_1, null) ?? '#'}
                       target="_blank" rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 rounded-lg bg-[#E7F8EE] px-3 py-2 text-sm font-medium text-[#15803D] hover:bg-[#E7F8EE]"
                     >

@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react'
 import type { ParentOperationalRow, LinkedChild } from '@/modules/parents/operational'
 import { resetParentPassword } from '@/modules/parents/modal-actions'
+import { buildWhatsAppUrl } from '@/lib/contact-utils'
 
 interface Props {
   parent:  ParentOperationalRow
@@ -120,7 +121,7 @@ function OverviewTab({ p, hCfg }: { p: ParentOperationalRow; hCfg: { label: stri
           {p.phone ? (
             <div className="flex items-center gap-2">
               <a href={`tel:${p.phone}`} className="text-[#0B1F3A] hover:text-[#FF8A1F]">{p.phone}</a>
-              <a href={`https://wa.me/${p.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+              <a href={buildWhatsAppUrl(p.phone, null) ?? '#'} target="_blank" rel="noopener noreferrer"
                 className="rounded border border-[#25D366]/30 px-1.5 py-0.5 text-[10px] font-medium text-[#25D366]">
                 WA
               </a>
@@ -439,11 +440,6 @@ function AttendanceTab({ p }: { p: ParentOperationalRow }) {
 
 // ── Tab: Communication ─────────────────────────────────────────────────────────
 
-function waLink(phone: string, msg: string) {
-  const num = phone.replace(/\D/g, '')
-  return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`
-}
-
 function CommunicationTab({ p }: { p: ParentOperationalRow }) {
   const firstName = p.first_name || p.parent_name.split(' ')[0] || 'there'
 
@@ -474,7 +470,7 @@ function CommunicationTab({ p }: { p: ParentOperationalRow }) {
         {p.phone ? (
           <div className="flex gap-2">
             <a
-              href={`https://wa.me/${p.phone.replace(/\D/g, '')}`}
+              href={buildWhatsAppUrl(p.phone, null) ?? '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-[#25D366]/40 bg-[#25D366]/5 py-2.5 text-sm font-medium text-[#25D366] hover:bg-[#25D366]/10"
@@ -507,7 +503,7 @@ function CommunicationTab({ p }: { p: ParentOperationalRow }) {
           {templates.map(t => (
             <a
               key={t.label}
-              href={waLink(p.phone!, t.msg)}
+              href={`${buildWhatsAppUrl(p.phone, null)}?text=${encodeURIComponent(t.msg)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-between w-full rounded-xl border border-[#25D366]/30 bg-[#25D366]/5 px-3 py-2.5 hover:bg-[#25D366]/10"

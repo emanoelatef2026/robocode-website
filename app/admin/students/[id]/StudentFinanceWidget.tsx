@@ -8,6 +8,7 @@ import {
   type StudentFinanceDetail, type PaymentMethod, type ActivityType,
 } from '@/modules/finance/types'
 import Link from 'next/link'
+import { normalizeEgyptPhone } from '@/lib/contact-utils'
 
 type WidgetTab = 'summary' | 'installments' | 'payment' | 'notes' | 'activities' | 'promises' | 'discount'
 
@@ -634,8 +635,8 @@ function QuickActionsBar({ detail, accountId, setTab, onRefresh }: {
   const [pending, start] = useTransition()
 
   function buildWa(phone: string | null) {
-    if (!phone) return null
-    const clean = phone.replace(/\D/g, '').replace(/^0/, '20')
+    const clean = normalizeEgyptPhone(phone)
+    if (!clean) return null
     const msg = encodeURIComponent(
       `عزيزي ولي الأمر، نود تذكيركم بأن الدفعة المستحقة من ${student.name} بمبلغ EGP ${fmt(account.remaining_amount)} لم يتم سدادها.${account.next_due_date ? ` تاريخ الاستحقاق: ${dateFmt(account.next_due_date)}` : ''} يرجى التواصل معنا. شكراً 🙏 Robocode Academy`
     )

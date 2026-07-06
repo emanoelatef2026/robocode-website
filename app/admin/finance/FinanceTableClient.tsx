@@ -12,6 +12,7 @@ import {
   type FinanceListItem, type StudentFinanceDetail,
   type PaymentMethod, type ActivityType,
 } from '@/modules/finance/types'
+import { normalizeEgyptPhone } from '@/lib/contact-utils'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -892,8 +893,8 @@ function QuickActionsFooter({
   const { student, account }    = detail
 
   function buildWaLink(phone: string | null) {
-    if (!phone) return null
-    const clean = phone.replace(/\D/g, '').replace(/^0/, '20')
+    const clean = normalizeEgyptPhone(phone)
+    if (!clean) return null
     const msg = encodeURIComponent(
       `عزيزي ولي الأمر،\nنود تذكيركم بأن الدفعة المستحقة من ${student.name} بمبلغ EGP ${fmt(account.remaining_amount)} لم يتم سدادها.${account.next_due_date ? `\nتاريخ الاستحقاق: ${dateFmt(account.next_due_date)}` : ''}\nيرجى التواصل معنا في أقرب وقت. شكراً 🙏\nRobocode Academy`
     )

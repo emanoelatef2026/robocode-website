@@ -6,6 +6,7 @@ import type { ParentOperationalRow, StudentPickerOption } from '@/modules/parent
 import ParentDetailDrawer from './ParentDetailDrawer'
 import ParentFormModal    from './ParentFormModal'
 import { useTopbarAction } from '@/components/admin/TopbarActionContext'
+import { buildWhatsAppUrl } from '@/lib/contact-utils'
 
 // Normalize Egyptian phone formats so search matches any variant
 function normalizePhone(p: string): string {
@@ -328,7 +329,7 @@ export default function ParentsClient({
                       {row.phone && (
                         <>
                           <a
-                            href={`https://wa.me/${row.phone.replace(/\D/g, '')}`}
+                            href={buildWhatsAppUrl(row.phone, null) ?? '#'}
                             target="_blank" rel="noopener noreferrer"
                             className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#25D366] hover:bg-[#E7F8EE]"
                           >
@@ -398,7 +399,7 @@ export default function ParentsClient({
                             <div className="flex items-center gap-1.5">
                               <a href={`tel:${row.phone}`} className="text-sm text-[#0B1F3A] hover:text-[#FF8A1F]">{row.phone}</a>
                               <a
-                                href={`https://wa.me/${row.phone.replace(/\D/g, '')}`}
+                                href={buildWhatsAppUrl(row.phone, null) ?? '#'}
                                 target="_blank" rel="noopener noreferrer"
                                 className="rounded border border-[#25D366]/30 px-1.5 py-0.5 text-[10px] font-medium text-[#25D366] hover:bg-[#E7F8EE]"
                               >

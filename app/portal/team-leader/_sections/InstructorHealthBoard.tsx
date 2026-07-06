@@ -2,16 +2,13 @@
 import { getInstructorOpsData, type InstructorOpsRow } from '@/modules/tl-dashboard/queries'
 import { InstructorScoreBadge, ScoreBar } from '../_components/RiskBadge'
 import DashCard, { DashCardEmpty } from '../_components/DashCard'
+import { normalizeEgyptPhone } from '@/lib/contact-utils'
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function buildInstructorWa(phone: string | null | undefined, name: string): string | null {
-  if (!phone) return null
-  const digits = phone.replace(/\D/g, '')
-  const normalized = digits.startsWith('20') && digits.length === 12 ? digits
-    : digits.length === 11 && /^0(10|11|12|15)/.test(digits) ? `2${digits}`
-    : digits.length === 10 && /^(10|11|12|15)/.test(digits)  ? `20${digits}`
-    : digits
+  const normalized = normalizeEgyptPhone(phone)
+  if (!normalized) return null
   const msg = encodeURIComponent(`Hi ${name}, this is a message from Robocode regarding your teaching.`)
   return `https://wa.me/${normalized}?text=${msg}`
 }

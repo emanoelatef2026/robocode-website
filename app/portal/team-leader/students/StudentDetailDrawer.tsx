@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useEffect, useState } from 'react'
+import { buildWhatsAppUrl } from '@/lib/contact-utils'
 import type { StudentOperationalRow } from '@/modules/students/operational'
 import { getStudentGroupHistory, type GroupHistoryEntry } from '@/modules/students/group-history'
 import {
@@ -435,7 +436,7 @@ function ContactsTab({ s }: { s: StudentOperationalRow }) {
                   <a href={`tel:${c.phone1}`} className="text-[12px] text-[#0B1F3A] hover:text-[#FF8A1F]">{c.phone1}</a>
                   {c.whatsapp_preferred && (
                     <a
-                      href={`https://wa.me/${c.phone1.replace(/\D/g,'')}`}
+                      href={buildWhatsAppUrl(c.phone1, null) ?? '#'}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[10px] text-[#25D366] border border-[#25D366]/30 rounded px-1.5 py-0.5"

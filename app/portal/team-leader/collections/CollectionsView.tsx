@@ -6,6 +6,7 @@ import type { StudentOperationsRow } from '@/modules/finance/types'
 import { RISK_LEVEL_CLASSES, RISK_FLAG_LABELS, STATUS_COLORS, STATUS_LABELS } from '@/modules/finance/types'
 import { quickPayment } from '@/modules/finance/actions'
 import StudentOpsDrawer from '../finance/StudentOpsDrawer'
+import { buildWhatsAppUrl } from '@/lib/contact-utils'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
@@ -167,7 +168,7 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
         {parentPhone && (
           <>
             <a
-              href={`https://wa.me/${parentPhone.replace(/\D/g, '')}`}
+              href={buildWhatsAppUrl(parentPhone, null) ?? '#'}
               target="_blank" rel="noopener noreferrer"
               className="rounded-lg bg-[#E7F8EE] px-2.5 py-1 text-[11px] font-medium text-[#15803D] hover:bg-[#E7F8EE]"
             >

@@ -11,6 +11,7 @@ import {
 } from '@/modules/tl-dashboard/dashboard-v2-queries'
 import DashCard, { DashCardEmpty, DashRow } from '../_components/DashCard'
 import WaCallButtons from '../_components/WaCallButtons'
+import { normalizeEgyptPhone } from '@/lib/contact-utils'
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -61,7 +62,7 @@ function SessionCard({ session }: { session: SessionStartingSoon }) {
           </Link>
           {session.instructor_phone && (
             <a
-              href={`https://wa.me/${session.instructor_phone.replace(/\D/g, '')}${waMsg ? `?text=${waMsg}` : ''}`}
+              href={`https://wa.me/${normalizeEgyptPhone(session.instructor_phone)}${waMsg ? `?text=${waMsg}` : ''}`}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] px-2.5 py-1 text-[10px] font-semibold text-[#15803D] hover:bg-[#E7F8EE]"

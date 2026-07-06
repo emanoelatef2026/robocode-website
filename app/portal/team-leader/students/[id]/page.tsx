@@ -4,6 +4,7 @@ import { notFound }                             from 'next/navigation'
 import Link                                     from 'next/link'
 import { evaluateActions }                      from '@/modules/actions-engine'
 import { getStudentTrialHistory }               from '@/modules/special-sessions/queries'
+import { buildWhatsAppUrl }                     from '@/lib/contact-utils'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
@@ -177,7 +178,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
                         <dd className="flex items-center gap-2">
                           <a href={`tel:${c.phone1}`} className="text-[#0B1F3A]">{c.phone1}</a>
                           {c.whatsapp_preferred && (
-                            <a href={`https://wa.me/${c.phone1.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#25D366] border border-[#25D366]/30 rounded px-1.5 py-0.5">WA</a>
+                            <a href={buildWhatsAppUrl(c.phone1, null) ?? '#'} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#25D366] border border-[#25D366]/30 rounded px-1.5 py-0.5">WA</a>
                           )}
                         </dd>
                       </div>

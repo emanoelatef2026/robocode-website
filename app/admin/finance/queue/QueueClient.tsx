@@ -2,6 +2,7 @@
 import { useTransition, useState } from 'react'
 import { recordActivity, addPaymentPromise } from '@/modules/finance/actions'
 import type { CollectionQueueItem } from '@/modules/finance/types'
+import { normalizeEgyptPhone } from '@/lib/contact-utils'
 
 function fmt(n: number) {
   return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
@@ -22,8 +23,8 @@ export default function QueueClient({ item, mode }: Props) {
 
   function buildWaLink() {
     const phone = item.parent_phone_1 ?? item.parent_phone_2
-    if (!phone) return null
-    const clean = phone.replace(/\D/g, '').replace(/^0/, '20')
+    const clean = normalizeEgyptPhone(phone)
+    if (!clean) return null
     const msg = encodeURIComponent(
       `عزيزي ولي الأمر،\nنود تذكيركم بأن الدفعة المستحقة من ${item.student_name} بمبلغ EGP ${fmt(item.remaining_amount)} لم يتم سدادها.${item.next_due_date ? `\nتاريخ الاستحقاق: ${dateFmt(item.next_due_date)}` : item.days_overdue > 0 ? `\nمتأخرة منذ ${item.days_overdue} يوم.` : ''}\nيرجى التواصل معنا في أقرب وقت. شكراً 🙏 Robocode Academy`
     )
