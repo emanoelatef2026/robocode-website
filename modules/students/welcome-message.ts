@@ -155,11 +155,10 @@ export async function sendWelcomeWhatsAppAction(
 
   const message = buildWelcomeMessage({
     student_name:      info.student_name,
-    course_name:       info.course_name ?? 'General Sessions',
-    parent_email:       parentCreds.email!,
-    parent_password:    parentCreds.portal_password!,
-    student_email:      studentCreds.email!,
-    student_password:   studentCreds.portal_password!,
+    parent_email:      parentCreds.email!,
+    parent_password:   parentCreds.portal_password!,
+    student_email:     studentCreds.email!,
+    student_password:  studentCreds.portal_password!,
   })
 
   const url = `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(message)}`
