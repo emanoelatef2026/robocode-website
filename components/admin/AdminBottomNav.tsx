@@ -128,6 +128,11 @@ const I = {
       <path fillRule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
     </svg>
   ),
+  portfolio: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M5.25 3A2.25 2.25 0 0 0 3 5.25v13.5A2.25 2.25 0 0 0 5.25 21h9a2.25 2.25 0 0 0 2.25-2.25V9.621a2.25 2.25 0 0 0-.659-1.591l-4.121-4.121A2.25 2.25 0 0 0 10.129 3H5.25Zm4.5 6.75a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75V10.5a.75.75 0 0 1 .75-.75H9.75Zm-2.25 3.75a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5h-4.5Z" clipRule="evenodd" />
+    </svg>
+  ),
 }
 
 // ── Config ─────────────────────────────────────────────────────────────────────
@@ -155,6 +160,7 @@ const MORE_ITEMS: MoreItem[] = [
   { label: "Staff",        href: "/admin/staff",          icon: I.staff,        superAdminOnly: true              },
   { label: "Courses",      href: "/admin/courses",        icon: I.courses,      permission: "manage_courses"      },
   { label: "Certificates", href: "/admin/certificates",   icon: I.certificates, permission: "manage_certificates" },
+  { label: "Portfolio",    href: "/admin/portfolio",      icon: I.portfolio,    permission: "manage_portfolio"    },
   { label: "Attendance",   href: "/admin/attendance",     icon: I.attendance,   permission: "manage_attendance"   },
   { label: "Assignments",  href: "/admin/assignments",    icon: I.assignments                                     },
   { label: "Payroll",      href: "/admin/payroll",        icon: I.payroll,      permission: "manage_financials"   },

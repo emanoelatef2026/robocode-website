@@ -88,6 +88,21 @@ const I = {
       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
     </svg>
   ),
+  watchlist: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.94 6.94a.75.75 0 011.06 0l1.72 1.72a.75.75 0 010 1.06l-1.72 1.72a.75.75 0 11-1.06-1.06L9.94 9.5 8.94 8.5a.75.75 0 010-1.06z" clipRule="evenodd" />
+    </svg>
+  ),
+  performance: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M15.98 1.804a1 1 0 00-1.96 0l-.24 1.192a1 1 0 01-.784.785l-1.192.238a1 1 0 000 1.962l1.192.238a1 1 0 01.785.785l.238 1.192a1 1 0 001.962 0l.238-1.192a1 1 0 01.785-.785l1.192-.238a1 1 0 000-1.962l-1.192-.238a1 1 0 01-.785-.785l-.238-1.192zM6 6a1 1 0 011 1v10a1 1 0 11-2 0V7a1 1 0 011-1zm4 3a1 1 0 011 1v7a1 1 0 11-2 0v-7a1 1 0 011-1zm4-2a1 1 0 011 1v9a1 1 0 11-2 0V8a1 1 0 011-1z" clipRule="evenodd" />
+    </svg>
+  ),
+  portfolio: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm3 8a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm-2 3a1 1 0 100 2h6a1 1 0 100-2H7z" />
+    </svg>
+  ),
 }
 
 // ── Nav sections ──────────────────────────────────────────────────────────────
@@ -105,6 +120,7 @@ const SECTIONS: PortalNavSection[] = [
       { label: "Students",    href: "/portal/team-leader/students",    icon: I.students    },
       { label: "Parents",     href: "/portal/team-leader/parents",     icon: I.parents     },
       { label: "Instructors", href: "/portal/team-leader/instructors", icon: I.instructors },
+      { label: "Instructor Performance", href: "/portal/team-leader/instructor-performance", icon: I.performance },
     ],
   },
   {
@@ -113,13 +129,15 @@ const SECTIONS: PortalNavSection[] = [
       { label: "Groups",       href: "/portal/team-leader/groups",       icon: I.groups       },
       { label: "Courses",      href: "/portal/team-leader/courses",      icon: I.courses      },
       { label: "Certificates", href: "/portal/team-leader/certificates", icon: I.certificates },
+      { label: "Portfolio",    href: "/portal/team-leader/portfolio",    icon: I.portfolio    },
     ],
   },
   {
     title: "Finance",
     items: [
-      { label: "Payroll",     href: "/portal/team-leader/payroll",  icon: I.payroll     },
-      { label: "Collections", href: "/portal/team-leader/finance",  icon: I.collections },
+      { label: "Payroll",     href: "/portal/team-leader/payroll",     icon: I.payroll     },
+      { label: "Collections", href: "/portal/team-leader/finance",     icon: I.collections },
+      { label: "Watchlist",   href: "/portal/team-leader/collections", icon: I.watchlist   },
     ],
   },
   {

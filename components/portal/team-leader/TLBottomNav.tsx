@@ -73,6 +73,21 @@ const I = {
       <path fillRule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
     </svg>
   ),
+  watchlist: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178ZM15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" clipRule="evenodd" />
+    </svg>
+  ),
+  performance: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M3 13.125c0-1.036.84-1.875 1.875-1.875h2.25c1.036 0 1.875.84 1.875 1.875v6.75C9 20.91 8.16 21.75 7.125 21.75h-2.25C3.84 21.75 3 20.91 3 19.875v-6.75ZM9.75 8.625c0-1.036.84-1.875 1.875-1.875h2.25c1.035 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-2.25c-1.036 0-1.875-.84-1.875-1.875V8.625ZM16.5 4.125c0-1.036.84-1.875 1.875-1.875h2.25C21.66 2.25 22.5 3.09 22.5 4.125v15.75c0 1.035-.84 1.875-1.875 1.875h-2.25c-1.036 0-1.875-.84-1.875-1.875V4.125Z" clipRule="evenodd" />
+    </svg>
+  ),
+  portfolio: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M5.25 3A2.25 2.25 0 0 0 3 5.25v13.5A2.25 2.25 0 0 0 5.25 21h9a2.25 2.25 0 0 0 2.25-2.25V9.621a2.25 2.25 0 0 0-.659-1.591l-4.121-4.121A2.25 2.25 0 0 0 10.129 3H5.25Zm4.5 6.75a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75V10.5a.75.75 0 0 1 .75-.75H9.75Zm-2.25 3.75a.75.75 0 0 0 0 1.5h4.5a.75.75 0 0 0 0-1.5h-4.5Z" clipRule="evenodd" />
+    </svg>
+  ),
 }
 
 // ── Config ─────────────────────────────────────────────────────────────────────
@@ -89,9 +104,12 @@ const MORE_ITEMS = [
   { label: "Parents",      href: "/portal/team-leader/parents",                      icon: I.parents,      matchPatterns: [] },
   { label: "Courses",      href: "/portal/team-leader/courses",                      icon: I.courses,      matchPatterns: [] },
   { label: "Certificates", href: "/portal/team-leader/certificates",                 icon: I.certificates, matchPatterns: [] },
+  { label: "Portfolio",    href: "/portal/team-leader/portfolio",                    icon: I.portfolio,    matchPatterns: [] },
   { label: "Satisfaction", href: "/portal/team-leader/parent-feedback?tab=reviews",  icon: I.satisfaction, matchPatterns: ["/portal/team-leader/parent-feedback", "/portal/team-leader/parent-satisfaction"] },
   { label: "Analytics",    href: "/portal/team-leader/analytics",                    icon: I.analytics,    matchPatterns: [] },
+  { label: "Instructor Performance", href: "/portal/team-leader/instructor-performance", icon: I.performance, matchPatterns: [] },
   { label: "Payroll",     href: "/portal/team-leader/payroll",                       icon: I.payroll,      matchPatterns: ["/portal/team-leader/instructor-payroll"] },
+  { label: "Watchlist",   href: "/portal/team-leader/collections",                   icon: I.watchlist,    matchPatterns: [] },
 ]
 
 // ── Component ──────────────────────────────────────────────────────────────────
