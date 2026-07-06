@@ -221,7 +221,6 @@ export async function updateInstructor(_prev: unknown, formData: FormData): Prom
   revalidatePath('/admin/instructors')
   revalidatePath(`/admin/instructors/${id}`)
   revalidatePath('/portal/team-leader/instructors')
-  revalidatePath(`/portal/team-leader/instructors/${id}`)
   redirect(returnTo ?? '/admin/instructors')
 }
 

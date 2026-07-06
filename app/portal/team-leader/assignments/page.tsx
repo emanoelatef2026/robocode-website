@@ -313,7 +313,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                   {by_instructor.map(i => (
                     <tr key={i.instructor_id} className="ds-table-row">
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">
-                        <Link href={`/portal/team-leader/instructors/${i.instructor_id}`} className="hover:text-[#FF8A1F]">{i.instructor_name}</Link>
+                        <Link href="/portal/team-leader/instructors" className="hover:text-[#FF8A1F]">{i.instructor_name}</Link>
                       </td>
                       <td className="px-4 py-3 text-right text-[#64748B]">{i.assignment_count}</td>
                       <td className="px-4 py-3">{pctBar(i.avg_completion_pct)}</td>

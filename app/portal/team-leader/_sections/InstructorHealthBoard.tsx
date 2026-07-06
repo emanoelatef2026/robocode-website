@@ -83,7 +83,7 @@ function InstructorRow({ instr }: { instr: InstructorOpsRow }) {
       {/* Action bar */}
       <div className="flex items-center gap-2 border-t border-[#F1F5F9] px-4 py-2">
         <Link
-          href={`/portal/team-leader/instructors/${instr.instructor_id}`}
+          href="/portal/team-leader/instructors"
           className="text-[11px] font-medium text-[#FF8A1F] hover:underline"
         >
           View profile →

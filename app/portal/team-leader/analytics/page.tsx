@@ -592,7 +592,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                   {instructorData.map(i => (
                     <tr key={i.instructor_id} className="ds-table-row">
                       <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
-                        <Link href={`/portal/team-leader/instructors/${i.instructor_id}`} className="hover:text-[#FF8A1F]">{i.instructor_name}</Link>
+                        <Link href="/portal/team-leader/instructors" className="hover:text-[#FF8A1F]">{i.instructor_name}</Link>
                       </td>
                       <td className="px-4 py-2.5 text-[#64748B]">{i.active_groups}</td>
                       <td className="px-4 py-2.5 text-[#64748B]">{i.active_students}</td>
@@ -758,7 +758,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                     {assignmentData.by_instructor.map(i => (
                       <tr key={i.instructor_id} className="ds-table-row">
                         <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
-                          <Link href={`/portal/team-leader/instructors/${i.instructor_id}`} className="hover:text-[#FF8A1F]">{i.instructor_name}</Link>
+                          <Link href="/portal/team-leader/instructors" className="hover:text-[#FF8A1F]">{i.instructor_name}</Link>
                         </td>
                         <td className="px-4 py-2.5 text-[#64748B]">{i.assignment_count}</td>
                         <td className="px-4 py-2.5">
