@@ -5,7 +5,7 @@ import {
   getWorkloadDistribution, getAvgDaysToConvert,
 } from '@/modules/leads/queries'
 import { LEAD_STATUSES, LEAD_SOURCES } from '@/modules/leads/schemas'
-import { AGING_THRESHOLDS } from '@/modules/leads/types'
+import { AGING_THRESHOLDS, LEAD_STATUS_COLORS, LEAD_SOURCE_LABELS } from '@/modules/leads/types'
 import { createServiceClient } from '@/lib/supabase/service'
 import EmptyState    from '@/components/admin/EmptyState'
 import Pagination    from '@/components/admin/Pagination'
@@ -28,29 +28,11 @@ interface Props {
   }>
 }
 
-// ── Shared constants ──────────────────────────────────────────────────────────
-
-const STATUS_COLORS: Record<string, string> = {
-  NEW:            'bg-[#EFF6FF]  text-[#1D4ED8]',
-  CONTACTED:      'bg-yellow-100 text-yellow-700',
-  INTERESTED:     'bg-purple-100 text-purple-700',
-  TRIAL_BOOKED:   'bg-indigo-100 text-indigo-700',
-  TRIAL_ATTENDED: 'bg-cyan-100  text-cyan-700',
-  FOLLOW_UP:      'bg-orange-100 text-orange-700',
-  CONVERTED:      'bg-[#E7F8EE] text-[#15803D]',
-  LOST:           'bg-[#FEE2E2]  text-[#DC2626]',
-}
-
-const SOURCE_LABELS: Record<string, string> = {
-  website: 'Website', facebook_ad: 'Facebook Ad', instagram_ad: 'Instagram Ad',
-  whatsapp: 'WhatsApp', referral: 'Referral', walk_in: 'Walk-In', other: 'Other',
-}
-
 // ── UI helpers ────────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[status] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${LEAD_STATUS_COLORS[status as keyof typeof LEAD_STATUS_COLORS] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
       {status.replace(/_/g, ' ')}
     </span>
   )
@@ -145,7 +127,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
   })
 
   const statusOptions = LEAD_STATUSES.map(s => ({ value: s, label: s.replace(/_/g, ' ') }))
-  const sourceOptions = LEAD_SOURCES.map(s => ({ value: s, label: SOURCE_LABELS[s] ?? s }))
+  const sourceOptions = LEAD_SOURCES.map(s => ({ value: s, label: LEAD_SOURCE_LABELS[s] ?? s }))
   const hasFilters    = !!(status || source || search || assignedTo || unassignedOnly)
 
   return (
@@ -350,7 +332,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                           href={`?source=${s.source}`}
                           className="text-sm font-medium text-[#0B1F3A] hover:underline"
                         >
-                          {SOURCE_LABELS[s.source] ?? s.source}
+                          {LEAD_SOURCE_LABELS[s.source as keyof typeof LEAD_SOURCE_LABELS] ?? s.source}
                         </Link>
                         <span className="shrink-0 text-[11px] font-bold text-[#0B1F3A]">{s.count} <span className="font-normal text-[#94A3B8]">({pct}%)</span></span>
                       </div>

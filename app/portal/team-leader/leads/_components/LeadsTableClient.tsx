@@ -4,26 +4,7 @@ import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import ScheduleTrialModal from './ScheduleTrialModal'
 import type { LeadListItem } from '@/modules/leads/types'
-
-const STATUS_COLORS: Record<string, string> = {
-  NEW:            'bg-[#EFF6FF]  text-[#1D4ED8]',
-  CONTACTED:      'bg-yellow-100 text-yellow-700',
-  INTERESTED:     'bg-purple-100 text-purple-700',
-  TRIAL_BOOKED:   'bg-indigo-100 text-indigo-700',
-  TRIAL_ATTENDED: 'bg-cyan-100   text-cyan-700',
-  FOLLOW_UP:      'bg-orange-100 text-orange-700',
-  CONVERTED:      'bg-[#E7F8EE]  text-[#15803D]',
-  LOST:           'bg-[#FEE2E2]  text-[#DC2626]',
-}
-
-const SOURCE_LABELS: Record<string, string> = {
-  website: 'Website', facebook_ad: 'Facebook Ad', instagram_ad: 'Instagram Ad',
-  whatsapp: 'WhatsApp', referral: 'Referral', walk_in: 'Walk-In', other: 'Other',
-}
-
-const AGING_THRESHOLDS: Record<string, number> = {
-  NEW: 2, CONTACTED: 3, TRIAL_BOOKED: 7, FOLLOW_UP: 5,
-}
+import { LEAD_STATUS_COLORS, LEAD_SOURCE_LABELS, AGING_THRESHOLDS } from '@/modules/leads/types'
 
 interface Props {
   leads:       LeadListItem[]
@@ -34,14 +15,14 @@ interface Props {
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[status] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${LEAD_STATUS_COLORS[status as keyof typeof LEAD_STATUS_COLORS] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
       {status.replace(/_/g, ' ')}
     </span>
   )
 }
 
 function DaysBadge({ days, status }: { days: number; status: string }) {
-  const threshold = AGING_THRESHOLDS[status]
+  const threshold = AGING_THRESHOLDS[status as keyof typeof AGING_THRESHOLDS]
   const isAging   = threshold != null && days > threshold
   const cls = isAging
     ? 'bg-[#FEE2E2] text-[#DC2626] font-semibold'
@@ -149,7 +130,7 @@ export default function LeadsTableClient({ leads, instructors, branches, basePat
 
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748B]">
                     {lead.phone && <a href={`tel:${lead.phone}`} className="font-medium text-[#0B1F3A]">{lead.phone}</a>}
-                    <span>{SOURCE_LABELS[lead.source] ?? lead.source}</span>
+                    <span>{LEAD_SOURCE_LABELS[lead.source] ?? lead.source}</span>
                     {lead.assigned_name && <span>{lead.assigned_name}</span>}
                   </div>
 
@@ -246,7 +227,7 @@ export default function LeadsTableClient({ leads, instructors, branches, basePat
                   <td className="px-4 py-3">
                     <DaysBadge days={lead.days_in_stage} status={lead.status} />
                   </td>
-                  <td className="px-4 py-3 text-[#64748B]">{SOURCE_LABELS[lead.source] ?? lead.source}</td>
+                  <td className="px-4 py-3 text-[#64748B]">{LEAD_SOURCE_LABELS[lead.source] ?? lead.source}</td>
                   <td className="px-4 py-3">
                     {followUpDate ? (
                       <span className={`text-xs font-medium ${followUpOverdue ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>

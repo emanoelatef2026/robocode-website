@@ -14,7 +14,7 @@ import {
 } from '@/modules/leads/actions'
 import { bookTrialFromLead } from '@/modules/special-sessions/actions'
 import { LEAD_STATUSES, LEAD_SOURCES } from '@/modules/leads/schemas'
-import { AGING_THRESHOLDS }             from '@/modules/leads/types'
+import { AGING_THRESHOLDS, LEAD_STATUS_COLORS } from '@/modules/leads/types'
 import SubmitButton from '@/components/admin/SubmitButton'
 import type { Lead, LeadTimelineEvent, BranchTeamMember } from '@/modules/leads/types'
 import type { ActionResult } from '@/types/app'
@@ -33,17 +33,6 @@ interface Props {
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-const STATUS_COLORS: Record<string, string> = {
-  NEW:            'bg-[#EFF6FF]  text-[#1D4ED8]',
-  CONTACTED:      'bg-yellow-100 text-yellow-700',
-  INTERESTED:     'bg-purple-100 text-purple-700',
-  TRIAL_BOOKED:   'bg-indigo-100 text-indigo-700',
-  TRIAL_ATTENDED: 'bg-cyan-100  text-cyan-700',
-  FOLLOW_UP:      'bg-orange-100 text-orange-700',
-  CONVERTED:      'bg-[#E7F8EE] text-[#15803D]',
-  LOST:           'bg-[#FEE2E2]  text-[#DC2626]',
-}
 
 const EVENT_ICONS: Record<string, string> = {
   REOPENED:               '🔁',
@@ -140,7 +129,7 @@ export default function LeadDetailClient({
                   ⚠ Stuck {daysInStage}d
                 </span>
               )}
-              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_COLORS[lead.status] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
+              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${LEAD_STATUS_COLORS[lead.status] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
                 {lead.status.replace(/_/g, ' ')}
               </span>
             </div>
@@ -611,7 +600,7 @@ export default function LeadDetailClient({
           <div className="space-y-1.5">
             {(Object.entries(AGING_THRESHOLDS) as [string, number][]).map(([s, d]) => (
               <div key={s} className="flex items-center justify-between text-[11px]">
-                <span className={`rounded-full px-2 py-0.5 font-semibold ${STATUS_COLORS[s]}`}>
+                <span className={`rounded-full px-2 py-0.5 font-semibold ${LEAD_STATUS_COLORS[s as keyof typeof LEAD_STATUS_COLORS]}`}>
                   {s.replace(/_/g, ' ')}
                 </span>
                 <span className="text-[#94A3B8]">alert after {d}d</span>

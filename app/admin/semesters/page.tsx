@@ -7,21 +7,15 @@ import SearchInput from '@/components/admin/SearchInput'
 import FilterSelect from '@/components/admin/FilterSelect'
 import Link from 'next/link'
 import { TopbarAction } from '@/components/admin/TopbarActionContext'
+import { SEMESTER_STATUS_COLORS } from '@/modules/semesters/types'
 
 interface Props {
   searchParams: Promise<{ page?: string; q?: string; status?: string; year?: string }>
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  planned:   'bg-yellow-50 text-yellow-700 border-yellow-200',
-  active:    'bg-[#E7F8EE] text-[#15803D] border-[#A7F3D0]',
-  completed: 'bg-[#EFF6FF] text-[#1D4ED8] border-blue-200',
-  archived:  'bg-[#F9FAFB] text-[#6B7280] border-[#E2E8F0]',
-}
-
 function SemesterStatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium capitalize ${STATUS_COLORS[status] ?? 'bg-[#F9FAFB] text-[#6B7280] border-[#E2E8F0]'}`}>
+    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium capitalize ${SEMESTER_STATUS_COLORS[status as keyof typeof SEMESTER_STATUS_COLORS] ?? 'bg-[#F9FAFB] text-[#6B7280] border-[#E2E8F0]'}`}>
       {status}
     </span>
   )

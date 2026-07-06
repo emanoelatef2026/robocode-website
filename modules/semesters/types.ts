@@ -2,6 +2,13 @@ export type SemesterStatus = 'planned' | 'active' | 'completed' | 'archived'
 export type EnrollmentStatus = 'enrolled' | 'dropped' | 'completed' | 'paused'
 export type PaymentStatus = 'pending' | 'paid' | 'partial' | 'waived' | 'overdue'
 
+export const SEMESTER_STATUS_COLORS: Record<SemesterStatus, string> = {
+  planned:   'bg-yellow-50 text-yellow-700 border-yellow-200',
+  active:    'bg-[#E7F8EE] text-[#15803D] border-[#A7F3D0]',
+  completed: 'bg-[#EFF6FF] text-[#1D4ED8] border-blue-200',
+  archived:  'bg-[#F9FAFB] text-[#6B7280] border-[#E2E8F0]',
+}
+
 export interface Semester {
   id: string
   org_id: string

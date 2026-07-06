@@ -134,3 +134,24 @@ export const AGING_THRESHOLDS: Partial<Record<LeadStatus, number>> = {
   TRIAL_BOOKED: 7,
   FOLLOW_UP:    5,
 }
+
+export const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
+  NEW:            'bg-[#EFF6FF]  text-[#1D4ED8]',
+  CONTACTED:      'bg-yellow-100 text-yellow-700',
+  INTERESTED:     'bg-purple-100 text-purple-700',
+  TRIAL_BOOKED:   'bg-indigo-100 text-indigo-700',
+  TRIAL_ATTENDED: 'bg-cyan-100   text-cyan-700',
+  FOLLOW_UP:      'bg-orange-100 text-orange-700',
+  CONVERTED:      'bg-[#E7F8EE]  text-[#15803D]',
+  LOST:           'bg-[#FEE2E2]  text-[#DC2626]',
+}
+
+export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
+  website:      'Website',
+  facebook_ad:  'Facebook Ad',
+  instagram_ad: 'Instagram Ad',
+  whatsapp:     'WhatsApp',
+  referral:     'Referral',
+  walk_in:      'Walk-In',
+  other:        'Other',
+}

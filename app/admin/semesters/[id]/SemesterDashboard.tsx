@@ -11,6 +11,7 @@ import {
 } from '@/modules/semesters/actions'
 import SubmitButton from '@/components/admin/SubmitButton'
 import type { SemesterDashboard as TDashboard, SemesterEnrollment, SemesterCourse, SemesterGroup } from '@/modules/semesters/types'
+import { SEMESTER_STATUS_COLORS } from '@/modules/semesters/types'
 import type { AcademicYearListItem } from '@/modules/academic-years/types'
 import type { StudentListItem } from '@/modules/students/types'
 import type { CourseListItem } from '@/modules/courses/types'
@@ -24,13 +25,6 @@ interface Props {
   years:        AcademicYearListItem[]
   allStudents:  StudentListItem[]
   allCourses:   CourseListItem[]
-}
-
-const STATUS_COLORS: Record<string, string> = {
-  planned:   'bg-yellow-50 text-yellow-700 border-yellow-200',
-  active:    'bg-[#E7F8EE]  text-[#15803D]  border-[#A7F3D0]',
-  completed: 'bg-[#EFF6FF]   text-[#1D4ED8]   border-blue-200',
-  archived:  'bg-[#F9FAFB]   text-[#6B7280]   border-[#E2E8F0]',
 }
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
@@ -265,7 +259,7 @@ export default function SemesterDashboard({
                     <p className="text-sm text-[#64748B]">
                       {e.first_name && e.last_name ? `${e.first_name} ${e.last_name}` : e.student_email}
                     </p>
-                    <span className={`rounded-md border px-2 py-0.5 text-xs capitalize ${STATUS_COLORS[e.status] ?? ''}`}>
+                    <span className={`rounded-md border px-2 py-0.5 text-xs capitalize ${SEMESTER_STATUS_COLORS[e.status as keyof typeof SEMESTER_STATUS_COLORS] ?? ''}`}>
                       {e.status}
                     </span>
                   </li>
