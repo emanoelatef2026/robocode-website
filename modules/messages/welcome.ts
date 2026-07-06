@@ -3,6 +3,7 @@
 // message is assembled; do not inline message generation in components.
 
 export interface WelcomeMessagePayload {
+  student_name:      string
   parent_email:      string
   parent_password:   string
   student_email:     string
@@ -35,6 +36,7 @@ export function buildWelcomeMessage(payload: WelcomeMessagePayload): string {
 Your portal accounts have been created successfully.
 
 👨‍🎓 Student Account
+👦 Name: ${payload.student_name}
 📧 Email: ${payload.student_email}
 🔒 Password: ${payload.student_password}
 

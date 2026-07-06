@@ -154,6 +154,7 @@ export async function sendWelcomeWhatsAppAction(
   if (!normalizedPhone) return { error: 'Parent phone number is missing.' }
 
   const message = buildWelcomeMessage({
+    student_name:      info.student_name,
     parent_email:      parentCreds.email!,
     parent_password:   parentCreds.portal_password!,
     student_email:     studentCreds.email!,
