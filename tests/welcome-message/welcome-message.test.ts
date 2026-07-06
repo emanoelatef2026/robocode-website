@@ -38,8 +38,6 @@ import {
 const STUDENT_ID = 'stu-001'
 
 const FULL_PAYLOAD: WelcomeMessagePayload = {
-  student_name:      'Ali Ahmed',
-  course_name:       'Scratch Level 1',
   parent_email:      'parent@example.com',
   parent_password:   'Parent123',
   student_email:     'ali@example.com',

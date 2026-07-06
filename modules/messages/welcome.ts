@@ -3,12 +3,10 @@
 // message is assembled; do not inline message generation in components.
 
 export interface WelcomeMessagePayload {
-  student_name:      string
-  course_name:       string
   parent_email:      string
   parent_password:   string
-  student_email:      string
-  student_password:   string
+  student_email:     string
+  student_password:  string
 }
 
 export interface WelcomeMessageEligibility {
@@ -32,48 +30,27 @@ export interface WelcomeMessageLog {
 }
 
 export function buildWelcomeMessage(payload: WelcomeMessagePayload): string {
-  return `🌟 أهلاً بحضرتك في Robocode School
+  return `🚀 Welcome to Robocode School!
 
-يسعدنا انضمام الطالب:
+Your portal accounts have been created successfully.
 
-👦 الطالب: ${payload.student_name}
-📚 الكورس: ${payload.course_name}
+👨‍🎓 Student Account
+📧 Email: ${payload.student_email}
+🔒 Password: ${payload.student_password}
 
-يمكنكم الآن متابعة رحلة الطالب التعليمية بالكامل من خلال منصة Robocode School.
+👨‍👩‍👧 Parent Account
+📧 Email: ${payload.parent_email}
+🔒 Password: ${payload.parent_password}
 
-━━━━━━━━━━━━━━
-👨‍👩‍👦 حساب ولي الأمر
+🌐 Login:
+https://robocodeschools.com
 
-📧 البريد الإلكتروني:
-${payload.parent_email}
+Please change your password after your first login to keep your account secure.
 
-🔐 كلمة المرور:
-${payload.parent_password}
+For any assistance, feel free to contact us.
 
-━━━━━━━━━━━━━━
-👨‍💻 حساب الطالب
-
-📧 البريد الإلكتروني:
-${payload.student_email}
-
-🔐 كلمة المرور:
-${payload.student_password}
-
-━━━━━━━━━━━━━━
-
-من خلال البورتال يمكنكم:
-
-✅ متابعة حضور الطالب
-✅ متابعة التقدم والمستوى
-✅ مشاهدة الواجبات والمشاريع
-✅ متابعة عدد الحصص المتبقية
-✅ الاطلاع على الشهادات والإنجازات
-✅ التواصل بسهولة مع الأكاديمية
-
-نتمنى للطالب رحلة تعليمية ممتعة ومليئة بالإنجازات 🚀
-
-فريق Robocode School 💙
-https://robocodeschools.com`
+Robocode School
+Code • Build • Invent • Solve 🚀`
 }
 
 export function canSendWelcomeMessage(input: {
