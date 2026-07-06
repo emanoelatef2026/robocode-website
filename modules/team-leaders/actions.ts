@@ -6,6 +6,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
 import { createTeamLeaderSchema, updateTeamLeaderSchema } from './schemas'
 import { saveUserPermissions } from '@/modules/user-permissions/mutations'
+import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import type { ActionResult } from '@/types/app'
 
 // UUID format for validating branch_ids from form
@@ -29,7 +30,6 @@ export async function createTeamLeader(
   }
 
   const raw = {
-    email:               formData.get('email'),
     password:            formData.get('password'),
     first_name:          formData.get('first_name'),
     last_name:           formData.get('last_name'),
@@ -48,26 +48,19 @@ export async function createTeamLeader(
   const actor = await requirePermission('manage_system')
   const db    = createServiceClient()
 
-  const { email, password, first_name, last_name, status, phone, payment_link, wallet_number, bank_account_number } = parsed.data
+  const { password, first_name, last_name, status, phone, payment_link, wallet_number, bank_account_number } = parsed.data
 
-  // 1. Create or find auth user
-  let authUserId: string
-  const { data: listData } = await db.auth.admin.listUsers({ perPage: 1000 })
-  const existing = listData?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())
-
-  if (existing) {
-    authUserId = existing.id
-  } else {
-    const { data: created, error: createError } = await db.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    })
-    if (createError || !created?.user) {
-      return { success: false, error: { code: 'AUTH_ERROR', message: createError?.message ?? 'Failed to create user' } }
-    }
-    authUserId = created.user.id
+  // 1. Generate a unique @robocodeschools.com login address, then create the auth user
+  const email = await generateUniqueLoginEmail('staff', first_name, last_name, makeEmailLocalPartExists(db))
+  const { data: created, error: createError } = await db.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  })
+  if (createError || !created?.user) {
+    return { success: false, error: { code: 'AUTH_ERROR', message: createError?.message ?? 'Failed to create user' } }
   }
+  const authUserId = created.user.id
 
   // 2. Ensure public.users row
   await db.from('users').upsert({ id: authUserId, email, phone: phone || null }, { onConflict: 'id' })

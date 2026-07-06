@@ -3,6 +3,9 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
+import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
+import { listParentContactsOperational, getStudentPickerOptions } from './operational'
+import type { ParentOperationalRow, StudentPickerOption } from './operational'
 import { z } from 'zod'
 import type { ActionResult } from '@/types/app'
 
@@ -18,8 +21,7 @@ const createSchema = z.object({
   whatsapp_preferred: z.preprocess(v => v === 'true' || v === true, z.boolean()).default(false),
   notes:              z.string().max(1000).optional().or(z.literal('')),
   student_ids_json:   z.string(),
-  // Optional portal access
-  email:              z.string().email().optional().or(z.literal('')),
+  // Optional portal access — set a password to create a login (email is generated)
   password:           z.string().min(6).optional().or(z.literal('')),
 })
 
@@ -36,7 +38,6 @@ const updateSchema = z.object({
   contacts_to_remove_json: z.string().default('[]'),
   // portal account (optional)
   user_id:  z.string().uuid().optional().or(z.literal('')),  // existing portal account UUID
-  email:    z.string().email().optional().or(z.literal('')),
   password: z.string().min(6).optional().or(z.literal('')),
 })
 
@@ -80,7 +81,6 @@ export async function createParentContactAction(
     whatsapp_preferred: formData.get('whatsapp_preferred') || 'false',
     notes:              formData.get('notes')              || '',
     student_ids_json:   formData.get('student_ids_json')   || '[]',
-    email:              formData.get('email')              || '',
     password:           formData.get('password')           || '',
   }
 
@@ -122,17 +122,19 @@ export async function createParentContactAction(
     return { success: false, error: { code: 'DB_ERROR', message: insertErr.message } }
   }
 
-  // Optional portal account
-  const email    = parsed.data.email?.trim()
+  // Optional portal account — set a password to create a login (email is generated)
   const password = parsed.data.password?.trim()
-  if (email && password) {
+  if (password) {
+    const nameParts = name.trim().split(/\s+/)
+    const email = await generateUniqueLoginEmail(
+      'learner', nameParts[0] ?? name, nameParts.slice(1).join(' ') || name, makeEmailLocalPartExists(db)
+    )
     const { data: authData, error: authErr } = await db.auth.admin.createUser({
       email, password, email_confirm: true,
     })
     if (!authErr && authData?.user) {
       const uid = authData.user.id
       await db.from('users').upsert({ id: uid, email, phone: phone1 || null }, { onConflict: 'id' })
-      const nameParts = name.trim().split(/\s+/)
       await db.from('profiles').upsert(
         { user_id: uid, first_name: nameParts[0] ?? '', last_name: nameParts.slice(1).join(' ') || null },
         { onConflict: 'user_id' }
@@ -174,7 +176,6 @@ export async function updateParentContactAction(
     students_to_add_json:    formData.get('students_to_add_json')    || '[]',
     contacts_to_remove_json: formData.get('contacts_to_remove_json') || '[]',
     user_id:                 formData.get('user_id')            || '',
-    email:                   formData.get('email')              || '',
     password:                formData.get('password')           || '',
   }
 
@@ -190,7 +191,6 @@ export async function updateParentContactAction(
   const studentsToAdd    = parseIds(parsed.data.students_to_add_json)
   const contactsToRemove = parseIds(parsed.data.contacts_to_remove_json)
   const existingUserId   = parsed.data.user_id?.trim() || null
-  const email            = parsed.data.email?.trim()   || null
   const password         = parsed.data.password?.trim() || null
 
   // Update all existing entries in this group
@@ -236,26 +236,25 @@ export async function updateParentContactAction(
 
   // ── Portal account ──────────────────────────────────────────────────────────
   if (existingUserId) {
-    // Update existing portal account
-    const updates: Record<string, string> = {}
-    if (email) updates.email = email
-    if (password) updates.password = password
-    if (Object.keys(updates).length) {
-      await db.auth.admin.updateUserById(existingUserId, updates)
-      if (email) await db.from('users').update({ email }).eq('id', existingUserId)
+    // Update existing portal account (login email is immutable — password only)
+    if (password) {
+      await db.auth.admin.updateUserById(existingUserId, { password })
       // Store plain text for internal ops visibility (intentional — internal system,
       // mirrors students.portal_password) so the welcome-message feature can surface it.
-      if (password) await db.from('parents').update({ portal_password: password }).eq('user_id', existingUserId)
+      await db.from('parents').update({ portal_password: password }).eq('user_id', existingUserId)
     }
-  } else if (email && password) {
-    // Create new portal account for this parent
+  } else if (password) {
+    // Create new portal account for this parent (login email is generated)
+    const nameParts = name.trim().split(/\s+/)
+    const email = await generateUniqueLoginEmail(
+      'learner', nameParts[0] ?? name, nameParts.slice(1).join(' ') || name, makeEmailLocalPartExists(db)
+    )
     const { data: authData, error: authErr } = await db.auth.admin.createUser({
       email, password, email_confirm: true,
     })
     if (!authErr && authData?.user) {
       const uid = authData.user.id
       await db.from('users').upsert({ id: uid, email, phone: phone1 || null }, { onConflict: 'id' })
-      const nameParts = name.trim().split(/\s+/)
       await db.from('profiles').upsert(
         { user_id: uid, first_name: nameParts[0] ?? '', last_name: nameParts.slice(1).join(' ') || null },
         { onConflict: 'user_id' }
@@ -329,4 +328,29 @@ export async function restoreParentContactAction(
 
   revalidatePath('/portal/team-leader/parents')
   return { success: true, data: null }
+}
+
+// ── Single-parent edit context (for embedding ParentFormModal elsewhere) ───────
+// Reuses the same operational queries as the Parents page, scoped to one branch,
+// so callers like the group student quick-view can open the parent edit form
+// without duplicating the aggregation logic in ./operational.
+
+export async function getParentEditContextAction(
+  parentGroupId: string,
+  branchId: string
+): Promise<
+  | { success: true; data: { parent: ParentOperationalRow; studentOptions: StudentPickerOption[] } }
+  | { success: false; error: string }
+> {
+  await requirePermission('manage_students')
+
+  const [parents, studentOptions] = await Promise.all([
+    listParentContactsOperational([branchId]),
+    getStudentPickerOptions([branchId]),
+  ])
+
+  const parent = parents.find(p => p.parent_group_id === parentGroupId)
+  if (!parent) return { success: false, error: 'Parent record not found.' }
+
+  return { success: true, data: { parent, studentOptions } }
 }

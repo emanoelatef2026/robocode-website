@@ -64,14 +64,12 @@ export const reassignLeadSchema = z.object({
 
 export const convertToStudentSchema = z.object({
   lead_id:         z.string().uuid(),
-  email:           z.string().email('Valid email required'),
   password:        z.string().min(6, 'Min 6 characters'),
   first_name:      z.string().min(1, 'First name required'),
   last_name:       z.string().min(1, 'Last name required'),
   branch_id:       z.string().uuid('Branch required'),
   parent_first:    z.string().min(1, 'Parent first name required'),
   parent_last:     z.string().min(1, 'Parent last name required'),
-  parent_email:    z.string().email('Valid parent email required'),
   parent_password: z.string().min(6, 'Min 6 characters'),
   parent_phone:    z.string().optional().or(z.literal('')),
 })

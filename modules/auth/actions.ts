@@ -8,6 +8,8 @@ import { getSupabasePublic } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requireAuth } from '@/modules/rbac/guards'
 import { ROLE_PORTAL_MAP } from '@/types/enums'
+import { normalizeLoginIdentifier } from '@/lib/generate-login-email'
+import { sendRecoveryEmail } from '@/lib/send-recovery-email'
 
 const STUDIO_ROLES          = new Set(['super_admin', 'team_leader'])
 const WORKSPACE_PICKER_ROLES = new Set(['super_admin', 'team_leader'])
@@ -22,7 +24,7 @@ export async function signIn(
   _prev: SignInState | null,
   formData: FormData
 ): Promise<SignInState> {
-  const email    = ((formData.get('email') as string) ?? '').trim().toLowerCase()
+  const email    = normalizeLoginIdentifier((formData.get('email') as string) ?? '')
   const password = (formData.get('password') as string) ?? ''
 
   if (!email || !password) {
@@ -78,7 +80,7 @@ export async function signInStudio(
   _prev: SignInStudioState | null,
   formData: FormData
 ): Promise<SignInStudioState> {
-  const email    = ((formData.get('email') as string) ?? '').trim().toLowerCase()
+  const email    = normalizeLoginIdentifier((formData.get('email') as string) ?? '')
   const password = (formData.get('password') as string) ?? ''
 
   if (!email || !password) {
@@ -179,4 +181,70 @@ export async function changePassword(
   }
 
   return { success: true }
+}
+
+// ── Request password reset ──────────────────────────────────────────────────
+// Login addresses are always @robocodeschools.com, which isn't a real inbox
+// for every account. If public.users.recovery_email is set for the account,
+// the recovery link is generated via the admin API and emailed there instead
+// (via Resend) — otherwise falls back to Supabase Auth's own mailer sending
+// straight to the login address, unchanged from before.
+//
+// Always reports success regardless of what happened (enumeration-safe,
+// matches Supabase's own resetPasswordForEmail behavior).
+
+export interface RequestPasswordResetState {
+  submitted?: boolean
+}
+
+async function deliverPasswordReset(rawIdentifier: string, redirectTo: string): Promise<void> {
+  const email = normalizeLoginIdentifier(rawIdentifier)
+  if (!email) return
+
+  try {
+    const db = createServiceClient()
+    const { data: userRow } = await db
+      .from('users')
+      .select('recovery_email')
+      .ilike('email', email)
+      .maybeSingle()
+
+    if (userRow?.recovery_email) {
+      const { data: linkData, error: linkErr } = await db.auth.admin.generateLink({
+        type: 'recovery',
+        email,
+        options: { redirectTo },
+      })
+      if (!linkErr && linkData?.properties?.action_link) {
+        await sendRecoveryEmail(userRow.recovery_email, linkData.properties.action_link)
+      }
+      return
+    }
+
+    const anon = getSupabasePublic()
+    await anon.auth.resetPasswordForEmail(email, { redirectTo })
+  } catch (err) {
+    console.error('[auth] password reset delivery failed', err)
+  }
+}
+
+export async function requestPasswordReset(
+  _prev: RequestPasswordResetState | null,
+  formData: FormData
+): Promise<RequestPasswordResetState> {
+  const identifier = (formData.get('email') as string) ?? ''
+  await deliverPasswordReset(identifier, `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/auth/callback?type=recovery`)
+  return { submitted: true }
+}
+
+export async function requestStudioPasswordReset(
+  _prev: RequestPasswordResetState | null,
+  formData: FormData
+): Promise<RequestPasswordResetState> {
+  const identifier = (formData.get('email') as string) ?? ''
+  await deliverPasswordReset(
+    identifier,
+    `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/auth/callback?type=recovery&source=studio`
+  )
+  return { submitted: true }
 }

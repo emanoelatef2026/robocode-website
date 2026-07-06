@@ -3,13 +3,13 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
+import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import { z } from 'zod'
 import type { ActionResult } from '@/types/app'
 
 // ── Schemas ────────────────────────────────────────────────────────────────────
 
 const createSchema = z.object({
-  email:             z.string().email('Invalid email address'),
   password:          z.string().min(6, 'Password must be at least 6 characters'),
   first_name:        z.string().min(1, 'First name required').max(100),
   last_name:         z.string().min(1, 'Last name required').max(100),
@@ -22,7 +22,6 @@ const updateSchema = z.object({
   first_name:        z.string().min(1).max(100).optional().or(z.literal('')),
   last_name:         z.string().min(1).max(100).optional().or(z.literal('')),
   phone:             z.string().max(30).optional().or(z.literal('')),
-  email:             z.string().email('Invalid email address').optional().or(z.literal('')),
   new_password:      z.string().min(6, 'Password must be at least 6 characters').optional().or(z.literal('')),
   student_links_json: z.string(),
 })
@@ -94,7 +93,6 @@ export async function createParentModal(
   formData: FormData
 ): Promise<ActionResult<{ id: string }>> {
   const raw = {
-    email:              formData.get('email'),
     password:           formData.get('password'),
     first_name:         formData.get('first_name'),
     last_name:          formData.get('last_name'),
@@ -115,40 +113,17 @@ export async function createParentModal(
   const user = await requirePermission('manage_parents')
   const db   = createServiceClient()
 
-  const { email, password, first_name, last_name, phone } = parsed.data
+  const { password, first_name, last_name, phone } = parsed.data
 
-  // 1. Check for existing user by email
-  let authUserId: string
-  const { data: existingUser } = await db
-    .from('users')
-    .select('id')
-    .eq('email', email.toLowerCase())
-    .maybeSingle()
-
-  if (existingUser) {
-    // Hard block if this user already owns a parent entity
-    const { data: existingParent } = await db
-      .from('parents')
-      .select('id')
-      .eq('user_id', existingUser.id)
-      .maybeSingle()
-
-    if (existingParent) {
-      return {
-        success: false,
-        error: { code: 'DUPLICATE_EMAIL', message: 'A parent account with this email already exists.' },
-      }
-    }
-    authUserId = existingUser.id
-  } else {
-    const { data: created, error: createErr } = await db.auth.admin.createUser({
-      email, password, email_confirm: true,
-    })
-    if (createErr || !created?.user) {
-      return { success: false, error: { code: 'AUTH_ERROR', message: createErr?.message ?? 'Failed to create user' } }
-    }
-    authUserId = created.user.id
+  // 1. Generate a unique @robocodeschools.com login address, then create the auth user
+  const email = await generateUniqueLoginEmail('learner', first_name, last_name, makeEmailLocalPartExists(db))
+  const { data: created, error: createErr } = await db.auth.admin.createUser({
+    email, password, email_confirm: true,
+  })
+  if (createErr || !created?.user) {
+    return { success: false, error: { code: 'AUTH_ERROR', message: createErr?.message ?? 'Failed to create user' } }
   }
+  const authUserId = created.user.id
 
   // 2. users row
   await db.from('users').upsert(
@@ -218,7 +193,6 @@ export async function updateParentModal(
     first_name:         formData.get('first_name') || undefined,
     last_name:          formData.get('last_name')  || undefined,
     phone:              formData.get('phone')       || undefined,
-    email:              formData.get('email')       || undefined,
     new_password:       formData.get('new_password') || undefined,
     student_links_json: formData.get('student_links_json') || '[]',
   }
@@ -236,7 +210,7 @@ export async function updateParentModal(
   const user = await requirePermission('manage_parents')
   const db   = createServiceClient()
 
-  const { id, first_name, last_name, phone, email, new_password } = parsed.data
+  const { id, first_name, last_name, phone, new_password } = parsed.data
 
   const { data: parent } = await db
     .from('parents')
@@ -245,28 +219,6 @@ export async function updateParentModal(
     .single()
   if (!parent) {
     return { success: false, error: { code: 'NOT_FOUND', message: 'Parent not found.' } }
-  }
-
-  // Email update — check for conflicts before applying
-  if (email) {
-    const { data: conflictUser } = await db
-      .from('users')
-      .select('id')
-      .eq('email', email.toLowerCase())
-      .maybeSingle()
-
-    if (conflictUser && conflictUser.id !== parent.user_id) {
-      return {
-        success: false,
-        error: { code: 'DUPLICATE_EMAIL', message: 'This email is already in use by another account.' },
-      }
-    }
-
-    const { error: authEmailErr } = await db.auth.admin.updateUserById(parent.user_id, { email })
-    if (authEmailErr) {
-      return { success: false, error: { code: 'AUTH_ERROR', message: authEmailErr.message } }
-    }
-    await db.from('users').update({ email: email.toLowerCase() }).eq('id', parent.user_id)
   }
 
   // Password update
@@ -301,7 +253,7 @@ export async function updateParentModal(
     p_action:       'update',
     p_entity_type:  'parent',
     p_entity_id:    id,
-    p_new_values:   { first_name, last_name, phone, email_changed: !!email, password_changed: !!new_password },
+    p_new_values:   { first_name, last_name, phone, password_changed: !!new_password },
   })
 
   revalidatePath('/portal/team-leader/parents')

@@ -52,16 +52,21 @@ function StudioLoginForm() {
       <form action={action} className="space-y-4">
         <div>
           <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-            Email address
+            Username
           </label>
-          <input
-            type="email"
-            name="email"
-            required
-            autoComplete="email"
-            placeholder="you@example.com"
-            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
-          />
+          <div className="flex items-stretch overflow-hidden rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] transition focus-within:border-[#19C6F4] focus-within:ring-2 focus-within:ring-[#19C6F4]/20">
+            <input
+              type="text"
+              name="email"
+              required
+              autoComplete="username"
+              placeholder="e.g. e.atef"
+              className="min-w-0 flex-1 bg-transparent px-4 py-3 text-[14px] text-[#0B132B] outline-none"
+            />
+            <span className="flex items-center whitespace-nowrap border-l border-[#E2E8F0] bg-[#F1F5F9] px-3 text-[13px] text-[#9CA3AF]">
+              @robocodeschools.com
+            </span>
+          </div>
         </div>
 
         <div>

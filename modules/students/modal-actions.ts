@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
+import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import { z } from 'zod'
 import type { ActionResult } from '@/types/app'
 
@@ -16,7 +17,6 @@ const parentContactSchema = z.object({
   whatsapp_preferred: z.boolean().default(false),
   is_primary:         z.boolean().default(false),
   is_emergency:       z.boolean().default(true),
-  email:              z.string().email().optional().or(z.literal('')),
   password:           z.string().min(6).optional().or(z.literal('')),
 })
 
@@ -27,7 +27,6 @@ const ageSchema = z
   .pipe(z.number().int().min(3, 'Age must be at least 3').max(25, 'Age must be at most 25'))
 
 const createSchema = z.object({
-  email:           z.string().email('Invalid email address'),
   password:        z.string().min(6, 'Password must be at least 6 characters'),
   first_name:      z.string().min(1, 'First name required').max(100),
   last_name:       z.string().min(1, 'Last name required').max(100),
@@ -52,10 +51,6 @@ const updateSchema = z.object({
   status:         z.enum(['active', 'inactive', 'graduated', 'paused', 'banned']).optional(),
   notes:          z.string().max(1000).optional().or(z.literal('')),
   parent_contacts_json: z.string(),
-  new_email:      z.preprocess(
-    (v) => (typeof v === 'string' && v.trim() ? v.trim().toLowerCase() : undefined),
-    z.string().email('Invalid email address').optional()
-  ),
   new_password:   z.preprocess(
     (v) => (typeof v === 'string' && v ? v : undefined),
     z.string().min(6, 'Password must be at least 6 characters').optional()
@@ -229,28 +224,22 @@ async function syncParentContacts(
     }))
   )
 
-  // Create portal accounts for contacts that have email+password
+  // Create portal accounts for contacts a password was set for (login email is generated)
   for (const c of resolvedContacts) {
-    const email    = c.email?.trim()    || null
     const password = c.password?.trim() || null
-    if (!email || !password) continue
+    if (!password) continue
 
-    // Check if an account already exists for this email
-    const { data: existingUser } = await db
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle()
-
-    if (existingUser) continue  // account already exists — skip
+    const nameParts = c.name.trim().split(/\s+/)
+    const email = await generateUniqueLoginEmail(
+      'learner', nameParts[0] ?? c.name, nameParts.slice(1).join(' ') || c.name, makeEmailLocalPartExists(db)
+    )
 
     const { data: authData, error: authErr } = await db.auth.admin.createUser({
       email, password, email_confirm: true,
     })
     if (authErr || !authData?.user) continue
 
-    const uid       = authData.user.id
-    const nameParts = c.name.trim().split(/\s+/)
+    const uid = authData.user.id
     await db.from('users').upsert({ id: uid, email, phone: c.phone || null }, { onConflict: 'id' })
     await db.from('profiles').upsert(
       { user_id: uid, first_name: nameParts[0] ?? '', last_name: nameParts.slice(1).join(' ') || null },
@@ -275,7 +264,6 @@ export async function createStudentModal(
   formData: FormData
 ): Promise<ActionResult<{ id: string }>> {
   const raw = {
-    email:           formData.get('email'),
     password:        formData.get('password'),
     first_name:      formData.get('first_name'),
     last_name:       formData.get('last_name'),
@@ -302,7 +290,7 @@ export async function createStudentModal(
   const user = await requirePermission('manage_students', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
 
-  const { email, password, first_name, last_name, branch_id, phone, age, school_grade, date_of_birth, enrollment_date, notes } = parsed.data
+  const { password, first_name, last_name, branch_id, phone, age, school_grade, date_of_birth, enrollment_date, notes } = parsed.data
 
   // 0. Groups must be in the student's branch — validate before creating anything
   const groupsToAdd = parseGroupIds(formData.get('groups_to_add_json'))
@@ -311,20 +299,15 @@ export async function createStudentModal(
     return { success: false, error: { code: 'VALIDATION', message: branchErr } }
   }
 
-  // 1. Auth user
-  let authUserId: string
-  const { data: existing } = await db.from('users').select('id').eq('email', email.toLowerCase()).maybeSingle()
-  if (existing) {
-    authUserId = existing.id
-  } else {
-    const { data: created, error: createErr } = await db.auth.admin.createUser({
-      email, password, email_confirm: true,
-    })
-    if (createErr || !created?.user) {
-      return { success: false, error: { code: 'AUTH_ERROR', message: createErr?.message ?? 'Failed to create user' } }
-    }
-    authUserId = created.user.id
+  // 1. Generate a unique @robocodeschools.com login address, then create the auth user
+  const email = await generateUniqueLoginEmail('learner', first_name, last_name, makeEmailLocalPartExists(db))
+  const { data: created, error: createErr } = await db.auth.admin.createUser({
+    email, password, email_confirm: true,
+  })
+  if (createErr || !created?.user) {
+    return { success: false, error: { code: 'AUTH_ERROR', message: createErr?.message ?? 'Failed to create user' } }
   }
+  const authUserId = created.user.id
 
   // 2. users row
   await db.from('users').upsert({ id: authUserId, email, phone: phone || null }, { onConflict: 'id' })
@@ -406,7 +389,6 @@ export async function updateStudentModal(
     status:         formData.get('status')        || undefined,
     notes:          formData.get('notes')         || undefined,
     parent_contacts_json: formData.get('parent_contacts_json') || '[]',
-    new_email:      formData.get('new_email'),
     new_password:   formData.get('new_password'),
   }
 
@@ -423,7 +405,7 @@ export async function updateStudentModal(
   const user = await requirePermission('manage_students')
   const db   = createServiceClient()
 
-  const { id, first_name, last_name, phone, age, school_grade, date_of_birth, status, notes, new_email, new_password } = parsed.data
+  const { id, first_name, last_name, phone, age, school_grade, date_of_birth, status, notes, new_password } = parsed.data
 
   const { data: old } = await db.from('students').select('user_id, branch_id').eq('id', id).single()
   if (!old) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
@@ -434,18 +416,6 @@ export async function updateStudentModal(
   const branchErr      = await validateGroupsMatchBranch(db, old.branch_id, groupsToAdd)
   if (branchErr) {
     return { success: false, error: { code: 'VALIDATION', message: branchErr } }
-  }
-
-  // Email update
-  if (new_email && old.user_id) {
-    const { data: currentUser } = await db.from('users').select('email').eq('id', old.user_id).maybeSingle()
-    if (currentUser?.email?.toLowerCase() !== new_email) {
-      const { data: dup } = await db.from('users').select('id').eq('email', new_email).neq('id', old.user_id).maybeSingle()
-      if (dup) return { success: false, error: { code: 'DUPLICATE', message: 'This email is already in use by another account.' } }
-      const { error: authErr } = await db.auth.admin.updateUserById(old.user_id, { email: new_email })
-      if (authErr) return { success: false, error: { code: 'AUTH_ERROR', message: authErr.message } }
-      await db.from('users').update({ email: new_email }).eq('id', old.user_id)
-    }
   }
 
   // Password update

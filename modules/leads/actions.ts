@@ -3,6 +3,7 @@
 import { revalidatePath }       from 'next/cache'
 import { createServiceClient }  from '@/lib/supabase/service'
 import { requirePortalRole }    from '@/modules/rbac/guards'
+import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -384,14 +385,12 @@ export async function convertLeadToStudent(
 
   const raw = {
     lead_id:         formData.get('lead_id'),
-    email:           formData.get('email'),
     password:        formData.get('password'),
     first_name:      formData.get('first_name'),
     last_name:       formData.get('last_name'),
     branch_id:       formData.get('branch_id'),
     parent_first:    formData.get('parent_first'),
     parent_last:     formData.get('parent_last'),
-    parent_email:    formData.get('parent_email'),
     parent_password: formData.get('parent_password'),
     parent_phone:    formData.get('parent_phone') || undefined,
   }
@@ -402,22 +401,17 @@ export async function convertLeadToStudent(
   }
 
   const {
-    lead_id, email, password, first_name, last_name, branch_id,
-    parent_first, parent_last, parent_email, parent_password, parent_phone,
+    lead_id, password, first_name, last_name, branch_id,
+    parent_first, parent_last, parent_password, parent_phone,
   } = parsed.data
 
-  // 1. Create or find student auth user
-  let studentUserId: string
-  const { data: existingSU } = await db.from('users').select('id').eq('email', email.toLowerCase()).maybeSingle()
-  if (existingSU) {
-    studentUserId = existingSU.id
-  } else {
-    const { data: created, error: ce } = await db.auth.admin.createUser({ email, password, email_confirm: true })
-    if (ce || !created?.user) {
-      return { success: false, error: { code: 'AUTH_ERROR', message: ce?.message ?? 'Failed to create student user' } }
-    }
-    studentUserId = created.user.id
+  // 1. Generate a unique @robocodeschools.com login address, then create the student auth user
+  const email = await generateUniqueLoginEmail('learner', first_name, last_name, makeEmailLocalPartExists(db))
+  const { data: created, error: ce } = await db.auth.admin.createUser({ email, password, email_confirm: true })
+  if (ce || !created?.user) {
+    return { success: false, error: { code: 'AUTH_ERROR', message: ce?.message ?? 'Failed to create student user' } }
   }
+  const studentUserId = created.user.id
 
   await db.from('users').upsert({ id: studentUserId, email }, { onConflict: 'id' })
   await db.from('profiles').upsert({ user_id: studentUserId, first_name, last_name }, { onConflict: 'user_id' })
@@ -437,18 +431,13 @@ export async function convertLeadToStudent(
     )
   }
 
-  // 4. Create or find parent auth user
-  let parentUserId: string
-  const { data: existingPU } = await db.from('users').select('id').eq('email', parent_email.toLowerCase()).maybeSingle()
-  if (existingPU) {
-    parentUserId = existingPU.id
-  } else {
-    const { data: pc, error: pe } = await db.auth.admin.createUser({ email: parent_email, password: parent_password, email_confirm: true })
-    if (pe || !pc?.user) {
-      return { success: false, error: { code: 'AUTH_ERROR', message: pe?.message ?? 'Failed to create parent user' } }
-    }
-    parentUserId = pc.user.id
+  // 4. Generate a unique @robocodeschools.com login address, then create the parent auth user
+  const parent_email = await generateUniqueLoginEmail('learner', parent_first, parent_last, makeEmailLocalPartExists(db))
+  const { data: pc, error: pe } = await db.auth.admin.createUser({ email: parent_email, password: parent_password, email_confirm: true })
+  if (pe || !pc?.user) {
+    return { success: false, error: { code: 'AUTH_ERROR', message: pe?.message ?? 'Failed to create parent user' } }
   }
+  const parentUserId = pc.user.id
 
   await db.from('users').upsert({ id: parentUserId, email: parent_email, phone: parent_phone || null }, { onConflict: 'id' })
   await db.from('profiles').upsert({ user_id: parentUserId, first_name: parent_first, last_name: parent_last }, { onConflict: 'user_id' })

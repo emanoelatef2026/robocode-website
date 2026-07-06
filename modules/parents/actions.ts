@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
+import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import { createParentSchema, linkStudentSchema } from './schemas'
 import type { ActionResult } from '@/types/app'
 
@@ -12,7 +13,6 @@ export async function createParent(_prev: unknown, formData: FormData): Promise<
   const db   = createServiceClient()
 
   const raw = {
-    email:        formData.get('email'),
     password:     formData.get('password'),
     first_name:   formData.get('first_name'),
     last_name:    formData.get('last_name'),
@@ -25,25 +25,18 @@ export async function createParent(_prev: unknown, formData: FormData): Promise<
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { email, password, first_name, last_name, student_id, relationship } = parsed.data
+  const { password, first_name, last_name, student_id, relationship } = parsed.data
 
-  let authUserId: string
-  const { data: listData } = await db.auth.admin.listUsers({ perPage: 1000 })
-  const existing = listData?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())
-
-  if (existing) {
-    authUserId = existing.id
-  } else {
-    const { data: created, error: createError } = await db.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    })
-    if (createError || !created?.user) {
-      return { success: false, error: { code: 'AUTH_ERROR', message: createError?.message ?? 'Failed to create user' } }
-    }
-    authUserId = created.user.id
+  const email = await generateUniqueLoginEmail('learner', first_name, last_name, makeEmailLocalPartExists(db))
+  const { data: created, error: createError } = await db.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  })
+  if (createError || !created?.user) {
+    return { success: false, error: { code: 'AUTH_ERROR', message: createError?.message ?? 'Failed to create user' } }
   }
+  const authUserId = created.user.id
 
   await db.from('users').upsert({ id: authUserId, email }, { onConflict: 'id' })
 

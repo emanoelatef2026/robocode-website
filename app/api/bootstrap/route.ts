@@ -82,6 +82,9 @@ export async function POST(request: NextRequest) {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return NextResponse.json({ error: 'Invalid or missing email address' }, { status: 400 })
     }
+    if (!email.endsWith('@robocodeschools.com')) {
+      return NextResponse.json({ error: 'Email must be an @robocodeschools.com address' }, { status: 400 })
+    }
 
     const password = body.password?.trim()
     if (!password || password.length < 6) {

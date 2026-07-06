@@ -30,7 +30,6 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
   const [isPending, startTransition] = useTransition()
   const [error, setError]            = useState<string | null>(null)
 
-  const [email, setEmail]               = useState(instructor?.user_email ?? '')
   const [password, setPassword]         = useState('')
   const [firstName, setFirstName]       = useState(instructor?.first_name ?? '')
   const [lastName, setLastName]         = useState(instructor?.last_name ?? '')
@@ -65,7 +64,7 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
 
   function handleSubmit() {
     if (!firstName.trim() || !lastName.trim()) { setError('Full name is required.'); return }
-    if (!email.trim()) { setError('Email is required.'); return }
+    if (!isEdit && !password.trim()) { setError('Password is required.'); return }
     if (branchIds.length === 0) { setError('Select at least one branch.'); return }
     if (paymentMethod) {
       const paymentError = validatePaymentMethodFields({
@@ -81,7 +80,6 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
 
     const fd = new FormData()
     if (isEdit) fd.append('id', instructor!.id)
-    fd.append('email', email)
     fd.append('first_name', firstName)
     fd.append('last_name', lastName)
     if (password) fd.append('password', password)
@@ -196,7 +194,13 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
 
           {section === 'account' && (
             <>
-              <FormField label={`Email${isEdit ? ' (changes login)' : ''}`} type="email" value={email} onChange={setEmail} required />
+              {isEdit && (
+                <div>
+                  <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Login email</label>
+                  <input value={instructor!.user_email ?? ''} disabled
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#64748B]" />
+                </div>
+              )}
               <FormField label={isEdit ? 'New Password (leave blank to keep)' : 'Password'} type="password" value={password} onChange={setPassword} placeholder="min. 6 characters" required={!isEdit} />
               <div>
                 <label className="mb-2 block text-[12px] font-medium text-[#374151]">Specializations</label>

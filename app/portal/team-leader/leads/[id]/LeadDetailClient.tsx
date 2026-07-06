@@ -465,10 +465,6 @@ export default function LeadDetailClient({
                             <input name="last_name" required className={inputCls} defaultValue={lead.child_name.split(' ').slice(1).join(' ')} />
                           </div>
                           <div>
-                            <label className={labelCls}>Email <span className="text-[#EF4444]">*</span></label>
-                            <input name="email" type="email" required className={inputCls} placeholder="student@email.com" />
-                          </div>
-                          <div>
                             <label className={labelCls}>Password <span className="text-[#EF4444]">*</span></label>
                             <input name="password" type="password" required minLength={6} className={inputCls} />
                           </div>
@@ -492,10 +488,6 @@ export default function LeadDetailClient({
                           <div>
                             <label className={labelCls}>Last Name <span className="text-[#EF4444]">*</span></label>
                             <input name="parent_last" required className={inputCls} defaultValue={(lead.parent_name ?? '').split(' ').slice(1).join(' ')} />
-                          </div>
-                          <div>
-                            <label className={labelCls}>Email <span className="text-[#EF4444]">*</span></label>
-                            <input name="parent_email" type="email" required className={inputCls} defaultValue={lead.email ?? ''} />
                           </div>
                           <div>
                             <label className={labelCls}>Password <span className="text-[#EF4444]">*</span></label>

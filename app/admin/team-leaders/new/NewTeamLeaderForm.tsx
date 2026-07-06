@@ -45,13 +45,6 @@ export default function NewTeamLeaderForm({ branches }: Props) {
 
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Email <span className="text-[#EF4444]">*</span>
-          </label>
-          <input name="email" type="email" required className={cls} />
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
             Password <span className="text-[#EF4444]">*</span>
           </label>
           <input name="password" type="password" required autoComplete="new-password" placeholder="Minimum 6 characters" className={cls} />

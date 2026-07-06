@@ -14,6 +14,9 @@ interface Props {
   studentOptions: StudentPickerOption[]
   onClose:        () => void
   onSuccess:      () => void
+  // Set when opened on top of another modal (e.g. the student quick-view) so
+  // it needs a higher stacking context to render above it.
+  nested?:        boolean
 }
 
 const RELATIONS = [
@@ -32,9 +35,18 @@ function normalizePhone(p: string): string {
   return s
 }
 
+/** Client-side random password suggestion — a convenience preview only; the
+ *  submitted value is whatever ends up in the field at submit time. */
+function generatePasswordSuggestion(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'
+  const bytes = new Uint32Array(8)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, n => chars[n % chars.length]).join('')
+}
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
-export default function ParentFormModal({ mode, parent: p, studentOptions, onClose, onSuccess }: Props) {
+export default function ParentFormModal({ mode, parent: p, studentOptions, onClose, onSuccess, nested = false }: Props) {
   const isEdit = mode === 'edit'
 
   // ── Form fields ─────────────────────────────────────────────────────────────
@@ -45,7 +57,6 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
   const [whatsapp,          setWhatsapp]         = useState(p?.whatsapp_preferred ?? false)
   const [notes,             setNotes]            = useState(p?.notes ?? '')
   const hasPortal = isEdit && !!p?.user_id
-  const [email,             setEmail]            = useState(isEdit ? (p?.email ?? '') : '')
   const [password,          setPassword]         = useState('')
   const [showPortal,        setShowPortal]       = useState(false)
 
@@ -130,12 +141,10 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
       fd.append('students_to_add_json',    JSON.stringify(selectedStudentIds))
       fd.append('contacts_to_remove_json', JSON.stringify(contactsToRemove))
       fd.append('user_id', p!.user_id || '')
-      if (email.trim())    fd.append('email',    email.trim())
       if (password.trim()) fd.append('password', password.trim())
     } else {
       fd.append('student_ids_json', JSON.stringify(selectedStudentIds))
-      if (showPortal && email.trim()) {
-        fd.append('email',    email.trim())
+      if (showPortal && password.trim()) {
         fd.append('password', password.trim())
       }
     }
@@ -149,12 +158,12 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm ${nested ? 'z-[75]' : 'z-40'}`}
         onClick={onClose}
       />
 
       {/* Panel — full screen on mobile, centered sheet on desktop */}
-      <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-4">
+      <div className={`fixed inset-0 flex items-end justify-center sm:items-center sm:p-4 ${nested ? 'z-[76]' : 'z-50'}`}>
         <div className="w-full sm:max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[92dvh]">
 
           {/* Header */}
@@ -418,38 +427,44 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                 <div className="space-y-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
                   {hasPortal ? (
                     <p className="text-xs text-[#64748B]">
-                      This parent has a portal account. Update the email or set a new password below.
+                      This parent has a portal account. Set a new password below to reset it.
                     </p>
                   ) : (
                     <p className="text-xs text-[#64748B]">
-                      Give this parent a login account to access the parent portal.
+                      Give this parent a login account to access the parent portal — the login email is generated automatically.
                     </p>
                   )}
 
+                  {hasPortal && (
+                    <div>
+                      <label className="block text-xs font-medium text-[#374151] mb-1">Login email</label>
+                      <input
+                        readOnly
+                        value={p?.email ?? ''}
+                        className="w-full ds-card bg-[#F1F5F9] px-3 py-2.5 text-sm text-[#64748B] cursor-not-allowed"
+                      />
+                    </div>
+                  )}
                   <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1">
-                      Email {hasPortal && <span className="text-[#94A3B8] font-normal">(current: {p?.email})</span>}
-                    </label>
-                    <input
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder={hasPortal ? 'New email (leave blank to keep current)' : 'parent@email.com'}
-                      type="email"
-                      autoComplete="off"
-                      className="w-full ds-card px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-[#374151] mb-1">
-                      {hasPortal ? 'New Password' : 'Password'}
-                    </label>
+                    <div className="mb-1 flex items-center justify-between">
+                      <label className="block text-xs font-medium text-[#374151]">
+                        {hasPortal ? 'New Password' : 'Password'}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setPassword(generatePasswordSuggestion())}
+                        className="text-[11px] font-semibold text-[#FF8A1F] hover:underline"
+                      >
+                        Generate
+                      </button>
+                    </div>
                     <input
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       placeholder={hasPortal ? 'Leave blank to keep current password' : 'Min. 6 characters'}
-                      type="password"
+                      type="text"
                       autoComplete="new-password"
-                      className="w-full ds-card px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
+                      className="w-full ds-card px-3 py-2.5 text-sm font-mono text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
                     />
                   </div>
                 </div>

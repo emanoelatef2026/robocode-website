@@ -5,7 +5,6 @@ import {
   updateStudent,
   deleteStudent,
   setStudentPassword,
-  sendStudentPasswordReset,
   transferStudentBranch,
 } from '@/modules/students/actions'
 import {
@@ -56,7 +55,6 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
   const [newPassword, setNewPassword] = useState('')
   const [pwError,     setPwError]     = useState<string | null>(null)
   const [pwSuccess,   setPwSuccess]   = useState<string | null>(null)
-  const [emailMsg,    setEmailMsg]    = useState<string | null>(null)
 
   // ── Branch transfer state ─────────────────────────────────────────────────
   const [targetBranch,    setTargetBranch]    = useState('')
@@ -85,14 +83,6 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
       const res = await setStudentPassword(student.id, newPassword)
       if (!res.success) { setPwError(res.error.message) }
       else { setPwSuccess('Password updated.'); setNewPassword('') }
-    })
-  }
-
-  const handleSendReset = () => {
-    setEmailMsg(null)
-    startTransition(async () => {
-      const res = await sendStudentPasswordReset(student.id)
-      setEmailMsg(res.success ? 'Reset email sent.' : (res as any).error.message)
     })
   }
 
@@ -179,10 +169,10 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
             </div>
           </div>
 
-          {/* Email */}
+          {/* Login email (system-generated, immutable) */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Email</label>
-            <input name="email" type="email" defaultValue={student.user_email ?? ''} className={cls} />
+            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Login email</label>
+            <input value={student.user_email ?? ''} disabled className={`${cls} bg-[#F8FAFC] text-[#64748B]`} />
           </div>
 
           {/* Status + DOB */}
@@ -344,27 +334,9 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
             </div>
             {pwError   && <p className="mt-1 text-xs text-[#EF4444]">{pwError}</p>}
             {pwSuccess  && <p className="mt-1 text-xs text-[#10B981]">{pwSuccess}</p>}
-          </div>
-
-          <div className="relative flex items-center">
-            <div className="flex-1 border-t border-[#E2E8F0]" />
-            <span className="mx-3 text-xs text-[#94A3B8]">or</span>
-            <div className="flex-1 border-t border-[#E2E8F0]" />
-          </div>
-
-          <div>
-            <p className="mb-1.5 text-xs text-[#64748B]">
-              Send a reset email to <strong>{student.user_email}</strong>
+            <p className="mt-2 text-xs text-[#94A3B8]">
+              The login address is a system identifier ({student.user_email}), not a real inbox — share the new password with the student directly.
             </p>
-            <button type="button" disabled={isPending} onClick={handleSendReset}
-              className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#0B1F3A] hover:border-[#FF8A1F] hover:text-[#FF8A1F] disabled:opacity-50">
-              Send Reset Email
-            </button>
-            {emailMsg && (
-              <p className={`mt-1.5 text-xs ${emailMsg.includes('sent') ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
-                {emailMsg}
-              </p>
-            )}
           </div>
         </div>
       </div>

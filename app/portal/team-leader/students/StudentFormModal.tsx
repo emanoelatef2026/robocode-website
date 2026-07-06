@@ -16,7 +16,6 @@ interface ParentContactBlock {
   whatsapp_preferred: boolean
   is_primary:         boolean
   is_emergency:       boolean
-  email:              string
   password:           string
 }
 
@@ -48,7 +47,6 @@ function newContact(isPrimary = false): ParentContactBlock {
     whatsapp_preferred: false,
     is_primary:         isPrimary,
     is_emergency:       true,
-    email:              '',
     password:           '',
   }
 }
@@ -90,7 +88,6 @@ export default function StudentFormModal({
         whatsapp_preferred: c.whatsapp_preferred,
         is_primary:         c.is_primary,
         is_emergency:       c.is_emergency,
-        email:              '',
         password:           '',
       }))
     : [newContact(true)]
@@ -468,33 +465,20 @@ export default function StudentFormModal({
               </div>
             </div>
 
-            {/* Auth fields (create only) */}
+            {/* Password (create only) — login email is generated automatically as @robocodeschools.com */}
             {!isEdit && (
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                    Email <span className="text-[#EF4444]">*</span>
-                  </label>
-                  <input
-                    name="email"
-                    type="email"
-                    required
-                    className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                    Password <span className="text-[#EF4444]">*</span>
-                  </label>
-                  <input
-                    name="password"
-                    type="password"
-                    required
-                    autoComplete="new-password"
-                    placeholder="Min 6 characters"
-                    className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
-                  />
-                </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+                  Password <span className="text-[#EF4444]">*</span>
+                </label>
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  autoComplete="new-password"
+                  placeholder="Min 6 characters"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                />
               </div>
             )}
 
@@ -556,16 +540,11 @@ export default function StudentFormModal({
               <legend className="px-1 text-xs font-semibold text-[#64748B] uppercase tracking-wide">Account</legend>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                    Email <span className="text-[11px] text-[#94A3B8]">(leave unchanged to keep)</span>
-                  </label>
+                  <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Login email</label>
                   <input
-                    name="new_email"
-                    type="email"
-                    defaultValue={student?.user_email ?? ''}
-                    placeholder="student@example.com"
-                    autoComplete="off"
-                    className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                    readOnly
+                    value={student?.user_email ?? ''}
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#94A3B8] cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -706,32 +685,20 @@ export default function StudentFormModal({
                   WhatsApp preferred
                 </label>
 
-                {/* Portal access — email + password */}
+                {/* Portal access — set a password to create a login (email is generated automatically) */}
                 <div className="mt-1 rounded-lg border border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-2.5 space-y-2">
                   <p className="text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wide">
                     Portal Access (optional)
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="mb-0.5 block text-xs text-[#64748B]">Email</label>
-                      <input
-                        value={c.email}
-                        onChange={e => updateContact(c._key, 'email', e.target.value)}
-                        placeholder="parent@email.com"
-                        type="email"
-                        className="w-full ds-card px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-0.5 block text-xs text-[#64748B]">Password</label>
-                      <input
-                        value={c.password}
-                        onChange={e => updateContact(c._key, 'password', e.target.value)}
-                        placeholder="Min 6 chars"
-                        type="password"
-                        className="w-full ds-card px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
-                      />
-                    </div>
+                  <div>
+                    <label className="mb-0.5 block text-xs text-[#64748B]">Password</label>
+                    <input
+                      value={c.password}
+                      onChange={e => updateContact(c._key, 'password', e.target.value)}
+                      placeholder="Min 6 chars — leave blank for no portal login"
+                      type="password"
+                      className="w-full ds-card px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                    />
                   </div>
                 </div>
               </div>

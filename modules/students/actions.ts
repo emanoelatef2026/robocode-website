@@ -3,8 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
-import { getSupabasePublic } from '@/lib/supabase/server'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
+import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import { createStudentSchema, updateStudentSchema } from './schemas'
 import type { ActionResult } from '@/types/app'
 
@@ -16,7 +16,6 @@ function validReturnTo(raw: FormDataEntryValue | null): string | null {
 
 export async function createStudent(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
   const raw = {
-    email:           formData.get('email'),
     password:        formData.get('password'),
     first_name:      formData.get('first_name'),
     last_name:       formData.get('last_name'),
@@ -43,31 +42,22 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
   const db   = createServiceClient()
 
   const {
-    email, password, first_name, last_name, branch_id, enrollment_date, notes,
+    password, first_name, last_name, branch_id, enrollment_date, notes,
     school_grade, address, phone, date_of_birth, parent_phone_1, parent_phone_2, group_id,
   } = parsed.data
 
-  // 1. Create or find auth user
-  let authUserId: string
-  const { data: existingUser } = await db
-    .from('users')
-    .select('id')
-    .eq('email', email.toLowerCase())
-    .maybeSingle()
+  // 1. Generate a unique @robocodeschools.com login address, then create the auth user
+  const email = await generateUniqueLoginEmail('learner', first_name, last_name, makeEmailLocalPartExists(db))
 
-  if (existingUser) {
-    authUserId = existingUser.id
-  } else {
-    const { data: created, error: createError } = await db.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-    })
-    if (createError || !created?.user) {
-      return { success: false, error: { code: 'AUTH_ERROR', message: createError?.message ?? 'Failed to create user' } }
-    }
-    authUserId = created.user.id
+  const { data: created, error: createError } = await db.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  })
+  if (createError || !created?.user) {
+    return { success: false, error: { code: 'AUTH_ERROR', message: createError?.message ?? 'Failed to create user' } }
   }
+  const authUserId = created.user.id
 
   // 2. Ensure public.users row (with phone)
   await db.from('users').upsert(
@@ -166,7 +156,6 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
     id:             formData.get('id'),
     first_name:     formData.get('first_name')     || undefined,
     last_name:      formData.get('last_name')      || undefined,
-    email:          formData.get('email')          || undefined,
     status:         formData.get('status')         || undefined,
     notes:          formData.get('notes')          || undefined,
     school_grade:   formData.get('school_grade')   || undefined,
@@ -182,7 +171,7 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { id, first_name, last_name, email, status, notes, school_grade, address, phone, date_of_birth, parent_phone_1, parent_phone_2 } = parsed.data
+  const { id, first_name, last_name, status, notes, school_grade, address, phone, date_of_birth, parent_phone_1, parent_phone_2 } = parsed.data
 
   const { data: old } = await db
     .from('students')
@@ -201,17 +190,6 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
     if (first_name) profileUpdate.first_name = first_name
     if (last_name)  profileUpdate.last_name  = last_name
     await db.from('profiles').update(profileUpdate).eq('user_id', old.user_id)
-  }
-
-  // ── Email update ──
-  if (email && email.trim()) {
-    const normalised = email.trim().toLowerCase()
-    const { data: taken } = await db.from('users').select('id').eq('email', normalised).neq('id', old.user_id).maybeSingle()
-    if (taken) return { success: false, error: { code: 'DUPLICATE', message: 'Email is already used by another account.' } }
-
-    const { error: authErr } = await db.auth.admin.updateUserById(old.user_id, { email: normalised })
-    if (authErr) return { success: false, error: { code: 'AUTH_ERROR', message: authErr.message } }
-    await db.from('users').update({ email: normalised }).eq('id', old.user_id)
   }
 
   // ── Phone + profile ──
@@ -252,7 +230,7 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
     p_entity_type:  'student',
     p_entity_id:    id,
     p_old_values:   old ?? null,
-    p_new_values:   { ...updates, first_name, last_name, email },
+    p_new_values:   { ...updates, first_name, last_name },
   })
 
   const returnTo = validReturnTo(formData.get('_return_to'))
@@ -344,40 +322,6 @@ export async function setStudentPassword(
     p_entity_type:  'student',
     p_entity_id:    studentId,
     p_new_values:   { method: 'direct' },
-  })
-
-  return { success: true, data: undefined }
-}
-
-export async function sendStudentPasswordReset(studentId: string): Promise<ActionResult<void>> {
-  const user = await requirePermission('manage_students')
-  const db   = createServiceClient()
-
-  const { data: student } = await db
-    .from('students')
-    .select('branch_id, users!students_user_id_fkey(email)')
-    .eq('id', studentId)
-    .single()
-  if (!student) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
-  if (!isBranchAccessible(user, (student as any).branch_id)) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
-  }
-
-  const email = (student as any).users?.email
-  if (!email) return { success: false, error: { code: 'NOT_FOUND', message: 'Student email not found.' } }
-
-  const anon = getSupabasePublic()
-  const { error } = await anon.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/reset-password`,
-  })
-  if (error) return { success: false, error: { code: 'AUTH_ERROR', message: error.message } }
-
-  await db.rpc('write_audit_log', {
-    p_performed_by: user.id,
-    p_action:       'send_password_reset',
-    p_entity_type:  'student',
-    p_entity_id:    studentId,
-    p_new_values:   { method: 'email', email },
   })
 
   return { success: true, data: undefined }

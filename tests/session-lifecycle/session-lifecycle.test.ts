@@ -61,7 +61,6 @@ vi.mock('@/modules/gamification/badge-service', () => ({
 import { createServiceClient } from '@/lib/supabase/service'
 import { startSession, saveAttendance, endSession, postponeSession } from '@/modules/instructor-portal/actions'
 import { SLOT_CONSUMING_STATUSES } from '@/modules/attendance/constants'
-import { createInstructor } from '@/modules/instructors/actions'
 import { awardXP } from '@/modules/gamification/xp-service'
 
 // ── Helper ────────────────────────────────────────────────────────────────────
@@ -334,41 +333,6 @@ describe('Attendance status rules — makeup counted', () => {
     await endSession('sess-6', 'grp-1', true)
 
     expect(awardXP).toHaveBeenCalledWith('stu-4', expect.any(Number), true)
-  })
-})
-
-// ── TEST 10: Instructor creation blocks duplicate email ───────────────────────
-
-describe('createInstructor — duplicate email', () => {
-  it('returns DUPLICATE error when email already exists in auth', async () => {
-    const db = {
-      from: vi.fn(),
-      rpc:  vi.fn(),
-      auth: {
-        admin: {
-          listUsers: vi.fn().mockResolvedValue({
-            data: { users: [{ id: 'existing-user', email: 'test@example.com' }] },
-          }),
-        },
-      },
-    }
-    ;(createServiceClient as ReturnType<typeof vi.fn>).mockReturnValue(db)
-
-    const fd = makeFormData({
-      email:      'test@example.com',
-      password:   'secret123',
-      first_name: 'Alice',
-      last_name:  'Smith',
-      branch_id:  'a0000000-0000-4000-8000-000000000020',
-    })
-
-    const result = await createInstructor(null, fd)
-
-    expect(result.success).toBe(false)
-    if (!result.success) {
-      expect(result.error.code).toBe('DUPLICATE')
-      expect(result.error.message).toMatch(/already registered/i)
-    }
   })
 })
 

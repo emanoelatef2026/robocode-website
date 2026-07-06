@@ -8,6 +8,7 @@ import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createInstructorSchema, updateInstructorSchema } from './schemas'
 import { saveUserPermissions } from '@/modules/user-permissions/mutations'
 import { validatePaymentMethodFields } from '@/modules/instructor-payments/types'
+import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import type { ActionResult } from '@/types/app'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
@@ -18,7 +19,6 @@ function validReturnTo(raw: FormDataEntryValue | null): string | null {
 
 export async function createInstructor(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
   const raw = {
-    email:           formData.get('email'),
     password:        formData.get('password'),
     first_name:      formData.get('first_name'),
     last_name:       formData.get('last_name'),
@@ -39,16 +39,12 @@ export async function createInstructor(_prev: unknown, formData: FormData): Prom
   const user = await requirePermission('manage_instructors', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
 
-  const { email, password, first_name, last_name, branch_id, employee_id, hire_date, specializations, phone } = parsed.data
+  const { password, first_name, last_name, branch_id, employee_id, hire_date, specializations, phone } = parsed.data
   const specsArray = specializations
     ? specializations.split(',').map((s) => s.trim()).filter(Boolean)
     : []
 
-  const { data: listData } = await db.auth.admin.listUsers({ perPage: 1000 })
-  const existing = listData?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())
-  if (existing) {
-    return { success: false, error: { code: 'DUPLICATE', message: 'This email is already registered.' } }
-  }
+  const email = await generateUniqueLoginEmail('staff', first_name, last_name, makeEmailLocalPartExists(db))
 
   const { data: created, error: createError } = await db.auth.admin.createUser({
     email,

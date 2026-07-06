@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
 export const createStudentSchema = z.object({
-  email:           z.string().email('Invalid email address'),
   password:        z.string().min(6, 'Password must be at least 6 characters'),
   first_name:      z.string().min(1, 'First name is required').max(100),
   last_name:       z.string().min(1, 'Last name is required').max(100),
@@ -22,8 +21,6 @@ export const updateStudentSchema = z.object({
   // Profile
   first_name:      z.string().min(1).max(100).optional().or(z.literal('')),
   last_name:       z.string().min(1).max(100).optional().or(z.literal('')),
-  // Auth
-  email:           z.string().email('Invalid email address').optional().or(z.literal('')),
   // Student
   status:          z.enum(['active', 'inactive', 'graduated', 'paused', 'banned']).optional(),
   notes:           z.string().max(1000).optional().or(z.literal('')),

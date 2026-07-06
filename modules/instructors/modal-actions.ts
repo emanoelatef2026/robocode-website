@@ -6,6 +6,7 @@ import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { validatePaymentMethodFields } from '@/modules/instructor-payments/types'
 import { getInstructorDetailData, getInstructorFormOptions, listInstructorsOperational } from './operational'
 import { computeNextAllocationStart } from '@/modules/academic/session-ownership'
+import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import type {
   InstructorDetailData,
   InstructorFormOptions,
@@ -53,15 +54,14 @@ export async function createInstructorModalAction(formData: FormData): Promise<A
   const user = await requirePermission('manage_instructors', { branchId: branch_id })
   const db   = createServiceClient()
 
-  const email      = (formData.get('email') as string)?.trim()
   const password   = formData.get('password') as string
   const first_name = (formData.get('first_name') as string)?.trim()
   const last_name  = (formData.get('last_name') as string)?.trim()
 
-  if (!email || !first_name || !last_name) {
-    return { success: false, error: { code: 'VALIDATION', message: 'Name and email are required.' } }
+  if (!first_name || !last_name) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Name is required.' } }
   }
-  if (password && password.length < 6) {
+  if (!password || password.length < 6) {
     return { success: false, error: { code: 'VALIDATION', message: 'Password must be at least 6 characters.' } }
   }
 
@@ -79,23 +79,15 @@ export async function createInstructorModalAction(formData: FormData): Promise<A
     }
   }
 
-  // Auth user
-  let authUserId: string
-  const { data: listData } = await db.auth.admin.listUsers({ perPage: 1000 })
-  const existing = listData?.users.find((u) => u.email?.toLowerCase() === email.toLowerCase())
-
-  if (existing) {
-    authUserId = existing.id
-  } else {
-    if (!password) return { success: false, error: { code: 'VALIDATION', message: 'Password is required for new users.' } }
-    const { data: created, error: createError } = await db.auth.admin.createUser({
-      email, password, email_confirm: true,
-    })
-    if (createError || !created?.user) {
-      return { success: false, error: { code: 'AUTH_ERROR', message: createError?.message ?? 'Failed to create user' } }
-    }
-    authUserId = created.user.id
+  // Auth user — generate a unique @robocodeschools.com login address
+  const email = await generateUniqueLoginEmail('staff', first_name, last_name, makeEmailLocalPartExists(db))
+  const { data: created, error: createError } = await db.auth.admin.createUser({
+    email, password, email_confirm: true,
+  })
+  if (createError || !created?.user) {
+    return { success: false, error: { code: 'AUTH_ERROR', message: createError?.message ?? 'Failed to create user' } }
   }
+  const authUserId = created.user.id
 
   const phone = (formData.get('phone') as string) || null
 
@@ -247,13 +239,6 @@ export async function updateInstructorModalAction(formData: FormData): Promise<A
   const phone = formData.get('phone') as string
   if (phone !== null) {
     await db.from('users').update({ phone: phone || null }).eq('id', instrRow.user_id)
-  }
-
-  // Update auth email if changed
-  const email = (formData.get('email') as string)?.trim()
-  if (email) {
-    await db.from('users').update({ email }).eq('id', instrRow.user_id)
-    await db.auth.admin.updateUserById(instrRow.user_id, { email })
   }
 
   // Update password if provided

@@ -23,8 +23,10 @@ const STUDIO_ROLES = new Set<RoleName>(['super_admin', 'team_leader'])
 
 // ─── Route helpers ────────────────────────────────────────────────────────────
 
+const STUDIO_PUBLIC_PATHS = ['/studio/login', '/studio/forgot-password', '/studio/reset-password']
+
 const isStudio = (p: string) =>
-  p.startsWith('/studio') && p !== STUDIO_LOGIN && !p.startsWith('/studio/login')
+  p.startsWith('/studio') && !STUDIO_PUBLIC_PATHS.some(pub => p === pub || p.startsWith(`${pub}/`))
 
 const isApiStudio = (p: string) => p.startsWith('/api/studio')
 

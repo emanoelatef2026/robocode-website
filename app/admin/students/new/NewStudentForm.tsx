@@ -46,13 +46,7 @@ export default function NewStudentForm({ branches, groups }: Props) {
           </div>
         </div>
 
-        {/* Email + password */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Email <span className="text-[#EF4444]">*</span>
-          </label>
-          <input name="email" type="email" required className={cls} />
-        </div>
+        {/* Password (login email is generated automatically as @robocodeschools.com) */}
         <div>
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
             Password <span className="text-[#EF4444]">*</span>

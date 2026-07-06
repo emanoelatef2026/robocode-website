@@ -1,40 +1,22 @@
-﻿'use client'
+'use client'
 
-import { Suspense, useState, useTransition } from 'react'
+import { Suspense, useActionState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { requestPasswordReset } from '@/modules/auth/actions'
+import type { RequestPasswordResetState } from '@/modules/auth/actions'
 
 function ForgotPasswordForm() {
   const searchParams = useSearchParams()
   const linkExpired  = searchParams.get('error') === 'link_expired'
 
-  const [sent, setSent]   = useState(false)
-  const [error, setError] = useState<string | null>(
-    linkExpired ? 'Your reset link has expired. Request a new one below.' : null
+  const [state, action, pending] = useActionState<RequestPasswordResetState | null, FormData>(
+    requestPasswordReset,
+    null
   )
-  const [pending, start]  = useTransition()
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError(null)
-    const email = (e.currentTarget.elements.namedItem('email') as HTMLInputElement).value.trim()
-
-    start(async () => {
-      const supabase = createSupabaseBrowserClient()
-      const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/callback?type=recovery`,
-      })
-      if (err) {
-        setError(err.message || 'Failed to send recovery email. Please try again.')
-      } else {
-        setSent(true)
-      }
-    })
-  }
-
-  if (sent) {
+  if (state?.submitted) {
     return (
       <div className="text-center">
         <div className="mb-4 flex justify-center">
@@ -46,7 +28,7 @@ function ForgotPasswordForm() {
         </div>
         <h1 className="mb-2 text-lg font-bold text-[#0B132B]">Check your email</h1>
         <p className="text-[13px] text-[#9CA3AF]">
-          If that email is registered, you will receive a password reset link shortly.
+          If that account is registered, you will receive a password reset link shortly.
         </p>
         <Link href="/login" className="mt-6 inline-block text-[13px] text-[#19C6F4] hover:underline">
           ← Back to sign in
@@ -58,29 +40,40 @@ function ForgotPasswordForm() {
   return (
     <>
       <h1 className="mb-1 text-center text-lg font-bold text-[#0B132B]">Reset your password</h1>
-      <p className="mb-7 text-center text-[13px] text-[#9CA3AF]">
-        Enter your email and we&apos;ll send you a reset link
+      <p className="mb-4 text-center text-[13px] text-[#9CA3AF]">
+        Enter your username and we&apos;ll send you a reset link
       </p>
 
-      {error && (
+      <div className="mb-5 rounded-lg bg-[#F0F9FF] px-4 py-3 text-[12px] text-[#0B132B]">
+        Staff (instructors, team leaders, admins): enter your username below.
+        Students and parents: your login isn&apos;t a real inbox — ask your instructor or team leader
+        to reset your password instead.
+      </div>
+
+      {linkExpired && (
         <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#EF4444]">
-          {error}
+          Your reset link has expired. Request a new one below.
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form action={action} className="space-y-4">
         <div>
           <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
-            Email address
+            Username
           </label>
-          <input
-            type="email"
-            name="email"
-            required
-            autoComplete="email"
-            placeholder="you@example.com"
-            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
-          />
+          <div className="flex items-stretch overflow-hidden rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] transition focus-within:border-[#19C6F4] focus-within:ring-2 focus-within:ring-[#19C6F4]/20">
+            <input
+              type="text"
+              name="email"
+              required
+              autoComplete="username"
+              placeholder="e.g. e.atef"
+              className="min-w-0 flex-1 bg-transparent px-4 py-3 text-[14px] text-[#0B132B] outline-none"
+            />
+            <span className="flex items-center whitespace-nowrap border-l border-[#E2E8F0] bg-[#F1F5F9] px-3 text-[13px] text-[#9CA3AF]">
+              @robocodeschools.com
+            </span>
+          </div>
         </div>
 
         <button

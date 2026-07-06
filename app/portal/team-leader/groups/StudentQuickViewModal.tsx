@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { buildWhatsAppUrl, buildTelUrl } from '@/lib/phone'
 import EnrollmentWizard from '../finance/EnrollmentWizard'
 import type { StudentResult } from '../finance/EnrollmentWizard'
+import ParentFormModal from '../parents/ParentFormModal'
 import {
   getStudentAttendanceHistoryAction,
   getStudentAuthDataAction,
@@ -26,6 +27,8 @@ import {
   sendWelcomeWhatsAppAction,
   generateMissingWelcomeCredentialsAction,
 } from '@/modules/students/welcome-message'
+import { getParentEditContextAction } from '@/modules/parents/contact-actions'
+import type { ParentOperationalRow, StudentPickerOption } from '@/modules/parents/operational'
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -168,6 +171,19 @@ function GenerateCredentialsButton({ generating, onClick }: { generating: boolea
       className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-[#FFFBEB] px-3 py-1.5 text-[11px] font-semibold text-[#B45309] hover:bg-[#FEF3C7] disabled:cursor-not-allowed disabled:opacity-50 transition"
     >
       ⚠ {generating ? 'Generating…' : 'Generate Credentials'}
+    </button>
+  )
+}
+
+function CreateParentAccountButton({ loading, onClick }: { loading: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      title="Create a parent portal account for this student"
+      className="flex items-center gap-1.5 rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-1.5 text-[11px] font-semibold text-[#1D4ED8] hover:bg-[#DBEAFE] disabled:cursor-not-allowed disabled:opacity-50 transition"
+    >
+      + {loading ? 'Loading…' : 'Create Parent Account'}
     </button>
   )
 }
@@ -837,6 +853,14 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   // Overlay modals
   const [wizardOpen, setWizardOpen] = useState(false)
 
+  // Parent portal account creation (reuses ParentFormModal from the Parents page)
+  const [parentModalOpen,    setParentModalOpen]    = useState(false)
+  const [parentModalLoading, setParentModalLoading] = useState(false)
+  const [parentEditData,     setParentEditData]     = useState<{
+    parent:         ParentOperationalRow
+    studentOptions: StudentPickerOption[]
+  } | null>(null)
+
   // Welcome WhatsApp message
   const [welcomeEligible,      setWelcomeEligible]      = useState(false)
   const [welcomeTooltip,       setWelcomeTooltip]       = useState<string | null>('Loading…')
@@ -845,14 +869,14 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   const [welcomeSending,       setWelcomeSending]       = useState(false)
   const [welcomeRegenerating,  setWelcomeRegenerating]  = useState(false)
 
-  // ESC to close (but not if the enrollment wizard is open)
+  // ESC to close (but not if an overlay modal is open)
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !wizardOpen) onClose()
+      if (e.key === 'Escape' && !wizardOpen && !parentModalOpen) onClose()
     }
     window.addEventListener('keydown', fn)
     return () => window.removeEventListener('keydown', fn)
-  }, [onClose, wizardOpen])
+  }, [onClose, wizardOpen, parentModalOpen])
 
   // Eager-load data needed for Overview + Attendance tabs
   useEffect(() => {
@@ -994,6 +1018,32 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     onStudentUpdated?.()
   }
 
+  // Create parent portal account (embeds the Parents page's ParentFormModal)
+  async function handleOpenParentAccountModal() {
+    if (!s.parent) return
+    setParentModalLoading(true)
+    const result = await getParentEditContextAction(s.parent.id, group.branch_id)
+    setParentModalLoading(false)
+    if (!result.success) {
+      alert(result.error)
+      return
+    }
+    setParentEditData(result.data)
+    setParentModalOpen(true)
+  }
+
+  async function handleParentAccountCreated() {
+    setParentModalOpen(false)
+    setParentEditData(null)
+    const status = await getWelcomeMessageStatusAction(s.student_id)
+    setWelcomeEligible(status.eligibility.eligible)
+    setWelcomeTooltip(status.eligibility.reason)
+    setWelcomeCanRegenerate(status.eligibility.canRegenerate)
+    setWelcomeLastSent(status.lastSentAt)
+    router.refresh()
+    onStudentUpdated?.()
+  }
+
   function handleEnrollmentWizardSuccess() {
     setWizardOpen(false)
     getStudentAttendanceSummaryAction(s.student_id).then(d => setAttSummary(d)).catch(() => {})
@@ -1012,7 +1062,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 : s.risk_level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]'
                 :                             'bg-[#E7F8EE] text-[#15803D]'
 
-  const anyOverlayOpen = wizardOpen
+  const anyOverlayOpen = wizardOpen || parentModalOpen
 
   return (
     <>
@@ -1091,6 +1141,14 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 <GenerateCredentialsButton
                   generating={welcomeRegenerating}
                   onClick={handleGenerateCredentials}
+                />
+              )}
+              {canSendWelcome && !welcomeEligible && !welcomeCanRegenerate
+                && welcomeTooltip === 'Parent portal account has not been created yet.'
+                && s.parent && (
+                <CreateParentAccountButton
+                  loading={parentModalLoading}
+                  onClick={handleOpenParentAccountModal}
                 />
               )}
             </div>
@@ -1176,6 +1234,18 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
           onClose={() => setWizardOpen(false)}
           onSuccess={handleEnrollmentWizardSuccess}
           overlayClassName="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-8"
+        />
+      )}
+
+      {/* ── Create Parent Account (reuses the Parents page form, z-[75/76]) ── */}
+      {parentModalOpen && parentEditData && (
+        <ParentFormModal
+          mode="edit"
+          parent={parentEditData.parent}
+          studentOptions={parentEditData.studentOptions}
+          onClose={() => setParentModalOpen(false)}
+          onSuccess={handleParentAccountCreated}
+          nested
         />
       )}
     </>
