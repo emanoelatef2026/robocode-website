@@ -72,6 +72,25 @@ function parseGroupIds(raw: FormDataEntryValue | null | undefined): string[] {
   } catch { return [] }
 }
 
+// Guard: every group a student is assigned to must live in the student's branch.
+// Returns an error message naming the offending groups, or null when all match.
+async function validateGroupsMatchBranch(
+  db: ReturnType<typeof createServiceClient>,
+  branchId: string,
+  groupIds: string[]
+): Promise<string | null> {
+  if (!groupIds.length) return null
+  const { data: groups } = await db
+    .from('groups')
+    .select('id, name, branch_id')
+    .in('id', groupIds)
+  const mismatched = (groups ?? []).filter(g => g.branch_id !== branchId)
+  if (mismatched.length) {
+    return `Student and group must belong to the same branch. Wrong-branch group(s): ${mismatched.map(g => g.name).join(', ')}`
+  }
+  return null
+}
+
 async function applyGroupAssignments(
   db: ReturnType<typeof createServiceClient>,
   studentId: string,
@@ -285,6 +304,13 @@ export async function createStudentModal(
 
   const { email, password, first_name, last_name, branch_id, phone, age, school_grade, date_of_birth, enrollment_date, notes } = parsed.data
 
+  // 0. Groups must be in the student's branch — validate before creating anything
+  const groupsToAdd = parseGroupIds(formData.get('groups_to_add_json'))
+  const branchErr   = await validateGroupsMatchBranch(db, branch_id, groupsToAdd)
+  if (branchErr) {
+    return { success: false, error: { code: 'VALIDATION', message: branchErr } }
+  }
+
   // 1. Auth user
   let authUserId: string
   const { data: existing } = await db.from('users').select('id').eq('email', email.toLowerCase()).maybeSingle()
@@ -344,8 +370,7 @@ export async function createStudentModal(
   // 5. Parent contacts
   await syncParentContacts(db, student.id, contactResult.contacts)
 
-  // 8. Group assignments
-  const groupsToAdd = parseGroupIds(formData.get('groups_to_add_json'))
+  // 8. Group assignments (branch match validated in step 0)
   if (groupsToAdd.length) {
     await applyGroupAssignments(db, student.id, groupsToAdd, [])
   }
@@ -403,6 +428,14 @@ export async function updateStudentModal(
   const { data: old } = await db.from('students').select('user_id, branch_id').eq('id', id).single()
   if (!old) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
 
+  // Groups must be in the student's branch — validate before any mutation
+  const groupsToAdd    = parseGroupIds(formData.get('groups_to_add_json'))
+  const groupsToRemove = parseGroupIds(formData.get('groups_to_remove_json'))
+  const branchErr      = await validateGroupsMatchBranch(db, old.branch_id, groupsToAdd)
+  if (branchErr) {
+    return { success: false, error: { code: 'VALIDATION', message: branchErr } }
+  }
+
   // Email update
   if (new_email && old.user_id) {
     const { data: currentUser } = await db.from('users').select('email').eq('id', old.user_id).maybeSingle()
@@ -450,9 +483,7 @@ export async function updateStudentModal(
   // Parent contacts sync
   await syncParentContacts(db, id, contactResult.contacts)
 
-  // Group assignment sync
-  const groupsToAdd    = parseGroupIds(formData.get('groups_to_add_json'))
-  const groupsToRemove = parseGroupIds(formData.get('groups_to_remove_json'))
+  // Group assignment sync (branch match validated above)
   if (groupsToAdd.length || groupsToRemove.length) {
     await applyGroupAssignments(db, id, groupsToAdd, groupsToRemove)
   }

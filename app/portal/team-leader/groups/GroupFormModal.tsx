@@ -740,6 +740,8 @@ export default function GroupFormModal({
   const linkedIds  = new Set(links.map(l => l.student_id))
   const filtered   = studentOptions.filter(s => {
     if (linkedIds.has(s.student_id)) return false
+    // Hard lock: students must live in the group's branch (server rejects mismatches)
+    if (selectedBranchId && s.branch_id !== selectedBranchId) return false
     if (pickerBranch && s.branch_id !== pickerBranch) return false
     if (pickerHasGroup === 'has'  && !s.group_name) return false
     if (pickerHasGroup === 'none' &&  s.group_name) return false
@@ -838,7 +840,17 @@ export default function GroupFormModal({
                   <select
                     name="branch_id"
                     value={selectedBranchId}
-                    onChange={e => setSelectedBranchId(e.target.value)}
+                    onChange={e => {
+                      const v = e.target.value
+                      setSelectedBranchId(v)
+                      // Drop picked students that no longer match the chosen branch
+                      if (v && mode === 'create') {
+                        setLinks(prev => prev.filter(l => {
+                          const opt = studentOptions.find(s => s.student_id === l.student_id)
+                          return !opt || opt.branch_id === v
+                        }))
+                      }
+                    }}
                     required
                     className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
                   >

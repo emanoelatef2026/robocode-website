@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { timingSafeEqual }           from 'crypto'
 import { createServiceClient }       from '@/lib/supabase/service'
+import { isAuthorizedCronRequest }   from '@/lib/cron-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,27 +23,12 @@ export const dynamic = 'force-dynamic'
 // transitioned (e.g. PENDING -> OVERDUE) no longer matches the WHERE clause,
 // so re-running the same day (or any day) only ever affects newly-eligible
 // rows — safe to trigger more than once.
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET
-  if (!secret) return false
-
-  const provided = req.headers.get('authorization') ?? ''
-  const expected = `Bearer ${secret}`
-
-  const a = Buffer.from(provided)
-  const b = Buffer.from(expected)
-  // Buffers must be equal length for timingSafeEqual; mismatched length
-  // already means "not authorized" without leaking timing info either way.
-  if (a.length !== b.length) return false
-
-  return timingSafeEqual(a, b)
-}
 
 export async function GET(req: NextRequest) {
   const startedAt = new Date()
   const startedMs = Date.now()
 
-  if (!isAuthorized(req)) {
+  if (!isAuthorizedCronRequest(req)) {
     console.warn('[cron:finance-maintenance] unauthorized request', {
       started_at:             startedAt.toISOString(),
       has_x_vercel_cron:      req.headers.get('x-vercel-cron') != null,

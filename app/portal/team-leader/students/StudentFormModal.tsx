@@ -69,8 +69,15 @@ function ageFromDob(dob: string): number | null {
 export default function StudentFormModal({
   mode, student, branchId, branchIds, branches, groupOptions = [], isTL, onClose, onSuccess, onDelete,
 }: Props) {
-  const singleBranch = branchId || (branchIds.length === 1 ? branchIds[0] : undefined)
+  // Only lock the branch when the user truly has a single branch — multi-branch
+  // users must pick explicitly, otherwise every student silently lands in branchIds[0].
+  const singleBranch = branchIds.length <= 1 ? (branchId || branchIds[0]) : undefined
   const isEdit       = mode === 'edit'
+
+  // Branch the student will belong to — drives which groups can be picked.
+  const [selectedBranchId, setSelectedBranchId] = useState<string>(
+    () => singleBranch ?? (mode === 'edit' ? (student?.branch_id ?? '') : '')
+  )
 
   // ── Contact state ───────────────────────────────────────────────────────────
   const initialContacts: ParentContactBlock[] = isEdit && student?.parent_contacts?.length
@@ -173,14 +180,19 @@ export default function StudentFormModal({
     const q = groupPickerQ.toLowerCase()
     return groupOptions.filter(g => {
       if (selectedGroupIds.has(g.group_id)) return false
-      if (groupPickerBranch && g.branch_id !== groupPickerBranch) return false
+      // Hard lock: groups must match the student's branch (server rejects mismatches)
+      if (selectedBranchId) {
+        if (g.branch_id !== selectedBranchId) return false
+      } else if (groupPickerBranch && g.branch_id !== groupPickerBranch) {
+        return false
+      }
       if (groupPickerStatus && g.status    !== groupPickerStatus) return false
       if (q && !g.group_name.toLowerCase().includes(q) &&
                !(g.course_name?.toLowerCase().includes(q)) &&
                !(g.instructor_name?.toLowerCase().includes(q))) return false
       return true
     })
-  }, [groupOptions, selectedGroupIds, groupPickerQ, groupPickerBranch, groupPickerStatus])
+  }, [groupOptions, selectedGroupIds, groupPickerQ, groupPickerBranch, groupPickerStatus, selectedBranchId])
 
   const groupsToAdd    = useMemo(() => groupLinks.filter(g => !originalGroupIds.has(g.group_id)).map(g => g.group_id), [groupLinks, originalGroupIds])
   const groupsToRemove = useMemo(() => [...originalGroupIds].filter(id => !selectedGroupIds.has(id)), [originalGroupIds, selectedGroupIds])
@@ -190,7 +202,12 @@ export default function StudentFormModal({
     return courseIds.length > 0 && courseIds.length !== new Set(courseIds).size
   }, [groupLinks])
 
-  const addGroupLink = (g: GroupPickerOption) => { setDirty(true); setGroupLinks(prev => [...prev, g]) }
+  const addGroupLink = (g: GroupPickerOption) => {
+    setDirty(true)
+    setGroupLinks(prev => [...prev, g])
+    // First group picked before a branch was chosen — follow the group's branch
+    if (!isEdit && !selectedBranchId) setSelectedBranchId(g.branch_id)
+  }
   const removeGroupLink = (groupId: string) => { setDirty(true); setGroupLinks(prev => prev.filter(g => g.group_id !== groupId)) }
 
   // ── Dirty state ─────────────────────────────────────────────────────────────
@@ -343,6 +360,14 @@ export default function StudentFormModal({
                 Branch <span className="text-[#EF4444]">*</span>
               </label>
               <select name="branch_id" required
+                value={selectedBranchId}
+                onChange={e => {
+                  const v = e.target.value
+                  setSelectedBranchId(v)
+                  setDirty(true)
+                  // Drop picked groups that no longer match the chosen branch
+                  if (v) setGroupLinks(prev => prev.filter(g => g.branch_id === v))
+                }}
                 className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
                 <option value="">— Select branch —</option>
                 {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -790,7 +815,7 @@ export default function StudentFormModal({
                     placeholder="Search groups…"
                     className="min-w-40 flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
                   />
-                  {branches.length > 1 && (
+                  {branches.length > 1 && !selectedBranchId && (
                     <select
                       value={groupPickerBranch}
                       onChange={e => setGroupPickerBranch(e.target.value)}

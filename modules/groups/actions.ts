@@ -351,6 +351,20 @@ export async function bulkEnrollStudents(
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
 
+  // Students must live in the group's branch
+  const { data: candidateStudents } = await db
+    .from('students').select('id, student_code, branch_id').in('id', studentIds)
+  const wrongBranch = (candidateStudents ?? []).filter(s => s.branch_id !== grp.branch_id)
+  if (wrongBranch.length) {
+    return {
+      success: false,
+      error: {
+        code: 'VALIDATION',
+        message: `Student and group must belong to the same branch. Wrong-branch student(s): ${wrongBranch.map(s => s.student_code ?? s.id).join(', ')}`,
+      },
+    }
+  }
+
   if (grp.capacity !== null) {
     const { count: current } = await db
       .from('group_students').select('id', { count: 'exact', head: true })

@@ -26,6 +26,25 @@ interface CheckSection {
 
 // ── Data fetcher ──────────────────────────────────────────────────────────────
 
+interface IntegrityRun {
+  run_at:      string
+  ok:          boolean
+  counts:      Record<string, number>
+  breached:    string[]
+  duration_ms: number
+}
+
+async function getLatestIntegrityRun(): Promise<IntegrityRun | null> {
+  const db = createServiceClient()
+  const { data } = await db
+    .from('integrity_check_runs')
+    .select('run_at, ok, counts, breached, duration_ms')
+    .order('run_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  return (data as IntegrityRun | null) ?? null
+}
+
 async function getHealthData() {
   const db          = createServiceClient()
   const twoWeeksAgo = new Date(Date.now() - 14 * 86400000).toISOString()
@@ -337,11 +356,12 @@ export default async function SystemHealthPage() {
   const user = await requireAuth()
   if (user.globalRole !== 'super_admin') redirect('/admin')
 
-  const [data, eventCounts, deadLetterJobs, executiveAlertsResult] = await Promise.all([
+  const [data, eventCounts, deadLetterJobs, executiveAlertsResult, latestIntegrityRun] = await Promise.all([
     getHealthData(),
     getEventSummaryCounts(24),
     getDeadLetterJobs(10),
     createServiceClient().from('v_executive_alerts').select('*').limit(20).then(r => r.data ?? [], () => []) as Promise<any[]>,
+    getLatestIntegrityRun(),
   ])
 
   const sections: CheckSection[] = [
@@ -524,6 +544,35 @@ export default async function SystemHealthPage() {
           </div>
         </div>
       )}
+
+      {/* ── Phase 6: daily integrity-check cron result ──────────────────── */}
+      <div className={`ds-card overflow-hidden ${latestIntegrityRun && !latestIntegrityRun.ok ? 'border-[#FECACA]' : ''}`}>
+        <div className={`flex items-center justify-between px-4 py-3 border-b border-[#E2E8F0] ${latestIntegrityRun && !latestIntegrityRun.ok ? 'bg-[#FEE2E2]' : 'bg-[#F8FAFC]'}`}>
+          <p className={`text-sm font-semibold ${latestIntegrityRun && !latestIntegrityRun.ok ? 'text-[#991B1B]' : 'text-[#0B1F3A]'}`}>
+            Daily Integrity Check {latestIntegrityRun ? `(${new Date(latestIntegrityRun.run_at).toLocaleString('en-GB')})` : ''}
+          </p>
+          {latestIntegrityRun && (
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${latestIntegrityRun.ok ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#FECACA] text-[#991B1B]'}`}>
+              {latestIntegrityRun.ok ? 'All clear' : `${latestIntegrityRun.breached.length} breached`}
+            </span>
+          )}
+        </div>
+        {!latestIntegrityRun ? (
+          <p className="px-4 py-3 text-sm text-[#94A3B8]">No integrity-check run recorded yet.</p>
+        ) : (
+          <ul className="divide-y divide-[#E2E8F0]">
+            {Object.entries(latestIntegrityRun.counts).map(([key, value]) => {
+              const breached = latestIntegrityRun.breached.includes(key)
+              return (
+                <li key={key} className="flex items-center justify-between px-4 py-2 text-sm">
+                  <span className="text-[#64748B]">{key.replace(/_/g, ' ')}</span>
+                  <span className={`font-semibold ${breached ? 'text-[#DC2626]' : 'text-[#0B1F3A]'}`}>{value}</span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
 
       {/* ── Original issue counts header ────────────────────────────────── */}
       <div className="flex items-center gap-2">

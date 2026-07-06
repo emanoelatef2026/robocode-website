@@ -870,7 +870,14 @@ export default function StudentsClient({
       {assignStudent && (
         <GroupAssignModal
           student={assignStudent}
-          groups={groups}
+          groups={
+            // Only groups in the student's branch — the server rejects cross-branch assignments
+            groupOptions.length
+              ? groupOptions
+                  .filter(g => g.branch_id === assignStudent.branch_id)
+                  .map(g => ({ id: g.group_id, name: g.group_name }))
+              : groups
+          }
           onClose={() => setAssignStudent(null)}
           onSuccess={() => { setAssignStudent(null); router.refresh() }}
         />

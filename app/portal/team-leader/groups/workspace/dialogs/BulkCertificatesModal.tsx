@@ -419,9 +419,9 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                     className="mt-0.5 accent-[#FF8A1F]"
                   />
                   <div>
-                    <p className="text-sm font-semibold text-[#0B1F3A]">Each student's portfolio projects</p>
+                    <p className="text-sm font-semibold text-[#0B1F3A]">Each student&apos;s portfolio projects</p>
                     <p className="text-xs text-[#64748B] mt-0.5">
-                      Projects are loaded from each student's portfolio individually — certificates will differ.
+                      Projects are loaded from each student&apos;s portfolio individually — certificates will differ.
                     </p>
                   </div>
                 </label>
@@ -488,7 +488,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
               {projectMode === 'portfolio' && (
                 <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
                   <p className="text-sm text-[#64748B]">
-                    Projects will be loaded from each student's portfolio automatically.
+                    Projects will be loaded from each student&apos;s portfolio automatically.
                     Students with no portfolio will still receive a certificate (with no projects listed).
                   </p>
                 </div>

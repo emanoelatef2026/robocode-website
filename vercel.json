@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/finance-maintenance",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/integrity-check",
+      "schedule": "0 3 * * *"
     }
   ]
 }

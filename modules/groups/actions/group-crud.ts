@@ -10,6 +10,25 @@ import { applyStudentChanges, assignCourseAndInstructor, updateGroupCoursePlan }
 
 const GROUPS_PATH = '/portal/team-leader/groups'
 
+// Guard: every student enrolled in a group must live in the group's branch.
+// Returns an error message naming the offending students, or null when all match.
+async function validateStudentsMatchBranch(
+  db: ReturnType<typeof createServiceClient>,
+  branchId: string,
+  studentIds: string[],
+): Promise<string | null> {
+  if (!studentIds.length) return null
+  const { data: students } = await db
+    .from('students')
+    .select('id, student_code, branch_id')
+    .in('id', studentIds)
+  const mismatched = (students ?? []).filter(s => s.branch_id !== branchId)
+  if (mismatched.length) {
+    return `Student and group must belong to the same branch. Wrong-branch student(s): ${mismatched.map(s => s.student_code ?? s.id).join(', ')}`
+  }
+  return null
+}
+
 export async function createGroupModal(
   _prev: unknown,
   formData: FormData,
@@ -35,6 +54,12 @@ export async function createGroupModal(
 
   const user = await requirePermission('manage_groups', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
+
+  // Students must be in the group's branch — validate before creating the group
+  const branchErr = await validateStudentsMatchBranch(db, rest.branch_id, parseStudentIds(students_to_add_json))
+  if (branchErr) {
+    return { success: false, error: { code: 'VALIDATION', message: branchErr } }
+  }
 
   const insertPayload = buildGroupInsert(rest)
   const { data: group, error } = await db.from('groups').insert(insertPayload).select('id').single()
@@ -118,6 +143,10 @@ export async function updateGroupModal(
   const toAdd    = parseStudentIds(students_to_add_json)
   const toRemove = parseStudentIds(students_to_remove_json)
   if (toAdd.length || toRemove.length) {
+    const memberBranchErr = await validateStudentsMatchBranch(db, existing.branch_id, toAdd)
+    if (memberBranchErr) {
+      return { success: false, error: { code: 'VALIDATION', message: memberBranchErr } }
+    }
     await applyStudentChanges(db, user.id, id, existing.branch_id, toAdd, toRemove)
   }
 
