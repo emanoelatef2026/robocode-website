@@ -26,7 +26,7 @@ const MAIN_ITEMS = [
     href:        "/portal/student/assignments",
     exact:       false,
     colorIdle:   "bg-[#FFFBEB] text-[#F59E0B]",
-    colorActive: "bg-[#FFFBEB]0 text-white shadow-md shadow-amber-200",
+    colorActive: "bg-[#F59E0B] text-white shadow-md shadow-amber-200",
     labelActive: "text-[#F59E0B]",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">
@@ -53,7 +53,7 @@ const MAIN_ITEMS = [
     href:        "/portal/student/leaderboard",
     exact:       false,
     colorIdle:   "bg-[#EFF6FF] text-[#3B82F6]",
-    colorActive: "bg-[#EFF6FF]0 text-white shadow-md shadow-blue-200",
+    colorActive: "bg-[#3B82F6] text-white shadow-md shadow-blue-200",
     labelActive: "text-[#3B82F6]",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">

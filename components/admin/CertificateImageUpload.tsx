@@ -85,7 +85,7 @@ export default function CertificateImageUpload({
                 type="button"
                 onClick={handleClear}
                 aria-label="Remove image"
-                className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-[#FEE2E2]0 text-white text-xs leading-none hover:bg-red-600 transition"
+                className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white text-xs leading-none hover:bg-red-600 transition"
               >
                 ×
               </button>

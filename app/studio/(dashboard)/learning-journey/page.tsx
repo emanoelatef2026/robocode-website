@@ -416,7 +416,7 @@ export default function LearningJourneyAdminPage() {
                     "absolute left-2 top-2 rounded-full px-2 py-0.5 text-[10px] font-bold",
                     stage.active
                       ? "bg-[#10B981] text-white"
-                      : "bg-[#F9FAFB]0/70 text-white",
+                      : "bg-slate-500/70 text-white",
                   ].join(" ")}
                 >
                   {stage.active ? "Active" : "Hidden"}

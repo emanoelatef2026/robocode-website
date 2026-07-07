@@ -19,10 +19,10 @@ const LEVEL_CLS: Record<Level, string> = {
 };
 
 const DOT_CLS: Record<Level, string> = {
-  critical: "bg-[#FEE2E2]0",
-  warning:  "bg-[#FFFBEB]0",
-  info:     "bg-[#EFF6FF]0",
-  success:  "bg-[#E7F8EE]0",
+  critical: "bg-[#DC2626]",
+  warning:  "bg-[#D97706]",
+  info:     "bg-[#2563EB]",
+  success:  "bg-[#16A34A]",
 };
 
 export default function InfoBanner({ label, count, href, level = "warning", icon, onClose }: Props) {
