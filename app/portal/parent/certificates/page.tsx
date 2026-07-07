@@ -3,6 +3,8 @@ import { getParentChildren }          from '@/modules/parents/parent-portal-quer
 import { getChildSessionsProgress }   from '@/modules/parents/parent-portal-queries'
 import { getChildCertificates }       from '@/modules/certificates/queries'
 import Link                           from 'next/link'
+import ChildSelector                  from '@/components/portal/parent/ChildSelector'
+import NoChildrenLinked               from '@/components/portal/parent/NoChildrenLinked'
 
 interface Props {
   searchParams: Promise<{ child?: string }>
@@ -23,11 +25,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
   const children = await getParentChildren(user.id)
 
   if (!children.length) {
-    return (
-      <div className="flex min-h-100 items-center justify-center">
-        <p className="text-sm text-[#94A3B8]">No children linked to this account.</p>
-      </div>
-    )
+    return <NoChildrenLinked />
   }
 
   const studentId  = child ?? children[0].student_id
@@ -61,9 +59,16 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
         </Link>
       </div>
 
+      {/* Child switcher */}
+      <ChildSelector
+        linkedChildren={children}
+        selectedId={selected.student_id}
+        hrefFor={(id) => `/portal/parent/certificates?child=${id}`}
+      />
+
       {/* Eligibility block */}
       <div className="ds-card p-5 space-y-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Certificate Eligibility</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Certificate Eligibility</p>
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-[#64748B]">Completed Sessions</span>
@@ -77,7 +82,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
         </div>
 
         <div className="flex items-center justify-between">
-          <p className="text-[12px] text-[#94A3B8]">
+          <p className="text-[12px] text-[#64748B]">
             Certificates are issued after course completion.
           </p>
           {hasCerts ? (
@@ -100,7 +105,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
       {certificates.length === 0 ? (
         <div className="ds-card px-6 py-12 text-center">
           <p className="text-sm text-[#64748B]">No certificates yet.</p>
-          <p className="mt-1 text-xs text-[#94A3B8]">
+          <p className="mt-1 text-xs text-[#64748B]">
             Certificates are issued after course completion.
           </p>
         </div>
@@ -127,7 +132,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                     {TYPE_LABELS[c.certificate_type] ?? c.certificate_type}
                     {c.course_title && ` · ${c.course_title}`}
                   </p>
-                  <p className="mt-1 text-[11px] text-[#94A3B8]">
+                  <p className="mt-1 text-[11px] text-[#64748B]">
                     Issued {new Date(c.issued_at).toLocaleDateString('en-GB')}
                     {' · '}
                     <span className="font-mono">{c.certificate_code}</span>
@@ -164,7 +169,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                     href={`/verify/${c.certificate_code}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-center text-[12px] font-medium text-[#0B1F3A]"
+                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[#E2E8F0] text-center text-[12px] font-medium text-[#0B1F3A]"
                   >
                     Verify
                   </a>
@@ -172,7 +177,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                     href={`/api/certificates/${c.certificate_code}/pdf`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-center text-[12px] font-medium text-white"
+                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg bg-[#FF8A1F] text-center text-[12px] font-medium text-white"
                   >
                     Download PDF
                   </a>

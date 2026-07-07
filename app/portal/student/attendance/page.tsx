@@ -52,7 +52,7 @@ export default async function StudentAttendancePage() {
         ].map(({ label, value, color }) => (
           <div key={label} className="ds-card p-3 text-center">
             <p className={`text-xl font-bold leading-none ${color}`}>{value}</p>
-            <p className="mt-1 text-[10px] text-[#94A3B8]">{label}</p>
+            <p className="mt-1 text-[10px] text-[#64748B]">{label}</p>
           </div>
         ))}
       </div>
@@ -85,7 +85,7 @@ export default async function StudentAttendancePage() {
           </div>
 
           {/* Table header — desktop only */}
-          <div className="hidden grid-cols-[64px_110px_1fr_90px] gap-3 border-b border-[#F1F5F9] px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] sm:grid">
+          <div className="hidden grid-cols-[64px_110px_1fr_90px] gap-3 border-b border-[#F1F5F9] px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#64748B] sm:grid">
             <span>#</span>
             <span>Date</span>
             <span>Topic</span>
@@ -104,19 +104,20 @@ export default async function StudentAttendancePage() {
                   <span className="hidden text-xs text-[#64748B] sm:block">
                     {new Date(r.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
-                  <span className="flex-1 text-sm text-[#0B1F3A] truncate">
-                    {r.topic ?? <span className="italic text-[#94A3B8]">No topic</span>}
-                  </span>
-                  {/* Mobile: date below topic */}
-                  <span className="block text-[10px] text-[#94A3B8] sm:hidden absolute">
-                    {/* hidden — shown in layout below */}
-                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm text-[#0B1F3A]">
+                      {r.topic ?? <span className="italic text-[#64748B]">No topic</span>}
+                    </p>
+                    <p className="text-[10px] text-[#64748B] sm:hidden">
+                      {new Date(r.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
+                  </div>
                   {cfg ? (
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>
                       {cfg.label}
                     </span>
                   ) : (
-                    <span className="text-xs text-[#94A3B8]">—</span>
+                    <span className="text-xs text-[#64748B]">—</span>
                   )}
                 </div>
               )

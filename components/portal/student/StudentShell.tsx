@@ -16,14 +16,6 @@ interface Props {
   xpToNextLevel?:  number
 }
 
-function BellIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="#475569" className="h-[17px] w-[17px]">
-      <path d="M10 2a6 6 0 00-6 6c0 1.886-.454 3.665-1.257 5.234a.75.75 0 00.515 1.076 32.9 32.9 0 003.256.508 3.5 3.5 0 006.972 0 32.9 32.9 0 003.256-.508.75.75 0 00.515-1.076A11.448 11.448 0 0116 8a6 6 0 00-6-6z" />
-    </svg>
-  )
-}
-
 function HamburgerIcon() {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -132,15 +124,6 @@ export default function StudentShell({
               </div>
             </div>
           )}
-
-          {/* Bell — desktop only */}
-          <button
-            className="relative hidden h-[38px] w-[38px] items-center justify-center rounded-[10px] border border-[#e4e9f0] bg-white transition hover:bg-[#F8FAFC] md:flex"
-            aria-label="Notifications"
-          >
-            <BellIcon />
-            <span className="absolute end-[8px] top-[7px] h-[7px] w-[7px] rounded-full border-[1.5px] border-white bg-[#DC2626]" />
-          </button>
         </header>
 
         {/* ── Page content ── */}

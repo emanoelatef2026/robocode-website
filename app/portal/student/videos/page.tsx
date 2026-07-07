@@ -18,7 +18,7 @@ export default async function MyVideosPage() {
   if (!studentId) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-[#94A3B8]">Student record not found.</p>
+        <p className="text-sm text-[#64748B]">Student record not found.</p>
       </div>
     )
   }

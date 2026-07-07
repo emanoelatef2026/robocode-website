@@ -41,6 +41,11 @@ const Icons = {
       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
     </svg>
   ),
+  progress: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+    </svg>
+  ),
   feedback: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
@@ -60,8 +65,9 @@ const Icons = {
 
 const NAV_ITEMS = [
   { label: 'Dashboard',    path: '/portal/parent',                icon: Icons.dashboard,    exact: true  },
-  { label: 'Attendance',   path: '/portal/parent/attendance',     icon: Icons.attendance,   exact: false },
   { label: 'Assignments',  path: '/portal/parent/assignments',    icon: Icons.assignments,  exact: false },
+  { label: 'Attendance',   path: '/portal/parent/attendance',     icon: Icons.attendance,   exact: false },
+  { label: 'Progress',     path: '/portal/parent/progress',       icon: Icons.progress,     exact: false },
   { label: 'Portfolio',    path: '/portal/parent/portfolio',      icon: Icons.portfolio,    exact: false },
   { label: 'Certificates', path: '/portal/parent/certificates',   icon: Icons.certificates, exact: false },
   { label: 'History',      path: '/portal/parent/semesters',      icon: Icons.history,      exact: false },
@@ -115,16 +121,16 @@ function NavContent({
 
       {/* Portal label */}
       <div className="px-5 pt-5 pb-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/25">Parent Portal</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/50">Parent Portal</p>
       </div>
 
       {/* Children switcher */}
       <div className="px-3 pt-2 pb-1">
-        <p className="mb-1 px-2 text-[9px] font-semibold uppercase tracking-[0.15em] text-white/20">
+        <p className="mb-1 px-2 text-[9px] font-semibold uppercase tracking-[0.15em] text-white/50">
           Children
         </p>
         {linkedChildren.length === 0 ? (
-          <p className="px-2 text-[12px] text-white/25">No children linked</p>
+          <p className="px-2 text-[12px] text-white/50">No children linked</p>
         ) : (
           linkedChildren.map(child => {
             const active  = currentChildId === child.student_id
@@ -185,14 +191,14 @@ function NavContent({
       <div className="border-t border-white/8 p-4 space-y-1">
         <Link
           href="/account/password"
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/35 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/50 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
         >
           {Icons.password}
           Change Password
         </Link>
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/35 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-white/50 transition-all duration-150 hover:bg-white/5 hover:text-white/70"
         >
           {Icons.logout}
           Logout

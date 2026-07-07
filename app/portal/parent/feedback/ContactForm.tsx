@@ -99,7 +99,7 @@ export default function ContactForm({ studentId, studentName }: Props) {
           placeholder="Write your message here… (minimum 10 characters)"
           className="w-full resize-none rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] placeholder:text-[#CBD5E1] focus:border-[#FF8A1F] focus:outline-none focus:ring-1 focus:ring-[#FF8A1F]/30"
         />
-        <p className={`mt-1 text-right text-[11px] ${message.length < 10 && message.length > 0 ? 'text-[#EF4444]' : 'text-[#94A3B8]'}`}>
+        <p className={`mt-1 text-right text-[11px] ${message.length < 10 && message.length > 0 ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
           {message.trim().length} / min 10
         </p>
       </div>
@@ -107,7 +107,7 @@ export default function ContactForm({ studentId, studentName }: Props) {
       {/* Optional image */}
       <div>
         <label className="mb-1.5 block text-sm font-medium text-[#0B1F3A]">
-          Image <span className="text-[12px] font-normal text-[#94A3B8]">(optional, max 5 MB)</span>
+          Image <span className="text-[12px] font-normal text-[#64748B]">(optional, max 5 MB)</span>
         </label>
         <div className="flex items-center gap-3">
           <button
@@ -117,7 +117,7 @@ export default function ContactForm({ studentId, studentName }: Props) {
           >
             Choose File
           </button>
-          <span className="text-[13px] text-[#94A3B8]">
+          <span className="text-[13px] text-[#64748B]">
             {fileName ?? 'No file chosen'}
           </span>
           {fileName && (
@@ -154,7 +154,7 @@ export default function ContactForm({ studentId, studentName }: Props) {
         {pending ? 'Sending…' : 'Send Message'}
       </button>
 
-      <p className="text-center text-[11px] text-[#94A3B8]">
+      <p className="text-center text-[11px] text-[#64748B]">
         Regarding {studentName} · Team leader will respond as soon as possible.
       </p>
     </div>

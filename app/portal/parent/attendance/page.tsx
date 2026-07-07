@@ -4,6 +4,8 @@ import {
   getChildAttendance,
 } from '@/modules/parents/parent-portal-queries'
 import Link from 'next/link'
+import ChildSelector from '@/components/portal/parent/ChildSelector'
+import NoChildrenLinked from '@/components/portal/parent/NoChildrenLinked'
 
 interface Props {
   searchParams: Promise<{ child?: string }>
@@ -39,11 +41,7 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
   const children = await getParentChildren(user.id)
 
   if (!children.length) {
-    return (
-      <div className="flex min-h-100 items-center justify-center">
-        <p className="text-sm text-[#94A3B8]">No children linked to this account.</p>
-      </div>
-    )
+    return <NoChildrenLinked />
   }
 
   const studentId = child ?? children[0].student_id
@@ -54,7 +52,7 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
   if (!attendance) {
     return (
       <div className="flex min-h-100 items-center justify-center">
-        <p className="text-sm text-[#94A3B8]">Unable to load attendance data.</p>
+        <p className="text-sm text-[#64748B]">Unable to load attendance data.</p>
       </div>
     )
   }
@@ -79,6 +77,13 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
           ← Dashboard
         </Link>
       </div>
+
+      {/* Child switcher */}
+      <ChildSelector
+        linkedChildren={children}
+        selectedId={selected.student_id}
+        hrefFor={(id) => `/portal/parent/attendance?child=${id}`}
+      />
 
       {/* Low attendance warning */}
       {showWarning && (
@@ -108,7 +113,7 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
             style={{ width: `${attendancePct}%` }}
           />
         </div>
-        <p className="mt-2 text-xs text-[#94A3B8]">
+        <p className="mt-2 text-xs text-[#64748B]">
           Present / Late / Makeup counted as attended · {summary.total} total sessions
         </p>
       </div>
@@ -116,7 +121,7 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
       {/* Attendance trend breakdown */}
       {summary.total > 0 && (
         <div className="ds-card p-5 space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Attendance Trend</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Attendance Trend</p>
           <TrendBar label="Present" count={summary.present} total={summary.total} color="bg-[#10B981]"  />
           <TrendBar label="Absent"  count={summary.absent}  total={summary.total} color="bg-[#EF4444]"    />
           <TrendBar label="Late"    count={summary.late}    total={summary.total} color="bg-yellow-500" />
@@ -150,7 +155,7 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
                 : '—'
               return (
                 <div key={r.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className="shrink-0 text-[11px] font-semibold text-[#94A3B8] w-6 text-right">{records.length - idx}</span>
+                  <span className="shrink-0 text-[11px] font-semibold text-[#64748B] w-6 text-right">{records.length - idx}</span>
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-medium text-[#0B1F3A]">{dateStr}</p>
                     {r.course_title && <p className="text-[11px] text-[#64748B]">{r.course_title}</p>}
@@ -168,11 +173,11 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
             <table className="w-full text-[13px]">
               <thead className="ds-table-head">
                 <tr className="border-b border-[#F1F5F9] text-left">
-                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">#</th>
-                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Date</th>
-                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Status</th>
-                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Course</th>
-                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Note</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">#</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Date</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Status</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Course</th>
+                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Note</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F8FAFC]">
@@ -183,13 +188,13 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
                     : '—'
                   return (
                     <tr key={r.id} className="hover:bg-[#F8FAFC]">
-                      <td className="px-5 py-3 text-[12px] text-[#94A3B8]">{records.length - idx}</td>
+                      <td className="px-5 py-3 text-[12px] text-[#64748B]">{records.length - idx}</td>
                       <td className="px-5 py-3 text-[#0B1F3A]">{dateStr}</td>
                       <td className="px-5 py-3">
                         <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>{cfg.label}</span>
                       </td>
                       <td className="px-5 py-3 text-[#64748B]">{r.course_title ?? '—'}</td>
-                      <td className="px-5 py-3 text-[#94A3B8]">{r.note ?? '—'}</td>
+                      <td className="px-5 py-3 text-[#64748B]">{r.note ?? '—'}</td>
                     </tr>
                   )
                 })}

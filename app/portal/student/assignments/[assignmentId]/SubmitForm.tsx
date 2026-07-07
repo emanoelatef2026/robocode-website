@@ -92,14 +92,14 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
   if (alreadySubmitted) {
     return (
       <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-6">
-        <p className="font-medium text-[#0B132B]">Submission received</p>
+        <p className="font-medium text-[#0B1F3A]">Submission received</p>
         <p className="mt-1 text-sm text-[#64748B]">
           {submission!.public_feedback
             ? `Instructor feedback: ${submission!.public_feedback}`
             : 'Your instructor will review and grade your submission.'}
         </p>
         {submission!.score != null && (
-          <p className="mt-3 text-lg font-bold text-[#0B132B]">
+          <p className="mt-3 text-lg font-bold text-[#0B1F3A]">
             Score: {submission!.score} / {maxScore}
           </p>
         )}
@@ -138,7 +138,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
 
       {showText && (
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-[#0B132B]">
+          <label className="mb-1.5 block text-sm font-medium text-[#0B1F3A]">
             Answer / Content
           </label>
           <textarea
@@ -146,16 +146,16 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             rows={6}
             defaultValue={isResubmit ? (submission?.content ?? '') : ''}
             placeholder="Write your answer here…"
-            className="w-full ds-card px-4 py-3 text-sm text-[#0B132B] outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full ds-card px-4 py-3 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
           />
         </div>
       )}
 
       {showImage && (
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-[#0B132B]">
+          <label className="mb-1.5 block text-sm font-medium text-[#0B1F3A]">
             Images
-            <span className="ml-1 text-xs font-normal text-[#94A3B8]">
+            <span className="ml-1 text-xs font-normal text-[#64748B]">
               (up to 5, auto-compressed to ~100 KB each)
             </span>
           </label>
@@ -198,7 +198,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
               <label
                 htmlFor="image-upload"
                 className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-[#E2E8F0] px-4 py-3 text-sm transition
-                  ${uploading ? 'cursor-not-allowed opacity-50' : 'hover:border-[#19C6F4] hover:text-[#19C6F4]'} text-[#64748B]`}
+                  ${uploading ? 'cursor-not-allowed opacity-50' : 'hover:border-[#FF8A1F] hover:text-[#FF8A1F]'} text-[#64748B]`}
               >
                 {uploading ? (
                   <span className="flex items-center gap-2">
@@ -214,7 +214,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
                       <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd"/>
                     </svg>
                     {images.length === 0 ? 'Choose images' : 'Add more images'}
-                    <span className="text-xs text-[#94A3B8]">({5 - images.length} remaining)</span>
+                    <span className="text-xs text-[#64748B]">({5 - images.length} remaining)</span>
                   </>
                 )}
               </label>
@@ -225,7 +225,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
 
       {showDrive && (
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-[#0B132B]">
+          <label className="mb-1.5 block text-sm font-medium text-[#0B1F3A]">
             Google Drive link
           </label>
           <input
@@ -233,14 +233,14 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             name="drive_url"
             defaultValue={isResubmit ? (submission?.drive_url ?? '') : ''}
             placeholder="https://drive.google.com/…"
-            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
           />
         </div>
       )}
 
       {showGithub && (
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-[#0B132B]">
+          <label className="mb-1.5 block text-sm font-medium text-[#0B1F3A]">
             GitHub repository
           </label>
           <input
@@ -248,14 +248,14 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             name="github_url"
             defaultValue={isResubmit ? (submission?.github_url ?? '') : ''}
             placeholder="https://github.com/…"
-            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
           />
         </div>
       )}
 
       {showUrl && (
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-[#0B132B]">
+          <label className="mb-1.5 block text-sm font-medium text-[#0B1F3A]">
             Project URL
           </label>
           <input
@@ -263,14 +263,14 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             name="project_url"
             defaultValue={isResubmit ? (submission?.project_url ?? '') : ''}
             placeholder="https://…"
-            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
           />
         </div>
       )}
 
       {showVideo && (
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-[#0B132B]">
+          <label className="mb-1.5 block text-sm font-medium text-[#0B1F3A]">
             Video link (YouTube / Vimeo)
           </label>
           <input
@@ -278,7 +278,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
             name="video_url"
             defaultValue={isResubmit ? (submission?.video_url ?? '') : ''}
             placeholder="https://youtube.com/…"
-            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full ds-card px-4 py-3 text-sm outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/20"
           />
         </div>
       )}
@@ -296,7 +296,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
       <button
         type="submit"
         disabled={pending || uploading}
-        className="w-full rounded-lg bg-[#0B132B] py-3 text-sm font-semibold text-white transition hover:bg-[#19C6F4] disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-lg bg-[#0B1F3A] py-3 text-sm font-semibold text-white transition hover:bg-[#FF8A1F] disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending
           ? 'Submitting…'

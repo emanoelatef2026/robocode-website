@@ -258,7 +258,7 @@ export default function VideoGallery({ videos }: { videos: VideoProject[] }) {
   const [activeVideo, setActiveVideo] = useState<VideoProject | null>(null)
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto max-w-3xl space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -270,7 +270,7 @@ export default function VideoGallery({ videos }: { videos: VideoProject[] }) {
         </div>
         <Link
           href="/portal/student/portfolio"
-          className="rounded-xl bg-[#FF8A1F] px-3.5 py-2 text-[12px] font-bold text-white transition hover:bg-[#e87a10]"
+          className="flex min-h-11 items-center rounded-xl bg-[#FF8A1F] px-3.5 text-[12px] font-bold text-white transition hover:bg-[#e87a10]"
         >
           + Add Video
         </Link>
@@ -297,7 +297,7 @@ export default function VideoGallery({ videos }: { videos: VideoProject[] }) {
         <div className="rounded-2xl border border-dashed border-[#E2E8F0] py-16 text-center">
           <p className="text-4xl">🎬</p>
           <p className="mt-3 text-sm font-semibold text-[#0B1F3A]">No videos yet</p>
-          <p className="mt-1 text-[12px] text-[#94A3B8]">Add a video URL to any portfolio project to see it here.</p>
+          <p className="mt-1 text-[12px] text-[#64748B]">Add a video URL to any portfolio project to see it here.</p>
           <Link
             href="/portal/student/portfolio"
             className="mt-4 inline-block rounded-xl bg-[#FF8A1F] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#e87a10]"
@@ -309,7 +309,7 @@ export default function VideoGallery({ videos }: { videos: VideoProject[] }) {
 
       {/* Supported platforms note */}
       {videos.length > 0 && (
-        <p className="text-center text-[10.5px] text-[#94A3B8]">
+        <p className="text-center text-[10.5px] text-[#64748B]">
           Supports YouTube · TikTok · Instagram · Facebook · Google Drive
         </p>
       )}

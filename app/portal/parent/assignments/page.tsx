@@ -4,6 +4,8 @@ import {
   getChildAssignments,
 } from '@/modules/parents/parent-portal-queries'
 import Link from 'next/link'
+import ChildSelector from '@/components/portal/parent/ChildSelector'
+import NoChildrenLinked from '@/components/portal/parent/NoChildrenLinked'
 
 interface Props {
   searchParams: Promise<{ child?: string; filter?: string }>
@@ -41,11 +43,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
   const children = await getParentChildren(user.id)
 
   if (!children.length) {
-    return (
-      <div className="flex min-h-100 items-center justify-center">
-        <p className="text-sm text-[#94A3B8]">No children linked to this account.</p>
-      </div>
-    )
+    return <NoChildrenLinked />
   }
 
   const studentId = child ?? children[0].student_id
@@ -85,6 +83,13 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
         </Link>
       </div>
 
+      {/* Child switcher */}
+      <ChildSelector
+        linkedChildren={children}
+        selectedId={selected.student_id}
+        hrefFor={(id) => `/portal/parent/assignments?child=${id}&filter=${filterKey}`}
+      />
+
       {/* Filter tabs */}
       <div className="flex flex-wrap gap-2">
         {FILTERS.map(f => (
@@ -92,7 +97,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
             key={f.key}
             href={filterHref(f.key)}
             className={[
-              'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-all',
+              'flex min-h-11 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-all',
               filterKey === f.key
                 ? 'border-[#FF8A1F] bg-[#FF8A1F]/10 text-[#FF8A1F]'
                 : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1]',
@@ -143,7 +148,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
                       <p className="mt-0.5 text-[12px] text-[#64748B]">{a.course_title}</p>
                     )}
 
-                    <div className="mt-2 flex flex-wrap gap-4 text-[12px] text-[#94A3B8]">
+                    <div className="mt-2 flex flex-wrap gap-4 text-[12px] text-[#64748B]">
                       {a.due_at && (
                         <span>
                           Due {new Date(a.due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -166,7 +171,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
                 {/* Public feedback only */}
                 {a.public_feedback && (
                   <div className="mt-3 rounded-lg bg-[#F8FAFC] border border-[#F1F5F9] px-3 py-2.5">
-                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
                       Instructor Feedback
                     </p>
                     <p className="text-[13px] text-[#64748B] whitespace-pre-wrap">{a.public_feedback}</p>

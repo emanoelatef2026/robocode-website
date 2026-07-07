@@ -79,7 +79,7 @@ async function resolveParentId(userId: string): Promise<string | null> {
   return (data as any)?.id ?? null
 }
 
-async function verifyParentChild(parentUserId: string, studentId: string): Promise<boolean> {
+export async function verifyParentChild(parentUserId: string, studentId: string): Promise<boolean> {
   const parentId = await resolveParentId(parentUserId)
   if (!parentId) return false
 

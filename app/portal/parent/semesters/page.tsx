@@ -3,6 +3,8 @@ import { getParentChildren }          from '@/modules/parents/parent-portal-quer
 import { getChildHistoryTimeline }    from '@/modules/parents/parent-portal-queries'
 import type { TimelineEvent }         from '@/modules/parents/parent-portal-queries'
 import Link                           from 'next/link'
+import ChildSelector                  from '@/components/portal/parent/ChildSelector'
+import NoChildrenLinked               from '@/components/portal/parent/NoChildrenLinked'
 
 interface Props {
   searchParams: Promise<{ child?: string }>
@@ -27,11 +29,7 @@ export default async function ParentHistoryPage({ searchParams }: Props) {
   const children = await getParentChildren(user.id)
 
   if (!children.length) {
-    return (
-      <div className="flex min-h-100 items-center justify-center">
-        <p className="text-sm text-[#94A3B8]">No children linked to this account.</p>
-      </div>
-    )
+    return <NoChildrenLinked />
   }
 
   const studentId  = child ?? children[0].student_id
@@ -68,10 +66,17 @@ export default async function ParentHistoryPage({ searchParams }: Props) {
         </Link>
       </div>
 
+      {/* Child switcher */}
+      <ChildSelector
+        linkedChildren={children}
+        selectedId={selected.student_id}
+        hrefFor={(id) => `/portal/parent/semesters?child=${id}`}
+      />
+
       {monthGroups.length === 0 ? (
         <div className="ds-card px-6 py-12 text-center">
           <p className="text-sm text-[#64748B]">No activity recorded yet.</p>
-          <p className="mt-1 text-xs text-[#94A3B8]">Activity will appear as sessions, assignments, and portfolio work progress.</p>
+          <p className="mt-1 text-xs text-[#64748B]">Activity will appear as sessions, assignments, and portfolio work progress.</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -81,7 +86,7 @@ export default async function ParentHistoryPage({ searchParams }: Props) {
               <div className="mb-4 flex items-center gap-3">
                 <span className="text-[13px] font-semibold text-[#0B1F3A]">{key}</span>
                 <div className="flex-1 border-t border-[#E2E8F0]" />
-                <span className="text-[11px] text-[#94A3B8]">{events.length} events</span>
+                <span className="text-[11px] text-[#64748B]">{events.length} events</span>
               </div>
 
               {/* Events */}
@@ -102,7 +107,7 @@ export default async function ParentHistoryPage({ searchParams }: Props) {
                             <span className="text-[13px]">{cfg.icon}</span>
                             <span className="text-[13px] font-medium text-[#0B1F3A]">{ev.title}</span>
                           </div>
-                          <span className="shrink-0 text-[11px] text-[#94A3B8]">
+                          <span className="shrink-0 text-[11px] text-[#64748B]">
                             {new Date(ev.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                           </span>
                         </div>

@@ -26,7 +26,7 @@ function dueBadge(dueAt: string | null, hasSubmission: boolean) {
   const now = new Date()
   const overdue = !hasSubmission && due < now
   return (
-    <span className={`text-[11px] ${overdue ? 'font-semibold text-[#EF4444]' : 'text-[#94A3B8]'}`}>
+    <span className={`text-[11px] ${overdue ? 'font-semibold text-[#EF4444]' : 'text-[#64748B]'}`}>
       {overdue ? 'Overdue · ' : ''}Due {due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
     </span>
   )
@@ -59,11 +59,11 @@ export default async function StudentAssignmentsPage() {
               <Link
                 key={a.id}
                 href={`/portal/student/assignments/${a.id}`}
-                className="flex items-center justify-between gap-3 ds-card px-4 py-3 transition hover:border-[#19C6F4] hover:shadow-sm"
+                className="flex items-center justify-between gap-3 ds-card px-4 py-3 transition hover:border-[#FF8A1F] hover:shadow-sm"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-[#0B132B]">{a.title}</p>
-                  <p className="mt-0.5 text-[11px] text-[#94A3B8]">
+                  <p className="truncate text-sm font-medium text-[#0B1F3A]">{a.title}</p>
+                  <p className="mt-0.5 text-[11px] text-[#64748B]">
                     {a.course_title && <span>{a.course_title} · </span>}
                     {a.type}
                   </p>
@@ -90,11 +90,11 @@ export default async function StudentAssignmentsPage() {
               <Link
                 key={a.id}
                 href={`/portal/student/assignments/${a.id}`}
-                className="flex items-center justify-between gap-3 ds-card px-4 py-3 transition hover:border-[#19C6F4] hover:shadow-sm"
+                className="flex items-center justify-between gap-3 ds-card px-4 py-3 transition hover:border-[#FF8A1F] hover:shadow-sm"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-[#0B132B]">{a.title}</p>
-                  <p className="mt-0.5 text-[11px] text-[#94A3B8]">
+                  <p className="truncate text-sm font-medium text-[#0B1F3A]">{a.title}</p>
+                  <p className="mt-0.5 text-[11px] text-[#64748B]">
                     {a.course_title && <span>{a.course_title} · </span>}
                     {a.type}
                   </p>
@@ -102,7 +102,7 @@ export default async function StudentAssignmentsPage() {
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   {statusBadge(a.submission_status)}
                   {a.submission_score != null && (
-                    <span className="text-xs font-semibold text-[#0B132B]">
+                    <span className="text-xs font-semibold text-[#0B1F3A]">
                       {a.submission_score}/{a.max_score}
                     </span>
                   )}

@@ -3,6 +3,8 @@ import { getParentChildren, getChildDashboardData, getChildEnrollmentContracts }
 import { getChildSessionsProgress }             from '@/modules/parents/parent-portal-queries'
 import { getPendingFeedbackMilestone }           from '@/modules/parent-feedback/queries'
 import Link                                      from 'next/link'
+import ChildSelector                             from '@/components/portal/parent/ChildSelector'
+import NoChildrenLinked                          from '@/components/portal/parent/NoChildrenLinked'
 
 function fmtMoney(n: number) {
   return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
@@ -56,16 +58,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
   const children = await getParentChildren(user.id)
 
   if (!children.length) {
-    return (
-      <div className="flex min-h-100 items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg font-semibold text-[#0B1F3A]">No children linked</p>
-          <p className="mt-1 text-sm text-[#64748B]">
-            Contact your administrator to link your children to this account.
-          </p>
-        </div>
-      </div>
-    )
+    return <NoChildrenLinked />
   }
 
   const studentId = child ?? children[0].student_id
@@ -90,30 +83,11 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
     <div className="mx-auto max-w-3xl space-y-6">
 
       {/* Multi-child switcher */}
-      {children.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          {children.map(c => (
-            <Link
-              key={c.student_id}
-              href={`/portal/parent?child=${c.student_id}`}
-              className={[
-                'flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-all',
-                c.student_id === selected.student_id
-                  ? 'border-[#FF8A1F] bg-[#FF8A1F]/10 text-[#FF8A1F]'
-                  : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1]',
-              ].join(' ')}
-            >
-              <span className={[
-                'flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold',
-                c.student_id === selected.student_id ? 'bg-[#FF8A1F] text-white' : 'bg-[#E2E8F0] text-[#64748B]',
-              ].join(' ')}>
-                {c.student_name.charAt(0).toUpperCase()}
-              </span>
-              {c.student_name}
-            </Link>
-          ))}
-        </div>
-      )}
+      <ChildSelector
+        linkedChildren={children}
+        selectedId={selected.student_id}
+        hrefFor={(id) => `/portal/parent?child=${id}`}
+      />
 
       {/* Feedback prompt */}
       {pendingMilestone && (
@@ -146,9 +120,9 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
             { label: 'Course',     value: dashboard?.course_title    ?? '—' },
             { label: 'Instructor', value: dashboard?.instructor_name ?? '—' },
           ].map(({ label, value }) => (
-            <div key={label}>
+            <div key={label} className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-white/40">{label}</p>
-              <p className="mt-0.5 text-sm font-medium text-white/90 leading-tight">{value}</p>
+              <p className="mt-0.5 truncate text-sm font-medium text-white/90 leading-tight" title={value}>{value}</p>
             </div>
           ))}
         </div>
@@ -163,9 +137,9 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
           { label: 'Certificates', value: dashboard?.certificate_count ?? 0,   suffix: '',   href: childHref('/portal/parent/certificates'), color: 'text-[#FF8A1F]'  },
         ].map(({ label, value, suffix, href, color }) => (
           <Link key={label} href={href} className="ds-card p-4 transition hover:border-[#CBD5E1]">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">{label}</p>
             {value == null ? (
-              <p className="mt-1 text-sm text-[#94A3B8]">—</p>
+              <p className="mt-1 text-sm text-[#64748B]">—</p>
             ) : (
               <p className={`mt-1 text-2xl font-bold ${color}`}>
                 {typeof value === 'number' && suffix === '%' ? `${Math.round(value)}${suffix}` : `${value}${suffix}`}
@@ -185,8 +159,8 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="font-semibold text-[#0B1F3A]">{c.course_name ?? 'Course'}</p>
-                    <p className="text-xs text-[#94A3B8]">{[c.group_name, c.instructor_name].filter(Boolean).join(' · ')}</p>
-                    {c.contract_code && <p className="font-mono text-[10px] text-[#94A3B8]">{c.contract_code}</p>}
+                    <p className="text-xs text-[#64748B]">{[c.group_name, c.instructor_name].filter(Boolean).join(' · ')}</p>
+                    {c.contract_code && <p className="font-mono text-[10px] text-[#64748B]">{c.contract_code}</p>}
                   </div>
                   <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D] shrink-0">Active</span>
                 </div>
@@ -196,24 +170,24 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                     <p className={`font-bold text-sm ${c.enrolled_sessions > 0 && c.remaining_sessions <= 2 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
                       {c.enrolled_sessions > 0 ? `${c.remaining_sessions}` : '∞'}
                     </p>
-                    <p className="text-[#94A3B8]">Sessions Left</p>
+                    <p className="text-[#64748B]">Sessions Left</p>
                     {c.enrolled_sessions > 0 && <p className="text-[10px] text-[#CBD5E1]">{c.consumed_sessions}/{c.enrolled_sessions} used</p>}
                   </div>
                   <div className="rounded-lg bg-[#F8FAFC] p-2">
                     <p className={`font-bold text-sm ${c.remaining_amount > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                       {c.remaining_amount > 0 ? `EGP ${fmtMoney(c.remaining_amount)}` : 'Paid ✓'}
                     </p>
-                    <p className="text-[#94A3B8]">Balance</p>
+                    <p className="text-[#64748B]">Balance</p>
                   </div>
                   <div className="rounded-lg bg-[#F8FAFC] p-2">
                     <p className="font-bold text-sm text-[#0B1F3A]">EGP {fmtMoney(c.net_amount)}</p>
-                    <p className="text-[#94A3B8]">Total</p>
+                    <p className="text-[#64748B]">Total</p>
                   </div>
                 </div>
 
                 {c.remaining_amount > 0 && c.next_due_date && (
                   <div className="mt-2 flex items-center justify-between text-xs">
-                    <span className="text-[#94A3B8]">Next due</span>
+                    <span className="text-[#64748B]">Next due</span>
                     <span className={`font-medium ${new Date(c.next_due_date) < new Date() ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
                       {fmtDate(c.next_due_date)}
                     </span>
@@ -233,7 +207,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                     <div key={c.enrollment_id} className="px-4 py-3 flex items-center justify-between gap-2">
                       <div>
                         <p className="text-sm font-medium text-[#0B1F3A]">{c.course_name ?? '—'}</p>
-                        <p className="text-[11px] text-[#94A3B8]">{fmtDate(c.start_date)} → {fmtDate(c.end_date)}</p>
+                        <p className="text-[11px] text-[#64748B]">{fmtDate(c.start_date)} → {fmtDate(c.end_date)}</p>
                       </div>
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
                         ${c.status === 'COMPLETED' ? 'bg-[#F1F5F9] text-[#475569]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
@@ -292,7 +266,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
           value={courseProgress}
           color={courseProgress >= 75 ? 'bg-[#10B981]' : courseProgress >= 50 ? 'bg-yellow-500' : 'bg-[#FF8A1F]'}
         />
-        <p className="mt-2 text-[12px] text-[#94A3B8]">
+        <p className="mt-2 text-[12px] text-[#64748B]">
           {completedS} consumed · {Math.max(0, totalS - completedS)} remaining · {totalS} enrolled sessions
         </p>
       </div>
@@ -303,7 +277,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
         <div className="ds-card p-5">
           <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Upcoming Class</p>
           {!dashboard?.upcoming_class || (!dashboard.upcoming_class.day_of_week && !dashboard.upcoming_class.next_session_at) ? (
-            <p className="text-sm text-[#94A3B8]">No upcoming sessions scheduled.</p>
+            <p className="text-sm text-[#64748B]">No upcoming sessions scheduled.</p>
           ) : (
             <div className="space-y-2">
               {dashboard.upcoming_class.next_session_at && (
@@ -331,7 +305,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                 <div className="grid grid-cols-2 gap-3">
                   {dashboard.upcoming_class.day_of_week && (
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Day</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">Day</p>
                       <p className="mt-0.5 text-sm font-medium text-[#0B1F3A] capitalize">
                         {DAY_LABELS[dashboard.upcoming_class.day_of_week.toLowerCase()] ?? dashboard.upcoming_class.day_of_week}
                       </p>
@@ -339,13 +313,13 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                   )}
                   {dashboard.upcoming_class.time && (
                     <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Time</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">Time</p>
                       <p className="mt-0.5 text-sm font-medium text-[#0B1F3A]">{dashboard.upcoming_class.time}</p>
                     </div>
                   )}
                   {dashboard.upcoming_class.instructor_name && (
                     <div className="col-span-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Instructor</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">Instructor</p>
                       <p className="mt-0.5 text-sm font-medium text-[#0B1F3A]">{dashboard.upcoming_class.instructor_name}</p>
                     </div>
                   )}
@@ -365,7 +339,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
           </div>
 
           {!dashboard?.recent_activity.length ? (
-            <p className="text-sm text-[#94A3B8]">No activity yet.</p>
+            <p className="text-sm text-[#64748B]">No activity yet.</p>
           ) : (
             <div className="space-y-2.5">
               {dashboard.recent_activity.slice(0, 6).map(ev => (
@@ -377,7 +351,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                       <p className="truncate text-[11px] text-[#64748B]">{ev.subtitle}</p>
                     )}
                   </div>
-                  <p className="shrink-0 text-[11px] text-[#94A3B8]">
+                  <p className="shrink-0 text-[11px] text-[#64748B]">
                     {new Date(ev.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                   </p>
                 </div>

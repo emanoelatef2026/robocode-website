@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion"
 
 const MAIN_ITEMS = [
   {
-    label:       "Home",
+    label:       "Dashboard",
     href:        "/portal/student",
     exact:       true,
     colorIdle:   "bg-orange-50 text-orange-500",
@@ -26,7 +26,7 @@ const MAIN_ITEMS = [
     href:        "/portal/student/assignments",
     exact:       false,
     colorIdle:   "bg-[#FFFBEB] text-[#F59E0B]",
-    colorActive: "bg-[#FFFBEB]0 text-white shadow-md shadow-amber-200",
+    colorActive: "bg-[#F59E0B] text-white shadow-md shadow-amber-200",
     labelActive: "text-[#F59E0B]",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">
@@ -53,7 +53,7 @@ const MAIN_ITEMS = [
     href:        "/portal/student/leaderboard",
     exact:       false,
     colorIdle:   "bg-[#EFF6FF] text-[#3B82F6]",
-    colorActive: "bg-[#EFF6FF]0 text-white shadow-md shadow-blue-200",
+    colorActive: "bg-[#3B82F6] text-white shadow-md shadow-blue-200",
     labelActive: "text-[#3B82F6]",
     icon: (
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-[18px] w-[18px]">
@@ -147,7 +147,7 @@ export default function StudentBottomNav() {
             exit={{ opacity: 0, y: 14, scale: 0.96 }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
           >
-            <p className="px-4 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-widest text-[#94A3B8]">
+            <p className="px-4 pb-1 pt-3 text-[9.5px] font-bold uppercase tracking-widest text-[#64748B]">
               More
             </p>
             <div className="grid grid-cols-4 gap-1 px-3 pb-4 pt-1">
@@ -200,7 +200,7 @@ export default function StudentBottomNav() {
                 </div>
                 <span className={[
                   "text-[9.5px] font-semibold leading-none transition-colors",
-                  active ? item.labelActive : "text-[#94A3B8]",
+                  active ? item.labelActive : "text-[#64748B]",
                 ].join(" ")}>
                   {item.label}
                 </span>
@@ -232,7 +232,7 @@ export default function StudentBottomNav() {
             </div>
             <span className={[
               "text-[9.5px] font-semibold leading-none transition-colors",
-              (isMoreActive || moreOpen) ? "text-[#475569]" : "text-[#94A3B8]",
+              (isMoreActive || moreOpen) ? "text-[#475569]" : "text-[#64748B]",
             ].join(" ")}>
               More
             </span>

@@ -2,7 +2,7 @@
 import { getStudentDashboardData } from '@/modules/student-portal/queries'
 import { getPendingFeedbackSessions } from '@/modules/feedback/queries'
 import { createServiceClient } from '@/lib/supabase/service'
-import { LEVEL_THRESHOLDS, MAX_LEVEL } from '@/modules/gamification/types'
+import { MAX_LEVEL } from '@/modules/gamification/types'
 import Link from 'next/link'
 import type { UpcomingHomework, RecentFeedbackItem, StudentDashboardData } from '@/modules/student-portal/types'
 import SessionFeedbackWidget from './SessionFeedbackWidget'
@@ -33,15 +33,6 @@ function formatTime(t: string | null): string {
   } catch {
     return t
   }
-}
-
-function calculateLevel(xp: number): number {
-  let level = 1
-  for (let i = 1; i < MAX_LEVEL; i++) {
-    if (xp >= LEVEL_THRESHOLDS[i]) level = i + 1
-    else break
-  }
-  return level
 }
 
 // ── Level badge (color-coded per tier) ───────────────────────────────────────
@@ -190,7 +181,7 @@ function SessionCard({
   return (
     <div className="rounded-2xl border border-[#E2E8F0] bg-white px-3.5 py-3">
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">Sessions</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-[#64748B]">Sessions</p>
         <span className="rounded-full bg-[#FFF1E2] px-2 py-0.5 text-[10px] font-bold text-[#FF8A1F]">
           {sessionPct}%
         </span>
@@ -201,9 +192,9 @@ function SessionCard({
         </span>
         <span className="text-[12px] text-[#64748B]">/ {data.enrolled_sessions} sessions</span>
         {data.enrolled_sessions === 0 ? (
-          <span className="text-[10px] text-[#94A3B8]">No active package</span>
+          <span className="text-[10px] text-[#64748B]">No active package</span>
         ) : data.remaining_sessions > 0 ? (
-          <span className="text-[10px] text-[#94A3B8]">{data.remaining_sessions} left</span>
+          <span className="text-[10px] text-[#64748B]">{data.remaining_sessions} left</span>
         ) : null}
       </div>
       <div className="mt-1.5">
@@ -310,7 +301,7 @@ function deriveNextActions(data: StudentDashboardData): Array<{ label: string; h
   const actions: Array<{ label: string; href: string; kind: string }> = []
 
   if (!data.group_id) {
-    actions.push({ label: 'Contact your admin to join a group', href: '#', kind: 'info' })
+    actions.push({ label: 'Contact your admin to join a group', href: '/#branches', kind: 'info' })
     return actions
   }
 
@@ -351,7 +342,7 @@ function MissionsCard({ actions }: { actions: Array<{ label: string; href: strin
 
   return (
     <section>
-      <h2 className="mb-2 px-0.5 text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">
+      <h2 className="mb-2 px-0.5 text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
         🎯 Your Missions
       </h2>
       <div className="space-y-2">
@@ -386,7 +377,7 @@ function UpcomingCard({ items }: { items: UpcomingHomework[] }) {
         <Link href="/portal/student/assignments" className="text-xs text-[#FF8A1F] hover:underline">View all →</Link>
       </div>
       {items.length === 0 ? (
-        <p className="text-sm text-[#94A3B8]">No pending homework.</p>
+        <p className="text-sm text-[#64748B]">No pending homework.</p>
       ) : (
         <div className="space-y-2">
           {items.map((hw) => (
@@ -397,11 +388,11 @@ function UpcomingCard({ items }: { items: UpcomingHomework[] }) {
             >
               <p className="min-w-0 flex-1 truncate text-sm font-medium text-[#0B1F3A]">{hw.title}</p>
               {hw.due_at ? (
-                <p className={`shrink-0 text-xs ${new Date(hw.due_at) < new Date() ? 'font-semibold text-[#EF4444]' : 'text-[#94A3B8]'}`}>
+                <p className={`shrink-0 text-xs ${new Date(hw.due_at) < new Date() ? 'font-semibold text-[#EF4444]' : 'text-[#64748B]'}`}>
                   Due {new Date(hw.due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </p>
               ) : (
-                <p className="shrink-0 text-xs text-[#94A3B8]">No due date</p>
+                <p className="shrink-0 text-xs text-[#64748B]">No due date</p>
               )}
             </Link>
           ))}
@@ -416,7 +407,7 @@ function FeedbackCard({ items }: { items: RecentFeedbackItem[] }) {
     <div className="ds-card p-4">
       <p className="mb-2.5 text-sm font-semibold text-[#0B1F3A]">Recent Feedback</p>
       {items.length === 0 ? (
-        <p className="text-sm text-[#94A3B8]">No feedback yet.</p>
+        <p className="text-sm text-[#64748B]">No feedback yet.</p>
       ) : (
         <div className="space-y-2.5">
           {items.map((item) => (
@@ -430,7 +421,7 @@ function FeedbackCard({ items }: { items: RecentFeedbackItem[] }) {
                 )}
               </div>
               <p className="mt-1 text-xs text-[#64748B]">{item.public_feedback}</p>
-              <p className="mt-1 text-[10px] text-[#94A3B8]">
+              <p className="mt-1 text-[10px] text-[#64748B]">
                 {new Date(item.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             </div>
@@ -461,7 +452,7 @@ export default async function StudentDashboardPage() {
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="rounded-2xl border border-[#E2E8F0] bg-white p-6 text-center">
           <p className="text-sm font-medium text-[#0B1F3A]">Account not fully set up yet.</p>
-          <p className="mt-1 text-sm text-[#94A3B8]">Contact your administrator.</p>
+          <p className="mt-1 text-sm text-[#64748B]">Contact your administrator.</p>
         </div>
       </div>
     )
@@ -555,6 +546,7 @@ export default async function StudentDashboardPage() {
               sub={data.overall_pct != null
                 ? data.overall_pct >= 75 ? 'Great work! 🌟' : 'Keep going!'
                 : 'No grades yet'}
+              href="/portal/student/assignments"
               bgFrom="#EFF6FF"
               bgTo="#DBEAFE"
               textColor="text-[#1D4ED8]"
@@ -582,8 +574,8 @@ export default async function StudentDashboardPage() {
             <SessionFeedbackWidget sessions={feedbackSessions} />
           )}
 
-          {/* ── Desktop-only: upcoming + feedback columns ─────────────────────── */}
-          <div className="hidden gap-3 md:grid md:grid-cols-2">
+          {/* ── Upcoming homework + recent feedback ───────────────────────────── */}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <UpcomingCard items={data.upcoming_homework} />
             <FeedbackCard items={data.recent_feedback} />
           </div>

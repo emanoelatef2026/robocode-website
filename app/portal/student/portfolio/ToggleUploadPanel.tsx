@@ -17,7 +17,7 @@ export default function ToggleUploadPanel() {
           <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FF8A1F] text-sm font-bold text-white">+</span>
           <span className="text-sm font-semibold text-[#0B1F3A]">Upload New Project</span>
         </div>
-        <span className="text-[#94A3B8]">{open ? '▲' : '▼'}</span>
+        <span className="text-[#64748B]">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (

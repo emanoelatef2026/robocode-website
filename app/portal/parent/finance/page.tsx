@@ -2,7 +2,8 @@
 import { getParentChildren }       from '@/modules/parents/parent-portal-queries'
 import { getParentChildFinance }   from '@/modules/finance/queries'
 import { listStudentEnrollments }  from '@/modules/enrollments/queries'
-import Link                        from 'next/link'
+import ChildSelector               from '@/components/portal/parent/ChildSelector'
+import NoChildrenLinked            from '@/components/portal/parent/NoChildrenLinked'
 import {
   STATUS_COLORS, STATUS_LABELS, INSTALLMENT_STATUS_COLORS, PAYMENT_METHOD_LABELS,
 } from '@/modules/finance/types'
@@ -26,11 +27,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
   const children = await getParentChildren(user.id)
 
   if (!children.length) {
-    return (
-      <div className="flex min-h-60 items-center justify-center">
-        <p className="text-sm text-[#64748B]">No children linked to your account.</p>
-      </div>
-    )
+    return <NoChildrenLinked />
   }
 
   const studentId = childParam ?? children[0].student_id
@@ -45,33 +42,14 @@ export default async function ParentFinancePage({ searchParams }: Props) {
   const activeEnrollments = enrollments.filter(e => e.status === 'ACTIVE')
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5">
+    <div className="mx-auto max-w-3xl space-y-5">
 
       {/* Child switcher */}
-      {children.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          {children.map(c => (
-            <Link
-              key={c.student_id}
-              href={`/portal/parent/finance?child=${c.student_id}`}
-              className={[
-                'flex items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-all',
-                c.student_id === selected.student_id
-                  ? 'border-[#FF8A1F] bg-[#FF8A1F]/10 text-[#FF8A1F]'
-                  : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1]',
-              ].join(' ')}
-            >
-              <span className={[
-                'flex h-5 w-5 items-center justify-center rounded-full text-[9px] font-bold',
-                c.student_id === selected.student_id ? 'bg-[#FF8A1F] text-white' : 'bg-[#E2E8F0] text-[#64748B]',
-              ].join(' ')}>
-                {c.student_name.charAt(0).toUpperCase()}
-              </span>
-              {c.student_name}
-            </Link>
-          ))}
-        </div>
-      )}
+      <ChildSelector
+        linkedChildren={children}
+        selectedId={selected.student_id}
+        hrefFor={(id) => `/portal/parent/finance?child=${id}`}
+      />
 
       {/* ── Active Enrollments ─────────────────────────────────────────── */}
       {activeEnrollments.length > 0 && (
@@ -168,17 +146,17 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                     {enroll.net_amount > 0 && (
                       <div className="grid grid-cols-3 gap-2 border-t border-[#F1F5F9] pt-2 text-[11px]">
                         <div>
-                          <p className="text-[#94A3B8]">Course Fee</p>
+                          <p className="text-[#64748B]">Course Fee</p>
                           <p className="font-semibold text-[#0B1F3A]">EGP {fmt(enroll.net_amount)}</p>
                         </div>
                         {enroll.discount_amount > 0 && (
                           <div>
-                            <p className="text-[#94A3B8]">Discount</p>
+                            <p className="text-[#64748B]">Discount</p>
                             <p className="font-semibold text-[#10B981]">-EGP {fmt(enroll.discount_amount)}</p>
                           </div>
                         )}
                         <div>
-                          <p className="text-[#94A3B8]">Since</p>
+                          <p className="text-[#64748B]">Since</p>
                           <p className="font-semibold text-[#0B1F3A]">{dateFmt(enroll.start_date)}</p>
                         </div>
                       </div>
@@ -195,13 +173,13 @@ export default async function ParentFinancePage({ searchParams }: Props) {
       {!data ? (
         <div className="ds-card px-6 py-12 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F1F5F9]">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-6 w-6 text-[#94A3B8]">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-6 w-6 text-[#64748B]">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                 d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <p className="font-medium text-[#0B1F3A]">No financial account found</p>
-          <p className="mt-1 text-sm text-[#94A3B8]">
+          <p className="mt-1 text-sm text-[#64748B]">
             Contact the academy to set up a financial account for {selected.student_name}.
           </p>
         </div>
@@ -224,20 +202,30 @@ export default async function ParentFinancePage({ searchParams }: Props) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 divide-x divide-[#E2E8F0] border-t border-[#E2E8F0]">
-              {[
-                { label: 'Total',     value: `EGP ${fmt(data.account.total_amount)}`,     cls: 'text-[#0B1F3A]' },
-                { label: 'Discount',  value: `-EGP ${fmt(data.account.discount_amount)}`, cls: 'text-[#10B981]' },
-                { label: 'Net Total', value: `EGP ${fmt(data.account.net_amount)}`,       cls: 'font-bold text-[#0B1F3A]' },
-                { label: 'Paid',      value: `EGP ${fmt(data.account.paid_amount)}`,      cls: 'font-bold text-[#10B981]' },
-                { label: 'Remaining', value: `EGP ${fmt(data.account.remaining_amount)}`, cls: `font-bold ${data.account.remaining_amount > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}` },
-                { label: 'Next Due',  value: dateFmt(data.account.next_due_date),         cls: 'text-[#0B1F3A]' },
-              ].map(({ label, value, cls }) => (
-                <div key={label} className="px-4 py-3">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">{label}</p>
-                  <p className={`mt-0.5 text-sm ${cls}`}>{value}</p>
-                </div>
-              ))}
+            <div className="grid grid-cols-2 border-t border-[#E2E8F0]">
+              {(() => {
+                const items = [
+                  { label: 'Total',     value: `EGP ${fmt(data.account.total_amount)}`,     cls: 'text-[#0B1F3A]' },
+                  { label: 'Discount',  value: `-EGP ${fmt(data.account.discount_amount)}`, cls: 'text-[#10B981]' },
+                  { label: 'Net Total', value: `EGP ${fmt(data.account.net_amount)}`,       cls: 'font-bold text-[#0B1F3A]' },
+                  { label: 'Paid',      value: `EGP ${fmt(data.account.paid_amount)}`,      cls: 'font-bold text-[#10B981]' },
+                  { label: 'Remaining', value: `EGP ${fmt(data.account.remaining_amount)}`, cls: `font-bold ${data.account.remaining_amount > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}` },
+                  { label: 'Next Due',  value: dateFmt(data.account.next_due_date),         cls: 'text-[#0B1F3A]' },
+                ]
+                return items.map(({ label, value, cls }, i) => (
+                  <div
+                    key={label}
+                    className={[
+                      'px-4 py-3 border-[#E2E8F0]',
+                      i % 2 === 0 ? 'border-r' : '',
+                      i < items.length - 2 ? 'border-b' : '',
+                    ].join(' ')}
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B]">{label}</p>
+                    <p className={`mt-0.5 text-sm ${cls}`}>{value}</p>
+                  </div>
+                ))
+              })()}
             </div>
 
             {/* Progress bar */}
@@ -298,7 +286,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                         {PAYMENT_METHOD_LABELS[p.payment_method as keyof typeof PAYMENT_METHOD_LABELS] ?? p.payment_method}
                       </p>
                       {p.reference_number && (
-                        <p className="text-[11px] text-[#94A3B8]">#{p.reference_number}</p>
+                        <p className="text-[11px] text-[#64748B]">#{p.reference_number}</p>
                       )}
                     </div>
                   </div>

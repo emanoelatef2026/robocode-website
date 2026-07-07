@@ -19,7 +19,7 @@ export default async function StudentLeaderboardPage() {
   if (!studentId) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-[#94A3B8]">Student record not found.</p>
+        <p className="text-sm text-[#64748B]">Student record not found.</p>
       </div>
     )
   }
@@ -38,8 +38,8 @@ export default async function StudentLeaderboardPage() {
 
   if (!groupId) {
     return (
-      <div className="mx-auto max-w-xl py-12 text-center">
-        <p className="text-sm text-[#94A3B8]">You are not enrolled in a group yet. Join a group to see the leaderboard.</p>
+      <div className="mx-auto max-w-3xl py-12 text-center">
+        <p className="text-sm text-[#64748B]">You are not enrolled in a group yet. Join a group to see the leaderboard.</p>
         <Link href="/portal/student" className="mt-3 inline-block text-sm text-[#FF8A1F] hover:underline">
           ← Back to Dashboard
         </Link>
@@ -62,7 +62,7 @@ export default async function StudentLeaderboardPage() {
   const medalEmojis: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
   return (
-    <div className="mx-auto max-w-xl space-y-3">
+    <div className="mx-auto max-w-3xl space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -84,7 +84,7 @@ export default async function StudentLeaderboardPage() {
               {selfEntry.total_xp.toLocaleString()} XP · Level {selfEntry.current_level}
             </p>
           </div>
-          <span className="text-[10px] text-[#94A3B8]">out of {entries.length}</span>
+          <span className="text-[10px] text-[#64748B]">out of {entries.length}</span>
         </div>
       )}
 
@@ -112,7 +112,7 @@ export default async function StudentLeaderboardPage() {
                   {entry.total_xp.toLocaleString()} XP · Lv.{entry.current_level} · {entry.project_count} projects
                 </p>
               </div>
-              <span className="shrink-0 text-xs font-bold text-[#94A3B8]">#{entry.rank}</span>
+              <span className="shrink-0 text-xs font-bold text-[#64748B]">#{entry.rank}</span>
             </div>
           ))}
         </div>
@@ -127,7 +127,7 @@ export default async function StudentLeaderboardPage() {
                 key={entry.student_id}
                 className={`flex items-center gap-3 px-3.5 py-2.5 ${entry.is_self ? 'bg-[#FFF7ED]' : ''}`}
               >
-                <span className="w-5 shrink-0 text-center text-[10px] font-semibold text-[#94A3B8]">#{entry.rank}</span>
+                <span className="w-5 shrink-0 text-center text-[10px] font-semibold text-[#64748B]">#{entry.rank}</span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[12.5px] font-medium text-[#0B1F3A]">
                     {entry.student_name}
@@ -137,7 +137,7 @@ export default async function StudentLeaderboardPage() {
                     {entry.total_xp.toLocaleString()} XP · Lv.{entry.current_level}
                   </p>
                 </div>
-                <span className="shrink-0 text-[10px] text-[#94A3B8]">{entry.project_count} proj.</span>
+                <span className="shrink-0 text-[10px] text-[#64748B]">{entry.project_count} proj.</span>
               </div>
             ))}
           </div>
@@ -146,7 +146,7 @@ export default async function StudentLeaderboardPage() {
 
       {entries.length === 0 && (
         <div className="rounded-xl border border-dashed border-[#E2E8F0] py-10 text-center">
-          <p className="text-sm text-[#94A3B8]">No students in this group yet.</p>
+          <p className="text-sm text-[#64748B]">No students in this group yet.</p>
         </div>
       )}
 

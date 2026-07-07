@@ -30,7 +30,7 @@ export default async function StudentCertificatesPage() {
         <div className={`rounded-xl border p-4 ${eligibility.is_eligible ? 'border-[#A7F3D0] bg-[#E7F8EE]' : 'border-[#E2E8F0] bg-white'}`}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Certificate Status</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">Certificate Status</p>
               {eligibility.is_eligible ? (
                 <>
                   <p className="mt-1 text-sm font-bold text-[#15803D]">✓ Eligible for Certificate</p>
@@ -56,7 +56,7 @@ export default async function StudentCertificatesPage() {
                   ? `${Math.round((eligibility.consumed_sessions / eligibility.enrolled_sessions) * 100)}%`
                   : '—'}
               </p>
-              <p className="text-[10px] text-[#94A3B8]">progress</p>
+              <p className="text-[10px] text-[#64748B]">progress</p>
             </div>
           </div>
 
@@ -72,7 +72,7 @@ export default async function StudentCertificatesPage() {
           )}
 
           {eligibility.course_title && (
-            <p className="mt-2 text-[10px] text-[#94A3B8]">
+            <p className="mt-2 text-[10px] text-[#64748B]">
               {eligibility.course_title}{eligibility.group_name ? ` · ${eligibility.group_name}` : ''}
             </p>
           )}
@@ -105,7 +105,7 @@ export default async function StudentCertificatesPage() {
                     {TYPE_LABELS[c.certificate_type] ?? c.certificate_type}
                     {c.course_title && ` · ${c.course_title}`}
                   </p>
-                  <p className="mt-1 text-[11px] text-[#94A3B8]">
+                  <p className="mt-1 text-[11px] text-[#64748B]">
                     Issued {new Date(c.issued_at).toLocaleDateString('en-GB')} · <span className="font-mono">{c.certificate_code}</span>
                   </p>
                 </div>
@@ -140,7 +140,7 @@ export default async function StudentCertificatesPage() {
                     href={`/verify/${c.certificate_code}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-center text-[12px] font-medium text-[#0B1F3A]"
+                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[#E2E8F0] text-center text-[12px] font-medium text-[#0B1F3A]"
                   >
                     Verify
                   </a>
@@ -148,7 +148,7 @@ export default async function StudentCertificatesPage() {
                     href={`/api/certificates/${c.certificate_code}/pdf`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-center text-[12px] font-medium text-white"
+                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg bg-[#FF8A1F] text-center text-[12px] font-medium text-white"
                   >
                     Download PDF
                   </a>

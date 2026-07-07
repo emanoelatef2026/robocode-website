@@ -20,18 +20,18 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
   const isOverdue = dueDate && new Date() > dueDate && !submission
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
+    <div className="mx-auto max-w-3xl space-y-4">
       {/* Back link */}
       <Link href="/portal/student/assignments" className="text-xs text-[#FF8A1F] hover:underline">← Assignments</Link>
 
       {/* Header */}
       <div>
-        <div className="mb-1 flex items-center gap-2 text-xs text-[#94A3B8]">
+        <div className="mb-1 flex items-center gap-2 text-xs text-[#64748B]">
           {detail.course_title && <span>{detail.course_title}</span>}
           {detail.course_title && detail.module_title && <span>·</span>}
           {detail.module_title && <span>{detail.module_title}</span>}
         </div>
-        <h1 className="text-lg font-bold text-[#0B132B]">{detail.title}</h1>
+        <h1 className="text-lg font-bold text-[#0B1F3A]">{detail.title}</h1>
 
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <span className="rounded-full bg-[#F1F5F9] px-2.5 py-1 text-xs font-medium text-[#64748B] capitalize">
@@ -41,7 +41,7 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
             {detail.max_score} points
           </span>
           {dueDate && (
-            <span className={`text-xs ${isOverdue ? 'font-semibold text-[#EF4444]' : 'text-[#94A3B8]'}`}>
+            <span className={`text-xs ${isOverdue ? 'font-semibold text-[#EF4444]' : 'text-[#64748B]'}`}>
               {isOverdue ? 'Overdue · ' : 'Due '}
               {dueDate.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
             </span>
@@ -52,7 +52,7 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
       {/* Description */}
       {detail.description && (
         <section className="ds-card p-4">
-          <h2 className="mb-1.5 text-sm font-semibold text-[#0B132B]">Description</h2>
+          <h2 className="mb-1.5 text-sm font-semibold text-[#0B1F3A]">Description</h2>
           <p className="whitespace-pre-wrap text-sm text-[#64748B]">{detail.description}</p>
         </section>
       )}
@@ -60,7 +60,7 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
       {/* Instructions */}
       {detail.instructions && (
         <section className="ds-card p-4">
-          <h2 className="mb-1.5 text-sm font-semibold text-[#0B132B]">Instructions</h2>
+          <h2 className="mb-1.5 text-sm font-semibold text-[#0B1F3A]">Instructions</h2>
           <p className="whitespace-pre-wrap text-sm text-[#64748B]">{detail.instructions}</p>
         </section>
       )}
@@ -68,17 +68,17 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
       {/* Rubric */}
       {detail.rubric?.length > 0 && (
         <section className="ds-card p-4">
-          <h2 className="mb-2.5 text-sm font-semibold text-[#0B132B]">Grading Criteria</h2>
+          <h2 className="mb-2.5 text-sm font-semibold text-[#0B1F3A]">Grading Criteria</h2>
           <div className="space-y-2">
             {detail.rubric.map(criterion => (
               <div key={criterion.id} className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium text-[#0B132B]">{criterion.label}</p>
+                  <p className="text-sm font-medium text-[#0B1F3A]">{criterion.label}</p>
                   {criterion.description && (
-                    <p className="text-xs text-[#94A3B8]">{criterion.description}</p>
+                    <p className="text-xs text-[#64748B]">{criterion.description}</p>
                   )}
                 </div>
-                <span className="shrink-0 text-sm font-semibold text-[#0B132B]">
+                <span className="shrink-0 text-sm font-semibold text-[#0B1F3A]">
                   {criterion.max_points} pts
                 </span>
               </div>
@@ -89,7 +89,7 @@ export default async function StudentAssignmentDetailPage({ params }: Props) {
 
       {/* Submission form or status */}
       <section className="ds-card p-4">
-        <h2 className="mb-3 text-sm font-semibold text-[#0B132B]">
+        <h2 className="mb-3 text-sm font-semibold text-[#0B1F3A]">
           {submission ? 'Your Submission' : 'Submit Your Work'}
         </h2>
         <SubmitForm

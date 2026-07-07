@@ -3,6 +3,8 @@ import { getParentChildren }   from '@/modules/parents/parent-portal-queries'
 import { getChildPortfolioDetail } from '@/modules/portfolio/queries'
 import { PROJECT_STATUS_CONFIG }   from '@/modules/portfolio/types'
 import Link                    from 'next/link'
+import ChildSelector           from '@/components/portal/parent/ChildSelector'
+import NoChildrenLinked        from '@/components/portal/parent/NoChildrenLinked'
 
 interface Props {
   searchParams: Promise<{ child?: string }>
@@ -24,11 +26,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
   const children = await getParentChildren(user.id)
 
   if (!children.length) {
-    return (
-      <div className="flex min-h-100 items-center justify-center">
-        <p className="text-sm text-[#94A3B8]">No children linked to this account.</p>
-      </div>
-    )
+    return <NoChildrenLinked />
   }
 
   const studentId  = child ?? children[0].student_id
@@ -40,7 +38,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
   const activeProjects = detail?.projects.filter(p => !p.is_archived) ?? []
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-3xl space-y-8">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -51,12 +49,19 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
           {detail?.portfolio.bio && (
             <p className="mt-1 text-sm text-[#64748B]">{detail.portfolio.bio}</p>
           )}
-          <p className="mt-0.5 text-sm text-[#94A3B8]">{activeProjects.length} project{activeProjects.length !== 1 ? 's' : ''}</p>
+          <p className="mt-0.5 text-sm text-[#64748B]">{activeProjects.length} project{activeProjects.length !== 1 ? 's' : ''}</p>
         </div>
         <Link href={`/portal/parent${childParam}`} className="text-[13px] text-[#FF8A1F] hover:underline">
           ← Dashboard
         </Link>
       </div>
+
+      {/* Child switcher */}
+      <ChildSelector
+        linkedChildren={children}
+        selectedId={selected.student_id}
+        hrefFor={(id) => `/portal/parent/portfolio?child=${id}`}
+      />
 
       {!detail || activeProjects.length === 0 ? (
         <div className="ds-card px-6 py-12 text-center">
@@ -142,7 +147,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
                     {/* Instructor review feedback */}
                     {p.instructor_feedback && (
                       <div className="rounded-lg bg-[#F8FAFC] border border-[#F1F5F9] px-3 py-2.5">
-                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
                           Instructor Review
                         </p>
                         <p className="text-[13px] text-[#64748B] whitespace-pre-wrap leading-relaxed">
@@ -196,7 +201,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
                 <div>
                   <p className="font-medium text-[#0B1F3A]">{a.title}</p>
                   {a.description && <p className="text-[13px] text-[#64748B]">{a.description}</p>}
-                  <p className="mt-1 text-[11px] text-[#94A3B8] capitalize">
+                  <p className="mt-1 text-[11px] text-[#64748B] capitalize">
                     {a.achievement_type} · {new Date(a.date_awarded).toLocaleDateString('en-GB')}
                   </p>
                 </div>

@@ -8,6 +8,8 @@ import { CATEGORY_LABELS, STATUS_CONFIG } from '@/modules/parent-messages/querie
 import FeedbackForm                    from './FeedbackForm'
 import ContactForm                     from './ContactForm'
 import Link                            from 'next/link'
+import ChildSelector                   from '@/components/portal/parent/ChildSelector'
+import NoChildrenLinked                from '@/components/portal/parent/NoChildrenLinked'
 
 interface Props {
   searchParams: Promise<{ child?: string; tab?: string }>
@@ -23,11 +25,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
   const children = await getParentChildren(user.id)
 
   if (!children.length) {
-    return (
-      <div className="flex min-h-100 items-center justify-center">
-        <p className="text-sm text-[#94A3B8]">No children linked to this account.</p>
-      </div>
-    )
+    return <NoChildrenLinked />
   }
 
   const studentId  = child ?? children[0].student_id
@@ -50,7 +48,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
   const tabHref = (t: Tab) => `/portal/parent/feedback?tab=${t}${childParam}`
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
@@ -62,6 +60,13 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
           ← Dashboard
         </Link>
       </div>
+
+      {/* Child switcher */}
+      <ChildSelector
+        linkedChildren={children}
+        selectedId={selected.student_id}
+        hrefFor={(id) => `/portal/parent/feedback?tab=${activeTab}&child=${id}`}
+      />
 
       {/* Tab switcher */}
       <div className="flex rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-1 gap-1">
@@ -113,7 +118,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
           ) : (
             <div className="ds-card px-6 py-12 text-center">
               <p className="text-sm text-[#64748B]">No session feedback pending at this time.</p>
-              <p className="mt-1 text-xs text-[#94A3B8]">
+              <p className="mt-1 text-xs text-[#64748B]">
                 Feedback is requested every 6 completed sessions · {completedSessions} completed so far.
               </p>
             </div>
@@ -136,7 +141,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
                       ))}
                     </div>
                   </div>
-                  <p className="mt-1 text-[11px] text-[#94A3B8]">
+                  <p className="mt-1 text-[11px] text-[#64748B]">
                     {new Date(fb.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                   {fb.notes && (
@@ -166,43 +171,68 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
             </p>
             {myMessages.length === 0 ? (
               <div className="ds-card px-6 py-10 text-center">
-                <p className="text-sm text-[#94A3B8]">No messages sent yet.</p>
+                <p className="text-sm text-[#64748B]">No messages sent yet.</p>
               </div>
             ) : (
-              <div className="overflow-hidden ds-card">
-                <table className="w-full text-[13px]">
-                  <thead className="ds-table-head">
-                    <tr className="border-b border-[#F1F5F9] text-left">
-                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Date</th>
-                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Category</th>
-                      <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Status</th>
-                      <th className="hidden px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] md:table-cell">Last Updated</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#F8FAFC]">
-                    {myMessages.map(msg => {
-                      const statusCfg = STATUS_CONFIG[msg.status]
-                      return (
-                        <tr key={msg.id} className="hover:bg-[#F8FAFC]">
-                          <td className="px-4 py-3 text-[#0B1F3A]">
-                            {new Date(msg.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </td>
-                          <td className="px-4 py-3 text-[#64748B]">
+              <div className="ds-card overflow-hidden">
+                {/* Mobile list */}
+                <div className="divide-y divide-[#F1F5F9] md:hidden">
+                  {myMessages.map(msg => {
+                    const statusCfg = STATUS_CONFIG[msg.status]
+                    return (
+                      <div key={msg.id} className="px-4 py-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[13px] font-medium text-[#0B1F3A]">
                             {CATEGORY_LABELS[msg.category] ?? msg.category}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
-                              {statusCfg.label}
-                            </span>
-                          </td>
-                          <td className="hidden px-4 py-3 text-[#94A3B8] md:table-cell">
-                            {new Date(msg.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+                          </p>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
+                            {statusCfg.label}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-[11px] text-[#64748B]">
+                          {new Date(msg.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden overflow-x-auto md:block">
+                  <table className="w-full text-[13px]">
+                    <thead className="ds-table-head">
+                      <tr className="border-b border-[#F1F5F9] text-left">
+                        <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Date</th>
+                        <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Category</th>
+                        <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Status</th>
+                        <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Last Updated</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F8FAFC]">
+                      {myMessages.map(msg => {
+                        const statusCfg = STATUS_CONFIG[msg.status]
+                        return (
+                          <tr key={msg.id} className="hover:bg-[#F8FAFC]">
+                            <td className="px-4 py-3 text-[#0B1F3A]">
+                              {new Date(msg.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </td>
+                            <td className="px-4 py-3 text-[#64748B]">
+                              {CATEGORY_LABELS[msg.category] ?? msg.category}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
+                                {statusCfg.label}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-[#64748B]">
+                              {new Date(msg.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>

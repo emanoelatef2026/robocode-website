@@ -96,7 +96,7 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
         return (
           <div key={key} className="ds-card p-5">
             <p className="mb-0.5 text-sm font-semibold text-[#0B1F3A]">{en}</p>
-            <p className="mb-4 text-[13px] text-[#94A3B8]" dir="rtl">{ar}</p>
+            <p className="mb-4 text-[13px] text-[#64748B]" dir="rtl">{ar}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => handleAnswer(key as QKey, true)}
@@ -128,13 +128,13 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
       {/* Star rating */}
       <div className="ds-card p-5">
         <p className="mb-1 text-sm font-semibold text-[#0B1F3A]">Overall Rating</p>
-        <p className="mb-4 text-[13px] text-[#94A3B8]">1 star = poor, 5 stars = excellent</p>
+        <p className="mb-4 text-[13px] text-[#64748B]">1 star = poor, 5 stars = excellent</p>
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5].map(s => (
             <button
               key={s}
               onClick={() => setRating(s)}
-              className="text-3xl transition-transform hover:scale-110 focus:outline-none"
+              className="rounded text-3xl transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2"
               aria-label={`Rate ${s} star${s !== 1 ? 's' : ''}`}
             >
               {s <= rating ? '★' : '☆'}
@@ -142,16 +142,16 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
           ))}
         </div>
         {rating > 0 && (
-          <p className="mt-2 text-[12px] text-[#94A3B8]">{rating} / 5</p>
+          <p className="mt-2 text-[12px] text-[#64748B]">{rating} / 5</p>
         )}
       </div>
 
       {/* Notes */}
       <div className="ds-card p-5">
         <p className="mb-1 text-sm font-semibold text-[#0B1F3A]">
-          Notes or Suggestions <span className="text-[12px] font-normal text-[#94A3B8]">(optional)</span>
+          Notes or Suggestions <span className="text-[12px] font-normal text-[#64748B]">(optional)</span>
         </p>
-        <p className="mb-3 text-[13px] text-[#94A3B8]" dir="rtl">ملاحظات أو اقتراحات</p>
+        <p className="mb-3 text-[13px] text-[#64748B]" dir="rtl">ملاحظات أو اقتراحات</p>
         <textarea
           value={notes}
           onChange={e => setNotes(e.target.value)}

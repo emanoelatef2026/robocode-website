@@ -147,7 +147,7 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
       <div>
         <label className="mb-1 block text-xs font-medium text-[#64748B]">
           Cover Image <span className="text-[#EF4444]">*</span>
-          <span className="ml-1 font-normal text-[#94A3B8]">(JPEG/PNG/WebP, auto-compressed to ≤500 KB)</span>
+          <span className="ml-1 font-normal text-[#64748B]">(JPEG/PNG/WebP, auto-compressed to ≤500 KB)</span>
         </label>
         {imageUrl ? (
           <div className="relative">
@@ -163,11 +163,20 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
           </div>
         ) : (
           <div
-            className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#E2E8F0] p-8 text-center transition hover:border-[#FF8A1F]"
+            role="button"
+            tabIndex={0}
+            aria-label="Select cover image"
+            className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#E2E8F0] p-8 text-center transition hover:border-[#FF8A1F] focus:outline-none focus-visible:border-[#FF8A1F] focus-visible:ring-2 focus-visible:ring-[#FF8A1F]/30"
             onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                fileInputRef.current?.click()
+              }
+            }}
           >
             <p className="text-sm text-[#64748B]">{imageUploading ? 'Uploading…' : 'Click to select image'}</p>
-            <p className="mt-1 text-xs text-[#94A3B8]">Max 1200px wide · auto-compressed</p>
+            <p className="mt-1 text-xs text-[#64748B]">Max 1200px wide · auto-compressed</p>
           </div>
         )}
         <input
@@ -211,7 +220,7 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
       <div>
         <label className="mb-1 block text-xs font-medium text-[#64748B]">
           Project Link <span className="text-[#EF4444]">*</span>
-          <span className="ml-1 font-normal text-[#94A3B8]">(Google Drive, GitHub, Scratch, Replit, Website…)</span>
+          <span className="ml-1 font-normal text-[#64748B]">(Google Drive, GitHub, Scratch, Replit, Website…)</span>
         </label>
         <input name="project_link" type="url" required defaultValue={project?.project_url ?? ''} placeholder="https://…" className={cls} />
       </div>
@@ -219,7 +228,7 @@ export default function UploadProjectForm({ mode = 'create', project, onCancel }
       {/* Video URL */}
       <div>
         <label className="mb-1 block text-xs font-medium text-[#64748B]">
-          Demo Video URL <span className="ml-1 font-normal text-[#94A3B8]">(YouTube only, optional)</span>
+          Demo Video URL <span className="ml-1 font-normal text-[#64748B]">(YouTube only, optional)</span>
         </label>
         <input name="video_url" type="url" defaultValue={project?.video_url ?? ''} placeholder="https://youtube.com/watch?v=…" className={cls} />
       </div>

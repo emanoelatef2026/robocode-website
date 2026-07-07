@@ -66,14 +66,21 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
   }, [isTL, s.student_id])
 
   async function handleSendWelcomeMessage() {
+    // Open the tab synchronously, inside the click handler, so mobile browsers
+    // (iOS Safari, Chrome for Android) still treat it as user-initiated — they
+    // block window.open() called after an await breaks the user-gesture chain,
+    // unlike most desktop browsers which are more lenient about the delay.
+    const pending = window.open('', '_blank')
     setWelcomeSending(true)
     const result = await sendWelcomeWhatsAppAction(s.student_id)
     setWelcomeSending(false)
     if ('error' in result) {
+      pending?.close()
       alert(result.error)
       return
     }
-    window.open(result.url, '_blank')
+    if (pending) pending.location.href = result.url
+    else window.open(result.url, '_blank')
   }
 
   async function handleGenerateCredentials() {

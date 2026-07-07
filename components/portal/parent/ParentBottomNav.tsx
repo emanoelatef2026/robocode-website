@@ -108,7 +108,7 @@ function NavInner() {
               href={buildHref(item.href)}
               className={[
                 "relative flex flex-col items-center justify-center gap-1 py-2 min-h-[60px] transition-colors",
-                active ? "text-[#FF8A1F]" : "text-[#94A3B8] active:text-[#64748B]",
+                active ? "text-[#FF8A1F]" : "text-[#64748B] active:text-[#64748B]",
               ].join(" ")}
               aria-current={active ? "page" : undefined}
             >
@@ -116,7 +116,7 @@ function NavInner() {
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[#FF8A1F]" />
               )}
               {item.icon}
-              <span className={`text-[10px] font-semibold leading-none ${active ? "text-[#FF8A1F]" : "text-[#94A3B8]"}`}>
+              <span className={`text-[10px] font-semibold leading-none ${active ? "text-[#FF8A1F]" : "text-[#64748B]"}`}>
                 {item.label}
               </span>
             </Link>
@@ -129,7 +129,7 @@ function NavInner() {
           onClick={() => setMoreOpen(true)}
           className={[
             "relative flex flex-col items-center justify-center gap-1 py-2 min-h-[60px] transition-colors",
-            moreActive ? "text-[#FF8A1F]" : "text-[#94A3B8] active:text-[#64748B]",
+            moreActive ? "text-[#FF8A1F]" : "text-[#64748B] active:text-[#64748B]",
           ].join(" ")}
           aria-label="More navigation items"
         >
@@ -137,7 +137,7 @@ function NavInner() {
             <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-[#FF8A1F]" />
           )}
           {I.more}
-          <span className={`text-[10px] font-semibold leading-none ${moreActive ? "text-[#FF8A1F]" : "text-[#94A3B8]"}`}>
+          <span className={`text-[10px] font-semibold leading-none ${moreActive ? "text-[#FF8A1F]" : "text-[#64748B]"}`}>
             More
           </span>
         </button>
@@ -172,7 +172,7 @@ function NavInner() {
               </div>
 
               {/* Title */}
-              <p className="px-5 pt-1 pb-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#94A3B8]">
+              <p className="px-5 pt-1 pb-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#64748B]">
                 More
               </p>
 
@@ -190,7 +190,7 @@ function NavInner() {
                         active ? "text-[#FF8A1F]" : "text-[#64748B]",
                       ].join(" ")}
                     >
-                      <span className={active ? "text-[#FF8A1F]" : "text-[#94A3B8]"}>
+                      <span className={active ? "text-[#FF8A1F]" : "text-[#64748B]"}>
                         {item.icon}
                       </span>
                       <span className={`text-[11px] font-semibold leading-none ${active ? "text-[#FF8A1F]" : "text-[#64748B]"}`}>

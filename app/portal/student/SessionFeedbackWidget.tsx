@@ -85,7 +85,7 @@ export default function SessionFeedbackWidget({ sessions }: Props) {
         {FEEDBACK_QUESTIONS.map((q) => (
           <div key={q.key}>
             <p className="mb-0.5 text-sm font-medium text-[#78350F]">{q.english}</p>
-            <p className="mb-1.5 text-[11px] text-[#B45309] rtl">{q.arabic}</p>
+            <p className="mb-1.5 text-[11px] text-[#B45309]" dir="rtl">{q.arabic}</p>
             <StarPicker name={`${q.key}_score`} />
           </div>
         ))}

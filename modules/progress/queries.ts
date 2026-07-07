@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { verifyParentChild } from '@/modules/parents/parent-portal-queries'
 import type { StudentCourseProgress, ProgressSummary } from './types'
 
 export async function getStudentProgressByUserId(
@@ -83,77 +84,62 @@ export async function getStudentSessionCounts(
   return result
 }
 
-export async function getProgressForParent(
-  userId: string
-): Promise<ProgressSummary[]> {
+export async function getProgressForChild(
+  parentUserId: string,
+  studentId:    string
+): Promise<ProgressSummary | null> {
+  if (!(await verifyParentChild(parentUserId, studentId))) return null
+
   const db = createServiceClient()
 
-  const { data: parentRow } = await db
-    .from('parents')
-    .select('id')
-    .eq('user_id', userId)
-    .single()
-
-  if (!parentRow) return []
-
-  const { data: linkedStudents } = await db
-    .from('parent_students')
+  const { data: studentRow } = await db
+    .from('students')
     .select(`
-      student_id,
-      students!parent_students_student_id_fkey(
-        id,
-        users!students_user_id_fkey(
-          email,
-          profiles!profiles_user_id_fkey(first_name, last_name)
-        )
+      id,
+      users!students_user_id_fkey(
+        email,
+        profiles!profiles_user_id_fkey(first_name, last_name)
       )
     `)
-    .eq('parent_id', parentRow.id)
+    .eq('id', studentId)
+    .maybeSingle()
 
-  if (!linkedStudents?.length) return []
+  if (!studentRow) return null
+  const student = studentRow as any
 
-  const summaries: ProgressSummary[] = []
+  const { data: progressRows } = await db
+    .from('student_course_progress')
+    .select(`
+      *,
+      courses!student_course_progress_course_id_fkey(title),
+      groups!student_course_progress_group_id_fkey(name)
+    `)
+    .eq('student_id', studentId)
+    .order('last_calculated_at', { ascending: false })
 
-  for (const link of linkedStudents) {
-    const student = (link as any).students
-    if (!student) continue
+  const courses: StudentCourseProgress[] = (progressRows ?? []).map((row: any) => ({
+    ...row,
+    course_title:  row.courses?.title ?? '',
+    semester_name: '',
+    group_name:    row.groups?.name   ?? '',
+  }))
 
-    const { data: progressRows } = await db
-      .from('student_course_progress')
-      .select(`
-        *,
-        courses!student_course_progress_course_id_fkey(title),
-        groups!student_course_progress_group_id_fkey(name)
-      `)
-      .eq('student_id', student.id)
-      .order('last_calculated_at', { ascending: false })
+  const overall = courses.length
+    ? Math.round(
+        (courses.reduce((sum, c) => sum + c.completion_percentage, 0) / courses.length) * 100
+      ) / 100
+    : 0
 
-    const courses: StudentCourseProgress[] = (progressRows ?? []).map((row: any) => ({
-      ...row,
-      course_title:  row.courses?.title ?? '',
-      semester_name: '',
-      group_name:    row.groups?.name   ?? '',
-    }))
-
-    const overall = courses.length
-      ? Math.round(
-          (courses.reduce((sum, c) => sum + c.completion_percentage, 0) / courses.length) * 100
-        ) / 100
-      : 0
-
-    summaries.push({
-      student_id:         student.id,
-      student_name:       [
-        student.users?.profiles?.first_name,
-        student.users?.profiles?.last_name,
-      ].filter(Boolean).join(' ') || 'Student',
-      student_email:      student.users?.email ?? '',
-      courses,
-      overall_percentage: overall,
-    })
+  return {
+    student_id:         studentId,
+    student_name:       [
+      student.users?.profiles?.first_name,
+      student.users?.profiles?.last_name,
+    ].filter(Boolean).join(' ') || 'Student',
+    student_email:      student.users?.email ?? '',
+    courses,
+    overall_percentage: overall,
   }
-
-  return summaries
 }
 
 export async function getProgressForGroup(

@@ -50,12 +50,23 @@ const PATH_TITLES: Record<string, string> = {
   "/portal/instructor/students": "Students",
   "/portal/instructor/portfolio": "Portfolio",
   "/portal/instructor/payments": "My Payments",
+  // Parent portal paths
+  "/portal/parent": "Dashboard",
+  "/portal/parent/assignments": "Assignments",
+  "/portal/parent/attendance": "Attendance",
+  "/portal/parent/certificates": "Certificates",
+  "/portal/parent/feedback": "Feedback Center",
+  "/portal/parent/finance": "Finance",
+  "/portal/parent/portfolio": "Portfolio",
+  "/portal/parent/progress": "Academic Progress",
+  "/portal/parent/semesters": "Activity History",
 };
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "Super Admin",
   team_leader: "Team Leader",
   instructor:  "Instructor",
+  parent:      "Parent",
 };
 
 function getPageTitle(pathname: string): string {
@@ -140,7 +151,7 @@ export default function AdminTopbar({ onMenuClick, role = "super_admin", branchN
         style={{ background: 'linear-gradient(135deg,#FF8A1F,#163560)' }}
         title={role}
       >
-        {{ super_admin: 'SA', team_leader: 'TL', instructor: 'IN' }[role] ?? 'AD'}
+        {{ super_admin: 'SA', team_leader: 'TL', instructor: 'IN', parent: 'PA' }[role] ?? 'AD'}
       </div>
     </header>
   );
