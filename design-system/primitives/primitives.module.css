@@ -1,0 +1,999 @@
+/**
+ * Primitive Component Library — shared stylesheet (Sprint 2).
+ *
+ * Every rule below resolves color/radius/elevation through the Theme's
+ * runtime CSS custom properties (`--rc-color-*` / `--rc-radius-*` /
+ * `--rc-elevation-*`, mounted by `DesignSystemProvider`, DSA §5.6) with a
+ * Light Theme literal fallback — never a new, undocumented value. The block
+ * below bridges the remaining static Primitive Token categories (spacing,
+ * typography, sizing, motion, z-index) that the Theme layer does not turn
+ * into CSS variables because they do not vary per Theme; every value here
+ * is copied verbatim from `design-system/tokens/primitive/*` — this file
+ * introduces no new design decision, only a CSS-reachable form of one.
+ * All directional properties use logical properties (RTL, DSA §13).
+ */
+
+:global(:root) {
+  /* mirrors tokens/primitive/spacing.ts */
+  --rc-space-px: 1px;
+  --rc-space-0-5: 0.125rem;
+  --rc-space-1: 0.25rem;
+  --rc-space-1-5: 0.375rem;
+  --rc-space-2: 0.5rem;
+  --rc-space-2-5: 0.625rem;
+  --rc-space-3: 0.75rem;
+  --rc-space-4: 1rem;
+  --rc-space-6: 1.5rem;
+
+  /* mirrors tokens/primitive/typography.ts */
+  --rc-font-family-body: var(--font-poppins), sans-serif;
+  --rc-font-size-xs: 0.75rem;
+  --rc-font-size-sm: 0.875rem;
+  --rc-font-size-base: 1rem;
+  --rc-font-size-lg: 1.125rem;
+  --rc-font-weight-regular: 400;
+  --rc-font-weight-medium: 500;
+  --rc-font-weight-semibold: 600;
+  --rc-font-weight-bold: 700;
+  --rc-line-height-normal: 1.5;
+  --rc-line-height-snug: 1.3;
+
+  /* mirrors tokens/primitive/sizing.ts */
+  --rc-target-dense: 28px;
+  --rc-target-comfortable: 36px;
+  --rc-target-compact: 40px;
+  --rc-target-touch: 44px;
+  --rc-icon-xs: 12px;
+  --rc-icon-sm: 16px;
+  --rc-icon-md: 20px;
+  --rc-icon-lg: 24px;
+  --rc-icon-xl: 32px;
+
+  /* mirrors tokens/primitive/motion.ts */
+  --rc-motion-fast: 150ms;
+  --rc-motion-base: 220ms;
+  --rc-motion-slower: 600ms;
+  --rc-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --rc-ease-decelerate: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* mirrors tokens/primitive/z-index.ts */
+  --rc-z-dropdown: 1000;
+  --rc-z-tooltip: 1800;
+
+  /* mirrors tokens/primitive/opacity.ts ["50"] — Interaction Architecture's Disabled state (DSA §7.2) */
+  --rc-opacity-disabled: 0.5;
+}
+
+/* ── Focus ring — the one frozen contract every focusable Primitive uses (a11y/focus.ts) ── */
+:global(.rc-focus-ring) {
+  outline: var(--rc-space-0-5) solid transparent;
+  outline-offset: var(--rc-space-0-5);
+}
+:global(.rc-focus-ring:focus-visible) {
+  outline-color: var(--rc-color-brand-accent, #ff8a1f);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :global(*) {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ══════════════════════════════ Button ══════════════════════════════ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rc-space-2);
+  font-family: var(--rc-font-family-body);
+  font-weight: var(--rc-font-weight-semibold);
+  line-height: var(--rc-line-height-normal);
+  border-radius: var(--rc-radius-admin-button, 8px);
+  border: var(--rc-space-px, 1px) solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  padding-inline: var(--rc-space-4);
+  transition: background-color var(--rc-motion-fast) var(--rc-ease-standard),
+    border-color var(--rc-motion-fast) var(--rc-ease-standard),
+    color var(--rc-motion-fast) var(--rc-ease-standard),
+    transform var(--rc-motion-fast) var(--rc-ease-standard);
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.btn:disabled,
+.btnLoading {
+  cursor: not-allowed;
+  opacity: var(--rc-opacity-disabled);
+}
+.btnFullWidth {
+  display: flex;
+  width: 100%;
+}
+
+.btnSm {
+  min-height: var(--rc-target-dense);
+  font-size: var(--rc-font-size-sm);
+  padding-inline: var(--rc-space-3);
+}
+.btnMd {
+  min-height: var(--rc-target-comfortable);
+  font-size: var(--rc-font-size-sm);
+}
+.btnLg {
+  min-height: var(--rc-target-touch);
+  font-size: var(--rc-font-size-base);
+  padding-inline: var(--rc-space-6);
+}
+
+.btnPrimary {
+  background-color: var(--rc-color-brand-accent, #ff8a1f);
+  color: var(--rc-color-text-on-brand, #ffffff);
+}
+.btnPrimary:hover:not(:disabled) {
+  background-color: var(--rc-color-brand-accent-soft, #ffb15a);
+}
+
+.btnSecondary {
+  background-color: var(--rc-color-brand-primary, #0b1f3a);
+  color: var(--rc-color-text-on-brand, #ffffff);
+}
+.btnSecondary:hover:not(:disabled) {
+  background-color: var(--rc-color-brand-primary-hover, #163560);
+}
+
+.btnOutline {
+  background-color: transparent;
+  border-color: var(--rc-color-border-default, #e2e8f0);
+  color: var(--rc-color-text-primary, #0f172a);
+}
+.btnOutline:hover:not(:disabled) {
+  background-color: var(--rc-color-bg-muted, #f1f5f9);
+}
+
+.btnGhost {
+  background-color: transparent;
+  color: var(--rc-color-text-primary, #0f172a);
+}
+.btnGhost:hover:not(:disabled) {
+  background-color: var(--rc-color-bg-muted, #f1f5f9);
+}
+
+.btnDanger {
+  background-color: var(--rc-color-status-danger-dot, #ef4444);
+  color: var(--rc-color-text-on-brand, #ffffff);
+}
+.btnDanger:hover:not(:disabled) {
+  background-color: var(--rc-color-status-danger-text, #b91c1c);
+}
+
+.btnSpinner {
+  display: inline-flex;
+}
+
+/* ══════════════════════════════ IconButton ══════════════════════════════ */
+
+.iconBtn {
+  composes: btn;
+  padding-inline: 0;
+  flex-shrink: 0;
+}
+.iconBtnSm {
+  composes: btnSm;
+  width: var(--rc-target-dense);
+}
+.iconBtnMd {
+  composes: btnMd;
+  width: var(--rc-target-comfortable);
+}
+.iconBtnLg {
+  composes: btnLg;
+  width: var(--rc-target-touch);
+}
+
+/* ══════════════════════════════ Label ══════════════════════════════ */
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rc-space-1);
+  font-family: var(--rc-font-family-body);
+  font-weight: var(--rc-font-weight-medium);
+  color: var(--rc-color-text-secondary, #334155);
+}
+.labelSm {
+  font-size: var(--rc-font-size-xs);
+}
+.labelMd {
+  font-size: var(--rc-font-size-sm);
+}
+.labelLg {
+  font-size: var(--rc-font-size-base);
+}
+.labelDisabled {
+  color: var(--rc-color-text-muted-soft, #94a3b8);
+}
+.labelRequiredMark {
+  color: var(--rc-color-status-danger-dot, #ef4444);
+}
+
+/* ══════════════════════════════ Field (Input/Textarea/Select/Number/Search/Email/Password) ══════════════════════════════ */
+
+.fieldWrapper {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.field {
+  width: 100%;
+  min-width: 0;
+  font-family: var(--rc-font-family-body);
+  color: var(--rc-color-text-primary, #0f172a);
+  background-color: var(--rc-color-bg-card, #ffffff);
+  border: var(--rc-space-px, 1px) solid var(--rc-color-border-default, #e2e8f0);
+  border-radius: var(--rc-radius-input, 8px);
+  padding-inline: var(--rc-space-3);
+  transition: border-color var(--rc-motion-fast) var(--rc-ease-standard),
+    background-color var(--rc-motion-fast) var(--rc-ease-standard);
+}
+.field::placeholder {
+  color: var(--rc-color-text-muted-soft, #94a3b8);
+}
+.field:hover:not(:disabled):not(:focus) {
+  border-color: var(--rc-color-text-muted-soft, #94a3b8);
+}
+.field:focus {
+  outline: none;
+  border-color: var(--rc-color-brand-accent, #ff8a1f);
+}
+.field:disabled {
+  cursor: not-allowed;
+  background-color: var(--rc-color-bg-muted, #f1f5f9);
+  color: var(--rc-color-text-muted-soft, #94a3b8);
+  opacity: var(--rc-opacity-disabled);
+}
+.field:read-only:not(:disabled) {
+  background-color: var(--rc-color-bg-muted, #f1f5f9);
+}
+
+.fieldInvalid {
+  border-color: var(--rc-color-status-danger-dot, #ef4444) !important;
+}
+.fieldInvalid:focus {
+  border-color: var(--rc-color-status-danger-dot, #ef4444) !important;
+}
+
+.fieldSm {
+  min-height: var(--rc-target-dense);
+  font-size: var(--rc-font-size-sm);
+}
+.fieldMd {
+  min-height: var(--rc-target-comfortable);
+  font-size: var(--rc-font-size-sm);
+}
+.fieldLg {
+  min-height: var(--rc-target-touch);
+  font-size: var(--rc-font-size-base);
+}
+
+.fieldWithStartAddon {
+  padding-inline-start: var(--rc-target-comfortable);
+}
+.fieldWithEndAddon {
+  padding-inline-end: var(--rc-target-comfortable);
+}
+
+.fieldAddonStart,
+.fieldAddonEnd {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  color: var(--rc-color-text-muted, #64748b);
+  pointer-events: none;
+}
+.fieldAddonStart {
+  inset-inline-start: var(--rc-space-3);
+}
+.fieldAddonEnd {
+  inset-inline-end: var(--rc-space-1);
+  gap: var(--rc-space-0-5);
+}
+.fieldAddonEnd > * {
+  pointer-events: auto;
+}
+
+.fieldHelperText {
+  margin-block-start: var(--rc-space-1);
+  font-family: var(--rc-font-family-body);
+  font-size: var(--rc-font-size-xs);
+  color: var(--rc-color-text-muted, #64748b);
+}
+.fieldHelperTextInvalid {
+  color: var(--rc-color-status-danger-dot, #ef4444);
+}
+
+.textarea {
+  composes: field;
+  padding-block: var(--rc-space-2);
+  line-height: var(--rc-line-height-normal);
+  min-height: unset;
+}
+.textareaResizeVertical {
+  resize: vertical;
+}
+.textareaResizeNone {
+  resize: none;
+}
+
+.selectWrapper {
+  composes: fieldWrapper;
+}
+.select {
+  composes: field;
+  appearance: none;
+  padding-inline-end: var(--rc-target-comfortable);
+  cursor: pointer;
+}
+.select:disabled {
+  cursor: not-allowed;
+}
+.selectChevron {
+  position: absolute;
+  inset-inline-end: var(--rc-space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--rc-color-text-muted, #64748b);
+  pointer-events: none;
+}
+
+.numberStepper {
+  display: flex;
+  flex-direction: column;
+}
+.numberStepperButton {
+  composes: rc-focus-ring from global;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--rc-color-text-muted, #64748b);
+  cursor: pointer;
+  block-size: 50%;
+  padding: 0 var(--rc-space-1-5);
+}
+.numberStepperButton:hover:not(:disabled) {
+  color: var(--rc-color-text-primary, #0f172a);
+}
+.numberStepperButton:disabled {
+  cursor: not-allowed;
+  opacity: var(--rc-opacity-disabled);
+}
+
+.searchClearButton {
+  composes: rc-focus-ring from global;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--rc-color-text-muted, #64748b);
+  cursor: pointer;
+  border-radius: var(--rc-radius-chip, 9999px);
+  inline-size: var(--rc-icon-xl);
+  block-size: var(--rc-icon-xl);
+}
+.searchClearButton:hover {
+  color: var(--rc-color-text-primary, #0f172a);
+  background-color: var(--rc-color-bg-muted, #f1f5f9);
+}
+
+.passwordToggleButton {
+  composes: searchClearButton;
+}
+
+/* ══════════════════════════════ Checkbox / Radio / Switch ══════════════════════════════ */
+
+.choiceRoot {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rc-space-2);
+  cursor: pointer;
+  font-family: var(--rc-font-family-body);
+  color: var(--rc-color-text-primary, #0f172a);
+}
+.choiceRootDisabled {
+  cursor: not-allowed;
+  color: var(--rc-color-text-muted-soft, #94a3b8);
+}
+
+.choiceLabelSm {
+  font-size: var(--rc-font-size-xs);
+}
+.choiceLabelMd {
+  font-size: var(--rc-font-size-sm);
+}
+.choiceLabelLg {
+  font-size: var(--rc-font-size-base);
+}
+
+.checkboxBox {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--rc-space-px, 1px) solid var(--rc-color-border-default, #e2e8f0);
+  border-radius: var(--rc-radius-input, 8px);
+  background-color: var(--rc-color-bg-card, #ffffff);
+  color: var(--rc-color-text-on-brand, #ffffff);
+  transition: background-color var(--rc-motion-fast) var(--rc-ease-standard),
+    border-color var(--rc-motion-fast) var(--rc-ease-standard);
+}
+.checkboxBoxSm {
+  inline-size: var(--rc-icon-sm);
+  block-size: var(--rc-icon-sm);
+}
+.checkboxBoxMd {
+  inline-size: var(--rc-icon-md);
+  block-size: var(--rc-icon-md);
+}
+.checkboxBoxLg {
+  inline-size: var(--rc-icon-lg);
+  block-size: var(--rc-icon-lg);
+}
+.checkboxGlyph {
+  opacity: 0;
+  transition: opacity var(--rc-motion-fast) var(--rc-ease-standard);
+}
+
+.choiceInput:checked ~ .checkboxBox,
+.choiceInput:indeterminate ~ .checkboxBox {
+  background-color: var(--rc-color-brand-primary, #0b1f3a);
+  border-color: var(--rc-color-brand-primary, #0b1f3a);
+}
+.choiceInput:checked ~ .checkboxBox .checkboxGlyph,
+.choiceInput:indeterminate ~ .checkboxBox .checkboxGlyph {
+  opacity: 1;
+}
+.choiceInput:focus-visible ~ .checkboxBox,
+.choiceInput:focus-visible ~ .radioDot {
+  outline: var(--rc-space-0-5) solid var(--rc-color-brand-accent, #ff8a1f);
+  outline-offset: var(--rc-space-0-5);
+}
+.choiceInput:disabled ~ .checkboxBox,
+.choiceInput:disabled ~ .radioDot {
+  opacity: var(--rc-opacity-disabled);
+}
+
+.radioDot {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--rc-space-px, 1px) solid var(--rc-color-border-default, #e2e8f0);
+  border-radius: var(--rc-radius-chip, 9999px);
+  background-color: var(--rc-color-bg-card, #ffffff);
+  transition: border-color var(--rc-motion-fast) var(--rc-ease-standard);
+}
+.radioDotSm {
+  inline-size: var(--rc-icon-sm);
+  block-size: var(--rc-icon-sm);
+}
+.radioDotMd {
+  inline-size: var(--rc-icon-md);
+  block-size: var(--rc-icon-md);
+}
+.radioDotLg {
+  inline-size: var(--rc-icon-lg);
+  block-size: var(--rc-icon-lg);
+}
+.radioDotInner {
+  inline-size: 55%;
+  block-size: 55%;
+  border-radius: var(--rc-radius-chip, 9999px);
+  background-color: var(--rc-color-brand-primary, #0b1f3a);
+  opacity: 0;
+  transition: opacity var(--rc-motion-fast) var(--rc-ease-standard);
+}
+.choiceInput:checked ~ .radioDot {
+  border-color: var(--rc-color-brand-primary, #0b1f3a);
+}
+.choiceInput:checked ~ .radioDot .radioDotInner {
+  opacity: 1;
+}
+
+.switchTrack {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  border: var(--rc-space-px, 1px) solid var(--rc-color-border-default, #e2e8f0);
+  border-radius: var(--rc-radius-chip, 9999px);
+  background-color: var(--rc-color-bg-muted, #f1f5f9);
+  transition: background-color var(--rc-motion-fast) var(--rc-ease-standard),
+    border-color var(--rc-motion-fast) var(--rc-ease-standard);
+  padding: var(--rc-space-0-5);
+}
+.switchTrackSm {
+  inline-size: calc(var(--rc-icon-md) * 2);
+  block-size: var(--rc-icon-md);
+}
+.switchTrackMd {
+  inline-size: calc(var(--rc-target-dense) * 2);
+  block-size: var(--rc-target-dense);
+}
+.switchTrackLg {
+  inline-size: calc(var(--rc-icon-xl) * 1.5);
+  block-size: var(--rc-icon-xl);
+}
+.switchThumb {
+  aspect-ratio: 1;
+  block-size: 100%;
+  border-radius: var(--rc-radius-chip, 9999px);
+  background-color: var(--rc-color-bg-card, #ffffff);
+  box-shadow: var(--rc-elevation-card-resting, 0 1px 4px rgba(11, 31, 58, 0.06));
+  transition: transform var(--rc-motion-fast) var(--rc-ease-standard);
+}
+.choiceInput:checked ~ .switchTrack {
+  background-color: var(--rc-color-brand-accent, #ff8a1f);
+  border-color: var(--rc-color-brand-accent, #ff8a1f);
+}
+.choiceInput:checked ~ .switchTrack .switchThumb {
+  transform: translateX(calc(100% * var(--rc-switch-dir, 1)));
+}
+:global([dir="rtl"]) .switchThumb {
+  --rc-switch-dir: -1;
+}
+.choiceInput:focus-visible ~ .switchTrack {
+  outline: var(--rc-space-0-5) solid var(--rc-color-brand-accent, #ff8a1f);
+  outline-offset: var(--rc-space-0-5);
+}
+.choiceInput:disabled ~ .switchTrack {
+  opacity: var(--rc-opacity-disabled);
+}
+
+/* ══════════════════════════════ Badge ══════════════════════════════ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rc-space-1-5);
+  font-family: var(--rc-font-family-body);
+  font-weight: var(--rc-font-weight-medium);
+  border-radius: var(--rc-radius-chip, 9999px);
+  white-space: nowrap;
+  line-height: var(--rc-line-height-normal);
+}
+.badgeSm {
+  font-size: var(--rc-font-size-xs);
+  padding-block: var(--rc-space-0-5);
+  padding-inline: var(--rc-space-2);
+}
+.badgeMd {
+  font-size: var(--rc-font-size-xs);
+  padding-block: var(--rc-space-1);
+  padding-inline: var(--rc-space-2-5);
+}
+.badgeLg {
+  font-size: var(--rc-font-size-sm);
+  padding-block: var(--rc-space-1);
+  padding-inline: var(--rc-space-3);
+}
+.badgeDot {
+  inline-size: var(--rc-space-1-5);
+  block-size: var(--rc-space-1-5);
+  border-radius: var(--rc-radius-chip, 9999px);
+  flex-shrink: 0;
+}
+
+.badgeSuccess {
+  background-color: var(--rc-color-status-success-bg, #e7f8ee);
+  color: var(--rc-color-status-success-text, #15803d);
+}
+.badgeSuccess .badgeDot {
+  background-color: var(--rc-color-status-success-dot, #10b981);
+}
+.badgeWarning {
+  background-color: var(--rc-color-status-warning-bg, #fffbeb);
+  color: var(--rc-color-status-warning-text, #b45309);
+}
+.badgeWarning .badgeDot {
+  background-color: var(--rc-color-status-warning-dot, #f59e0b);
+}
+.badgeDanger {
+  background-color: var(--rc-color-status-danger-bg, #fef2f2);
+  color: var(--rc-color-status-danger-text, #b91c1c);
+}
+.badgeDanger .badgeDot {
+  background-color: var(--rc-color-status-danger-dot, #ef4444);
+}
+.badgeInfo {
+  background-color: var(--rc-color-status-info-bg, #e0f2fe);
+  color: var(--rc-color-status-info-text, #0369a1);
+}
+.badgeInfo .badgeDot {
+  background-color: var(--rc-color-status-info-dot, #38bdf8);
+}
+.badgeNeutral {
+  background-color: var(--rc-color-status-neutral-bg, #f1f5f9);
+  color: var(--rc-color-status-neutral-text, #475569);
+}
+.badgeNeutral .badgeDot {
+  background-color: var(--rc-color-status-neutral-dot, #94a3b8);
+}
+.badgeSpecial {
+  background-color: var(--rc-color-status-special-bg, #f3e8ff);
+  color: var(--rc-color-status-special-text, #6b21a8);
+}
+.badgeSpecial .badgeDot {
+  background-color: var(--rc-color-status-special-dot, #a855f7);
+}
+
+/* ══════════════════════════════ Avatar ══════════════════════════════ */
+
+.avatar {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+.avatarImage,
+.avatarFallback {
+  inline-size: 100%;
+  block-size: 100%;
+  border-radius: var(--rc-radius-chip, 9999px);
+}
+.avatarImage {
+  object-fit: cover;
+}
+.avatarFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--rc-color-brand-primary, #0b1f3a);
+  color: var(--rc-color-text-on-brand, #ffffff);
+  font-family: var(--rc-font-family-body);
+  font-weight: var(--rc-font-weight-semibold);
+}
+.avatarSm {
+  inline-size: var(--rc-icon-lg);
+  block-size: var(--rc-icon-lg);
+}
+.avatarSm .avatarFallback {
+  font-size: var(--rc-font-size-xs);
+}
+.avatarMd {
+  inline-size: var(--rc-icon-xl);
+  block-size: var(--rc-icon-xl);
+}
+.avatarMd .avatarFallback {
+  font-size: var(--rc-font-size-sm);
+}
+.avatarLg {
+  inline-size: var(--rc-target-touch);
+  block-size: var(--rc-target-touch);
+}
+.avatarLg .avatarFallback {
+  font-size: var(--rc-font-size-base);
+}
+.avatarStatus {
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline-end: 0;
+  inline-size: 28%;
+  block-size: 28%;
+  min-inline-size: var(--rc-space-2);
+  min-block-size: var(--rc-space-2);
+  border-radius: var(--rc-radius-chip, 9999px);
+  border: var(--rc-space-0-5) solid var(--rc-color-bg-card, #ffffff);
+}
+.avatarStatusOnline {
+  background-color: var(--rc-color-status-success-dot, #10b981);
+}
+.avatarStatusAway {
+  background-color: var(--rc-color-status-warning-dot, #f59e0b);
+}
+.avatarStatusBusy {
+  background-color: var(--rc-color-status-danger-dot, #ef4444);
+}
+.avatarStatusOffline {
+  background-color: var(--rc-color-status-neutral-dot, #94a3b8);
+}
+
+/* ══════════════════════════════ Spinner ══════════════════════════════ */
+
+.spinner {
+  display: inline-block;
+  flex-shrink: 0;
+  animation: rc-spin var(--rc-motion-slower) linear infinite;
+  color: var(--rc-color-brand-accent, #ff8a1f);
+}
+.spinnerSm {
+  inline-size: var(--rc-icon-sm);
+  block-size: var(--rc-icon-sm);
+}
+.spinnerMd {
+  inline-size: var(--rc-icon-lg);
+  block-size: var(--rc-icon-lg);
+}
+.spinnerLg {
+  inline-size: var(--rc-icon-xl);
+  block-size: var(--rc-icon-xl);
+}
+@keyframes rc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: rc-pulse 1.6s ease-in-out infinite;
+  }
+}
+@keyframes rc-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+/* ══════════════════════════════ Skeleton ══════════════════════════════ */
+
+.skeleton {
+  display: block;
+  background-color: var(--rc-color-bg-muted, #f1f5f9);
+  position: relative;
+  overflow: hidden;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent,
+    var(--rc-color-border-soft, #e7ebf1),
+    transparent
+  );
+  animation: rc-shimmer 1.6s var(--rc-ease-standard) infinite;
+}
+:global([dir="rtl"]) .skeleton::after {
+  transform: translateX(100%);
+}
+@keyframes rc-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+:global([dir="rtl"]) .skeleton::after {
+  animation-name: rc-shimmer-rtl;
+}
+@keyframes rc-shimmer-rtl {
+  100% {
+    transform: translateX(-100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+    content: none;
+  }
+}
+.skeletonText {
+  border-radius: var(--rc-radius-input, 8px);
+  block-size: 1em;
+}
+.skeletonCircle {
+  border-radius: var(--rc-radius-chip, 9999px);
+}
+.skeletonRect {
+  border-radius: var(--rc-radius-card, 16px);
+}
+
+/* ══════════════════════════════ Tooltip ══════════════════════════════ */
+
+.tooltipWrapper {
+  position: relative;
+  display: inline-flex;
+}
+.tooltipContent {
+  position: absolute;
+  z-index: var(--rc-z-tooltip);
+  background-color: var(--rc-color-brand-primary, #0b1f3a);
+  color: var(--rc-color-text-on-brand, #ffffff);
+  font-family: var(--rc-font-family-body);
+  font-size: var(--rc-font-size-xs);
+  line-height: var(--rc-line-height-snug);
+  padding-block: var(--rc-space-1-5);
+  padding-inline: var(--rc-space-2-5);
+  border-radius: var(--rc-radius-input, 8px);
+  /* Readable-line-length cap for floating hint text — no Sizing/Container
+     token fits a value this small (PRIMITIVE_SIZING.container starts at
+     640px); a deliberate, documented exception, not an untracked value. */
+  max-inline-size: 240px;
+  width: max-content;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--rc-motion-fast) var(--rc-ease-standard);
+}
+.tooltipVisible {
+  opacity: 1;
+}
+.tooltipTop {
+  inset-block-end: 100%;
+  inset-inline-start: 50%;
+  transform: translateX(-50%) translateY(calc(-1 * var(--rc-space-2)));
+}
+.tooltipBottom {
+  inset-block-start: 100%;
+  inset-inline-start: 50%;
+  transform: translateX(-50%) translateY(var(--rc-space-2));
+}
+.tooltipLeft {
+  inset-inline-end: 100%;
+  inset-block-start: 50%;
+  transform: translateY(-50%) translateX(calc(-1 * var(--rc-space-2)));
+}
+.tooltipRight {
+  inset-inline-start: 100%;
+  inset-block-start: 50%;
+  transform: translateY(-50%) translateX(var(--rc-space-2));
+}
+
+/* ══════════════════════════════ Divider / Separator ══════════════════════════════ */
+
+.divider {
+  border: none;
+  flex-shrink: 0;
+}
+.dividerHorizontal {
+  block-size: var(--rc-space-px, 1px);
+  inline-size: 100%;
+  background-color: var(--rc-color-border-default, #e2e8f0);
+  margin-block: var(--rc-space-4);
+}
+.dividerVertical {
+  inline-size: var(--rc-space-px, 1px);
+  align-self: stretch;
+  background-color: var(--rc-color-border-default, #e2e8f0);
+  margin-inline: var(--rc-space-4);
+}
+.dividerWithLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--rc-space-3);
+  margin-block: var(--rc-space-4);
+  color: var(--rc-color-text-muted, #64748b);
+  font-family: var(--rc-font-family-body);
+  font-size: var(--rc-font-size-xs);
+  font-weight: var(--rc-font-weight-medium);
+}
+.dividerWithLabel::before,
+.dividerWithLabel::after {
+  content: "";
+  flex: 1;
+  block-size: var(--rc-space-px, 1px);
+  background-color: var(--rc-color-border-default, #e2e8f0);
+}
+
+.separatorHorizontal {
+  block-size: var(--rc-space-px, 1px);
+  inline-size: 100%;
+  background-color: var(--rc-color-border-soft, #e7ebf1);
+  border: none;
+}
+.separatorVertical {
+  inline-size: var(--rc-space-px, 1px);
+  align-self: stretch;
+  background-color: var(--rc-color-border-soft, #e7ebf1);
+  border: none;
+}
+
+/* ══════════════════════════════ ScrollArea ══════════════════════════════ */
+
+.scrollArea {
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rc-color-text-muted-soft, #94a3b8) transparent;
+}
+.scrollArea::-webkit-scrollbar {
+  width: var(--rc-space-2);
+  height: var(--rc-space-2);
+}
+.scrollArea::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollArea::-webkit-scrollbar-thumb {
+  background-color: var(--rc-color-text-muted-soft, #94a3b8);
+  border-radius: var(--rc-radius-chip, 9999px);
+}
+.scrollAreaBordered {
+  border: var(--rc-space-px, 1px) solid var(--rc-color-border-default, #e2e8f0);
+  border-radius: var(--rc-radius-card, 16px);
+}
+.scrollAreaAxisVertical {
+  overflow-x: hidden;
+}
+.scrollAreaAxisHorizontal {
+  overflow-y: hidden;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════ Progress ══════════════════════════════ */
+
+.progressTrack {
+  inline-size: 100%;
+  border-radius: var(--rc-radius-chip, 9999px);
+  background-color: var(--rc-color-bg-muted, #f1f5f9);
+  overflow: hidden;
+}
+.progressTrackSm {
+  block-size: var(--rc-space-1);
+}
+.progressTrackMd {
+  block-size: var(--rc-space-1-5);
+}
+.progressTrackLg {
+  block-size: var(--rc-space-2);
+}
+.progressFill {
+  block-size: 100%;
+  border-radius: var(--rc-radius-chip, 9999px);
+  background-color: var(--rc-color-brand-accent, #ff8a1f);
+  transition: inline-size var(--rc-motion-base) var(--rc-ease-standard);
+}
+.progressIndeterminate {
+  inline-size: 40% !important;
+  animation: rc-progress-indeterminate 1.4s var(--rc-ease-standard) infinite;
+}
+@keyframes rc-progress-indeterminate {
+  0% {
+    margin-inline-start: -40%;
+  }
+  100% {
+    margin-inline-start: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .progressIndeterminate {
+    animation: none;
+    margin-inline-start: 30%;
+  }
+}
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-block-end: var(--rc-space-1);
+  font-family: var(--rc-font-family-body);
+  font-size: var(--rc-font-size-xs);
+  color: var(--rc-color-text-secondary, #334155);
+}
+
+/* ══════════════════════════════ LoadingIndicator ══════════════════════════════ */
+
+.loadingIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--rc-space-2);
+  font-family: var(--rc-font-family-body);
+  font-size: var(--rc-font-size-sm);
+  color: var(--rc-color-text-secondary, #334155);
+}
+.loadingIndicatorFullPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--rc-space-3);
+  inline-size: 100%;
+  padding-block: var(--rc-space-6);
+}

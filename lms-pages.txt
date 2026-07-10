@@ -1,0 +1,223 @@
+========================================================
+جرد صفحات نظام إدارة التعلّم (LMS) - Robocode
+مجموع الصفحات: 148
+غير مُدرَج: صفحات الموقع التسويقي العام + استوديو إدارة المحتوى /studio/(dashboard)/*
+========================================================
+
+
+--------------------------------------------------------
+1) لوحة الإدارة (Admin) - القاعدة: /admin  [69 صفحة]
+--------------------------------------------------------
+/admin                                                  لوحة التحكم الرئيسية
+/admin/analytics                                        التحليلات العامة
+/admin/executive                                        لوحة الإدارة التنفيذية
+/admin/system-health                                    صحة النظام
+/admin/system-events                                    سجلّ أحداث النظام
+/admin/production-readiness                             جاهزية الإنتاج
+/admin/recovery                                         استرجاع البيانات (أولياء أمور وطلاب)
+
+/admin/courses                                          قائمة الكورسات
+/admin/courses/new                                      إنشاء كورس
+/admin/courses/[id]                                     تفاصيل الكورس
+/admin/courses/[id]/modules/[moduleId]                  تفاصيل وحدة داخل الكورس
+
+/admin/groups                                           قائمة المجموعات
+/admin/groups/new                                       إنشاء مجموعة
+/admin/groups/[id]                                      تفاصيل المجموعة
+
+/admin/sessions                                         الجلسات
+/admin/attendance                                        الحضور والغياب
+/admin/attendance/record                                 تسجيل حضور
+/admin/special-sessions                                  الجلسات الخاصة (تعويضية/تجريبية)
+
+/admin/assignments                                       الواجبات
+/admin/assignments/new                                   إنشاء واجب
+/admin/assignments/[id]                                  تفاصيل الواجب
+/admin/assignments/[id]/submissions/[submissionId]       تسليم طالب لواجب
+
+/admin/semesters                                         الفصول الدراسية
+/admin/semesters/new                                     إنشاء فصل دراسي
+/admin/semesters/[id]                                    تفاصيل الفصل الدراسي
+/admin/semesters/academic-years                          السنوات الدراسية
+
+/admin/students                                          قائمة الطلاب
+/admin/students/new                                      إضافة طالب
+/admin/students/[id]                                     ملف الطالب
+
+/admin/parents                                           قائمة أولياء الأمور
+/admin/parents/new                                       إضافة ولي أمر
+/admin/parents/[id]                                      ملف ولي الأمر
+
+/admin/instructors                                       قائمة المدربين
+/admin/instructors/new                                   إضافة مدرب
+/admin/instructors/[id]                                  ملف المدرب
+
+/admin/team-leaders                                      قائمة قادة الفرق
+/admin/team-leaders/new                                  إضافة قائد فريق
+/admin/team-leaders/[id]                                 ملف قائد الفريق
+/admin/team-leaders/[id]/edit                            تعديل قائد فريق
+/admin/team-leaders/[id]/performance                     أداء قائد الفريق
+
+/admin/staff                                             الموظفون
+
+/admin/branches                                          الفروع
+/admin/branches/new                                      إضافة فرع
+/admin/branches/[id]                                     تفاصيل الفرع
+/admin/branches/[id]/performance                         أداء الفرع
+
+/admin/portfolio                                         معرض أعمال الطلاب (الكل)
+/admin/portfolio/[studentId]                             معرض أعمال طالب
+/admin/portfolio/[studentId]/achievements/new            إضافة إنجاز
+/admin/portfolio/[studentId]/badges/new                  إضافة شارة
+/admin/portfolio/[studentId]/projects/new                إضافة مشروع
+/admin/portfolio/[studentId]/projects/[projectId]/edit   تعديل مشروع
+/admin/portfolio/[studentId]/projects/promote            ترقية مشروع
+
+/admin/certificates                                      الشهادات
+/admin/certificates/new                                  إصدار شهادة
+/admin/certificates/[certificateId]                      تفاصيل شهادة
+/admin/certificates/templates                            قوالب الشهادات
+/admin/certificates/templates/new                        إنشاء قالب شهادة
+/admin/certificates/templates/[templateId]/edit          تعديل قالب شهادة
+
+/admin/finance-center                                    مركز الشؤون المالية
+/admin/finance                                           المعاملات المالية
+/admin/finance/new                                       تسجيل معاملة مالية
+/admin/finance/queue                                     طابور المراجعة المالية
+/admin/revenue                                           الإيرادات
+/admin/expenses                                          المصروفات
+/admin/payroll                                           الرواتب
+
+/admin/leads                                             العملاء المحتملون
+/admin/leads/new                                         إضافة عميل محتمل
+/admin/leads/[id]                                        تفاصيل عميل محتمل
+/admin/leads/funnel                                      قمع المبيعات
+
+/admin/communications                                    التواصل والإشعارات
+
+
+--------------------------------------------------------
+2) بوابة قائد الفريق (Team Leader) - القاعدة: /portal/team-leader  [40 صفحة]
+--------------------------------------------------------
+/portal/team-leader                                      لوحة التحكم الرئيسية
+/portal/team-leader/calendar                             التقويم
+/portal/team-leader/analytics                            التحليلات
+
+/portal/team-leader/groups                               قائمة المجموعات
+/portal/team-leader/groups/new                            إنشاء مجموعة
+/portal/team-leader/groups/[id]                           تفاصيل المجموعة
+/portal/team-leader/groups/[id]/edit                      تعديل المجموعة
+/portal/team-leader/groups/[id]/sessions/new              إضافة جلسة للمجموعة
+
+/portal/team-leader/students                              قائمة الطلاب
+/portal/team-leader/students/new                          إضافة طالب
+/portal/team-leader/students/[id]                         ملف الطالب
+/portal/team-leader/students/[id]/edit                    تعديل بيانات الطالب
+
+/portal/team-leader/parents                               قائمة أولياء الأمور
+/portal/team-leader/parents/new                           إضافة ولي أمر
+/portal/team-leader/parents/[id]                          ملف ولي الأمر
+
+/portal/team-leader/instructors                           قائمة المدربين
+/portal/team-leader/instructors/new                       إضافة مدرب
+
+/portal/team-leader/courses                               الكورسات
+/portal/team-leader/courses/new                           إنشاء كورس
+/portal/team-leader/courses/[id]                          تفاصيل الكورس
+
+/portal/team-leader/assignments                           الواجبات
+/portal/team-leader/assignments/new                       إنشاء واجب
+/portal/team-leader/assignments/[id]                      تفاصيل الواجب
+
+/portal/team-leader/attendance                             الحضور والغياب
+/portal/team-leader/attendance/record                      تسجيل حضور
+
+/portal/team-leader/certificates                           الشهادات
+/portal/team-leader/certificates/new                       إصدار شهادة
+/portal/team-leader/certificates/[id]                      تفاصيل شهادة
+
+/portal/team-leader/portfolio                              معرض أعمال الطلاب
+
+/portal/team-leader/finance                                المعاملات المالية
+/portal/team-leader/finance/new                            تسجيل معاملة مالية
+/portal/team-leader/collections                            التحصيلات
+/portal/team-leader/payroll                                الرواتب
+/portal/team-leader/instructor-payroll                     رواتب المدربين
+/portal/team-leader/instructor-performance                 أداء المدربين
+
+/portal/team-leader/parent-feedback                        ملاحظات أولياء الأمور
+/portal/team-leader/parent-satisfaction                    رضا أولياء الأمور
+
+/portal/team-leader/leads                                  العملاء المحتملون
+/portal/team-leader/leads/new                              إضافة عميل محتمل
+/portal/team-leader/leads/[id]                             تفاصيل عميل محتمل
+
+/portal/team-leader/special-sessions                       الجلسات الخاصة
+/portal/team-leader/special-sessions/new                   إنشاء جلسة خاصة
+/portal/team-leader/special-sessions/[id]                  تفاصيل جلسة خاصة
+
+
+--------------------------------------------------------
+3) بوابة المدرب (Instructor) - القاعدة: /portal/instructor  [16 صفحة]
+--------------------------------------------------------
+/portal/instructor                                        لوحة التحكم الرئيسية
+/portal/instructor/calendar                               التقويم
+
+/portal/instructor/groups                                 مجموعاتي
+/portal/instructor/groups/[id]                             تفاصيل المجموعة
+/portal/instructor/groups/[id]/sessions/new                إضافة جلسة
+/portal/instructor/groups/[id]/sessions/[sid]              تفاصيل جلسة
+/portal/instructor/groups/[id]/students/[studentId]        ملف طالب داخل المجموعة
+
+/portal/instructor/homework                                الواجبات المُرسَلة
+/portal/instructor/homework/[submissionId]                 تصحيح تسليم واجب
+
+/portal/instructor/history                                 سجلّ الجلسات السابقة
+/portal/instructor/history/[sessionId]                     تفاصيل جلسة سابقة
+
+/portal/instructor/students/search                         بحث عن طالب
+/portal/instructor/portfolio                                معرض أعمال الطلاب
+/portal/instructor/payments                                 المدفوعات المستحقة
+
+/portal/instructor/special-sessions                         الجلسات الخاصة
+/portal/instructor/special-sessions/[id]                    تفاصيل جلسة خاصة
+/portal/instructor/special-sessions/new-makeup              طلب جلسة تعويضية
+
+
+--------------------------------------------------------
+4) بوابة ولي الأمر (Parent) - القاعدة: /portal/parent  [9 صفحات]
+--------------------------------------------------------
+/portal/parent                                            لوحة المتابعة الرئيسية
+/portal/parent/assignments                                واجبات الأبناء
+/portal/parent/attendance                                 الحضور والغياب
+/portal/parent/certificates                               الشهادات
+/portal/parent/feedback                                   إرسال ملاحظات
+/portal/parent/finance                                    الشؤون المالية
+/portal/parent/portfolio                                  معرض أعمال الابن/الابنة
+/portal/parent/progress                                   تقدّم الابن/الابنة
+/portal/parent/semesters                                  الفصول الدراسية
+
+
+--------------------------------------------------------
+5) بوابة الطالب (Student) - القاعدة: /portal/student  [10 صفحات]
+--------------------------------------------------------
+/portal/student                                           لوحة الطالب الرئيسية
+/portal/student/assignments                                الواجبات
+/portal/student/assignments/[assignmentId]                 تفاصيل / تسليم واجب
+/portal/student/attendance                                  سجلّ الحضور
+/portal/student/certificates                                شهاداتي
+/portal/student/history                                     سجلّ الجلسات
+/portal/student/leaderboard                                 لوحة المتصدّرين
+/portal/student/portfolio                                   معرض أعمالي
+/portal/student/semesters                                   الفصول الدراسية
+/portal/student/videos                                       الفيديوهات التعليمية
+
+
+--------------------------------------------------------
+6) دخول واختيار المساحة (Auth / عامة)  [5 صفحات]
+--------------------------------------------------------
+/login                                                     تسجيل الدخول
+/reset-password                                            إعادة تعيين كلمة المرور
+/select-workspace                                          اختيار المساحة / الدور
+/account/password                                          تغيير كلمة المرور
+/book-session                                               حجز جلسة تجريبية
