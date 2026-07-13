@@ -1,12 +1,12 @@
 import { z } from 'zod'
+import { GROUP_STATUSES } from '@/types/enums'
 
 export const DAYS = [
   'monday', 'tuesday', 'wednesday', 'thursday',
   'friday', 'saturday', 'sunday',
 ] as const
 
-export const GROUP_TYPES    = ['class', 'workshop', 'bootcamp', 'trial', 'makeup'] as const
-export const GROUP_STATUSES = ['forming', 'active', 'completed', 'cancelled'] as const
+export const GROUP_TYPES = ['class', 'workshop', 'bootcamp', 'trial', 'makeup'] as const
 
 const emptyStr = z.literal('')
 

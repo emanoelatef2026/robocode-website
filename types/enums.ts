@@ -10,7 +10,14 @@ export type InstructorStatus = 'active' | 'inactive' | 'on_leave' | 'deleted'
 
 export type GroupType = 'class' | 'workshop' | 'bootcamp' | 'trial' | 'makeup'
 
-export type GroupStatus = 'forming' | 'active' | 'completed' | 'cancelled'
+// Canonical runtime list — mirrors the groups_status_check CHECK constraint
+// (migration 0086) exactly. Import this array wherever a Zod enum or other
+// runtime validator needs the same set instead of re-declaring the literals.
+export const GROUP_STATUSES = [
+  'forming', 'active', 'handoff_pending', 'completed', 'cancelled', 'archived',
+] as const
+
+export type GroupStatus = typeof GROUP_STATUSES[number]
 
 export type GroupStudentStatus = 'active' | 'dropped' | 'graduated' | 'paused' | 'waitlisted'
 

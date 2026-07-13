@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod'
+import { GROUP_STATUSES } from '@/types/enums'
 
 // ── Re-export foundation primitives ────────────────────────────────────────────
 
@@ -69,9 +70,7 @@ export const StudentStatusSchema = z.enum([
 ])
 
 /** Group status enum for filter/validation. */
-export const GroupStatusSchema = z.enum([
-  'forming', 'active', 'completed', 'cancelled',
-])
+export const GroupStatusSchema = z.enum(GROUP_STATUSES)
 
 /** Generic active/inactive status. */
 export const ActiveStatusSchema = z.enum(['active', 'inactive'])

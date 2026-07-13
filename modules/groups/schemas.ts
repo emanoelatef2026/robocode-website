@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { GROUP_STATUSES } from '@/types/enums'
 
 const DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'] as const
 
@@ -17,7 +18,7 @@ export const createGroupSchema = z.object({
 
 export const updateGroupSchema = createGroupSchema.extend({
   id:     z.string().uuid(),
-  status: z.enum(['forming', 'active', 'completed', 'cancelled']).optional(),
+  status: z.enum(GROUP_STATUSES).optional(),
 }).omit({ branch_id: true, instructor_id: true })
 
 export const enrollStudentSchema = z.object({
