@@ -9,6 +9,7 @@ import ParentFormModal from '../parents/ParentFormModal'
 import {
   getStudentAttendanceHistoryAction,
   getStudentAuthDataAction,
+  getParentAuthDataAction,
   getStudentAttendanceSummaryAction,
   getStudentPackageLedgerAction,
   getStudentCourseTimelineAction,
@@ -17,6 +18,7 @@ import {
   type GroupDetailStudent,
   type StudentAttendanceHistoryRecord,
   type StudentPortalCredentials,
+  type ParentPortalCredentials,
   type StudentAttendanceSummary,
   type PackageLedgerRecord,
   type StudentCourseTimelineEntry,
@@ -73,6 +75,16 @@ function enrollmentStatusCls(status: string) {
 
 async function copyToClipboard(text: string) {
   try { await navigator.clipboard.writeText(text) } catch { /* ignore */ }
+}
+
+// A wa.me link opened inside a JS-created window (window.open + later
+// location.href) doesn't get the OS-level App Link handoff on iOS/Android —
+// it just renders the wa.me fallback page, which is why the WhatsApp button
+// was landing on WhatsApp Web instead of the native app. A direct same-tab
+// navigation is what mobile browsers hand off to the installed app.
+function isMobileDevice(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 }
 
 // ─── sub-components ────────────────────────────────────────────────────────────
@@ -229,13 +241,69 @@ function portalStatusBadge(status: StudentPortalCredentials['status']) {
   return                                    <span className="rounded-full bg-[#F1F5F9]  px-2 py-0.5 text-[9px] font-bold text-[#64748B]  uppercase tracking-wide">No Account</span>
 }
 
+// Shared card for displaying portal email/password — used for both the student's
+// own account and the parent's account so newly generated credentials show up
+// identically in both places without reopening the modal.
+function AuthCard({
+  title, data, loading,
+}: {
+  title:   string
+  data:    { email: string | null; portal_password: string | null; status: StudentPortalCredentials['status'] } | null
+  loading: boolean
+}) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-[#94A3B8]">{title}</p>
+        {!loading && data && portalStatusBadge(data.status)}
+      </div>
+      <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 space-y-0">
+        <div className="flex items-center justify-between gap-2 border-b border-[#F1F5F9] py-1.5">
+          <span className="shrink-0 text-[11px] text-[#94A3B8]">Email</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            {loading ? (
+              <Skeleton className="h-3.5 w-36" />
+            ) : data?.email ? (
+              <>
+                <span className="font-mono text-[11px] text-[#0B1F3A] truncate">{data.email}</span>
+                <CopyButton value={data.email} label="email" />
+              </>
+            ) : (
+              <span className="text-[11px] text-[#CBD5E1]">No email</span>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-2 py-1.5">
+          <span className="shrink-0 text-[11px] text-[#94A3B8]">Password</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            {loading ? (
+              <Skeleton className="h-3.5 w-28" />
+            ) : data?.portal_password ? (
+              <>
+                <span className="font-mono text-[12px] font-semibold text-[#0B1F3A] tracking-wide">
+                  {data.portal_password}
+                </span>
+                <CopyButton value={data.portal_password} label="password" />
+              </>
+            ) : (
+              <span className="text-[11px] text-[#CBD5E1]">No portal password assigned</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function OverviewTab({
-  s, group, authData, authLoading, attSummary, attSumLoading,
+  s, group, authData, authLoading, parentAuthData, parentAuthLoading, attSummary, attSumLoading,
 }: {
   s:            GroupDetailStudent
   group:        GroupOperationalRow
   authData:     StudentPortalCredentials | null
   authLoading:  boolean
+  parentAuthData:    ParentPortalCredentials | null
+  parentAuthLoading: boolean
   attSummary:   StudentAttendanceSummary | null
   attSumLoading: boolean
 }) {
@@ -247,47 +315,10 @@ function OverviewTab({
 
   return (
     <div className="space-y-4">
-      {/* Authentication */}
-      <div>
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-[#94A3B8]">Authentication</p>
-          {!authLoading && authData && portalStatusBadge(authData.status)}
-        </div>
-        <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 space-y-0">
-          <div className="flex items-center justify-between gap-2 border-b border-[#F1F5F9] py-1.5">
-            <span className="shrink-0 text-[11px] text-[#94A3B8]">Email</span>
-            <div className="flex items-center gap-1.5 min-w-0">
-              {authLoading ? (
-                <Skeleton className="h-3.5 w-36" />
-              ) : authData?.email ? (
-                <>
-                  <span className="font-mono text-[11px] text-[#0B1F3A] truncate">{authData.email}</span>
-                  <CopyButton value={authData.email} label="email" />
-                </>
-              ) : (
-                <span className="text-[11px] text-[#CBD5E1]">No email</span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center justify-between gap-2 py-1.5">
-            <span className="shrink-0 text-[11px] text-[#94A3B8]">Password</span>
-            <div className="flex items-center gap-1.5 min-w-0">
-              {authLoading ? (
-                <Skeleton className="h-3.5 w-28" />
-              ) : authData?.portal_password ? (
-                <>
-                  <span className="font-mono text-[12px] font-semibold text-[#0B1F3A] tracking-wide">
-                    {authData.portal_password}
-                  </span>
-                  <CopyButton value={authData.portal_password} label="password" />
-                </>
-              ) : (
-                <span className="text-[11px] text-[#CBD5E1]">No portal password assigned</span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Authentication — student + parent portal accounts, always kept in sync
+          with the latest generated credentials so nothing requires reopening. */}
+      <AuthCard title="Student Portal" data={authData}       loading={authLoading} />
+      <AuthCard title="Parent Portal"  data={parentAuthData} loading={parentAuthLoading} />
 
       {/* Contact */}
       <div>
@@ -823,11 +854,15 @@ interface Props {
   group:                GroupOperationalRow
   onClose:              () => void
   onStudentUpdated?:    () => void
+  // Background sync only — unlike onStudentUpdated, never closes the dialog.
+  // Credentials aren't shown in the outer group table, so this is a no-op by
+  // default; callers that surface credential state elsewhere can hook in here.
+  onCredentialsRefreshed?: () => void
   onOpenFullFinance?:   () => void
   canSendWelcome?:      boolean
 }
 
-export default function StudentQuickViewModal({ student: s, group, onClose, onStudentUpdated, onOpenFullFinance, canSendWelcome = false }: Props) {
+export default function StudentQuickViewModal({ student: s, group, onClose, onStudentUpdated, onCredentialsRefreshed, onOpenFullFinance, canSendWelcome = false }: Props) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
@@ -836,8 +871,17 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   const [histLoad,      setHistLoad]       = useState(true)
   const [authData,      setAuthData]       = useState<StudentPortalCredentials | null>(null)
   const [authLoading,   setAuthLoading]    = useState(true)
+  const [parentAuthData,    setParentAuthData]    = useState<ParentPortalCredentials | null>(null)
+  const [parentAuthLoading, setParentAuthLoading] = useState(true)
   const [attSummary,    setAttSummary]     = useState<StudentAttendanceSummary | null>(null)
   const [attSumLoading, setAttSumLoading]  = useState(true)
+
+  // Toast — success/error feedback that doesn't interrupt the dialog (no alert()/close)
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
+  function showToast(type: 'success' | 'error', msg: string) {
+    setToast({ type, msg })
+    setTimeout(() => setToast(null), 4000)
+  }
 
   // Package Ledger data (loaded on tab open)
   const [ledger,       setLedger]      = useState<PackageLedgerRecord[] | null>(null)
@@ -888,12 +932,38 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     return () => { cancelled = true }
   }, [s.student_id])
 
+  // Shared loaders — reused by the eager-load effect below AND by
+  // handleGenerateCredentials, so a freshly generated password shows up in this
+  // same open dialog without the user closing/reopening it.
+  const loadAuthData = useCallback(() => {
+    setAuthLoading(true)
+    return getStudentAuthDataAction(s.student_id)
+      .then(d => { setAuthData(d); setAuthLoading(false); return d })
+      .catch(() => { setAuthData(null); setAuthLoading(false); return null })
+  }, [s.student_id])
+
+  const loadParentAuthData = useCallback(() => {
+    setParentAuthLoading(true)
+    return getParentAuthDataAction(s.student_id)
+      .then(d => { setParentAuthData(d); setParentAuthLoading(false); return d })
+      .catch(() => { setParentAuthData(null); setParentAuthLoading(false); return null })
+  }, [s.student_id])
+
   useEffect(() => {
     let cancelled = false
     setAuthLoading(true)
     getStudentAuthDataAction(s.student_id)
       .then(d => { if (!cancelled) { setAuthData(d); setAuthLoading(false) } })
       .catch(() => { if (!cancelled) { setAuthData(null); setAuthLoading(false) } })
+    return () => { cancelled = true }
+  }, [s.student_id])
+
+  useEffect(() => {
+    let cancelled = false
+    setParentAuthLoading(true)
+    getParentAuthDataAction(s.student_id)
+      .then(d => { if (!cancelled) { setParentAuthData(d); setParentAuthLoading(false) } })
+      .catch(() => { if (!cancelled) { setParentAuthData(null); setParentAuthLoading(false) } })
     return () => { cancelled = true }
   }, [s.student_id])
 
@@ -991,11 +1061,15 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   }, [canSendWelcome, s.student_id])
 
   async function handleSendWelcomeMessage() {
-    // Open the tab synchronously, inside the click handler, so mobile browsers
-    // (iOS Safari, Chrome for Android) still treat it as user-initiated — they
-    // block window.open() called after an await breaks the user-gesture chain,
-    // unlike most desktop browsers which are more lenient about the delay.
-    const pending = window.open('', '_blank')
+    const mobile = isMobileDevice()
+    // Desktop: open the tab synchronously, inside the click handler, so the
+    // browser still treats it as user-initiated — it would otherwise block
+    // window.open() called after an await breaks the user-gesture chain.
+    // WhatsApp Web is the correct desktop destination, so this stays a new tab.
+    // Mobile: skip the blank tab entirely and navigate the current tab once the
+    // URL is ready — that's what actually triggers the native WhatsApp app to
+    // open with the message pre-filled, instead of falling back to WhatsApp Web.
+    const pending = mobile ? null : window.open('', '_blank')
     setWelcomeSending(true)
     const result = await sendWelcomeWhatsAppAction(s.student_id)
     setWelcomeSending(false)
@@ -1004,8 +1078,13 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
       alert(result.error)
       return
     }
-    if (pending) pending.location.href = result.url
-    else window.open(result.url, '_blank')
+    if (mobile) {
+      window.location.href = result.url
+    } else if (pending) {
+      pending.location.href = result.url
+    } else {
+      window.open(result.url, '_blank')
+    }
     setWelcomeLastSent(new Date().toISOString())
   }
 
@@ -1014,15 +1093,27 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     const result = await generateMissingWelcomeCredentialsAction(s.student_id)
     setWelcomeRegenerating(false)
     if (!result.success) {
-      alert(result.error)
+      // Keep the dialog open and preserve everything already loaded — just surface the error.
+      showToast('error', result.error)
       return
     }
-    const status = await getWelcomeMessageStatusAction(s.student_id)
+    // Refresh the credentials shown in this same open dialog (student + parent),
+    // plus the Send Welcome Message eligibility that gates the WhatsApp button —
+    // no close/reopen needed to see or act on the new credentials.
+    const [status] = await Promise.all([
+      getWelcomeMessageStatusAction(s.student_id),
+      loadAuthData(),
+      loadParentAuthData(),
+    ])
     setWelcomeEligible(status.eligibility.eligible)
     setWelcomeTooltip(status.eligibility.reason)
     setWelcomeCanRegenerate(status.eligibility.canRegenerate)
-    router.refresh()
-    onStudentUpdated?.()
+    showToast('success', 'Credentials generated — ready to send.')
+    // Deliberately NOT onStudentUpdated() — in GroupWorkspace that callback also
+    // does setQuickViewStudent(null), which unmounts this dialog. Credentials
+    // aren't shown in the outer group table, so only a background sync (if the
+    // caller wants one) belongs here — never a close.
+    onCredentialsRefreshed?.()
   }
 
   // Create parent portal account (embeds the Parents page's ParentFormModal)
@@ -1042,13 +1133,17 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   async function handleParentAccountCreated() {
     setParentModalOpen(false)
     setParentEditData(null)
-    const status = await getWelcomeMessageStatusAction(s.student_id)
+    const [status] = await Promise.all([
+      getWelcomeMessageStatusAction(s.student_id),
+      loadParentAuthData(),
+    ])
     setWelcomeEligible(status.eligibility.eligible)
     setWelcomeTooltip(status.eligibility.reason)
     setWelcomeCanRegenerate(status.eligibility.canRegenerate)
     setWelcomeLastSent(status.lastSentAt)
-    router.refresh()
-    onStudentUpdated?.()
+    showToast('success', 'Parent portal account created.')
+    // Same reasoning as handleGenerateCredentials — keep this dialog open.
+    onCredentialsRefreshed?.()
   }
 
   function handleEnrollmentWizardSuccess() {
@@ -1073,6 +1168,26 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
 
   return (
     <>
+      {/* Toast — success/error feedback that never closes the dialog */}
+      {toast && (
+        <div className={`fixed top-6 right-6 z-[100] flex items-center gap-2 rounded-xl border px-4 py-3 text-[13px] font-medium shadow-lg ${
+          toast.type === 'success'
+            ? 'border-[#A7F3D0] bg-[#E7F8EE] text-[#15803D]'
+            : 'border-[#FECACA] bg-[#FEE2E2] text-[#DC2626]'
+        }`}>
+          {toast.type === 'success' ? (
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+            </svg>
+          ) : (
+            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+            </svg>
+          )}
+          {toast.msg}
+        </div>
+      )}
+
       {/* Backdrop */}
       <div
         className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-[1px]"
@@ -1195,6 +1310,8 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 group={group}
                 authData={authData}
                 authLoading={authLoading}
+                parentAuthData={parentAuthData}
+                parentAuthLoading={parentAuthLoading}
                 attSummary={attSummary}
                 attSumLoading={attSumLoading}
               />

@@ -1,14 +1,19 @@
 'use server'
 
-import { getStudentPortalCredentials } from '@/modules/students/portal-credentials'
+import { getStudentPortalCredentials }        from '@/modules/students/portal-credentials'
+import { getParentPortalCredentialsForStudent } from '@/modules/parents/portal-credentials'
 import { createServiceClient }         from '@/lib/supabase/service'
 import { requirePermission }           from '@/modules/rbac/guards'
 import type { StudentAttendanceSummary } from './types'
 
 export { getStudentPortalCredentials }
+export { getParentPortalCredentialsForStudent }
 
 // Backward-compat alias — callers that import getStudentAuthDataAction continue to work.
 export const getStudentAuthDataAction = getStudentPortalCredentials
+
+// Client-callable wrapper for the student's primary parent portal credentials.
+export const getParentAuthDataAction = getParentPortalCredentialsForStudent
 
 // ── Attendance summary (live from attendance_records) ─────────────────────────
 

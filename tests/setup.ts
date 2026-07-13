@@ -1,9 +1,6 @@
 import { vi } from 'vitest'
 import '@testing-library/jest-dom/vitest'
 
-// Stub out Next.js server-only marker so tests can import server modules
-vi.mock('server-only', () => ({}))
-
 // Stub Next.js cache + navigation primitives
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),

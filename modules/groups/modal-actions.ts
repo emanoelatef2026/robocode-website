@@ -11,7 +11,7 @@ export {
   deleteGroupSessionAction,
   rebuildGroupAttendanceAction,
 } from './actions/group-attendance'
-export { getStudentAuthDataAction, getStudentAttendanceSummaryAction, getStudentPortalCredentials } from './actions/student-quick-view'
+export { getStudentAuthDataAction, getParentAuthDataAction, getStudentAttendanceSummaryAction, getStudentPortalCredentials } from './actions/student-quick-view'
 export {
   getStudentPackageLedgerAction,
   getStudentCourseTimelineAction,
@@ -32,3 +32,4 @@ export type {
   StudentCourseTimelineEntry,
 } from './actions/types'
 export type { StudentPortalCredentials, PortalStatus } from '@/modules/students/portal-credentials'
+export type { ParentPortalCredentials } from '@/modules/parents/portal-credentials'

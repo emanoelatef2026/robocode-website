@@ -264,6 +264,9 @@ export function GroupWorkspace({
             setQuickViewStudent(null)
             onStudentsChanged()
           }}
+          // Credentials aren't shown in the group table — sync data in the
+          // background without closing the quick-view dialog.
+          onCredentialsRefreshed={onStudentsChanged}
           onOpenFullFinance={() => {
             const s = quickViewStudent
             setQuickViewStudent(null)

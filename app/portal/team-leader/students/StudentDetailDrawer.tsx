@@ -66,11 +66,16 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
   }, [isTL, s.student_id])
 
   async function handleSendWelcomeMessage() {
-    // Open the tab synchronously, inside the click handler, so mobile browsers
-    // (iOS Safari, Chrome for Android) still treat it as user-initiated — they
-    // block window.open() called after an await breaks the user-gesture chain,
-    // unlike most desktop browsers which are more lenient about the delay.
-    const pending = window.open('', '_blank')
+    const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    // Desktop: open the tab synchronously, inside the click handler, so the
+    // browser still treats it as user-initiated — it would otherwise block
+    // window.open() called after an await breaks the user-gesture chain.
+    // WhatsApp Web is the correct desktop destination, so this stays a new tab.
+    // Mobile: skip the blank tab entirely and navigate the current tab once the
+    // URL is ready — a wa.me link opened inside a JS-created window doesn't get
+    // the OS-level App Link handoff, so it lands on WhatsApp Web instead of the
+    // native app. A direct same-tab navigation is what triggers the app switch.
+    const pending = mobile ? null : window.open('', '_blank')
     setWelcomeSending(true)
     const result = await sendWelcomeWhatsAppAction(s.student_id)
     setWelcomeSending(false)
@@ -79,8 +84,13 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
       alert(result.error)
       return
     }
-    if (pending) pending.location.href = result.url
-    else window.open(result.url, '_blank')
+    if (mobile) {
+      window.location.href = result.url
+    } else if (pending) {
+      pending.location.href = result.url
+    } else {
+      window.open(result.url, '_blank')
+    }
   }
 
   async function handleGenerateCredentials() {
