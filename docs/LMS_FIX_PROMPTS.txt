@@ -94,10 +94,10 @@
 ════════════════════════════════════════════════════════════════════
 
 أ) كارثة الأقساط — الحساب المتضرر محدد بالكامل:
-   account_id = 8946c26b-c0b1-4014-a810-9e8c22c50277
-   student_id = e7f9fe40-ac82-4cf8-b169-7d5bfcc6ed0e
-   enrollment_id = 1a9cbc7c-b751-4be0-a559-59fd7e3472e2 (contract_code
-   CNT-2026-000021, status ACTIVE, net_amount = 3400.00, enrolled_sessions=12)
+   account_id = <CORRUPTED_ACCOUNT_ID>
+   student_id = <CORRUPTED_ACCOUNT_STUDENT_ID>
+   enrollment_id = <CORRUPTED_ACCOUNT_ENROLLMENT_ID> (contract_code
+   <CORRUPTED_ACCOUNT_CONTRACT_CODE>, status ACTIVE, net_amount = 3400.00, enrolled_sessions=12)
    عليه 3,400 قسط (installment_number 1→3400)، كل واحد amount=1.00،
    كلهم created_at = 2026-06-06 23:37:59.791407 (نفس اللحظة بالظبط).
 
@@ -140,12 +140,12 @@
      فاضي (net_amount=0) ليهم هيكون نمط جديد غير موجود في الداتا حاليًا
      (اتأكدت: مفيش ولا صف حالي بـ net_amount=0 أو من غير enrollment_id).
    القرار: اعمل حسابات للـ 3 دول بس، من بيانات enrollment بتاعهم:
-   1) student_id 1e4c4d5f-7b3f-4190-8546-7ff8c2b3b6b7 → enrollment
-      6a68d6fa-52fa-41a5-939b-248bdc73baec (CNT-2026-6a68d6, total/net=0)
-   2) student_id 0df5ea9b-49b1-45b4-9ff4-9934c57afdc4 → enrollment
-      3936c3d1-8b4c-42da-8f63-3e2485fb945b (CNT-2026-3936c3, total/net=0)
-   3) student_id 15179c59-abf2-42ca-a3f5-be9ea8189483 → enrollment
-      3120e0af-53fe-4a3e-83e3-aa22f107b340 (CNT-2026-3120e0, total/net=0)
+   1) student_id <MISSING_ACCOUNT_1_STUDENT_ID> → enrollment
+      <MISSING_ACCOUNT_1_ENROLLMENT_ID> (<MISSING_ACCOUNT_1_CONTRACT_CODE>, total/net=0)
+   2) student_id <MISSING_ACCOUNT_2_STUDENT_ID> → enrollment
+      <MISSING_ACCOUNT_2_ENROLLMENT_ID> (<MISSING_ACCOUNT_2_CONTRACT_CODE>, total/net=0)
+   3) student_id <MISSING_ACCOUNT_3_STUDENT_ID> → enrollment
+      <MISSING_ACCOUNT_3_ENROLLMENT_ID> (<MISSING_ACCOUNT_3_CONTRACT_CODE>, total/net=0)
    الثلاثة دول total_amount=net_amount=0 (تعاقدات مجانية/legacy)، يبقى
    الحساب المالي remaining=0, status='PAID'. الـ 61 الباقيين اسكيبهم.
 
@@ -240,9 +240,9 @@
 4. بيانات — تنظيف الحساب المتضرر (اعرض عليّا قبل التنفيذ مع عدد الصفوف):
    - Backup: CREATE TABLE finance_installments_backup_20260706 AS
      SELECT * FROM finance_installments WHERE account_id =
-     '8946c26b-c0b1-4014-a810-9e8c22c50277';
+     '<CORRUPTED_ACCOUNT_ID>';
    - DELETE FROM finance_installments WHERE account_id =
-     '8946c26b-c0b1-4014-a810-9e8c22c50277'; (هيمسح 3,400 صف بالظبط)
+     '<CORRUPTED_ACCOUNT_ID>'; (هيمسح 3,400 صف بالظبط)
    - أعد توليد قسط واحد صحيح: amount=3400.00, due_date = أقرب تاريخ
      معقول (استخدم next_due_date الحالي بتاع الحساب أو تاريخ اليوم+30
      يوم لو مفيش)، status='PENDING', installment_number=1.

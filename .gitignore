@@ -1,4 +1,7 @@
-.claude# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Claude Code local settings (per-developer permission cache — never shared)
+.claude/settings.local.json
 
 # dependencies
 /node_modules
@@ -43,3 +46,9 @@ next-env.d.ts
 .vercel
 .env*
 !.env.example
+
+# Supabase CLI local cache (project ref/connection metadata, regenerated per machine)
+/supabase/.temp
+
+# One-off ops script outputs that may contain production PII — never commit
+backfill-org-emails-*.csv

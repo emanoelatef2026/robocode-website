@@ -140,7 +140,7 @@ two different features that don't know about each other. Full list:
 
 ### The one exception — needs manual review, not auto-classified
 
-**STU-000010** (`ebf8439f-003f-4a6d-9d67-7f16da30caf4`): one row is linked to
+**STU-000010** (`<STU-000010_UUID>`): one row is linked to
 real group `Shrouk-Sun6 Scratch jr` (whose *actual* `group_courses` assignment,
 checked directly, is titled **"General Sessions"** — a generic placeholder
 course, not literally "Scratch Jr" despite the group's display name); the other

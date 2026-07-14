@@ -22,7 +22,7 @@ Verification: `npx tsc --noEmit` → 0 errors. `npx vitest run` → 244/244 pass
 
 ## 2. Data fixes (re-verified against live DB before touching anything — all numbers matched the 2026-07-05 diagnosis exactly)
 
-### a) Corrupted installment account (`8946c26b-c0b1-4014-a810-9e8c22c50277`, contract `CNT-2026-000021`)
+### a) Corrupted installment account (`<CORRUPTED_ACCOUNT_ID>`, contract `<CORRUPTED_ACCOUNT_CONTRACT_CODE>`)
 - Backed up first: `finance_installments_backup_20260706` (3,400 rows).
 - Deleted the 3,400 bogus EGP-1 installments (confirmed 0 `finance_payments` referenced any of them — safe).
 - **Deviation from the original plan, based on what the live data actually showed:** the account already had `paid_amount = 3400.00` / `remaining_amount = 0.00` from one real EGP 3,400 Instapay payment on 2026-06-06 (previously unlinked, `installment_id IS NULL`). So instead of regenerating a `PENDING` installment as originally planned, I regenerated one installment (`amount = 3400`, `due_date = 2026-06-09`, the account's existing `next_due_date`) and linked the existing payment to it. The existing trigger recomputed it correctly to `status = PAID`.
@@ -30,9 +30,9 @@ Verification: `npx tsc --noEmit` → 0 errors. `npx vitest run` → 244/244 pass
 
 ### b) 3 missing financial accounts
 Created for the 3 students confirmed to have a real free/legacy enrollment (`net_amount = 0`) and no account:
-- `1e4c4d5f-7b3f-4190-8546-7ff8c2b3b6b7` (enrollment `6a68d6fa-...`)
-- `0df5ea9b-49b1-45b4-9ff4-9934c57afdc4` (enrollment `3936c3d1-...`)
-- `15179c59-abf2-42ca-a3f5-be9ea8189483` (enrollment `3120e0af-...`)
+- `<MISSING_ACCOUNT_1_STUDENT_ID>` (enrollment `<MISSING_ACCOUNT_1_ENROLLMENT_ID>`)
+- `<MISSING_ACCOUNT_2_STUDENT_ID>` (enrollment `<MISSING_ACCOUNT_2_ENROLLMENT_ID>`)
+- `<MISSING_ACCOUNT_3_STUDENT_ID>` (enrollment `<MISSING_ACCOUNT_3_ENROLLMENT_ID>`)
 
 All created with `net_amount = 0`, `status = PAID`. The other ~61 students without an account (no enrollment at all) were intentionally left untouched per the original decision.
 
