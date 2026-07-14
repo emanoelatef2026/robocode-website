@@ -24,6 +24,9 @@ export type PermissionName =
   | 'manage_parents'
   // Academic
   | 'manage_groups'
+  | 'archive_cohort'
+  | 'view_archived_cohorts'
+  | 'recover_archived_cohort'
   | 'manage_courses'
   | 'manage_modules'
   | 'manage_lessons'

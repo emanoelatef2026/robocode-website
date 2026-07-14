@@ -3,6 +3,7 @@ import type { GroupDetailStudent } from '@/modules/groups/modal-actions'
 import type { StudentOperationsRow } from '@/modules/finance/types'
 import type { StudentResult } from '../../finance/EnrollmentWizard'
 import type { Filters } from './types'
+import { getCohortLifecycleStage } from '@/modules/groups/lifecycle-stage'
 export { fmtDate, fmtCurrency } from '@/components/shared/workspace/utils'
 
 // ── Date / time formatters ───────────────────────────────────────────
@@ -39,14 +40,17 @@ export function fmtDateShort(iso: string | null | undefined): string {
 export function applyFilters(groups: GroupOperationalRow[], f: Filters): GroupOperationalRow[] {
   return groups.filter(g => {
     if (f.branch_id && g.branch_id !== f.branch_id) return false
-    if (f.quickFilter === 'active'         && g.status !== 'active')                                   return false
-    if (f.quickFilter === 'forming'        && g.status !== 'forming')                                  return false
+    if (f.quickFilter === 'draft'          && getCohortLifecycleStage(g) !== 'draft')                  return false
+    if (f.quickFilter === 'open'           && getCohortLifecycleStage(g) !== 'open')                   return false
+    if (f.quickFilter === 'running'        && getCohortLifecycleStage(g) !== 'running')                return false
+    if (f.quickFilter === 'completed'      && getCohortLifecycleStage(g) !== 'completed')               return false
+    if (f.quickFilter === 'archived'       && g.status !== 'archived')                                 return false
+    if (f.quickFilter === 'cancelled'      && g.status !== 'cancelled')                                return false
     if (f.quickFilter === 'no_instructor'  && g.has_instructor)                                        return false
     if (f.quickFilter === 'low_attendance' && !g.is_low_attendance)                                    return false
     if (f.quickFilter === 'low_capacity'   && !g.is_low_capacity)                                      return false
     if (f.quickFilter === 'overloaded'     && !g.is_overloaded)                                        return false
     if (f.quickFilter === 'starts_soon'    && !g.starts_soon)                                          return false
-    if (f.quickFilter === 'archived'       && g.status !== 'cancelled' && g.status !== 'archived')     return false
     if (f.q) {
       const q   = f.q.toLowerCase()
       const hay = [g.name, g.code, g.lead_instructor_name, g.course_name, g.branch_name]
@@ -77,7 +81,7 @@ export function buildPageKpis(groups: GroupOperationalRow[]) {
     { label: 'Active',       value: groups.filter(g => g.status === 'active').length,                               dotColor: 'bg-[#10B981]',  bgColor: 'bg-[#E7F8EE]/60', valueColor: 'text-[#15803D]'  },
     { label: 'Forming',      value: groups.filter(g => g.status === 'forming').length,                              dotColor: 'bg-[#38BDF8]',  bgColor: 'bg-[#EFF6FF]/60', valueColor: 'text-[#1D4ED8]'  },
     { label: 'Completed',    value: groups.filter(g => g.status === 'completed').length,                            dotColor: 'bg-[#94A3B8]',  bgColor: 'bg-[#F8FAFC]',    valueColor: 'text-[#475569]'  },
-    { label: 'Archived',     value: groups.filter(g => g.status === 'cancelled' || g.status === 'archived').length, dotColor: 'bg-[#FCA5A5]',  bgColor: 'bg-[#FEE2E2]/60', valueColor: 'text-[#EF4444]'  },
+    { label: 'Archived',     value: groups.filter(g => g.status === 'archived').length,                            dotColor: 'bg-[#94A3B8]',  bgColor: 'bg-[#F8FAFC]',    valueColor: 'text-[#64748B]'  },
     { label: 'Students',     value: totalStudents,                                                                  dotColor: 'bg-violet-400', bgColor: 'bg-violet-50/60', valueColor: 'text-violet-700' },
   ]
 }

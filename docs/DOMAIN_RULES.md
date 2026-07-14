@@ -1,6 +1,7 @@
 # Domain Rules — Group / Cohort Academic Lifecycle
 
-**Status:** Phase 0 — foundation only, no enforcement yet
+**Status:** Phase 1 — Archived-stage read-only enforcement is live (migration
+`20260714120000_cohort_lifecycle_archive_enforcement.sql`)
 **Owns:** `groups`, `group_series`, `student_enrollments`, `certificates`, and everything
 that hangs off a group (`schedules`, `attendance_records`, `group_students`,
 `group_instructors`, `group_courses`)
@@ -32,12 +33,28 @@ the fact, no matter how the app code evolves later.
 - `certificates` is **not** in the locked set — see Rule 6.
 - Enforcement is DB-level (a trigger), not app-level, mirroring the precedent
   already set by `certificate_snapshots` (`prevent_snapshot_mutation()`,
-  migration `0027`) — immutability that survives an app bug, not just a UI guard.
-- There is deliberately no app-layer "unlock" function. Reopening an archived
-  group is a manual, audited, superuser database action only.
-- **Not yet enforced in Phase 0.** The `archived_at` column and `'archived'`
-  status value exist as of Phase 0, but no trigger blocks writes yet. Enforcement
-  is Phase 1.
+  migration `0027`) and `prevent_attendance_on_cancelled_session()` (migration
+  `0092`) — immutability that survives an app bug, not just a UI guard.
+  `is_group_archived()`, `prevent_mutation_on_archived_group()` (direct
+  `group_id` tables), `prevent_schedule_mutation_on_archived_group()`, and
+  `prevent_attendance_mutation_on_archived_group()` implement this (Phase 1,
+  migration `20260714120000_cohort_lifecycle_archive_enforcement.sql`).
+- **Revised in Phase 1**: there IS an app-layer reopen path after all —
+  `recoverCohortAction` (`modules/groups/actions/lifecycle.ts`), gated by the
+  `recover_archived_cohort` permission (**super_admin only**, never
+  `team_leader`), fully audited via `write_audit_log` (`p_action:
+  'recover_cohort'`, records the reason and prior/new status). It moves the
+  cohort's `status` back to `'completed'` — the `groups` row itself is never
+  part of the locked table set, so this update always succeeds; the
+  `sync_group_archived_at()` trigger (Rule 3) auto-clears `archived_at` as a
+  side effect. This supersedes the original "DB-only, no app unlock" language
+  above — a real UI action exists, but it stays a narrow, permission-gated,
+  audited exception, not a general-purpose unlock.
+- **Enforced as of Phase 1.** The `archived_at` column and `'archived'` status
+  value existed since Phase 0; the read-only trigger and the `archiveCohortAction`
+  /`recoverCohortAction` workflow were added in Phase 1. Archiving itself is
+  only reachable from the `Completed` stage (Phase 1's `validateCohortArchival`
+  blocks archiving a still-Running cohort) — see Rule 11's stage table below.
 
 ## 2. `deleted_at` is reserved for accidental deletion only
 
@@ -183,10 +200,24 @@ introduced by this feature):
 `'cancelled'` is a separate, unrelated concept (a mistaken or aborted group,
 Rule 2) and is not part of this three-stage progression.
 
-"Archive" as a word in the UI (e.g. a filter or a tab) is allowed to mean
-*either* `'cancelled'` or `'archived'` for display convenience — that is a
-presentation concern, not a business-invariant one, and is out of scope for
-this document.
+**Revised in Phase 1**: the UI no longer conflates `'cancelled'` and
+`'archived'` under one "Archived" filter — they are business-invariantly
+distinct (Rule 2), so the Groups workspace now exposes them as separate quick
+filters. The UI additionally splits `Running` into two presentation-only
+sub-labels, computed by `getCohortLifecycleStage()`
+(`modules/groups/lifecycle-stage.ts`) and never stored as a new `status`
+value:
+
+| UI stage (business/domain term "Cohort") | `status` | Notes |
+|---|---|---|
+| Draft | `forming` | not yet enrollment-ready (no course/instructor assigned) |
+| Open | `forming` | enrollment-ready (course + instructor assigned) |
+| Running | `active`, `handoff_pending` | unchanged from this rule's original 3-stage table |
+| Completed | `completed` | unchanged |
+| Archived | `archived` | unchanged — the only locked stage (Rule 1) |
+
+`'cancelled'` remains outside this progression entirely (Rule 2) and is shown
+as its own distinct badge/filter, never folded into any of the 5 stages above.
 
 ## 12. What stays editable at each stage (summary)
 
@@ -207,12 +238,10 @@ likely to be checked while building a UI or Server Action:
 Before any lock or archival workflow is built, the codebase must not allow a
 student to silently accumulate more than one *open* `group_students` row from
 the same course lineage (e.g. left uncommitted when moved between groups). This
-is tracked and fixed as **Priority 0**, sequenced after Phase 0's additive
-schema (because its likely fix — a partial unique index scoped
-`(student_id, series_id)` — depends on `group_series` existing) and before
-Phase 1's locking behavior. It is a precondition for trusting "current group"
-queries once cohorts start rolling over each semester; it is not itself part of
-Phase 0's scope.
+was tracked and fixed as **Priority 0** (closed, commit `1cd8c81`) — via
+`course_id`-scoped partial unique indexes rather than `series_id` (no group has
+ever been linked to a series yet; see `docs/GROUP_SERIES_RULES.md`) — sequenced
+after Phase 0's additive schema and before Phase 1's locking behavior below.
 
 ---
 
@@ -223,3 +252,13 @@ Phase 0's scope.
   snapshot columns). No enforcement exists yet; every "locked"/"immutable"
   statement above describes the target state, not current behavior, unless a
   line explicitly says otherwise.
+- **2026-07-14** — Phase 1: the Archived-stage read-only trigger described in
+  Rule 1 is now live (migration
+  `20260714120000_cohort_lifecycle_archive_enforcement.sql`), covering
+  `group_courses`, `group_instructors`, `group_students`, `schedules`, and
+  `attendance_records`. Added an audited, super_admin-only app-layer recovery
+  path (`recoverCohortAction`), revising Rule 1's original "DB-only, no app
+  unlock" language. Added the UI-facing 5-stage lifecycle mapping to Rule 11.
+  New permissions: `archive_cohort`, `view_archived_cohorts` (team_leader +
+  super_admin), `recover_archived_cohort` (super_admin only). Priority 0
+  (Rule 13) is now closed.

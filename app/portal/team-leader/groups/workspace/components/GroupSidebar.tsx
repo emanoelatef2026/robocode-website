@@ -2,6 +2,7 @@ import type { GroupOperationalRow, GroupFormOptions } from '@/modules/groups/ope
 import type { Filters, QuickFilter } from '../types'
 import { applyFilters } from '../utils'
 import { GroupListItem } from './GroupListItem'
+import { getCohortLifecycleStage } from '@/modules/groups/lifecycle-stage'
 
 const QUICK_FILTER_OPTIONS: {
   value: QuickFilter
@@ -9,14 +10,17 @@ const QUICK_FILTER_OPTIONS: {
   count: (g: GroupOperationalRow[]) => number
 }[] = [
   { value: '',               label: 'All Groups',     count: g => g.length },
-  { value: 'active',         label: 'Active',         count: g => g.filter(x => x.status === 'active').length },
-  { value: 'forming',        label: 'Forming',        count: g => g.filter(x => x.status === 'forming').length },
+  { value: 'draft',          label: 'Draft',          count: g => g.filter(x => getCohortLifecycleStage(x) === 'draft').length },
+  { value: 'open',           label: 'Open',           count: g => g.filter(x => getCohortLifecycleStage(x) === 'open').length },
+  { value: 'running',        label: 'Running',        count: g => g.filter(x => getCohortLifecycleStage(x) === 'running').length },
+  { value: 'completed',      label: 'Completed',      count: g => g.filter(x => getCohortLifecycleStage(x) === 'completed').length },
   { value: 'no_instructor',  label: 'No Instructor',  count: g => g.filter(x => !x.has_instructor).length },
   { value: 'low_attendance', label: 'Low Attendance', count: g => g.filter(x => x.is_low_attendance).length },
   { value: 'low_capacity',   label: 'Under Capacity', count: g => g.filter(x => x.is_low_capacity).length },
   { value: 'overloaded',     label: 'Full',           count: g => g.filter(x => x.is_overloaded).length },
   { value: 'starts_soon',    label: 'Starting Soon',  count: g => g.filter(x => x.starts_soon).length },
-  { value: 'archived',       label: 'Archived',       count: g => g.filter(x => x.status === 'cancelled' || x.status === 'archived').length },
+  { value: 'archived',       label: 'Archived',       count: g => g.filter(x => x.status === 'archived').length },
+  { value: 'cancelled',      label: 'Cancelled',      count: g => g.filter(x => x.status === 'cancelled').length },
 ]
 
 export function GroupSidebar({

@@ -11,6 +11,11 @@ import {
   deleteGroupAction,
   removeStudentFromGroupAction,
 } from '@/modules/groups/modal-actions'
+import {
+  validateCohortArchival,
+  archiveCohortAction,
+  recoverCohortAction,
+} from '@/modules/groups/actions/lifecycle'
 import type { GroupDetailData, GroupDetailStudent } from '@/modules/groups/modal-actions'
 import type { GroupOperationalRow, GroupStudentOption } from '@/modules/groups/operational'
 import GroupAttendanceModal from '../GroupAttendanceModal'
@@ -34,10 +39,11 @@ const TABS: { key: WorkspaceTab; label: (count: number) => string }[] = [
 ]
 
 export function GroupWorkspace({
-  group, isTL, onEdit, onDelete, onStudentsChanged, studentOptions, refreshKey, allGroups,
+  group, isTL, isSuperAdmin = false, onEdit, onDelete, onStudentsChanged, studentOptions, refreshKey, allGroups,
 }: {
   group:             GroupOperationalRow
   isTL:              boolean
+  isSuperAdmin?:     boolean
   onEdit:            (g: GroupOperationalRow) => void
   onDelete:          () => void
   onStudentsChanged: () => void
@@ -59,6 +65,16 @@ export function GroupWorkspace({
   const [quickViewStudent, setQuickViewStudent] = useState<GroupDetailStudent | null>(null)
   const [bulkCertOpen, setBulkCertOpen]         = useState(false)
   const [, startT]                              = useTransition()
+
+  // Phase 1: Cohort Lifecycle — Archive / Recover
+  const [archiveDialog, setArchiveDialog]       = useState<{ warnings: string[]; blockers: string[] } | null>(null)
+  const [archiveReason, setArchiveReason]       = useState('')
+  const [archiveError, setArchiveError]         = useState<string | null>(null)
+  const [archiveBusy, setArchiveBusy]           = useState(false)
+  const [recoverConfirm, setRecoverConfirm]     = useState(false)
+  const [recoverReason, setRecoverReason]       = useState('')
+  const [recoverError, setRecoverError]         = useState<string | null>(null)
+  const [recoverBusy, setRecoverBusy]           = useState(false)
 
   function reloadDetail() {
     setLoading(true)
@@ -116,6 +132,37 @@ export function GroupWorkspace({
     })
   }
 
+  async function openArchiveDialog() {
+    setArchiveError(null)
+    setArchiveReason('')
+    const validation = await validateCohortArchival(group.group_id)
+    setArchiveDialog(validation)
+  }
+
+  function handleArchiveConfirm() {
+    setArchiveError(null)
+    setArchiveBusy(true)
+    startT(async () => {
+      const res = await archiveCohortAction(group.group_id, archiveReason)
+      setArchiveBusy(false)
+      if (!res.success) { setArchiveError(res.error?.message ?? 'Failed to archive cohort.'); return }
+      setArchiveDialog(null)
+      onStudentsChanged() // reuses the existing router.refresh() plumbing
+    })
+  }
+
+  function handleRecoverConfirm() {
+    setRecoverError(null)
+    setRecoverBusy(true)
+    startT(async () => {
+      const res = await recoverCohortAction(group.group_id, recoverReason)
+      setRecoverBusy(false)
+      if (!res.success) { setRecoverError(res.error?.message ?? 'Failed to recover cohort.'); return }
+      setRecoverConfirm(false)
+      onStudentsChanged()
+    })
+  }
+
   const students          = detailData?.students ?? []
   const sessions          = detailData?.sessions ?? []
   const currentStudentIds = students.map(s => s.student_id)
@@ -132,7 +179,21 @@ export function GroupWorkspace({
         onRecordAttendance={() => setAttendanceOpen(true)}
         onAddStudent={() => setQuickAddOpen(true)}
         onIssueBulkCertificates={() => setBulkCertOpen(true)}
+        canArchive={isTL && group.status === 'completed'}
+        canRecover={isSuperAdmin && group.status === 'archived'}
+        onArchive={openArchiveDialog}
+        onRecover={() => { setRecoverError(null); setRecoverReason(''); setRecoverConfirm(true) }}
       />
+
+      {/* Phase 1: Archived read-only banner */}
+      {group.status === 'archived' && (
+        <div className="flex items-center gap-2 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 text-[12px] text-[#64748B] shrink-0">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-[#94A3B8]">
+            <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+          </svg>
+          This cohort is Archived and permanently read-only. Attendance, instructor allocation, and roster changes are locked.
+        </div>
+      )}
 
       {/* Tab bar */}
       <div className="flex border-b border-[#E2E8F0] shrink-0 bg-white overflow-x-auto">
@@ -316,6 +377,102 @@ export function GroupWorkspace({
                 className="flex-1 rounded-lg bg-[#EF4444] py-2 text-[13px] font-semibold text-white hover:bg-[#DC2626] transition"
               >
                 Delete Group
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Archive Cohort confirmation */}
+      {archiveDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="mb-1 text-[15px] font-bold text-[#0B1F3A]">Archive Cohort</h3>
+            {archiveDialog.blockers.length > 0 ? (
+              <div className="mb-4 space-y-1.5 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">
+                {archiveDialog.blockers.map((b, i) => (
+                  <p key={i} className="text-[12px] text-[#B91C1C]">{b}</p>
+                ))}
+              </div>
+            ) : (
+              <>
+                <p className="mb-3 text-[13px] text-[#64748B]">
+                  <strong>{group.name}</strong> will become permanently read-only. Attendance,
+                  instructor allocation, and roster changes will be locked forever. This cannot
+                  be undone except by a super admin using Recover Cohort.
+                </p>
+                {archiveDialog.warnings.length > 0 && (
+                  <div className="mb-4 space-y-1.5 rounded-xl border border-[#FED7AA] bg-[#FFFBEB] p-3">
+                    {archiveDialog.warnings.map((w, i) => (
+                      <p key={i} className="text-[12px] text-[#B45309]">⚠ {w}</p>
+                    ))}
+                  </div>
+                )}
+                <textarea
+                  value={archiveReason}
+                  onChange={e => setArchiveReason(e.target.value)}
+                  placeholder="Reason (optional)"
+                  rows={2}
+                  className="mb-3 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] outline-none focus:border-[#FF8A1F]"
+                />
+              </>
+            )}
+            {archiveError && (
+              <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{archiveError}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setArchiveDialog(null)}
+                className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] text-[#374151] hover:bg-[#F8FAFC] transition"
+              >
+                Cancel
+              </button>
+              {archiveDialog.blockers.length === 0 && (
+                <button
+                  onClick={handleArchiveConfirm}
+                  disabled={archiveBusy}
+                  className="flex-1 rounded-lg bg-[#64748B] py-2 text-[13px] font-semibold text-white hover:bg-[#475569] transition disabled:opacity-60"
+                >
+                  {archiveBusy ? 'Archiving…' : 'Archive Cohort'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recover Cohort confirmation (super_admin only) */}
+      {recoverConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="mb-1 text-[15px] font-bold text-[#0B1F3A]">Recover Cohort</h3>
+            <p className="mb-3 text-[13px] text-[#64748B]">
+              <strong>{group.name}</strong> will be moved back to Completed and become editable
+              again. This action is audited.
+            </p>
+            <textarea
+              value={recoverReason}
+              onChange={e => setRecoverReason(e.target.value)}
+              placeholder="Reason (optional)"
+              rows={2}
+              className="mb-3 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] outline-none focus:border-[#FF8A1F]"
+            />
+            {recoverError && (
+              <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{recoverError}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setRecoverConfirm(false)}
+                className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] text-[#374151] hover:bg-[#F8FAFC] transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRecoverConfirm}
+                disabled={recoverBusy}
+                className="flex-1 rounded-lg bg-[#1D4ED8] py-2 text-[13px] font-semibold text-white hover:bg-[#1E40AF] transition disabled:opacity-60"
+              >
+                {recoverBusy ? 'Recovering…' : 'Recover Cohort'}
               </button>
             </div>
           </div>

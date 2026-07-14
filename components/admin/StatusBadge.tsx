@@ -24,6 +24,13 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   // Groups / Courses / Sessions
   forming:    { bg: "bg-[#FFFBEB]", text: "text-[#B45309]", label: "Forming",    dot: "bg-[#F59E0B]" },
   completed:  { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Completed",  dot: "bg-[#10B981]" },
+  // Cohort lifecycle stages (Phase 1) — open/running/archived are derived
+  // presentation labels (getCohortLifecycleStage), never a DB status. 'draft'
+  // reuses the existing entry below (Assignments section) — same label/tone
+  // already fits a not-yet-ready cohort.
+  open:       { bg: "bg-[#EFF6FF]", text: "text-[#1D4ED8]", label: "Open",       dot: "bg-[#3B82F6]" },
+  running:    { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Running",    dot: "bg-[#10B981]" },
+  archived:   { bg: "bg-[#F1F5F9]", text: "text-[#64748B]", label: "Archived",   dot: "bg-[#64748B]" },
   ongoing:    { bg: "bg-[#EFF6FF]", text: "text-[#1D4ED8]", label: "Ongoing",    dot: "bg-[#3B82F6]" },
   scheduled:  { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "Scheduled",  dot: "bg-[#94A3B8]" },
   cancelled:  { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]", label: "Cancelled",  dot: "bg-[#EF4444]" },

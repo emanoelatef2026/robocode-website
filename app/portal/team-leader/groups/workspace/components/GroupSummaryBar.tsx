@@ -9,6 +9,7 @@ import { DAYS_FULL, fmt12, fmtDate } from '../utils'
 
 export function GroupSummaryBar({
   group, sessionsCompleted, isTL, onEdit, onDelete, onRecordAttendance, onAddStudent, onIssueBulkCertificates,
+  canArchive = false, canRecover = false, onArchive, onRecover,
 }: {
   group:                     GroupOperationalRow
   sessionsCompleted:         number
@@ -18,6 +19,10 @@ export function GroupSummaryBar({
   onRecordAttendance:        () => void
   onAddStudent:              () => void
   onIssueBulkCertificates?:  () => void
+  canArchive?: boolean
+  canRecover?: boolean
+  onArchive?:  () => void
+  onRecover?:  () => void
 }) {
   const [infoOpen, setInfoOpen] = useState(false)
   const [popupPos, setPopupPos] = useState<{ top: number; left: number; width: number } | null>(null)
@@ -110,7 +115,7 @@ export function GroupSummaryBar({
           {group.code && (
             <span className="font-mono text-[11px] text-[#94A3B8] shrink-0 hidden sm:inline">{group.code}</span>
           )}
-          <StatusChip status={group.status} />
+          <StatusChip group={group} />
         </div>
 
         <div className="flex items-center gap-1.5 shrink-0">
@@ -160,6 +165,11 @@ export function GroupSummaryBar({
               onEdit={() => onEdit(group)}
               onDelete={onDelete}
               onIssueBulkCertificates={onIssueBulkCertificates}
+              isArchived={group.status === 'archived'}
+              canArchive={canArchive}
+              canRecover={canRecover}
+              onArchive={onArchive}
+              onRecover={onRecover}
             />
           )}
         </div>

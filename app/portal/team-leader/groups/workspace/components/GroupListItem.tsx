@@ -20,7 +20,7 @@ export function GroupListItem({
     >
       <div className="flex items-center justify-between gap-2">
         <p className="text-[12px] font-semibold text-[#0B1F3A] truncate">{group.name}</p>
-        <StatusChip status={group.status} />
+        <StatusChip group={group} />
       </div>
       <p className="mt-0.5 text-[11px] text-[#94A3B8]">
         {group.student_count} student{group.student_count !== 1 ? 's' : ''}

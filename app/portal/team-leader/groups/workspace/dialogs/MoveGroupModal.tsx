@@ -135,7 +135,7 @@ export function MoveGroupModal({
                       <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">Over cap</span>
                     )}
                     <span className="text-[11px] text-[#94A3B8]">{capDisplay}</span>
-                    <StatusChip status={g.status} />
+                    <StatusChip group={g} />
                   </div>
                 </div>
               </button>

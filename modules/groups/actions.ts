@@ -115,10 +115,17 @@ export async function updateGroup(_prev: unknown, formData: FormData): Promise<A
 
   const { id, name, type, capacity, status, start_date, day_of_week, time, notes, robocode_share_percent } = parsed.data
 
-  const { data: existing } = await db.from('groups').select('branch_id').eq('id', id).single()
+  const { data: existing } = await db.from('groups').select('branch_id, status').eq('id', id).single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
   if (!isBranchAccessible(user, existing.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+  // Phase 1: Archived is the terminal, structurally read-only lifecycle stage
+  // (DOMAIN_RULES.md Rule 1) — groups' own columns aren't covered by the
+  // child-table triggers, so guard here. Recovery is a separate, audited
+  // action (recoverCohortAction in modules/groups/actions/lifecycle.ts).
+  if (existing.status === 'archived') {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'This cohort is Archived and permanently read-only. Use Recover Cohort first if changes are needed.' } }
   }
 
   const updates: Record<string, unknown> = { name, type }
@@ -155,10 +162,13 @@ export async function deleteGroup(id: string): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
 
-  const { data: existing } = await db.from('groups').select('branch_id').eq('id', id).single()
+  const { data: existing } = await db.from('groups').select('branch_id, status').eq('id', id).single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
   if (!isBranchAccessible(user, existing.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+  if (existing.status === 'archived') {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'This cohort is Archived and permanently read-only. Use Recover Cohort first if changes are needed.' } }
   }
 
   const { error } = await db

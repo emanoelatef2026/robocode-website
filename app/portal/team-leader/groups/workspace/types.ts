@@ -1,6 +1,11 @@
+// Phase 1: lifecycle-stage filters (draft/open/running/completed/archived)
+// replace the old ad-hoc 'active'/'forming'/'archived' values, which either
+// missed handoff_pending groups ('active') or conflated the unrelated
+// 'cancelled' concept with 'archived' (DOMAIN_RULES.md Rule 2/11) — 'cancelled'
+// is now its own distinct filter instead of being folded into 'archived'.
 export type QuickFilter =
-  | '' | 'active' | 'forming' | 'no_instructor'
-  | 'low_attendance' | 'low_capacity' | 'overloaded' | 'starts_soon' | 'archived'
+  | '' | 'draft' | 'open' | 'running' | 'completed' | 'archived' | 'cancelled'
+  | 'no_instructor' | 'low_attendance' | 'low_capacity' | 'overloaded' | 'starts_soon'
 
 export interface Filters {
   q:           string

@@ -121,10 +121,18 @@ export async function updateGroupModal(
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
 
-  const { data: existing } = await db.from('groups').select('branch_id').eq('id', id).single()
+  const { data: existing } = await db.from('groups').select('branch_id, status').eq('id', id).single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
   if (!isBranchAccessible(user, existing.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'No access to this branch.' } }
+  }
+  // Phase 1: Archived is the terminal, structurally read-only lifecycle stage
+  // (DOMAIN_RULES.md Rule 1). The 5 child tables are DB-trigger-enforced, but
+  // groups' own columns (name, notes, dates...) aren't — block here instead.
+  // Recovery is a separate, audited action (recoverCohortAction), not a
+  // side-effect of a general-purpose update.
+  if (existing.status === 'archived') {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'This cohort is Archived and permanently read-only. Use Recover Cohort first if changes are needed.' } }
   }
 
   const cleanUpdates = stripUndefined(buildGroupUpdate(rest))
@@ -162,10 +170,17 @@ export async function archiveGroupAction(groupId: string): Promise<ActionResult<
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
 
-  const { data: existing } = await db.from('groups').select('branch_id').eq('id', groupId).single()
+  const { data: existing } = await db.from('groups').select('branch_id, status').eq('id', groupId).single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
   if (!isBranchAccessible(user, existing.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'No access to this branch.' } }
+  }
+  // Phase 1: this is the legacy cancel/soft-delete path (DOMAIN_RULES.md Rule
+  // 2), unrelated to the real Cohort Archived lifecycle stage — never let it
+  // touch a cohort that's genuinely Archived (see archiveCohortAction in
+  // ./lifecycle.ts for the real, audited archive workflow).
+  if (existing.status === 'archived') {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'This cohort is Archived and permanently read-only. Use Recover Cohort first if changes are needed.' } }
   }
 
   await db.from('groups').update({ status: 'cancelled', deleted_at: new Date().toISOString() }).eq('id', groupId)
@@ -178,10 +193,17 @@ export async function deleteGroupAction(groupId: string): Promise<ActionResult<v
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
 
-  const { data: existing } = await db.from('groups').select('branch_id').eq('id', groupId).single()
+  const { data: existing } = await db.from('groups').select('branch_id, status').eq('id', groupId).single()
   if (!existing) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
   if (!isBranchAccessible(user, existing.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'No access to this branch.' } }
+  }
+  // Phase 1: the group_students update below would be rejected by the new
+  // Archived read-only trigger anyway (silently, since its error isn't
+  // checked) — refuse explicitly instead so this legacy path can never
+  // corrupt a genuinely Archived cohort's terminal state.
+  if (existing.status === 'archived') {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'This cohort is Archived and permanently read-only. Use Recover Cohort first if changes are needed.' } }
   }
 
   const now = new Date().toISOString()

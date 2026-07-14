@@ -237,6 +237,7 @@ export default function GroupsWorkspaceClient({
               key={selectedGroup.group_id}
               group={selectedGroup}
               isTL={isTL}
+              isSuperAdmin={isSuperAdmin}
               onEdit={openEdit}
               onDelete={handleGroupDeleted}
               onStudentsChanged={handleStudentsChanged}

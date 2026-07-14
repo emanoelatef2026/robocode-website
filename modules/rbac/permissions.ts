@@ -17,6 +17,9 @@ export const PERMISSIONS = {
   MANAGE_PARENTS:       'manage_parents',
   // Academic
   MANAGE_GROUPS:        'manage_groups',
+  ARCHIVE_COHORT:          'archive_cohort',
+  VIEW_ARCHIVED_COHORTS:   'view_archived_cohorts',
+  RECOVER_ARCHIVED_COHORT: 'recover_archived_cohort',
   MANAGE_COURSES:       'manage_courses',
   MANAGE_MODULES:       'manage_modules',
   MANAGE_LESSONS:       'manage_lessons',
@@ -173,6 +176,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<RoleName, PermissionName[]> = {
     PERMISSIONS.MANAGE_INSTRUCTORS,
     PERMISSIONS.MANAGE_PARENTS,
     PERMISSIONS.MANAGE_GROUPS,
+    PERMISSIONS.ARCHIVE_COHORT,
+    PERMISSIONS.VIEW_ARCHIVED_COHORTS,
     PERMISSIONS.MANAGE_COURSES,
     PERMISSIONS.MANAGE_MODULES,
     PERMISSIONS.MANAGE_LESSONS,
