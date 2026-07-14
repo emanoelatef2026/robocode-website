@@ -1,6 +1,8 @@
 # Domain Rules — Group / Cohort Academic Lifecycle
 
-**Status:** Phase 1 — Archived-stage read-only enforcement is live (migration
+**Status:** Phase 2 — the Graduation Wizard is live (migration
+`20260714130000_cohort_graduation_workflow.sql`); Phase 1's Archived-stage
+read-only enforcement remains live (migration
 `20260714120000_cohort_lifecycle_archive_enforcement.sql`)
 **Owns:** `groups`, `group_series`, `student_enrollments`, `certificates`, and everything
 that hangs off a group (`schedules`, `attendance_records`, `group_students`,
@@ -243,6 +245,58 @@ was tracked and fixed as **Priority 0** (closed, commit `1cd8c81`) — via
 ever been linked to a series yet; see `docs/GROUP_SERIES_RULES.md`) — sequenced
 after Phase 0's additive schema and before Phase 1's locking behavior below.
 
+## 14. Graduation — the workflow that activates `renewal_of` and `series_id`
+
+The Graduation Wizard (Phase 2) is the first and only workflow that populates
+`student_enrollments.renewal_of` and `groups.series_id` for real — both were
+dormant, empty columns since Phase 0. It runs against a **Completed** cohort
+and, in one atomic commit (`commit_cohort_graduation()`), creates the next
+cohort plus a new, `renewal_of`-chained `student_enrollments` row for every
+Continue/Repeat/Transfer student, without ever touching the graduating
+cohort's historical rows beyond `group_students.status`/`left_at`/`notes`
+(already permitted at the Completed stage by Rule 12) and the OLD
+`student_enrollments` row's own `status` column, which the commit transitions
+per decision (continue/graduate/repeat → `COMPLETED`, hold → `PAUSED`, drop →
+`DROPPED`, transfer → `TRANSFERRED`) so the old `ACTIVE` row stops colliding
+with the new one on `uq_student_enrollments_active_course`. No other column
+on the old enrollment row — `group_id`/`course_id`/dates/`renewal_of`/
+financial linkage — is ever rewritten.
+
+- **Idempotency**: `groups.graduated_at IS NOT NULL` is the stage guard — a
+  cohort can be graduated exactly once. `groups.graduated_to_group_id` /
+  `graduated_from_group_id` are a mirrored pointer pair linking the old and
+  new cohort. `groups.graduation_request_id` is a client-supplied replay
+  key: retrying the exact same commit (same `request_id`) after it already
+  succeeded returns the original result instead of erroring, while a
+  genuinely different request after `graduated_at` is set is still rejected.
+- **No financial account is ever created by this workflow.** A student who
+  continues, repeats, or transfers gets a new `student_enrollments` row with
+  no linked `student_financial_accounts` row — real pricing is set
+  separately via the existing Enrollment & Contract flow, exactly like any
+  other manually-added student without a contract yet.
+- **No course/instructor/schedule configuration happens automatically.** The
+  new cohort is always created bare (`status='forming'`, no `group_courses`/
+  `group_instructors`/`schedules` rows) — this is not conditional on
+  anything succeeding or failing, because nothing configuration-related is
+  ever attempted inside or immediately after the commit. The TL configures
+  it via the existing Edit Group flow, guided by a "Draft – Setup Required"
+  indicator.
+- **`cohort_graduation_decisions`** is an insert-only, per-student audit
+  trail (one row per student per graduation) — the complement to the single
+  `write_audit_log` row the commit also writes.
+- **`cohort_graduation_drafts`** supports saving and resuming wizard
+  progress before commit. One `in_progress` draft exists per **(cohort,
+  user)** pair — never shared or silently overwritten across users. If a
+  draft's underlying cohort gets graduated by a different draft/user while
+  it's still open, it's automatically marked `stale` on next access rather
+  than being allowed to walk into a doomed commit.
+- Transfer decisions (an existing student moving into an already-existing,
+  different cohort rather than the freshly created one) are the one case
+  where a new enrollment's target group is **not** the cohort this
+  graduation created — still subject to the same rule: the target cohort
+  must not be Archived, and the transfer is recorded via the same
+  `cohort_graduation_decisions` trail.
+
 ---
 
 ## Revision history
@@ -262,3 +316,22 @@ after Phase 0's additive schema and before Phase 1's locking behavior below.
   New permissions: `archive_cohort`, `view_archived_cohorts` (team_leader +
   super_admin), `recover_archived_cohort` (super_admin only). Priority 0
   (Rule 13) is now closed.
+- **2026-07-14** — Phase 2: the Graduation Wizard is live (Rule 14),
+  activating `renewal_of` and `series_id` for real for the first time.
+  `groups` gains `graduated_at`/`graduated_to_group_id`/
+  `graduated_from_group_id`/`graduation_request_id`; two new tables,
+  `cohort_graduation_decisions` (audit trail) and `cohort_graduation_drafts`
+  (resumable wizard state, one per cohort per user). New permission
+  `graduate_cohort` (team_leader + super_admin). Production acceptance QA for
+  this phase found and fixed two real, live-applied bugs (see
+  `docs/PHASE2_COMPLETION_REPORT.md` for full detail): (1)
+  `student_enrollments.renewal_of` did not actually exist on the live table —
+  migration `0054`'s `CREATE TABLE IF NOT EXISTS` had silently no-opped
+  against a differently-shaped pre-existing table — fixed by
+  `20260714131000_fix_missing_renewal_of_column.sql`; (2)
+  `commit_cohort_graduation()` never transitioned the OLD enrollment's
+  `status` away from `ACTIVE`, which would have broken every real
+  Continue/Repeat into the same course on the live
+  `uq_student_enrollments_active_course` constraint — fixed by
+  `20260714131500_fix_old_enrollment_status_transition.sql` (see the updated
+  Rule 14 text above). 66/66 acceptance QA checks pass after both fixes.

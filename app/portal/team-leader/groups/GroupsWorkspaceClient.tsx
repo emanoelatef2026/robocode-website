@@ -109,6 +109,14 @@ export default function GroupsWorkspaceClient({
     router.refresh()
   }
 
+  // Phase 2: Graduation Wizard committed — select the newly created (Draft)
+  // cohort so the TL lands directly on it.
+  function handleGraduationCommitted(newGroupId: string) {
+    setSelectedGroupId(newGroupId)
+    setRefreshKey(k => k + 1)
+    router.refresh()
+  }
+
   // Topbar buttons: Export Excel + New Group
   const { setAction } = useTopbarAction()
   useEffect(() => {
@@ -244,6 +252,7 @@ export default function GroupsWorkspaceClient({
               studentOptions={studentOptions}
               refreshKey={refreshKey}
               allGroups={groups}
+              onGraduationCommitted={handleGraduationCommitted}
             />
           ) : (
             <EmptyWorkspace />

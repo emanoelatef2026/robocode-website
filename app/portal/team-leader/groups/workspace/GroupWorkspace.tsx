@@ -28,6 +28,7 @@ import { GroupPerformanceTab } from './components/GroupPerformanceTab'
 import { QuickAddStudentModal } from './dialogs/QuickAddStudentModal'
 import { MoveGroupModal } from './dialogs/MoveGroupModal'
 import { BulkCertificatesModal } from './dialogs/BulkCertificatesModal'
+import { GraduationWizard } from './dialogs/graduation/GraduationWizard'
 import { buildStudentResult, mapToOpsRow } from './utils'
 import type { WorkspaceTab } from './types'
 
@@ -40,6 +41,7 @@ const TABS: { key: WorkspaceTab; label: (count: number) => string }[] = [
 
 export function GroupWorkspace({
   group, isTL, isSuperAdmin = false, onEdit, onDelete, onStudentsChanged, studentOptions, refreshKey, allGroups,
+  onGraduationCommitted,
 }: {
   group:             GroupOperationalRow
   isTL:              boolean
@@ -50,6 +52,8 @@ export function GroupWorkspace({
   studentOptions:    GroupStudentOption[]
   refreshKey:        number
   allGroups:         GroupOperationalRow[]
+  // Phase 2: Graduation Wizard committed — select the newly created cohort.
+  onGraduationCommitted?: (newGroupId: string) => void
 }) {
   const [tab, setTab]                           = useState<WorkspaceTab>('students')
   const [detailData, setDetailData]             = useState<GroupDetailData | null>(null)
@@ -64,6 +68,7 @@ export function GroupWorkspace({
   const [paymentStudent, setPaymentStudent]     = useState<GroupDetailStudent | null>(null)
   const [quickViewStudent, setQuickViewStudent] = useState<GroupDetailStudent | null>(null)
   const [bulkCertOpen, setBulkCertOpen]         = useState(false)
+  const [graduationOpen, setGraduationOpen]     = useState(false)
   const [, startT]                              = useTransition()
 
   // Phase 1: Cohort Lifecycle — Archive / Recover
@@ -183,6 +188,14 @@ export function GroupWorkspace({
         canRecover={isSuperAdmin && group.status === 'archived'}
         onArchive={openArchiveDialog}
         onRecover={() => { setRecoverError(null); setRecoverReason(''); setRecoverConfirm(true) }}
+        canGraduate={isTL && group.status === 'completed' && !group.graduated_at}
+        onGraduate={() => {
+          if (group.graduated_at && group.graduated_to_group_id) {
+            onGraduationCommitted?.(group.graduated_to_group_id)
+          } else {
+            setGraduationOpen(true)
+          }
+        }}
       />
 
       {/* Phase 1: Archived read-only banner */}
@@ -498,6 +511,18 @@ export function GroupWorkspace({
         onSuccess={() => {
           setBulkCertOpen(false)
           reloadDetail()
+        }}
+      />
+
+      {/* Graduation Wizard (Phase 2) */}
+      <GraduationWizard
+        isOpen={graduationOpen}
+        group={group}
+        onClose={() => setGraduationOpen(false)}
+        onSuccess={(newGroupId) => {
+          setGraduationOpen(false)
+          onGraduationCommitted?.(newGroupId)
+          onStudentsChanged() // reuses the existing router.refresh() plumbing
         }}
       />
 

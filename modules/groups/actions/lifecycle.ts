@@ -9,6 +9,7 @@
 import { revalidatePath }      from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
+import { computeCohortHealthWarnings } from './cohort-health'
 import type { ActionResult }   from '@/types/app'
 
 const GROUPS_PATH = '/portal/team-leader/groups'
@@ -48,70 +49,11 @@ export async function validateCohortArchival(groupId: string): Promise<CohortArc
     return { blockers: ['Cohort must be Completed before it can be Archived.'], warnings: [] }
   }
 
-  const warnings: string[] = []
-
-  const { data: groupCourses } = await db
-    .from('group_courses')
-    .select('id, course_id')
-    .eq('group_id', groupId)
-
-  const groupCourseIds = (groupCourses ?? []).map(gc => gc.id)
-
-  if (groupCourseIds.length) {
-    const { data: schedules } = await db
-      .from('schedules')
-      .select('id, status')
-      .in('group_course_id', groupCourseIds)
-
-    const unfinished = (schedules ?? []).filter(s => s.status !== 'completed' && s.status !== 'cancelled')
-    if (unfinished.length) {
-      warnings.push(`${unfinished.length} session(s) are not marked completed or cancelled.`)
-    }
-
-    const completedScheduleIds = (schedules ?? []).filter(s => s.status === 'completed').map(s => s.id)
-    if (completedScheduleIds.length) {
-      const { data: attendanceRows } = await db
-        .from('attendance_records')
-        .select('schedule_id')
-        .in('schedule_id', completedScheduleIds)
-      const withAttendance = new Set((attendanceRows ?? []).map(a => a.schedule_id))
-      const missing = completedScheduleIds.filter(id => !withAttendance.has(id))
-      if (missing.length) {
-        warnings.push(`${missing.length} completed session(s) have no attendance recorded.`)
-      }
-    }
-  }
-
-  const { data: financeAccounts } = await db
-    .from('student_financial_accounts')
-    .select('id, remaining_amount')
-    .eq('group_id', groupId)
-    .gt('remaining_amount', 0)
-
-  if (financeAccounts?.length) {
-    warnings.push(`${financeAccounts.length} student(s) have an outstanding balance for this cohort.`)
-  }
-
-  const { data: activeStudents } = await db
-    .from('group_students')
-    .select('student_id')
-    .eq('group_id', groupId)
-    .eq('status', 'active')
-
-  const courseIds = [...new Set((groupCourses ?? []).map(gc => gc.course_id).filter(Boolean))]
-  if (activeStudents?.length && courseIds.length) {
-    const studentIds = activeStudents.map(s => s.student_id)
-    const { data: certs } = await db
-      .from('certificates')
-      .select('student_id')
-      .in('student_id', studentIds)
-      .in('course_id', courseIds)
-    const withCert = new Set((certs ?? []).map(c => c.student_id))
-    const missingCert = studentIds.filter(id => !withCert.has(id))
-    if (missingCert.length) {
-      warnings.push(`${missingCert.length} student(s) have no certificate on file for this cohort's course.`)
-    }
-  }
+  // Shared with Phase 2's validateCohortGraduation (modules/groups/actions/graduation.ts)
+  // — see cohort-health.ts. Mapped to bare strings here to keep this
+  // function's external return shape (and the 18 Phase 1 tests asserting it)
+  // unchanged.
+  const warnings = (await computeCohortHealthWarnings(db, groupId)).map(w => w.message)
 
   return { blockers: [], warnings }
 }

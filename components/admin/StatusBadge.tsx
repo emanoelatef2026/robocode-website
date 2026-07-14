@@ -31,6 +31,9 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
   open:       { bg: "bg-[#EFF6FF]", text: "text-[#1D4ED8]", label: "Open",       dot: "bg-[#3B82F6]" },
   running:    { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Running",    dot: "bg-[#10B981]" },
   archived:   { bg: "bg-[#F1F5F9]", text: "text-[#64748B]", label: "Archived",   dot: "bg-[#64748B]" },
+  // Phase 2: a Draft cohort created by the Graduation Wizard, not yet given
+  // a course/instructor/schedule — see modules/groups/actions/graduation.ts.
+  setup_required: { bg: "bg-[#FFFBEB]", text: "text-[#B45309]", label: "Draft – Setup Required", dot: "bg-[#F59E0B]" },
   ongoing:    { bg: "bg-[#EFF6FF]", text: "text-[#1D4ED8]", label: "Ongoing",    dot: "bg-[#3B82F6]" },
   scheduled:  { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "Scheduled",  dot: "bg-[#94A3B8]" },
   cancelled:  { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]", label: "Cancelled",  dot: "bg-[#EF4444]" },

@@ -8,12 +8,19 @@ import { getCohortLifecycleStage } from '@/modules/groups/lifecycle-stage'
 export function StatusChip({
   group,
 }: {
-  group: { status: string; has_course?: boolean; has_instructor?: boolean }
+  group: { status: string; has_course?: boolean; has_instructor?: boolean; graduated_from_group_id?: string | null }
 }) {
   if (group.status === 'cancelled') {
     return <StatusBadge status="cancelled" dot />
   }
-  return <StatusBadge status={getCohortLifecycleStage(group)} dot />
+  const stage = getCohortLifecycleStage(group)
+  // Phase 2: a cohort born from graduation that's still Draft hasn't had its
+  // course/instructor/schedule configured yet — surface that distinctly so
+  // it's not confused with an ordinary from-scratch Draft.
+  if (stage === 'draft' && group.graduated_from_group_id) {
+    return <StatusBadge status="setup_required" dot />
+  }
+  return <StatusBadge status={stage} dot />
 }
 
 export function RiskBadge({ level }: { level: 'HIGH' | 'MEDIUM' | 'LOW' }) {

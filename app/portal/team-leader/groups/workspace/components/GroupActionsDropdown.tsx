@@ -4,6 +4,7 @@ import { useState } from 'react'
 export function GroupActionsDropdown({
   onRecordAttendance, onAddStudent, onEdit, onDelete, onIssueBulkCertificates,
   isArchived = false, canArchive = false, canRecover = false, onArchive, onRecover,
+  canGraduate = false, alreadyGraduated = false, onGraduate,
 }: {
   onRecordAttendance:        () => void
   onAddStudent:              () => void
@@ -18,6 +19,11 @@ export function GroupActionsDropdown({
   canRecover?: boolean
   onArchive?:  () => void
   onRecover?:  () => void
+  // Phase 2: Graduation Wizard — canGraduate is a client-side UX hint only;
+  // real enforcement is requirePermission('graduate_cohort', ...) server-side.
+  canGraduate?:      boolean
+  alreadyGraduated?: boolean
+  onGraduate?:       () => void
 }) {
   const [open, setOpen] = useState(false)
 
@@ -122,6 +128,21 @@ export function GroupActionsDropdown({
                         <path d="M4 3a2 2 0 00-2 2v1a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zM3 9v6a2 2 0 002 2h10a2 2 0 002-2V9H3zm5 2h4a1 1 0 010 2H8a1 1 0 010-2z" />
                       </svg>
                       Archive Cohort
+                    </button>
+                  </>
+                )}
+
+                {(canGraduate || alreadyGraduated) && onGraduate && (
+                  <>
+                    <div className="my-1 border-t border-[#F1F5F9]" />
+                    <button
+                      onClick={() => { setOpen(false); onGraduate() }}
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2 text-[12px] font-medium text-[#15803D] hover:bg-[#E7F8EE] transition"
+                    >
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
+                        <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0z" />
+                      </svg>
+                      {alreadyGraduated ? 'View Next Cohort →' : 'Start Graduation'}
                     </button>
                   </>
                 )}

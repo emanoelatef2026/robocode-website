@@ -57,6 +57,10 @@ export interface GroupOperationalRow {
   open_ended:            boolean
   // Phase XXXII: revenue share (0–100, default 100)
   robocode_share_percent: number
+  // Phase 2: Graduation Wizard lineage
+  graduated_at:            string | null
+  graduated_to_group_id:   string | null
+  graduated_from_group_id: string | null
 }
 
 export interface EnrolledStudentBasic {
@@ -97,6 +101,7 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
     .select(`
       id, branch_id, name, code, type, capacity, status,
       start_date, day_of_week, time, notes, completed_sessions, robocode_share_percent,
+      graduated_at, graduated_to_group_id, graduated_from_group_id,
       branches!groups_branch_id_fkey(name),
       group_instructors!group_instructors_group_id_fkey(
         instructor_id, role, from_session, to_session, allocation_status,
@@ -261,6 +266,9 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
       enrolled_students:      enrolledMap.get(g.id) ?? [],
       completed_sessions:     (g.completed_sessions as number) ?? 0,
       robocode_share_percent: Number(g.robocode_share_percent ?? 100),
+      graduated_at:            g.graduated_at ?? null,
+      graduated_to_group_id:   g.graduated_to_group_id ?? null,
+      graduated_from_group_id: g.graduated_from_group_id ?? null,
     }
   })
 }

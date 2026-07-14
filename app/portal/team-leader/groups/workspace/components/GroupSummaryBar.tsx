@@ -10,6 +10,7 @@ import { DAYS_FULL, fmt12, fmtDate } from '../utils'
 export function GroupSummaryBar({
   group, sessionsCompleted, isTL, onEdit, onDelete, onRecordAttendance, onAddStudent, onIssueBulkCertificates,
   canArchive = false, canRecover = false, onArchive, onRecover,
+  canGraduate = false, onGraduate,
 }: {
   group:                     GroupOperationalRow
   sessionsCompleted:         number
@@ -23,6 +24,9 @@ export function GroupSummaryBar({
   canRecover?: boolean
   onArchive?:  () => void
   onRecover?:  () => void
+  // Phase 2: Graduation Wizard
+  canGraduate?: boolean
+  onGraduate?:  () => void
 }) {
   const [infoOpen, setInfoOpen] = useState(false)
   const [popupPos, setPopupPos] = useState<{ top: number; left: number; width: number } | null>(null)
@@ -170,6 +174,9 @@ export function GroupSummaryBar({
               canRecover={canRecover}
               onArchive={onArchive}
               onRecover={onRecover}
+              canGraduate={canGraduate}
+              alreadyGraduated={!!group.graduated_at}
+              onGraduate={onGraduate}
             />
           )}
         </div>

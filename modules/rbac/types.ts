@@ -27,6 +27,7 @@ export type PermissionName =
   | 'archive_cohort'
   | 'view_archived_cohorts'
   | 'recover_archived_cohort'
+  | 'graduate_cohort'
   | 'manage_courses'
   | 'manage_modules'
   | 'manage_lessons'

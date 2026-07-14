@@ -1,9 +1,11 @@
 # Group Series & Lineage Model — Design Rationale
 
-**Status:** Phase 0 schema exists (`group_series` table, `groups.series_id`,
-`student_enrollments.renewal_of`); no workflow uses it yet. This document
-explains *why* the model looks the way it does, so future work builds on it
-correctly instead of re-deriving or contradicting these decisions.
+**Status:** Phase 0 built the schema (`group_series` table, `groups.series_id`,
+`student_enrollments.renewal_of`). As of Phase 2, the Graduation Wizard is the
+first (and still only) workflow that actually populates both columns — see
+`docs/DOMAIN_RULES.md` Rule 14. This document explains *why* the model looks
+the way it does, so future work builds on it correctly instead of
+re-deriving or contradicting these decisions.
 
 Related: [DOMAIN_RULES.md](DOMAIN_RULES.md) (business invariants — read that
 first for the *rules*; this document is about the *shape of the model* and why
@@ -129,10 +131,16 @@ described in `DOMAIN_RULES.md` Rule 1. Specifically:
   is just a pointer — archiving a semester's group never touches, relinks, or
   requires any change to the `group_series` row it points at.
 - `renewal_of` never rewrites the enrollment it points back to (Rule 5) — the
-  old enrollment, its financial account, and its attendance history stay
-  exactly as they were, permanently, under the old group. The chain is purely
-  additive: read backward through `renewal_of` to reconstruct a journey;
-  nothing about walking that chain forward ever mutates a past link.
+  old enrollment's `group_id`/`course_id`/dates/financial account/attendance
+  history stay exactly as they were, permanently, under the old group. The
+  one deliberate exception is the old enrollment's own `status` column, which
+  the Graduation Wizard transitions away from `ACTIVE` (to `COMPLETED`/
+  `PAUSED`/`DROPPED`/`TRANSFERRED` per decision, see `DOMAIN_RULES.md` Rule
+  14) so it stops colliding with the new `ACTIVE` row on
+  `uq_student_enrollments_active_course` — this is a status transition, not a
+  historical rewrite. The chain is otherwise purely additive: read backward
+  through `renewal_of` to reconstruct a journey; nothing about walking that
+  chain forward ever mutates a past link's substantive data.
 - Both mechanisms are additive-only by construction: a series or a renewal
   link can be *added* pointing at history, but nothing in this model ever
   requires editing a historical row to add a new one on top of it.
@@ -189,9 +197,11 @@ to know which series any given enrollment's group belonged to.
   as-is).
 - **A group is linked to a series by setting `groups.series_id` at creation
   time**, typically when "cloning" a finished semester's slot into a new one
-  for the next semester. Nothing today creates this link automatically — that
-  workflow is later-phase work ("Create Next Cohort"), not part of this
-  foundation.
+  for the next semester. **As of Phase 2**, the Graduation Wizard
+  (`commit_cohort_graduation()`, `modules/groups/actions/graduation.ts`) is
+  this workflow — Step 4 ("Next Cohort") prefills `series_id` from the
+  graduating cohort's own `series_id` if it was already set, and the TL may
+  set/change it before committing. No other code path creates this link.
 - **Don't add a uniqueness constraint on `group_series` beyond its primary
   key.** Two series rows with the same `branch_id`/`day_of_week`/`time` are
   not necessarily duplicates — e.g. a slot that moved rooms/time and a brand
