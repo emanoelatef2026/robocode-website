@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { resolvePrimaryActiveGroupId } from '@/modules/academic/enrollment-integrity'
 import type {
   SessionFeedbackAggregate,
   InstructorRatingSummary,
@@ -30,15 +31,7 @@ export async function getPendingFeedbackSessions(
   const db = createServiceClient()
 
   // Get active group's gc
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  const groupId = (gsRow as any)?.group_id ?? null
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
   if (!groupId) return []
 
   const { data: gcRow } = await db

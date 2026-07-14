@@ -5,6 +5,10 @@ import { createServiceClient }  from '@/lib/supabase/service'
 import { requirePortalRole }    from '@/modules/rbac/guards'
 import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import {
+  resolveGroupCourseId,
+  closeSameCourseGroupMemberships,
+} from '@/modules/academic/enrollment-integrity'
+import {
   createLeadSchema,
   updateLeadSchema,
   updateStatusSchema,
@@ -510,8 +514,16 @@ export async function assignLeadToGroup(
     .eq('group_id', group_id).eq('student_id', student_id).eq('status', 'active').maybeSingle()
 
   if (!existing) {
+    const courseId = await resolveGroupCourseId(db, group_id)
+    await closeSameCourseGroupMemberships(db, {
+      studentId:      student_id,
+      courseId,
+      excludeGroupId: group_id,
+      reason:         `Superseded by move to group ${group_id} (same course).`,
+    })
+
     const { error } = await db.from('group_students').insert({
-      group_id, student_id, status: 'active', enrollment_type: 'primary',
+      group_id, student_id, status: 'active', enrollment_type: 'primary', course_id: courseId,
     })
     if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
   }

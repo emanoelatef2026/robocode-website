@@ -5,6 +5,10 @@ import { requirePermission }        from '@/modules/rbac/guards'
 import { revalidatePath }           from 'next/cache'
 import { logTimelineEvent }         from '@/lib/timeline'
 import { _internalReconcileEnrollment } from '@/modules/attendance/reconciliation'
+import {
+  findActiveEnrollmentForCourse,
+  closeSameCourseGroupMemberships,
+} from '@/modules/academic/enrollment-integrity'
 import type {
   CreateEnrollmentInput,
   TransferEnrollmentInput,
@@ -59,6 +63,12 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
   let instructorName: string | null = null
   let gcId:           string | null = null
   let instructorId:   string | null = input.instructor_id ?? null
+  // Resolved course lineage — used both for the snapshot and for the
+  // same-course duplicate-enrollment guard below. input.course_id alone is
+  // not enough: when a group is given but course_id isn't explicitly passed,
+  // the course must be derived from the group's active group_courses row, or
+  // duplicate detection would silently never fire for group-based enrollments.
+  let resolvedCourseId: string | null = input.course_id ?? null
 
   const { data: branchRow } = await db
     .from('branches').select('name').eq('id', input.branch_id).single()
@@ -69,7 +79,7 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
       db.from('groups').select('name').eq('id', input.group_id).maybeSingle(),
       db.from('group_courses')
         .select(`
-          id, instructor_id,
+          id, course_id, instructor_id,
           courses!group_courses_course_id_fkey(title),
           instructors!group_courses_instructor_id_fkey(
             id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))
@@ -82,6 +92,7 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
 
     groupName = (groupRow as any)?.name ?? null
     gcId = (gcRow as any)?.id ?? null
+    if (!resolvedCourseId) resolvedCourseId = (gcRow as any)?.course_id ?? null
     if (!instructorId) instructorId = (gcRow as any)?.instructor_id ?? null
     const instrProf = (gcRow as any)?.instructors?.users?.profiles
     instructorName = instrProf
@@ -107,6 +118,14 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
       : null
   }
 
+  // ── 2. Duplicate guard — reuse an existing ACTIVE enrollment for this
+  // student+course rather than creating a second one (idempotent by design;
+  // does not depend on the DB constraint firing/racing to behave correctly).
+  const existingActive = await findActiveEnrollmentForCourse(db, input.student_id, resolvedCourseId)
+  if (existingActive) {
+    return _createFinanceForEnrollment(db, user, existingActive.id, input, net)
+  }
+
   // ── 3. Create student_enrollments (with snapshots) ─────────────────────────
   const { data: seRow, error: seErr } = await db
     .from('student_enrollments')
@@ -114,7 +133,7 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
       student_id:       input.student_id,
       branch_id:        input.branch_id,
       group_id:         input.group_id ?? null,
-      course_id:        input.course_id ?? null,
+      course_id:        resolvedCourseId,
       group_course_id:  gcId,
       instructor_id:    instructorId,
       start_date:       input.start_date,
@@ -144,17 +163,21 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
 
   if (seErr) {
     if (seErr.code === '23505') {
-      const { data: existing } = await db
-        .from('student_enrollments')
-        .select('id')
-        .eq('student_id', input.student_id)
-        .eq('status', 'ACTIVE')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle()
-      const enrollmentId = (existing as any)?.id as string | null
-      if (!enrollmentId) return { error: 'Duplicate enrollment — could not resolve existing record' }
-      return _createFinanceForEnrollment(db, user, enrollmentId, input, net)
+      // Race: another request created the same student+course (or
+      // student+group) enrollment between our check above and this insert.
+      // Re-resolve scoped the same way the proactive guard did, so we don't
+      // accidentally attach this request to an unrelated course's enrollment.
+      const raceExisting = await findActiveEnrollmentForCourse(db, input.student_id, resolvedCourseId)
+        ?? (input.group_id
+          ? (await db.from('student_enrollments')
+              .select('id')
+              .eq('student_id', input.student_id)
+              .eq('group_id', input.group_id)
+              .eq('status', 'ACTIVE')
+              .maybeSingle()).data as { id: string } | null
+          : null)
+      if (!raceExisting) return { error: 'Duplicate enrollment — could not resolve existing record' }
+      return _createFinanceForEnrollment(db, user, raceExisting.id, input, net)
     }
     return { error: seErr.message }
   }
@@ -352,7 +375,36 @@ export async function createEnrollment(input: CreateEnrollmentInput) {
   const startDate = input.start_date ?? new Date().toISOString().slice(0, 10)
   const net       = (input.total_amount ?? 0) - (input.discount_amount ?? 0)
 
-  // 1. Upsert group_students (keeps existing group management working)
+  // 1. Resolve group_course_id + course_id up front — course_id drives both
+  // the same-course-lineage guard below and the enrollment row itself.
+  let gcId = input.group_course_id ?? null
+  let courseId: string | null = null
+  {
+    const { data: gcRow } = await db
+      .from('group_courses')
+      .select('id, course_id, instructor_id')
+      .eq(gcId ? 'id' : 'group_id', gcId ?? input.group_id)
+      .eq('status', 'active')
+      .maybeSingle()
+    gcId = (gcRow as any)?.id ?? gcId
+    courseId = (gcRow as any)?.course_id ?? null
+    if (!input.instructor_id && (gcRow as any)?.instructor_id) {
+      input.instructor_id = (gcRow as any).instructor_id
+    }
+  }
+
+  // 2. Same-course-lineage guard: if this student already holds an active
+  // membership in a DIFFERENT group teaching the SAME course, that's a move
+  // (e.g. semester rollover), not a new concurrent enrollment — close it.
+  // Different-course memberships (the valid concurrent case) are untouched.
+  await closeSameCourseGroupMemberships(db, {
+    studentId:      input.student_id,
+    courseId,
+    excludeGroupId: input.group_id,
+    reason:         `Superseded by move to group ${input.group_id} (same course).`,
+  })
+
+  // 3. Upsert group_students (keeps existing group management working)
   const { data: gsData, error: gsErr } = await db
     .from('group_students')
     .upsert({
@@ -362,6 +414,7 @@ export async function createEnrollment(input: CreateEnrollmentInput) {
       status:          'active',
       joined_at:       startDate,
       notes:           input.notes ?? null,
+      course_id:       courseId,
     }, { onConflict: 'group_id,student_id' })
     .select('id')
     .single()
@@ -369,22 +422,7 @@ export async function createEnrollment(input: CreateEnrollmentInput) {
   if (gsErr) throw new Error(gsErr.message)
   const groupStudentId = (gsData as any).id as string
 
-  // 2. Resolve group_course_id if not provided
-  let gcId = input.group_course_id ?? null
-  if (!gcId) {
-    const { data: gcRow } = await db
-      .from('group_courses')
-      .select('id, instructor_id')
-      .eq('group_id', input.group_id)
-      .eq('status', 'active')
-      .maybeSingle()
-    gcId = (gcRow as any)?.id ?? null
-    if (!input.instructor_id && (gcRow as any)?.instructor_id) {
-      input.instructor_id = (gcRow as any).instructor_id
-    }
-  }
-
-  // 3. Get branch_id from group if not provided
+  // 4. Get branch_id from group if not provided
   let branchId = input.branch_id
   if (!branchId) {
     const { data: gRow } = await db
@@ -392,13 +430,21 @@ export async function createEnrollment(input: CreateEnrollmentInput) {
     branchId = (gRow as any)?.branch_id ?? input.branch_id
   }
 
-  // 4. Create student_enrollments row
+  // 5. Duplicate guard: reuse an existing ACTIVE enrollment for this
+  // student+course instead of creating a second one.
+  const existingActive = await findActiveEnrollmentForCourse(db, input.student_id, courseId)
+  if (existingActive) {
+    return { enrollmentId: existingActive.id, groupStudentId }
+  }
+
+  // 6. Create student_enrollments row
   const { data: seData, error: seErr } = await db
     .from('student_enrollments')
     .insert({
       student_id:      input.student_id,
       branch_id:       branchId,
       group_id:        input.group_id,
+      course_id:       courseId,
       group_course_id: gcId,
       instructor_id:   input.instructor_id ?? null,
       group_student_id: groupStudentId,
@@ -416,16 +462,17 @@ export async function createEnrollment(input: CreateEnrollmentInput) {
     .single()
 
   if (seErr) {
-    // If duplicate active enrollment: return the existing one
+    // If duplicate active enrollment: return the existing one (race safety net)
     if (seErr.code === '23505') {
-      const { data: existing } = await db
-        .from('student_enrollments')
-        .select('id')
-        .eq('student_id', input.student_id)
-        .eq('group_id', input.group_id)
-        .eq('status', 'ACTIVE')
-        .maybeSingle()
-      return { enrollmentId: (existing as any)?.id as string, groupStudentId }
+      const raceExisting = await findActiveEnrollmentForCourse(db, input.student_id, courseId) ?? (
+        (await db.from('student_enrollments')
+          .select('id')
+          .eq('student_id', input.student_id)
+          .eq('group_id', input.group_id)
+          .eq('status', 'ACTIVE')
+          .maybeSingle()).data as { id: string } | null
+      )
+      return { enrollmentId: (raceExisting as any)?.id as string, groupStudentId }
     }
     throw new Error(seErr.message)
   }
@@ -461,14 +508,16 @@ export async function transferEnrollment(input: TransferEnrollmentInput) {
 
   let newGcId = input.new_group_course_id ?? null
   let newInstructorId = input.new_instructor_id ?? null
-  if (!newGcId) {
+  let newCourseId: string | null = null
+  {
     const { data: gcRow } = await db
       .from('group_courses')
-      .select('id, instructor_id')
-      .eq('group_id', input.new_group_id)
+      .select('id, course_id, instructor_id')
+      .eq(newGcId ? 'id' : 'group_id', newGcId ?? input.new_group_id)
       .eq('status', 'active')
       .maybeSingle()
-    newGcId = (gcRow as any)?.id ?? null
+    newGcId = (gcRow as any)?.id ?? newGcId
+    newCourseId = (gcRow as any)?.course_id ?? null
     if (!newInstructorId) newInstructorId = (gcRow as any)?.instructor_id ?? null
   }
 
@@ -494,6 +543,7 @@ export async function transferEnrollment(input: TransferEnrollmentInput) {
       status:          'active',
       joined_at:       transferDate,
       notes:           `Transferred from group ${curr.group_id ?? '—'}. ${input.notes ?? ''}`.trim(),
+      course_id:       newCourseId,
     })
     .select('id')
     .single()
@@ -506,6 +556,7 @@ export async function transferEnrollment(input: TransferEnrollmentInput) {
       student_id:       curr.student_id,
       branch_id:        newBranchId,
       group_id:         input.new_group_id,
+      course_id:        newCourseId,
       group_course_id:  newGcId,
       instructor_id:    newInstructorId,
       group_student_id: newGroupStudentId,

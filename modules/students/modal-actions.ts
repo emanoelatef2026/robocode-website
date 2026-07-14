@@ -4,6 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
 import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
+import {
+  resolveGroupCourseId,
+  closeSameCourseGroupMemberships,
+} from '@/modules/academic/enrollment-integrity'
 import { z } from 'zod'
 import type { ActionResult } from '@/types/app'
 
@@ -128,12 +132,24 @@ async function applyGroupAssignments(
       if (count !== null && count >= (grp as any).capacity) continue
     }
 
+    // Same-course-lineage guard: close any OTHER active membership this
+    // student holds for the same course before adding them here.
+    // Different-course memberships (valid concurrent enrollment) untouched.
+    const courseId = await resolveGroupCourseId(db, groupId)
+    await closeSameCourseGroupMemberships(db, {
+      studentId,
+      courseId,
+      excludeGroupId: groupId,
+      reason:         `Superseded by move to group ${groupId} (same course).`,
+    })
+
     await db.from('group_students').insert({
       group_id:        groupId,
       student_id:      studentId,
       enrollment_type: 'primary',
       status:          'active',
       joined_at:       now,
+      course_id:       courseId,
     })
   }
 }

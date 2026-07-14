@@ -2,6 +2,7 @@ import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getLevelProgress } from '@/modules/gamification/xp-service'
 import { getStudentGroupRank, getStudentOfTheWeek } from '@/modules/gamification/queries'
+import { resolvePrimaryActiveGroupId } from '@/modules/academic/enrollment-integrity'
 import type {
   StudentEnrollment,
   StudentProgressStats,
@@ -46,15 +47,7 @@ export async function getStudentDashboardData(
   const studentName = [sp?.first_name, sp?.last_name].filter(Boolean).join(' ') || 'Student'
 
   // Active group
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  const groupId = (gsRow as any)?.group_id ?? null
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
 
   // ── Gamification data (fetched early — independent of group) ─────────────────
   const { data: gamRow } = await db
@@ -430,16 +423,7 @@ export async function getStudentEnrollment(userId: string): Promise<StudentEnrol
   if (!studentId) return null
 
   // Latest active group membership
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  const groupId = (gsRow as any)?.group_id ?? null
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
   if (!groupId) {
     return { student_id: studentId, group_id: null, group_name: null, course_title: null, instructor_name: null }
   }
@@ -504,16 +488,7 @@ export async function getStudentProgressStats(userId: string): Promise<StudentPr
   const studentId = await resolveStudentId(userId)
   if (!studentId) return null
 
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  const groupId = (gsRow as any)?.group_id ?? null
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
   if (!groupId) return { attendance_pct: null, assignment_pct: null, portfolio_pct: null, progress_pct: null }
 
   const { data: p } = await db
@@ -570,15 +545,7 @@ export async function getStudentTimeline(userId: string): Promise<TimelineEvent[
   const events: TimelineEvent[] = []
 
   // Resolve active group + gc for session numbering
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  const groupId = (gsRow as any)?.group_id ?? null
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
 
   const schedNumMap = new Map<string, number>()
   const topicMap    = new Map<string, string | null>()
@@ -697,15 +664,7 @@ export async function getStudentAttendanceHistory(userId: string): Promise<Stude
   const studentId = await resolveStudentId(userId)
   if (!studentId) return []
 
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  const groupId = (gsRow as any)?.group_id ?? null
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
   if (!groupId) return []
 
   // Fetch ALL group_courses (active AND inactive) — matches getGroupSchedules so
@@ -786,15 +745,7 @@ export async function getCertificateEligibility(userId: string): Promise<Certifi
   const studentId = await resolveStudentId(userId)
   if (!studentId) return null
 
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  const groupId = (gsRow as any)?.group_id ?? null
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
   if (!groupId) return null
 
   const [groupRes, gcRes] = await Promise.all([

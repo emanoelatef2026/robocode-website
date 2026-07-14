@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { resolvePrimaryActiveGroupId } from '@/modules/academic/enrollment-integrity'
 import type { StudentCourseProgress } from '@/modules/progress/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -137,16 +138,7 @@ export async function getChildEnrollment(
 
   const db = createServiceClient()
 
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  const groupId = (gsRow as any)?.group_id ?? null
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
   if (!groupId) {
     return { student_id: studentId, group_id: null, group_name: null, course_title: null, instructor_name: null }
   }
@@ -197,16 +189,7 @@ export async function getChildProgressStats(
 
   const db = createServiceClient()
 
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  const groupId = (gsRow as any)?.group_id ?? null
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
   if (!groupId) return { attendance_pct: null, assignment_pct: null, portfolio_pct: null, progress_pct: null }
 
   const { data: p } = await db
@@ -504,15 +487,7 @@ export async function getChildDashboardData(
   const studentName = [sp?.first_name, sp?.last_name].filter(Boolean).join(' ') || 'Student'
 
   // Active group
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  const groupId = (gsRow as any)?.group_id ?? null
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
 
   const empty: Omit<ChildDashboardData, 'student_name'> = {
     group_name: null, course_title: null, instructor_name: null,
@@ -802,15 +777,7 @@ export async function getChildSessionsProgress(
   const db = createServiceClient()
 
   // Prefer group-linked ACTIVE enrollment; FIFO fallback to any ACTIVE enrollment.
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-  const groupId = (gsRow as any)?.group_id ?? null
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
 
   let enrollmentRow: any = null
 

@@ -11,6 +11,11 @@ import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/sa
 import { syncGroupStatus } from './lifecycle'
 import { assignGroupCourseService } from './assignment-service'
 import { updateGroupCoursePlan } from './actions/db-ops'
+import {
+  resolveGroupCourseId,
+  closeSameCourseGroupMemberships,
+  findActiveEnrollmentForCourse,
+} from '@/modules/academic/enrollment-integrity'
 import type { ActionResult } from '@/types/app'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
@@ -232,12 +237,25 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
 
   const today = new Date().toISOString()
 
+  // Same-course-lineage guard: if the student already holds an active
+  // membership in a DIFFERENT group teaching the same course, that's a move
+  // (e.g. semester rollover) — close it. Different-course memberships (the
+  // valid concurrent case, e.g. Python + Robotics) are left untouched.
+  const courseId = await resolveGroupCourseId(db, group_id)
+  await closeSameCourseGroupMemberships(db, {
+    studentId:      student_id,
+    courseId,
+    excludeGroupId: group_id,
+    reason:         `Superseded by move to group ${group_id} (same course).`,
+  })
+
   const { data: gsRow, error } = await db.from('group_students').insert({
     group_id,
     student_id,
     enrollment_type,
     status:    'active',
     joined_at: today,
+    course_id: courseId,
   }).select('id').single()
 
   if (error) {
@@ -249,26 +267,32 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
 
   // ── Dual-write: create student_enrollments record (Sprint 41) ────────────
   // Best-effort — failures are non-fatal to keep backward compatibility.
+  // Idempotent: reuses an existing ACTIVE enrollment for this student+course
+  // instead of creating a duplicate ledger row.
   try {
-    const { data: gcRow } = await db
-      .from('group_courses')
-      .select('id, instructor_id')
-      .eq('group_id', group_id)
-      .eq('status', 'active')
-      .maybeSingle()
+    const existingActive = await findActiveEnrollmentForCourse(db, student_id, courseId)
+    if (!existingActive) {
+      const { data: gcRow } = await db
+        .from('group_courses')
+        .select('id, instructor_id')
+        .eq('group_id', group_id)
+        .eq('status', 'active')
+        .maybeSingle()
 
-    await db.from('student_enrollments').insert({
-      student_id,
-      branch_id:       group.branch_id,
-      group_id,
-      group_course_id: (gcRow as any)?.id   ?? null,
-      instructor_id:   (gcRow as any)?.instructor_id ?? null,
-      group_student_id: (gsRow as any).id,
-      start_date:      today.slice(0, 10),
-      status:          'ACTIVE',
-      enrollment_type,
-      created_by:      user.id,
-    })
+      await db.from('student_enrollments').insert({
+        student_id,
+        branch_id:       group.branch_id,
+        group_id,
+        course_id:       courseId,
+        group_course_id: (gcRow as any)?.id   ?? null,
+        instructor_id:   (gcRow as any)?.instructor_id ?? null,
+        group_student_id: (gsRow as any).id,
+        start_date:      today.slice(0, 10),
+        status:          'ACTIVE',
+        enrollment_type,
+        created_by:      user.id,
+      })
+    }
   } catch {
     // Non-fatal: enrollment record will be backfilled by migration if missed
   }
@@ -383,13 +407,27 @@ export async function bulkEnrollStudents(
   const enrolledIds: string[] = []
   const now = new Date().toISOString()
 
+  // Resolve the target group's course once — used by the same-course-lineage
+  // guard below for every student in this batch.
+  const courseId = await resolveGroupCourseId(db, groupId)
+
   for (const studentId of studentIds) {
+    // Close any OTHER active membership this student holds for the SAME
+    // course (a move/rollover). Different-course memberships are untouched.
+    await closeSameCourseGroupMemberships(db, {
+      studentId,
+      courseId,
+      excludeGroupId: groupId,
+      reason:         `Superseded by bulk move to group ${groupId} (same course).`,
+    })
+
     const { error } = await db.from('group_students').insert({
       group_id: groupId,
       student_id: studentId,
       enrollment_type: enrollmentType,
       status:    'active',
       joined_at: now,
+      course_id: courseId,
     })
     if (error) {
       skipped++

@@ -3,6 +3,10 @@
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
+import {
+  resolveGroupCourseId,
+  closeSameCourseGroupMemberships,
+} from '@/modules/academic/enrollment-integrity'
 import type { ActionResult } from '@/types/app'
 
 export async function assignStudentToGroup(
@@ -35,21 +39,33 @@ export async function assignStudentToGroup(
     .eq('group_id', groupId)
     .maybeSingle()
 
+  const courseId = await resolveGroupCourseId(db, groupId)
+
   if (existing) {
     if (existing.status === 'active') {
       return { success: false, error: { code: 'DUPLICATE', message: 'Student is already in this group.' } }
     }
-    // Re-activate
+    // Re-activate. Same-course-lineage guard first: close any OTHER active
+    // membership this student holds for the same course.
+    await closeSameCourseGroupMemberships(db, {
+      studentId, courseId, excludeGroupId: groupId,
+      reason: `Superseded by move to group ${groupId} (same course).`,
+    })
     await db.from('group_students')
-      .update({ status: 'active', left_at: null, joined_at: new Date().toISOString() })
+      .update({ status: 'active', left_at: null, joined_at: new Date().toISOString(), course_id: courseId })
       .eq('id', existing.id)
   } else {
+    await closeSameCourseGroupMemberships(db, {
+      studentId, courseId, excludeGroupId: groupId,
+      reason: `Superseded by move to group ${groupId} (same course).`,
+    })
     await db.from('group_students').insert({
       group_id:        groupId,
       student_id:      studentId,
       enrollment_type: 'primary',
       status:          'active',
       joined_at:       new Date().toISOString(),
+      course_id:       courseId,
     })
   }
 
