@@ -1,6 +1,7 @@
 'use server'
 
 import { createServiceClient } from '@/lib/supabase/service'
+import { requirePermission }   from '@/modules/rbac/guards'
 
 export interface GroupHistoryEntry {
   group_id:       string
@@ -13,6 +14,7 @@ export interface GroupHistoryEntry {
 }
 
 export async function getStudentGroupHistory(studentId: string): Promise<GroupHistoryEntry[]> {
+  await requirePermission('manage_students')
   const db = createServiceClient()
 
   // Fetch all group memberships for this student, including past ones

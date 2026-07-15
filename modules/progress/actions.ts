@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
+import { requireAuth }         from '@/modules/rbac/guards'
 import type { ActionResult } from '@/types/app'
 
 // Upserts one row in student_course_progress.
@@ -12,6 +13,7 @@ export async function calculateStudentProgress(
   semesterId: string,
   groupId:    string
 ): Promise<ActionResult<void>> {
+  await requireAuth()
   const db = createServiceClient()
 
   // ── 1. Resolve group_course_id ──────────────────────────────────────────────

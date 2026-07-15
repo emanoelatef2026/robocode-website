@@ -2,6 +2,7 @@
 
 import { createServiceClient } from '@/lib/supabase/service'
 import { getGroupSchedules }   from '../queries'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import type { RiskLevel }      from '@/modules/operational-engine'
 import type { GroupDetailData, GroupDetailSession, GroupDetailStudent, GroupDetailParentInfo, SessionAttendanceRecord } from './types'
 
@@ -37,7 +38,13 @@ interface ParentPortalRow {
 // ── Action ────────────────────────────────────────────────────────────────────
 
 export async function getGroupDetailDataAction(groupId: string): Promise<GroupDetailData> {
+  const user = await requirePermission('manage_groups')
   const db = createServiceClient()
+
+  const { data: groupRow } = await db.from('groups').select('branch_id').eq('id', groupId).single()
+  if (!groupRow || !isBranchAccessible(user, (groupRow as { branch_id: string | null }).branch_id)) {
+    return { sessions: [], students: [] }
+  }
 
   const [schedules, gsRes] = await Promise.all([
     getGroupSchedules(groupId),

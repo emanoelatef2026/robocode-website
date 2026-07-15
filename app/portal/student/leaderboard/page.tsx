@@ -1,6 +1,7 @@
 ﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getGroupLeaderboard } from '@/modules/gamification/queries'
+import { resolvePrimaryActiveGroupId } from '@/modules/academic/enrollment-integrity'
 import Link from 'next/link'
 
 export default async function StudentLeaderboardPage() {
@@ -24,17 +25,16 @@ export default async function StudentLeaderboardPage() {
     )
   }
 
-  const { data: gsRow } = await db
-    .from('group_students')
-    .select('group_id, groups!group_students_group_id_fkey(name)')
-    .eq('student_id', studentId)
-    .eq('status', 'active')
-    .order('joined_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  const groupId   = (gsRow as any)?.group_id   ?? null
-  const groupName = (gsRow as any)?.groups?.name ?? null
+  // Reuse the same resolver every other student-portal page uses (dashboard,
+  // attendance, certificate eligibility) so "your primary group" never
+  // disagrees from one page to the next. This previously re-implemented the
+  // lookup inline with the opposite sort direction (most-recently-joined
+  // instead of FIFO), which could show a different group here than on the
+  // rest of the portal for a student in 2+ concurrent groups.
+  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
+  const groupName = groupId
+    ? ((await db.from('groups').select('name').eq('id', groupId).maybeSingle()).data as any)?.name ?? null
+    : null
 
   if (!groupId) {
     return (

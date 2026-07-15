@@ -2,6 +2,7 @@
 
 import { createServiceClient } from '@/lib/supabase/service'
 import { getGroupPnLRows }      from '@/modules/finance/queries'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import type { BatchStudentRow, ExportServerResult } from './types'
 
 export async function fetchGroupsExportData(
@@ -12,11 +13,32 @@ export async function fetchGroupsExportData(
     return { pnlRows: [], students: [] }
   }
 
+  const user = await requirePermission('manage_groups')
+  // Caller-supplied branchIds are untrusted — only branches the user can actually access are honored.
+  const authorizedBranchIds = branchIds.filter(id => isBranchAccessible(user, id))
+  if (!authorizedBranchIds.length) {
+    return { pnlRows: [], students: [] }
+  }
+
   const db = createServiceClient()
 
+  // Caller-supplied groupIds are also untrusted — only honor the ones that
+  // actually belong to an authorized branch.
+  const { data: groupBranchRows } = await db
+    .from('groups')
+    .select('id, branch_id')
+    .in('id', groupIds)
+  const authorizedGroupIds = ((groupBranchRows ?? []) as { id: string; branch_id: string | null }[])
+    .filter(g => isBranchAccessible(user, g.branch_id))
+    .map(g => g.id)
+
+  if (!authorizedGroupIds.length) {
+    return { pnlRows: [], students: [] }
+  }
+
   // 1. Financial data — reuse canonical PnL query, then filter to visible groups
-  const allPnl     = await getGroupPnLRows(branchIds)
-  const visibleSet = new Set(groupIds)
+  const allPnl     = await getGroupPnLRows(authorizedBranchIds)
+  const visibleSet = new Set(authorizedGroupIds)
   const pnlRows    = allPnl.filter(r => visibleSet.has(r.group_id))
 
   // 2. All active students across the visible groups
@@ -32,7 +54,7 @@ export async function fetchGroupsExportData(
         )
       )
     `)
-    .in('group_id', groupIds)
+    .in('group_id', authorizedGroupIds)
     .eq('status', 'active')
     .order('joined_at')
 
@@ -48,7 +70,7 @@ export async function fetchGroupsExportData(
     // Per-group attendance score (same source as single-group detail view)
     db.from('student_course_progress')
       .select('student_id, group_id, attendance_score')
-      .in('group_id', groupIds)
+      .in('group_id', authorizedGroupIds)
       .in('student_id', studentIds)
       .eq('status', 'active'),
 

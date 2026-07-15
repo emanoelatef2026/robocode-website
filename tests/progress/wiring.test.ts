@@ -14,6 +14,7 @@ vi.mock('@/lib/supabase/service', () => ({
 vi.mock('@/modules/rbac/guards', () => ({
   requirePermission:    vi.fn().mockResolvedValue({ id: 'user-1', role: 'instructor' }),
   requireAuth:          vi.fn().mockResolvedValue({ id: 'user-2' }),
+  requirePortalRole:    vi.fn().mockResolvedValue({ id: 'user-2', role: 'student' }),
   isBranchAccessible:   vi.fn().mockReturnValue(true),
 }))
 

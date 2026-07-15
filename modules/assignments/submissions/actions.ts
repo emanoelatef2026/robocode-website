@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission, requireAuth } from '@/modules/rbac/guards'
+import { requirePermission, requirePortalRole, isBranchAccessible } from '@/modules/rbac/guards'
 import { resolveProgressFromSubmission, resolveProgressFromAssignment } from '@/modules/progress/resolve'
 import { safeRecalcProgress } from '@/modules/progress/safe-recalc'
 import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
@@ -47,9 +47,9 @@ export async function gradeSubmission(
 
   const d = parsed.data
 
-  // ── Group-level scope enforcement for instructors ────────────────────────────
-  // super_admin and team_leader can grade any submission.
-  // Instructors may only grade submissions belonging to students in their groups.
+  // ── Group/branch-level scope enforcement ──────────────────────────────────────
+  // super_admin can grade any submission. Instructors may only grade submissions
+  // belonging to students in their own groups; team_leaders are branch-scoped.
   if (user.globalRole === 'instructor') {
     const { data: sub } = await db
       .from('submissions')
@@ -92,6 +92,32 @@ export async function gradeSubmission(
       }
     } else {
       return { success: false, error: { code: 'FORBIDDEN', message: 'You have no assigned groups.' } }
+    }
+  } else if (user.globalRole === 'team_leader') {
+    // TLs are branch-scoped everywhere else in the codebase (isBranchAccessible) —
+    // grading must not be the one place a TL can reach across branches.
+    const { data: sub } = await db
+      .from('submissions')
+      .select('student_id')
+      .eq('id', d.submission_id)
+      .single()
+
+    if (!sub) {
+      return { success: false, error: { code: 'NOT_FOUND', message: 'Submission not found.' } }
+    }
+
+    const { data: gs } = await db
+      .from('group_students')
+      .select('groups!group_students_group_id_fkey(branch_id)')
+      .eq('student_id', (sub as any).student_id)
+      .eq('status', 'active')
+      .limit(1)
+      .maybeSingle()
+
+    const branchId = (gs as any)?.groups?.branch_id ?? null
+
+    if (!isBranchAccessible(user, branchId)) {
+      return { success: false, error: { code: 'FORBIDDEN', message: 'No access to this branch.' } }
     }
   }
   // ─────────────────────────────────────────────────────────────────────────────
@@ -183,7 +209,7 @@ export async function submitAssignment(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<{ submission_id: string }>> {
-  const user = await requireAuth()
+  const user = await requirePortalRole('student')
   const db   = createServiceClient()
 
   const raw = {

@@ -1,6 +1,7 @@
 'use server'
 
 import { createServiceClient } from '@/lib/supabase/service'
+import { requirePermission }   from '@/modules/rbac/guards'
 import type { StudentAttendanceHistoryRecord } from './types'
 
 // Flat row — enrichment done via separate queries to avoid PostgREST nested-FK issues
@@ -13,6 +14,7 @@ interface AttendanceRow {
 export async function getStudentAttendanceHistoryAction(
   studentId: string,
 ): Promise<StudentAttendanceHistoryRecord[]> {
+  await requirePermission('manage_attendance')
   const db = createServiceClient()
 
   // Use a flat query to avoid broken nested-FK paths that PostgREST rejects

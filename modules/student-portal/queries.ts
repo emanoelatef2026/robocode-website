@@ -2,7 +2,7 @@ import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getLevelProgress } from '@/modules/gamification/xp-service'
 import { getStudentGroupRank, getStudentOfTheWeek } from '@/modules/gamification/queries'
-import { resolvePrimaryActiveGroupId } from '@/modules/academic/enrollment-integrity'
+import { resolvePrimaryActiveGroupId, resolveActiveGroupIds } from '@/modules/academic/enrollment-integrity'
 import type {
   StudentEnrollment,
   StudentProgressStats,
@@ -46,8 +46,13 @@ export async function getStudentDashboardData(
   const sp          = (studentRow as any)?.users?.profiles
   const studentName = [sp?.first_name, sp?.last_name].filter(Boolean).join(' ') || 'Student'
 
-  // Active group
-  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
+  // Active group — groupId is the "primary" group used for header display
+  // (name/course/instructor labels can't show 2+ courses without a UI
+  // change); activeGroupIds is every concurrently active group and drives
+  // every count/stat below so a student in 2+ courses sees a true combined
+  // total instead of just one course's numbers.
+  const groupId        = await resolvePrimaryActiveGroupId(db, studentId)
+  const activeGroupIds = await resolveActiveGroupIds(db, studentId)
 
   // ── Gamification data (fetched early — independent of group) ─────────────────
   const { data: gamRow } = await db
@@ -103,70 +108,70 @@ export async function getStudentDashboardData(
   // visible.  We still prefer an active non-placeholder course for display purposes.
   const [groupRes, gcListRes] = await Promise.all([
     db.from('groups').select('name, day_of_week, time').eq('id', groupId).maybeSingle(),
-    db.from('group_courses')
-      .select('id, status, instructor_id, course_id, courses!group_courses_course_id_fkey(title)')
-      .eq('group_id', groupId)
-      .order('created_at', { ascending: false }),
+    activeGroupIds.length > 0
+      ? db.from('group_courses')
+          .select('id, group_id, status, instructor_id, course_id, courses!group_courses_course_id_fkey(title)')
+          .in('group_id', activeGroupIds)
+          .order('created_at', { ascending: false })
+      : Promise.resolve({ data: [] as any[] }),
   ])
 
-  const gcList   = (gcListRes.data ?? []) as any[]
-  const allGcIds = gcList.map((gc: any) => gc.id as string)
+  // gcList spans every active group's courses (used below for stat aggregation).
+  // primaryGcList is scoped to just the header group, so the displayed
+  // course/instructor name stays consistent with the displayed group name.
+  const gcList        = (gcListRes.data ?? []) as any[]
+  const allGcIds       = gcList.map((gc: any) => gc.id as string)
+  const primaryGcList = gcList.filter((gc: any) => gc.group_id === groupId)
   // For display: prefer active + real course, then active placeholder, then any real, then any
   const primaryGc =
-    gcList.find((gc: any) => gc.status === 'active' && gc.courses?.title && gc.courses.title !== 'General Sessions') ??
-    gcList.find((gc: any) => gc.status === 'active') ??
-    gcList.find((gc: any) => gc.courses?.title && gc.courses.title !== 'General Sessions') ??
-    gcList[0] ?? null
+    primaryGcList.find((gc: any) => gc.status === 'active' && gc.courses?.title && gc.courses.title !== 'General Sessions') ??
+    primaryGcList.find((gc: any) => gc.status === 'active') ??
+    primaryGcList.find((gc: any) => gc.courses?.title && gc.courses.title !== 'General Sessions') ??
+    primaryGcList[0] ?? null
   const courseTitle  = primaryGc?.courses?.title ?? null
   const instrId      = primaryGc?.instructor_id  ?? null
 
   // ── Enrollment-scoped session progress ───────────────────────────────────────
-  // Use the student's purchased enrollment, NOT group.total_sessions.
-  // Prefer enrollment linked to this group; fall back to any ACTIVE enrollment (FIFO).
-  let enrollmentId:        string | null = null
+  // Use the student's purchased enrollment(s), NOT group.total_sessions.
+  // Summed across every concurrently ACTIVE enrollment — a student in 2
+  // courses at once has 2 session packages, and showing only one understates
+  // their real remaining balance (the single-enrollment version of this code
+  // was the root of the "primary course only" dashboard mismatch).
+  let enrollmentId:        string | null = null   // primary enrollment id, kept for API back-compat
   let enrolledSessions     = 0
   let consumedSessions     = 0
   let remainingSessions    = 0
-  let enrollmentStartDate: string | null = null
+  let enrollmentStartDate: string | null = null    // floor used to exclude pre-enrollment sessions below
 
   {
-    const { data: enrRow } = await db
+    const { data: enrRows } = await db
       .from('student_enrollments')
-      .select('id, enrolled_sessions, consumed_sessions, remaining_sessions, start_date')
+      .select('id, group_id, enrolled_sessions, consumed_sessions, remaining_sessions, start_date')
       .eq('student_id', studentId)
-      .eq('group_id', groupId)
       .eq('status', 'ACTIVE')
       .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle()
 
-    const e = (enrRow as any) ?? null
-    if (e) {
-      enrollmentId         = e.id
-      enrolledSessions     = Number(e.enrolled_sessions  ?? 0)
-      consumedSessions     = Number(e.consumed_sessions  ?? 0)
-      remainingSessions    = Number(e.remaining_sessions ?? 0)
-      enrollmentStartDate  = e.start_date ?? null
-    } else {
-      // Fallback: any ACTIVE enrollment for this student
-      const { data: fallbackRow } = await db
-        .from('student_enrollments')
-        .select('id, enrolled_sessions, consumed_sessions, remaining_sessions, start_date')
-        .eq('student_id', studentId)
-        .eq('status', 'ACTIVE')
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle()
-
-      const f = (fallbackRow as any) ?? null
-      if (f) {
-        enrollmentId         = f.id
-        enrolledSessions     = Number(f.enrolled_sessions  ?? 0)
-        consumedSessions     = Number(f.consumed_sessions  ?? 0)
-        remainingSessions    = Number(f.remaining_sessions ?? 0)
-        enrollmentStartDate  = f.start_date ?? null
-      }
+    const rows = (enrRows ?? []) as any[]
+    for (const e of rows) {
+      enrolledSessions  += Number(e.enrolled_sessions  ?? 0)
+      consumedSessions  += Number(e.consumed_sessions  ?? 0)
+      remainingSessions += Number(e.remaining_sessions ?? 0)
     }
+
+    // Primary enrollment for id/back-compat: the one linked to the header
+    // group, else the earliest ACTIVE one (FIFO, same tiebreak as
+    // resolvePrimaryActiveGroupId).
+    const primaryEnrollment = rows.find(e => e.group_id === groupId) ?? rows[0] ?? null
+    enrollmentId = primaryEnrollment?.id ?? null
+
+    // Use the EARLIEST start_date across all active enrollments as the floor
+    // for the schedule query below, not just the primary enrollment's — using
+    // a later course's start_date as a global floor would wrongly exclude an
+    // earlier-joined course's legitimate sessions.
+    const startDates = rows.map(e => e.start_date).filter(Boolean) as string[]
+    enrollmentStartDate = startDates.length
+      ? startDates.reduce((min, d) => (d < min ? d : min))
+      : null
   }
 
   // Instructor name — try group_courses.instructor_id first, then group_instructors
@@ -249,11 +254,12 @@ export async function getStudentDashboardData(
   const dashAssignIds = new Set<string>()
 
   // Path A: module-linked (for legacy groups with course_modules)
-  // gc is already declared above from gcRes.data
-  const dashCourseId = primaryGc?.course_id as string | undefined
-  if (dashCourseId) {
+  // Spans every active group's course, not just the header group's, so a
+  // second concurrent legacy course's module-linked assignments still count.
+  const dashCourseIds = [...new Set(gcList.map((gc: any) => gc.course_id).filter(Boolean))] as string[]
+  if (dashCourseIds.length > 0) {
     const { data: modRows } = await db
-      .from('course_modules').select('id').eq('course_id', dashCourseId).is('deleted_at', null)
+      .from('course_modules').select('id').in('course_id', dashCourseIds).is('deleted_at', null)
     const modIds = (modRows ?? []).map((m: any) => m.id as string)
     if (modIds.length > 0) {
       const { data: lesRows } = await db
@@ -337,14 +343,23 @@ export async function getStudentDashboardData(
     portfolioReviewed = reviewedRes.count ?? 0
   }
 
-  // Overall from student_course_progress
-  const { data: progressRow } = await db
-    .from('student_course_progress')
-    .select('completion_percentage')
-    .eq('student_id', studentId)
-    .eq('group_id', groupId)
-    .maybeSingle()
-  const overallPct = (progressRow as any)?.completion_percentage ?? null
+  // Overall from student_course_progress — averaged across every active
+  // group's progress row, not just the header group's, so the number
+  // reflects all of the student's concurrent courses.
+  let overallPct: number | null = null
+  if (activeGroupIds.length > 0) {
+    const { data: progressRows } = await db
+      .from('student_course_progress')
+      .select('completion_percentage')
+      .eq('student_id', studentId)
+      .in('group_id', activeGroupIds)
+    const pcts = ((progressRows ?? []) as any[])
+      .map(r => r.completion_percentage)
+      .filter((v): v is number => v != null)
+    if (pcts.length > 0) {
+      overallPct = Math.round((pcts.reduce((s, v) => s + Number(v), 0) / pcts.length) * 100) / 100
+    }
+  }
 
   // Recent feedback (public only)
   const { data: feedbackRows } = await db
@@ -544,19 +559,20 @@ export async function getStudentTimeline(userId: string): Promise<TimelineEvent[
 
   const events: TimelineEvent[] = []
 
-  // Resolve active group + gc for session numbering
-  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
+  // Resolve every active group, not just one, so a concurrently-enrolled
+  // second course's sessions appear in the timeline too.
+  const activeGroupIds = await resolveActiveGroupIds(db, studentId)
 
   const schedNumMap = new Map<string, number>()
   const topicMap    = new Map<string, string | null>()
 
-  if (groupId) {
+  if (activeGroupIds.length > 0) {
     // Use ALL group_courses (active AND inactive) so sessions from replaced/inactive
     // courses appear in the timeline — mirrors getGroupSchedules behavior.
     const { data: gcRows } = await db
       .from('group_courses')
       .select('id')
-      .eq('group_id', groupId)
+      .in('group_id', activeGroupIds)
     const allGcIds = (gcRows ?? []).map((r: any) => r.id as string)
 
     if (allGcIds.length > 0) {
@@ -664,15 +680,17 @@ export async function getStudentAttendanceHistory(userId: string): Promise<Stude
   const studentId = await resolveStudentId(userId)
   if (!studentId) return []
 
-  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
-  if (!groupId) return []
+  // Union across every concurrently active group, not just one — a student
+  // in 2 courses at once has session history in both.
+  const activeGroupIds = await resolveActiveGroupIds(db, studentId)
+  if (activeGroupIds.length === 0) return []
 
   // Fetch ALL group_courses (active AND inactive) — matches getGroupSchedules so
   // sessions recorded under a replaced/inactive course are included.
   const { data: gcRows } = await db
     .from('group_courses')
     .select('id')
-    .eq('group_id', groupId)
+    .in('group_id', activeGroupIds)
   const allGcIds = (gcRows ?? []).map((r: any) => r.id as string)
   if (allGcIds.length === 0) return []
 
@@ -740,71 +758,56 @@ export async function getStudentAttendanceHistory(userId: string): Promise<Stude
 
 // ─── Certificate eligibility ──────────────────────────────────────────────────
 
-export async function getCertificateEligibility(userId: string): Promise<CertificateEligibility | null> {
+// Returns one eligibility entry per active course — a student in 2 concurrent
+// courses gets 2 independent eligibility checks (certificates are inherently
+// per-course), not one that hides the second course entirely.
+export async function getCertificateEligibility(userId: string): Promise<CertificateEligibility[]> {
   const db        = createServiceClient()
   const studentId = await resolveStudentId(userId)
-  if (!studentId) return null
+  if (!studentId) return []
 
-  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
-  if (!groupId) return null
+  const activeGroupIds = await resolveActiveGroupIds(db, studentId)
+  if (activeGroupIds.length === 0) return []
 
-  const [groupRes, gcRes] = await Promise.all([
-    db.from('groups').select('name').eq('id', groupId).maybeSingle(),
+  const [groupsRes, gcRes, enrRes] = await Promise.all([
+    db.from('groups').select('id, name').in('id', activeGroupIds),
     db.from('group_courses')
-      .select('id, courses!group_courses_course_id_fkey(title)')
-      .eq('group_id', groupId)
-      .eq('status', 'active')
-      .limit(1)
-      .maybeSingle(),
+      .select('id, group_id, courses!group_courses_course_id_fkey(title)')
+      .in('group_id', activeGroupIds)
+      .eq('status', 'active'),
+    db.from('student_enrollments')
+      .select('group_id, enrolled_sessions, consumed_sessions, remaining_sessions')
+      .eq('student_id', studentId)
+      .in('group_id', activeGroupIds)
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: true }),
   ])
 
-  // Active enrollment — prefer group-linked, fallback to any ACTIVE (FIFO)
-  let enrolledSessions  = 0
-  let consumedSessions  = 0
-  let remainingSessions = 0
+  const groupNameById = new Map(((groupsRes.data ?? []) as any[]).map(g => [g.id as string, g.name as string | null]))
 
-  {
-    const { data: enrRow } = await db
-      .from('student_enrollments')
-      .select('enrolled_sessions, consumed_sessions, remaining_sessions')
-      .eq('student_id', studentId)
-      .eq('group_id', groupId)
-      .eq('status', 'ACTIVE')
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle()
+  const gcByGroup = new Map<string, any>()
+  for (const gc of (gcRes.data ?? []) as any[]) {
+    if (!gcByGroup.has(gc.group_id)) gcByGroup.set(gc.group_id, gc) // first active course per group
+  }
 
-    const e = (enrRow as any) ?? null
-    if (e) {
-      enrolledSessions  = Number(e.enrolled_sessions  ?? 0)
-      consumedSessions  = Number(e.consumed_sessions  ?? 0)
-      remainingSessions = Number(e.remaining_sessions ?? 0)
-    } else {
-      const { data: fallbackRow } = await db
-        .from('student_enrollments')
-        .select('enrolled_sessions, consumed_sessions, remaining_sessions')
-        .eq('student_id', studentId)
-        .eq('status', 'ACTIVE')
-        .order('created_at', { ascending: true })
-        .limit(1)
-        .maybeSingle()
-      const f = (fallbackRow as any) ?? null
-      if (f) {
-        enrolledSessions  = Number(f.enrolled_sessions  ?? 0)
-        consumedSessions  = Number(f.consumed_sessions  ?? 0)
-        remainingSessions = Number(f.remaining_sessions ?? 0)
-      }
+  const enrollByGroup = new Map<string, any>()
+  for (const e of (enrRes.data ?? []) as any[]) {
+    if (!enrollByGroup.has(e.group_id)) enrollByGroup.set(e.group_id, e) // FIFO first per group
+  }
+
+  return activeGroupIds.map((groupId): CertificateEligibility => {
+    const e = enrollByGroup.get(groupId)
+    const enrolledSessions  = Number(e?.enrolled_sessions  ?? 0)
+    const consumedSessions  = Number(e?.consumed_sessions  ?? 0)
+    const remainingSessions = Number(e?.remaining_sessions ?? 0)
+
+    return {
+      is_eligible:        enrolledSessions > 0 && consumedSessions >= enrolledSessions,
+      consumed_sessions:  consumedSessions,
+      enrolled_sessions:  enrolledSessions,
+      sessions_remaining: remainingSessions,
+      group_name:         groupNameById.get(groupId) ?? null,
+      course_title:       gcByGroup.get(groupId)?.courses?.title ?? null,
     }
-  }
-
-  const isEligible = enrolledSessions > 0 && consumedSessions >= enrolledSessions
-
-  return {
-    is_eligible:        isEligible,
-    consumed_sessions:  consumedSessions,
-    enrolled_sessions:  enrolledSessions,
-    sessions_remaining: remainingSessions,
-    group_name:         (groupRes.data as any)?.name ?? null,
-    course_title:       (gcRes.data as any)?.courses?.title ?? null,
-  }
+  })
 }

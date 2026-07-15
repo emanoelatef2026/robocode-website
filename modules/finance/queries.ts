@@ -812,8 +812,35 @@ export async function getBrokenPromises(branchIds?: string[]) {
 }
 
 // ── Parent: own child's finance ────────────────────────────────────────────────
+//
+// A student may hold multiple concurrent financial accounts — one per
+// enrollment_id, per the 0054 schema-reconciliation + sprint1 migrations —
+// so this returns one entry per account, not a single row. `null` means the
+// caller is denied (not linked, or can_view_financials is off); `[]` means
+// the link is valid but the student genuinely has no financial account yet.
+// Callers must distinguish the two rather than showing one "no account"
+// message for both (the prior single-account version conflated them).
 
-export async function getParentChildFinance(parentUserId: string, studentId: string) {
+export interface ParentFinanceAccountView {
+  enrollment_id: string | null
+  account: {
+    id:               string
+    total_amount:     number
+    discount_amount:  number
+    net_amount:       number
+    paid_amount:      number
+    remaining_amount: number
+    status:           string
+    next_due_date:    string | null
+  }
+  installments: any[]
+  payments:     any[]
+}
+
+export async function getParentChildFinance(
+  parentUserId: string,
+  studentId:    string
+): Promise<ParentFinanceAccountView[] | null> {
   const db = createServiceClient()
 
   // Verify the calling user IS a parent for this student (both parent_id AND student_id)
@@ -834,32 +861,51 @@ export async function getParentChildFinance(parentUserId: string, studentId: str
 
   if (!link || !(link as any).can_view_financials) return null
 
-  const { data: account } = await db
+  const { data: accounts } = await db
     .from('student_financial_accounts')
     .select('*')
     .eq('student_id', studentId)
-    .maybeSingle()
+    .order('created_at', { ascending: false })
 
-  if (!account) return null
+  const accountRows = (accounts ?? []) as any[]
+  if (!accountRows.length) return []
+
+  const accountIds = accountRows.map(a => a.id as string)
 
   const [installRes, paymentRes] = await Promise.all([
-    db.from('finance_installments').select('*').eq('account_id', (account as any).id).order('installment_number'),
-    db.from('finance_payments').select('amount, payment_date, payment_method, reference_number').eq('account_id', (account as any).id).order('payment_date', { ascending: false }),
+    db.from('finance_installments').select('*').in('account_id', accountIds).order('installment_number'),
+    db.from('finance_payments').select('amount, payment_date, payment_method, reference_number, account_id').in('account_id', accountIds).order('payment_date', { ascending: false }),
   ])
 
-  return {
-    account: {
-      total_amount:     Number((account as any).total_amount),
-      discount_amount:  Number((account as any).discount_amount),
-      net_amount:       Number((account as any).net_amount),
-      paid_amount:      Number((account as any).paid_amount),
-      remaining_amount: Number((account as any).remaining_amount),
-      status:           (account as any).status as string,
-      next_due_date:    (account as any).next_due_date as string | null,
-    },
-    installments: (installRes.data ?? []) as any[],
-    payments:     (paymentRes.data ?? []) as any[],
+  const installByAccount = new Map<string, any[]>()
+  for (const row of (installRes.data ?? []) as any[]) {
+    const list = installByAccount.get(row.account_id) ?? []
+    list.push(row)
+    installByAccount.set(row.account_id, list)
   }
+
+  const paymentByAccount = new Map<string, any[]>()
+  for (const row of (paymentRes.data ?? []) as any[]) {
+    const list = paymentByAccount.get(row.account_id) ?? []
+    list.push(row)
+    paymentByAccount.set(row.account_id, list)
+  }
+
+  return accountRows.map((account): ParentFinanceAccountView => ({
+    enrollment_id: account.enrollment_id ?? null,
+    account: {
+      id:               account.id,
+      total_amount:     Number(account.total_amount),
+      discount_amount:  Number(account.discount_amount),
+      net_amount:       Number(account.net_amount),
+      paid_amount:      Number(account.paid_amount),
+      remaining_amount: Number(account.remaining_amount),
+      status:           account.status as string,
+      next_due_date:    account.next_due_date as string | null,
+    },
+    installments: installByAccount.get(account.id) ?? [],
+    payments:     paymentByAccount.get(account.id) ?? [],
+  }))
 }
 
 // ── Student Operations Center — enrollment-centric main list ──────────────────

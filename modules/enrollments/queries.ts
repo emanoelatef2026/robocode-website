@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient }    from '@/lib/supabase/service'
+import { verifyParentChild }      from '@/modules/parents/parent-portal-queries'
 import type {
   StudentEnrollment,
   EnrollmentListItem,
@@ -7,10 +8,17 @@ import type {
 } from './types'
 
 // ── List enrollments for a student ───────────────────────────────────────────
+// Ownership is enforced here (not left to the caller) — this had no internal
+// check before and was safe only because its one caller happened to
+// pre-validate the id; a future caller that didn't would have been a
+// straightforward IDOR.
 
 export async function listStudentEnrollments(
-  studentId: string
+  parentUserId: string,
+  studentId:    string
 ): Promise<EnrollmentListItem[]> {
+  if (!(await verifyParentChild(parentUserId, studentId))) return []
+
   const db = createServiceClient()
 
   const { data, error } = await db

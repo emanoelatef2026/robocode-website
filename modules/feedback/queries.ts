@@ -1,6 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
-import { resolvePrimaryActiveGroupId } from '@/modules/academic/enrollment-integrity'
+import { resolveActiveGroupIds } from '@/modules/academic/enrollment-integrity'
 import type {
   SessionFeedbackAggregate,
   InstructorRatingSummary,
@@ -30,26 +30,28 @@ export async function getPendingFeedbackSessions(
 ): Promise<Array<{ schedule_id: string; group_name: string; topic: string | null; scheduled_at: string }>> {
   const db = createServiceClient()
 
-  // Get active group's gc
-  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
-  if (!groupId) return []
+  // Every concurrently active group, not just one — a pending-feedback
+  // session in a second concurrent course must still surface here.
+  const activeGroupIds = await resolveActiveGroupIds(db, studentId)
+  if (activeGroupIds.length === 0) return []
 
-  const { data: gcRow } = await db
+  const { data: gcRows } = await db
     .from('group_courses')
-    .select('id')
-    .eq('group_id', groupId)
+    .select('id, group_id')
+    .in('group_id', activeGroupIds)
     .eq('status', 'active')
-    .limit(1)
-    .maybeSingle()
-  const gcId = (gcRow as any)?.id ?? null
-  if (!gcId) return []
+  const gcRowsData = (gcRows ?? []) as { id: string; group_id: string }[]
+  if (gcRowsData.length === 0) return []
+
+  const gcIds        = gcRowsData.map(gc => gc.id)
+  const groupIdByGc  = new Map(gcRowsData.map(gc => [gc.id, gc.group_id]))
 
   // Recently completed sessions
   const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
   const { data: schedRows } = await db
     .from('schedules')
-    .select('id, scheduled_at')
-    .eq('group_course_id', gcId)
+    .select('id, scheduled_at, group_course_id')
+    .in('group_course_id', gcIds)
     .eq('status', 'completed')
     .gte('scheduled_at', cutoff)
     .order('scheduled_at', { ascending: false })
@@ -73,15 +75,16 @@ export async function getPendingFeedbackSessions(
     .from('schedules').select('id, topic').in('id', schedIds)
   for (const r of enrichRows ?? []) topicMap.set((r as any).id, (r as any).topic ?? null)
 
-  // Get group name
-  const { data: groupRow } = await db.from('groups').select('name').eq('id', groupId).maybeSingle()
-  const groupName = (groupRow as any)?.name ?? ''
+  // Group names for every surfaced group
+  const groupIds = [...new Set(gcRowsData.map(gc => gc.group_id))]
+  const { data: groupRows } = await db.from('groups').select('id, name').in('id', groupIds)
+  const groupNameById = new Map(((groupRows ?? []) as any[]).map(g => [g.id as string, g.name as string]))
 
   return schedRows
     .filter((s: any) => !submittedIds.has(s.id))
     .map((s: any) => ({
       schedule_id:  s.id,
-      group_name:   groupName,
+      group_name:   groupNameById.get(groupIdByGc.get(s.group_course_id) ?? '') ?? '',
       topic:        topicMap.get(s.id) ?? null,
       scheduled_at: s.scheduled_at,
     }))

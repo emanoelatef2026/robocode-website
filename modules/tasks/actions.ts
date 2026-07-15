@@ -1,6 +1,6 @@
 'use server'
 import { createServiceClient } from '@/lib/supabase/service'
-import { getCurrentUser }      from '@/modules/rbac/guards'
+import { getCurrentUser, requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { logTimelineEvent }    from '@/lib/timeline'
 import type { CreateTaskInput, UpdateTaskInput, TaskStatus } from './types'
 
@@ -49,7 +49,13 @@ export async function createTask(input: CreateTaskInput): Promise<{ id: string }
 // ── Update task status ────────────────────────────────────────────────────────
 
 export async function updateTask(id: string, input: UpdateTaskInput): Promise<void> {
+  const user = await requirePermission('manage_students')
   const db = createServiceClient()
+
+  const { data: existing } = await db.from('operational_tasks').select('branch_id').eq('id', id).single()
+  if (!existing || !isBranchAccessible(user, (existing as { branch_id: string | null }).branch_id)) {
+    throw new Error('No access to this task.')
+  }
 
   const update: Record<string, unknown> = {}
   if (input.status    !== undefined) update.status     = input.status
@@ -104,7 +110,14 @@ export async function completeTask(id: string, notes?: string): Promise<void> {
 // ── Dismiss task ──────────────────────────────────────────────────────────────
 
 export async function dismissTask(id: string, reason?: string): Promise<void> {
+  const user = await requirePermission('manage_students')
   const db = createServiceClient()
+
+  const { data: existing } = await db.from('operational_tasks').select('branch_id').eq('id', id).single()
+  if (!existing || !isBranchAccessible(user, (existing as { branch_id: string | null }).branch_id)) {
+    throw new Error('No access to this task.')
+  }
+
   await db
     .from('operational_tasks')
     .update({
@@ -121,6 +134,7 @@ export async function dismissTask(id: string, reason?: string): Promise<void> {
 
 export async function bulkCreateTasks(inputs: CreateTaskInput[]): Promise<void> {
   if (!inputs.length) return
+  await requirePermission('manage_students')
   const db = createServiceClient()
 
   for (const input of inputs) {

@@ -130,3 +130,26 @@ export async function resolvePrimaryActiveGroupId(
     .maybeSingle()
   return (data as any)?.group_id ?? null
 }
+
+/**
+ * Resolves ALL active group IDs for a student — the multi-course-correct
+ * counterpart to resolvePrimaryActiveGroupId. Use this for any call site that
+ * should reflect every concurrently-active course (dashboard aggregation,
+ * attendance history, certificate eligibility, timeline, feedback prompts)
+ * rather than silently picking one and hiding the rest. Same FIFO ordering
+ * as resolvePrimaryActiveGroupId — resolveActiveGroupIds(...)[0] is always
+ * equal to resolvePrimaryActiveGroupId(...) for a given student.
+ */
+export async function resolveActiveGroupIds(
+  db: Db,
+  studentId: string
+): Promise<string[]> {
+  const { data } = await db
+    .from('group_students')
+    .select('group_id')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .order('joined_at', { ascending: true })
+    .order('id',        { ascending: true })
+  return ((data ?? []) as { group_id: string }[]).map(r => r.group_id)
+}

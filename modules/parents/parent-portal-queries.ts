@@ -1,6 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
-import { resolvePrimaryActiveGroupId } from '@/modules/academic/enrollment-integrity'
+import { resolvePrimaryActiveGroupId, resolveActiveGroupIds } from '@/modules/academic/enrollment-integrity'
 import type { StudentCourseProgress } from '@/modules/progress/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -229,6 +229,12 @@ export async function getChildAttendance(
     `)
     .eq('student_id', studentId)
     .order('recorded_at', { ascending: false })
+    // Was unbounded — grew linearly with account age. This computes an
+    // all-time summary (attendance_pct etc.), so a small cap like the
+    // 50-row "recent activity" siblings in this file would silently make
+    // the percentage wrong for any long-tenured student; 500 is a safety
+    // ceiling, not a "recent N" window.
+    .limit(500)
 
   // Only show attendance from academically consuming (completed) sessions.
   // Cancelled / postponed sessions are invisible to parents.
@@ -548,13 +554,26 @@ export async function getChildDashboardData(
     }
   }
 
-  // Progress from student_course_progress
-  const { data: progressRow } = await db
-    .from('student_course_progress')
-    .select('attendance_score, assignment_score')
-    .eq('student_id', studentId)
-    .eq('group_id', groupId)
-    .maybeSingle()
+  // Progress from student_course_progress — averaged across every active
+  // group, not just the header group, so the stat tiles match the
+  // multi-course-aware Enrollment Contracts section rendered on the same
+  // page instead of contradicting it (both used to independently resolve
+  // "the" group and could disagree for a family with 2+ active courses).
+  const activeGroupIds = await resolveActiveGroupIds(db, studentId)
+  let avgAttendanceScore: number | null = null
+  let avgAssignmentScore: number | null = null
+  if (activeGroupIds.length > 0) {
+    const { data: progressRows } = await db
+      .from('student_course_progress')
+      .select('attendance_score, assignment_score')
+      .eq('student_id', studentId)
+      .in('group_id', activeGroupIds)
+    const rows = (progressRows ?? []) as { attendance_score: number | null; assignment_score: number | null }[]
+    const attScores = rows.map(r => r.attendance_score).filter((v): v is number => v != null)
+    const asgScores = rows.map(r => r.assignment_score).filter((v): v is number => v != null)
+    if (attScores.length) avgAttendanceScore = Math.round((attScores.reduce((s, v) => s + v, 0) / attScores.length) * 100) / 100
+    if (asgScores.length) avgAssignmentScore = Math.round((asgScores.reduce((s, v) => s + v, 0) / asgScores.length) * 100) / 100
+  }
 
   // Portfolio count
   let portfolioCount = 0
@@ -650,8 +669,8 @@ export async function getChildDashboardData(
     group_name:         gRow?.name ?? null,
     course_title:       courseTitle,
     instructor_name:    instructorName,
-    attendance_pct:     (progressRow as any)?.attendance_score ?? null,
-    assignment_pct:     (progressRow as any)?.assignment_score ?? null,
+    attendance_pct:     avgAttendanceScore,
+    assignment_pct:     avgAssignmentScore,
     portfolio_count:    portfolioCount,
     certificate_count:  certificateCount,
     completed_sessions: completedSessions,
@@ -776,41 +795,23 @@ export async function getChildSessionsProgress(
 
   const db = createServiceClient()
 
-  // Prefer group-linked ACTIVE enrollment; FIFO fallback to any ACTIVE enrollment.
-  const groupId = await resolvePrimaryActiveGroupId(db, studentId)
+  // Summed across every concurrently ACTIVE enrollment — this is the number
+  // actually rendered on the parent dashboard (app/portal/parent/page.tsx),
+  // so a family with 2 active courses was previously shown only one course's
+  // session package here even though the dashboard billed itself as the
+  // family's overall progress.
+  const { data: enrollRows } = await db
+    .from('student_enrollments')
+    .select('enrolled_sessions, consumed_sessions')
+    .eq('student_id', studentId)
+    .eq('status', 'ACTIVE')
 
-  let enrollmentRow: any = null
-
-  if (groupId) {
-    const { data } = await db
-      .from('student_enrollments')
-      .select('enrolled_sessions, consumed_sessions')
-      .eq('student_id', studentId)
-      .eq('group_id', groupId)
-      .eq('status', 'ACTIVE')
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle()
-    enrollmentRow = data
-  }
-
-  if (!enrollmentRow) {
-    const { data } = await db
-      .from('student_enrollments')
-      .select('enrolled_sessions, consumed_sessions')
-      .eq('student_id', studentId)
-      .eq('status', 'ACTIVE')
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle()
-    enrollmentRow = data
-  }
-
-  if (!enrollmentRow) return { completed_sessions: 0, total_sessions: 0 }
+  const rows = (enrollRows ?? []) as { enrolled_sessions: number | null; consumed_sessions: number | null }[]
+  if (!rows.length) return { completed_sessions: 0, total_sessions: 0 }
 
   return {
-    completed_sessions: enrollmentRow.consumed_sessions  ?? 0,
-    total_sessions:     enrollmentRow.enrolled_sessions  ?? 0,
+    completed_sessions: rows.reduce((sum, r) => sum + (r.consumed_sessions ?? 0), 0),
+    total_sessions:     rows.reduce((sum, r) => sum + (r.enrolled_sessions ?? 0), 0),
   }
 }
 
