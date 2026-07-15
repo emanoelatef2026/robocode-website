@@ -1,10 +1,18 @@
 ﻿import { requirePortalRole }                    from '@/modules/rbac/guards'
-import { getParentChildren, getChildDashboardData, getChildEnrollmentContracts } from '@/modules/parents/parent-portal-queries'
-import { getChildSessionsProgress }             from '@/modules/parents/parent-portal-queries'
+import {
+  getParentChildren, getChildDashboardData, getChildEnrollmentContracts,
+  getChildSessionsProgress, getChildrenOverview, getChildLearningCards,
+  getChildEvaluations, getChildCompetitions, getChildNotes,
+} from '@/modules/parents/parent-portal-queries'
+import { getChildPortfolioDetail }              from '@/modules/portfolio/queries'
 import { getPendingFeedbackMilestone }           from '@/modules/parent-feedback/queries'
+import { EVALUATION_CRITERION_LABELS }           from '@/modules/student-evaluations/types'
 import Link                                      from 'next/link'
 import ChildSelector                             from '@/components/portal/parent/ChildSelector'
 import NoChildrenLinked                          from '@/components/portal/parent/NoChildrenLinked'
+import ChildOverviewCard                         from '@/components/portal/parent/ChildOverviewCard'
+import LearningCard                              from '@/components/portal/student/LearningCard'
+import SectionPreviewCard                        from '@/components/portal/student/SectionPreviewCard'
 
 function fmtMoney(n: number) {
   return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
@@ -37,15 +45,6 @@ function ActivityIcon({ type }: { type: string }) {
   return <span className={`${base} bg-[#F3F4F6] text-[#6B7280]`}>•</span>
 }
 
-function ProgressBar({ value, color = 'bg-[#FF8A1F]' }: { value: number; color?: string }) {
-  const pct = Math.min(100, Math.max(0, value))
-  return (
-    <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-[#F1F5F9]">
-      <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
-    </div>
-  )
-}
-
 const DAY_LABELS: Record<string, string> = {
   sunday: 'Sun', monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed',
   thursday: 'Thu', friday: 'Fri', saturday: 'Sat',
@@ -64,10 +63,16 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
   const studentId = child ?? children[0].student_id
   const selected  = children.find(c => c.student_id === studentId) ?? children[0]
 
-  const [dashboard, sessions, contracts] = await Promise.all([
+  const [dashboard, sessions, contracts, childrenOverview, learningCards, evaluations, competitions, notes, portfolio] = await Promise.all([
     getChildDashboardData(user.id, selected.student_id),
     getChildSessionsProgress(user.id, selected.student_id),
     getChildEnrollmentContracts(user.id, selected.student_id),
+    getChildrenOverview(user.id),
+    getChildLearningCards(user.id, selected.student_id),
+    getChildEvaluations(user.id, selected.student_id),
+    getChildCompetitions(user.id, selected.student_id),
+    getChildNotes(user.id, selected.student_id),
+    getChildPortfolioDetail(user.id, selected.student_id),
   ])
 
   const pendingMilestone = dashboard
@@ -75,9 +80,9 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
     : null
 
   const childHref  = (path: string) => `${path}?child=${selected.student_id}`
-  const completedS = sessions?.completed_sessions ?? 0
-  const totalS     = sessions?.total_sessions     ?? 0
-  const courseProgress = totalS > 0 ? Math.round((completedS / totalS) * 100) : 0
+  const latestEvaluation = evaluations[0] ?? null
+  const latestCompetition = competitions[0] ?? null
+  const latestNote = notes[0] ?? null
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -88,6 +93,16 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
         selectedId={selected.student_id}
         hrefFor={(id) => `/portal/parent?child=${id}`}
       />
+
+      {/* ── Children Overview — one card per linked child, at a glance ─── */}
+      <div>
+        <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">
+          {childrenOverview.length === 1 ? 'Your Child' : 'Your Children'}
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {childrenOverview.map(c => <ChildOverviewCard key={c.student_id} data={c} />)}
+        </div>
+      </div>
 
       {/* Feedback prompt */}
       {pendingMilestone && (
@@ -114,17 +129,15 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
       <div className="rounded-xl border border-[#E2E8F0] bg-linear-to-br from-[#0B1F3A] to-[#1a3460] p-5 text-white">
         <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">Student</p>
         <h1 className="mt-1 text-2xl font-bold">{selected.student_name}</h1>
-        <div className="mt-3 grid grid-cols-3 gap-3">
-          {[
-            { label: 'Group',      value: dashboard?.group_name      ?? '—' },
-            { label: 'Course',     value: dashboard?.course_title    ?? '—' },
-            { label: 'Instructor', value: dashboard?.instructor_name ?? '—' },
-          ].map(({ label, value }) => (
-            <div key={label} className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-white/40">{label}</p>
-              <p className="mt-0.5 truncate text-sm font-medium text-white/90 leading-tight" title={value}>{value}</p>
-            </div>
-          ))}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/90">
+            📚 {learningCards.length} active {learningCards.length === 1 ? 'course' : 'courses'}
+          </span>
+          {selected.branch_name && (
+            <span className="rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/90">
+              {selected.branch_name}
+            </span>
+          )}
         </div>
       </div>
 
@@ -147,6 +160,77 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
             )}
           </Link>
         ))}
+      </div>
+
+      {/* ── Current Learning — one card per active enrollment, never assumes
+             a single course. Reuses the exact Student Workspace LearningCard. */}
+      {learningCards.length > 0 && (
+        <div>
+          <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Current Learning</p>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {learningCards.map(card => (
+              <LearningCard
+                key={card.group_id}
+                data={card}
+                basePath="/portal/parent"
+                childId={selected.student_id}
+                hideContinueLearning
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Your child's story — evaluations, competitions, notes, journey ─ */}
+      <div>
+        <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">{selected.student_name}&apos;s Story</p>
+        <div className="grid gap-2.5 sm:grid-cols-2">
+          <SectionPreviewCard
+            icon="📊" iconBg="bg-blue-50" title="Evaluations"
+            count={evaluations.length} countLabel="records"
+            hasItems={!!latestEvaluation}
+            preview={latestEvaluation ? `${EVALUATION_CRITERION_LABELS[latestEvaluation.criterion]}${latestEvaluation.rating != null ? ` · ${latestEvaluation.rating}★` : ''}` : undefined}
+            emptyText="No evaluations shared yet."
+            href={childHref('/portal/parent/evaluations')}
+          />
+          <SectionPreviewCard
+            icon="🎖️" iconBg="bg-purple-50" title="Competitions"
+            count={competitions.length} countLabel="entries"
+            hasItems={!!latestCompetition}
+            preview={latestCompetition ? `${latestCompetition.competition_name} (${latestCompetition.year})` : undefined}
+            emptyText="No competition history yet."
+            href={childHref('/portal/parent/competitions')}
+          />
+          <SectionPreviewCard
+            icon="📌" iconBg="bg-amber-50" title="Notes from Academy"
+            count={notes.length} countLabel="notes"
+            hasItems={!!latestNote}
+            preview={latestNote?.content}
+            emptyText="No notes shared yet."
+            href={childHref('/portal/parent/notes')}
+          />
+          <SectionPreviewCard
+            icon="🕘" iconBg="bg-slate-100" title="Learning Journey"
+            hasItems={true}
+            preview="Every milestone, in one timeline."
+            emptyText="No activity yet."
+            href={childHref('/portal/parent/journey')}
+          />
+          <SectionPreviewCard
+            icon="📜" iconBg="bg-orange-50" title="Certificates"
+            count={dashboard?.certificate_count ?? 0} countLabel="earned"
+            hasItems={(dashboard?.certificate_count ?? 0) > 0}
+            emptyText="Certificates are issued after course completion."
+            href={childHref('/portal/parent/certificates')}
+          />
+          <SectionPreviewCard
+            icon="🖼" iconBg="bg-indigo-50" title="Portfolio"
+            count={portfolio?.projects.length ?? 0} countLabel="projects"
+            hasItems={(portfolio?.projects.length ?? 0) > 0}
+            emptyText="No portfolio projects yet."
+            href={childHref('/portal/parent/portfolio')}
+          />
+        </div>
       </div>
 
       {/* ── Enrollment Contracts (contract-centric view) ──────────────── */}
@@ -255,21 +339,6 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
           </div>
         )
       })()}
-
-      {/* Course progress */}
-      <div className="ds-card p-5">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold text-[#0B1F3A]">Course Progress</p>
-          <span className="text-sm font-bold text-[#0B1F3A]">{courseProgress}%</span>
-        </div>
-        <ProgressBar
-          value={courseProgress}
-          color={courseProgress >= 75 ? 'bg-[#10B981]' : courseProgress >= 50 ? 'bg-yellow-500' : 'bg-[#FF8A1F]'}
-        />
-        <p className="mt-2 text-[12px] text-[#64748B]">
-          {completedS} consumed · {Math.max(0, totalS - completedS)} remaining · {totalS} enrolled sessions
-        </p>
-      </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
 

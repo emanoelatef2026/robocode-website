@@ -56,6 +56,27 @@ const I = {
       <path fillRule="evenodd" d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 0 1-.814 1.686.75.75 0 0 0 .44 1.223ZM8.25 10.875a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25ZM10.875 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875-1.125a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Z" clipRule="evenodd" />
     </svg>
   ),
+  evaluations: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path d="M11.25 5.337c0-.355-.186-.676-.401-.959a1.647 1.647 0 0 1-.349-1.003c0-1.036 1.007-1.875 2.25-1.875s2.25.84 2.25 1.875c0 .369-.128.713-.349 1.003-.215.283-.401.604-.401.959 0 .332.278.598.61.578 1.91-.114 3.79-.342 5.632-.676a.75.75 0 0 1 .878.645 49.17 49.17 0 0 1 .376 5.452.657.657 0 0 1-.66.664c-.354 0-.657-.271-.72-.618a44.16 44.16 0 0 0-.31-1.4c-.087-.351-.483-.51-.806-.334a48.36 48.36 0 0 1-3.919 1.898.75.75 0 0 1-.983-.83A47.42 47.42 0 0 0 15.75 5.5" />
+      <path fillRule="evenodd" d="M3.75 12a.75.75 0 0 1 .75.75v6.75h15v-6.75a.75.75 0 0 1 1.5 0V19.5a1.5 1.5 0 0 1-1.5 1.5H4.5a1.5 1.5 0 0 1-1.5-1.5v-6.75a.75.75 0 0 1 .75-.75Z" clipRule="evenodd" />
+    </svg>
+  ),
+  competitions: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
+    </svg>
+  ),
+  notes: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-6.75a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clipRule="evenodd" />
+    </svg>
+  ),
+  journey: (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
+      <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clipRule="evenodd" />
+    </svg>
+  ),
   more: (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
       <path fillRule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
@@ -73,8 +94,12 @@ const PRIMARY = [
 ] as const
 
 const MORE_ITEMS = [
+  { label: "Evaluations",  href: "/portal/parent/evaluations",   icon: I.evaluations  },
+  { label: "Competitions", href: "/portal/parent/competitions",  icon: I.competitions },
+  { label: "Notes",        href: "/portal/parent/notes",         icon: I.notes        },
   { label: "Portfolio",    href: "/portal/parent/portfolio",     icon: I.portfolio    },
   { label: "Certificates", href: "/portal/parent/certificates",  icon: I.certificates },
+  { label: "Journey",      href: "/portal/parent/journey",       icon: I.journey      },
   { label: "History",      href: "/portal/parent/semesters",     icon: I.history      },
   { label: "Finance",      href: "/portal/parent/finance",       icon: I.finance      },
   { label: "Feedback",     href: "/portal/parent/feedback",      icon: I.feedback     },

@@ -32,12 +32,18 @@ async function notifyNoteAudience(studentId: string, noteId: string, visibility:
   }
 }
 
-function logNoteTimelineEvent(studentId: string, content: string, createdBy: string, visibility: NoteVisibility): void {
+function logNoteTimelineEvent(studentId: string, _content: string, createdBy: string, visibility: NoteVisibility): void {
   if (PRIVATE_VISIBILITIES.includes(visibility)) return // never leak an author-private note into the timeline
+  // The timeline event carries no note content — student_timeline_events has no
+  // visibility column, so a STUDENT_INSTRUCTION-only or PARENT_EVALUATION-only
+  // note's text must never appear in the `notes` field here, since both the
+  // student's Journey and the parent's Journey read from this same shared
+  // table without re-checking per-note visibility. The actual content stays
+  // properly gated behind getStudentNotes()/canViewerReadNote() on the
+  // dedicated Notes page.
   void logTimelineEvent({
     student_id: studentId,
     event_type: 'NOTE_ADDED',
-    notes:      content.slice(0, 140),
     created_by: createdBy,
   }).catch(() => {})
 }

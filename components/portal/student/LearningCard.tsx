@@ -37,7 +37,18 @@ const CERT_STATUS_CONFIG = {
   in_progress: { label: 'In progress',          cls: 'bg-[#F1F5F9] text-[#64748B]' },
 } as const
 
-export default function LearningCard({ data }: { data: LearningCardData }) {
+interface Props {
+  data:              LearningCardData
+  /** Portal path prefix for quick-action links. Defaults to the student portal. */
+  basePath?:         string
+  /** Appended as `?child=<id>` to every quick-action link (parent portal, multi-child). */
+  childId?:          string
+  /** Hides the "Continue Learning" call-to-action, which doesn't apply to a non-student viewer. */
+  hideContinueLearning?: boolean
+}
+
+export default function LearningCard({ data, basePath = '/portal/student', childId, hideContinueLearning = false }: Props) {
+  const qs = childId ? `?child=${childId}` : ''
   const sessionPct = data.enrolled_sessions > 0
     ? Math.round((data.consumed_sessions / data.enrolled_sessions) * 100)
     : 0
@@ -115,25 +126,27 @@ export default function LearningCard({ data }: { data: LearningCardData }) {
       {/* Quick actions */}
       <div className="mt-3 flex flex-wrap gap-2">
         <Link
-          href="/portal/student/attendance"
+          href={`${basePath}/attendance${qs}`}
           className="rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
         >
           View Attendance
         </Link>
         {data.certificate_status !== 'in_progress' && (
           <Link
-            href="/portal/student/certificates"
+            href={`${basePath}/certificates${qs}`}
             className="rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
           >
             {data.certificate_status === 'issued' ? 'Download Certificate' : 'Claim Certificate'}
           </Link>
         )}
-        <Link
-          href="/portal/student/assignments"
-          className="rounded-full bg-[#FF8A1F] px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#E67A15]"
-        >
-          Continue Learning →
-        </Link>
+        {!hideContinueLearning && (
+          <Link
+            href={`${basePath}/assignments${qs}`}
+            className="rounded-full bg-[#FF8A1F] px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#E67A15]"
+          >
+            Continue Learning →
+          </Link>
+        )}
       </div>
     </div>
   )

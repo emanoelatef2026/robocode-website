@@ -1,7 +1,20 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { resolvePrimaryActiveGroupId, resolveActiveGroupIds } from '@/modules/academic/enrollment-integrity'
+import { getStudentLearningCards } from '@/modules/student-portal/queries'
+import { getStudentEvaluations } from '@/modules/student-evaluations/queries'
+import { getStudentCompetitions } from '@/modules/student-competitions/queries'
+import { getStudentNotes } from '@/modules/student-notes/queries'
+import { getStudentTimeline as getSharedTimeline, PARENT_VISIBLE_TIMELINE_EVENT_TYPES } from '@/lib/timeline'
+import { getChildCertificates } from '@/modules/certificates/queries'
+import { getChildPortfolioDetail } from '@/modules/portfolio/queries'
+import { getParentChildFinance } from '@/modules/finance/queries'
 import type { StudentCourseProgress } from '@/modules/progress/types'
+import type { LearningCard } from '@/modules/student-portal/types'
+import type { StudentEvaluation } from '@/modules/student-evaluations/types'
+import type { StudentCompetition } from '@/modules/student-competitions/types'
+import type { StudentNote } from '@/modules/student-notes/types'
+import type { StudentStatus } from '@/types/enums'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -10,6 +23,8 @@ export interface ParentChildSummary {
   student_name:  string
   student_email: string
   branch_name:   string
+  status:        StudentStatus
+  avatar_url:    string | null
 }
 
 export interface ChildEnrollment {
@@ -106,8 +121,9 @@ export async function getParentChildren(userId: string): Promise<ParentChildSumm
     .select(`
       student_id,
       students!parent_students_student_id_fkey(
+        status,
         users!students_user_id_fkey(
-          email,
+          email, avatar_url,
           profiles!profiles_user_id_fkey(first_name, last_name)
         ),
         branches!students_branch_id_fkey(name)
@@ -124,6 +140,8 @@ export async function getParentChildren(userId: string): Promise<ParentChildSumm
       student_name:  [firstName, lastName].filter(Boolean).join(' ') || s?.users?.email || 'Student',
       student_email: s?.users?.email ?? '',
       branch_name:   s?.branches?.name ?? '',
+      status:        (s?.status ?? 'active') as StudentStatus,
+      avatar_url:    s?.users?.avatar_url ?? null,
     }
   })
 }
@@ -902,4 +920,150 @@ export async function getChildEnrollmentContracts(
       total_sessions_recorded: 0,
     }
   })
+}
+
+// ── Student Domain reuse (Sprint 4 — Parent Experience) ───────────────────────
+// Every function below is a thin, verified adapter over the exact same
+// business-layer queries the Student Workspace uses (modules/student-portal,
+// modules/student-notes, modules/student-evaluations, modules/student-competitions,
+// lib/timeline). No query logic is duplicated — each one verifies the
+// parent-child link, then delegates.
+
+// getStudentLearningCards/getCertificateEligibility etc. are keyed off the
+// student's own auth user_id (they resolve `students.user_id = userId`
+// internally). The parent portal only has studentId, so resolve the linked
+// user_id once and pass it straight through — no query duplication.
+async function resolveStudentUserId(studentId: string): Promise<string | null> {
+  const db = createServiceClient()
+  const { data } = await db.from('students').select('user_id').eq('id', studentId).maybeSingle()
+  return (data as any)?.user_id ?? null
+}
+
+// ── Section 3: Current Learning — one card per active enrollment ─────────────
+
+export async function getChildLearningCards(
+  parentUserId: string,
+  studentId:    string
+): Promise<LearningCard[]> {
+  if (!(await verifyParentChild(parentUserId, studentId))) return []
+  const studentUserId = await resolveStudentUserId(studentId)
+  if (!studentUserId) return []
+  return getStudentLearningCards(studentUserId)
+}
+
+// ── Section 4: Progress & Evaluations ─────────────────────────────────────────
+
+export async function getChildEvaluations(
+  parentUserId: string,
+  studentId:    string
+): Promise<StudentEvaluation[]> {
+  if (!(await verifyParentChild(parentUserId, studentId))) return []
+  return getStudentEvaluations(studentId, 'parent')
+}
+
+// ── Section 7: Competitions ────────────────────────────────────────────────────
+// Competition history carries no visibility gate (mirrors student_achievements —
+// always self/parent readable), same as the student-facing reader.
+
+export async function getChildCompetitions(
+  parentUserId: string,
+  studentId:    string
+): Promise<StudentCompetition[]> {
+  if (!(await verifyParentChild(parentUserId, studentId))) return []
+  return getStudentCompetitions(studentId)
+}
+
+// ── Section 8: Parent Notes — SHARED + PARENT_EVALUATION only ────────────────
+// canViewerReadNote() (the single source of truth used by every portal) is
+// what actually enforces this; passing kind:'parent' is the only thing that
+// differs from the student/staff readers.
+
+export async function getChildNotes(
+  parentUserId: string,
+  studentId:    string
+): Promise<StudentNote[]> {
+  if (!(await verifyParentChild(parentUserId, studentId))) return []
+  return getStudentNotes(studentId, { userId: parentUserId, kind: 'parent' })
+}
+
+// ── Section 10: Timeline — parent-visible subset of the shared event log ─────
+
+export interface ParentTimelineEvent {
+  id:              string
+  event_type:      string
+  notes:           string | null
+  created_at:      string
+  severity:        'INFO' | 'WARNING' | 'CRITICAL'
+  created_by_name: string | null
+}
+
+export async function getChildJourneyTimeline(
+  parentUserId: string,
+  studentId:    string
+): Promise<ParentTimelineEvent[]> {
+  if (!(await verifyParentChild(parentUserId, studentId))) return []
+  const allowlist = new Set<string>(PARENT_VISIBLE_TIMELINE_EVENT_TYPES)
+  const events     = await getSharedTimeline(studentId, null, 100)
+  return events.filter(e => allowlist.has(e.event_type))
+}
+
+// ── Section 2: Children Overview — one summary card per linked child ─────────
+// Composes existing, already-verified per-child readers (learning cards,
+// evaluations, competitions, certificates, portfolio achievements, finance) —
+// no new query logic, just aggregation for the card grid.
+
+export interface ChildOverviewCard {
+  student_id:          string
+  student_name:        string
+  avatar_url:           string | null
+  status:              StudentStatus
+  branch_name:         string
+  active_courses:      number
+  attendance_pct:      number | null
+  latest_evaluation:   { criterion: string; score: number | null; rating: number | null } | null
+  latest_achievement:  { title: string; date_awarded: string } | null
+  certificates_count:  number
+  competitions_count:  number
+  outstanding_balance: number | null   // null = financial access restricted for this parent
+}
+
+export async function getChildrenOverview(parentUserId: string): Promise<ChildOverviewCard[]> {
+  const children = await getParentChildren(parentUserId)
+  if (!children.length) return []
+
+  return Promise.all(children.map(async (child): Promise<ChildOverviewCard> => {
+    const [cards, evaluations, competitions, certificates, portfolio, accounts] = await Promise.all([
+      getChildLearningCards(parentUserId, child.student_id),
+      getChildEvaluations(parentUserId, child.student_id),
+      getChildCompetitions(parentUserId, child.student_id),
+      getChildCertificates(parentUserId, child.student_id),
+      getChildPortfolioDetail(parentUserId, child.student_id),
+      getParentChildFinance(parentUserId, child.student_id),
+    ])
+
+    const attTotal   = cards.reduce((sum, c) => sum + c.att_total, 0)
+    const attPresent = cards.reduce((sum, c) => sum + c.att_present, 0)
+    const latestAchievement = portfolio?.achievements[0] ?? null
+
+    return {
+      student_id:          child.student_id,
+      student_name:        child.student_name,
+      avatar_url:          child.avatar_url,
+      status:              child.status,
+      branch_name:         child.branch_name,
+      active_courses:      cards.length,
+      attendance_pct:      attTotal > 0 ? Math.round((attPresent / attTotal) * 100) : null,
+      latest_evaluation:   evaluations[0]
+        ? { criterion: evaluations[0].criterion, score: evaluations[0].score, rating: evaluations[0].rating }
+        : null,
+      latest_achievement:  latestAchievement
+        ? { title: latestAchievement.title, date_awarded: latestAchievement.date_awarded }
+        : null,
+      certificates_count:  certificates.filter(c => c.status === 'active').length,
+      competitions_count:  competitions.length,
+      outstanding_balance: accounts
+        ? accounts.reduce((sum, a) => sum + Number(a.account.remaining_amount ?? 0), 0)
+        : null,
+    }
+  }))
 }

@@ -7,9 +7,24 @@ vi.mock('@/lib/supabase/service', () => ({
 vi.mock('@/modules/rbac/guards', () => ({
   requireAuth:       vi.fn().mockResolvedValue({ id: 'user-instructor-001' }),
   requirePortalRole: vi.fn().mockResolvedValue({ id: 'user-instructor-001' }),
+  requirePermission: vi.fn().mockResolvedValue({ id: 'user-tl-001' }),
+}))
+
+const logTimelineEventMock = vi.fn().mockResolvedValue(undefined)
+vi.mock('@/lib/timeline', () => ({
+  logTimelineEvent: (...args: unknown[]) => logTimelineEventMock(...args),
+}))
+vi.mock('@/modules/notifications/actions', () => ({
+  seedStudentNoteNotification: vi.fn(),
+  seedParentNoteNotification:  vi.fn(),
+}))
+vi.mock('@/modules/notifications/queries', () => ({
+  getStudentUserId:            vi.fn().mockResolvedValue(null),
+  getParentUserIdsForStudent:  vi.fn().mockResolvedValue([]),
 }))
 
 import { canViewerReadNote } from '@/modules/student-notes/queries'
+import { createServiceClient } from '@/lib/supabase/service'
 
 const INSTRUCTOR_USER_ID = 'user-instructor-001'
 const STUDENT_ID         = 'stu-001'
@@ -113,6 +128,44 @@ describe('Student notes', () => {
     expect(needsAttention.map((s) => s.student_id)).toContain('stu-001')
     expect(needsAttention.map((s) => s.student_id)).toContain('stu-003')
     expect(needsAttention.map((s) => s.student_id)).not.toContain('stu-002')
+  })
+
+  it('TEST 10 — a note added with PARENT_EVALUATION visibility never leaks its content into the shared timeline (Sprint 4 fix)', async () => {
+    // student_timeline_events has no per-row visibility column and is read by
+    // BOTH the student's and the parent's Journey pages. Before this fix,
+    // logNoteTimelineEvent stored a 140-char content snippet regardless of
+    // visibility tier, so a PARENT_EVALUATION-only (or STUDENT_INSTRUCTION-only)
+    // note's text would leak to the wrong audience via NOTE_ADDED events.
+    const db: any = {
+      from: vi.fn((table: string) => {
+        const c: any = {}
+        const methods = ['select', 'eq']
+        for (const m of methods) c[m] = () => c
+        if (table === 'students') {
+          c.maybeSingle = () => Promise.resolve({ data: { branch_id: 'branch-1' }, error: null })
+        }
+        if (table === 'student_notes') {
+          c.insert = () => c
+          c.select = () => c
+          c.single = () => Promise.resolve({ data: { id: 'note-1' }, error: null })
+        }
+        return c
+      }),
+    }
+    ;(createServiceClient as ReturnType<typeof vi.fn>).mockReturnValue(db)
+
+    const { createTeamLeaderNote } = await import('@/modules/student-notes/actions')
+
+    await createTeamLeaderNote({
+      student_id: '123e4567-e89b-42d3-a456-426614174000', // schema requires a valid (RFC4122) UUID
+      content:    'Sensitive detail the student must never see',
+      visibility: 'PARENT_EVALUATION',
+    })
+
+    expect(logTimelineEventMock).toHaveBeenCalledTimes(1)
+    const loggedEvent = logTimelineEventMock.mock.calls[0][0]
+    expect(loggedEvent.event_type).toBe('NOTE_ADDED')
+    expect(loggedEvent.notes).toBeUndefined()
   })
 
   it('TEST 9 — TodaySessionCard and StudentNoteModal satisfy mobile layout contract', () => {

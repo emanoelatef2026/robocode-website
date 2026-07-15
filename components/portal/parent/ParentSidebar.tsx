@@ -51,6 +51,26 @@ const Icons = {
       <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
     </svg>
   ),
+  evaluations: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+    </svg>
+  ),
+  competitions: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M6 3a1 1 0 00-1 1v1H4a1 1 0 00-1 1v3a3 3 0 003 3h.5a4.002 4.002 0 003.396 3.396A2.99 2.99 0 009 16.586V17H7a1 1 0 100 2h6a1 1 0 100-2h-2v-.414a2.99 2.99 0 00.104-.19A4.002 4.002 0 0014.5 12H15a3 3 0 003-3V6a1 1 0 00-1-1h-1V4a1 1 0 00-1-1H6zM5 6h1v3a2 2 0 01-1-1.732V6zm10 3V6h1v1.268A2 2 0 0115 9z" clipRule="evenodd" />
+    </svg>
+  ),
+  notes: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+    </svg>
+  ),
+  journey: (
+    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+    </svg>
+  ),
   password: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
       <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
@@ -68,8 +88,12 @@ const NAV_ITEMS = [
   { label: 'Assignments',  path: '/portal/parent/assignments',    icon: Icons.assignments,  exact: false },
   { label: 'Attendance',   path: '/portal/parent/attendance',     icon: Icons.attendance,   exact: false },
   { label: 'Progress',     path: '/portal/parent/progress',       icon: Icons.progress,     exact: false },
+  { label: 'Evaluations',  path: '/portal/parent/evaluations',    icon: Icons.evaluations,  exact: false },
+  { label: 'Competitions', path: '/portal/parent/competitions',   icon: Icons.competitions, exact: false },
+  { label: 'Notes',        path: '/portal/parent/notes',          icon: Icons.notes,        exact: false },
   { label: 'Portfolio',    path: '/portal/parent/portfolio',      icon: Icons.portfolio,    exact: false },
   { label: 'Certificates', path: '/portal/parent/certificates',   icon: Icons.certificates, exact: false },
+  { label: 'Journey',      path: '/portal/parent/journey',        icon: Icons.journey,      exact: false },
   { label: 'History',      path: '/portal/parent/semesters',      icon: Icons.history,      exact: false },
   { label: 'Finance',      path: '/portal/parent/finance',        icon: (
     <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">

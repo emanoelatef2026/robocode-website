@@ -245,6 +245,27 @@ export const STUDENT_VISIBLE_TIMELINE_EVENT_TYPES: readonly TimelineEventType[] 
   'NOTE_ADDED',
 ]
 
+// ── Parent-visible subset ─────────────────────────────────────────────────────
+// Same shared table, different audience. A parent must never see
+// finance/collections/staff-internal events, and — unlike a student — must
+// never see HOMEWORK_ASSIGNED/HOMEWORK_COMPLETED either (those aren't part of
+// what a parent is meant to track day-to-day; homework detail lives in the
+// existing Assignments page which already exposes only public_feedback).
+
+export const PARENT_VISIBLE_TIMELINE_EVENT_TYPES: readonly TimelineEventType[] = [
+  'ENROLLMENT_CREATED',
+  'ENROLLMENT_CANCELLED',
+  'RENEWAL_CREATED',
+  'TRANSFER',
+  'ATTENDANCE_RECORDED',
+  'CERTIFICATE_ISSUED',
+  'EVALUATION_RECORDED',
+  'COMPETITION_LOGGED',
+  'ACHIEVEMENT_EARNED',
+  'BADGE_EARNED',
+  'NOTE_ADDED',
+]
+
 export const TIMELINE_SEVERITY_COLORS: Record<TimelineEventSeverity, string> = {
   INFO:     'bg-slate-100 text-slate-600',
   WARNING:  'bg-amber-100 text-amber-700',

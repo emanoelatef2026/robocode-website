@@ -5,7 +5,7 @@ import InstructorSidebar from "./InstructorSidebar"
 import InstructorBottomNav from "./InstructorBottomNav"
 import AdminTopbar from "@/components/admin/AdminTopbar"
 import { TopbarActionProvider } from "@/components/admin/TopbarActionContext"
-import NotificationBell from "./NotificationBell"
+import NotificationBell from "@/components/portal/shared/NotificationBell"
 import InstructorFAB    from "./InstructorFAB"
 
 interface Props {

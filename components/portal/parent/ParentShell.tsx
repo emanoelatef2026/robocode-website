@@ -5,14 +5,16 @@ import ParentSidebar from './ParentSidebar'
 import ParentBottomNav from './ParentBottomNav'
 import AdminTopbar from '@/components/admin/AdminTopbar'
 import { TopbarActionProvider } from '@/components/admin/TopbarActionContext'
+import NotificationBell from '@/components/portal/shared/NotificationBell'
 import type { ParentChildSummary } from '@/modules/parents/parent-portal-queries'
 
 interface Props {
-  children:       React.ReactNode
-  linkedChildren: ParentChildSummary[]
+  children:            React.ReactNode
+  linkedChildren:      ParentChildSummary[]
+  unreadNotifications?: number
 }
 
-export default function ParentShell({ children, linkedChildren }: Props) {
+export default function ParentShell({ children, linkedChildren, unreadNotifications = 0 }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
@@ -35,6 +37,7 @@ export default function ParentShell({ children, linkedChildren }: Props) {
           <AdminTopbar
             onMenuClick={() => setSidebarOpen(true)}
             role="parent"
+            bellSlot={<NotificationBell initialUnreadCount={unreadNotifications} />}
           />
           <main className="flex-1 overflow-y-auto p-4 md:p-7 pb-bottom-nav md:pb-7 scroll-smooth-mobile">
             {children}

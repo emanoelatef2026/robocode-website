@@ -60,6 +60,10 @@ const PATH_TITLES: Record<string, string> = {
   "/portal/parent/portfolio": "Portfolio",
   "/portal/parent/progress": "Academic Progress",
   "/portal/parent/semesters": "Activity History",
+  "/portal/parent/evaluations": "Evaluations",
+  "/portal/parent/competitions": "Competitions",
+  "/portal/parent/notes": "Notes from the Academy",
+  "/portal/parent/journey": "Learning Journey",
 };
 
 const ROLE_LABELS: Record<string, string> = {
