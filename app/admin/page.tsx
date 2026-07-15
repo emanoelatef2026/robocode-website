@@ -14,6 +14,24 @@ import KpiCard                       from '@/components/admin/KpiCard'
 import SectionDivider                from '@/components/admin/SectionDivider'
 import FinanceSummaryCard            from '@/components/admin/FinanceSummaryCard'
 import BranchPerformanceTable        from '@/components/admin/BranchPerformanceTable'
+import AcademyKPICard                from '@/components/admin/AcademyKPICard'
+
+// ── Academy Overview icons ─────────────────────────────────────────────────────
+
+const AcademyIcon = {
+  branches: (
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
+  ),
+  groups: (
+    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v1h8v-1zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-1a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v1h-3zM4.75 14.094A5.973 5.973 0 004 17v1H1v-1a3 3 0 013.75-2.906z" /></svg>
+  ),
+  instructors: (
+    <svg viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+  ),
+  students: (
+    <svg viewBox="0 0 20 20" fill="currentColor"><path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" /></svg>
+  ),
+}
 
 // ── Data fetcher ──────────────────────────────────────────────────────────────
 
@@ -214,7 +232,7 @@ function AlertRow({
 }) {
   if (count === 0) return null
   const cls = {
-    critical: 'border-[#FECACA] bg-[#FEE2E2] text-[#DC2626]',
+    critical: 'border-[#FECACA] bg-[#FEF2F2] text-[#DC2626]',
     warning:  'border-[#FDE68A] bg-[#FFFBEB] text-[#B45309]',
     info:     'border-blue-200 bg-[#EFF6FF] text-[#1D4ED8]',
   }[level]
@@ -261,8 +279,8 @@ export default async function AdminDashboard() {
 
       {/* ── Alerts shortcut ──────────────────────────────────────────── */}
       {totalAlerts > 0 && (
-        <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#FECACA] bg-[#FEE2E2] px-4 py-2.5">
-          <span className="h-2 w-2 rounded-full bg-[#EF4444] shrink-0" />
+        <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-2.5">
+          <span className="h-2 w-2 rounded-full bg-[#EF4444] shrink-0" style={{ animation: 'rcpulse 1.6s infinite' }} />
           <span className="flex-1 text-[13px] font-medium text-[#DC2626]">
             {totalAlerts} item{totalAlerts !== 1 ? 's' : ''} need your attention
           </span>
@@ -364,26 +382,26 @@ export default async function AdminDashboard() {
       <SectionDivider title="Academy" />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {isSuperAdmin && (
-          <KpiCard
-            label="Branches"           value={d.totalBranches}
-            href="/admin/branches"     barColor="#FF8A1F"
-            bars={[80,82,85,88,90,92,100]}
+          <AcademyKPICard
+            label="Branches"        value={d.totalBranches}
+            href="/admin/branches"  fill={100}
+            icon={AcademyIcon.branches} iconBg="#FFF1E2" iconFg="#FF8A1F"
           />
         )}
-        <KpiCard
-          label="Active Groups"        value={d.totalGroups}
-          href="/admin/groups"         barColor="#38BDF8"
-          bars={[55,60,65,68,70,74,78]}
+        <AcademyKPICard
+          label="Active Groups"     value={d.totalGroups}
+          href="/admin/groups"      fill={78}
+          icon={AcademyIcon.groups} iconBg="#EFF6FF" iconFg="#38BDF8"
         />
-        <KpiCard
-          label="Instructors"          value={d.totalInstructors}
-          href="/admin/instructors"    barColor="#6366F1"
-          bars={[45,48,52,55,58,60,65]}
+        <AcademyKPICard
+          label="Instructors"            value={d.totalInstructors}
+          href="/admin/instructors"      fill={65}
+          icon={AcademyIcon.instructors} iconBg="#EEF2FF" iconFg="#6366F1"
         />
-        <KpiCard
-          label="Active Students"      value={d.activeStudents}
-          href="/admin/students"       barColor="#10B981"
-          bars={[60,62,65,68,70,73,76]}
+        <AcademyKPICard
+          label="Active Students"     value={d.activeStudents}
+          href="/admin/students"      fill={76}
+          icon={AcademyIcon.students} iconBg="#F0FDF4" iconFg="#10B981"
         />
       </div>
 
