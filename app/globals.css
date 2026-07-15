@@ -68,14 +68,16 @@
   --header-height:           64px;
   --bottom-nav-height:       64px;
 
-  /* Layered UI z-index scale — reused by every drawer/header/bottom-nav/sheet */
-  --z-overlay:        20;
-  --z-drawer:          30;
-  --z-header:          40;
-  --z-bottom-nav:      40;
-  --z-sheet-backdrop:  40;
-  --z-sheet-panel:     50;
-  --z-fab:             50;
+  /* Layered UI z-index scale. On mobile the nav drawer and the "More" sheet are
+     true modals that sit ABOVE the header + bottom nav — so the drawer's logo is
+     never hidden behind the header — and their backdrops dim the chrome beneath. */
+  --z-fab:             25;
+  --z-header:          30;
+  --z-bottom-nav:      30;
+  --z-overlay:         40;   /* drawer backdrop */
+  --z-sheet-backdrop:  40;   /* "More" sheet backdrop */
+  --z-drawer:          50;   /* mobile nav drawer — above the header so the logo shows */
+  --z-sheet-panel:     50;   /* "More" sheet panel */
   --z-tooltip:         9999;
 
   /* Avatar + icon sizes shared across sidebar footer, topbar and bottom nav */
@@ -147,8 +149,14 @@ button, [role="button"], a {
   padding-bottom: max(8px, var(--safe-bottom));
 }
 
-.pb-bottom-nav {
-  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+/* Only needed on mobile, where the fixed bottom nav overlaps content. Scoped to
+   the mobile breakpoint so the `md:pb-*` override on the consuming element wins
+   on desktop — this rule is unlayered and would otherwise beat Tailwind's
+   layered `md:` utilities and leave dead space at the bottom of every page. */
+@media (max-width: 767px) {
+  .pb-bottom-nav {
+    padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+  }
 }
 
 /* Mobile drawers/sheets must stop above the fixed bottom nav so they never

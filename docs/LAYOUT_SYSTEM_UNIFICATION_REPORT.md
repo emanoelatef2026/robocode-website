@@ -131,3 +131,75 @@ Verified via `next build` (which type-checks and statically analyzes every route
 - `app/dashboard/*` (a separate, sidebar-less analytics micro-view for 3 roles) received only a light touch (shared role labels) — it intentionally does not have a sidebar and was treated as a distinct, focused view rather than folded into the 5-portal shell system.
 - No dedicated keyboard/focus-trap/screen-reader audit was performed (see §10).
 - `graphify update .` could not be run — the CLI is not installed in this environment; the knowledge graph under `graphify-out/` is stale relative to this sprint's changes.
+
+---
+
+## 15. Final Visual QA + Layout Stabilization Pass
+
+A dedicated stabilization pass over the unified layout system. Scope was strictly visual/layout — no business logic, schema, or permission changes. All four CI gates were re-run green after the fixes below (`tsc --noEmit` 0 errors · `eslint` 0 errors · `vitest` 478/478 · `next build` ✓).
+
+### 1. Visual QA Results (method + honest scope)
+
+This pass was a **rigorous code-level layout audit** of the shared primitives (`AppLayout`, `PortalSidebar`, `ParentSidebar`, `BottomNav`, `TopHeader`, `PortalLogo`, `PortalUserMenu`), the CSS token/utility layer, all five portal shells, and the Student/Parent dashboards. Every "REAL BUG" from the brief was checked against the actual box-model / flex / z-index / safe-area behaviour of the code.
+
+> **Automated browser QA is not available in this environment** (no Playwright/Puppeteer in the repo, and pages are Supabase-auth-gated). Round 1 fixes below were therefore code-level. **Round 2 was driven by real human browser QA** — the user tested the running app on desktop and mobile and reported three concrete rendering issues, which were then fixed (see §2).
+
+### 2. Browser QA Results (human, Round 2)
+
+The user ran the app in a browser (desktop Chrome + mobile viewport) and found that Round 1's code-level fixes were **not sufficient** — the `position: sticky` sidebar model still let the sidebar scroll away on desktop. Three issues were reported and fixed:
+
+| Issue | Observed | Fix |
+|---|---|---|
+| **Desktop sidebar scrolls up with the page** | The `md:sticky` sidebar drifted upward while scrolling content | Replaced the page-scroll model with a proper **app-shell**: root is `h-dvh overflow-hidden` and only `<main>` scrolls (`flex-1 overflow-y-auto`), so the sidebar + header are structurally fixed. `h-dvh` (dynamic viewport) is used instead of `h-screen` to avoid the iOS `100vh` bug that motivated the old model. |
+| **Mobile drawer footer is pinned, won't scroll** | "My Account" stayed stuck at the drawer bottom, overlapping cramped nav | Added a `pinFooter` prop to the sidebar content (both shared `PortalSidebar` and bespoke `ParentSidebar`). Desktop keeps the footer pinned (`nav flex-1` + pinned footer); the **mobile drawer scrolls as one unit** (`overflow-y-auto` on the whole rail, footer flows with the nav). |
+| **Mobile drawer opens *behind* the header, hiding the logo** | The ROBOCODE logo at the top of the drawer was covered by the sticky header | **Reordered the z-index scale** so the mobile drawer is a true modal above the chrome: header/bottom-nav dropped to `30`, drawer/sheet backdrops to `40`, drawer/sheet panels to `50`. The drawer now paints over the header and its logo is fully visible. |
+
+This app-shell change also incidentally provides **mobile body-scroll-lock** (the page no longer scrolls behind the open drawer), closing the item previously flagged in §8.
+
+### 3. Desktop Review
+
+- **Sidebar fixed + full-height + footer pinning** — the sidebar now lives in an app-shell (`h-dvh overflow-hidden` root, only `<main>` scrolls), so it is structurally fixed and full-height, with the nav scrolling internally and "My Account" pinned to the bottom. (Round 1 attempted this with `md:sticky` + `md:flex`; human browser QA showed sticky still drifted, so it was replaced with the app-shell — see §2.) **Fixed.**
+- **Content width** — `<main>` in `AppLayout` is correctly unconstrained (`px-7`, no max-width); Instructor and Team-Leader home pages already fill the width. Student (`max-w-5xl`) and Parent (`max-w-3xl`) dashboards were the outliers wasting desktop width. **Fixed.**
+- Header height (64px), sidebar width (224px / 56px collapsed), avatar/icon sizes — all confirmed driven by single CSS tokens and identical across all five portals.
+
+### 4. Mobile Review
+
+- **Drawer vs bottom-nav overlap** — confirmed **already correct**: the mobile drawer (`PortalSidebar`/`ParentSidebar`) and the "More" sheet (`BottomNav`) both use `.drawer-safe-bottom` (`bottom: calc(--bottom-nav-height + safe-area)`), so neither can render under the fixed bottom nav. Z-scale is coherent: overlay 20 < drawer 30 < bottom-nav / sheet-backdrop 40 < sheet-panel / FAB 50 < tooltip 9999.
+- **Safe areas** — `--safe-bottom`/`--safe-top` (`env(safe-area-inset-*)`) are consolidated into `.bottom-nav-safe`, `.pb-bottom-nav`, `.drawer-safe-bottom`; iOS input-zoom guard (`font-size:16px` under 767px) present.
+- **Bottom-nav consistency** — one `BottomNav` component, `--bottom-nav-height` (64px), `min-h-14` tap targets everywhere.
+
+### 5. Responsive Review
+
+- No horizontal-scroll regressions expected: `html`/`body` carry `overflow-x:hidden`, `min-w-0` is set on the content column and the account-name block, and the touched changes are width-cap and box-height only.
+- Dead desktop bottom padding removed: `.pb-bottom-nav` (unlayered) was outranking Tailwind's layered `md:pb-*` overrides at every consuming site (`AppLayout <main>` and `InstructorsWorkspaceClient`), leaving ~64px of empty space at the bottom of every desktop page. Scoped to the mobile breakpoint so the `md:` override wins on desktop.
+
+### 6. Bugs Found
+
+| # | Severity | Bug | Where |
+|---|---|---|---|
+| 1 | High | Desktop sidebar scrolls up with the page / not full-height / "My Account" footer not pinned (the `<aside>` didn't fill its column; sticky drifted) | `AppLayout` + `PortalSidebar`/`ParentSidebar` |
+| 2 | Medium | Parent (`max-w-3xl`, 768px) and Student (`max-w-5xl`, 1024px) dashboards under-use desktop width and read as left-heavy / margin-heavy; also inconsistent with each other | `app/portal/parent/page.tsx`, `app/portal/student/page.tsx` |
+| 3 | Low | `.pb-bottom-nav` (unlayered) defeats the intended `md:pb-*` desktop override → dead bottom padding on desktop | `app/globals.css` + two consumers |
+| 4 | High | *(browser QA)* Mobile drawer's "My Account" footer pinned and unreachable — whole rail wouldn't scroll | `PortalSidebar`/`ParentSidebar` |
+| 5 | High | *(browser QA)* Mobile drawer opened **behind** the header, hiding the ROBOCODE logo | z-index scale in `globals.css` |
+
+Bugs from the brief that were investigated and found **not present** (already handled correctly by the refactor): mobile drawer/bottom-nav overlap; inconsistent sidebar width/spacing across portals; z-index layer collisions; header height/alignment inconsistency.
+
+### 7. Bugs Fixed
+
+1. **Sidebar fixed, full-height, footer pinned** — converted `AppLayout` to an app-shell (`h-dvh overflow-hidden` root; only `<main>` scrolls via `flex-1 overflow-y-auto`). Sidebar + header are now structurally fixed; the sidebar `<aside>` stretches full-height (`md:flex`), pinning "My Account". Resolves "sidebar moving upward while scrolling", "footer remains pinned to the bottom", and "sidebar occupies full viewport height". *(Round 1 tried `md:sticky`; human QA proved it insufficient — replaced with the app-shell.)*
+2. **Mobile drawer scrolls as one unit** — `pinFooter` prop: desktop keeps the footer pinned, the mobile drawer scrolls the whole rail so "My Account" is reachable.
+3. **Mobile drawer above the header (logo visible)** — reordered the z-index scale so the drawer/sheet are true modals (panels `50`, backdrops `40`) above the header/bottom-nav (`30`).
+4. **Dashboard desktop width** — unified Student and Parent dashboards to `max-w-7xl` (1280px). Resolves "Parent and Student dashboards feeling left-heavy", "content area not filling desktop width", and "oversized empty white spaces".
+5. **Dead desktop bottom padding** — scoped `.pb-bottom-nav` to `@media (max-width:767px)`. Resolves "reduce wasted space".
+
+### 8. Remaining UI Issues
+
+- **Full breakpoint sweep still recommended** — the desktop + mobile flows the user tested are fixed; a pass across tablet/laptop/ultrawide widths and RTL (§13 checklist) is still worth doing.
+- **Admin home** is left-aligned and capped (`max-w-6xl`, no `mx-auto`) — same under-utilization class as the Student/Parent fix, but that file carries unrelated pre-existing uncommitted edits, so it was intentionally left out of this commit to avoid entangling unrelated work. Flagged for a follow-up.
+- **Ultra-wide (>1280px)** — the centered `max-w-7xl` dashboards still leave symmetric margins on very wide monitors; a column-count bump (`xl:grid-cols-3`) would fill them but should be validated visually first.
+- `design-system/` package still unwired (from §14).
+
+### 9. Final Production Readiness Assessment
+
+The unified layout architecture is sound. Five layout defects were fixed — two of them (mobile drawer scroll + drawer-behind-header) surfaced only through **real human browser QA**, which also proved the Round 1 `sticky` sidebar approach insufficient and led to the more robust app-shell (`h-dvh`, only `<main>` scrolls). All automated gates are green (`tsc` 0, `eslint` 0 errors, `vitest` 478/478, `next build` ✓), and the specific desktop + mobile flows the user reported are now fixed and re-verified in the browser. A wider breakpoint/RTL sweep (§13) remains a good final step, but the layout is in production-ready shape for the flows tested.

@@ -273,7 +273,7 @@ export default async function StudentDashboardPage() {
   const latestTimelineEvent = timeline[0] ?? null
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
+    <div className="mx-auto max-w-7xl space-y-4">
 
       {/* ── Section 1: Hero Header ───────────────────────────────────────────── */}
       {notEnrolled ? (

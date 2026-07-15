@@ -30,8 +30,14 @@ export function AppLayout({ renderSidebar, renderHeader, bottomNav, fab, childre
   const close = () => setSidebarOpen(false)
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC]">
-      <div className="md:sticky md:top-0 md:h-screen md:shrink-0">
+    <div className="flex h-dvh overflow-hidden bg-[#F8FAFC]">
+      {/* App-shell scroll model: the shell is exactly one (dynamic) viewport tall
+          and only <main> scrolls — so the sidebar and header stay put on desktop
+          instead of scrolling away with the page. `h-dvh` (not `h-screen`) tracks
+          the mobile browser chrome, avoiding the iOS `100vh` trap. `md:flex`
+          stretches the sidebar <aside> to full height, pinning "My Account" to
+          the bottom for every portal including the bespoke Parent sidebar. */}
+      <div className="md:flex md:h-full md:shrink-0">
         {renderSidebar({ isOpen: sidebarOpen, onClose: close })}
       </div>
 
@@ -42,11 +48,11 @@ export function AppLayout({ renderSidebar, renderHeader, bottomNav, fab, childre
         />
       )}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <div className="sticky top-0 z-(--z-header)">
           {renderHeader({ onMenuClick: () => setSidebarOpen(true) })}
         </div>
-        <main className="pb-bottom-nav scroll-smooth-mobile flex-1 px-4 pt-4 md:px-7 md:pb-7 md:pt-6">
+        <main className="pb-bottom-nav scroll-smooth-mobile flex-1 overflow-y-auto px-4 pt-4 md:px-7 md:pb-7 md:pt-6">
           {children}
         </main>
       </div>

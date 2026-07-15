@@ -15,10 +15,13 @@ function NavContent({
   linkedChildren,
   email,
   onClose,
+  pinFooter = true,
 }: {
   linkedChildren: ParentChildSummary[]
   email?: string | null
   onClose?: () => void
+  /** Desktop: footer pinned. Mobile drawer: whole rail scrolls as one. */
+  pinFooter?: boolean
 }) {
   const pathname     = usePathname()
   const searchParams = useSearchParams()
@@ -33,7 +36,7 @@ function NavContent({
     exact ? pathname === path : pathname === path || pathname.startsWith(path + '/')
 
   return (
-    <div className="flex h-full flex-col">
+    <div className={`flex h-full flex-col ${pinFooter ? "" : "overflow-y-auto"}`}>
       <PortalLogo />
 
       <div className="px-5 pb-1">
@@ -75,7 +78,7 @@ function NavContent({
 
       <div className="mx-3 my-1 border-t border-white/8" />
 
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3">
+      <nav className={`space-y-0.5 px-3 ${pinFooter ? "flex-1 overflow-y-auto" : ""}`}>
         {PARENT_NAV_ITEMS.map((item) => {
           const active = isActive(item.href, item.exact)
           return (
@@ -135,7 +138,7 @@ export default function ParentSidebar({ isOpen, onClose, linkedChildren, email }
             className="drawer-safe-bottom fixed top-0 left-0 z-(--z-drawer) w-(--drawer-width) bg-[#0B1F3A] md:hidden"
           >
             <Suspense fallback={<div className="flex-1" />}>
-              <NavContent linkedChildren={linkedChildren} email={email} onClose={onClose} />
+              <NavContent linkedChildren={linkedChildren} email={email} onClose={onClose} pinFooter={false} />
             </Suspense>
           </motion.aside>
         )}

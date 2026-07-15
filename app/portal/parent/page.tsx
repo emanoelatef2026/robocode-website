@@ -85,7 +85,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
   const latestNote = notes[0] ?? null
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6">
 
       {/* Multi-child switcher */}
       <ChildSelector

@@ -125,11 +125,14 @@ interface PortalSidebarContentProps {
   onToggleCollapse: () => void
   /** Portal-specific content rendered above "My Account" — e.g. Student's XP widget. Hidden while collapsed. */
   footerExtra?:     React.ReactNode
+  /** Desktop: nav scrolls and the footer stays pinned to the bottom. Mobile drawer:
+   *  the whole rail (footer included) scrolls as one, so "My Account" is reachable. */
+  pinFooter?:       boolean
 }
 
 function PortalSidebarContent({
   sections, role, name, subtitle,
-  onClose, collapsed, onToggleCollapse, footerExtra,
+  onClose, collapsed, onToggleCollapse, footerExtra, pinFooter = true,
 }: PortalSidebarContentProps) {
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
@@ -152,7 +155,7 @@ function PortalSidebarContent({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className={`flex h-full min-h-0 flex-col ${pinFooter ? "" : "overflow-y-auto"}`}>
 
       {/* Logo + collapse toggle */}
       <div className={[
@@ -184,7 +187,7 @@ function PortalSidebarContent({
       </div>
 
       {/* Nav sections */}
-      <nav className="flex-1 overflow-y-auto px-2 pt-2 pb-2">
+      <nav className={`px-2 pt-2 pb-2 ${pinFooter ? "flex-1 overflow-y-auto" : ""}`}>
         {sections.map((section, idx) => (
           <SidebarSection
             key={section.title ?? '__top'}
@@ -316,6 +319,7 @@ export default function PortalSidebar({
               onClose={onClose}
               collapsed={false}
               onToggleCollapse={() => {}}
+              pinFooter={false}
             />
           </motion.aside>
         )}
