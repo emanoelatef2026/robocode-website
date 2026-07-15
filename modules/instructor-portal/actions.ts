@@ -24,6 +24,11 @@ import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
 import { deleteSessionStartingNotification, readSessionStartingNotification } from '@/modules/notifications/actions'
 import { checkAndUnlockAchievements } from '@/modules/gamification/achievement-service'
 import { checkAndAwardBadges } from '@/modules/gamification/badge-service'
+import {
+  createStudentNote as sharedCreateStudentNote,
+  updateStudentNote as sharedUpdateStudentNote,
+  deleteStudentNote as sharedDeleteStudentNote,
+} from '@/modules/student-notes/actions'
 import type { ActionResult } from '@/types/app'
 
 // Statuses that count toward student attendance (XP, achievements).
@@ -1097,158 +1102,26 @@ export async function postponeSession(
 }
 
 // ── Student Notes ─────────────────────────────────────────────────────────────
-
-const NOTE_CATEGORIES = ['GENERAL', 'ACADEMIC', 'BEHAVIOR', 'PARENT_FOLLOWUP'] as const
-const NOTE_SEVERITIES  = ['LOW', 'MEDIUM', 'HIGH'] as const
-
-const noteSchema = z.object({
-  student_id:  z.string().uuid(),
-  group_id:    z.string().uuid(),
-  content:     z.string().min(1, 'Note content is required'),
-  category:    z.enum(NOTE_CATEGORIES).default('GENERAL'),
-  severity:    z.enum(NOTE_SEVERITIES).default('LOW'),
-  is_private:  z.string().optional().transform((v) => v !== 'false'),
-  schedule_id: z.string().uuid().optional().or(z.literal('')),
-})
+// Relocated to modules/student-notes/ (shared across instructor/TL/student/parent
+// portals). Wrapped (not bare re-exported — Next.js's server-action bundler
+// requires actual function declarations in a 'use server' file) so existing
+// imports (`@/modules/instructor-portal/actions`) in the instructor UI keep
+// working unchanged.
 
 export async function createStudentNote(
-  _prev: unknown,
+  prevState: unknown,
   formData: FormData
 ): Promise<ActionResult<{ noteId: string }>> {
-  const user = await requireAuth()
-  const db   = createServiceClient()
-
-  const raw = {
-    student_id:  formData.get('student_id'),
-    group_id:    formData.get('group_id'),
-    content:     formData.get('content'),
-    category:    formData.get('category') || 'GENERAL',
-    severity:    formData.get('severity') || 'LOW',
-    is_private:  formData.get('is_private') as string | undefined,
-    schedule_id: formData.get('schedule_id') || undefined,
-  }
-
-  const parsed = noteSchema.safeParse(raw)
-  if (!parsed.success) {
-    return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
-  }
-
-  const d = parsed.data
-
-  const instructor = await getInstructorByUserId(user.id)
-  if (!instructor) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
-  }
-
-  // Verify access (group_courses OR group_instructors)
-  const { data: gcRow } = await db
-    .from('group_courses')
-    .select('id')
-    .eq('group_id', d.group_id)
-    .eq('instructor_id', instructor.id)
-    .eq('status', 'active')
-    .maybeSingle()
-
-  if (!gcRow) {
-    const { data: giRow } = await db
-      .from('group_instructors')
-      .select('group_id')
-      .eq('group_id', d.group_id)
-      .eq('instructor_id', instructor.id)
-      .maybeSingle()
-    if (!giRow) {
-      return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
-    }
-  }
-
-  const { data: note, error: noteErr } = await db
-    .from('student_notes')
-    .insert({
-      student_id:  d.student_id,
-      author_id:   user.id,
-      content:     d.content,
-      category:    d.category,
-      severity:    d.severity,
-      is_private:  d.is_private,
-      schedule_id: d.schedule_id || null,
-    })
-    .select('id')
-    .single()
-
-  if (noteErr || !note) {
-    return { success: false, error: { code: 'DB_ERROR', message: noteErr?.message ?? 'Failed to save note.' } }
-  }
-
-  revalidatePath(`/portal/instructor/groups/${d.group_id}/students/${d.student_id}`)
-  return { success: true, data: { noteId: (note as any).id } }
+  return sharedCreateStudentNote(prevState, formData)
 }
 
-const updateNoteSchema = z.object({
-  note_id:    z.string().uuid(),
-  student_id: z.string().uuid(),
-  group_id:   z.string().uuid(),
-  content:    z.string().min(1, 'Note content is required'),
-  is_private: z.string().optional().transform((v) => v !== 'false'),
-})
-
 export async function updateStudentNote(
-  _prev: unknown,
+  prevState: unknown,
   formData: FormData
 ): Promise<ActionResult<void>> {
-  const user = await requireAuth()
-  const db   = createServiceClient()
-
-  const raw = {
-    note_id:    formData.get('note_id'),
-    student_id: formData.get('student_id'),
-    group_id:   formData.get('group_id'),
-    content:    formData.get('content'),
-    is_private: formData.get('is_private') as string | undefined,
-  }
-
-  const parsed = updateNoteSchema.safeParse(raw)
-  if (!parsed.success) {
-    return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
-  }
-
-  const d = parsed.data
-
-  const { error: updateErr } = await db
-    .from('student_notes')
-    .update({ content: d.content, is_private: d.is_private })
-    .eq('id', d.note_id)
-    .eq('author_id', user.id)
-
-  if (updateErr) {
-    return { success: false, error: { code: 'DB_ERROR', message: updateErr.message } }
-  }
-
-  revalidatePath(`/portal/instructor/groups/${d.group_id}/students/${d.student_id}`)
-  return { success: true, data: undefined }
+  return sharedUpdateStudentNote(prevState, formData)
 }
 
 export async function deleteStudentNote(formData: FormData): Promise<ActionResult<void>> {
-  const user = await requireAuth()
-  const db   = createServiceClient()
-
-  const noteId    = formData.get('note_id')    as string
-  const studentId = formData.get('student_id') as string
-  const groupId   = formData.get('group_id')   as string
-
-  if (!noteId || !studentId || !groupId) {
-    return { success: false, error: { code: 'VALIDATION', message: 'Missing required fields.' } }
-  }
-
-  const { error } = await db
-    .from('student_notes')
-    .delete()
-    .eq('id', noteId)
-    .eq('author_id', user.id)
-
-  if (error) {
-    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
-  }
-
-  revalidatePath(`/portal/instructor/groups/${groupId}/students/${studentId}`)
-  return { success: true, data: undefined }
+  return sharedDeleteStudentNote(formData)
 }

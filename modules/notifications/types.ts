@@ -9,6 +9,12 @@ export type NotificationType =
   | 'TRIAL_SESSION_ASSIGNED'
   | 'MAKEUP_SESSION_ASSIGNED'
   | 'TRIAL_SESSION_REMINDER'
+  // Student domain (Sprint 2)
+  | 'EVALUATION_PUBLISHED'
+  | 'STUDENT_NOTE_SHARED'
+  | 'PARENT_NOTE_SHARED'
+  | 'ACHIEVEMENT_EARNED'
+  | 'COMPETITION_RESULT'
 
 export interface Notification {
   id:           string

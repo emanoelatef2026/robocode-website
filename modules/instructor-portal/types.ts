@@ -1,3 +1,6 @@
+import type { StudentNote } from '@/modules/student-notes/types'
+export type { NoteCategory, NoteSeverity, StudentNote } from '@/modules/student-notes/types'
+
 export interface InstructorRecord {
   id:         string
   user_id:    string
@@ -162,23 +165,6 @@ export interface PendingSubmissionItem {
   status:             string
   is_late:            boolean
   resubmission_count: number
-}
-
-export type NoteCategory = 'GENERAL' | 'ACADEMIC' | 'BEHAVIOR' | 'PARENT_FOLLOWUP'
-export type NoteSeverity = 'LOW' | 'MEDIUM' | 'HIGH'
-
-export interface StudentNote {
-  id:             string
-  content:        string
-  category:       NoteCategory
-  severity:       NoteSeverity
-  is_private:     boolean
-  schedule_id:    string | null
-  schedule_topic: string | null
-  created_at:     string
-  updated_at:     string
-  author_name:    string
-  is_own:         boolean
 }
 
 export interface StudentAssignmentItem {

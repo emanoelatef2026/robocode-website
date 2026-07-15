@@ -63,6 +63,9 @@ export type PermissionName =
   | 'manage_portfolio'
   // Certificates
   | 'manage_certificates'
+  // Student domain
+  | 'manage_evaluations'
+  | 'manage_competitions'
   // AI (future)
   | 'manage_ai_agents'
   | 'read_ai_reports'

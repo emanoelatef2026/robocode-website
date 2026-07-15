@@ -1,5 +1,8 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { logTimelineEvent } from '@/lib/timeline'
+import { seedAchievementEarnedNotification } from '@/modules/notifications/actions'
+import { getStudentUserId } from '@/modules/notifications/queries'
 import { BADGE_DEFS, type BadgeDef } from './types'
 
 // ─── Award a badge (idempotent) ───────────────────────────────────────────────
@@ -16,12 +19,30 @@ async function awardBadge(studentId: string, portfolioId: string | null, def: Ba
 
   if (existing) return false
 
-  await db.from('student_badges').insert({
-    student_id:   studentId,
-    portfolio_id: portfolioId,
-    badge_name:   def.badge_name,
-    description:  def.description,
-  })
+  const { data: badge } = await db
+    .from('student_badges')
+    .insert({
+      student_id:   studentId,
+      portfolio_id: portfolioId,
+      badge_name:   def.badge_name,
+      description:  def.description,
+    })
+    .select('id')
+    .single()
+
+  void logTimelineEvent({
+    student_id: studentId,
+    event_type: 'BADGE_EARNED',
+    notes:      def.badge_name,
+  }).catch(() => {})
+
+  try {
+    const badgeId = (badge as any)?.id as string | undefined
+    const studentUserId = await getStudentUserId(studentId)
+    if (badgeId && studentUserId) await seedAchievementEarnedNotification(studentUserId, badgeId, def.badge_name)
+  } catch {
+    // non-critical
+  }
 
   return true
 }

@@ -1,6 +1,7 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { ACADEMICALLY_CONSUMING_SESSION_STATUSES } from '@/modules/academic/constants'
+import { getStudentNotes } from '@/modules/student-notes/queries'
 import type {
   InstructorRecord,
   InstructorGroup,
@@ -1143,7 +1144,7 @@ export async function getStudentProfileForInstructor(
 
   const gcId = (gcRow as any)?.id ?? null
 
-  const [studentRes, groupRes, schedRes, noteRes] = await Promise.all([
+  const [studentRes, groupRes, schedRes, notesForViewer] = await Promise.all([
     db.from('students')
       .select(
         `id, user_id,
@@ -1157,14 +1158,7 @@ export async function getStudentProfileForInstructor(
       ? db.from('schedules').select('id').eq('group_course_id', gcId)
           .in('status', [...ACADEMICALLY_CONSUMING_SESSION_STATUSES])
       : Promise.resolve({ data: [], error: null }),
-    // Fetch all non-private notes + current user's private notes for this student
-    db.from('student_notes')
-      .select(
-        `id, content, category, severity, is_private, author_id, schedule_id, created_at, updated_at,
-         schedules!student_notes_schedule_id_fkey(topic)`
-      )
-      .eq('student_id', studentId)
-      .order('created_at', { ascending: false }),
+    getStudentNotes(studentId, { userId, kind: 'staff' }),
   ])
 
   if (studentRes.error || !studentRes.data) return null
@@ -1191,44 +1185,15 @@ export async function getStudentProfileForInstructor(
     }
   }
 
-  // Build author name map from note author_ids
-  const authorIds = [...new Set((noteRes.data ?? []).map((n: any) => n.author_id as string))]
-  const authorNameMap = new Map<string, string>()
-  if (authorIds.length > 0) {
-    const { data: authorRows } = await db
-      .from('users')
-      .select('id, profiles!profiles_user_id_fkey(first_name, last_name)')
-      .in('id', authorIds)
-    for (const a of authorRows ?? []) {
-      const p = (a as any).profiles
-      const name = [p?.first_name, p?.last_name].filter(Boolean).join(' ') || (a as any).id
-      authorNameMap.set((a as any).id, name)
-    }
-  }
-
   const NOTE_SEVERITY_ORDER: Record<string, number> = { HIGH: 0, MEDIUM: 1, LOW: 2 }
 
-  // Include notes visible to current user: own notes (public or private) + others' public notes
-  const notes: StudentNote[] = (noteRes.data ?? [])
-    .filter((n: any) => !n.is_private || n.author_id === userId)
-    .map((n: any) => ({
-      id:             n.id,
-      content:        n.content,
-      category:       (n.category ?? 'GENERAL') as StudentNote['category'],
-      severity:       (n.severity ?? 'LOW')     as StudentNote['severity'],
-      is_private:     n.is_private,
-      schedule_id:    n.schedule_id   ?? null,
-      schedule_topic: (n.schedules as any)?.topic ?? null,
-      created_at:     n.created_at,
-      updated_at:     n.updated_at,
-      author_name:    authorNameMap.get(n.author_id as string) ?? 'Instructor',
-      is_own:         n.author_id === userId,
-    }))
-    .sort((a, b) => {
-      const sev = (NOTE_SEVERITY_ORDER[a.severity] ?? 2) - (NOTE_SEVERITY_ORDER[b.severity] ?? 2)
-      if (sev !== 0) return sev
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    })
+  // getStudentNotes() already applies the visibility matrix + author-name resolution —
+  // this view only needs the severity/newest-first display ordering.
+  const notes: StudentNote[] = [...notesForViewer].sort((a, b) => {
+    const sev = (NOTE_SEVERITY_ORDER[a.severity] ?? 2) - (NOTE_SEVERITY_ORDER[b.severity] ?? 2)
+    if (sev !== 0) return sev
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
 
   return {
     student_id:         studentId,

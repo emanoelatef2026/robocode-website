@@ -196,6 +196,107 @@ export async function seedSpecialSessionReminderNotification(
 }
 
 
+// ── Student domain seed helpers (Sprint 2) ────────────────────────────────────
+
+// Notifies a student or parent that a new evaluation was published for them.
+export async function seedEvaluationPublishedNotification(
+  recipientId:  string,
+  evaluationId: string,
+  criterionLabel: string,
+): Promise<void> {
+  const db = createServiceClient()
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'EVALUATION_PUBLISHED',
+        title:        `New evaluation — ${criterionLabel}`,
+        body:         'A new evaluation has been recorded.',
+        dedup_key:    `evaluation_published:${evaluationId}:${recipientId}`,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
+// Notifies a student that a note visible to them was added.
+export async function seedStudentNoteNotification(
+  recipientId: string,
+  noteId:      string,
+): Promise<void> {
+  const db = createServiceClient()
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'STUDENT_NOTE_SHARED',
+        title:        'New note from your instructor',
+        dedup_key:    `student_note:${noteId}`,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
+// Notifies a parent that a note visible to them was added.
+export async function seedParentNoteNotification(
+  recipientId: string,
+  noteId:      string,
+): Promise<void> {
+  const db = createServiceClient()
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'PARENT_NOTE_SHARED',
+        title:        'New note about your child',
+        dedup_key:    `parent_note:${noteId}:${recipientId}`,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
+// Notifies a student that they earned a new achievement.
+export async function seedAchievementEarnedNotification(
+  recipientId:     string,
+  achievementId:   string,
+  achievementTitle: string,
+): Promise<void> {
+  const db = createServiceClient()
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'ACHIEVEMENT_EARNED',
+        title:        `Achievement unlocked — ${achievementTitle}`,
+        dedup_key:    `achievement_earned:${achievementId}`,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
+// Notifies a student/parent of a logged competition result.
+export async function seedCompetitionResultNotification(
+  recipientId:     string,
+  competitionId:   string,
+  competitionName: string,
+): Promise<void> {
+  const db = createServiceClient()
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'COMPETITION_RESULT',
+        title:        `Competition result recorded — ${competitionName}`,
+        dedup_key:    `competition_result:${competitionId}:${recipientId}`,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
 // Creates a HOMEWORK_NEEDS_GRADING notification (one per pending batch check).
 export async function seedHomeworkNotification(
   recipientId: string,

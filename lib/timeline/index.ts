@@ -35,6 +35,11 @@ export type TimelineEventType =
   | 'SCORE_COMPUTED'
   | 'COLLECTION_STAGE_ADVANCED'
   | 'ENROLLMENT_CANCELLED'
+  // Sprint 2: Student Domain
+  | 'EVALUATION_RECORDED'
+  | 'COMPETITION_LOGGED'
+  | 'ACHIEVEMENT_EARNED'
+  | 'BADGE_EARNED'
 
 export type TimelineEventSeverity = 'INFO' | 'WARNING' | 'CRITICAL'
 
@@ -84,6 +89,11 @@ const SEVERITY_MAP: Record<TimelineEventType, TimelineEventSeverity> = {
   SCORE_COMPUTED:            'INFO',
   COLLECTION_STAGE_ADVANCED: 'WARNING',
   ENROLLMENT_CANCELLED:      'CRITICAL',
+  // Sprint 2
+  EVALUATION_RECORDED:       'INFO',
+  COMPETITION_LOGGED:        'INFO',
+  ACHIEVEMENT_EARNED:        'INFO',
+  BADGE_EARNED:              'INFO',
 }
 
 // ── Log event ──────────────────────────────────────────────────────────────────
@@ -205,6 +215,11 @@ export const TIMELINE_EVENT_LABELS: Record<TimelineEventType, string> = {
   SCORE_COMPUTED:            'Risk Score Updated',
   COLLECTION_STAGE_ADVANCED: 'Collection Stage Advanced',
   ENROLLMENT_CANCELLED:      'Contract Cancelled',
+  // Sprint 2
+  EVALUATION_RECORDED:       'Evaluation Recorded',
+  COMPETITION_LOGGED:        'Competition Logged',
+  ACHIEVEMENT_EARNED:        'Achievement Earned',
+  BADGE_EARNED:              'Badge Earned',
 }
 
 export const TIMELINE_SEVERITY_COLORS: Record<TimelineEventSeverity, string> = {

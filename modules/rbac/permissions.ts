@@ -58,6 +58,9 @@ export const PERMISSIONS = {
   MANAGE_PORTFOLIO:     'manage_portfolio',
   // Certificates
   MANAGE_CERTIFICATES:  'manage_certificates',
+  // Student domain
+  MANAGE_EVALUATIONS:   'manage_evaluations',
+  MANAGE_COMPETITIONS:  'manage_competitions',
   // AI
   MANAGE_AI_AGENTS:     'manage_ai_agents',
   READ_AI_REPORTS:      'read_ai_reports',
@@ -205,6 +208,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<RoleName, PermissionName[]> = {
     PERMISSIONS.READ_AUDIT_LOGS,
     PERMISSIONS.MANAGE_PORTFOLIO,
     PERMISSIONS.MANAGE_CERTIFICATES,
+    PERMISSIONS.MANAGE_EVALUATIONS,
+    PERMISSIONS.MANAGE_COMPETITIONS,
     PERMISSIONS.READ_AI_REPORTS,
   ],
 
@@ -224,6 +229,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<RoleName, PermissionName[]> = {
     PERMISSIONS.MANAGE_MEDIA,         // own content only
     PERMISSIONS.READ_MEDIA,
     PERMISSIONS.READ_ANALYTICS,       // own students only
+    PERMISSIONS.MANAGE_EVALUATIONS,   // own students only — enforced by RLS
     PERMISSIONS.READ_AI_REPORTS,
   ],
 

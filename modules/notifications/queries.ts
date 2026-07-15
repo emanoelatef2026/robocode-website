@@ -58,3 +58,25 @@ export async function getUnreadNotificationCount(userId: string): Promise<number
 
   return Math.max(0, (total ?? 0) - (readCount ?? 0))
 }
+
+// ── Recipient resolution — shared by every student-domain notification ───────
+
+// Returns the auth user_id for a student's own portal account, or null if none.
+export async function getStudentUserId(studentId: string): Promise<string | null> {
+  const db = createServiceClient()
+  const { data } = await db.from('students').select('user_id').eq('id', studentId).maybeSingle()
+  return (data as any)?.user_id ?? null
+}
+
+// Returns the auth user_ids of every parent linked to a student.
+export async function getParentUserIdsForStudent(studentId: string): Promise<string[]> {
+  const db = createServiceClient()
+  const { data } = await db
+    .from('parent_students')
+    .select('parents!parent_students_parent_id_fkey(user_id)')
+    .eq('student_id', studentId)
+
+  return ((data ?? []) as any[])
+    .map((row) => row.parents?.user_id as string | undefined)
+    .filter((id): id is string => Boolean(id))
+}

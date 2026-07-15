@@ -240,7 +240,7 @@ export default async function StudentProfilePage({ params }: Props) {
                       <span className="italic">{n.schedule_topic}</span>
                     </>
                   )}
-                  {n.is_private && (
+                  {(n.visibility === 'PRIVATE_INSTRUCTOR' || n.visibility === 'PRIVATE_TEAM_LEADER') && (
                     <>
                       <span>·</span>
                       <span className="text-[#FF8A1F]">private</span>

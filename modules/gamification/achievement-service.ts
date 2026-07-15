@@ -1,5 +1,8 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { logTimelineEvent } from '@/lib/timeline'
+import { seedAchievementEarnedNotification } from '@/modules/notifications/actions'
+import { getStudentUserId } from '@/modules/notifications/queries'
 import { ACHIEVEMENT_DEFS, type AchievementDef } from './types'
 import { awardXP } from './xp-service'
 
@@ -23,18 +26,36 @@ async function unlockAchievement(
 
   if (existing) return false
 
-  await db.from('student_achievements').insert({
-    student_id:       studentId,
-    portfolio_id:     portfolioId,
-    title:            def.title,
-    description:      def.description,
-    achievement_type: def.type,
-    date_awarded:     new Date().toISOString().slice(0, 10),
-  })
+  const { data: achievement } = await db
+    .from('student_achievements')
+    .insert({
+      student_id:       studentId,
+      portfolio_id:     portfolioId,
+      title:            def.title,
+      description:      def.description,
+      achievement_type: def.type,
+      date_awarded:     new Date().toISOString().slice(0, 10),
+    })
+    .select('id')
+    .single()
 
   // Award bonus XP for unlocking this achievement (if any)
   if (def.xpReward > 0) {
     await awardXP(studentId, def.xpReward, false)
+  }
+
+  void logTimelineEvent({
+    student_id: studentId,
+    event_type: 'ACHIEVEMENT_EARNED',
+    notes:      def.title,
+  }).catch(() => {})
+
+  try {
+    const achievementId = (achievement as any)?.id as string | undefined
+    const studentUserId = await getStudentUserId(studentId)
+    if (achievementId && studentUserId) await seedAchievementEarnedNotification(studentUserId, achievementId, def.title)
+  } catch {
+    // non-critical
   }
 
   return true
@@ -42,7 +63,7 @@ async function unlockAchievement(
 
 // ─── Resolve portfolio id (null-safe) ────────────────────────────────────────
 
-async function resolvePortfolioId(studentId: string): Promise<string | null> {
+export async function resolvePortfolioId(studentId: string): Promise<string | null> {
   const db = createServiceClient()
   const { data } = await db
     .from('student_portfolios')

@@ -1626,6 +1626,7 @@ export type Database = {
           certificate_code: string
           certificate_type: string
           course_id: string | null
+          course_title_snapshot: string | null
           created_at: string
           description: string | null
           id: string
@@ -1638,6 +1639,7 @@ export type Database = {
           revoked_at: string | null
           revoked_by: string | null
           semester_id: string | null
+          semester_name_snapshot: string | null
           status: string
           student_id: string
           template_id: string | null
@@ -1651,6 +1653,7 @@ export type Database = {
           certificate_code: string
           certificate_type: string
           course_id?: string | null
+          course_title_snapshot?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1663,6 +1666,7 @@ export type Database = {
           revoked_at?: string | null
           revoked_by?: string | null
           semester_id?: string | null
+          semester_name_snapshot?: string | null
           status?: string
           student_id: string
           template_id?: string | null
@@ -1676,6 +1680,7 @@ export type Database = {
           certificate_code?: string
           certificate_type?: string
           course_id?: string | null
+          course_title_snapshot?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -1688,6 +1693,7 @@ export type Database = {
           revoked_at?: string | null
           revoked_by?: string | null
           semester_id?: string | null
+          semester_name_snapshot?: string | null
           status?: string
           student_id?: string
           template_id?: string | null
@@ -1785,6 +1791,523 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "certificate_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cohort_graduation_decisions: {
+        Row: {
+          created_at: string
+          decision: string
+          id: string
+          new_enrollment_id: string | null
+          new_group_id: string | null
+          old_enrollment_id: string | null
+          old_group_id: string
+          performed_by: string | null
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          decision: string
+          id?: string
+          new_enrollment_id?: string | null
+          new_group_id?: string | null
+          old_enrollment_id?: string | null
+          old_group_id: string
+          performed_by?: string | null
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          decision?: string
+          id?: string
+          new_enrollment_id?: string | null
+          new_group_id?: string | null
+          old_enrollment_id?: string | null
+          old_group_id?: string
+          performed_by?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_enrollment_id_fkey"
+            columns: ["new_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "student_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_enrollment_id_fkey"
+            columns: ["new_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_attendance_drift"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_enrollment_id_fkey"
+            columns: ["new_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_contract_consumption_mismatch"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_enrollment_id_fkey"
+            columns: ["new_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_enrollment_academic_progress"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_enrollment_id_fkey"
+            columns: ["new_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_enrollment_integrity"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_enrollment_id_fkey"
+            columns: ["new_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_finance_contract_summary"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_enrollment_id_fkey"
+            columns: ["new_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_contract_drift"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_enrollment_id_fkey"
+            columns: ["new_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_dashboard_integrity"
+            referencedColumns: ["active_enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_group_id_fkey"
+            columns: ["new_group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_group_id_fkey"
+            columns: ["new_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_attendance_mismatch"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_group_id_fkey"
+            columns: ["new_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_count_drift"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_group_id_fkey"
+            columns: ["new_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_group_id_fkey"
+            columns: ["new_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_progress_integrity"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_group_id_fkey"
+            columns: ["new_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_readiness"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_group_id_fkey"
+            columns: ["new_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_open_ended_groups"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_group_id_fkey"
+            columns: ["new_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_session_count_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_group_id_fkey"
+            columns: ["new_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_course_history"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_new_group_id_fkey"
+            columns: ["new_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_package_ledger"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_enrollment_id_fkey"
+            columns: ["old_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "student_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_enrollment_id_fkey"
+            columns: ["old_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_attendance_drift"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_enrollment_id_fkey"
+            columns: ["old_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_contract_consumption_mismatch"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_enrollment_id_fkey"
+            columns: ["old_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_enrollment_academic_progress"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_enrollment_id_fkey"
+            columns: ["old_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_enrollment_integrity"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_enrollment_id_fkey"
+            columns: ["old_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_finance_contract_summary"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_enrollment_id_fkey"
+            columns: ["old_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_contract_drift"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_enrollment_id_fkey"
+            columns: ["old_enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_dashboard_integrity"
+            referencedColumns: ["active_enrollment_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_attendance_mismatch"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_count_drift"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_progress_integrity"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_readiness"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_open_ended_groups"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_session_count_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_course_history"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_package_ledger"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_performed_by_fkey"
+            columns: ["performed_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "v_finance_contract_summary"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_decisions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_risk"
+            referencedColumns: ["student_id"]
+          },
+        ]
+      }
+      cohort_graduation_drafts: {
+        Row: {
+          committed_group_id: string | null
+          created_at: string
+          created_by: string | null
+          decisions: Json
+          id: string
+          new_group_draft: Json
+          old_group_id: string
+          request_id: string | null
+          status: string
+          step: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          committed_group_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          decisions?: Json
+          id?: string
+          new_group_draft?: Json
+          old_group_id: string
+          request_id?: string | null
+          status?: string
+          step?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          committed_group_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          decisions?: Json
+          id?: string
+          new_group_draft?: Json
+          old_group_id?: string
+          request_id?: string | null
+          status?: string
+          step?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cohort_graduation_drafts_committed_group_id_fkey"
+            columns: ["committed_group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_committed_group_id_fkey"
+            columns: ["committed_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_attendance_mismatch"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_committed_group_id_fkey"
+            columns: ["committed_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_count_drift"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_committed_group_id_fkey"
+            columns: ["committed_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_committed_group_id_fkey"
+            columns: ["committed_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_progress_integrity"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_committed_group_id_fkey"
+            columns: ["committed_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_readiness"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_committed_group_id_fkey"
+            columns: ["committed_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_open_ended_groups"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_committed_group_id_fkey"
+            columns: ["committed_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_session_count_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_committed_group_id_fkey"
+            columns: ["committed_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_course_history"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_committed_group_id_fkey"
+            columns: ["committed_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_package_ledger"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_attendance_mismatch"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_count_drift"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_progress_integrity"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_readiness"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_open_ended_groups"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_session_count_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_course_history"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_old_group_id_fkey"
+            columns: ["old_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_package_ledger"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "cohort_graduation_drafts_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -3443,8 +3966,84 @@ export type Database = {
           },
         ]
       }
+      group_series: {
+        Row: {
+          branch_id: string
+          created_at: string
+          day_of_week: string | null
+          default_capacity: number | null
+          default_course_id: string | null
+          default_room: string | null
+          id: string
+          name: string
+          time: string | null
+          updated_at: string
+        }
+        Insert: {
+          branch_id: string
+          created_at?: string
+          day_of_week?: string | null
+          default_capacity?: number | null
+          default_course_id?: string | null
+          default_room?: string | null
+          id?: string
+          name: string
+          time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string
+          created_at?: string
+          day_of_week?: string | null
+          default_capacity?: number | null
+          default_course_id?: string | null
+          default_room?: string | null
+          id?: string
+          name?: string
+          time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_series_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_series_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_overview"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "group_series_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_financial_collection_health"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "group_series_default_course_id_fkey"
+            columns: ["default_course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_series_default_course_id_fkey"
+            columns: ["default_course_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_package_ledger"
+            referencedColumns: ["course_id"]
+          },
+        ]
+      }
       group_students: {
         Row: {
+          course_id: string | null
           enrollment_type: string
           group_id: string
           id: string
@@ -3455,6 +4054,7 @@ export type Database = {
           student_id: string
         }
         Insert: {
+          course_id?: string | null
           enrollment_type?: string
           group_id: string
           id?: string
@@ -3465,6 +4065,7 @@ export type Database = {
           student_id: string
         }
         Update: {
+          course_id?: string | null
           enrollment_type?: string
           group_id?: string
           id?: string
@@ -3475,6 +4076,20 @@ export type Database = {
           student_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "group_students_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_students_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_package_ledger"
+            referencedColumns: ["course_id"]
+          },
           {
             foreignKeyName: "group_students_group_id_fkey"
             columns: ["group_id"]
@@ -3570,6 +4185,7 @@ export type Database = {
       }
       groups: {
         Row: {
+          archived_at: string | null
           branch_id: string
           capacity: number | null
           code: string | null
@@ -3577,12 +4193,17 @@ export type Database = {
           created_at: string
           day_of_week: string | null
           deleted_at: string | null
+          graduated_at: string | null
+          graduated_from_group_id: string | null
+          graduated_to_group_id: string | null
+          graduation_request_id: string | null
           id: string
           metadata: Json
           name: string
           notes: string | null
           robocode_share_percent: number
           semester_id: string | null
+          series_id: string | null
           start_date: string | null
           status: string
           target_sessions: number
@@ -3592,6 +4213,7 @@ export type Database = {
           waitlist_capacity: number
         }
         Insert: {
+          archived_at?: string | null
           branch_id: string
           capacity?: number | null
           code?: string | null
@@ -3599,12 +4221,17 @@ export type Database = {
           created_at?: string
           day_of_week?: string | null
           deleted_at?: string | null
+          graduated_at?: string | null
+          graduated_from_group_id?: string | null
+          graduated_to_group_id?: string | null
+          graduation_request_id?: string | null
           id?: string
           metadata?: Json
           name: string
           notes?: string | null
           robocode_share_percent?: number
           semester_id?: string | null
+          series_id?: string | null
           start_date?: string | null
           status?: string
           target_sessions?: number
@@ -3614,6 +4241,7 @@ export type Database = {
           waitlist_capacity?: number
         }
         Update: {
+          archived_at?: string | null
           branch_id?: string
           capacity?: number | null
           code?: string | null
@@ -3621,12 +4249,17 @@ export type Database = {
           created_at?: string
           day_of_week?: string | null
           deleted_at?: string | null
+          graduated_at?: string | null
+          graduated_from_group_id?: string | null
+          graduated_to_group_id?: string | null
+          graduation_request_id?: string | null
           id?: string
           metadata?: Json
           name?: string
           notes?: string | null
           robocode_share_percent?: number
           semester_id?: string | null
+          series_id?: string | null
           start_date?: string | null
           status?: string
           target_sessions?: number
@@ -3658,10 +4291,157 @@ export type Database = {
             referencedColumns: ["branch_id"]
           },
           {
+            foreignKeyName: "groups_graduated_from_group_id_fkey"
+            columns: ["graduated_from_group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_from_group_id_fkey"
+            columns: ["graduated_from_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_attendance_mismatch"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_from_group_id_fkey"
+            columns: ["graduated_from_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_count_drift"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_from_group_id_fkey"
+            columns: ["graduated_from_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_from_group_id_fkey"
+            columns: ["graduated_from_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_progress_integrity"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_from_group_id_fkey"
+            columns: ["graduated_from_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_readiness"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_from_group_id_fkey"
+            columns: ["graduated_from_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_open_ended_groups"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_from_group_id_fkey"
+            columns: ["graduated_from_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_session_count_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_from_group_id_fkey"
+            columns: ["graduated_from_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_course_history"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_from_group_id_fkey"
+            columns: ["graduated_from_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_package_ledger"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_to_group_id_fkey"
+            columns: ["graduated_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_to_group_id_fkey"
+            columns: ["graduated_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_attendance_mismatch"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_to_group_id_fkey"
+            columns: ["graduated_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_count_drift"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_to_group_id_fkey"
+            columns: ["graduated_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_to_group_id_fkey"
+            columns: ["graduated_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_progress_integrity"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_to_group_id_fkey"
+            columns: ["graduated_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_group_readiness"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_to_group_id_fkey"
+            columns: ["graduated_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_open_ended_groups"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_to_group_id_fkey"
+            columns: ["graduated_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_session_count_health"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_to_group_id_fkey"
+            columns: ["graduated_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_course_history"
+            referencedColumns: ["group_id"]
+          },
+          {
+            foreignKeyName: "groups_graduated_to_group_id_fkey"
+            columns: ["graduated_to_group_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_package_ledger"
+            referencedColumns: ["group_id"]
+          },
+          {
             foreignKeyName: "groups_semester_id_fkey"
             columns: ["semester_id"]
             isOneToOne: false
             referencedRelation: "semesters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "groups_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "group_series"
             referencedColumns: ["id"]
           },
         ]
@@ -7557,6 +8337,7 @@ export type Database = {
       student_achievements: {
         Row: {
           achievement_type: string
+          competition_id: string | null
           created_at: string
           created_by: string | null
           date_awarded: string
@@ -7571,6 +8352,7 @@ export type Database = {
         }
         Insert: {
           achievement_type?: string
+          competition_id?: string | null
           created_at?: string
           created_by?: string | null
           date_awarded?: string
@@ -7585,6 +8367,7 @@ export type Database = {
         }
         Update: {
           achievement_type?: string
+          competition_id?: string | null
           created_at?: string
           created_by?: string | null
           date_awarded?: string
@@ -7598,6 +8381,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "student_achievements_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "student_competitions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "student_achievements_created_by_fkey"
             columns: ["created_by"]
@@ -7700,6 +8490,150 @@ export type Database = {
           },
           {
             foreignKeyName: "student_badges_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_risk"
+            referencedColumns: ["student_id"]
+          },
+        ]
+      }
+      student_competitions: {
+        Row: {
+          achievement_id: string | null
+          award: string | null
+          branch_id: string | null
+          certificate_id: string | null
+          coach_instructor_id: string | null
+          competition_name: string
+          created_at: string
+          created_by: string
+          id: string
+          media: Json
+          notes: string | null
+          project_id: string | null
+          rank: string | null
+          role: string | null
+          season: string | null
+          student_id: string
+          team_name: string | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          achievement_id?: string | null
+          award?: string | null
+          branch_id?: string | null
+          certificate_id?: string | null
+          coach_instructor_id?: string | null
+          competition_name: string
+          created_at?: string
+          created_by: string
+          id?: string
+          media?: Json
+          notes?: string | null
+          project_id?: string | null
+          rank?: string | null
+          role?: string | null
+          season?: string | null
+          student_id: string
+          team_name?: string | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          achievement_id?: string | null
+          award?: string | null
+          branch_id?: string | null
+          certificate_id?: string | null
+          coach_instructor_id?: string | null
+          competition_name?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          media?: Json
+          notes?: string | null
+          project_id?: string | null
+          rank?: string | null
+          role?: string | null
+          season?: string | null
+          student_id?: string
+          team_name?: string | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_competitions_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "student_achievements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_competitions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_competitions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_overview"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "student_competitions_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_financial_collection_health"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "student_competitions_certificate_id_fkey"
+            columns: ["certificate_id"]
+            isOneToOne: false
+            referencedRelation: "certificates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_competitions_coach_instructor_id_fkey"
+            columns: ["coach_instructor_id"]
+            isOneToOne: false
+            referencedRelation: "instructors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_competitions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_competitions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_competitions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_competitions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "v_finance_contract_summary"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "student_competitions_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "v_student_risk"
@@ -7898,6 +8832,7 @@ export type Database = {
           pricing_plan: string | null
           pricing_snapshot: Json
           remaining_sessions: number | null
+          renewal_of: string | null
           start_date: string
           status: string
           student_id: string
@@ -7935,6 +8870,7 @@ export type Database = {
           pricing_plan?: string | null
           pricing_snapshot?: Json
           remaining_sessions?: number | null
+          renewal_of?: string | null
           start_date?: string
           status?: string
           student_id: string
@@ -7972,6 +8908,7 @@ export type Database = {
           pricing_plan?: string | null
           pricing_snapshot?: Json
           remaining_sessions?: number | null
+          renewal_of?: string | null
           start_date?: string
           status?: string
           student_id?: string
@@ -8122,6 +9059,62 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "student_enrollments_renewal_of_fkey"
+            columns: ["renewal_of"]
+            isOneToOne: false
+            referencedRelation: "student_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_renewal_of_fkey"
+            columns: ["renewal_of"]
+            isOneToOne: false
+            referencedRelation: "v_attendance_drift"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_renewal_of_fkey"
+            columns: ["renewal_of"]
+            isOneToOne: false
+            referencedRelation: "v_contract_consumption_mismatch"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_renewal_of_fkey"
+            columns: ["renewal_of"]
+            isOneToOne: false
+            referencedRelation: "v_enrollment_academic_progress"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_renewal_of_fkey"
+            columns: ["renewal_of"]
+            isOneToOne: false
+            referencedRelation: "v_enrollment_integrity"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_renewal_of_fkey"
+            columns: ["renewal_of"]
+            isOneToOne: false
+            referencedRelation: "v_finance_contract_summary"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_renewal_of_fkey"
+            columns: ["renewal_of"]
+            isOneToOne: false
+            referencedRelation: "v_student_contract_drift"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_enrollments_renewal_of_fkey"
+            columns: ["renewal_of"]
+            isOneToOne: false
+            referencedRelation: "v_student_dashboard_integrity"
+            referencedColumns: ["active_enrollment_id"]
+          },
+          {
             foreignKeyName: "student_enrollments_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
@@ -8253,6 +9246,186 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_student_dashboard_integrity"
             referencedColumns: ["active_enrollment_id"]
+          },
+        ]
+      }
+      student_evaluations: {
+        Row: {
+          author_id: string
+          branch_id: string
+          course_id: string | null
+          created_at: string
+          criterion: string
+          custom_label: string | null
+          deleted_at: string | null
+          enrollment_id: string | null
+          evaluated_at: string
+          feedback: string | null
+          id: string
+          rating: number | null
+          score: number | null
+          student_id: string
+          updated_at: string
+          visible_to_parent: boolean
+          visible_to_student: boolean
+        }
+        Insert: {
+          author_id: string
+          branch_id: string
+          course_id?: string | null
+          created_at?: string
+          criterion: string
+          custom_label?: string | null
+          deleted_at?: string | null
+          enrollment_id?: string | null
+          evaluated_at?: string
+          feedback?: string | null
+          id?: string
+          rating?: number | null
+          score?: number | null
+          student_id: string
+          updated_at?: string
+          visible_to_parent?: boolean
+          visible_to_student?: boolean
+        }
+        Update: {
+          author_id?: string
+          branch_id?: string
+          course_id?: string | null
+          created_at?: string
+          criterion?: string
+          custom_label?: string | null
+          deleted_at?: string | null
+          enrollment_id?: string | null
+          evaluated_at?: string
+          feedback?: string | null
+          id?: string
+          rating?: number | null
+          score?: number | null
+          student_id?: string
+          updated_at?: string
+          visible_to_parent?: boolean
+          visible_to_student?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_evaluations_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_dashboard_overview"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "v_financial_collection_health"
+            referencedColumns: ["branch_id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_package_ledger"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "student_enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_attendance_drift"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_contract_consumption_mismatch"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_enrollment_academic_progress"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_enrollment_integrity"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_finance_contract_summary"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_contract_drift"
+            referencedColumns: ["enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_dashboard_integrity"
+            referencedColumns: ["active_enrollment_id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "v_finance_contract_summary"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "student_evaluations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_risk"
+            referencedColumns: ["student_id"]
           },
         ]
       }
@@ -8469,21 +9642,21 @@ export type Database = {
           {
             foreignKeyName: "student_financial_accounts_student_id_fkey"
             columns: ["student_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "student_financial_accounts_student_id_fkey"
             columns: ["student_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "v_finance_contract_summary"
             referencedColumns: ["student_id"]
           },
           {
             foreignKeyName: "student_financial_accounts_student_id_fkey"
             columns: ["student_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "v_student_risk"
             referencedColumns: ["student_id"]
           },
@@ -8566,40 +9739,46 @@ export type Database = {
       }
       student_notes: {
         Row: {
+          attachments: Json
           author_id: string
           category: string
           content: string
           created_at: string
+          deleted_at: string | null
           id: string
-          is_private: boolean
           schedule_id: string | null
           severity: string
           student_id: string
           updated_at: string
+          visibility: string
         }
         Insert: {
+          attachments?: Json
           author_id: string
           category?: string
           content: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
-          is_private?: boolean
           schedule_id?: string | null
           severity?: string
           student_id: string
           updated_at?: string
+          visibility?: string
         }
         Update: {
+          attachments?: Json
           author_id?: string
           category?: string
           content?: string
           created_at?: string
+          deleted_at?: string | null
           id?: string
-          is_private?: boolean
           schedule_id?: string | null
           severity?: string
           student_id?: string
           updated_at?: string
+          visibility?: string
         }
         Relationships: [
           {
@@ -9671,6 +10850,7 @@ export type Database = {
           id: string
           metadata: Json
           phone: string | null
+          recovery_email: string | null
           updated_at: string
         }
         Insert: {
@@ -9680,6 +10860,7 @@ export type Database = {
           id: string
           metadata?: Json
           phone?: string | null
+          recovery_email?: string | null
           updated_at?: string
         }
         Update: {
@@ -9689,6 +10870,7 @@ export type Database = {
           id?: string
           metadata?: Json
           phone?: string | null
+          recovery_email?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -13032,6 +14214,15 @@ export type Database = {
         Returns: Json
       }
       check_invoice_overdue: { Args: never; Returns: undefined }
+      commit_cohort_graduation: {
+        Args: {
+          p_draft_id?: string
+          p_payload: Json
+          p_performed_by: string
+          p_request_id: string
+        }
+        Returns: Json
+      }
       consume_attendance_sessions_batch: {
         Args: {
           p_enrollment_ids: string[]
@@ -13058,6 +14249,7 @@ export type Database = {
         Args: { p_branch_id?: string; p_flag_name: string; p_user_id?: string }
         Returns: boolean
       }
+      is_group_archived: { Args: { p_group_id: string }; Returns: boolean }
       mark_broken_promises: { Args: never; Returns: undefined }
       mark_overdue_installments: { Args: never; Returns: undefined }
       next_certificate_number: { Args: never; Returns: string }
