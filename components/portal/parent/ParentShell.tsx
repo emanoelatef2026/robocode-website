@@ -1,51 +1,42 @@
 'use client'
 
-import { useState } from 'react'
 import ParentSidebar from './ParentSidebar'
 import ParentBottomNav from './ParentBottomNav'
-import AdminTopbar from '@/components/admin/AdminTopbar'
-import { TopbarActionProvider } from '@/components/admin/TopbarActionContext'
+import { AppLayout } from '@/components/shared/layout/AppLayout'
+import TopHeader from '@/components/shared/layout/TopHeader'
+import { TopbarActionProvider } from '@/components/shared/layout/TopbarActionContext'
 import NotificationBell from '@/components/portal/shared/NotificationBell'
+import { PARENT_NAV_ITEMS } from '@/modules/parents/navigation'
 import type { ParentChildSummary } from '@/modules/parents/parent-portal-queries'
 
+const PARENT_SECTIONS = [{ items: PARENT_NAV_ITEMS.map(({ label, href, exact }) => ({ label, href, exact, icon: null })) }]
+
 interface Props {
-  children:            React.ReactNode
-  linkedChildren:      ParentChildSummary[]
+  children:             React.ReactNode
+  linkedChildren:       ParentChildSummary[]
   unreadNotifications?: number
+  email?:               string | null
 }
 
-export default function ParentShell({ children, linkedChildren, unreadNotifications = 0 }: Props) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
+export default function ParentShell({ children, linkedChildren, unreadNotifications = 0, email }: Props) {
   return (
     <TopbarActionProvider>
-      <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
-        <ParentSidebar
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          linkedChildren={linkedChildren}
-        />
-
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-20 bg-black/40 md:hidden"
-            onClick={() => setSidebarOpen(false)}
+      <AppLayout
+        renderSidebar={({ isOpen, onClose }) => (
+          <ParentSidebar isOpen={isOpen} onClose={onClose} linkedChildren={linkedChildren} email={email} />
+        )}
+        renderHeader={({ onMenuClick }) => (
+          <TopHeader
+            onMenuClick={onMenuClick}
+            role="parent"
+            sections={PARENT_SECTIONS}
+            notificationSlot={<NotificationBell initialUnreadCount={unreadNotifications} />}
           />
         )}
-
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <AdminTopbar
-            onMenuClick={() => setSidebarOpen(true)}
-            role="parent"
-            bellSlot={<NotificationBell initialUnreadCount={unreadNotifications} />}
-          />
-          <main className="flex-1 overflow-y-auto p-4 md:p-7 pb-bottom-nav md:pb-7 scroll-smooth-mobile">
-            {children}
-          </main>
-        </div>
-
-        <ParentBottomNav />
-      </div>
+        bottomNav={<ParentBottomNav />}
+      >
+        {children}
+      </AppLayout>
     </TopbarActionProvider>
   )
 }

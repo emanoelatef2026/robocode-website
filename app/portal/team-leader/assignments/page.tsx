@@ -6,7 +6,7 @@ import Pagination                               from '@/components/admin/Paginat
 import StatusBadge                              from '@/components/admin/StatusBadge'
 import EmptyState                               from '@/components/admin/EmptyState'
 import Link                                     from 'next/link'
-import { TopbarAction }                         from '@/components/admin/TopbarActionContext'
+import { TopbarAction }                         from '@/components/shared/layout/TopbarActionContext'
 
 interface Props {
   searchParams: Promise<{ page?: string; q?: string; type?: string; status?: string; view?: string }>

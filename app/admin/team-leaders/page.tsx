@@ -5,7 +5,7 @@ import EmptyState from '@/components/admin/EmptyState'
 import Pagination from '@/components/admin/Pagination'
 import SearchInput from '@/components/admin/SearchInput'
 import Link from 'next/link'
-import { TopbarAction } from '@/components/admin/TopbarActionContext'
+import { TopbarAction } from '@/components/shared/layout/TopbarActionContext'
 
 interface Props {
   searchParams: Promise<{ page?: string; q?: string; status?: string }>

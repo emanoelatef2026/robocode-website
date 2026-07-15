@@ -60,6 +60,30 @@
   --safe-top:    env(safe-area-inset-top, 0px);
   --safe-left:   env(safe-area-inset-left, 0px);
   --safe-right:  env(safe-area-inset-right, 0px);
+
+  /* ── Portal layout system (single source of truth for every portal shell) ──── */
+  --sidebar-width:           224px;
+  --sidebar-width-collapsed: 56px;
+  --drawer-width:            224px;
+  --header-height:           64px;
+  --bottom-nav-height:       64px;
+
+  /* Layered UI z-index scale — reused by every drawer/header/bottom-nav/sheet */
+  --z-overlay:        20;
+  --z-drawer:          30;
+  --z-header:          40;
+  --z-bottom-nav:      40;
+  --z-sheet-backdrop:  40;
+  --z-sheet-panel:     50;
+  --z-fab:             50;
+  --z-tooltip:         9999;
+
+  /* Avatar + icon sizes shared across sidebar footer, topbar and bottom nav */
+  --avatar-sm: 28px;
+  --avatar-md: 32px;
+  --icon-sm:   16px;
+  --icon-md:   20px;
+  --icon-lg:   24px;
 }
 
 html {
@@ -124,7 +148,13 @@ button, [role="button"], a {
 }
 
 .pb-bottom-nav {
-  padding-bottom: calc(64px + var(--safe-bottom));
+  padding-bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
+}
+
+/* Mobile drawers/sheets must stop above the fixed bottom nav so they never
+   render underneath it (bottom nav is always z-40, on top of a z-30 drawer). */
+.drawer-safe-bottom {
+  bottom: calc(var(--bottom-nav-height) + var(--safe-bottom));
 }
 
 /* ── Smooth scrolling containers ─────────────────────────────────────────────── */

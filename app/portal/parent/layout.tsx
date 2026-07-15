@@ -10,7 +10,7 @@ export default async function ParentLayout({ children }: { children: React.React
     getUnreadNotificationCount(user.id),
   ])
   return (
-    <ParentShell linkedChildren={linkedChildren} unreadNotifications={unreadNotifications}>
+    <ParentShell linkedChildren={linkedChildren} unreadNotifications={unreadNotifications} email={user.email}>
       {children}
     </ParentShell>
   )

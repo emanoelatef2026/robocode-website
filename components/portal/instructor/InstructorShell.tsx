@@ -1,47 +1,40 @@
 "use client"
 
-import { useState } from "react"
 import InstructorSidebar from "./InstructorSidebar"
 import InstructorBottomNav from "./InstructorBottomNav"
-import AdminTopbar from "@/components/admin/AdminTopbar"
-import { TopbarActionProvider } from "@/components/admin/TopbarActionContext"
+import InstructorFAB from "./InstructorFAB"
+import { AppLayout } from "@/components/shared/layout/AppLayout"
+import TopHeader from "@/components/shared/layout/TopHeader"
+import { TopbarActionProvider } from "@/components/shared/layout/TopbarActionContext"
 import NotificationBell from "@/components/portal/shared/NotificationBell"
-import InstructorFAB    from "./InstructorFAB"
+import { INSTRUCTOR_SECTIONS } from "@/modules/instructor-portal/navigation"
 
 interface Props {
-  children:           React.ReactNode
+  children:             React.ReactNode
   unreadNotifications?: number
+  email?:               string | null
 }
 
-export default function InstructorShell({ children, unreadNotifications = 0 }: Props) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
+export default function InstructorShell({ children, unreadNotifications = 0, email }: Props) {
   return (
     <TopbarActionProvider>
-      <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
-        <InstructorSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 z-20 bg-black/40 md:hidden"
-            onClick={() => setSidebarOpen(false)}
+      <AppLayout
+        renderSidebar={({ isOpen, onClose }) => (
+          <InstructorSidebar isOpen={isOpen} onClose={onClose} email={email} />
+        )}
+        renderHeader={({ onMenuClick }) => (
+          <TopHeader
+            onMenuClick={onMenuClick}
+            role="instructor"
+            sections={INSTRUCTOR_SECTIONS}
+            notificationSlot={<NotificationBell initialUnreadCount={unreadNotifications} />}
           />
         )}
-
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <AdminTopbar
-            onMenuClick={() => setSidebarOpen(true)}
-            role="instructor"
-            bellSlot={<NotificationBell initialUnreadCount={unreadNotifications} />}
-          />
-          <main className="flex-1 overflow-y-auto p-4 md:p-7 pb-bottom-nav md:pb-7 scroll-smooth-mobile">
-            {children}
-          </main>
-        </div>
-
-        <InstructorBottomNav />
-        <InstructorFAB />
-      </div>
+        bottomNav={<InstructorBottomNav />}
+        fab={<InstructorFAB />}
+      >
+        {children}
+      </AppLayout>
     </TopbarActionProvider>
   )
 }

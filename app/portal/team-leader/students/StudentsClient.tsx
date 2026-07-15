@@ -1,7 +1,7 @@
 ﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
-import { useTopbarAction } from '@/components/admin/TopbarActionContext'
+import { useTopbarAction } from '@/components/shared/layout/TopbarActionContext'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import type { StudentOperationalRow, GroupPickerOption } from '@/modules/students/operational'
 import { bulkDeleteStudentsAction } from '@/modules/students/modal-actions'

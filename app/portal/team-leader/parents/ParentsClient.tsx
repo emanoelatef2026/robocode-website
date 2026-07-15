@@ -5,7 +5,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import type { ParentOperationalRow, StudentPickerOption } from '@/modules/parents/operational'
 import ParentDetailDrawer from './ParentDetailDrawer'
 import ParentFormModal    from './ParentFormModal'
-import { useTopbarAction } from '@/components/admin/TopbarActionContext'
+import { useTopbarAction } from '@/components/shared/layout/TopbarActionContext'
 import { buildWhatsAppUrl } from '@/lib/contact-utils'
 
 // Normalize Egyptian phone formats so search matches any variant

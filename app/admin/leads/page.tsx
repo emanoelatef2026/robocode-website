@@ -8,7 +8,7 @@ import Pagination                   from '@/components/admin/Pagination'
 import KpiCard                      from '@/components/admin/KpiCard'
 import Link                         from 'next/link'
 import type { LeadStatus }          from '@/modules/leads/types'
-import { TopbarAction }             from '@/components/admin/TopbarActionContext'
+import { TopbarAction }             from '@/components/shared/layout/TopbarActionContext'
 
 // ── Status display ─────────────────────────────────────────────────────────────
 

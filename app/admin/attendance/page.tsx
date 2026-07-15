@@ -7,7 +7,7 @@ import {
 } from '@/modules/attendance/queries'
 import { listBranches } from '@/modules/branches/queries'
 import Link             from 'next/link'
-import { TopbarAction } from '@/components/admin/TopbarActionContext'
+import { TopbarAction } from '@/components/shared/layout/TopbarActionContext'
 
 interface Props {
   searchParams: Promise<{ q?: string; risk?: string; att?: string; view?: string; branch?: string }>

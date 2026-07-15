@@ -1,41 +1,41 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import AdminSidebar from "./AdminSidebar";
-import AdminTopbar from "./AdminTopbar";
-import AdminBottomNav from "./AdminBottomNav";
-import { TopbarActionProvider } from "./TopbarActionContext";
+import AdminSidebar from "./AdminSidebar"
+import AdminBottomNav from "./AdminBottomNav"
+import { AppLayout } from "@/components/shared/layout/AppLayout"
+import TopHeader from "@/components/shared/layout/TopHeader"
+import { TopbarActionProvider } from "@/components/shared/layout/TopbarActionContext"
+import NotificationBell from "@/components/portal/shared/NotificationBell"
+import { ADMIN_SECTIONS } from "@/modules/admin/navigation"
+import type { PortalRole } from "@/components/shared/layout/roles"
 
 interface Props {
-  children: React.ReactNode
-  role: string
-  permissions: string[]
+  children:             React.ReactNode
+  role:                 PortalRole
+  permissions:          string[]
+  email?:               string | null
+  unreadNotifications?: number
 }
 
-export default function AdminShell({ children, role, permissions }: Props) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
+export default function AdminShell({ children, role, permissions, email, unreadNotifications = 0 }: Props) {
   return (
     <TopbarActionProvider>
-    <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
-      <AdminSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} role={role} permissions={permissions} />
-
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-20 bg-black/40 md:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <AdminTopbar onMenuClick={() => setSidebarOpen(true)} role={role} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-7 pb-bottom-nav md:pb-7 scroll-smooth-mobile">
-          {children}
-        </main>
-      </div>
-
-      <AdminBottomNav role={role} permissions={permissions} />
-    </div>
+      <AppLayout
+        renderSidebar={({ isOpen, onClose }) => (
+          <AdminSidebar isOpen={isOpen} onClose={onClose} role={role} permissions={permissions} email={email} />
+        )}
+        renderHeader={({ onMenuClick }) => (
+          <TopHeader
+            onMenuClick={onMenuClick}
+            role={role}
+            sections={ADMIN_SECTIONS}
+            notificationSlot={<NotificationBell initialUnreadCount={unreadNotifications} />}
+          />
+        )}
+        bottomNav={<AdminBottomNav role={role} permissions={permissions} />}
+      >
+        {children}
+      </AppLayout>
     </TopbarActionProvider>
-  );
+  )
 }

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import CourseModal from '@/app/admin/courses/CourseModal'
 import type { CourseListItem } from '@/modules/courses/types'
-import { useTopbarAction } from '@/components/admin/TopbarActionContext'
+import { useTopbarAction } from '@/components/shared/layout/TopbarActionContext'
 
 export interface CourseMetric {
   courseId:  string

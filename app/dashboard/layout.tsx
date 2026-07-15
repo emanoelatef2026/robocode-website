@@ -3,14 +3,9 @@ import { redirect }    from 'next/navigation'
 import Link            from 'next/link'
 import { ROLE_PORTAL_MAP } from '@/types/enums'
 import type { RoleName } from '@/types/enums'
+import { ROLE_LABELS } from '@/components/shared/layout/roles'
 
 const ALLOWED: RoleName[] = ['super_admin', 'team_leader', 'instructor']
-
-const ROLE_LABELS: Record<string, string> = {
-  super_admin:  'Admin',
-  team_leader:  'Team Leader',
-  instructor:   'Instructor',
-}
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireAuth()

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { useTopbarAction } from '@/components/admin/TopbarActionContext'
+import { useTopbarAction } from '@/components/shared/layout/TopbarActionContext'
 import type { InstructorOperationalRow, InstructorFormOptions } from '@/modules/instructors/types'
 import { useInstructorState } from './workspace/hooks/useInstructorState'
 import { useInstructorFilters } from './workspace/hooks/useInstructorFilters'

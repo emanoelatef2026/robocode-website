@@ -57,7 +57,7 @@ export default async function InstructorLayout({ children }: { children: React.R
   })()
 
   return (
-    <InstructorShell unreadNotifications={unreadNotifications}>
+    <InstructorShell unreadNotifications={unreadNotifications} email={user.email}>
       {children}
     </InstructorShell>
   )

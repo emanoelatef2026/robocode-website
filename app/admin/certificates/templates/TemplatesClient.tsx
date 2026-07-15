@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import StatusBadge from '@/components/admin/StatusBadge'
 import TemplateFormModal from '@/components/admin/TemplateFormModal'
 import type { CertificateTemplateListItem } from '@/modules/certificates/types'
-import { useTopbarAction } from '@/components/admin/TopbarActionContext'
+import { useTopbarAction } from '@/components/shared/layout/TopbarActionContext'
 
 interface Props {
   templates: CertificateTemplateListItem[]
