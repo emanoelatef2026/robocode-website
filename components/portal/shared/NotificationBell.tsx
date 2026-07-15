@@ -12,6 +12,12 @@ const TYPE_ICON: Record<string, string> = {
   STUDENT_PROJECT:         '🎯',
   STUDENT_VIDEO:           '🎥',
   ANNOUNCEMENT:            '📢',
+  // Student domain (Sprint 2) — shared by student + parent portals
+  EVALUATION_PUBLISHED:    '📊',
+  STUDENT_NOTE_SHARED:     '📌',
+  PARENT_NOTE_SHARED:      '📌',
+  ACHIEVEMENT_EARNED:      '🏅',
+  COMPETITION_RESULT:      '🎖️',
 }
 
 function timeAgo(iso: string): string {

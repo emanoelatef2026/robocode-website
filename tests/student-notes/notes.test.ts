@@ -159,6 +159,8 @@ describe('Student notes', () => {
     await createTeamLeaderNote({
       student_id: '123e4567-e89b-42d3-a456-426614174000', // schema requires a valid (RFC4122) UUID
       content:    'Sensitive detail the student must never see',
+      category:   'GENERAL',
+      severity:   'LOW',
       visibility: 'PARENT_EVALUATION',
     })
 
