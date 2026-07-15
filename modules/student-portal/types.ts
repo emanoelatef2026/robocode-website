@@ -105,3 +105,37 @@ export interface CertificateEligibility {
   group_name:         string | null
   course_title:       string | null
 }
+
+// ─── Learning Card — one per concurrently-active enrollment ──────────────────
+// Multi-course-correct counterpart to the single-course fields on
+// StudentDashboardData. A student in 2 active courses gets 2 cards.
+
+export type CertificateCardStatus = 'issued' | 'eligible' | 'in_progress'
+
+// ─── Hero header identity fields (self-scoped, no branch-access gate needed —
+// a student reading their own record is always allowed) ───────────────────────
+
+export interface StudentProfileHeader {
+  student_code: string | null
+  branch_name:  string | null
+  status:       'active' | 'inactive' | 'graduated' | 'paused' | 'banned'
+}
+
+export interface LearningCard {
+  group_id:            string
+  group_name:          string | null
+  course_title:        string | null
+  instructor_name:     string | null
+  day_of_week:         string | null
+  group_time:          string | null
+  enrolled_sessions:   number
+  consumed_sessions:   number
+  remaining_sessions:  number
+  att_present:         number
+  att_total:           number
+  att_pct:             number
+  progress_pct:        number | null
+  next_session_at:     string | null
+  next_session_topic:  string | null
+  certificate_status:  CertificateCardStatus
+}

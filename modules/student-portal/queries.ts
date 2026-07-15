@@ -3,6 +3,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { getLevelProgress } from '@/modules/gamification/xp-service'
 import { getStudentGroupRank, getStudentOfTheWeek } from '@/modules/gamification/queries'
 import { resolvePrimaryActiveGroupId, resolveActiveGroupIds } from '@/modules/academic/enrollment-integrity'
+import { getOwnCertificates } from '@/modules/certificates/queries'
 import type {
   StudentEnrollment,
   StudentProgressStats,
@@ -11,6 +12,9 @@ import type {
   StudentDashboardData,
   StudentAttendanceRecord,
   CertificateEligibility,
+  LearningCard,
+  CertificateCardStatus,
+  StudentProfileHeader,
 } from './types'
 
 // ─── Shared student-id lookup ─────────────────────────────────────────────────
@@ -24,6 +28,58 @@ async function resolveStudentId(userId: string): Promise<string | null> {
     .is('deleted_at', null)
     .maybeSingle()
   return (data as any)?.id ?? null
+}
+
+// ─── Hero header identity fields ──────────────────────────────────────────────
+// Deliberately self-scoped by userId only (no isBranchAccessible gate, unlike
+// the staff-facing modules/students/queries.ts getStudent()) — a student
+// reading their own code/branch/status never needs a branch-membership check.
+
+export async function getStudentProfileHeader(userId: string): Promise<StudentProfileHeader | null> {
+  const db = createServiceClient()
+  const { data } = await db
+    .from('students')
+    .select('student_code, status, branches!students_branch_id_fkey(name)')
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .maybeSingle()
+  if (!data) return null
+  const row = data as any
+  return {
+    student_code: row.student_code ?? null,
+    branch_name:  row.branches?.name ?? null,
+    status:       row.status,
+  }
+}
+
+// ─── Shared instructor-name resolver ──────────────────────────────────────────
+// Tries the course-level instructor first, then falls back to the group's lead
+// instructor (group_instructors). Shared by every query below that needs to
+// display "who teaches this group" — previously duplicated verbatim in 2 places.
+async function resolveGroupInstructorName(
+  db: ReturnType<typeof createServiceClient>,
+  groupId: string,
+  instructorId: string | null
+): Promise<string | null> {
+  if (instructorId) {
+    const { data: ir } = await db
+      .from('instructors')
+      .select('users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
+      .eq('id', instructorId)
+      .maybeSingle()
+    const ip = (ir as any)?.users?.profiles
+    const name = ip ? [ip.first_name, ip.last_name].filter(Boolean).join(' ') : ''
+    if (name) return name
+  }
+  const { data: giRows } = await db
+    .from('group_instructors')
+    .select('role, instructors!group_instructors_instructor_id_fkey(users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name)))')
+    .eq('group_id', groupId)
+  const gis = (giRows ?? []) as any[]
+  const gi  = gis.find((r: any) => r.role === 'lead') ?? gis[0] ?? null
+  const ip  = gi?.instructors?.users?.profiles
+  const name = ip ? [ip.first_name, ip.last_name].filter(Boolean).join(' ') : ''
+  return name || null
 }
 
 // ─── Comprehensive dashboard data ────────────────────────────────────────────
@@ -174,28 +230,7 @@ export async function getStudentDashboardData(
       : null
   }
 
-  // Instructor name — try group_courses.instructor_id first, then group_instructors
-  let instructorName: string | null = null
-  if (instrId) {
-    const { data: ir } = await db
-      .from('instructors')
-      .select('users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
-      .eq('id', instrId)
-      .maybeSingle()
-    const ip = (ir as any)?.users?.profiles
-    if (ip) instructorName = [ip.first_name, ip.last_name].filter(Boolean).join(' ') || null
-  }
-  // Fallback: group_instructors table (TL assigns instructor at the group level)
-  if (!instructorName) {
-    const { data: giRows } = await db
-      .from('group_instructors')
-      .select('role, instructors!group_instructors_instructor_id_fkey(users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name)))')
-      .eq('group_id', groupId)
-    const gis = (giRows ?? []) as any[]
-    const gi  = gis.find((r: any) => r.role === 'lead') ?? gis[0] ?? null
-    const ip  = gi?.instructors?.users?.profiles
-    if (ip) instructorName = [ip.first_name, ip.last_name].filter(Boolean).join(' ') || null
-  }
+  const instructorName = await resolveGroupInstructorName(db, groupId, instrId)
 
   // Sessions — scoped to the student's enrollment window.
   // scheduleIds:          non-cancelled sessions (for assignment queries)
@@ -464,28 +499,7 @@ export async function getStudentEnrollment(userId: string): Promise<StudentEnrol
 
   const gc           = gcRow as any
   const instructorId = gc?.instructor_id ?? null
-
-  // Instructor name — try group_courses.instructor_id first, then group_instructors
-  let instructorName: string | null = null
-  if (instructorId) {
-    const { data: instrRow } = await db
-      .from('instructors')
-      .select('users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
-      .eq('id', instructorId)
-      .maybeSingle()
-    const prof = (instrRow as any)?.users?.profiles
-    if (prof) instructorName = [prof.first_name, prof.last_name].filter(Boolean).join(' ') || null
-  }
-  if (!instructorName) {
-    const { data: giRows } = await db
-      .from('group_instructors')
-      .select('role, instructors!group_instructors_instructor_id_fkey(users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name)))')
-      .eq('group_id', groupId)
-    const gis = (giRows ?? []) as any[]
-    const gi  = gis.find((r: any) => r.role === 'lead') ?? gis[0] ?? null
-    const ip  = gi?.instructors?.users?.profiles
-    if (ip) instructorName = [ip.first_name, ip.last_name].filter(Boolean).join(' ') || null
-  }
+  const instructorName = await resolveGroupInstructorName(db, groupId, instructorId)
 
   return {
     student_id:      studentId,
@@ -808,6 +822,177 @@ export async function getCertificateEligibility(userId: string): Promise<Certifi
       sessions_remaining: remainingSessions,
       group_name:         groupNameById.get(groupId) ?? null,
       course_title:       gcByGroup.get(groupId)?.courses?.title ?? null,
+    }
+  })
+}
+
+// ─── Learning Cards — one per concurrently-active enrollment ──────────────────
+// Multi-course-correct: a student in 2 active courses gets 2 cards, each with
+// its own instructor/schedule/attendance/progress/next-session/certificate
+// status. All lookups are batched across every active group up front — no
+// per-group query loop. Certificate status is derived by zipping
+// getCertificateEligibility(userId)'s result against activeGroupIds (both are
+// built from the same resolveActiveGroupIds(...) call with the same FIFO
+// order, so a positional zip is safe) and cross-checking getOwnCertificates
+// for an already-issued certificate matching the course title.
+export async function getStudentLearningCards(userId: string): Promise<LearningCard[]> {
+  const db        = createServiceClient()
+  const studentId = await resolveStudentId(userId)
+  if (!studentId) return []
+
+  const activeGroupIds = await resolveActiveGroupIds(db, studentId)
+  if (activeGroupIds.length === 0) return []
+
+  const [groupsRes, gcRes, enrRes, progressRes, eligibility, ownCerts] = await Promise.all([
+    db.from('groups').select('id, name, day_of_week, time').in('id', activeGroupIds),
+    // ALL group_courses (active AND inactive) — mirrors getStudentDashboardData
+    // so sessions recorded under a replaced/inactive course are still counted.
+    db.from('group_courses')
+      .select('id, group_id, status, instructor_id, course_id, courses!group_courses_course_id_fkey(title)')
+      .in('group_id', activeGroupIds),
+    db.from('student_enrollments')
+      .select('group_id, enrolled_sessions, consumed_sessions, remaining_sessions, start_date')
+      .eq('student_id', studentId)
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: true }),
+    db.from('student_course_progress')
+      .select('group_id, completion_percentage')
+      .eq('student_id', studentId)
+      .in('group_id', activeGroupIds),
+    getCertificateEligibility(userId),
+    getOwnCertificates(userId),
+  ])
+
+  const groupById = new Map(((groupsRes.data ?? []) as any[]).map(g => [g.id as string, g]))
+
+  const gcRows = (gcRes.data ?? []) as any[]
+  const gcByGroup = new Map<string, any[]>()
+  for (const gc of gcRows) {
+    const list = gcByGroup.get(gc.group_id) ?? []
+    list.push(gc)
+    gcByGroup.set(gc.group_id, list)
+  }
+  const allGcIds       = gcRows.map(gc => gc.id as string)
+  const gcIdToGroupId  = new Map(gcRows.map(gc => [gc.id as string, gc.group_id as string]))
+
+  const enrByGroup = new Map<string, any>()
+  for (const e of (enrRes.data ?? []) as any[]) {
+    if (!enrByGroup.has(e.group_id)) enrByGroup.set(e.group_id, e) // FIFO first per group
+  }
+
+  const progressByGroup = new Map(
+    ((progressRes.data ?? []) as any[]).map(p => [p.group_id as string, p.completion_percentage as number | null])
+  )
+
+  // Schedules across every gc, bucketed by group.
+  let schedRows: any[] = []
+  if (allGcIds.length > 0) {
+    const { data } = await db
+      .from('schedules')
+      .select('id, group_course_id, status, scheduled_at, topic')
+      .in('group_course_id', allGcIds)
+      .neq('status', 'cancelled')
+    schedRows = data ?? []
+  }
+
+  const schedByGroup = new Map<string, any[]>()
+  const completedScheduleIds: string[] = []
+  for (const s of schedRows) {
+    const groupId = gcIdToGroupId.get(s.group_course_id)
+    if (!groupId) continue
+    const list = schedByGroup.get(groupId) ?? []
+    list.push(s)
+    schedByGroup.set(groupId, list)
+    if (s.status === 'completed') completedScheduleIds.push(s.id)
+  }
+
+  let attRows: any[] = []
+  if (completedScheduleIds.length > 0) {
+    const { data } = await db
+      .from('attendance_records')
+      .select('schedule_id, status')
+      .eq('student_id', studentId)
+      .in('schedule_id', completedScheduleIds)
+      .is('invalidated_at', null)
+    attRows = data ?? []
+  }
+  const attStatusBySchedule = new Map(attRows.map(a => [a.schedule_id as string, a.status as string]))
+
+  const eligibilityByGroup   = new Map(activeGroupIds.map((gid, idx) => [gid, eligibility[idx]]))
+  const issuedCertByCourse   = new Map(ownCerts.filter(c => c.course_title).map(c => [c.course_title as string, c]))
+
+  // ── Per-group "active course" selection, then instructor names in parallel ──
+  const activeGcByGroup = new Map<string, any>()
+  for (const groupId of activeGroupIds) {
+    const gcList = gcByGroup.get(groupId) ?? []
+    const activeGc =
+      gcList.find((gc: any) => gc.status === 'active' && gc.courses?.title && gc.courses.title !== 'General Sessions') ??
+      gcList.find((gc: any) => gc.status === 'active') ??
+      gcList.find((gc: any) => gc.courses?.title && gc.courses.title !== 'General Sessions') ??
+      gcList[0] ?? null
+    activeGcByGroup.set(groupId, activeGc)
+  }
+
+  const instructorNames = await Promise.all(
+    activeGroupIds.map(groupId =>
+      resolveGroupInstructorName(db, groupId, activeGcByGroup.get(groupId)?.instructor_id ?? null)
+    )
+  )
+  const instructorNameByGroup = new Map(activeGroupIds.map((gid, idx) => [gid, instructorNames[idx]]))
+
+  const now = Date.now()
+
+  return activeGroupIds.map((groupId): LearningCard => {
+    const group        = groupById.get(groupId)
+    const activeGc      = activeGcByGroup.get(groupId)
+    const courseTitle  = activeGc?.courses?.title ?? null
+
+    const enr = enrByGroup.get(groupId)
+    const enrollmentStartDate = enr?.start_date ?? null
+
+    const groupSchedules = (schedByGroup.get(groupId) ?? []).filter((s: any) =>
+      !enrollmentStartDate || s.scheduled_at >= enrollmentStartDate
+    )
+
+    let attPresent = 0, attTotal = 0
+    for (const s of groupSchedules) {
+      if (s.status !== 'completed') continue
+      const status = attStatusBySchedule.get(s.id)
+      if (!status) continue
+      attTotal++
+      if (status === 'present' || status === 'late' || status === 'makeup') attPresent++
+    }
+    const attPct = attTotal > 0 ? Math.round((attPresent / attTotal) * 100) : 0
+
+    const upcoming = groupSchedules
+      .filter((s: any) => s.status !== 'completed' && new Date(s.scheduled_at).getTime() >= now)
+      .sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0] ?? null
+
+    const eligibilityEntry = eligibilityByGroup.get(groupId)
+    const issuedCert       = courseTitle ? issuedCertByCourse.get(courseTitle) : undefined
+    const certificateStatus: CertificateCardStatus = issuedCert
+      ? 'issued'
+      : eligibilityEntry?.is_eligible
+        ? 'eligible'
+        : 'in_progress'
+
+    return {
+      group_id:            groupId,
+      group_name:          group?.name        ?? null,
+      course_title:        courseTitle,
+      instructor_name:     instructorNameByGroup.get(groupId) ?? null,
+      day_of_week:         group?.day_of_week ?? null,
+      group_time:          group?.time        ?? null,
+      enrolled_sessions:   Number(enr?.enrolled_sessions  ?? 0),
+      consumed_sessions:   Number(enr?.consumed_sessions  ?? 0),
+      remaining_sessions:  Number(enr?.remaining_sessions ?? 0),
+      att_present:         attPresent,
+      att_total:           attTotal,
+      att_pct:             attPct,
+      progress_pct:        progressByGroup.get(groupId) ?? null,
+      next_session_at:     upcoming?.scheduled_at ?? null,
+      next_session_topic:  upcoming?.topic        ?? null,
+      certificate_status:  certificateStatus,
     }
   })
 }

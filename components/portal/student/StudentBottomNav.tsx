@@ -106,6 +106,57 @@ const MORE_ITEMS = [
     ),
     color: "bg-purple-50 text-purple-600",
   },
+  {
+    label: "Journey",
+    href:  "/portal/student/journey",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+        <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.018.008.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z" clipRule="evenodd" />
+      </svg>
+    ),
+    color: "bg-[#FFF1E2] text-[#FF8A1F]",
+  },
+  {
+    label: "Achievements",
+    href:  "/portal/student/achievements",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+    ),
+    color: "bg-purple-50 text-purple-600",
+  },
+  {
+    label: "Evaluations",
+    href:  "/portal/student/evaluations",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+      </svg>
+    ),
+    color: "bg-[#E7F8EE] text-[#10B981]",
+  },
+  {
+    label: "Competitions",
+    href:  "/portal/student/competitions",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+        <path fillRule="evenodd" d="M6 3a1 1 0 00-1 1v1a1 1 0 001 1h.01A5.002 5.002 0 004 10c0 1.7.83 3.207 2.106 4.138A3.995 3.995 0 004 17.5V18a1 1 0 001 1h10a1 1 0 001-1v-.5a3.995 3.995 0 00-2.106-3.362A4.998 4.998 0 0016 10a5.002 5.002 0 00-3.01-4H14a1 1 0 001-1V4a1 1 0 00-1-1H6zm2 6a2 2 0 104 0 2 2 0 00-4 0z" clipRule="evenodd" />
+      </svg>
+    ),
+    color: "bg-[#FFFBEB] text-[#F59E0B]",
+  },
+  {
+    label: "Notes",
+    href:  "/portal/student/notes",
+    icon: (
+      <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+        <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 8a1 1 0 100 2h6a1 1 0 100-2H7zm0-3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+      </svg>
+    ),
+    color: "bg-[#EFF6FF] text-[#2563EB]",
+  },
 ]
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -140,7 +191,7 @@ export default function StudentBottomNav() {
       <AnimatePresence>
         {moreOpen && (
           <motion.div
-            className="fixed inset-x-3 z-50 overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-2xl md:hidden"
+            className="fixed inset-x-3 z-50 max-h-[70vh] overflow-y-auto rounded-2xl border border-[#E2E8F0] bg-white shadow-2xl md:hidden"
             style={{ bottom: "calc(58px + max(8px, env(safe-area-inset-bottom)))" }}
             initial={{ opacity: 0, y: 14, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

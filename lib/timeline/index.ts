@@ -222,6 +222,29 @@ export const TIMELINE_EVENT_LABELS: Record<TimelineEventType, string> = {
   BADGE_EARNED:              'Badge Earned',
 }
 
+// ── Student-visible subset ────────────────────────────────────────────────────
+// student_timeline_events is a shared table — most of the 31 event types are
+// staff/finance/collections concerns (payments, promises, complaints, block
+// state, call logs...) that must never reach a student or parent portal. This
+// is the allowlist the Student Workspace's Learning Journey feed filters
+// against before rendering anything from this table.
+
+export const STUDENT_VISIBLE_TIMELINE_EVENT_TYPES: readonly TimelineEventType[] = [
+  'ENROLLMENT_CREATED',
+  'ENROLLMENT_CANCELLED',
+  'RENEWAL_CREATED',
+  'TRANSFER',
+  'ATTENDANCE_RECORDED',
+  'HOMEWORK_ASSIGNED',
+  'HOMEWORK_COMPLETED',
+  'CERTIFICATE_ISSUED',
+  'EVALUATION_RECORDED',
+  'COMPETITION_LOGGED',
+  'ACHIEVEMENT_EARNED',
+  'BADGE_EARNED',
+  'NOTE_ADDED',
+]
+
 export const TIMELINE_SEVERITY_COLORS: Record<TimelineEventSeverity, string> = {
   INFO:     'bg-slate-100 text-slate-600',
   WARNING:  'bg-amber-100 text-amber-700',
