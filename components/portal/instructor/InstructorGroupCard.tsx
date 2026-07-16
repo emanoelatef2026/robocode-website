@@ -29,7 +29,7 @@ export default function InstructorGroupCard({ g }: { g: InstructorGroupCardData 
   return (
     <Link
       href={`/portal/instructor/groups/${g.group_id}`}
-      className="ds-card group flex gap-4 p-4 md:p-5 transition-all duration-150 hover:border-[#CBD5E1] hover:shadow-[0_4px_16px_rgba(11,31,58,.10)]"
+      className="ds-card group flex gap-4 p-4 md:p-5 transition-all duration-150 hover:border-[#CBD5E1] hover:shadow-[0_4px_16px_rgba(11,31,58,.10)] active:bg-[#F8FAFC]"
     >
       {/* Icon */}
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EEF2FF]">

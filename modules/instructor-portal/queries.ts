@@ -3,6 +3,10 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { ACADEMICALLY_CONSUMING_SESSION_STATUSES } from '@/modules/academic/constants'
 import { getStudentNotes } from '@/modules/student-notes/queries'
 import { getGroupLeaderboard } from '@/modules/gamification/queries'
+import { getInstructorPerformance, getCertReadyStudents } from '@/modules/tl-dashboard/queries'
+import type { InstructorPerf, CertReadyStudent } from '@/modules/tl-dashboard/queries'
+import { listProjectsForInstructorReview } from '@/modules/portfolio/queries'
+import { getInstructorSessionEarnings } from '@/modules/instructor-payments/queries'
 import type {
   InstructorRecord,
   InstructorGroup,
@@ -1972,4 +1976,146 @@ export async function getTodaySessions(instructorId: string): Promise<TodaySessi
     if (ao !== bo) return ao - bo
     return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
   })
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Performance Center — every function here reuses an existing, already-tested
+// query rather than recomputing its business logic. Where the source query is
+// branch/org-scoped (getInstructorPerformance, getCertReadyStudents live in
+// modules/tl-dashboard/queries.ts for the Team Leader's cross-instructor view),
+// results are filtered down to this instructor's own groups/students after the
+// call — never re-derived — so the underlying computation stays single-sourced.
+// ═════════════════════════════════════════════════════════════════════════════
+
+// One instructor's row from the TL's branch-wide performance rollup —
+// attendance rate, homework/portfolio review %, avg student rating.
+export async function getInstructorPerformanceSummary(
+  instructor: InstructorRecord
+): Promise<InstructorPerf | null> {
+  const rows = await getInstructorPerformance([instructor.branch_id])
+  return rows.find((r) => r.instructor_id === instructor.id) ?? null
+}
+
+// Students in this instructor's own groups who are ≥90% through their course
+// (the same "certificate ready" threshold the TL dashboard uses), reusing
+// getCertReadyStudents verbatim and filtering to this instructor's roster.
+export async function getCertReadyStudentsForInstructor(
+  instructor: InstructorRecord,
+  limit = 8
+): Promise<CertReadyStudent[]> {
+  const db = createServiceClient()
+  const { groupIds } = await resolveGcContext(instructor.id, db)
+  if (groupIds.length === 0) return []
+
+  const { data: gsRows } = await db
+    .from('group_students')
+    .select('student_id')
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+  const ownStudentIds = new Set((gsRows ?? []).map((r: any) => r.student_id as string))
+  if (ownStudentIds.size === 0) return []
+
+  const branchWide = await getCertReadyStudents([instructor.branch_id], limit * 4)
+  return branchWide.filter((r) => ownStudentIds.has(r.student_id)).slice(0, limit)
+}
+
+export interface PortfolioStatusCount {
+  status: 'pending_review' | 'approved' | 'needs_improvement' | 'featured'
+  count:  number
+}
+
+// Portfolio completion breakdown for this instructor's students, reusing
+// listProjectsForInstructorReview (one call per status — the same query the
+// Portfolio Review and Review Center pages already use).
+export async function getPortfolioStatusBreakdown(instructorId: string): Promise<PortfolioStatusCount[]> {
+  const statuses = ['pending_review', 'approved', 'needs_improvement', 'featured'] as const
+  const results = await Promise.all(
+    statuses.map((s) => listProjectsForInstructorReview(instructorId, s))
+  )
+  return statuses.map((status, i) => ({ status, count: results[i].length }))
+}
+
+export interface CompetitionActivityItem {
+  student_id:        string
+  student_name:      string
+  competition_name:  string
+  year:               number
+  rank:               string | null
+  award:              string | null
+}
+
+export interface CompetitionActivitySummary {
+  total_records:              number
+  students_with_competitions: number
+  recent:                     CompetitionActivityItem[]
+}
+
+// Competition history logged (by team leaders — instructors are read-only
+// here per RBAC) for students in this instructor's groups. A factual count
+// of what's on record, not a synthesized "candidate" score.
+export async function getCompetitionActivityForInstructor(
+  instructorId: string,
+  limit = 5
+): Promise<CompetitionActivitySummary> {
+  const db = createServiceClient()
+  const { groupIds } = await resolveGcContext(instructorId, db)
+  if (groupIds.length === 0) return { total_records: 0, students_with_competitions: 0, recent: [] }
+
+  const { data: gsRows } = await db
+    .from('group_students')
+    .select('student_id')
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+  const studentIds = [...new Set((gsRows ?? []).map((r: any) => r.student_id as string))]
+  if (studentIds.length === 0) return { total_records: 0, students_with_competitions: 0, recent: [] }
+
+  const { data: allCompRows } = await db
+    .from('student_competitions')
+    .select('id, student_id, competition_name, year, rank, award')
+    .in('student_id', studentIds)
+    .order('year', { ascending: false })
+
+  const totalRecords              = (allCompRows ?? []).length
+  const studentsWithCompetitions  = new Set((allCompRows ?? []).map((r: any) => r.student_id as string)).size
+  const compRows                  = (allCompRows ?? []).slice(0, limit)
+
+  const recentIds = compRows.map((c: any) => c.student_id as string)
+  const { data: studRows } = recentIds.length > 0
+    ? await db
+        .from('students')
+        .select(`id, users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
+        .in('id', recentIds)
+    : { data: [] as any[] }
+  const nameMap = new Map<string, string>(
+    (studRows ?? []).map((s: any) => {
+      const p = s.users?.profiles
+      return [s.id as string, [p?.first_name, p?.last_name].filter(Boolean).join(' ') || 'Unknown']
+    })
+  )
+
+  return {
+    total_records:              totalRecords ?? 0,
+    students_with_competitions: studentsWithCompetitions,
+    recent: (compRows ?? []).map((c: any) => ({
+      student_id:       c.student_id,
+      student_name:     nameMap.get(c.student_id) ?? 'Unknown',
+      competition_name: c.competition_name,
+      year:              c.year,
+      rank:              c.rank,
+      award:             c.award,
+    })),
+  }
+}
+
+// Sessions this instructor has actually taught this calendar month, reusing
+// getInstructorSessionEarnings (the same source the Payments tab reads) —
+// no separate "hours taught" figure since the source data has no duration.
+export async function getInstructorWorkloadThisMonth(instructor: InstructorRecord): Promise<number> {
+  const sessions = await getInstructorSessionEarnings(instructor.id, [instructor.branch_id])
+  const now = new Date()
+  return sessions.filter((s) => {
+    if (s.status !== 'completed') return false
+    const d = new Date(s.scheduled_at)
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+  }).length
 }

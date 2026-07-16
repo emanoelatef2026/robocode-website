@@ -15,7 +15,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import NoteForm from './NoteForm'
 import DeleteNoteButton from './DeleteNoteButton'
-import EvaluationForm from './EvaluationForm'
+import { EvaluationForm } from '@/components/portal/instructor/StudentEvaluationModal'
 
 interface Props { params: Promise<{ id: string; studentId: string }> }
 

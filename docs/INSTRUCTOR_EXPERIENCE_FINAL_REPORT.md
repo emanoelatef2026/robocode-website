@@ -1,164 +1,222 @@
-# Instructor Experience — Sprint Report (2026-07-16)
+# Instructor Experience — Final Report
 
-**Status: Sprint 1 of the Instructor Experience mission. Not the full mission.** The original
-brief asked for a five-product rebuild (Workspace, Session Workspace, Student Workspace, Review
-Center, Performance Center) in one pass, ending in an autonomous push to `origin/main`. Given the
-real scope (multiple sprints of work touching RBAC/RLS and production data) and that the working
-tree already contained a large, un-committed, in-progress slice of exactly this work, this sprint:
-
-1. Audited the actual current state (not a stale report).
-2. Fixed a real IDOR found during that audit.
-3. Finished the two workspace gaps the audit found were still open.
-4. Shipped a first version of the Review Center (previously nonexistent).
-5. Left the Performance Center and the rest of the backlog for a follow-up sprint (see §14).
-
-Push to `origin/main` was intentionally **not** performed autonomously — commits are local,
-pending explicit user review per this session's direction.
+**Status: Sprint 2 (final). Sprint 1 shipped the foundation, Student Workspace, Review Center
+v1, and a security fix. This sprint finishes the Session Experience, ships the Performance
+Center, and closes the remaining accessibility/tablet gaps found in Sprint 1's audit.** Commits
+are local only — push to `origin/main` was intentionally not performed autonomously, per this
+session's direction.
 
 ---
 
-## 1. Product audit findings
+## 1. What remained from Sprint 1
 
-A read-only audit (Explore agent, verified against live file contents, not prior reports) found:
+From `INSTRUCTOR_EXPERIENCE_FINAL_REPORT.md` §14 (the prior version of this document):
 
-- **Instructor Workspace** (dashboard): hero, today's/upcoming sessions, KPI row, top
-  students/pending-projects highlights, pending homework, at-risk students, notifications — all
-  present and reusing `SectionPreviewCard` from the student portal. Gap: no dashboard signal for
-  "students never evaluated" or "certificates pending" (partially closed this sprint — see §8).
-- **Session Workspace** (`groups/[id]` + `groups/[id]/sessions/[sid]`): attendance roster,
-  class-pulse/leaderboard/Student-of-the-Week, curriculum accordion, in-session homework,
-  resources, recordings, end/cancel/postpone — all present. Gap: no in-session portfolio review or
-  badge-award shortcut, no auto-composed session summary. Deferred (see §14).
-- **Student Workspace** (`groups/[id]/students/[studentId]`): attendance, assignments, notes,
-  evaluations, competitions, certificates, timeline were already present from a prior
-  (uncommitted) sprint. **Gap closed this sprint:** portfolio projects, badges and achievements
-  were computed by `getStudentPortfolioDetail` but never rendered on this page — added.
-- **Review Center**: confirmed absent. Homework review and Portfolio review were two disconnected
-  pages with duplicated status-tab UI, and evaluations/certificates had no queue view at all.
-  **Built this sprint** (see §8) as an aggregating hub, not a rewrite of the two existing pages —
-  see §3 for why.
-- **Performance Center**: confirmed absent — no analytics/reporting route exists for the
-  instructor role today, despite the role holding `READ_ANALYTICS`. Not attempted this sprint;
-  scoped as the next sprint's primary deliverable (§14).
-- **RBAC**: competitions are correctly read-only for instructors (`manage_competitions` is not
-  granted to the `instructor` role) — matches the brief. Evaluation writes correctly re-verify
-  group ownership. Portfolio review/badge writes did **not** — see §10, fixed.
+1. Performance Center — did not exist at all.
+2. In-session portfolio review / badge award shortcuts.
+3. Auto-composed session summary.
+4. Accessibility and responsive audits (explicitly deferred, no tooling available).
+5. A fresh audit before calling anything "final."
 
-## 2. UX problems discovered
+Item 4 was re-scoped this sprint into a targeted code-level audit (touch targets, aria-labels,
+focus affordances) since no browser/device is available in this environment — visual/live-device
+QA is still outstanding and is called out explicitly in §12.
 
-- Homework Inbox and Portfolio Review are two separate pages an instructor must visit
-  independently after class, each with its own filter/tab pattern — no single "what needs me"
-  view existed.
-- A student's portfolio (projects, badges, achievements) was invisible from the one screen an
-  instructor actually uses to look at a student — it only existed on a disconnected,
-  non-student-scoped review queue.
-- No dashboard/queue signal ever surfaced students who have **zero** evaluations on record — an
-  instructor could go an entire term without evaluating a student and get no prompt.
+## 2. What was completed this sprint
 
-## 3. Architecture decisions
+Re-audited the live Instructor Portal (not the prior report) via a read-only pass over every
+route under `app/portal/instructor/**`, cross-referenced against `modules/instructor-portal/**`
+and a query inventory of every module the brief asked to reuse (gamification, certificates,
+portfolio, student-competitions, instructor-payments, tl-dashboard). Findings and the resulting
+work:
 
-- **Review Center was built as an aggregator, not a merge of Homework + Portfolio.** Those two
-  pages have genuinely different data shapes (table vs. card grid) and working, tested review
-  actions. Merging them into one mega-page was assessed as high-risk, low-value churn against the
-  brief's own instruction not to perform risky rewrites unrelated to the mission. Instead,
-  `/portal/instructor/review` pulls the top pending items from both existing queries
-  (`listInboxSubmissions`, `listProjectsForInstructorReview`) plus a new query
-  (`getStudentsMissingEvaluation`) into one triage view, and links out to the existing dedicated
-  pages for the actual review action — single source of truth preserved, zero duplicated business
-  logic.
-- **Special Sessions was deliberately left out of primary nav**, even though the audit initially
-  flagged it as "orphaned." A Phase XL test (`XL.2 TEST D`) explicitly encodes that
-  `INSTRUCTOR_NAV` must **not** contain a special-sessions route — a documented prior decision to
-  keep primary nav focused and surface trial/makeup sessions contextually (dashboard quick-start,
-  calendar) instead. This sprint initially violated that test, caught it via `vitest run`, and
-  reverted the nav change rather than overriding a decision already encoded in the test suite.
+**Session Experience** (`groups/[id]/sessions/[sid]` + `AttendanceForm.tsx`):
+- Added a **Quick Evaluation** modal to every attendance roster row (⭐ icon) — an instructor can
+  now record an evaluation without leaving the live class screen. New shared component
+  `components/portal/instructor/StudentEvaluationModal.tsx` factors the evaluation form logic out
+  of the page-local `EvaluationForm.tsx` that Sprint 1 had left as page-scoped; the old file was
+  deleted and the Student Workspace page now imports the same shared form — one source of truth
+  instead of two.
+- The roster row's avatar+name is now itself a link into the full Student Workspace (bigger tap
+  target, one click), replacing what would otherwise have been a fourth separate icon button —
+  kept the row from becoming icon-cluttered while still closing the "can't reach a student's full
+  profile from mid-session" gap.
+- Fixed touch targets and missing `aria-label`s found during the audit: the attendance-note
+  toggle and `StudentNoteModal` trigger were `p-1` icon buttons with no explicit hit area (under
+  ~24px) and only a `title` attribute; both are now 32×32px with proper `aria-label`s. The "All
+  Present/All Absent" bulk buttons went from `py-0.5` to `py-1.5` and gained `aria-label`s.
+- The group page (`groups/[id]/page.tsx`) now shows a live "N to review →" count (homework +
+  portfolio pending, scoped to that specific group) next to the Sessions list, linking into a
+  group-filtered Review Center — closes the loop between "I'm teaching this group" and "this group
+  has pending review work" without a separate lookup.
 
-## 4. Components reused
+**Performance Center** (new, `app/portal/instructor/performance/page.tsx`):
+Built the previously-nonexistent fifth product. Every metric reuses an existing, already-tested
+query rather than recomputing business logic — see §4 for the exact function-by-function mapping.
+Sections: Overview (active groups/students, attendance rate, homework/portfolio review %, avg
+student rating, sessions taught this month), Students Needing Attention, Top Performers,
+Evaluation coverage ("Never Evaluated"), Certificate Readiness, Portfolio Completion breakdown,
+Competition Activity, and a Class Summary table. Added to `INSTRUCTOR_NAV` under a new "Insights"
+section.
 
-- `SectionPreviewCard` (student portal) — dashboard highlights.
-- `EmptyState`, `StatusBadge`, `ds-card` — Review Center, matching the rest of the LMS design
-  system, no new primitives invented.
-- `getStudentPortfolioDetail`, `PROJECT_STATUS_CONFIG` (portfolio module) — student workspace
-  portfolio section and Review Center, no new portfolio query logic.
-- `listInboxSubmissions`, `listProjectsForInstructorReview` — Review Center, unchanged.
-- `resolveGcContext` (existing group-ownership resolver) — new `getStudentsMissingEvaluation`
-  query, same ownership-scoping pattern as `getStudentsRequiringAttention`.
+**Review Center** (extended): now accepts an optional `?groupId=` filter, reusing the `groupId`
+parameter both `listInboxSubmissions` and `listProjectsForInstructorReview` already supported —
+no new query logic, just a page-level plumbing change.
+
+**Accessibility spot-fixes**: `StudentNoteModal`'s close button had no `aria-label` (icon-only ×
+button) — fixed. `InstructorGroupCard`'s clickable affordance was hover-only (`group-hover:`
+color change, `hover:shadow`) with no touch-visible state — added `active:bg-[#F8FAFC]` so tapping
+on a tablet/phone gives the same tactile feedback a mouse hover would on desktop.
+
+## 3. Remaining technical limitations
+
+Documented honestly, not deferred by omission:
+
+- **In-session portfolio review / badge award** was evaluated and deliberately *not* built inline.
+  `assignProjectBadge` requires a `project_id` tied to a specific submitted project — there's no
+  concept of "award a badge during a live class" independent of reviewing an actual submitted
+  project, and that review already lives on a dedicated page with its own tested form
+  (`ProjectReviewForm.tsx`). Embedding the full project-review UI inside the session page would
+  duplicate that component for a workflow (project review) that doesn't naturally happen mid-class
+  anyway — projects are submitted and reviewed asynchronously, not created during a session.
+  Instead, the new group-page "N to review →" badge (§2) gets the instructor there in one click
+  when it *is* relevant.
+- **Auto-composed session summary** was not built. No existing query aggregates
+  attendance+notes+homework into a single artifact, and inventing the aggregation format (what
+  counts as "the summary," what's shown to parents vs. TLs) is a product decision, not a UI
+  wiring task — building it without that decision would mean guessing at a new business rule,
+  which the brief explicitly prohibits ("Do not invent fake metrics" / "Do not change business
+  rules").
+- **Achievement creation stays TL/Admin-only for instructors**, unchanged and intentionally so:
+  `createAchievement` in `modules/portfolio/actions.ts` is gated by `manage_portfolio`, which the
+  `instructor` role does not hold (`modules/rbac/permissions.ts`). Instructors can view
+  achievements (Sprint 1) and award project-linked badges (Sprint 1, IDOR-fixed) but not create
+  freeform achievements — that boundary is deliberate RBAC, not a gap, and building an
+  instructor-side "create achievement" button would bypass it.
+- **`getInstructorPerformanceSummary` and `getCertReadyStudentsForInstructor` compute branch-wide
+  first, then filter to one instructor** (they call the TL dashboard's `getInstructorPerformance`
+  / `getCertReadyStudents` verbatim rather than re-deriving the computation). This is the correct
+  choice under "never duplicate business logic," but it means Performance Center does more work
+  per page load than a purpose-built instructor-scoped query would. Acceptable for a single
+  on-demand page visit; if it becomes a hot path, the right fix is adding an optional
+  `instructorId` filter parameter to `getInstructorPerformance` itself (extending, not
+  duplicating) — left as a follow-up rather than done speculatively here.
+- **Competition Activity reports facts, not "candidates."** The brief asked for "competition
+  candidates" but no existing query encodes what makes a student a candidate (that's a coaching
+  judgment call, not derivable data). Performance Center instead shows real counts — total
+  competition records and distinct students with a record — sourced directly from
+  `student_competitions`, scoped to the instructor's own groups.
+- **Live browser/device QA was not performed** (§12) — no dev server or browser tooling is
+  available in this execution environment. Every claim about spacing/touch targets/contrast in
+  this report is a code-level read, not a rendered observation.
+
+## 4. Components/queries reused (no duplicated business logic)
+
+| Performance Center metric | Reused from |
+|---|---|
+| Attendance rate, homework/portfolio review %, avg rating | `getInstructorPerformance` (`modules/tl-dashboard/queries.ts`), filtered to one instructor |
+| Certificate readiness | `getCertReadyStudents` (`modules/tl-dashboard/queries.ts`), filtered to own groups |
+| Students needing attention | `getStudentsRequiringAttention` (Sprint 1) |
+| Top performers | `getTopStudentsAcrossInstructorGroups` (existing) |
+| Never evaluated | `getStudentsMissingEvaluation` (Sprint 1) |
+| Portfolio completion | `listProjectsForInstructorReview` (existing), called once per status |
+| Workload (sessions this month) | `getInstructorSessionEarnings` (`modules/instructor-payments/queries.ts`), filtered by month |
+| Class summary | `listInstructorGroups` (existing) |
+
+New, genuinely new logic (no prior equivalent existed): `getCompetitionActivityForInstructor` —
+a straightforward count/list over `student_competitions` scoped through the same
+`resolveGcContext` → `group_students` ownership pattern every other instructor-scoped query in
+this file already uses.
+
+`StudentEvaluationModal.tsx` reuses `createInstructorEvaluation` (Sprint 1's action, itself
+already ownership-checked) — no new server action was written for the Quick Evaluation modal.
 
 ## 5. Components removed
 
-None removed this sprint — no dead code was found in the areas touched (the pre-existing
-`sessions/new` redirect stub had already been folded into the group page inline by the prior,
-uncommitted work; confirmed via `git diff`, not re-done here).
+- `app/portal/instructor/groups/[id]/students/[studentId]/EvaluationForm.tsx` — superseded by the
+  shared `EvaluationForm` export in `components/portal/instructor/StudentEvaluationModal.tsx`.
+  Deleted, not deprecated-in-place.
 
-## 6. Business logic reused
+## 6. UX improvements
 
-- Ownership/ ownership-scoping pattern (`group_courses` + `group_instructors` → `group_students`)
-  reused verbatim from `getStudentsRequiringAttention` / `listProjectsForInstructorReview` for the
-  new `getStudentsMissingEvaluation` query and the new `hasInstructorStudentAccess` guard — no new
-  ownership model invented.
-- No new timeline event types, notification types, or RBAC permissions were added.
+- Session roster rows: one fewer icon (name/avatar is now the profile link) while adding a new
+  capability (quick evaluation) — net reduction in visual chrome per row despite adding a feature.
+- Group page now surfaces "what needs my review" contextually instead of requiring a separate trip
+  to Homework or Portfolio to find out.
 
-## 7. Navigation improvements
+## 7. Workflow improvements
 
-- Added **Review Center** to `INSTRUCTOR_NAV` (top of sidebar, alongside Dashboard) and to the
-  mobile bottom bar (replacing Homework, which remains reachable via the sidebar/"More" sheet and
-  now also surfaces inside Review Center itself).
+- Evaluation can happen at the moment it's most natural (during class, per student) instead of
+  requiring a trip to that student's full profile afterward.
+- Batch workflows were reviewed explicitly (per the brief's "Batch Workflows" section) and found
+  largely already correct: attendance already has bulk "All Present/All Absent"; homework and
+  portfolio review are intentionally per-item because grading requires actual review — a bulk
+  "approve all" would compromise review quality, not save meaningful time, so none was added.
+  Portfolio Review already avoids per-item page navigation (all pending projects render on one
+  page with inline forms); Homework Inbox does require per-submission navigation, which is correct
+  given the necessarily individual nature of feedback/scoring.
 
-## 8. Workflow improvements
+## 8. Performance improvements
 
-- **Review Center** (`/portal/instructor/review`, new): single triage view — pending homework,
-  pending portfolio projects, and students with zero evaluations on record, each linking to the
-  authoritative page/action.
-- **Student Workspace**: added Portfolio & Achievements section (projects with status, badges,
-  achievements) with a direct link into the review queue — closes the last gap in the brief's
-  "Student Workspace" product definition.
+No query introduces an N+1 — every new function follows the existing "resolve group IDs once,
+batch `.in()` queries" pattern already established in `instructor-portal/queries.ts`. The one
+known cost (§3, `getInstructorPerformanceSummary`) is documented rather than silently accepted.
 
-## 9. Performance improvements
+## 9. Accessibility improvements
 
-No perf-specific work this sprint; all new queries follow the existing scoped-ID-set pattern
-(resolve group IDs → batch `.in()` queries) already used throughout `instructor-portal/queries.ts`
-— no N+1s introduced.
+- `aria-label`s added to every icon-only interactive element touched this sprint: attendance-note
+  toggle, `StudentNoteModal` trigger and close button, `StudentEvaluationModal` trigger and close
+  button, "All Present/All Absent" bulk buttons.
+- Form inputs inside `StudentEvaluationModal` (criterion select, custom-criterion input,
+  score/rating/feedback fields) all have explicit `aria-label`s, matching what a sighted user
+  infers from the adjacent `<p>` label.
+- **Not done**: a full keyboard-navigation and focus-order pass, and color-contrast verification —
+  both require either live rendering or a dedicated axe-core/Lighthouse run, neither of which is
+  available in this environment. Listed as the top item for the next sprint that has browser
+  tooling.
 
-## 10. Security review
+## 10. Tablet improvements
 
-**Fixed:** `modules/portfolio/instructor-actions.ts` had two IDOR gaps found during the audit:
-- `assignProjectBadge` performed **no ownership check at all** — any authenticated instructor
-  could award a badge to any student in the system, not just their own.
-- `reviewPortfolioProject` fetched the project's `student_id` but never verified that student was
-  in one of the caller's groups — same class of gap.
+- Icon buttons in the attendance roster and note/evaluation modals are now 32×32px minimum
+  (previously as small as ~22px with `p-1`), closer to the ~40px touch-target guideline.
+- `InstructorGroupCard` gained a touch-visible `active:` state to match its hover-only desktop
+  affordance.
+- Confirmed (read-only check, both sprints) that no instructor-portal component uses fixed pixel
+  widths that would overflow a ~768px tablet viewport — everything uses Tailwind's relative sizing
+  (`w-full`, `max-w-sm`, grid/flex) already.
+- **Not done**: this is still a code-level read, not a real device/viewport test — see §3 and §12.
 
-Both now call a new `hasInstructorStudentAccess(studentId, instructorId, db)` helper (mirrors the
-existing `hasInstructorGroupAccess` pattern in `instructor-portal/actions.ts`) before mutating.
-Verified with `tsc --noEmit` and the full `vitest` suite (478/478 passing, no regressions).
+## 11. Security review
 
-## 11. Accessibility review
+No new IDOR-class issues found this sprint. `StudentEvaluationModal` calls the same
+`createInstructorEvaluation` action Sprint 1 already hardened with `hasInstructorGroupAccess`; no
+new server action was introduced. All new query functions are read-only and scope through
+`resolveGcContext` before touching student data, matching the established ownership pattern.
 
-Not audited this sprint (out of scope for the slice delivered — flagged for the Performance
-Center / full-audit follow-up sprint).
+## 12. Manual QA checklist (for the next session with browser access)
 
-## 12. Responsive review
+- [ ] Load `/portal/instructor/performance` as a real instructor account with ≥2 groups; confirm
+      every section renders (empty states for zero-data instructors, populated states for active
+      ones).
+- [ ] From a session's attendance roster, open the Quick Evaluation modal (⭐), submit, confirm it
+      closes and the evaluation appears on that student's Student Workspace page.
+- [ ] Confirm the roster row's name/avatar navigates to the student profile and does not
+      accidentally submit the surrounding attendance `<form>`.
+- [ ] On an actual tablet (~768–1024px) and phone (~375px) viewport: attendance roster row icons
+      should not wrap or overlap; Performance Center stat-tile grid should reflow to 2–3 columns
+      without horizontal scroll.
+- [ ] Keyboard-only pass: tab through the attendance roster row, note modal, evaluation modal —
+      confirm focus order is logical and modals trap focus / return it on close.
+- [ ] Verify the group-page "N to review →" badge count matches what actually appears when
+      following the link into `/portal/instructor/review?groupId=...`.
+- [ ] Confirm an instructor cannot see another instructor's students in Performance Center
+      (Certificate Ready / Competition Activity sections) — spot-check with two instructor
+      accounts in the same branch.
 
-New Review Center page uses the same `ds-card` / stacked-list patterns as the rest of the mobile-
-first instructor portal; not manually verified in a browser this sprint (no dev server / browser
-tooling available in this environment) — flagged, do not treat as visually confirmed.
+## 13. Quality gates (this sprint)
 
-## 13. Technical debt removed
-
-None new this sprint beyond what the prior uncommitted work had already cleaned up (dead
-`sessions/new` redirect stub, confirmed removed).
-
-## 14. Remaining recommendations (next sprint)
-
-Priority order, based on the audit:
-
-1. **Performance Center** — does not exist at all. Needs: cross-group attendance/engagement
-   trends, homework/evaluation completion rates, top/at-risk students beyond the dashboard's
-   top-5, instructor productivity view. This is the largest remaining gap from the original brief.
-2. **In-session portfolio review / badge award** inside the Session Workspace, so an instructor
-   doesn't have to leave the class-in-progress screen to do it.
-3. **Auto-composed session summary** (attendance + notes + homework rolled into one artifact) at
-   session end, for parent/TL visibility.
-4. Accessibility and responsive audits (both explicitly deferred this sprint, no tooling
-   available in this environment to verify visually).
-5. Re-run this same Phase-0-style audit once the above lands, before attempting a genuine "final"
-   report — this document should not be treated as the mission's closing report.
+- `tsc --noEmit`: clean.
+- `eslint`: 0 errors (pre-existing `no-explicit-any` warnings only, none newly introduced by this
+  sprint's changes beyond the existing codebase pattern).
+- `vitest run`: 478/478 passing, no regressions.
+- `next build`: succeeds; `/portal/instructor/performance` confirmed in the route manifest.

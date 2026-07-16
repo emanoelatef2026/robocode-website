@@ -19,6 +19,7 @@ export const INSTRUCTOR_NAV: InstructorNavItem[] = [
   { key: 'homework',  label: 'Homework',        href: '/portal/instructor/homework'                     },
   { key: 'portfolio', label: 'Portfolio',       href: '/portal/instructor/portfolio'                    },
   { key: 'history',   label: 'My Sessions',     href: '/portal/instructor/history'                      },
+  { key: 'performance', label: 'Performance',   href: '/portal/instructor/performance'                  },
   { key: 'payments',  label: 'My Payments',     href: '/portal/instructor/payments'                     },
 ]
 
@@ -26,6 +27,7 @@ export const INSTRUCTOR_NAV: InstructorNavItem[] = [
 export const INSTRUCTOR_NAV_SECTIONS = [
   { title: undefined, keys: ['dashboard', 'review'] },
   { title: 'Teaching', keys: ['groups', 'calendar', 'students', 'homework', 'portfolio', 'history'] },
+  { title: 'Insights', keys: ['performance'] },
   { title: 'Finance', keys: ['payments'] },
 ] as const
 
@@ -41,6 +43,7 @@ const ICON_MAP: Record<string, keyof typeof Icons> = {
   homework:  'assignments',
   portfolio: 'portfolio',
   history:   'sessions',
+  performance: 'performance',
   payments:  'payroll',
 }
 

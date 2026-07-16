@@ -3,9 +3,11 @@ import {
   getInstructorByUserId,
   getGroupForInstructor,
   getGroupAttendanceAnalytics,
+  listInboxSubmissions,
 } from '@/modules/instructor-portal/queries'
 import { getCourse } from '@/modules/courses/queries'
 import { getGroupLeaderboard, getStudentOfTheWeek } from '@/modules/gamification/queries'
+import { listProjectsForInstructorReview } from '@/modules/portfolio/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import StartGroupSessionButton from './StartGroupSessionButton'
@@ -35,12 +37,15 @@ export default async function GroupDetailPage({ params }: Props) {
   const group = await getGroupForInstructor(id, instructor.id)
   if (!group) notFound()
 
-  const [analytics, course, leaderboard, studentOfWeek] = await Promise.all([
+  const [analytics, course, leaderboard, studentOfWeek, pendingHomework, pendingProjects] = await Promise.all([
     getGroupAttendanceAnalytics(id, instructor.id),
     group.course_id ? getCourse(group.course_id) : Promise.resolve(null),
     getGroupLeaderboard(id),
     getStudentOfTheWeek(id),
+    listInboxSubmissions(instructor.id, 'pending', id),
+    listProjectsForInstructorReview(instructor.id, 'pending_review', id),
   ])
+  const pendingReviewCount = pendingHomework.length + pendingProjects.length
 
   const isActive = !!group.group_course_id
 
@@ -266,7 +271,17 @@ export default async function GroupDetailPage({ params }: Props) {
 
       {/* ── 6. SESSIONS LIST ─────────────────────────────────────────────────── */}
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-[#0B1F3A]">Sessions</h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-[#0B1F3A]">Sessions</h2>
+          {pendingReviewCount > 0 && (
+            <Link
+              href={`/portal/instructor/review?groupId=${id}`}
+              className="text-xs font-medium text-[#FF8A1F] hover:underline"
+            >
+              {pendingReviewCount} to review →
+            </Link>
+          )}
+        </div>
 
         {!isActive ? (
           <div className="rounded-xl border border-dashed border-[#FDE68A] bg-[#FFFBEB] px-4 py-4 text-center">

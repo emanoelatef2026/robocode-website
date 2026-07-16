@@ -3,7 +3,9 @@
 import { useActionState, useState } from 'react'
 import { saveAttendance } from '@/modules/instructor-portal/actions'
 import type { SessionAttendanceRow } from '@/modules/instructor-portal/types'
+import Link from 'next/link'
 import StudentNoteModal from '@/components/portal/instructor/StudentNoteModal'
+import StudentEvaluationModal from '@/components/portal/instructor/StudentEvaluationModal'
 
 interface Props {
   sessionId:    string
@@ -142,8 +144,9 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
                 <button
                   key={st}
                   type="button"
+                  aria-label={`Mark all students ${LABEL[st].toLowerCase()}`}
                   onClick={() => markAll(st)}
-                  className={`rounded px-2 py-0.5 text-[11px] font-medium transition hover:opacity-80 ${CHIP_ACTIVE[st]}`}
+                  className={`rounded px-2.5 py-1.5 text-[11px] font-medium transition hover:opacity-80 ${CHIP_ACTIVE[st]}`}
                 >
                   All {LABEL[st]}
                 </button>
@@ -165,20 +168,26 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
 
               return (
                 <div key={r.student_id} className="px-4 py-3">
-                  {/* Row: avatar + name + note icon */}
+                  {/* Row: avatar + name (links to full profile) + quick actions */}
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EFF6FF] text-[11px] font-bold text-[#3B82F6]">
-                      {r.student_name[0]?.toUpperCase() ?? '?'}
-                    </div>
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#0B1F3A]">
-                      {r.student_name}
-                    </span>
+                    <Link
+                      href={`/portal/instructor/groups/${groupId}/students/${r.student_id}`}
+                      className="flex min-w-0 flex-1 items-center gap-3"
+                    >
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EFF6FF] text-[11px] font-bold text-[#3B82F6]">
+                        {r.student_name[0]?.toUpperCase() ?? '?'}
+                      </div>
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#0B1F3A] hover:underline">
+                        {r.student_name}
+                      </span>
+                    </Link>
                     {/* Attendance note toggle */}
                     <button
                       type="button"
+                      aria-label={`Toggle attendance note for ${r.student_name}`}
                       title="Attendance note"
                       onClick={() => setExpandedNote(noteOpen ? null : r.student_id)}
-                      className={`shrink-0 rounded p-1 transition ${noteOpen || noteVal ? 'text-[#64748B]' : 'text-[#94A3B8] hover:text-[#64748B]'}`}
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded transition ${noteOpen || noteVal ? 'text-[#64748B]' : 'text-[#94A3B8] hover:text-[#64748B]'}`}
                     >
                       <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
                         <path d="M2.5 3A1.5 1.5 0 0 0 1 4.5v.793c.026.009.051.02.076.032L7.674 8.51c.206.1.446.1.652 0l6.598-3.185A.755.755 0 0 1 15 5.293V4.5A1.5 1.5 0 0 0 13.5 3h-11Z" />
@@ -191,6 +200,12 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
                       studentName={r.student_name}
                       groupId={groupId}
                       scheduleId={sessionId}
+                    />
+                    {/* Quick evaluation modal */}
+                    <StudentEvaluationModal
+                      studentId={r.student_id}
+                      studentName={r.student_name}
+                      groupId={groupId}
                     />
                   </div>
 

@@ -130,9 +130,10 @@ export default function StudentNoteModal({ studentId, studentName, groupId, sche
     <>
       <button
         type="button"
+        aria-label={`Add note for ${studentName}`}
         title="Add student note"
         onClick={() => setOpen(true)}
-        className="shrink-0 rounded p-1 text-[#94A3B8] transition hover:text-[#FF8A1F]"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-[#94A3B8] transition hover:text-[#FF8A1F]"
       >
         <span className="text-[15px]">📝</span>
       </button>
@@ -149,7 +150,7 @@ export default function StudentNoteModal({ studentId, studentName, groupId, sche
                 <h3 className="text-sm font-semibold text-[#0B1F3A]">Add Note</h3>
                 <p className="text-xs text-[#64748B]">{studentName}</p>
               </div>
-              <button onClick={close} className="text-[#94A3B8] hover:text-[#64748B] transition">
+              <button onClick={close} aria-label="Close" className="text-[#94A3B8] hover:text-[#64748B] transition">
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
                   <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>

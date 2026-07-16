@@ -10,7 +10,11 @@ import Link from 'next/link'
 import EmptyState from '@/components/admin/EmptyState'
 import StatusBadge from '@/components/admin/StatusBadge'
 
-export default async function ReviewCenterPage() {
+interface Props {
+  searchParams: Promise<{ groupId?: string }>
+}
+
+export default async function ReviewCenterPage({ searchParams }: Props) {
   const user       = await requirePortalRole('instructor')
   const instructor = await getInstructorByUserId(user.id)
 
@@ -23,9 +27,11 @@ export default async function ReviewCenterPage() {
     )
   }
 
+  const { groupId } = await searchParams
+
   const [homework, projects, missingEvaluations] = await Promise.all([
-    listInboxSubmissions(instructor.id, 'pending', undefined, 8),
-    listProjectsForInstructorReview(instructor.id, 'pending_review'),
+    listInboxSubmissions(instructor.id, 'pending', groupId, 8),
+    listProjectsForInstructorReview(instructor.id, 'pending_review', groupId),
     getStudentsMissingEvaluation(instructor.id, 8),
   ])
 
@@ -38,6 +44,11 @@ export default async function ReviewCenterPage() {
         <p className="mt-0.5 text-sm text-[#64748B]">
           Everything waiting on you, in one place — {totalPending} item{totalPending !== 1 ? 's' : ''}
         </p>
+        {groupId && (
+          <Link href="/portal/instructor/review" className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-[#FF8A1F] hover:underline">
+            Filtered to one group — show all →
+          </Link>
+        )}
       </div>
 
       {totalPending === 0 ? (
