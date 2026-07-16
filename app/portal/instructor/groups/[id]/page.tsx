@@ -48,6 +48,7 @@ export default async function GroupDetailPage({ params }: Props) {
   const pendingReviewCount = pendingHomework.length + pendingProjects.length
 
   const isActive = !!group.group_course_id
+  const ongoingSession = group.sessions.find((s) => s.status === 'ongoing')
 
   const totalPct =
     group.total_sessions != null && group.total_sessions > 0
@@ -132,13 +133,30 @@ export default async function GroupDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* ── 3. START SESSION — appears exactly once ───────────────────────────── */}
+      {/* ── 3. START SESSION — or, if one is already running, continue it ──────── */}
       {isActive && (
-        <StartGroupSessionButton
-          groupId={id}
-          groupCourseId={group.group_course_id!}
-          branchId={group.branch_id}
-        />
+        ongoingSession ? (
+          <Link
+            href={`/portal/instructor/groups/${id}/sessions/${ongoingSession.id}`}
+            className="flex items-center justify-between gap-3 rounded-xl border-2 border-[#A7F3D0] bg-[#E7F8EE] px-4 py-3.5 transition hover:bg-emerald-100"
+          >
+            <div>
+              <p className="text-sm font-semibold text-[#065F46]">Session in progress</p>
+              <p className="mt-0.5 text-xs text-[#15803D]">
+                {ongoingSession.topic ?? 'Untitled session'} — tap to continue
+              </p>
+            </div>
+            <span className="shrink-0 rounded-lg bg-[#10B981] px-4 py-2 text-sm font-semibold text-white">
+              Continue Session
+            </span>
+          </Link>
+        ) : (
+          <StartGroupSessionButton
+            groupId={id}
+            groupCourseId={group.group_course_id!}
+            branchId={group.branch_id}
+          />
+        )
       )}
 
       {/* ── 4. COURSE CONTENT (accordion, collapsed by default) ──────────────── */}

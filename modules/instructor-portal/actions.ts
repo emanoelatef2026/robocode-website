@@ -223,6 +223,26 @@ export async function startGroupSession(
     return { success: false, error: { code: 'FORBIDDEN', message: rangeCheck.reason ?? 'Outside your allocated session range.' } }
   }
 
+  // Guard against creating a duplicate session while one is already running —
+  // without this, a confused re-click of "Start Session" on the group page
+  // (e.g. after following a stale "Continue Session" link) silently opens a
+  // second, unrelated ongoing session for the same group.
+  const { data: ongoingRow } = await db
+    .from('schedules')
+    .select('id')
+    .eq('group_course_id', groupCourseId)
+    .eq('status', 'ongoing')
+    .maybeSingle()
+  if (ongoingRow) {
+    return {
+      success: false,
+      error: {
+        code:    'VALIDATION',
+        message: 'A session is already in progress for this group — continue it instead of starting a new one.',
+      },
+    }
+  }
+
   const now = new Date().toISOString()
 
   const { data: schedule, error } = await db

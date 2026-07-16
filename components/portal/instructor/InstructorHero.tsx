@@ -97,7 +97,7 @@ export default function InstructorHero({
             <Link
               href={
                 quickStart.session_type === 'primary'
-                  ? `/portal/instructor/groups/${quickStart.group_id}`
+                  ? `/portal/instructor/groups/${quickStart.group_id}/sessions/${quickStart.id}`
                   : `/portal/instructor/special-sessions/${quickStart.id}`
               }
               className="shrink-0 rounded-lg bg-[#10B981] px-4 py-1.5 text-[12.5px] font-semibold text-white transition hover:bg-emerald-600"
