@@ -1,6 +1,7 @@
 ﻿'use client'
 
 import { useActionState, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   updateSession,
   addSessionRecording,
@@ -65,6 +66,7 @@ function SectionCard({ title, children, defaultOpen = true }: {
 }
 
 export default function SessionDetailsPanel({ session, groupId }: Props) {
+  const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
   const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
@@ -131,7 +133,8 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
     setEndError(null)
     startEndTransition(async () => {
       const res = await endSession(session.id, groupId, force)
-      if (!res.success) setEndError(res.error.message)
+      if (!res.success) { setEndError(res.error.message); return }
+      router.push('/portal/instructor/history')
     })
   }
 

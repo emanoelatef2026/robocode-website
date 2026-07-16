@@ -211,12 +211,13 @@ export interface InstructorDashboardStats {
 
 export interface SessionHistoryItem {
   session_id:       string
+  session_type:     'primary' | 'trial' | 'makeup'
   session_num:      number
   total_in_group:   number
   scheduled_at:     string
   group_id:         string
   group_name:       string
-  group_course_id:  string
+  group_course_id:  string | null
   course_title:     string
   topic:            string | null
   status:           string

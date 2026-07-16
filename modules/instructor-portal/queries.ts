@@ -1489,29 +1489,112 @@ export async function listSessionHistory(
     }
   }
 
-  // Build result sorted newest first
-  return filteredSessions
-    .map((s: any): SessionHistoryItem => {
-      const info  = gcInfo.get(s.group_course_id)
-      const att   = attCounts.get(s.id) ?? { present: 0, absent: 0, late: 0 }
-      const total = info ? (groupStudentCount.get(info.groupId) ?? 0) : 0
-      return {
-        session_id:      s.id,
-        session_num:     sessionNumMap.get(s.id) ?? 0,
-        total_in_group:  sessionTotalMap.get(s.id) ?? 0,
-        scheduled_at:    s.scheduled_at,
-        group_id:        info?.groupId    ?? '',
-        group_name:      info?.groupName  ?? '',
-        group_course_id: s.group_course_id,
-        course_title:    info?.courseTitle ?? '',
-        topic:           topicMap.get(s.id) ?? null,
-        status:          s.status,
-        present_count:   att.present,
-        absent_count:    att.absent,
-        late_count:      att.late,
-        total_students:  total,
+  const primaryRows: SessionHistoryItem[] = filteredSessions.map((s: any): SessionHistoryItem => {
+    const info  = gcInfo.get(s.group_course_id)
+    const att   = attCounts.get(s.id) ?? { present: 0, absent: 0, late: 0 }
+    const total = info ? (groupStudentCount.get(info.groupId) ?? 0) : 0
+    return {
+      session_id:      s.id,
+      session_type:    'primary',
+      session_num:     sessionNumMap.get(s.id) ?? 0,
+      total_in_group:  sessionTotalMap.get(s.id) ?? 0,
+      scheduled_at:    s.scheduled_at,
+      group_id:        info?.groupId    ?? '',
+      group_name:      info?.groupName  ?? '',
+      group_course_id: s.group_course_id,
+      course_title:    info?.courseTitle ?? '',
+      topic:           topicMap.get(s.id) ?? null,
+      status:          s.status,
+      present_count:   att.present,
+      absent_count:    att.absent,
+      late_count:      att.late,
+      total_students:  total,
+    }
+  })
+
+  // ── Trial / makeup sessions ─────────────────────────────────────────────────
+  // These are standalone (group_course_id IS NULL) so the group_courses-based
+  // query above never sees them. session_instructors is the same source of
+  // truth the payroll system (getInstructorSessionEarnings) uses to credit an
+  // instructor for a session — reused here rather than re-deriving it, and
+  // skipped entirely when filtering to one specific group since standalone
+  // sessions don't belong to any group.
+  let specialRows: SessionHistoryItem[] = []
+  if (!filters?.groupId) {
+    const { data: siRows } = await db
+      .from('session_instructors')
+      .select('session_id')
+      .eq('instructor_id', instructorId)
+    const specialSessionIds = [...new Set((siRows ?? []).map((r: any) => r.session_id as string))]
+
+    if (specialSessionIds.length > 0) {
+      let specialQuery = db
+        .from('schedules')
+        .select('id, type, scheduled_at, status, topic')
+        .in('id', specialSessionIds)
+        .is('group_course_id', null)
+        .in('type', ['trial', 'makeup'])
+
+      if (filters?.from)   specialQuery = specialQuery.gte('scheduled_at', filters.from)
+      if (filters?.to)     specialQuery = specialQuery.lte('scheduled_at', filters.to)
+      if (filters?.status) {
+        specialQuery = Array.isArray(filters.status)
+          ? specialQuery.in('status', filters.status)
+          : specialQuery.eq('status', filters.status)
       }
-    })
+
+      const { data: specialSchedules } = await specialQuery
+
+      if (specialSchedules && specialSchedules.length > 0) {
+        const specialIds = (specialSchedules as any[]).map((s) => s.id as string)
+
+        const [{ data: trialAtt }, { data: makeupAtt }] = await Promise.all([
+          db.from('trial_session_students').select('schedule_id, attendance_status').in('schedule_id', specialIds),
+          db.from('makeup_session_students').select('schedule_id, attendance_status').in('schedule_id', specialIds),
+        ])
+
+        const attBySchedule = new Map<string, { present: number; absent: number; late: number; total: number }>()
+        for (const row of [...(trialAtt ?? []), ...(makeupAtt ?? [])] as any[]) {
+          const sid = row.schedule_id as string
+          const cur = attBySchedule.get(sid) ?? { present: 0, absent: 0, late: 0, total: 0 }
+          cur.total++
+          if (row.attendance_status === 'present') cur.present++
+          else if (row.attendance_status === 'absent') cur.absent++
+          else if (row.attendance_status === 'late') cur.late++
+          attBySchedule.set(sid, cur)
+        }
+
+        specialRows = (specialSchedules as any[])
+          .filter((s) => {
+            if (!filters?.topic) return true
+            return ((s.topic ?? '') as string).toLowerCase().includes(filters.topic.toLowerCase())
+          })
+          .map((s): SessionHistoryItem => {
+            const att = attBySchedule.get(s.id) ?? { present: 0, absent: 0, late: 0, total: 0 }
+            return {
+              session_id:      s.id,
+              session_type:    s.type as 'trial' | 'makeup',
+              session_num:     0,
+              total_in_group:  0,
+              scheduled_at:    s.scheduled_at,
+              group_id:        '',
+              group_name:      s.type === 'trial' ? 'Trial Session' : 'Makeup Session',
+              group_course_id: null,
+              course_title:    '',
+              topic:           s.topic ?? null,
+              status:          s.status,
+              present_count:   att.present,
+              absent_count:    att.absent,
+              late_count:      att.late,
+              total_students:  att.total,
+            }
+          })
+      }
+    }
+  }
+
+  // Build result sorted newest first
+  return [...primaryRows, ...specialRows]
     .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
 }
 
