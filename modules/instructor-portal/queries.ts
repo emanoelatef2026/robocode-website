@@ -2,9 +2,11 @@ import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { ACADEMICALLY_CONSUMING_SESSION_STATUSES } from '@/modules/academic/constants'
 import { getStudentNotes } from '@/modules/student-notes/queries'
+import { getGroupLeaderboard } from '@/modules/gamification/queries'
 import type {
   InstructorRecord,
   InstructorGroup,
+  InstructorTopStudent,
   InstructorSession,
   SessionDetail,
   SessionHomeworkItem,
@@ -18,9 +20,9 @@ import type {
   SessionRecording,
   ResourceLink,
   CourseModuleItem,
-  TodayAction,
   TodaySession,
   StudentAttentionItem,
+  StudentMissingEvaluationItem,
   SessionHistoryItem,
   SessionHistoryFilters,
   AttendanceAnalyticsRow,
@@ -334,6 +336,40 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
   }
 
   return results
+}
+
+// ── Top Students (composed across all of the instructor's groups) ──────────────
+// Thin composition over the existing per-group leaderboard — no new XP/ranking
+// logic, just a merge + re-sort of getGroupLeaderboard's output per group.
+
+export async function getTopStudentsAcrossInstructorGroups(
+  instructorId: string,
+  limit = 5
+): Promise<InstructorTopStudent[]> {
+  const groups = await listInstructorGroups(instructorId)
+  if (groups.length === 0) return []
+
+  const perGroup = await Promise.all(
+    groups.map(async (g) => {
+      const entries = await getGroupLeaderboard(g.group_id)
+      return entries.slice(0, limit).map((e) => ({
+        student_id:    e.student_id,
+        student_name:  e.student_name,
+        total_xp:      e.total_xp,
+        current_level: e.current_level,
+        group_id:      g.group_id,
+        group_name:    g.group_name,
+      }))
+    })
+  )
+
+  const merged = new Map<string, InstructorTopStudent>()
+  for (const entry of perGroup.flat()) {
+    const existing = merged.get(entry.student_id)
+    if (!existing || entry.total_xp > existing.total_xp) merged.set(entry.student_id, entry)
+  }
+
+  return [...merged.values()].sort((a, b) => b.total_xp - a.total_xp).slice(0, limit)
 }
 
 // ── Group Detail ──────────────────────────────────────────────────────────────
@@ -749,17 +785,32 @@ export async function getSessionDetail(
   }))
 
   const allSessions = (progressRes.data ?? []) as any[]
-  const progress: SessionProgressItem[] = allSessions.map((ps, idx) => ({
+  // A cancelled session (with or without a makeup) never happened as itself —
+  // drop it from the visible curriculum trail. Its makeup, if one was
+  // created, is its own separate schedules row and already appears on its
+  // own. A postponed session is NOT excluded: it's the same session row just
+  // moved to a new date, so it still needs to show as pending.
+  const visibleSessions = allSessions.filter(
+    (ps) => ps.status !== 'cancelled' && ps.status !== 'cancelled_with_makeup'
+  )
+  // session_num is the session's POSITION among visible sessions, not its raw
+  // immutable session_number — a cancelled session must not leave a numbering
+  // gap in what the instructor sees (e.g. cancel #1 → the next real session
+  // displays as "Session 2", not "Session 3").
+  const progress: SessionProgressItem[] = visibleSessions.map((ps, idx) => ({
     id:           ps.id,
     scheduled_at: ps.scheduled_at,
     status:       ps.status,
     topic:        null,
-    session_num:  (ps.session_number as number | null) ?? (idx + 1),
+    session_num:  idx + 1,
   }))
-  const currentSess = allSessions.find((ps) => ps.id === sessionId)
-  const currentNum  =
-    (currentSess?.session_number as number | null) ??
-    ((allSessions.findIndex((ps) => ps.id === sessionId) + 1) || progress.length)
+  const currentSess       = allSessions.find((ps) => ps.id === sessionId)
+  const currentVisibleIdx = visibleSessions.findIndex((ps) => ps.id === sessionId)
+  const currentNum        =
+    currentVisibleIdx >= 0
+      ? currentVisibleIdx + 1
+      : (currentSess?.session_number as number | null) ??
+        ((allSessions.findIndex((ps) => ps.id === sessionId) + 1) || progress.length)
 
   const groupName   = (groupRes.data  as any)?.name  ?? ''
   const courseTitle = (courseRes.data as any)?.title ?? ''
@@ -949,83 +1000,6 @@ export async function listPendingSubmissions(
   })
 }
 
-// ── Today's Actions ───────────────────────────────────────────────────────────
-
-export async function getTodayActions(instructorId: string): Promise<TodayAction[]> {
-  const db = createServiceClient()
-  const { gcIds } = await resolveGcContext(instructorId, db)
-  if (gcIds.length === 0) return []
-
-  const { data: gcMeta } = await db
-    .from('group_courses')
-    .select('id, group_id, groups!group_courses_group_id_fkey(name)')
-    .in('id', gcIds)
-  const gcGroupMap = new Map<string, { groupId: string; groupName: string }>(
-    (gcMeta ?? []).map((r: any) => [r.id as string, { groupId: r.group_id as string, groupName: r.groups?.name ?? '' }])
-  )
-
-  const now   = new Date()
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0))
-  const end   = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999))
-
-  const { data: todaySess } = await db
-    .from('schedules')
-    .select('id, group_course_id, status, topic, notes')
-    .in('group_course_id', gcIds)
-    .gte('scheduled_at', start.toISOString())
-    .lte('scheduled_at', end.toISOString())
-    .not('status', 'in', '("cancelled","cancelled_with_makeup","postponed")')
-
-  const completedIds = (todaySess ?? [])
-    .filter((s: any) => s.status === 'completed')
-    .map((s: any) => s.id as string)
-  const attCounts: Record<string, number> = {}
-  if (completedIds.length > 0) {
-    const { data: attRows } = await db
-      .from('attendance_records')
-      .select('schedule_id')
-      .in('schedule_id', completedIds)
-    for (const a of attRows ?? []) {
-      const sid = (a as any).schedule_id as string
-      attCounts[sid] = (attCounts[sid] ?? 0) + 1
-    }
-  }
-
-  const actions: TodayAction[] = []
-  for (const sess of todaySess ?? []) {
-    const gc   = gcGroupMap.get((sess as any).group_course_id)
-    if (!gc) continue
-    const href = `/portal/instructor/groups/${gc.groupId}/sessions/${(sess as any).id}`
-
-    if ((sess as any).status === 'scheduled') {
-      actions.push({ type: 'start_session', label: "Start today's session", detail: gc.groupName, href })
-    } else if ((sess as any).status === 'ongoing') {
-      actions.push({ type: 'complete_attendance', label: 'Session in progress — complete attendance', detail: gc.groupName, href })
-    } else if ((sess as any).status === 'completed') {
-      if (!attCounts[(sess as any).id]) {
-        actions.push({ type: 'complete_attendance', label: 'Complete attendance', detail: gc.groupName, href })
-      }
-      if (!(sess as any).topic && !(sess as any).notes) {
-        actions.push({ type: 'add_notes', label: 'Add session notes', detail: gc.groupName, href })
-      }
-    }
-  }
-
-  const pending = await listPendingSubmissions(instructorId, 1)
-  if (pending.length > 0) {
-    const allPending = await listPendingSubmissions(instructorId, 999)
-    const n = allPending.length
-    actions.push({
-      type:   'review_homework',
-      label:  `Review ${n} homework submission${n > 1 ? 's' : ''}`,
-      detail: '',
-      href:   '/portal/instructor/homework',
-    })
-  }
-
-  return actions
-}
-
 // ── Students Requiring Attention ──────────────────────────────────────────────
 
 export async function getStudentsRequiringAttention(
@@ -1099,6 +1073,63 @@ export async function getStudentsRequiringAttention(
       absence_count: count,
       reason:        `${count} absence${count > 1 ? 's' : ''}`,
       href:          groupId ? `/portal/instructor/groups/${groupId}/students/${studentId}` : '#',
+    }
+  })
+}
+
+// ── Students with no evaluation on record (Review Center queue) ────────────────
+
+export async function getStudentsMissingEvaluation(
+  instructorId: string,
+  limit = 20
+): Promise<StudentMissingEvaluationItem[]> {
+  const db = createServiceClient()
+  const { groupIds } = await resolveGcContext(instructorId, db)
+  if (groupIds.length === 0) return []
+
+  const { data: groupRows } = await db.from('groups').select('id, name').in('id', groupIds)
+  const groupNames = new Map<string, string>((groupRows ?? []).map((g: any) => [g.id as string, g.name as string]))
+
+  const { data: gsRows } = await db
+    .from('group_students')
+    .select('student_id, group_id')
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+  if (!gsRows || gsRows.length === 0) return []
+
+  const studentGroup = new Map<string, string>(gsRows.map((r: any) => [r.student_id as string, r.group_id as string]))
+  const studentIds   = [...studentGroup.keys()]
+
+  const { data: evalRows } = await db
+    .from('student_evaluations')
+    .select('student_id')
+    .in('student_id', studentIds)
+    .is('deleted_at', null)
+  const evaluated = new Set((evalRows ?? []).map((e: any) => e.student_id as string))
+
+  const missingIds = studentIds.filter((id) => !evaluated.has(id)).slice(0, limit)
+  if (missingIds.length === 0) return []
+
+  const { data: studRows } = await db
+    .from('students')
+    .select(`id, users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
+    .in('id', missingIds)
+    .is('deleted_at', null)
+  const nameMap = new Map<string, string>(
+    (studRows ?? []).map((s: any) => {
+      const p = s.users?.profiles
+      return [s.id as string, [p?.first_name, p?.last_name].filter(Boolean).join(' ') || 'Unknown']
+    })
+  )
+
+  return missingIds.map((studentId) => {
+    const groupId = studentGroup.get(studentId) ?? ''
+    return {
+      student_id:   studentId,
+      student_name: nameMap.get(studentId)  ?? 'Unknown',
+      group_id:     groupId,
+      group_name:   groupNames.get(groupId) ?? '',
+      href:         groupId ? `/portal/instructor/groups/${groupId}/students/${studentId}` : '#',
     }
   })
 }
@@ -1269,7 +1300,7 @@ export async function getStudentGroupAssignments(
   })
 }
 
-// ── Legacy: upcoming sessions (kept for dashboard backward compat) ─────────────
+// ── Upcoming sessions (beyond today) ────────────────────────────────────────────
 
 export async function getUpcomingSessionsForInstructor(
   instructorId: string,

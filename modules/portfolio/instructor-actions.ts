@@ -30,6 +30,34 @@ const badgeSchema = z.object({
   description: z.string().max(500).optional().or(z.literal('')),
 })
 
+// A student is only in scope for an instructor if they're active in one of
+// the groups that instructor teaches (group_courses or group_instructors) —
+// same ownership boundary listProjectsForInstructorReview enforces on read.
+async function hasInstructorStudentAccess(
+  studentId:    string,
+  instructorId: string,
+  db:           ReturnType<typeof createServiceClient>
+): Promise<boolean> {
+  const [{ data: gcDirect }, { data: giRows }] = await Promise.all([
+    db.from('group_courses').select('group_id').eq('instructor_id', instructorId).eq('status', 'active'),
+    db.from('group_instructors').select('group_id').eq('instructor_id', instructorId),
+  ])
+  const groupIds = [...new Set([
+    ...(gcDirect ?? []).map((r) => r.group_id as string),
+    ...(giRows   ?? []).map((r) => r.group_id as string),
+  ])]
+  if (groupIds.length === 0) return false
+
+  const { data: gsRow } = await db
+    .from('group_students')
+    .select('group_id')
+    .eq('student_id', studentId)
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+    .maybeSingle()
+  return !!gsRow
+}
+
 // ── Review portfolio project ───────────────────────────────────────────────────
 
 export async function reviewPortfolioProject(
@@ -66,6 +94,9 @@ export async function reviewPortfolioProject(
   if (!projRow) {
     return { success: false, error: { code: 'NOT_FOUND', message: 'Project not found.' } }
   }
+  if (!(await hasInstructorStudentAccess(projRow.student_id, instructor.id, db))) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'This student is not in one of your groups.' } }
+  }
 
   const updates: Record<string, unknown> = {
     status:              d.status,
@@ -96,8 +127,12 @@ export async function assignProjectBadge(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<void>> {
-  await requirePortalRole('instructor')
-  const db = createServiceClient()
+  const user       = await requirePortalRole('instructor')
+  const db         = createServiceClient()
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+  }
 
   const raw = {
     project_id:  formData.get('project_id'),
@@ -112,6 +147,10 @@ export async function assignProjectBadge(
   }
 
   const d = parsed.data
+
+  if (!(await hasInstructorStudentAccess(d.student_id, instructor.id, db))) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'This student is not in one of your groups.' } }
+  }
 
   // Check duplicate badge for same student
   const { data: existing } = await db

@@ -12,30 +12,34 @@ export interface InstructorNavItem {
 /** Canonical instructor portal navigation — sidebar, bottom nav and page titles all derive from this. */
 export const INSTRUCTOR_NAV: InstructorNavItem[] = [
   { key: 'dashboard', label: 'Dashboard',      href: '/portal/instructor',                  exact: true },
+  { key: 'review',    label: 'Review Center',   href: '/portal/instructor/review'                       },
   { key: 'groups',    label: 'My Groups',       href: '/portal/instructor/groups'                       },
   { key: 'calendar',  label: 'Calendar',        href: '/portal/instructor/calendar'                     },
   { key: 'students',  label: 'Students',        href: '/portal/instructor/students/search'              },
   { key: 'homework',  label: 'Homework',        href: '/portal/instructor/homework'                     },
+  { key: 'portfolio', label: 'Portfolio',       href: '/portal/instructor/portfolio'                    },
   { key: 'history',   label: 'My Sessions',     href: '/portal/instructor/history'                      },
   { key: 'payments',  label: 'My Payments',     href: '/portal/instructor/payments'                     },
 ]
 
 /** Desktop sidebar groups the nav into sections. */
 export const INSTRUCTOR_NAV_SECTIONS = [
-  { title: undefined, keys: ['dashboard'] },
-  { title: 'Teaching', keys: ['groups', 'calendar', 'students', 'homework', 'history'] },
+  { title: undefined, keys: ['dashboard', 'review'] },
+  { title: 'Teaching', keys: ['groups', 'calendar', 'students', 'homework', 'portfolio', 'history'] },
   { title: 'Finance', keys: ['payments'] },
 ] as const
 
 /** Primary tabs shown directly in the mobile bottom bar. */
-const BOTTOM_NAV_KEYS = ['dashboard', 'groups', 'calendar', 'homework'] as const
+const BOTTOM_NAV_KEYS = ['dashboard', 'review', 'groups', 'calendar'] as const
 
 const ICON_MAP: Record<string, keyof typeof Icons> = {
   dashboard: 'dashboard',
+  review:    'reports',
   groups:    'groups',
   calendar:  'schedules',
   students:  'students',
   homework:  'assignments',
+  portfolio: 'portfolio',
   history:   'sessions',
   payments:  'payroll',
 }
