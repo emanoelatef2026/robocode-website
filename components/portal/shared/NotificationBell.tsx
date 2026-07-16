@@ -18,6 +18,8 @@ const TYPE_ICON: Record<string, string> = {
   PARENT_NOTE_SHARED:      '📌',
   ACHIEVEMENT_EARNED:      '🏅',
   COMPETITION_RESULT:      '🎖️',
+  NEW_HOMEWORK_ASSIGNED:   '📚',
+  NEW_SESSION_RESOURCES:   '📎',
 }
 
 function timeAgo(iso: string): string {

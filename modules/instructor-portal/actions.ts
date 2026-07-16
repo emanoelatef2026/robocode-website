@@ -21,7 +21,13 @@ import {
   type EnrollmentForConsumption,
 } from '@/modules/academic/contract-consumption'
 import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
-import { deleteSessionStartingNotification, readSessionStartingNotification } from '@/modules/notifications/actions'
+import {
+  deleteSessionStartingNotification,
+  readSessionStartingNotification,
+  seedNewHomeworkAssignedNotification,
+  seedNewSessionResourcesNotification,
+} from '@/modules/notifications/actions'
+import { getStudentUserId, getParentUserIdsForStudent } from '@/modules/notifications/queries'
 import { checkAndUnlockAchievements } from '@/modules/gamification/achievement-service'
 import { checkAndAwardBadges } from '@/modules/gamification/badge-service'
 import {
@@ -788,6 +794,37 @@ export async function removeSessionRecording(
 
 // ── Session resources ─────────────────────────────────────────────────────────
 
+// Resolves every active student in a group to their own user_id plus their
+// parents' user_ids — shared by any action that needs to notify "everyone in
+// this group" (new homework, new session resources). Non-critical by design:
+// callers fire this with `void` and swallow errors so a notification hiccup
+// never blocks the actual homework/resource save.
+async function notifyGroupAudience(
+  groupId: string,
+  db: ReturnType<typeof createServiceClient>,
+  notify: (recipientUserId: string) => Promise<void>
+): Promise<void> {
+  try {
+    const { data: gsRows } = await db
+      .from('group_students')
+      .select('student_id')
+      .eq('group_id', groupId)
+      .eq('status', 'active')
+    const studentIds = [...new Set((gsRows ?? []).map((r: any) => r.student_id as string))]
+
+    await Promise.all(studentIds.map(async (studentId) => {
+      const [studentUserId, parentUserIds] = await Promise.all([
+        getStudentUserId(studentId),
+        getParentUserIdsForStudent(studentId),
+      ])
+      const recipients = [...(studentUserId ? [studentUserId] : []), ...parentUserIds]
+      await Promise.all(recipients.map(notify))
+    }))
+  } catch {
+    // non-critical
+  }
+}
+
 const resourcesSchema = z.object({
   session_id:      z.string().uuid(),
   group_id:        z.string().uuid(),
@@ -822,6 +859,12 @@ export async function updateSessionResources(
 
   const { error } = await db.from('schedules').update({ resources_links: resources }).eq('id', d.session_id)
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  if (resources.length > 0) {
+    void notifyGroupAudience(d.group_id, db, (recipientId) =>
+      seedNewSessionResourcesNotification(recipientId, d.session_id)
+    )
+  }
 
   revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
   return { success: true, data: undefined }
@@ -906,9 +949,14 @@ export async function createSessionHomework(
 
   if (error || !assignment) return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to create homework.' } }
 
+  const assignmentId = (assignment as any).id as string
+  void notifyGroupAudience(d.group_id, db, (recipientId) =>
+    seedNewHomeworkAssignedNotification(recipientId, assignmentId, d.title)
+  )
+
   revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
   revalidatePath('/portal/instructor/homework')
-  return { success: true, data: { assignmentId: (assignment as any).id } }
+  return { success: true, data: { assignmentId } }
 }
 
 // ── Cancel Session ────────────────────────────────────────────────────────────

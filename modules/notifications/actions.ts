@@ -297,6 +297,49 @@ export async function seedCompetitionResultNotification(
     )
 }
 
+// Notifies a student/parent that new homework was assigned in their group.
+export async function seedNewHomeworkAssignedNotification(
+  recipientId:  string,
+  assignmentId: string,
+  title:        string,
+): Promise<void> {
+  const db = createServiceClient()
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'NEW_HOMEWORK_ASSIGNED',
+        title:        `New homework — ${title}`,
+        href:         '/portal/student/assignments',
+        dedup_key:    `new_homework:${assignmentId}:${recipientId}`,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
+// Notifies a student/parent that resources were added to a session in their
+// group. Dedup'd per session (not per edit) — resources_links is a
+// full-replace array with no stable per-item id, so this fires once when a
+// session first gets resources rather than re-notifying on every tweak.
+export async function seedNewSessionResourcesNotification(
+  recipientId: string,
+  sessionId:   string,
+): Promise<void> {
+  const db = createServiceClient()
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'NEW_SESSION_RESOURCES',
+        title:        'New session resources available',
+        dedup_key:    `session_resources:${sessionId}:${recipientId}`,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
 // Creates a HOMEWORK_NEEDS_GRADING notification (one per pending batch check).
 export async function seedHomeworkNotification(
   recipientId: string,
