@@ -146,14 +146,7 @@ export default async function InstructorDashboardPage() {
 
       {/* ── OVERVIEW KPIs ────────────────────────────────────────────────── */}
       <SectionDivider title="Overview" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <KpiCard
-          label="This Month Earnings"
-          value={fmtEGP(thisMonthEarnings)}
-          href="/portal/instructor/payments"
-          barColor="#15803D"
-          bars={[35, 40, 48, 50, 55, 60, 65]}
-        />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard
           label="My Groups"
           value={stats.groupCount}

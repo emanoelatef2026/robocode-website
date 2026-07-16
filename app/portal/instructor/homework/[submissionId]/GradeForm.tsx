@@ -1,11 +1,13 @@
 ﻿'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { gradeSubmission } from '@/modules/assignments/submissions/actions'
 import type { Submission } from '@/modules/assignments/submissions/types'
 
 interface Props {
-  submission: Submission
+  submission:       Submission
+  nextSubmissionId?: string
 }
 
 const STATUSES = [
@@ -15,8 +17,23 @@ const STATUSES = [
   { value: 'under_review',             label: 'Under Review' },
 ] as const
 
-export default function GradeForm({ submission }: Props) {
+export default function GradeForm({ submission, nextSubmissionId }: Props) {
   const [state, action, pending] = useActionState(gradeSubmission, null)
+  const router = useRouter()
+  const advancing = !!state?.success
+
+  useEffect(() => {
+    if (!advancing) return
+    const t = setTimeout(() => {
+      router.push(
+        nextSubmissionId
+          ? `/portal/instructor/homework/${nextSubmissionId}`
+          : '/portal/instructor/homework'
+      )
+    }, 700)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [advancing])
 
   return (
     <form action={action} className="space-y-5">
@@ -30,7 +47,7 @@ export default function GradeForm({ submission }: Props) {
       )}
       {state?.success && (
         <div className="rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] px-4 py-3 text-sm text-[#15803D]">
-          Grade saved successfully.
+          Grade saved. {nextSubmissionId ? 'Moving to the next pending submission…' : 'Back to Homework Review…'}
         </div>
       )}
 
@@ -107,10 +124,10 @@ export default function GradeForm({ submission }: Props) {
 
       <button
         type="submit"
-        disabled={pending}
+        disabled={pending || advancing}
         className="w-full rounded-lg bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e07818] disabled:opacity-60 transition"
       >
-        {pending ? 'Saving…' : 'Save Grade'}
+        {pending ? 'Saving…' : advancing ? 'Saved ✓' : 'Save Grade'}
       </button>
     </form>
   )

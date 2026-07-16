@@ -135,6 +135,33 @@ export default async function StudentProfilePage({ params }: Props) {
         )}
       </div>
 
+      {/* ── Timeline — chronological overview, right after the vitals so the
+          instructor gets "what's been happening" before the section-by-section
+          detail below ─────────────────────────────────────────────────────── */}
+      {timeline.length > 0 && (
+        <div className="ds-card px-4 py-3.5">
+          <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Timeline</p>
+          <div className="relative space-y-3 pl-4 before:absolute before:left-1.5 before:top-0 before:h-full before:w-px before:bg-[#E2E8F0]">
+            {timeline.map((t) => (
+              <div key={t.id} className="relative">
+                <div className="absolute -left-4.5 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#94A3B8]" />
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-medium text-[#0B1F3A]">{TIMELINE_EVENT_LABELS[t.event_type]}</p>
+                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${TIMELINE_SEVERITY_COLORS[t.severity]}`}>
+                    {t.severity}
+                  </span>
+                </div>
+                {t.notes && <p className="mt-0.5 text-xs text-[#64748B]">{t.notes}</p>}
+                <p className="mt-0.5 text-[10px] text-[#94A3B8]">
+                  {new Date(t.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {t.created_by_name ? ` · ${t.created_by_name}` : ''}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Assignments ────────────────────────────────────────────────────── */}
       {assignments.length > 0 && (
         <div className="ds-card px-4 py-3.5">
@@ -428,31 +455,6 @@ export default async function StudentProfilePage({ params }: Props) {
           </div>
         )}
       </div>
-
-      {/* ── Timeline ───────────────────────────────────────────────────────── */}
-      {timeline.length > 0 && (
-        <div className="ds-card px-4 py-3.5">
-          <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Timeline</p>
-          <div className="relative space-y-3 pl-4 before:absolute before:left-1.5 before:top-0 before:h-full before:w-px before:bg-[#E2E8F0]">
-            {timeline.map((t) => (
-              <div key={t.id} className="relative">
-                <div className="absolute -left-4.5 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#94A3B8]" />
-                <div className="flex items-center gap-1.5">
-                  <p className="text-xs font-medium text-[#0B1F3A]">{TIMELINE_EVENT_LABELS[t.event_type]}</p>
-                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${TIMELINE_SEVERITY_COLORS[t.severity]}`}>
-                    {t.severity}
-                  </span>
-                </div>
-                {t.notes && <p className="mt-0.5 text-xs text-[#64748B]">{t.notes}</p>}
-                <p className="mt-0.5 text-[10px] text-[#94A3B8]">
-                  {new Date(t.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  {t.created_by_name ? ` · ${t.created_by_name}` : ''}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
     </div>
   )

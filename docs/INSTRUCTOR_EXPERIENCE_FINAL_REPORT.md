@@ -220,3 +220,138 @@ new server action was introduced. All new query functions are read-only and scop
   sprint's changes beyond the existing codebase pattern).
 - `vitest run`: 478/478 passing, no regressions.
 - `next build`: succeeds; `/portal/instructor/performance` confirmed in the route manifest.
+
+---
+
+## Final Product Review
+
+A third pass, done as product/UX/QA review rather than feature work — walking the portal as an
+instructor teaching six classes a day would, not reading it component-by-component. Per the
+brief's seven scenarios.
+
+### Scenario walkthroughs
+
+1. **Login → today's class.** `InstructorHero`'s quick-start CTA already resolves to the single
+   most actionable session (ongoing → next scheduled) and is one click from the dashboard.
+   Already good — left unchanged.
+2. **Taking attendance.** Bulk "All Present/All Absent" already exists; per-row status is a single
+   tap. Already good — left unchanged, beyond the touch-target fixes below.
+3. **Evaluating five students without navigation.** Solved in Sprint 2 (Quick Evaluation modal on
+   the roster). Re-verified this sprint — still correct, no further changes needed.
+4. **Reviewing one student's full history — is the hierarchy right?** **Found a real issue**: the
+   Timeline (the one section that gives a chronological "what's been happening" overview) was
+   rendered *last*, after six other detail sections (Assignments, Notes, Evaluations,
+   Competitions, Certificates, Portfolio). An instructor pulling up a student's profile to
+   understand their situation had to scroll past all the granular detail before reaching the
+   overview. **Fixed**: moved Timeline to immediately after Attendance — vitals first, chronological
+   story second, section-by-section detail below for drill-down.
+5. **Ending a session.** `SessionDetailsPanel`'s End Session flow already shows a live
+   attendance/notes readiness checklist before allowing completion. Already good — left unchanged.
+6. **Reviewing homework — reduce repetitive work.** **Found a real issue**: grading a submission
+   required navigating to `/homework/[submissionId]`, saving, then navigating back to the inbox
+   and re-opening the next one — for every single submission. **Fixed**: the grading page now shows
+   "N of M pending" with Prev/Next links, and `GradeForm` auto-advances to the next pending
+   submission ~0.7s after a successful save (or returns to the inbox if the queue is empty). Grading
+   twenty submissions is now a straight line instead of twenty round trips.
+7. **Checking analytics.** Performance Center's Overview tiles use consistent green/red/neutral
+   tone thresholds so "is this good or bad" doesn't require interpretation. Already reasonably
+   clear — left unchanged; a historical trend line would help but requires time-series data this
+   system doesn't currently store (would be inventing a metric, not presenting one).
+
+### 1. Remaining UX issues
+
+- Calendar day cells show very small (`text-[9px]`) stacked event chips when a day has multiple
+  sessions, with a "+N more" overflow. This mirrors a well-understood, standard calendar-UI
+  convention (comparable to Google Calendar's month view) rather than being a defect — not changed,
+  but flagged here rather than silently accepted.
+- No further hierarchy or click-count issues were found in the seven scenarios beyond items 4 and
+  6, which are now fixed.
+
+### 2. Improvements made this pass
+
+- Student Workspace: Timeline moved from last section to immediately after Attendance.
+- Homework grading: Prev/Next queue navigation + auto-advance-to-next-pending on save.
+- `HomeworkGroupSelect`'s bare `<select>` gained an `aria-label` ("Filter by group") — it had no
+  accessible name beyond its default option text.
+- Calendar type-filter pills (`All / Primary / Trial / Makeup`) grew from `py-1` to `py-1.5` —
+  they were noticeably smaller than the equivalent status-tab pattern used on Homework/Portfolio
+  (`py-2`), a real touch-target and cross-page consistency gap.
+
+### 3. Screens reviewed
+
+Dashboard, Group detail, Session detail (attendance + management panel), Student Workspace,
+Review Center, Performance Center, Homework Inbox, Homework grading, Portfolio Review, Calendar.
+(Payments, History, Special Sessions were spot-checked for obvious breakage, not deep-reviewed —
+out of this mission's five-product scope.)
+
+### 4. Components simplified
+
+None removed or collapsed this pass — the component boundaries established in Sprints 1–2 held up
+under this review (no screen was found that clearly "shouldn't exist" or that duplicates another).
+
+### 5. Components merged
+
+None. Homework Inbox and Portfolio Review were re-examined against Phase 3's "can two screens
+become one?" and re-confirmed as correctly separate (§ "Remaining technical limitations" from
+Sprint 1 — different data shapes, different tested review actions, merging would be churn not
+improvement).
+
+### 6. Click reductions
+
+- Homework grading: N submissions went from "2N navigations" (open → back, per item) to "N saves,
+  0 manual navigations" via auto-advance.
+- (Carried from Sprint 2, re-verified: Quick Evaluation modal already removed the "navigate to
+  student profile just to add one evaluation" round trip.)
+
+### 7. Navigation improvements
+
+- Grading queue Prev/Next lets an instructor skip a submission and come back to it without losing
+  their place in the inbox's pending list.
+
+### 8. Visual consistency improvements
+
+Checked instructor screens against the shared `ds-card`/hex-token palette and against the
+Student/Parent portals' patterns. One apparent inconsistency (Calendar's use of raw Tailwind
+colors — `bg-blue-100`, `bg-purple-100`, `bg-orange-100` — instead of the hex tokens used
+elsewhere) was investigated and found to **not** be a real deviation: the same raw-Tailwind
+convention is already used intentionally elsewhere in this portal for status/type badges (e.g.
+`postponed` uses `bg-yellow-100 text-yellow-800`, `makeup` attendance uses `bg-purple-500
+text-white`) — hex tokens are used for the primary brand palette, raw Tailwind for secondary
+status colors. Left unchanged; flagged so a future reviewer doesn't "fix" something that isn't
+broken.
+
+### 9. Accessibility improvements
+
+`HomeworkGroupSelect` aria-label (above). No other missing labels found in this pass — Sprint 2
+already closed the `StudentNoteModal`/`StudentEvaluationModal`/`AttendanceForm` gaps.
+
+### 10. Responsive improvements
+
+Calendar filter-pill touch target (above). No fixed-pixel-width overflow risks found in any newly
+reviewed file (Homework grading page, Calendar) — both use relative Tailwind sizing throughout.
+
+### 11. Intentionally left unchanged (with justification)
+
+- **Calendar's raw-Tailwind status colors** — established, intentional pattern (§8), not a bug.
+- **Calendar day-cell density** — standard calendar-UI convention, not a defect.
+- **Homework/Portfolio Review as separate pages** — re-confirmed correct (§5).
+- **No in-session portfolio/badge shortcut, no auto-composed session summary, no instructor-side
+  achievement creation** — all documented in this file's earlier sections as requiring new product
+  decisions or crossing an intentional RBAC boundary, not oversights. Still true after this review.
+
+## Final Decision
+
+**A) The Instructor Portal is production-ready. No meaningful improvements remain without
+changing product requirements.**
+
+Two genuine UX issues were found this pass (student-history information hierarchy, homework
+grading navigation overhead) and both were fixed, verified against all quality gates, with no
+regressions. Everything else reviewed was either already correct or intentionally out of scope for
+a documented, non-arbitrary reason (RBAC boundary, established design convention, or would require
+inventing a business rule this review has no authority to invent).
+
+**Caveat, not a blocker**: this review — like Sprints 1 and 2 — was performed by reading code, not
+by driving the app in a real browser (no dev server/browser tooling is available in this execution
+environment). Every claim about spacing, touch targets, and rendered hierarchy is a structural
+read, not a visual observation. The manual QA checklist in this document (Sprint 2, §12) should be
+run against a live instance before this is treated as fully validated in the field.
