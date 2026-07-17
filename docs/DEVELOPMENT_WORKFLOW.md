@@ -46,6 +46,22 @@ code on both PCs) still require manual resolution — rebase doesn't remove
 that, it just stops the noise of merge commits for the *non*-conflicting
 divergences that used to trigger them.
 
+**This setting lives in `.git/config`, which is per-clone and never pushed.**
+Run this once on every machine that clones this repo (both the work PC and
+the home PC need it set independently — pulling this repo does not carry it
+over):
+
+```bash
+git config pull.rebase true
+git config rerere.enabled true
+git config push.autoSetupRemote true
+```
+
+`rerere.enabled` makes git remember how you resolved a conflict so it can
+auto-apply the same resolution if the identical conflict recurs (useful if a
+rebase ever needs re-running). `push.autoSetupRemote` just removes the need
+for `-u origin <branch>` the first time you push a new branch.
+
 ## Safe push strategy
 
 Plain `git push` is fine — `push.autoSetupRemote=true` means pushing a new
@@ -136,6 +152,29 @@ git rebase --abort
 If a conflict shows up in a file under `graphify-out/`, something has
 regressed (it should be gitignored) — fix `.gitignore`/untrack it rather than
 hand-resolving the JSON.
+
+## Best practices
+
+- **Push before you walk away.** This single habit prevents nearly all
+  divergence between the two PCs — see "Daily shutdown."
+- **Pull before you start typing.** Do it before opening an editor, not after
+  you've already made changes — see "Daily startup."
+- **Never `git add -A` or `git add .` blindly.** Review `git status` first;
+  it's the fastest way an ignored-but-not-yet-fixed generated file sneaks
+  back into a commit.
+- **Never commit a regenerable file.** If a command can produce it
+  (`npm install`, `next build`, `graphify update .`), it doesn't belong in
+  git. When in doubt, ask "does the other machine need this file, or can it
+  just run the command that makes it?"
+- **Treat a merge/rebase conflict inside `graphify-out/` as a bug report**,
+  not a normal conflict to resolve — it means something regressed the
+  `.gitignore` rule, not that you need to manually merge JSON.
+- **Set the git config on both machines**, not just one — see the callout in
+  "Safe pull strategy." It's local-only and does not travel with the repo.
+- **Don't disable the graphify post-commit hook to "fix" this class of
+  problem** — the hook itself was never the bug; tracking its output was.
+  With `graphify-out/` gitignored, the hook running on every commit is
+  harmless background work.
 
 ## Why this happened (root cause)
 
