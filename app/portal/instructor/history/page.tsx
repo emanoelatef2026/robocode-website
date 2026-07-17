@@ -128,10 +128,19 @@ export default async function MySessionsPage({ searchParams }: Props) {
               const dateShort = new Date(s.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })
               const dateFull  = new Date(s.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
+              const href = s.session_type === 'primary'
+                ? `/portal/instructor/history/${s.session_id}`
+                : `/portal/instructor/special-sessions/${s.session_id}`
+              const typeBadge = s.session_type === 'trial'
+                ? { label: '🟣 Trial',  style: 'bg-purple-100 text-purple-700' }
+                : s.session_type === 'makeup'
+                ? { label: '🟠 Makeup', style: 'bg-orange-100 text-orange-700' }
+                : null
+
               return (
                 <Link
                   key={s.session_id}
-                  href={`/portal/instructor/history/${s.session_id}`}
+                  href={href}
                   className="block transition active:bg-[#F8FAFC] lg:hover:bg-[#F8FAFC]"
                 >
 
@@ -140,9 +149,15 @@ export default async function MySessionsPage({ searchParams }: Props) {
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-[11px] text-[#94A3B8] shrink-0">{dateShort}</span>
-                        <span className="text-[11px] font-bold text-[#0B1F3A] shrink-0">
-                          #{s.session_num}/{s.total_in_group}
-                        </span>
+                        {typeBadge ? (
+                          <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold shrink-0 ${typeBadge.style}`}>
+                            {typeBadge.label}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-bold text-[#0B1F3A] shrink-0">
+                            #{s.session_num}/{s.total_in_group}
+                          </span>
+                        )}
                       </div>
                       <StatusBadge status={s.status} dot />
                     </div>
@@ -174,10 +189,16 @@ export default async function MySessionsPage({ searchParams }: Props) {
                   <div className="hidden lg:grid grid-cols-[110px_1fr_1fr_90px_1fr_130px_100px] items-center gap-3 px-4 py-3">
                     <span className="text-[12px] text-[#64748B]">{dateFull}</span>
                     <span className="text-[13px] font-semibold text-[#0B1F3A] truncate">{s.group_name}</span>
-                    <span className="text-[12px] text-[#64748B] truncate">{s.course_title ?? '—'}</span>
-                    <span className="text-[12px] font-semibold text-[#0B1F3A]">
-                      {s.session_num} / {s.total_in_group}
-                    </span>
+                    <span className="text-[12px] text-[#64748B] truncate">{s.course_title || '—'}</span>
+                    {typeBadge ? (
+                      <span className={`inline-flex w-fit rounded-full px-2 py-0.5 text-[10px] font-bold ${typeBadge.style}`}>
+                        {typeBadge.label}
+                      </span>
+                    ) : (
+                      <span className="text-[12px] font-semibold text-[#0B1F3A]">
+                        {s.session_num} / {s.total_in_group}
+                      </span>
+                    )}
                     <span className={`text-[12px] truncate ${s.topic ? 'text-[#64748B]' : 'italic text-[#CBD5E1]'}`}>
                       {s.topic ?? 'No topic'}
                     </span>

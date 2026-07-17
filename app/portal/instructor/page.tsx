@@ -6,13 +6,15 @@ import {
   getStudentsRequiringAttention,
   getInstructorDashboardStats,
   getTodaySessions,
+  getUpcomingSessionsForInstructor,
+  getTopStudentsAcrossInstructorGroups,
 } from '@/modules/instructor-portal/queries'
 import { getInstructorRatingSummary } from '@/modules/feedback/queries'
 import type { InstructorRatingSummary } from '@/modules/feedback/types'
-import { getUnreadNotificationCount } from '@/modules/notifications/queries'
+import { getUnreadNotificationCount, getNotificationFeed } from '@/modules/notifications/queries'
 import { getInstructorPaymentOverview } from '@/modules/instructor-payments/queries'
 import { fmtEGP } from '@/modules/instructor-payments/types'
-import { TopbarTitle } from '@/components/shared/layout/TopbarActionContext'
+import { listProjectsForInstructorReview } from '@/modules/portfolio/queries'
 import Link from 'next/link'
 import KpiCard        from '@/components/admin/KpiCard'
 import SectionDivider from '@/components/admin/SectionDivider'
@@ -20,6 +22,8 @@ import StatusBadge    from '@/components/admin/StatusBadge'
 import EmptyState     from '@/components/admin/EmptyState'
 import InstructorGroupCard  from '@/components/portal/instructor/InstructorGroupCard'
 import TodaySessionCard     from '@/components/portal/instructor/TodaySessionCard'
+import InstructorHero       from '@/components/portal/instructor/InstructorHero'
+import SectionPreviewCard   from '@/components/portal/student/SectionPreviewCard'
 
 function Chevron() {
   return (
@@ -44,34 +48,40 @@ export default async function InstructorDashboardPage() {
 
   const name = [instructor.first_name, instructor.last_name].filter(Boolean).join(' ') || instructor.email
 
-  let groups:     Awaited<ReturnType<typeof listInstructorGroups>>          = []
-  let pending:    Awaited<ReturnType<typeof listPendingSubmissions>>        = []
-  let attention:  Awaited<ReturnType<typeof getStudentsRequiringAttention>> = []
-  let stats:      Awaited<ReturnType<typeof getInstructorDashboardStats>>   = {
+  let groups:         Awaited<ReturnType<typeof listInstructorGroups>>                    = []
+  let pending:        Awaited<ReturnType<typeof listPendingSubmissions>>                  = []
+  let attention:      Awaited<ReturnType<typeof getStudentsRequiringAttention>>           = []
+  let stats:          Awaited<ReturnType<typeof getInstructorDashboardStats>>             = {
     groupCount: 0, studentCount: 0, completedSessions: 0, pendingReviews: 0,
   }
-  let todaySessions: Awaited<ReturnType<typeof getTodaySessions>>           = []
+  let todaySessions:    Awaited<ReturnType<typeof getTodaySessions>>                      = []
+  let upcomingSessions: Awaited<ReturnType<typeof getUpcomingSessionsForInstructor>>       = []
+  let topStudents:      Awaited<ReturnType<typeof getTopStudentsAcrossInstructorGroups>>   = []
+  let pendingProjects:  Awaited<ReturnType<typeof listProjectsForInstructorReview>>        = []
   let rating: InstructorRatingSummary | null = null
   let unreadNotifications = 0
-  let thisMonthEarnings = 0
+  let thisMonthEarnings   = 0
+  let notificationFeed: Awaited<ReturnType<typeof getNotificationFeed>> = { notifications: [], unread_count: 0 }
 
   await Promise.allSettled([
-    listInstructorGroups(instructor.id).then((r)          => { groups    = r }),
-    listPendingSubmissions(instructor.id, 999).then((r)   => { pending   = r }),
-    getStudentsRequiringAttention(instructor.id).then((r) => { attention = r }),
-    getInstructorDashboardStats(instructor.id).then((r)   => { stats     = r }),
-    getTodaySessions(instructor.id).then((r)              => { todaySessions = r }),
-    getInstructorRatingSummary(instructor.id).then((r)    => { rating    = r }),
-    getUnreadNotificationCount(user.id).then((r)          => { unreadNotifications = r }),
+    listInstructorGroups(instructor.id).then((r)               => { groups            = r }),
+    listPendingSubmissions(instructor.id, 999).then((r)        => { pending           = r }),
+    getStudentsRequiringAttention(instructor.id).then((r)      => { attention         = r }),
+    getInstructorDashboardStats(instructor.id).then((r)        => { stats             = r }),
+    getTodaySessions(instructor.id).then((r)                   => { todaySessions     = r }),
+    getUpcomingSessionsForInstructor(instructor.id, 4).then((r) => { upcomingSessions = r }),
+    getTopStudentsAcrossInstructorGroups(instructor.id, 5).then((r) => { topStudents  = r }),
+    listProjectsForInstructorReview(instructor.id, 'pending_review').then((r) => { pendingProjects = r }),
+    getInstructorRatingSummary(instructor.id).then((r)         => { rating            = r }),
+    getUnreadNotificationCount(user.id).then((r)                => { unreadNotifications = r }),
+    getNotificationFeed(user.id).then((r)                       => { notificationFeed  = r }),
     getInstructorPaymentOverview(instructor.id, user.id, instructor.branch_id)
       .then((r) => { thisMonthEarnings = r.approved_this_month }),
   ])
 
   const activeGroups   = groups.filter((g) => !!g.course_title)
   const totalCompleted = groups.reduce((sum, g) => sum + g.completed_sessions, 0)
-  const ratingValue    = rating != null
-    ? `${(rating as InstructorRatingSummary).avg_overall.toFixed(1)}`
-    : '—'
+  const branchName     = groups.find((g) => g.branch_name)?.branch_name ?? null
 
   // Quick-start: the first actionable session (ongoing → scheduled → any)
   const quickStart =
@@ -82,23 +92,16 @@ export default async function InstructorDashboardPage() {
   return (
     <div>
 
-      <TopbarTitle
-        title={`Good morning, ${name}`}
-        subtitle={new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+      <InstructorHero
+        name={name}
+        branchName={branchName}
+        todaySessionCount={todaySessions.length}
+        pendingReviewsCount={pending.length}
+        thisMonthEarnings={fmtEGP(thisMonthEarnings)}
+        ratingAvg={rating != null ? (rating as InstructorRatingSummary).avg_overall : null}
+        ratingCount={rating != null ? (rating as InstructorRatingSummary).total_responses : null}
+        quickStart={quickStart}
       />
-
-      {/* ── RATING BADGE ─────────────────────────────────────────────────── */}
-      {rating != null && (
-        <div className="mb-5 flex justify-end">
-          <div className="flex shrink-0 items-center gap-1.5 rounded-xl border border-[#FDE68A] bg-[#FFF1E2] px-3 py-1.5">
-            <span className="text-[13px]">⭐</span>
-            <span className="font-orbitron text-[13px] font-bold text-[#FF8A1F]">
-              {(rating as InstructorRatingSummary).avg_overall.toFixed(1)}
-            </span>
-            <span className="text-[10px] text-[#B45309]">avg</span>
-          </div>
-        </div>
-      )}
 
       {/* ── TODAY'S SESSIONS ─────────────────────────────────────────────── */}
       <SectionDivider title="Today's Sessions" />
@@ -107,37 +110,35 @@ export default async function InstructorDashboardPage() {
           No sessions today 🎉
         </p>
       ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {todaySessions.map((s) => (
+            <TodaySessionCard key={s.id} session={s} />
+          ))}
+        </div>
+      )}
+
+      {/* ── UPCOMING CLASSES ─────────────────────────────────────────────── */}
+      {upcomingSessions.length > 0 && (
         <>
-          {/* Quick-start CTA */}
-          {quickStart && (
-            <div className="mb-3 rounded-xl border-2 border-[#A7F3D0] bg-[#E7F8EE] px-5 py-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-[#065F46]">
-                    {quickStart.status === 'ongoing' ? 'Session in progress' : 'Ready to start?'}
-                  </p>
-                  <p className="mt-0.5 text-sm text-[#15803D]">
-                    {quickStart.group_name}{quickStart.course_title ? ` — ${quickStart.course_title}` : ''}
+          <SectionDivider title="Upcoming Classes" />
+          <div className="overflow-hidden ds-card divide-y divide-[#F1F5F9]">
+            {upcomingSessions.map((s) => (
+              <Link
+                key={s.id}
+                href={`/portal/instructor/groups/${s.group_id}`}
+                className="flex items-center gap-3 px-4 py-3 transition hover:bg-[#F8FAFC] md:px-5"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-[#0B1F3A]">{s.group_name}</p>
+                  <p className="truncate text-xs text-[#64748B]">
+                    {s.course_title}{' · '}
+                    {new Date(s.scheduled_at).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    {' · '}
+                    {new Date(s.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
-                <Link
-                  href={
-                    quickStart.session_type === 'primary'
-                      ? `/portal/instructor/groups/${quickStart.group_id}`
-                      : `/portal/instructor/special-sessions/${quickStart.id}`
-                  }
-                  className="shrink-0 rounded-lg bg-[#10B981] px-5 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
-                >
-                  {quickStart.status === 'ongoing' ? 'Continue Session' : 'Start Session'}
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* Session cards grid */}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {todaySessions.map((s) => (
-              <TodaySessionCard key={s.id} session={s} />
+                <Chevron />
+              </Link>
             ))}
           </div>
         </>
@@ -145,14 +146,7 @@ export default async function InstructorDashboardPage() {
 
       {/* ── OVERVIEW KPIs ────────────────────────────────────────────────── */}
       <SectionDivider title="Overview" />
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-        <KpiCard
-          label="This Month Earnings"
-          value={fmtEGP(thisMonthEarnings)}
-          href="/portal/instructor/payments"
-          barColor="#15803D"
-          bars={[35, 40, 48, 50, 55, 60, 65]}
-        />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <KpiCard
           label="My Groups"
           value={stats.groupCount}
@@ -194,18 +188,6 @@ export default async function InstructorDashboardPage() {
           delta={unreadNotifications > 0 ? 'Unread' : undefined}
           deltaUp={false}
         />
-        <div className="col-span-2 sm:col-span-1">
-          <KpiCard
-            label="Avg Rating"
-            value={ratingValue}
-            href="/portal/instructor"
-            barColor="#FF8A1F"
-            bars={[70, 75, 72, 78, 80, 78, 82]}
-            sub={rating != null
-              ? `${(rating as InstructorRatingSummary).total_responses} responses`
-              : undefined}
-          />
-        </div>
       </div>
 
       {/* ── MY ACTIVE GROUPS ─────────────────────────────────────────────── */}
@@ -216,6 +198,39 @@ export default async function InstructorDashboardPage() {
             {activeGroups.map((g) => (
               <InstructorGroupCard key={g.group_id} g={g} />
             ))}
+          </div>
+        </>
+      )}
+
+      {/* ── TOP STUDENTS + PROJECTS AWAITING REVIEW ─────────────────────────── */}
+      {(topStudents.length > 0 || pendingProjects.length > 0) && (
+        <>
+          <SectionDivider title="Highlights" />
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            <SectionPreviewCard
+              icon="🏆"
+              iconBg="bg-[#FFFBEB]"
+              title="Top Students"
+              hasItems={topStudents.length > 0}
+              preview={topStudents.length > 0
+                ? topStudents.slice(0, 3).map((s) => s.student_name).join(', ')
+                : undefined}
+              emptyText="No XP activity yet"
+              href="/portal/instructor/groups"
+            />
+            <SectionPreviewCard
+              icon="🎨"
+              iconBg="bg-[#EFF6FF]"
+              title="Projects Awaiting Review"
+              count={pendingProjects.length}
+              countLabel="pending"
+              hasItems={pendingProjects.length > 0}
+              preview={pendingProjects.length > 0
+                ? pendingProjects.slice(0, 3).map((p) => p.student_name).join(', ')
+                : undefined}
+              emptyText="Nothing to review"
+              href="/portal/instructor/portfolio"
+            />
           </div>
         </>
       )}
@@ -284,6 +299,31 @@ export default async function InstructorDashboardPage() {
                   <p className="truncate text-xs text-[#64748B]">{s.group_name} · {s.reason}</p>
                 </div>
                 <Chevron />
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ── RECENT NOTIFICATIONS ─────────────────────────────────────────── */}
+      {notificationFeed.notifications.length > 0 && (
+        <>
+          <SectionDivider title="Recent Notifications" />
+          <div className="ds-card divide-y divide-[#F1F5F9]">
+            {notificationFeed.notifications.slice(0, 5).map((n) => (
+              <Link
+                key={n.id}
+                href={n.href ?? '/portal/instructor'}
+                className="flex items-center gap-3 px-4 py-3 transition hover:bg-[#F8FAFC] md:px-5"
+              >
+                {!n.is_read && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF8A1F]" />}
+                <div className="min-w-0 flex-1">
+                  <p className={`truncate text-sm ${n.is_read ? 'text-[#64748B]' : 'font-medium text-[#0B1F3A]'}`}>{n.title}</p>
+                  {n.body && <p className="truncate text-xs text-[#94A3B8]">{n.body}</p>}
+                </div>
+                <span className="shrink-0 text-[10px] text-[#94A3B8]">
+                  {new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                </span>
               </Link>
             ))}
           </div>

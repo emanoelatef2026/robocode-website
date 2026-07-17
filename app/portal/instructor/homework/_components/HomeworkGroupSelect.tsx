@@ -23,6 +23,7 @@ export function HomeworkGroupSelect({ groups, currentFilter, currentGroupId }: P
     <select
       value={currentGroupId ?? ''}
       onChange={handleChange}
+      aria-label="Filter by group"
       className="ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
     >
       <option value="">All groups</option>

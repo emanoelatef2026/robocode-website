@@ -66,8 +66,10 @@ export default function SpecialSessionDetail(props: Props) {
         return
       }
 
-      // Navigate back to sessions list so TL can see who attended
-      router.push('/portal/instructor/special-sessions')
+      // Same landing spot as ending a regular group session — "My Sessions"
+      // now includes trial/makeup sessions too (they're credited via
+      // session_instructors, same as payroll uses).
+      router.push('/portal/instructor/history')
     })
   }
 

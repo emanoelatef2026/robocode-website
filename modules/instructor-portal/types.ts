@@ -26,6 +26,15 @@ export interface InstructorGroup {
   allocated_sessions: number | null
 }
 
+export interface InstructorTopStudent {
+  student_id:    string
+  student_name:  string
+  total_xp:      number
+  current_level: number
+  group_id:      string
+  group_name:    string
+}
+
 export interface InstructorSession {
   id:               string
   group_course_id:  string
@@ -40,13 +49,6 @@ export interface InstructorSession {
   topic:            string | null
   notes:            string | null
   attendance_count: number | null
-}
-
-export interface TodayAction {
-  type:   'start_session' | 'complete_attendance' | 'add_notes' | 'review_homework'
-  label:  string
-  detail: string
-  href:   string
 }
 
 export interface TodaySession {
@@ -72,6 +74,14 @@ export interface StudentAttentionItem {
   absence_count: number
   reason:        string
   href:          string
+}
+
+export interface StudentMissingEvaluationItem {
+  student_id:   string
+  student_name: string
+  group_id:     string
+  group_name:   string
+  href:         string
 }
 
 export interface SessionAttendanceRow {
@@ -201,12 +211,13 @@ export interface InstructorDashboardStats {
 
 export interface SessionHistoryItem {
   session_id:       string
+  session_type:     'primary' | 'trial' | 'makeup'
   session_num:      number
   total_in_group:   number
   scheduled_at:     string
   group_id:         string
   group_name:       string
-  group_course_id:  string
+  group_course_id:  string | null
   course_title:     string
   topic:            string | null
   status:           string

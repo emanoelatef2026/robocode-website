@@ -21,7 +21,13 @@ import {
   type EnrollmentForConsumption,
 } from '@/modules/academic/contract-consumption'
 import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
-import { deleteSessionStartingNotification, readSessionStartingNotification } from '@/modules/notifications/actions'
+import {
+  deleteSessionStartingNotification,
+  readSessionStartingNotification,
+  seedNewHomeworkAssignedNotification,
+  seedNewSessionResourcesNotification,
+} from '@/modules/notifications/actions'
+import { getStudentUserId, getParentUserIdsForStudent } from '@/modules/notifications/queries'
 import { checkAndUnlockAchievements } from '@/modules/gamification/achievement-service'
 import { checkAndAwardBadges } from '@/modules/gamification/badge-service'
 import {
@@ -29,6 +35,8 @@ import {
   updateStudentNote as sharedUpdateStudentNote,
   deleteStudentNote as sharedDeleteStudentNote,
 } from '@/modules/student-notes/actions'
+import { createStudentEvaluation } from '@/modules/student-evaluations/actions'
+import type { EvaluationCriterion } from '@/modules/student-evaluations/types'
 import type { ActionResult } from '@/types/app'
 
 // Statuses that count toward student attendance (XP, achievements).
@@ -219,6 +227,26 @@ export async function startGroupSession(
   const rangeCheck = await canInstructorCreateNextSession(instructor.id, groupCourseId, db)
   if (!rangeCheck.allowed) {
     return { success: false, error: { code: 'FORBIDDEN', message: rangeCheck.reason ?? 'Outside your allocated session range.' } }
+  }
+
+  // Guard against creating a duplicate session while one is already running —
+  // without this, a confused re-click of "Start Session" on the group page
+  // (e.g. after following a stale "Continue Session" link) silently opens a
+  // second, unrelated ongoing session for the same group.
+  const { data: ongoingRow } = await db
+    .from('schedules')
+    .select('id')
+    .eq('group_course_id', groupCourseId)
+    .eq('status', 'ongoing')
+    .maybeSingle()
+  if (ongoingRow) {
+    return {
+      success: false,
+      error: {
+        code:    'VALIDATION',
+        message: 'A session is already in progress for this group — continue it instead of starting a new one.',
+      },
+    }
   }
 
   const now = new Date().toISOString()
@@ -766,6 +794,37 @@ export async function removeSessionRecording(
 
 // ── Session resources ─────────────────────────────────────────────────────────
 
+// Resolves every active student in a group to their own user_id plus their
+// parents' user_ids — shared by any action that needs to notify "everyone in
+// this group" (new homework, new session resources). Non-critical by design:
+// callers fire this with `void` and swallow errors so a notification hiccup
+// never blocks the actual homework/resource save.
+async function notifyGroupAudience(
+  groupId: string,
+  db: ReturnType<typeof createServiceClient>,
+  notify: (recipientUserId: string) => Promise<void>
+): Promise<void> {
+  try {
+    const { data: gsRows } = await db
+      .from('group_students')
+      .select('student_id')
+      .eq('group_id', groupId)
+      .eq('status', 'active')
+    const studentIds = [...new Set((gsRows ?? []).map((r: any) => r.student_id as string))]
+
+    await Promise.all(studentIds.map(async (studentId) => {
+      const [studentUserId, parentUserIds] = await Promise.all([
+        getStudentUserId(studentId),
+        getParentUserIdsForStudent(studentId),
+      ])
+      const recipients = [...(studentUserId ? [studentUserId] : []), ...parentUserIds]
+      await Promise.all(recipients.map(notify))
+    }))
+  } catch {
+    // non-critical
+  }
+}
+
 const resourcesSchema = z.object({
   session_id:      z.string().uuid(),
   group_id:        z.string().uuid(),
@@ -800,6 +859,12 @@ export async function updateSessionResources(
 
   const { error } = await db.from('schedules').update({ resources_links: resources }).eq('id', d.session_id)
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+
+  if (resources.length > 0) {
+    void notifyGroupAudience(d.group_id, db, (recipientId) =>
+      seedNewSessionResourcesNotification(recipientId, d.session_id)
+    )
+  }
 
   revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
   return { success: true, data: undefined }
@@ -884,9 +949,14 @@ export async function createSessionHomework(
 
   if (error || !assignment) return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to create homework.' } }
 
+  const assignmentId = (assignment as any).id as string
+  void notifyGroupAudience(d.group_id, db, (recipientId) =>
+    seedNewHomeworkAssignedNotification(recipientId, assignmentId, d.title)
+  )
+
   revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
   revalidatePath('/portal/instructor/homework')
-  return { success: true, data: { assignmentId: (assignment as any).id } }
+  return { success: true, data: { assignmentId } }
 }
 
 // ── Cancel Session ────────────────────────────────────────────────────────────
@@ -1124,4 +1194,105 @@ export async function updateStudentNote(
 
 export async function deleteStudentNote(formData: FormData): Promise<ActionResult<void>> {
   return sharedDeleteStudentNote(formData)
+}
+
+// ── Student Evaluations (instructor-authored) ───────────────────────────────────
+// modules/student-evaluations/actions.ts only enforces a branch-scoped
+// manage_evaluations permission — it has no concept of instructor/group
+// ownership, so a caller with the permission could otherwise evaluate any
+// student in the branch. This wrapper adds the same group_courses/
+// group_instructors ownership check createStudentNote uses (student-notes/
+// actions.ts) before delegating — all validation, timeline logging, and
+// notification fan-out stays in the shared action, not duplicated here.
+
+async function hasInstructorGroupAccess(
+  groupId:      string,
+  instructorId: string,
+  db:           ReturnType<typeof createServiceClient>
+): Promise<boolean> {
+  const { data: gcRow } = await db
+    .from('group_courses')
+    .select('id')
+    .eq('group_id', groupId)
+    .eq('instructor_id', instructorId)
+    .eq('status', 'active')
+    .maybeSingle()
+  if (gcRow) return true
+
+  const { data: giRow } = await db
+    .from('group_instructors')
+    .select('group_id')
+    .eq('group_id', groupId)
+    .eq('instructor_id', instructorId)
+    .maybeSingle()
+  return !!giRow
+}
+
+const evaluationFormSchema = z.object({
+  student_id:         z.string().uuid(),
+  group_id:           z.string().uuid(),
+  criterion:          z.string().min(1),
+  custom_label:       z.string().nullable().optional(),
+  score:              z.string().nullable().optional(),
+  rating:             z.string().nullable().optional(),
+  feedback:           z.string().nullable().optional(),
+  visible_to_student: z.string().nullable().optional(),
+  visible_to_parent:  z.string().nullable().optional(),
+})
+
+export async function createInstructorEvaluation(
+  _prevState: unknown,
+  formData: FormData
+): Promise<ActionResult<{ evaluationId: string }>> {
+  const user = await requireAuth()
+
+  const parsed = evaluationFormSchema.safeParse({
+    student_id:         formData.get('student_id'),
+    group_id:           formData.get('group_id'),
+    criterion:          formData.get('criterion'),
+    custom_label:       formData.get('custom_label') || undefined,
+    score:              formData.get('score') || undefined,
+    rating:             formData.get('rating') || undefined,
+    feedback:           formData.get('feedback') || undefined,
+    visible_to_student: formData.get('visible_to_student') as string | undefined,
+    visible_to_parent:  formData.get('visible_to_parent')  as string | undefined,
+  })
+  if (!parsed.success) {
+    return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+  }
+  const d = parsed.data
+
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+  }
+
+  const db = createServiceClient()
+  const hasAccess = await hasInstructorGroupAccess(d.group_id, instructor.id, db)
+  if (!hasAccess) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
+  }
+
+  const { data: studentRow } = await db.from('students').select('branch_id').eq('id', d.student_id).maybeSingle()
+  const branchId = (studentRow as any)?.branch_id as string | undefined
+  if (!branchId) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+  }
+
+  const result = await createStudentEvaluation({
+    student_id:          d.student_id,
+    branch_id:           branchId,
+    criterion:            d.criterion as EvaluationCriterion,
+    custom_label:         d.custom_label || null,
+    score:                d.score  ? Number(d.score)  : null,
+    rating:               d.rating ? Number(d.rating) : null,
+    feedback:             d.feedback || null,
+    visible_to_student:   d.visible_to_student === 'true',
+    visible_to_parent:    d.visible_to_parent  === 'true',
+  })
+
+  if (result.success) {
+    revalidatePath(`/portal/instructor/groups/${d.group_id}/students/${d.student_id}`)
+  }
+  return result
 }

@@ -134,7 +134,10 @@ export async function computeNextAllocationStart(
 }
 
 // What session_number would the NEXT new session get for this group_course?
-// Reads directly from the schedules table (what the trigger would compute).
+// Mirrors assign_session_number() (migration 20260702101548): cancelled rows
+// are excluded from the MAX() lookup so a cancellation doesn't permanently
+// push the group's numbering — and therefore the instructor's allocation
+// ceiling — past what was actually delivered or planned.
 export async function peekNextSessionNumber(
   groupCourseId: string,
   db:            ReturnType<typeof createServiceClient>
@@ -144,6 +147,7 @@ export async function peekNextSessionNumber(
     .select('session_number')
     .eq('group_course_id', groupCourseId)
     .not('session_number', 'is', null)
+    .neq('status', 'cancelled')
     .order('session_number', { ascending: false })
     .limit(1)
     .maybeSingle()

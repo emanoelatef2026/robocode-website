@@ -57,6 +57,7 @@ export async function createTrialSession(
       duration_minutes: d.duration_minutes,
       type:             'trial',
       status:           'scheduled',
+      topic:            d.course_name || 'Trial Session', // trg_require_topic_on_complete requires this before the session can end
       notes:            d.notes || null,
       created_by:       user.id,
     })
@@ -147,6 +148,7 @@ export async function createMakeupSession(
       duration_minutes: d.duration_minutes,
       type:             'makeup',
       status:           'scheduled',
+      topic:            'Makeup Session', // trg_require_topic_on_complete requires this before the session can end
       notes:            d.notes || null,
       created_by:       user.id,
     })
@@ -495,7 +497,7 @@ export async function endTrialSessionWithAttendance(
 
   const { data: sess } = await db
     .from('schedules')
-    .select('status, branch_id')
+    .select('status, branch_id, topic')
     .eq('id', sessionId)
     .eq('type', 'trial')
     .is('group_course_id', null)
@@ -505,6 +507,7 @@ export async function endTrialSessionWithAttendance(
   if ((sess as any).status === 'completed') return { success: false, error: { code: 'VALIDATION', message: 'Session already completed.' } }
 
   const branchId = (sess as any).branch_id as string
+  const existingTopic = (sess as any).topic as string | null
   const now      = new Date().toISOString()
 
   // 1. Save attendance statuses
@@ -560,10 +563,26 @@ export async function endTrialSessionWithAttendance(
   }
 
   // 5. Mark session complete
-  await db
+  // Trial sessions never collect a topic through the UI, but the DB-level
+  // trg_require_topic_on_complete trigger (0090_topic_integrity.sql) rejects
+  // ANY session — trial/makeup included — transitioning to 'completed'
+  // without one. Backfill a default here so the same invariant primary
+  // sessions already satisfy is met, and check the error instead of
+  // swallowing it silently (a prior version of this code ignored this
+  // update's result entirely, so a trigger rejection looked like success).
+  const hasValidTopic = !!existingTopic && !['', 'no topic', 'none', 'n/a'].includes(existingTopic.trim().toLowerCase())
+  const { error: completeErr } = await db
     .from('schedules')
-    .update({ status: 'completed', ended_at: now })
+    .update({
+      status:   'completed',
+      ended_at: now,
+      ...(hasValidTopic ? {} : { topic: 'Trial Session' }),
+    })
     .eq('id', sessionId)
+
+  if (completeErr) {
+    return { success: false, error: { code: 'DB_ERROR', message: completeErr.message } }
+  }
 
   // 6. Stamp instructor payroll record
   await db
@@ -603,7 +622,7 @@ export async function endMakeupSession(sessionId: string): Promise<ActionResult<
 
   const { data: sess } = await db
     .from('schedules')
-    .select('status, branch_id, scheduled_at')
+    .select('status, branch_id, scheduled_at, topic')
     .eq('id', sessionId)
     .eq('type', 'makeup')
     .is('group_course_id', null)
@@ -614,8 +633,27 @@ export async function endMakeupSession(sessionId: string): Promise<ActionResult<
 
   const now            = new Date().toISOString()
   const sessionDateISO = (sess as any).scheduled_at as string
+  const existingTopic  = (sess as any).topic as string | null
 
-  await db.from('schedules').update({ status: 'completed', ended_at: now }).eq('id', sessionId)
+  // Makeup sessions never collect a topic through the UI, but the DB-level
+  // trg_require_topic_on_complete trigger (0090_topic_integrity.sql) rejects
+  // ANY session transitioning to 'completed' without one — backfill a
+  // default and check the error instead of swallowing it silently (a prior
+  // version of this code ignored this update's result entirely, so a
+  // trigger rejection looked like success while the session stayed 'ongoing').
+  const hasValidTopic = !!existingTopic && !['', 'no topic', 'none', 'n/a'].includes(existingTopic.trim().toLowerCase())
+  const { error: completeErr } = await db
+    .from('schedules')
+    .update({
+      status:   'completed',
+      ended_at: now,
+      ...(hasValidTopic ? {} : { topic: 'Makeup Session' }),
+    })
+    .eq('id', sessionId)
+
+  if (completeErr) {
+    return { success: false, error: { code: 'DB_ERROR', message: completeErr.message } }
+  }
 
   // Mark instructor participation
   await db.from('session_instructors').update({ submitted_at: now }).eq('session_id', sessionId)
@@ -767,6 +805,7 @@ export async function bookTrialFromLead(
       duration_minutes: d.duration_minutes,
       type:             'trial',
       status:           'scheduled',
+      topic:            d.course_name || 'Trial Session', // trg_require_topic_on_complete requires this before the session can end
       notes:            notesValue,
       created_by:       user.id,
     })
@@ -979,6 +1018,7 @@ export async function bulkBookTrialFromLeads(
       duration_minutes: d.duration_minutes,
       type:             'trial',
       status:           'scheduled',
+      topic:            'Trial Session', // trg_require_topic_on_complete requires this before the session can end
       notes:            d.notes || null,
       created_by:       user.id,
     })

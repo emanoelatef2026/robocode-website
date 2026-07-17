@@ -266,6 +266,23 @@ export const PARENT_VISIBLE_TIMELINE_EVENT_TYPES: readonly TimelineEventType[] =
   'NOTE_ADDED',
 ]
 
+// ── Instructor-visible subset ─────────────────────────────────────────────────
+// Same shared table, staff audience this time — an instructor should see the
+// teaching-relevant history for their own students, never finance/collections/
+// staff-internal events (payments, promises, complaints, blocks, call logs).
+
+export const INSTRUCTOR_VISIBLE_TIMELINE_EVENT_TYPES: readonly TimelineEventType[] = [
+  'ATTENDANCE_RECORDED',
+  'HOMEWORK_ASSIGNED',
+  'HOMEWORK_COMPLETED',
+  'CERTIFICATE_ISSUED',
+  'EVALUATION_RECORDED',
+  'COMPETITION_LOGGED',
+  'ACHIEVEMENT_EARNED',
+  'BADGE_EARNED',
+  'NOTE_ADDED',
+]
+
 export const TIMELINE_SEVERITY_COLORS: Record<TimelineEventSeverity, string> = {
   INFO:     'bg-slate-100 text-slate-600',
   WARNING:  'bg-amber-100 text-amber-700',

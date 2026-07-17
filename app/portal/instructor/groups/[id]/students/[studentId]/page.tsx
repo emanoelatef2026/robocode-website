@@ -4,10 +4,18 @@ import {
   getStudentProfileForInstructor,
   getStudentGroupAssignments,
 } from '@/modules/instructor-portal/queries'
+import { getStudentEvaluations } from '@/modules/student-evaluations/queries'
+import { EVALUATION_CRITERION_LABELS } from '@/modules/student-evaluations/types'
+import { getStudentCompetitions } from '@/modules/student-competitions/queries'
+import { listCertificates } from '@/modules/certificates/queries'
+import { getStudentPortfolioDetail } from '@/modules/portfolio/queries'
+import { PROJECT_STATUS_CONFIG } from '@/modules/portfolio/types'
+import { getStudentTimeline, INSTRUCTOR_VISIBLE_TIMELINE_EVENT_TYPES, TIMELINE_EVENT_LABELS, TIMELINE_SEVERITY_COLORS } from '@/lib/timeline'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import NoteForm from './NoteForm'
 import DeleteNoteButton from './DeleteNoteButton'
+import { EvaluationForm } from '@/components/portal/instructor/StudentEvaluationModal'
 
 interface Props { params: Promise<{ id: string; studentId: string }> }
 
@@ -25,11 +33,20 @@ export default async function StudentProfilePage({ params }: Props) {
   const instructor        = await getInstructorByUserId(user.id)
   if (!instructor) notFound()
 
-  const [profile, assignments] = await Promise.all([
+  const [profile, assignments, evaluations, competitions, certificatesResult, timelineRaw, portfolio] = await Promise.all([
     getStudentProfileForInstructor(studentId, id, instructor.id, user.id),
     getStudentGroupAssignments(studentId, id),
+    getStudentEvaluations(studentId, 'staff'),
+    getStudentCompetitions(studentId),
+    listCertificates({ studentId, perPage: 10 }),
+    getStudentTimeline(studentId),
+    getStudentPortfolioDetail(studentId),
   ])
   if (!profile) notFound()
+
+  const certificates = certificatesResult.data
+  const portfolioProjects = portfolio?.projects.filter((p) => !p.is_archived) ?? []
+  const timeline = timelineRaw.filter((e) => INSTRUCTOR_VISIBLE_TIMELINE_EVENT_TYPES.includes(e.event_type))
 
   const name         = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.email
   const initials     = (profile.first_name?.[0] ?? profile.email[0]).toUpperCase()
@@ -117,6 +134,33 @@ export default async function StudentProfilePage({ params }: Props) {
           </>
         )}
       </div>
+
+      {/* ── Timeline — chronological overview, right after the vitals so the
+          instructor gets "what's been happening" before the section-by-section
+          detail below ─────────────────────────────────────────────────────── */}
+      {timeline.length > 0 && (
+        <div className="ds-card px-4 py-3.5">
+          <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Timeline</p>
+          <div className="relative space-y-3 pl-4 before:absolute before:left-1.5 before:top-0 before:h-full before:w-px before:bg-[#E2E8F0]">
+            {timeline.map((t) => (
+              <div key={t.id} className="relative">
+                <div className="absolute -left-4.5 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#94A3B8]" />
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-medium text-[#0B1F3A]">{TIMELINE_EVENT_LABELS[t.event_type]}</p>
+                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${TIMELINE_SEVERITY_COLORS[t.severity]}`}>
+                    {t.severity}
+                  </span>
+                </div>
+                {t.notes && <p className="mt-0.5 text-xs text-[#64748B]">{t.notes}</p>}
+                <p className="mt-0.5 text-[10px] text-[#94A3B8]">
+                  {new Date(t.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  {t.created_by_name ? ` · ${t.created_by_name}` : ''}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── Assignments ────────────────────────────────────────────────────── */}
       {assignments.length > 0 && (
@@ -250,6 +294,164 @@ export default async function StudentProfilePage({ params }: Props) {
               </div>
             )})}
 
+          </div>
+        )}
+      </div>
+
+      {/* ── Evaluations ────────────────────────────────────────────────────── */}
+      <div className="ds-card px-4 py-3.5">
+        <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Evaluations</p>
+
+        <EvaluationForm studentId={studentId} groupId={id} />
+
+        {evaluations.length === 0 ? (
+          <p className="mt-3 text-sm text-[#94A3B8]">No evaluations yet.</p>
+        ) : (
+          <div className="mt-4 divide-y divide-[#F1F5F9]">
+            {evaluations.map((e) => (
+              <div key={e.id} className="py-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-[#0B1F3A]">
+                    {e.criterion === 'CUSTOM' ? (e.custom_label ?? 'Custom') : EVALUATION_CRITERION_LABELS[e.criterion]}
+                  </p>
+                  <div className="flex shrink-0 items-center gap-1.5 text-xs">
+                    {e.score != null && <span className="font-semibold text-[#0B1F3A]">{e.score}/100</span>}
+                    {e.rating != null && <span className="text-[#F59E0B]">{'★'.repeat(e.rating)}</span>}
+                  </div>
+                </div>
+                {e.feedback && <p className="mt-1 text-xs text-[#64748B]">{e.feedback}</p>}
+                <p className="mt-1 text-[10px] text-[#94A3B8]">
+                  {new Date(e.evaluated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Competitions ───────────────────────────────────────────────────── */}
+      <div className="ds-card px-4 py-3.5">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-semibold text-[#0B1F3A]">Competitions</p>
+          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-medium text-[#64748B]">
+            Logged by team leader
+          </span>
+        </div>
+
+        {competitions.length === 0 ? (
+          <p className="text-sm text-[#94A3B8]">No competition history yet.</p>
+        ) : (
+          <div className="divide-y divide-[#F1F5F9]">
+            {competitions.map((c) => (
+              <div key={c.id} className="py-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-[#0B1F3A]">{c.competition_name}</p>
+                  <span className="shrink-0 text-xs text-[#94A3B8]">{c.year}</span>
+                </div>
+                {(c.rank || c.award) && (
+                  <p className="mt-0.5 text-xs text-[#B45309]">
+                    {[c.rank, c.award].filter(Boolean).join(' · ')}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Certificates ───────────────────────────────────────────────────── */}
+      <div className="ds-card px-4 py-3.5">
+        <p className="mb-3 text-sm font-semibold text-[#0B1F3A]">Certificates</p>
+
+        {certificates.length === 0 ? (
+          <p className="text-sm text-[#94A3B8]">No certificates issued yet.</p>
+        ) : (
+          <div className="divide-y divide-[#F1F5F9]">
+            {certificates.map((c) => (
+              <div key={c.id} className="flex items-center justify-between gap-2 py-2.5">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-[#0B1F3A]">{c.title}</p>
+                  <p className="text-xs text-[#94A3B8]">
+                    {c.certificate_code} · {new Date(c.issued_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </p>
+                </div>
+                <span className="shrink-0 rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-medium capitalize text-[#15803D]">
+                  {c.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Portfolio & Achievements ──────────────────────────────────────── */}
+      <div className="ds-card px-4 py-3.5">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-semibold text-[#0B1F3A]">Portfolio &amp; Achievements</p>
+          <Link
+            href={`/portal/instructor/portfolio?tab=pending_review`}
+            className="text-xs font-medium text-[#FF8A1F] hover:underline"
+          >
+            Review projects →
+          </Link>
+        </div>
+
+        {portfolioProjects.length === 0 && (portfolio?.achievements.length ?? 0) === 0 && (portfolio?.badges.length ?? 0) === 0 ? (
+          <p className="text-sm text-[#94A3B8]">No portfolio activity yet.</p>
+        ) : (
+          <div className="space-y-4">
+            {portfolioProjects.length > 0 && (
+              <div>
+                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+                  Projects ({portfolioProjects.length})
+                </p>
+                <div className="divide-y divide-[#F1F5F9]">
+                  {portfolioProjects.map((p) => {
+                    const statusCfg = p.status
+                      ? (PROJECT_STATUS_CONFIG[p.status] ?? PROJECT_STATUS_CONFIG.pending_review)
+                      : PROJECT_STATUS_CONFIG.pending_review
+                    return (
+                      <div key={p.id} className="flex items-center justify-between gap-2 py-2">
+                        <p className="min-w-0 flex-1 truncate text-sm text-[#0B1F3A]">{p.title}</p>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusCfg.cls}`}>
+                          {statusCfg.label}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {(portfolio?.badges.length ?? 0) > 0 && (
+              <div>
+                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Badges</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {portfolio!.badges.map((b) => (
+                    <span key={b.id} className="rounded-full bg-[#FFFBEB] px-2.5 py-1 text-xs font-medium text-[#B45309]">
+                      {b.badge_name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {(portfolio?.achievements.length ?? 0) > 0 && (
+              <div>
+                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Achievements</p>
+                <div className="divide-y divide-[#F1F5F9]">
+                  {portfolio!.achievements.map((a) => (
+                    <div key={a.id} className="py-2">
+                      <p className="text-sm font-medium text-[#0B1F3A]">{a.title}</p>
+                      {a.description && <p className="text-xs text-[#64748B]">{a.description}</p>}
+                      <p className="mt-0.5 text-[10px] text-[#94A3B8]">
+                        {new Date(a.date_awarded).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -27,7 +27,7 @@ export default function TodaySessionCard({ session, groupId }: Props) {
   const gid       = groupId ?? session.group_id
   const href      = isSpecial
     ? `/portal/instructor/special-sessions/${session.id}`
-    : gid ? `/portal/instructor/groups/${gid}` : '/portal/instructor/groups'
+    : gid ? `/portal/instructor/groups/${gid}/sessions/${session.id}` : '/portal/instructor/groups'
   const action    = STATUS_ACTION[session.status] ?? STATUS_ACTION.scheduled
   const typeBadge = SESSION_TYPE_BADGE[session.session_type ?? 'primary']
 

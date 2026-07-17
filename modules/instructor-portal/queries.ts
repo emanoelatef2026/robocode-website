@@ -2,9 +2,15 @@ import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { ACADEMICALLY_CONSUMING_SESSION_STATUSES } from '@/modules/academic/constants'
 import { getStudentNotes } from '@/modules/student-notes/queries'
+import { getGroupLeaderboard } from '@/modules/gamification/queries'
+import { getInstructorPerformance, getCertReadyStudents } from '@/modules/tl-dashboard/queries'
+import type { InstructorPerf, CertReadyStudent } from '@/modules/tl-dashboard/queries'
+import { listProjectsForInstructorReview } from '@/modules/portfolio/queries'
+import { getInstructorSessionEarnings } from '@/modules/instructor-payments/queries'
 import type {
   InstructorRecord,
   InstructorGroup,
+  InstructorTopStudent,
   InstructorSession,
   SessionDetail,
   SessionHomeworkItem,
@@ -18,9 +24,9 @@ import type {
   SessionRecording,
   ResourceLink,
   CourseModuleItem,
-  TodayAction,
   TodaySession,
   StudentAttentionItem,
+  StudentMissingEvaluationItem,
   SessionHistoryItem,
   SessionHistoryFilters,
   AttendanceAnalyticsRow,
@@ -334,6 +340,40 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
   }
 
   return results
+}
+
+// ── Top Students (composed across all of the instructor's groups) ──────────────
+// Thin composition over the existing per-group leaderboard — no new XP/ranking
+// logic, just a merge + re-sort of getGroupLeaderboard's output per group.
+
+export async function getTopStudentsAcrossInstructorGroups(
+  instructorId: string,
+  limit = 5
+): Promise<InstructorTopStudent[]> {
+  const groups = await listInstructorGroups(instructorId)
+  if (groups.length === 0) return []
+
+  const perGroup = await Promise.all(
+    groups.map(async (g) => {
+      const entries = await getGroupLeaderboard(g.group_id)
+      return entries.slice(0, limit).map((e) => ({
+        student_id:    e.student_id,
+        student_name:  e.student_name,
+        total_xp:      e.total_xp,
+        current_level: e.current_level,
+        group_id:      g.group_id,
+        group_name:    g.group_name,
+      }))
+    })
+  )
+
+  const merged = new Map<string, InstructorTopStudent>()
+  for (const entry of perGroup.flat()) {
+    const existing = merged.get(entry.student_id)
+    if (!existing || entry.total_xp > existing.total_xp) merged.set(entry.student_id, entry)
+  }
+
+  return [...merged.values()].sort((a, b) => b.total_xp - a.total_xp).slice(0, limit)
 }
 
 // ── Group Detail ──────────────────────────────────────────────────────────────
@@ -749,17 +789,32 @@ export async function getSessionDetail(
   }))
 
   const allSessions = (progressRes.data ?? []) as any[]
-  const progress: SessionProgressItem[] = allSessions.map((ps, idx) => ({
+  // A cancelled session (with or without a makeup) never happened as itself —
+  // drop it from the visible curriculum trail. Its makeup, if one was
+  // created, is its own separate schedules row and already appears on its
+  // own. A postponed session is NOT excluded: it's the same session row just
+  // moved to a new date, so it still needs to show as pending.
+  const visibleSessions = allSessions.filter(
+    (ps) => ps.status !== 'cancelled' && ps.status !== 'cancelled_with_makeup'
+  )
+  // session_num is the session's POSITION among visible sessions, not its raw
+  // immutable session_number — a cancelled session must not leave a numbering
+  // gap in what the instructor sees (e.g. cancel #1 → the next real session
+  // displays as "Session 2", not "Session 3").
+  const progress: SessionProgressItem[] = visibleSessions.map((ps, idx) => ({
     id:           ps.id,
     scheduled_at: ps.scheduled_at,
     status:       ps.status,
     topic:        null,
-    session_num:  (ps.session_number as number | null) ?? (idx + 1),
+    session_num:  idx + 1,
   }))
-  const currentSess = allSessions.find((ps) => ps.id === sessionId)
-  const currentNum  =
-    (currentSess?.session_number as number | null) ??
-    ((allSessions.findIndex((ps) => ps.id === sessionId) + 1) || progress.length)
+  const currentSess       = allSessions.find((ps) => ps.id === sessionId)
+  const currentVisibleIdx = visibleSessions.findIndex((ps) => ps.id === sessionId)
+  const currentNum        =
+    currentVisibleIdx >= 0
+      ? currentVisibleIdx + 1
+      : (currentSess?.session_number as number | null) ??
+        ((allSessions.findIndex((ps) => ps.id === sessionId) + 1) || progress.length)
 
   const groupName   = (groupRes.data  as any)?.name  ?? ''
   const courseTitle = (courseRes.data as any)?.title ?? ''
@@ -949,83 +1004,6 @@ export async function listPendingSubmissions(
   })
 }
 
-// ── Today's Actions ───────────────────────────────────────────────────────────
-
-export async function getTodayActions(instructorId: string): Promise<TodayAction[]> {
-  const db = createServiceClient()
-  const { gcIds } = await resolveGcContext(instructorId, db)
-  if (gcIds.length === 0) return []
-
-  const { data: gcMeta } = await db
-    .from('group_courses')
-    .select('id, group_id, groups!group_courses_group_id_fkey(name)')
-    .in('id', gcIds)
-  const gcGroupMap = new Map<string, { groupId: string; groupName: string }>(
-    (gcMeta ?? []).map((r: any) => [r.id as string, { groupId: r.group_id as string, groupName: r.groups?.name ?? '' }])
-  )
-
-  const now   = new Date()
-  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0))
-  const end   = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999))
-
-  const { data: todaySess } = await db
-    .from('schedules')
-    .select('id, group_course_id, status, topic, notes')
-    .in('group_course_id', gcIds)
-    .gte('scheduled_at', start.toISOString())
-    .lte('scheduled_at', end.toISOString())
-    .not('status', 'in', '("cancelled","cancelled_with_makeup","postponed")')
-
-  const completedIds = (todaySess ?? [])
-    .filter((s: any) => s.status === 'completed')
-    .map((s: any) => s.id as string)
-  const attCounts: Record<string, number> = {}
-  if (completedIds.length > 0) {
-    const { data: attRows } = await db
-      .from('attendance_records')
-      .select('schedule_id')
-      .in('schedule_id', completedIds)
-    for (const a of attRows ?? []) {
-      const sid = (a as any).schedule_id as string
-      attCounts[sid] = (attCounts[sid] ?? 0) + 1
-    }
-  }
-
-  const actions: TodayAction[] = []
-  for (const sess of todaySess ?? []) {
-    const gc   = gcGroupMap.get((sess as any).group_course_id)
-    if (!gc) continue
-    const href = `/portal/instructor/groups/${gc.groupId}/sessions/${(sess as any).id}`
-
-    if ((sess as any).status === 'scheduled') {
-      actions.push({ type: 'start_session', label: "Start today's session", detail: gc.groupName, href })
-    } else if ((sess as any).status === 'ongoing') {
-      actions.push({ type: 'complete_attendance', label: 'Session in progress — complete attendance', detail: gc.groupName, href })
-    } else if ((sess as any).status === 'completed') {
-      if (!attCounts[(sess as any).id]) {
-        actions.push({ type: 'complete_attendance', label: 'Complete attendance', detail: gc.groupName, href })
-      }
-      if (!(sess as any).topic && !(sess as any).notes) {
-        actions.push({ type: 'add_notes', label: 'Add session notes', detail: gc.groupName, href })
-      }
-    }
-  }
-
-  const pending = await listPendingSubmissions(instructorId, 1)
-  if (pending.length > 0) {
-    const allPending = await listPendingSubmissions(instructorId, 999)
-    const n = allPending.length
-    actions.push({
-      type:   'review_homework',
-      label:  `Review ${n} homework submission${n > 1 ? 's' : ''}`,
-      detail: '',
-      href:   '/portal/instructor/homework',
-    })
-  }
-
-  return actions
-}
-
 // ── Students Requiring Attention ──────────────────────────────────────────────
 
 export async function getStudentsRequiringAttention(
@@ -1099,6 +1077,63 @@ export async function getStudentsRequiringAttention(
       absence_count: count,
       reason:        `${count} absence${count > 1 ? 's' : ''}`,
       href:          groupId ? `/portal/instructor/groups/${groupId}/students/${studentId}` : '#',
+    }
+  })
+}
+
+// ── Students with no evaluation on record (Review Center queue) ────────────────
+
+export async function getStudentsMissingEvaluation(
+  instructorId: string,
+  limit = 20
+): Promise<StudentMissingEvaluationItem[]> {
+  const db = createServiceClient()
+  const { groupIds } = await resolveGcContext(instructorId, db)
+  if (groupIds.length === 0) return []
+
+  const { data: groupRows } = await db.from('groups').select('id, name').in('id', groupIds)
+  const groupNames = new Map<string, string>((groupRows ?? []).map((g: any) => [g.id as string, g.name as string]))
+
+  const { data: gsRows } = await db
+    .from('group_students')
+    .select('student_id, group_id')
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+  if (!gsRows || gsRows.length === 0) return []
+
+  const studentGroup = new Map<string, string>(gsRows.map((r: any) => [r.student_id as string, r.group_id as string]))
+  const studentIds   = [...studentGroup.keys()]
+
+  const { data: evalRows } = await db
+    .from('student_evaluations')
+    .select('student_id')
+    .in('student_id', studentIds)
+    .is('deleted_at', null)
+  const evaluated = new Set((evalRows ?? []).map((e: any) => e.student_id as string))
+
+  const missingIds = studentIds.filter((id) => !evaluated.has(id)).slice(0, limit)
+  if (missingIds.length === 0) return []
+
+  const { data: studRows } = await db
+    .from('students')
+    .select(`id, users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
+    .in('id', missingIds)
+    .is('deleted_at', null)
+  const nameMap = new Map<string, string>(
+    (studRows ?? []).map((s: any) => {
+      const p = s.users?.profiles
+      return [s.id as string, [p?.first_name, p?.last_name].filter(Boolean).join(' ') || 'Unknown']
+    })
+  )
+
+  return missingIds.map((studentId) => {
+    const groupId = studentGroup.get(studentId) ?? ''
+    return {
+      student_id:   studentId,
+      student_name: nameMap.get(studentId)  ?? 'Unknown',
+      group_id:     groupId,
+      group_name:   groupNames.get(groupId) ?? '',
+      href:         groupId ? `/portal/instructor/groups/${groupId}/students/${studentId}` : '#',
     }
   })
 }
@@ -1269,7 +1304,7 @@ export async function getStudentGroupAssignments(
   })
 }
 
-// ── Legacy: upcoming sessions (kept for dashboard backward compat) ─────────────
+// ── Upcoming sessions (beyond today) ────────────────────────────────────────────
 
 export async function getUpcomingSessionsForInstructor(
   instructorId: string,
@@ -1454,29 +1489,112 @@ export async function listSessionHistory(
     }
   }
 
-  // Build result sorted newest first
-  return filteredSessions
-    .map((s: any): SessionHistoryItem => {
-      const info  = gcInfo.get(s.group_course_id)
-      const att   = attCounts.get(s.id) ?? { present: 0, absent: 0, late: 0 }
-      const total = info ? (groupStudentCount.get(info.groupId) ?? 0) : 0
-      return {
-        session_id:      s.id,
-        session_num:     sessionNumMap.get(s.id) ?? 0,
-        total_in_group:  sessionTotalMap.get(s.id) ?? 0,
-        scheduled_at:    s.scheduled_at,
-        group_id:        info?.groupId    ?? '',
-        group_name:      info?.groupName  ?? '',
-        group_course_id: s.group_course_id,
-        course_title:    info?.courseTitle ?? '',
-        topic:           topicMap.get(s.id) ?? null,
-        status:          s.status,
-        present_count:   att.present,
-        absent_count:    att.absent,
-        late_count:      att.late,
-        total_students:  total,
+  const primaryRows: SessionHistoryItem[] = filteredSessions.map((s: any): SessionHistoryItem => {
+    const info  = gcInfo.get(s.group_course_id)
+    const att   = attCounts.get(s.id) ?? { present: 0, absent: 0, late: 0 }
+    const total = info ? (groupStudentCount.get(info.groupId) ?? 0) : 0
+    return {
+      session_id:      s.id,
+      session_type:    'primary',
+      session_num:     sessionNumMap.get(s.id) ?? 0,
+      total_in_group:  sessionTotalMap.get(s.id) ?? 0,
+      scheduled_at:    s.scheduled_at,
+      group_id:        info?.groupId    ?? '',
+      group_name:      info?.groupName  ?? '',
+      group_course_id: s.group_course_id,
+      course_title:    info?.courseTitle ?? '',
+      topic:           topicMap.get(s.id) ?? null,
+      status:          s.status,
+      present_count:   att.present,
+      absent_count:    att.absent,
+      late_count:      att.late,
+      total_students:  total,
+    }
+  })
+
+  // ── Trial / makeup sessions ─────────────────────────────────────────────────
+  // These are standalone (group_course_id IS NULL) so the group_courses-based
+  // query above never sees them. session_instructors is the same source of
+  // truth the payroll system (getInstructorSessionEarnings) uses to credit an
+  // instructor for a session — reused here rather than re-deriving it, and
+  // skipped entirely when filtering to one specific group since standalone
+  // sessions don't belong to any group.
+  let specialRows: SessionHistoryItem[] = []
+  if (!filters?.groupId) {
+    const { data: siRows } = await db
+      .from('session_instructors')
+      .select('session_id')
+      .eq('instructor_id', instructorId)
+    const specialSessionIds = [...new Set((siRows ?? []).map((r: any) => r.session_id as string))]
+
+    if (specialSessionIds.length > 0) {
+      let specialQuery = db
+        .from('schedules')
+        .select('id, type, scheduled_at, status, topic')
+        .in('id', specialSessionIds)
+        .is('group_course_id', null)
+        .in('type', ['trial', 'makeup'])
+
+      if (filters?.from)   specialQuery = specialQuery.gte('scheduled_at', filters.from)
+      if (filters?.to)     specialQuery = specialQuery.lte('scheduled_at', filters.to)
+      if (filters?.status) {
+        specialQuery = Array.isArray(filters.status)
+          ? specialQuery.in('status', filters.status)
+          : specialQuery.eq('status', filters.status)
       }
-    })
+
+      const { data: specialSchedules } = await specialQuery
+
+      if (specialSchedules && specialSchedules.length > 0) {
+        const specialIds = (specialSchedules as any[]).map((s) => s.id as string)
+
+        const [{ data: trialAtt }, { data: makeupAtt }] = await Promise.all([
+          db.from('trial_session_students').select('schedule_id, attendance_status').in('schedule_id', specialIds),
+          db.from('makeup_session_students').select('schedule_id, attendance_status').in('schedule_id', specialIds),
+        ])
+
+        const attBySchedule = new Map<string, { present: number; absent: number; late: number; total: number }>()
+        for (const row of [...(trialAtt ?? []), ...(makeupAtt ?? [])] as any[]) {
+          const sid = row.schedule_id as string
+          const cur = attBySchedule.get(sid) ?? { present: 0, absent: 0, late: 0, total: 0 }
+          cur.total++
+          if (row.attendance_status === 'present') cur.present++
+          else if (row.attendance_status === 'absent') cur.absent++
+          else if (row.attendance_status === 'late') cur.late++
+          attBySchedule.set(sid, cur)
+        }
+
+        specialRows = (specialSchedules as any[])
+          .filter((s) => {
+            if (!filters?.topic) return true
+            return ((s.topic ?? '') as string).toLowerCase().includes(filters.topic.toLowerCase())
+          })
+          .map((s): SessionHistoryItem => {
+            const att = attBySchedule.get(s.id) ?? { present: 0, absent: 0, late: 0, total: 0 }
+            return {
+              session_id:      s.id,
+              session_type:    s.type as 'trial' | 'makeup',
+              session_num:     0,
+              total_in_group:  0,
+              scheduled_at:    s.scheduled_at,
+              group_id:        '',
+              group_name:      s.type === 'trial' ? 'Trial Session' : 'Makeup Session',
+              group_course_id: null,
+              course_title:    '',
+              topic:           s.topic ?? null,
+              status:          s.status,
+              present_count:   att.present,
+              absent_count:    att.absent,
+              late_count:      att.late,
+              total_students:  att.total,
+            }
+          })
+      }
+    }
+  }
+
+  // Build result sorted newest first
+  return [...primaryRows, ...specialRows]
     .sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
 }
 
@@ -1941,4 +2059,146 @@ export async function getTodaySessions(instructorId: string): Promise<TodaySessi
     if (ao !== bo) return ao - bo
     return new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime()
   })
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Performance Center — every function here reuses an existing, already-tested
+// query rather than recomputing its business logic. Where the source query is
+// branch/org-scoped (getInstructorPerformance, getCertReadyStudents live in
+// modules/tl-dashboard/queries.ts for the Team Leader's cross-instructor view),
+// results are filtered down to this instructor's own groups/students after the
+// call — never re-derived — so the underlying computation stays single-sourced.
+// ═════════════════════════════════════════════════════════════════════════════
+
+// One instructor's row from the TL's branch-wide performance rollup —
+// attendance rate, homework/portfolio review %, avg student rating.
+export async function getInstructorPerformanceSummary(
+  instructor: InstructorRecord
+): Promise<InstructorPerf | null> {
+  const rows = await getInstructorPerformance([instructor.branch_id])
+  return rows.find((r) => r.instructor_id === instructor.id) ?? null
+}
+
+// Students in this instructor's own groups who are ≥90% through their course
+// (the same "certificate ready" threshold the TL dashboard uses), reusing
+// getCertReadyStudents verbatim and filtering to this instructor's roster.
+export async function getCertReadyStudentsForInstructor(
+  instructor: InstructorRecord,
+  limit = 8
+): Promise<CertReadyStudent[]> {
+  const db = createServiceClient()
+  const { groupIds } = await resolveGcContext(instructor.id, db)
+  if (groupIds.length === 0) return []
+
+  const { data: gsRows } = await db
+    .from('group_students')
+    .select('student_id')
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+  const ownStudentIds = new Set((gsRows ?? []).map((r: any) => r.student_id as string))
+  if (ownStudentIds.size === 0) return []
+
+  const branchWide = await getCertReadyStudents([instructor.branch_id], limit * 4)
+  return branchWide.filter((r) => ownStudentIds.has(r.student_id)).slice(0, limit)
+}
+
+export interface PortfolioStatusCount {
+  status: 'pending_review' | 'approved' | 'needs_improvement' | 'featured'
+  count:  number
+}
+
+// Portfolio completion breakdown for this instructor's students, reusing
+// listProjectsForInstructorReview (one call per status — the same query the
+// Portfolio Review and Review Center pages already use).
+export async function getPortfolioStatusBreakdown(instructorId: string): Promise<PortfolioStatusCount[]> {
+  const statuses = ['pending_review', 'approved', 'needs_improvement', 'featured'] as const
+  const results = await Promise.all(
+    statuses.map((s) => listProjectsForInstructorReview(instructorId, s))
+  )
+  return statuses.map((status, i) => ({ status, count: results[i].length }))
+}
+
+export interface CompetitionActivityItem {
+  student_id:        string
+  student_name:      string
+  competition_name:  string
+  year:               number
+  rank:               string | null
+  award:              string | null
+}
+
+export interface CompetitionActivitySummary {
+  total_records:              number
+  students_with_competitions: number
+  recent:                     CompetitionActivityItem[]
+}
+
+// Competition history logged (by team leaders — instructors are read-only
+// here per RBAC) for students in this instructor's groups. A factual count
+// of what's on record, not a synthesized "candidate" score.
+export async function getCompetitionActivityForInstructor(
+  instructorId: string,
+  limit = 5
+): Promise<CompetitionActivitySummary> {
+  const db = createServiceClient()
+  const { groupIds } = await resolveGcContext(instructorId, db)
+  if (groupIds.length === 0) return { total_records: 0, students_with_competitions: 0, recent: [] }
+
+  const { data: gsRows } = await db
+    .from('group_students')
+    .select('student_id')
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+  const studentIds = [...new Set((gsRows ?? []).map((r: any) => r.student_id as string))]
+  if (studentIds.length === 0) return { total_records: 0, students_with_competitions: 0, recent: [] }
+
+  const { data: allCompRows } = await db
+    .from('student_competitions')
+    .select('id, student_id, competition_name, year, rank, award')
+    .in('student_id', studentIds)
+    .order('year', { ascending: false })
+
+  const totalRecords              = (allCompRows ?? []).length
+  const studentsWithCompetitions  = new Set((allCompRows ?? []).map((r: any) => r.student_id as string)).size
+  const compRows                  = (allCompRows ?? []).slice(0, limit)
+
+  const recentIds = compRows.map((c: any) => c.student_id as string)
+  const { data: studRows } = recentIds.length > 0
+    ? await db
+        .from('students')
+        .select(`id, users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
+        .in('id', recentIds)
+    : { data: [] as any[] }
+  const nameMap = new Map<string, string>(
+    (studRows ?? []).map((s: any) => {
+      const p = s.users?.profiles
+      return [s.id as string, [p?.first_name, p?.last_name].filter(Boolean).join(' ') || 'Unknown']
+    })
+  )
+
+  return {
+    total_records:              totalRecords ?? 0,
+    students_with_competitions: studentsWithCompetitions,
+    recent: (compRows ?? []).map((c: any) => ({
+      student_id:       c.student_id,
+      student_name:     nameMap.get(c.student_id) ?? 'Unknown',
+      competition_name: c.competition_name,
+      year:              c.year,
+      rank:              c.rank,
+      award:             c.award,
+    })),
+  }
+}
+
+// Sessions this instructor has actually taught this calendar month, reusing
+// getInstructorSessionEarnings (the same source the Payments tab reads) —
+// no separate "hours taught" figure since the source data has no duration.
+export async function getInstructorWorkloadThisMonth(instructor: InstructorRecord): Promise<number> {
+  const sessions = await getInstructorSessionEarnings(instructor.id, [instructor.branch_id])
+  const now = new Date()
+  return sessions.filter((s) => {
+    if (s.status !== 'completed') return false
+    const d = new Date(s.scheduled_at)
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+  }).length
 }

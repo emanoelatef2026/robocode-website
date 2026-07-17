@@ -15,6 +15,8 @@ export type NotificationType =
   | 'PARENT_NOTE_SHARED'
   | 'ACHIEVEMENT_EARNED'
   | 'COMPETITION_RESULT'
+  | 'NEW_HOMEWORK_ASSIGNED'
+  | 'NEW_SESSION_RESOURCES'
 
 export interface Notification {
   id:           string

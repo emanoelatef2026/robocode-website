@@ -322,7 +322,8 @@ export async function getChildPortfolioDetail(
 
 export async function listProjectsForInstructorReview(
   instructorId: string,
-  status: 'pending_review' | 'approved' | 'featured' | 'needs_improvement' = 'pending_review'
+  status: 'pending_review' | 'approved' | 'featured' | 'needs_improvement' = 'pending_review',
+  groupId?: string
 ): Promise<PortfolioProjectListItem[]> {
   const db = createServiceClient()
 
@@ -335,6 +336,12 @@ export async function listProjectsForInstructorReview(
     ...(gcDirect ?? []).map((r: any) => r.group_id as string),
     ...(giRows ?? []).map((r: any) => r.group_id as string),
   ])
+  if (groupId) {
+    // Scope down to one group — the caller is still required to be assigned to it.
+    if (!groupIdSet.has(groupId)) return []
+    groupIdSet.clear()
+    groupIdSet.add(groupId)
+  }
   if (groupIdSet.size === 0) return []
 
   // Get student ids from those groups

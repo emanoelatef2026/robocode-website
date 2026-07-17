@@ -3,8 +3,11 @@ import {
   getInstructorByUserId,
   getGroupForInstructor,
   getGroupAttendanceAnalytics,
+  listInboxSubmissions,
 } from '@/modules/instructor-portal/queries'
 import { getCourse } from '@/modules/courses/queries'
+import { getGroupLeaderboard, getStudentOfTheWeek } from '@/modules/gamification/queries'
+import { listProjectsForInstructorReview } from '@/modules/portfolio/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import StartGroupSessionButton from './StartGroupSessionButton'
@@ -34,12 +37,18 @@ export default async function GroupDetailPage({ params }: Props) {
   const group = await getGroupForInstructor(id, instructor.id)
   if (!group) notFound()
 
-  const [analytics, course] = await Promise.all([
+  const [analytics, course, leaderboard, studentOfWeek, pendingHomework, pendingProjects] = await Promise.all([
     getGroupAttendanceAnalytics(id, instructor.id),
     group.course_id ? getCourse(group.course_id) : Promise.resolve(null),
+    getGroupLeaderboard(id),
+    getStudentOfTheWeek(id),
+    listInboxSubmissions(instructor.id, 'pending', id),
+    listProjectsForInstructorReview(instructor.id, 'pending_review', id),
   ])
+  const pendingReviewCount = pendingHomework.length + pendingProjects.length
 
   const isActive = !!group.group_course_id
+  const ongoingSession = group.sessions.find((s) => s.status === 'ongoing')
 
   const totalPct =
     group.total_sessions != null && group.total_sessions > 0
@@ -124,19 +133,84 @@ export default async function GroupDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* ── 3. START SESSION — appears exactly once ───────────────────────────── */}
+      {/* ── 3. START SESSION — or, if one is already running, continue it ──────── */}
       {isActive && (
-        <StartGroupSessionButton
-          groupId={id}
-          groupCourseId={group.group_course_id!}
-          branchId={group.branch_id}
-        />
+        ongoingSession ? (
+          <Link
+            href={`/portal/instructor/groups/${id}/sessions/${ongoingSession.id}`}
+            className="flex items-center justify-between gap-3 rounded-xl border-2 border-[#A7F3D0] bg-[#E7F8EE] px-4 py-3.5 transition hover:bg-emerald-100"
+          >
+            <div>
+              <p className="text-sm font-semibold text-[#065F46]">Session in progress</p>
+              <p className="mt-0.5 text-xs text-[#15803D]">
+                {ongoingSession.topic ?? 'Untitled session'} — tap to continue
+              </p>
+            </div>
+            <span className="shrink-0 rounded-lg bg-[#10B981] px-4 py-2 text-sm font-semibold text-white">
+              Continue Session
+            </span>
+          </Link>
+        ) : (
+          <StartGroupSessionButton
+            groupId={id}
+            groupCourseId={group.group_course_id!}
+            branchId={group.branch_id}
+          />
+        )
       )}
 
       {/* ── 4. COURSE CONTENT (accordion, collapsed by default) ──────────────── */}
       {isActive && course && (
         <InstructorCoursePanel course={course} />
       )}
+
+      {/* ── CLASS PULSE + LEADERBOARD ─────────────────────────────────────────── */}
+      {analytics.length > 0 && (() => {
+        const withAtt   = analytics.filter((a) => a.total > 0)
+        const avgPct    = withAtt.length > 0
+          ? Math.round(withAtt.reduce((sum, a) => sum + a.pct, 0) / withAtt.length)
+          : null
+        const atRisk    = analytics.filter((a) => a.attention).length
+        return (
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="ds-card px-4 py-3.5">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-[#94A3B8]">Class Pulse</p>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="rounded-lg bg-[#F8FAFC] px-2 py-2.5 text-center">
+                  <p className="text-lg font-bold leading-none text-[#0B1F3A]">{avgPct !== null ? `${avgPct}%` : '—'}</p>
+                  <p className="mt-1 text-[10px] text-[#94A3B8]">avg attendance</p>
+                </div>
+                <div className={`rounded-lg px-2 py-2.5 text-center ${atRisk > 0 ? 'bg-[#FEE2E2]' : 'bg-[#F8FAFC]'}`}>
+                  <p className={`text-lg font-bold leading-none ${atRisk > 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>{atRisk}</p>
+                  <p className="mt-1 text-[10px] text-[#94A3B8]">at risk</p>
+                </div>
+              </div>
+            </div>
+
+            {leaderboard.length > 0 && (
+              <div className="ds-card px-4 py-3.5">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#94A3B8]">Leaderboard</p>
+                  {studentOfWeek && (
+                    <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">
+                      🏆 {studentOfWeek.student_name}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  {leaderboard.slice(0, 3).map((s) => (
+                    <div key={s.student_id} className="flex items-center gap-2 text-sm">
+                      <span className="w-4 shrink-0 text-xs font-bold text-[#94A3B8]">#{s.rank}</span>
+                      <span className="min-w-0 flex-1 truncate text-[#0B1F3A]">{s.student_name}</span>
+                      <span className="shrink-0 text-xs font-semibold text-[#FF8A1F]">{s.total_xp.toLocaleString()} XP</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* ── 5. STUDENTS + ATTENDANCE — unified, no duplication ───────────────── */}
       <section>
@@ -215,7 +289,17 @@ export default async function GroupDetailPage({ params }: Props) {
 
       {/* ── 6. SESSIONS LIST ─────────────────────────────────────────────────── */}
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-[#0B1F3A]">Sessions</h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-[#0B1F3A]">Sessions</h2>
+          {pendingReviewCount > 0 && (
+            <Link
+              href={`/portal/instructor/review?groupId=${id}`}
+              className="text-xs font-medium text-[#FF8A1F] hover:underline"
+            >
+              {pendingReviewCount} to review →
+            </Link>
+          )}
+        </div>
 
         {!isActive ? (
           <div className="rounded-xl border border-dashed border-[#FDE68A] bg-[#FFFBEB] px-4 py-4 text-center">

@@ -1,5 +1,6 @@
 ﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import { getSubmission } from '@/modules/assignments/submissions/queries'
+import { getInstructorByUserId, listInboxSubmissions } from '@/modules/instructor-portal/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import GradeForm from './GradeForm'
@@ -7,11 +8,18 @@ import GradeForm from './GradeForm'
 interface Props { params: Promise<{ submissionId: string }> }
 
 export default async function GradeSubmissionPage({ params }: Props) {
-  await requirePortalRole('instructor')
+  const user       = await requirePortalRole('instructor')
   const { submissionId } = await params
 
   const submission = await getSubmission(submissionId)
   if (!submission) notFound()
+
+  const instructor = await getInstructorByUserId(user.id)
+  const queue = instructor ? await listInboxSubmissions(instructor.id, 'pending', undefined, 999) : []
+  const queueIndex = queue.findIndex((s) => s.submission_id === submissionId)
+  const nextInQueue = queueIndex >= 0 ? queue[queueIndex + 1] : undefined
+  const prevInQueue = queueIndex >= 1 ? queue[queueIndex - 1] : undefined
+  const queuePosition = queueIndex >= 0 ? queueIndex + 1 : null
 
   const links = [
     { label: 'Drive',   url: submission.drive_url },
@@ -23,9 +31,32 @@ export default async function GradeSubmissionPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <Link href="/portal/instructor/homework" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
-          ← Homework Review
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/portal/instructor/homework" className="text-sm text-[#64748B] hover:text-[#0B1F3A]">
+            ← Homework Review
+          </Link>
+          {queuePosition && (
+            <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
+              <span>{queuePosition} of {queue.length} pending</span>
+              <div className="flex items-center gap-1">
+                <Link
+                  href={prevInQueue ? `/portal/instructor/homework/${prevInQueue.submission_id}` : '#'}
+                  aria-disabled={!prevInQueue}
+                  className={`rounded px-1.5 py-1 ${prevInQueue ? 'hover:bg-[#F1F5F9] hover:text-[#0B1F3A]' : 'pointer-events-none opacity-30'}`}
+                >
+                  ← Prev
+                </Link>
+                <Link
+                  href={nextInQueue ? `/portal/instructor/homework/${nextInQueue.submission_id}` : '#'}
+                  aria-disabled={!nextInQueue}
+                  className={`rounded px-1.5 py-1 ${nextInQueue ? 'hover:bg-[#F1F5F9] hover:text-[#0B1F3A]' : 'pointer-events-none opacity-30'}`}
+                >
+                  Next →
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
         <h1 className="mt-2 text-xl font-bold text-[#0B1F3A]">Grade Submission</h1>
         <p className="mt-0.5 text-sm text-[#64748B]">
           {submission.assignment_title} · {submission.student_name}
@@ -81,7 +112,7 @@ export default async function GradeSubmissionPage({ params }: Props) {
       {/* Grade form */}
       <div className="ds-card p-5">
         <p className="mb-4 text-sm font-semibold text-[#0B1F3A]">Grade</p>
-        <GradeForm submission={submission} />
+        <GradeForm submission={submission} nextSubmissionId={nextInQueue?.submission_id} />
       </div>
     </div>
   )

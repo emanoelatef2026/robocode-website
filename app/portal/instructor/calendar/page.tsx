@@ -123,7 +123,7 @@ export default async function InstructorCalendarPage({ searchParams }: Props) {
           <Link
             key={f.key}
             href={`${filterBase}&filter=${f.key}`}
-            className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+            className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold transition ${
               filter === f.key
                 ? 'border-[#0B1F3A] bg-[#0B1F3A] text-white'
                 : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
