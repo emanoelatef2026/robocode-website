@@ -1,0 +1,161 @@
+# Development Workflow (Two-PC Setup)
+
+This repo is worked on from two machines (work PC, home PC), both pushing to
+the same `origin/main`. This doc exists because that pattern kept producing
+merge commits, conflicts in `graphify-out/`, and a dirty working tree
+immediately after `npm install` / `graphify` / `next build`. The root causes
+are fixed (see "Why this happened" below) — this doc is the discipline that
+keeps it fixed.
+
+## Daily startup (on whichever PC you're sitting at)
+
+```bash
+git status                # confirm nothing uncommitted is sitting from last time
+git pull                  # now rebases (pull.rebase=true) — see "Git config" below
+npm install                # only if package.json/lockfile changed since last pull
+```
+
+If `git pull` reports local commits it needs to rebase, that's expected when
+you committed on the other PC last — it will replay your commits on top of
+origin's, cleanly, with no merge commit. If it stops for a real conflict
+(same lines of actual source code changed on both machines), resolve it like
+any rebase conflict: fix the file, `git add <file>`, `git rebase --continue`.
+
+## Daily shutdown (before you walk away from a PC)
+
+```bash
+git status                 # anything you want to keep?
+git add <files>            # stage what you intend to keep — never `git add -A` blindly
+git commit -m "..."
+git push
+```
+
+**Push before you switch machines.** The entire class of problem this doc
+addresses comes from committing on PC A, then sitting down at PC B and
+committing again *before* pulling A's work. Rebase makes the eventual pull
+painless even if you forget, but pushing at the end of every session is what
+actually prevents divergence in the first place.
+
+## Safe pull strategy
+
+`pull.rebase` is set to `true` in this repo's local git config (`.git/config`,
+not versioned — see "Git config" below), so `git pull` = fetch + rebase. This
+keeps history linear: no merge commits for the ordinary "I worked on both
+machines" case. Real conflicts (you changed the same lines of actual product
+code on both PCs) still require manual resolution — rebase doesn't remove
+that, it just stops the noise of merge commits for the *non*-conflicting
+divergences that used to trigger them.
+
+## Safe push strategy
+
+Plain `git push` is fine — `push.autoSetupRemote=true` means pushing a new
+branch for the first time doesn't need `-u origin <branch>`. Don't force-push
+`main`.
+
+## Handling generated files
+
+Never commit anything regenerable by running a command. That includes (all
+gitignored):
+
+- `node_modules/`, `.next/`, `/out/`, `/build/`, `*.tsbuildinfo`, `next-env.d.ts`
+- `.vercel/`
+- `/supabase/.temp`
+- **`graphify-out/`** (see next section — this was the main offender)
+
+If `git status` ever shows one of these as modified/untracked, it means
+something is either missing from `.gitignore` or was tracked before the
+ignore rule existed — `git rm -r --cached <path>` removes it from tracking
+without touching the file on disk.
+
+## Handling Graphify
+
+`graphify-out/` is now fully gitignored and untracked (it was previously
+committed — see "Why this happened"). It regenerates locally:
+
+```bash
+graphify update .
+```
+
+Run this after pulling if you want the local graph current before asking
+`/graphify` questions — it's optional, not required for the build or tests.
+Never commit anything under `graphify-out/`, including `GRAPH_REPORT.md` — if
+you want a durable snapshot of a report for humans to read later, copy the
+specific file into `docs/` under its own name; don't let the live
+auto-regenerated one be tracked.
+
+There is also a **local git post-commit hook**
+(`.git/hooks/post-commit`, installed by `graphify hook install`) that
+rebuilds the graph in the background after every commit on whichever machine
+you're on. That hook is not itself versioned (git hooks never are), so it
+only exists on machines where you've run `graphify hook install`. It's safe
+to keep now that its output is gitignored — before this fix, it was the
+direct cause of tracked-file drift between machines (it silently mutated
+`graph.json`/`manifest.json`/the AST cache on every commit, independently on
+each PC, producing unmergeable diffs the moment you pulled).
+
+If you ever see the hook fire and don't want it: `GRAPHIFY_SKIP_HOOK=1 git commit ...`,
+or remove the hook entirely with `graphify hook uninstall` (or delete
+`.git/hooks/post-commit`).
+
+## Handling Claude Code
+
+- `.claude/settings.local.json` is gitignored (per-developer permission
+  cache) — never share it, never expect it to be present on a fresh clone.
+- `.claude/settings.json`, `.claude/CLAUDE.md`, and `.claude/skills/` **are**
+  tracked — they're shared project configuration (hooks, skill definitions),
+  not per-machine state, so they should stay in sync between the two PCs via
+  normal commits.
+- If Claude Code (or any tool) ever proposes committing `graphify-out/`,
+  `.next/`, or `node_modules/`, that's a bug in the ignore rules, not
+  something to work around by committing anyway — fix `.gitignore` instead.
+
+## How to avoid merge commits
+
+1. Push at the end of every session (see "Daily shutdown").
+2. Pull at the start of every session, before writing any code (see "Daily
+   startup") — `pull.rebase=true` handles the rest.
+3. Don't track generated/regenerable files (see above) — untracked churn in
+   files like `graphify-out/graph.json` was, in practice, the single biggest
+   source of conflicts in this repo, because two machines independently
+   regenerating the same JSON blob produce content that has no sensible
+   3-way merge.
+
+## How to resolve conflicts if they ever happen
+
+With `pull.rebase=true`, a conflict during `git pull` stops mid-rebase:
+
+```bash
+git status                  # shows the conflicting file(s)
+# edit the file(s), resolve the <<<<<<< / ======= / >>>>>>> markers
+git add <file>
+git rebase --continue        # repeat if more commits in the rebase also conflict
+# or, to bail out entirely and go back to how things were:
+git rebase --abort
+```
+
+If a conflict shows up in a file under `graphify-out/`, something has
+regressed (it should be gitignored) — fix `.gitignore`/untrack it rather than
+hand-resolving the JSON.
+
+## Why this happened (root cause)
+
+Before this doc, `graphify-out/` — including `graph.json`, `GRAPH_REPORT.md`,
+`manifest.json`, dated snapshot folders (`graphify-out/2026-07-02/`, etc.),
+and the AST cache (`graphify-out/cache/ast/...`) — was **committed to git**.
+A local post-commit hook (installed per-machine via `graphify hook install`)
+rebuilds this graph in the background after *every* commit. Because the
+rebuild is independent on each machine (different file-touch timestamps,
+different cache contents, non-deterministic dated snapshot folders), the two
+PCs' regenerated JSON diverged from each other constantly. Since the files
+were tracked, that divergence showed up as modified/untracked files right
+after every commit, and as merge conflicts the moment you pulled the other
+machine's independently-regenerated version. Combined with `pull.rebase`
+being unset (defaulting to merge), any ordinary divergence between the two
+PCs' commit histories also produced a merge commit instead of a clean
+fast-forward.
+
+The fix: `graphify-out/` is gitignored and untracked (this doc's companion
+change), and `pull.rebase=true` is set locally so future divergence rebases
+instead of merging. Neither the graph nor its cache needs to be shared
+between machines — `graphify update .` regenerates it from source in
+seconds, with no LLM/API cost for code-only extraction.

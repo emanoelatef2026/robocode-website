@@ -43,12 +43,14 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
-.env*
-!.env.example
-
 # Supabase CLI local cache (project ref/connection metadata, regenerated per machine)
 /supabase/.temp
 
 # One-off ops script outputs that may contain production PII — never commit
 backfill-org-emails-*.csv
+
+# graphify knowledge graph — fully regenerated locally (graphify update .),
+# rebuilt by a per-machine post-commit hook, and non-mergeable JSON blobs.
+# Tracking any of it guarantees merge conflicts between machines. See
+# docs/DEVELOPMENT_WORKFLOW.md for how to regenerate it after a pull.
+/graphify-out/

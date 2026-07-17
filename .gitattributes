@@ -1,0 +1,15 @@
+# Normalize line endings so Git stores LF in the repo regardless of which
+# machine/editor checks the file out. core.autocrlf converts CRLF<->LF on
+# checkout/checkin on both PCs, but this makes the repo's own behavior
+# explicit and machine-independent (doesn't rely on each PC's local config).
+* text=auto eol=lf
+
+# Binary/generated — never diff or merge, avoid noisy conflicts if ever tracked
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
