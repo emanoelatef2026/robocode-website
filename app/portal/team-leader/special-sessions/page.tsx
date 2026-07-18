@@ -5,9 +5,14 @@ import EmptyState from '@/components/admin/EmptyState'
 import StatusBadge from '@/components/admin/StatusBadge'
 
 export default async function TLSpecialSessionsPage() {
-  await requirePortalRole('team_leader')
+  const user = await requirePortalRole('team_leader')
 
-  const sessions = await listSpecialSessions({ limit: 100 })
+  const branchIds = user.branchIds ?? []
+
+  const sessions = await listSpecialSessions({
+    branchId: branchIds.length > 0 ? branchIds : ['__none__'],
+    limit: 100,
+  })
 
   return (
     <div className="space-y-4">

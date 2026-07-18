@@ -39,6 +39,7 @@ export default function TLAttendanceRecordForm({
   const [statuses, setStatuses] = useState<Record<string, AttendanceStatus>>(
     Object.fromEntries(students.map((s) => [s.student_id, 'present' as AttendanceStatus]))
   )
+  const [topic, setTopic] = useState('')
 
   const handleGroupChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const gid = e.target.value
@@ -49,6 +50,7 @@ export default function TLAttendanceRecordForm({
     e.preventDefault()
     setError(null)
     const data = new FormData(e.currentTarget)
+    data.set('topic', topic.trim())
     students.forEach((s) => data.set(`status_${s.student_id}`, statuses[s.student_id] ?? 'present'))
 
     startTransition(async () => {
@@ -168,6 +170,22 @@ export default function TLAttendanceRecordForm({
             </select>
           </div>
 
+          {/* Session topic — required for every academically recorded session */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
+              Session topic <span className="text-[#EF4444]">*</span>
+            </label>
+            <input
+              type="text"
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="e.g. Introduction to loops, Algebra chapter 3, Variables and data types…"
+              required
+              maxLength={200}
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            />
+          </div>
+
           {/* Student grid */}
           {selectedGroup && students.length > 0 && (
             <div className="border-t border-[#E2E8F0] pt-4">
@@ -248,7 +266,7 @@ export default function TLAttendanceRecordForm({
               </Link>
               <button
                 type="submit"
-                disabled={isPending || students.length === 0}
+                disabled={isPending || students.length === 0 || !topic.trim()}
                 className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isPending ? (

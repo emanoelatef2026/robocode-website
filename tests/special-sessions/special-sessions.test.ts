@@ -11,9 +11,10 @@ vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 vi.mock('@/lib/supabase/service', () => ({ createServiceClient: vi.fn() }))
 
 vi.mock('@/modules/rbac/guards', () => ({
-  requirePermission: vi.fn().mockResolvedValue({ id: 'user-tl-001' }),
-  requireAuth:       vi.fn().mockResolvedValue({ id: 'user-tl-001' }),
-  requirePortalRole: vi.fn().mockResolvedValue({ id: 'user-tl-001', branchIds: ['branch-001'] }),
+  requirePermission:  vi.fn().mockResolvedValue({ id: 'user-tl-001' }),
+  requireAuth:        vi.fn().mockResolvedValue({ id: 'user-tl-001' }),
+  requirePortalRole:  vi.fn().mockResolvedValue({ id: 'user-tl-001', branchIds: ['branch-001'] }),
+  isBranchAccessible: vi.fn().mockReturnValue(true),
 }))
 
 vi.mock('@/modules/instructor-portal/queries', () => ({
@@ -28,6 +29,7 @@ vi.mock('@/modules/notifications/actions', () => ({
 // ── Imports (after mocks) ──────────────────────────────────────────────────────
 
 import { createServiceClient } from '@/lib/supabase/service'
+import { isBranchAccessible } from '@/modules/rbac/guards'
 import {
   createTrialSession,
   createMakeupSession,
@@ -57,6 +59,7 @@ function fd(fields: Record<string, string>): FormData {
 }
 
 const BRANCH_ID         = '00000000-0000-4000-8000-000000000001'
+const OTHER_BRANCH_ID   = '00000000-0000-4000-8000-000000000099'
 const INSTR_ID          = '00000000-0000-4000-8000-000000000002'
 const SESSION_ID        = '00000000-0000-4000-8000-000000000003'
 const STUDENT_ID        = '00000000-0000-4000-8000-000000000004'
@@ -398,6 +401,7 @@ describe('Phase XL — Special Sessions System', () => {
   // ─────────────────────────────────────────────────────────────────────────────
   it('TEST 14 — addMakeupStudent rejects REPLACE_MISSED without replaced_session_id', async () => {
     mockDb({
+      schedules:               [{ data: { branch_id: BRANCH_ID }, error: null }],
       makeup_session_students: [{ data: null, error: null }],
     })
 
@@ -590,5 +594,113 @@ describe('Phase XL — Special Sessions System', () => {
       SESSION_ID,
       expect.any(String)
     )
+  })
+})
+
+// ── Sprint A: Branch isolation regression tests ─────────────────────────────────
+// A TL must never be able to read or mutate another branch's special session,
+// even when they hold the underlying permission (manage_schedule/manage_attendance)
+// and know or guess the session's ID. isBranchAccessible() is the enforcement
+// point; these tests verify every mutating action is actually wired to it.
+
+describe('Phase XL — Special Sessions — branch isolation (Sprint A)', () => {
+  beforeEach(() => { vi.clearAllMocks() })
+
+  it('postponeSpecialSession returns FORBIDDEN when the session belongs to another branch', async () => {
+    ;(isBranchAccessible as ReturnType<typeof vi.fn>).mockReturnValue(false)
+
+    const db = mockDb({
+      schedules: [{ data: { status: 'scheduled', branch_id: 'other-branch' }, error: null }],
+    })
+
+    const result = await postponeSpecialSession(null, fd({
+      session_id: SESSION_ID,
+      reason:     'Instructor unavailable',
+    }))
+
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error.code).toBe('FORBIDDEN')
+    expect(isBranchAccessible).toHaveBeenCalledWith(expect.anything(), 'other-branch')
+    // Must not have proceeded to mutate the session
+    const calls = (db.from as ReturnType<typeof vi.fn>).mock.calls.map((c: any[]) => c[0])
+    expect(calls).not.toContain('trial_session_students')
+  })
+
+  it('endMakeupSession returns FORBIDDEN when the session belongs to another branch', async () => {
+    ;(isBranchAccessible as ReturnType<typeof vi.fn>).mockReturnValue(false)
+
+    mockDb({
+      schedules: [{ data: { status: 'ongoing', branch_id: 'other-branch', scheduled_at: '2026-07-15T11:00:00Z' }, error: null }],
+    })
+
+    const result = await endMakeupSession(SESSION_ID)
+
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error.code).toBe('FORBIDDEN')
+  })
+
+  it('startSpecialSession returns FORBIDDEN when the session belongs to another branch', async () => {
+    ;(isBranchAccessible as ReturnType<typeof vi.fn>).mockReturnValue(false)
+
+    mockDb({
+      schedules: [{ data: { status: 'scheduled', type: 'trial', branch_id: 'other-branch' }, error: null }],
+    })
+
+    const result = await startSpecialSession(SESSION_ID)
+
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error.code).toBe('FORBIDDEN')
+  })
+
+  it('addMakeupStudent returns FORBIDDEN when the session belongs to another branch', async () => {
+    ;(isBranchAccessible as ReturnType<typeof vi.fn>).mockReturnValue(false)
+
+    mockDb({
+      schedules: [{ data: { branch_id: 'other-branch' }, error: null }],
+    })
+
+    const result = await addMakeupStudent(null, fd({
+      schedule_id: SESSION_ID,
+      student_id:  STUDENT_ID,
+      mode:        'EXTRA',
+    }))
+
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error.code).toBe('FORBIDDEN')
+  })
+
+  it('createTrialSession returns FORBIDDEN when submitted branch_id is outside the TL\'s branches', async () => {
+    ;(isBranchAccessible as ReturnType<typeof vi.fn>).mockReturnValue(false)
+
+    const db = mockDb({ schedules: [] })
+
+    const result = await createTrialSession(null, fd({
+      branch_id:        OTHER_BRANCH_ID,
+      instructor_id:    INSTR_ID,
+      scheduled_at:     '2026-07-15T10:00',
+      duration_minutes: '60',
+    }))
+
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error.code).toBe('FORBIDDEN')
+    // Must not have inserted a schedule row for a branch the TL can't access
+    expect(db.from).not.toHaveBeenCalledWith('schedules')
+  })
+
+  it('bulkBookTrialFromLeads returns FORBIDDEN when submitted branch_id is outside the TL\'s branches', async () => {
+    ;(isBranchAccessible as ReturnType<typeof vi.fn>).mockReturnValue(false)
+
+    const db = mockDb({ schedules: [] })
+
+    const result = await bulkBookTrialFromLeads(null, fd({
+      lead_ids:      JSON.stringify([LEAD_ID]),
+      branch_id:     OTHER_BRANCH_ID,
+      instructor_id: INSTR_ID,
+      scheduled_at:  '2026-07-20T09:00',
+    }))
+
+    expect(result.success).toBe(false)
+    if (!result.success) expect(result.error.code).toBe('FORBIDDEN')
+    expect(db.from).not.toHaveBeenCalledWith('schedules')
   })
 })

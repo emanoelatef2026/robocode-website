@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/service'
-import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import {
   seedTrialSessionAssignedNotification,
   seedMakeupSessionAssignedNotification,
@@ -47,6 +47,10 @@ export async function createTrialSession(
   }
 
   const d = parsed.data
+
+  if (!isBranchAccessible(user, d.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
 
   const { data: schedule, error: schedErr } = await db
     .from('schedules')
@@ -139,6 +143,10 @@ export async function createMakeupSession(
 
   const d = parsed.data
 
+  if (!isBranchAccessible(user, d.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
+
   const { data: schedule, error: schedErr } = await db
     .from('schedules')
     .insert({
@@ -207,7 +215,7 @@ export async function addTrialStudentFromLead(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<{ studentId: string }>> {
-  await requirePermission('manage_attendance')
+  const user = await requirePermission('manage_attendance')
   const db = createServiceClient()
 
   const parsed = addTrialStudentFromLeadSchema.safeParse({
@@ -223,11 +231,14 @@ export async function addTrialStudentFromLead(
   // Verify it's a trial session
   const { data: sess } = await db
     .from('schedules')
-    .select('type')
+    .select('type, branch_id')
     .eq('id', d.schedule_id)
     .maybeSingle()
   if (!sess || (sess as any).type !== 'trial') {
     return { success: false, error: { code: 'VALIDATION', message: 'Session is not a trial session.' } }
+  }
+  if (!isBranchAccessible(user, (sess as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this session.' } }
   }
 
   // Fetch lead details
@@ -277,7 +288,7 @@ export async function addTrialStudentNew(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<{ studentId: string }>> {
-  await requirePermission('manage_attendance')
+  const user = await requirePermission('manage_attendance')
   const db = createServiceClient()
 
   const parsed = addTrialStudentNewSchema.safeParse({
@@ -292,6 +303,18 @@ export async function addTrialStudentNew(
   }
 
   const d = parsed.data
+
+  const { data: sess } = await db
+    .from('schedules')
+    .select('branch_id')
+    .eq('id', d.schedule_id)
+    .maybeSingle()
+  if (!sess) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  }
+  if (!isBranchAccessible(user, (sess as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this session.' } }
+  }
 
   const { data: inserted, error } = await db
     .from('trial_session_students')
@@ -328,7 +351,7 @@ export async function addMakeupStudent(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<{ studentId: string }>> {
-  await requirePermission('manage_attendance')
+  const user = await requirePermission('manage_attendance')
   const db = createServiceClient()
 
   const parsed = addMakeupStudentSchema.safeParse({
@@ -342,6 +365,18 @@ export async function addMakeupStudent(
   }
 
   const d = parsed.data
+
+  const { data: sess } = await db
+    .from('schedules')
+    .select('branch_id')
+    .eq('id', d.schedule_id)
+    .maybeSingle()
+  if (!sess) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  }
+  if (!isBranchAccessible(user, (sess as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this session.' } }
+  }
 
   if (d.mode === 'REPLACE_MISSED' && !d.replaced_session_id) {
     return { success: false, error: { code: 'VALIDATION', message: 'A missed session must be selected for REPLACE_MISSED mode.' } }
@@ -392,12 +427,24 @@ export async function saveTrialAttendance(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<void>> {
-  await requirePermission('manage_attendance')
+  const user = await requirePermission('manage_attendance')
   const db = createServiceClient()
 
   const scheduleId = formData.get('schedule_id') as string
   if (!scheduleId) {
     return { success: false, error: { code: 'VALIDATION', message: 'Session ID is required.' } }
+  }
+
+  const { data: sess } = await db
+    .from('schedules')
+    .select('branch_id')
+    .eq('id', scheduleId)
+    .maybeSingle()
+  if (!sess) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  }
+  if (!isBranchAccessible(user, (sess as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this session.' } }
   }
 
   const { data: students } = await db
@@ -425,12 +472,24 @@ export async function saveMakeupAttendance(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<void>> {
-  await requirePermission('manage_attendance')
+  const user = await requirePermission('manage_attendance')
   const db = createServiceClient()
 
   const scheduleId = formData.get('schedule_id') as string
   if (!scheduleId) {
     return { success: false, error: { code: 'VALIDATION', message: 'Session ID is required.' } }
+  }
+
+  const { data: sess } = await db
+    .from('schedules')
+    .select('branch_id')
+    .eq('id', scheduleId)
+    .maybeSingle()
+  if (!sess) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  }
+  if (!isBranchAccessible(user, (sess as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this session.' } }
   }
 
   const { data: students } = await db
@@ -460,12 +519,15 @@ export async function startSpecialSession(sessionId: string): Promise<ActionResu
 
   const { data: sess } = await db
     .from('schedules')
-    .select('status, type')
+    .select('status, type, branch_id')
     .eq('id', sessionId)
     .is('group_course_id', null)
     .maybeSingle()
 
   if (!sess) return { success: false, error: { code: 'NOT_FOUND', message: 'Special session not found.' } }
+  if (!isBranchAccessible(user, (sess as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this session.' } }
+  }
   if ((sess as any).status === 'ongoing')   return { success: false, error: { code: 'VALIDATION', message: 'Session already in progress.' } }
   if ((sess as any).status === 'completed') return { success: false, error: { code: 'VALIDATION', message: 'Session is already completed.' } }
 
@@ -504,9 +566,13 @@ export async function endTrialSessionWithAttendance(
     .maybeSingle()
 
   if (!sess) return { success: false, error: { code: 'NOT_FOUND', message: 'Trial session not found.' } }
-  if ((sess as any).status === 'completed') return { success: false, error: { code: 'VALIDATION', message: 'Session already completed.' } }
 
   const branchId = (sess as any).branch_id as string
+  if (!isBranchAccessible(user, branchId)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this session.' } }
+  }
+  if ((sess as any).status === 'completed') return { success: false, error: { code: 'VALIDATION', message: 'Session already completed.' } }
+
   const existingTopic = (sess as any).topic as string | null
   const now      = new Date().toISOString()
 
@@ -629,6 +695,9 @@ export async function endMakeupSession(sessionId: string): Promise<ActionResult<
     .maybeSingle()
 
   if (!sess) return { success: false, error: { code: 'NOT_FOUND', message: 'Makeup session not found.' } }
+  if (!isBranchAccessible(user, (sess as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this session.' } }
+  }
   if ((sess as any).status === 'completed') return { success: false, error: { code: 'VALIDATION', message: 'Session already completed.' } }
 
   const now            = new Date().toISOString()
@@ -791,6 +860,10 @@ export async function bookTrialFromLead(
 
   const branchId = (lead as any).branch_id as string
 
+  if (!isBranchAccessible(user, branchId)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this lead.' } }
+  }
+
   const notesValue = [
     d.course_name ? `Course: ${d.course_name}` : null,
     d.notes || null,
@@ -868,7 +941,7 @@ export async function updateTrialStudent(
   _prev: unknown,
   formData: FormData
 ): Promise<ActionResult<void>> {
-  await requirePermission('manage_attendance')
+  const user = await requirePermission('manage_attendance')
   const db = createServiceClient()
 
   const parsed = updateTrialStudentSchema.safeParse({
@@ -883,6 +956,20 @@ export async function updateTrialStudent(
   }
 
   const d = parsed.data
+
+  const { data: studentRow } = await db
+    .from('trial_session_students')
+    .select('schedule_id, schedules!trial_session_students_schedule_id_fkey(branch_id)')
+    .eq('id', d.student_id)
+    .maybeSingle()
+  if (!studentRow) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Trial student not found.' } }
+  }
+  const branchId = (studentRow as any).schedules?.branch_id as string | undefined
+  if (!isBranchAccessible(user, branchId ?? null)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this session.' } }
+  }
+
   const { error } = await db
     .from('trial_session_students')
     .update({
@@ -934,6 +1021,9 @@ export async function postponeSpecialSession(
     .maybeSingle()
 
   if (!sess) return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  if (!isBranchAccessible(user, (sess as any).branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this session.' } }
+  }
   if ((sess as any).status === 'completed') {
     return { success: false, error: { code: 'VALIDATION', message: 'Cannot postpone a completed session.' } }
   }
@@ -1008,6 +1098,10 @@ export async function bulkBookTrialFromLeads(
   }
 
   const d = parsed.data
+
+  if (!isBranchAccessible(user, d.branch_id)) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
+  }
 
   const { data: schedule, error: schedErr } = await db
     .from('schedules')

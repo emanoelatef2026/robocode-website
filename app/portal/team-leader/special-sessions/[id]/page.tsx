@@ -1,4 +1,4 @@
-import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole, isBranchAccessible } from '@/modules/rbac/guards'
 import { getTrialSession, getMakeupSession, searchLeadsForTrialSession } from '@/modules/special-sessions/queries'
 import { createServiceClient } from '@/lib/supabase/service'
 import EmptyState from '@/components/admin/EmptyState'
@@ -10,7 +10,7 @@ interface Props {
 
 export default async function TLSpecialSessionPage({ params }: Props) {
   const { id } = await params
-  await requirePortalRole('team_leader')
+  const user = await requirePortalRole('team_leader')
 
   const db = createServiceClient()
 
@@ -27,6 +27,10 @@ export default async function TLSpecialSessionPage({ params }: Props) {
 
   const sessionType = (sessType as any).type as string
   const branchId    = (sessType as any).branch_id as string
+
+  if (!isBranchAccessible(user, branchId)) {
+    return <EmptyState title="Session not found" description="This session does not exist." />
+  }
 
   if (sessionType === 'trial') {
     const [session, leads] = await Promise.all([
