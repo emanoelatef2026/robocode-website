@@ -1,5 +1,6 @@
 ﻿import Link from 'next/link'
 import { getAcademicQualityData } from '@/modules/tl-dashboard/dashboard-v2-queries'
+import { getTLAcademicOverviewKPIs } from '@/modules/tl-analytics/queries'
 import { ScoreBar } from '../_components/RiskBadge'
 
 function QualityTile({ label, value, sub, href, colorCls }: {
@@ -40,7 +41,10 @@ function MetricRow({ label, value, href }: { label: string; value: number; href?
 }
 
 export default async function AcademicQuality({ branchIds }: { branchIds: string[] }) {
-  const data = await getAcademicQualityData(branchIds)
+  const [data, oversight] = await Promise.all([
+    getAcademicQualityData(branchIds),
+    getTLAcademicOverviewKPIs(branchIds),
+  ])
 
   return (
     <section id="academic">
@@ -100,6 +104,70 @@ export default async function AcademicQuality({ branchIds }: { branchIds: string
         <MetricRow label="Monthly Attendance"    value={data.attendance_rate}    href="/portal/team-leader/groups" />
         <MetricRow label="Homework Completion"   value={data.homework_rate}      href="/portal/team-leader/assignments" />
         <MetricRow label="Submission Rate"       value={data.submission_rate}    href="/portal/team-leader/assignments" />
+      </div>
+
+      {/* Academic Oversight — evaluations, notes, competitions */}
+      <div className="mt-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="text-[13px] font-semibold text-[#0B1F3A]">Academic Oversight</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-3">
+          <QualityTile
+            label="Evaluation Completion"
+            value={`${oversight.evaluation_completion_pct}%`}
+            href="/portal/team-leader/evaluations"
+            colorCls={oversight.evaluation_completion_pct >= 75 ? 'text-[#10B981]' : oversight.evaluation_completion_pct >= 50 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}
+          />
+          <QualityTile
+            label="Notes Completion"
+            value={`${oversight.notes_completion_pct}%`}
+            href="/portal/team-leader/notes"
+            colorCls={oversight.notes_completion_pct >= 75 ? 'text-[#10B981]' : oversight.notes_completion_pct >= 50 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}
+          />
+          <QualityTile
+            label="Competition Participation"
+            value={`${oversight.competition_participation_pct}%`}
+            href="/portal/team-leader/competitions"
+            colorCls={oversight.competition_participation_pct >= 50 ? 'text-[#10B981]' : oversight.competition_participation_pct >= 20 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}
+          />
+          <QualityTile
+            label="Homework Completion"
+            value={`${oversight.homework_completion_pct}%`}
+            href="/portal/team-leader/assignments"
+            colorCls={oversight.homework_completion_pct >= 75 ? 'text-[#10B981]' : oversight.homework_completion_pct >= 50 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <QualityTile
+            label="Missing Evaluations"
+            value={String(oversight.students_missing_evaluation)}
+            sub="students"
+            href="/portal/team-leader/evaluations"
+            colorCls={oversight.students_missing_evaluation > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}
+          />
+          <QualityTile
+            label="Missing Notes"
+            value={String(oversight.students_missing_notes)}
+            sub="students"
+            href="/portal/team-leader/notes"
+            colorCls={oversight.students_missing_notes > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}
+          />
+          <QualityTile
+            label="Groups Needing Attention"
+            value={String(oversight.groups_requiring_attention)}
+            sub="< 50% coverage"
+            colorCls={oversight.groups_requiring_attention > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]'}
+          />
+          <QualityTile
+            label="Instructors Needing Follow-up"
+            value={String(oversight.instructors_requiring_attention)}
+            sub="< 50% coverage"
+            href="/portal/team-leader/instructor-performance"
+            colorCls={oversight.instructors_requiring_attention > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]'}
+          />
+        </div>
       </div>
     </section>
   )

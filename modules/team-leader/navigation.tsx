@@ -28,6 +28,9 @@ export const TL_SECTIONS: PortalNavSection[] = [
       { label: "Courses",      href: "/portal/team-leader/courses",      icon: <Icons.courses /> },
       { label: "Certificates", href: "/portal/team-leader/certificates", icon: <Icons.certificates /> },
       { label: "Portfolio",    href: "/portal/team-leader/portfolio",    icon: <Icons.portfolio /> },
+      { label: "Evaluations",  href: "/portal/team-leader/evaluations",  icon: <Icons.evaluations /> },
+      { label: "Notes",        href: "/portal/team-leader/notes",        icon: <Icons.notes /> },
+      { label: "Competitions", href: "/portal/team-leader/competitions", icon: <Icons.competitions /> },
     ],
   },
   {

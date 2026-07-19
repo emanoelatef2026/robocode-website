@@ -11,6 +11,18 @@ import type {
   TLAssignmentInstructorRow,
   TLAssignmentOverview,
   OperationalAlert,
+  TLStudentCoverageGap,
+  TLEvaluationOverview,
+  TLEvaluationGroupRow,
+  TLEvaluationInstructorRow,
+  TLNotesOverview,
+  TLNotesGroupRow,
+  TLNotesInstructorRow,
+  TLCompetitionOverview,
+  TLCompetitionGroupRow,
+  TLCompetitionInstructorRow,
+  TLCompetitionActivityItem,
+  TLAcademicOverviewKPIs,
 } from './types'
 
 // ── Students Overview ─────────────────────────────────────────────────────────
@@ -665,4 +677,450 @@ export async function getOperationalAlerts(branchIds: string[]): Promise<Operati
   // Sort: critical first, then warning, then info
   const sev: Record<string, number> = { critical: 0, warning: 1, info: 2 }
   return alerts.sort((a, b) => sev[a.severity] - sev[b.severity])
+}
+
+// ── Academic Oversight (Evaluations / Notes / Competitions) ────────────────────
+//
+// Shared branch-scoped roster resolution, mirroring the group_courses → groups
+// → group_students resolution used by getTLAssignmentOverview above, so
+// evaluation/notes/competition coverage is computed against the exact same
+// "active student taught by an active instructor in one of my branches" set.
+
+const EVAL_RECENT_WINDOW_DAYS   = 30  // an evaluation "covers" a student for this many days
+const NOTES_RECENT_WINDOW_DAYS  = 30  // same cadence for notes
+const ACTIVITY_FEED_DAYS        = 7   // "recently submitted/created" feed window
+const ACTIVITY_FEED_LIMIT       = 15
+const COVERAGE_GAP_LIMIT        = 30
+const ATTENTION_THRESHOLD_PCT   = 50  // below this, a group/instructor "requires attention"
+
+interface BranchAcademicRoster {
+  studentIds:        string[]
+  studentGroupMap:   Map<string, string>
+  groupInfoMap:      Map<string, { name: string; branch_name: string | null }>
+  groupStudentIds:   Map<string, Set<string>>
+  instructorByGroup: Map<string, { id: string; name: string }>
+}
+
+async function resolveBranchAcademicRoster(
+  branchIds: string[],
+  db: ReturnType<typeof createServiceClient>
+): Promise<BranchAcademicRoster> {
+  const empty: BranchAcademicRoster = {
+    studentIds: [], studentGroupMap: new Map(), groupInfoMap: new Map(),
+    groupStudentIds: new Map(), instructorByGroup: new Map(),
+  }
+  if (!branchIds.length) return empty
+
+  const { data: gcRows } = await db
+    .from('group_courses')
+    .select(`
+      id, instructor_id,
+      groups!group_courses_group_id_fkey(id, name, branch_id, branches!groups_branch_id_fkey(name)),
+      instructors!group_courses_instructor_id_fkey(
+        id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))
+      )
+    `)
+    .eq('status', 'active')
+    .in('groups.branch_id', branchIds)
+
+  const branchGcRows = ((gcRows ?? []) as any[]).filter(r => branchIds.includes(r.groups?.branch_id))
+  if (!branchGcRows.length) return empty
+
+  const groupIds = [...new Set(branchGcRows.map(r => r.groups?.id as string).filter(Boolean))]
+
+  const { data: gsRows } = await db
+    .from('group_students')
+    .select('group_id, student_id')
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+
+  const groupStudentIds = new Map<string, Set<string>>()
+  const studentGroupMap = new Map<string, string>()
+  for (const gs of (gsRows ?? []) as any[]) {
+    if (!groupStudentIds.has(gs.group_id)) groupStudentIds.set(gs.group_id, new Set())
+    groupStudentIds.get(gs.group_id)!.add(gs.student_id)
+    studentGroupMap.set(gs.student_id, gs.group_id)
+  }
+
+  const groupInfoMap      = new Map<string, { name: string; branch_name: string | null }>()
+  const instructorByGroup = new Map<string, { id: string; name: string }>()
+  for (const gc of branchGcRows) {
+    const g = gc.groups
+    if (!g?.id) continue
+    groupInfoMap.set(g.id, { name: g.name, branch_name: g.branches?.name ?? null })
+    const instr = gc.instructors
+    if (instr?.id) {
+      const prof = instr.users?.profiles
+      const name = prof ? [prof.first_name, prof.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown'
+      instructorByGroup.set(g.id, { id: instr.id, name })
+    }
+  }
+
+  return {
+    studentIds: [...studentGroupMap.keys()],
+    studentGroupMap,
+    groupInfoMap,
+    groupStudentIds,
+    instructorByGroup,
+  }
+}
+
+// Resolves display names for a set of student ids and a set of user (author) ids
+// in two batched queries — shared by the evaluation/notes/competition overviews.
+async function resolveStudentAndAuthorNames(
+  db: ReturnType<typeof createServiceClient>,
+  studentIds: string[],
+  authorIds: string[]
+): Promise<{ studentNames: Map<string, string>; authorNames: Map<string, string> }> {
+  const [studentRows, authorRows] = await Promise.all([
+    studentIds.length
+      ? db.from('students')
+          .select('id, users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
+          .in('id', studentIds)
+          .is('deleted_at', null)
+      : Promise.resolve({ data: [] as any[] }),
+    authorIds.length
+      ? db.from('users')
+          .select('id, profiles!profiles_user_id_fkey(first_name, last_name)')
+          .in('id', authorIds)
+      : Promise.resolve({ data: [] as any[] }),
+  ])
+
+  const studentNames = new Map<string, string>()
+  for (const r of (studentRows.data ?? []) as any[]) {
+    const p = r.users?.profiles
+    studentNames.set(r.id, p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown' : 'Unknown')
+  }
+
+  const authorNames = new Map<string, string>()
+  for (const r of (authorRows.data ?? []) as any[]) {
+    const p = r.profiles
+    authorNames.set(r.id, p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Staff' : 'Staff')
+  }
+
+  return { studentNames, authorNames }
+}
+
+// Aggregates a per-student "covered" boolean set into by-group / by-instructor
+// completion rows — shared shape/math for evaluations and notes.
+function aggregateCoverageByGroupAndInstructor(
+  roster: BranchAcademicRoster,
+  coveredStudentIds: Set<string>
+): { byGroup: { group_id: string; group_name: string; branch_name: string | null; student_count: number; covered_count: number; completion_pct: number }[]
+     byInstructor: { instructor_id: string; instructor_name: string; student_count: number; covered_count: number; completion_pct: number }[] } {
+  const byGroup = [...roster.groupStudentIds.entries()]
+    .map(([groupId, studSet]) => {
+      const info = roster.groupInfoMap.get(groupId)
+      if (!info) return null
+      const coveredCount = [...studSet].filter(sid => coveredStudentIds.has(sid)).length
+      return {
+        group_id: groupId, group_name: info.name, branch_name: info.branch_name,
+        student_count: studSet.size, covered_count: coveredCount,
+        completion_pct: studSet.size > 0 ? Math.round((coveredCount / studSet.size) * 100) : 0,
+      }
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null)
+    .sort((a, b) => a.completion_pct - b.completion_pct)
+
+  const instrAgg = new Map<string, { name: string; studentIds: Set<string> }>()
+  for (const [groupId, studSet] of roster.groupStudentIds) {
+    const instr = roster.instructorByGroup.get(groupId)
+    if (!instr) continue
+    if (!instrAgg.has(instr.id)) instrAgg.set(instr.id, { name: instr.name, studentIds: new Set() })
+    for (const sid of studSet) instrAgg.get(instr.id)!.studentIds.add(sid)
+  }
+  const byInstructor = [...instrAgg.entries()]
+    .map(([id, agg]) => {
+      const coveredCount = [...agg.studentIds].filter(sid => coveredStudentIds.has(sid)).length
+      return {
+        instructor_id: id, instructor_name: agg.name,
+        student_count: agg.studentIds.size, covered_count: coveredCount,
+        completion_pct: agg.studentIds.size > 0 ? Math.round((coveredCount / agg.studentIds.size) * 100) : 0,
+      }
+    })
+    .sort((a, b) => a.completion_pct - b.completion_pct)
+
+  return { byGroup, byInstructor }
+}
+
+function buildCoverageGaps(
+  roster: BranchAcademicRoster,
+  missingIds: string[],
+  overdueIds: string[],
+  lastActivityByStudent: Map<string, string>,
+  studentNames: Map<string, string>
+): TLStudentCoverageGap[] {
+  const toGap = (id: string, status: 'missing' | 'overdue'): TLStudentCoverageGap => {
+    const groupId = roster.studentGroupMap.get(id) ?? null
+    return {
+      student_id:       id,
+      student_name:     studentNames.get(id) ?? 'Unknown',
+      group_id:         groupId,
+      group_name:       groupId ? roster.groupInfoMap.get(groupId)?.name ?? null : null,
+      status,
+      last_activity_at: lastActivityByStudent.get(id) ?? null,
+    }
+  }
+  return [
+    ...missingIds.map(id => toGap(id, 'missing')),
+    ...overdueIds.map(id => toGap(id, 'overdue')),
+  ].slice(0, COVERAGE_GAP_LIMIT)
+}
+
+// ── Evaluation Oversight ─────────────────────────────────────────────────────
+
+export async function getTLEvaluationOverview(branchIds: string[]): Promise<TLEvaluationOverview> {
+  const empty: TLEvaluationOverview = {
+    kpis: { total_active_students: 0, evaluated_recent_count: 0, completion_pct: 0, missing_count: 0, overdue_count: 0, recent_evaluations_count: 0 },
+    by_group: [], by_instructor: [], students_missing: [], recent_activity: [],
+  }
+  if (!branchIds.length) return empty
+
+  const db     = createServiceClient()
+  const roster = await resolveBranchAcademicRoster(branchIds, db)
+  if (!roster.studentIds.length) return empty
+
+  const recentCutoff   = new Date(Date.now() - EVAL_RECENT_WINDOW_DAYS * 86400000).toISOString()
+  const activityCutoff = new Date(Date.now() - ACTIVITY_FEED_DAYS * 86400000).toISOString()
+
+  const { data: evalRows } = await db
+    .from('student_evaluations')
+    .select('id, student_id, criterion, author_id, evaluated_at, created_at')
+    .in('student_id', roster.studentIds)
+    .is('deleted_at', null)
+    .order('evaluated_at', { ascending: false })
+
+  const evaluations = (evalRows ?? []) as any[]
+
+  const latestByStudent = new Map<string, string>()
+  for (const e of evaluations) {
+    const cur = latestByStudent.get(e.student_id)
+    if (!cur || e.evaluated_at > cur) latestByStudent.set(e.student_id, e.evaluated_at)
+  }
+
+  const evaluatedIds = new Set(latestByStudent.keys())
+  const missingIds   = roster.studentIds.filter(id => !evaluatedIds.has(id))
+  const overdueIds   = roster.studentIds.filter(id => evaluatedIds.has(id) && (latestByStudent.get(id) as string) < recentCutoff)
+  const coveredIds   = new Set(roster.studentIds.filter(id => evaluatedIds.has(id) && (latestByStudent.get(id) as string) >= recentCutoff))
+
+  const recentEvals = evaluations.filter(e => e.created_at >= activityCutoff).slice(0, ACTIVITY_FEED_LIMIT)
+
+  const { studentNames, authorNames } = await resolveStudentAndAuthorNames(
+    db,
+    [...new Set([...missingIds, ...overdueIds, ...recentEvals.map(e => e.student_id as string)])],
+    [...new Set(recentEvals.map(e => e.author_id as string))]
+  )
+
+  const { byGroup, byInstructor } = aggregateCoverageByGroupAndInstructor(roster, coveredIds)
+
+  const evaluationGroupRows: TLEvaluationGroupRow[] = byGroup.map(g => ({
+    group_id: g.group_id, group_name: g.group_name, branch_name: g.branch_name,
+    student_count: g.student_count, evaluated_count: g.covered_count, completion_pct: g.completion_pct,
+  }))
+  const evaluationInstructorRows: TLEvaluationInstructorRow[] = byInstructor.map(i => ({
+    instructor_id: i.instructor_id, instructor_name: i.instructor_name,
+    student_count: i.student_count, evaluated_count: i.covered_count, completion_pct: i.completion_pct,
+  }))
+
+  return {
+    kpis: {
+      total_active_students:    roster.studentIds.length,
+      evaluated_recent_count:   coveredIds.size,
+      completion_pct:           roster.studentIds.length > 0 ? Math.round((coveredIds.size / roster.studentIds.length) * 100) : 0,
+      missing_count:            missingIds.length,
+      overdue_count:            overdueIds.length,
+      recent_evaluations_count: recentEvals.length,
+    },
+    by_group:      evaluationGroupRows,
+    by_instructor: evaluationInstructorRows,
+    students_missing: buildCoverageGaps(roster, missingIds, overdueIds, latestByStudent, studentNames),
+    recent_activity: recentEvals.map(e => ({
+      id: e.id, student_id: e.student_id, student_name: studentNames.get(e.student_id) ?? 'Unknown',
+      criterion: e.criterion, author_name: authorNames.get(e.author_id) ?? 'Staff', evaluated_at: e.evaluated_at,
+    })),
+  }
+}
+
+// ── Student Notes Oversight ─────────────────────────────────────────────────
+
+export async function getTLNotesOverview(branchIds: string[]): Promise<TLNotesOverview> {
+  const empty: TLNotesOverview = {
+    kpis: { total_active_students: 0, noted_recent_count: 0, completion_pct: 0, missing_count: 0, overdue_count: 0, recent_notes_count: 0 },
+    by_group: [], by_instructor: [], students_missing: [], recent_activity: [],
+  }
+  if (!branchIds.length) return empty
+
+  const db     = createServiceClient()
+  const roster = await resolveBranchAcademicRoster(branchIds, db)
+  if (!roster.studentIds.length) return empty
+
+  const recentCutoff   = new Date(Date.now() - NOTES_RECENT_WINDOW_DAYS * 86400000).toISOString()
+  const activityCutoff = new Date(Date.now() - ACTIVITY_FEED_DAYS * 86400000).toISOString()
+
+  // Content is never selected — this aggregate only needs existence/category/
+  // severity/timing, never the note text (see TLNotesOverview doc comment).
+  const { data: noteRows } = await db
+    .from('student_notes')
+    .select('id, student_id, category, severity, author_id, created_at')
+    .in('student_id', roster.studentIds)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+
+  const notes = (noteRows ?? []) as any[]
+
+  const latestByStudent = new Map<string, string>()
+  for (const n of notes) {
+    const cur = latestByStudent.get(n.student_id)
+    if (!cur || n.created_at > cur) latestByStudent.set(n.student_id, n.created_at)
+  }
+
+  const notedIds   = new Set(latestByStudent.keys())
+  const missingIds = roster.studentIds.filter(id => !notedIds.has(id))
+  const overdueIds = roster.studentIds.filter(id => notedIds.has(id) && (latestByStudent.get(id) as string) < recentCutoff)
+  const coveredIds = new Set(roster.studentIds.filter(id => notedIds.has(id) && (latestByStudent.get(id) as string) >= recentCutoff))
+
+  const recentNotes = notes.filter(n => n.created_at >= activityCutoff).slice(0, ACTIVITY_FEED_LIMIT)
+
+  const { studentNames, authorNames } = await resolveStudentAndAuthorNames(
+    db,
+    [...new Set([...missingIds, ...overdueIds, ...recentNotes.map(n => n.student_id as string)])],
+    [...new Set(recentNotes.map(n => n.author_id as string))]
+  )
+
+  const { byGroup, byInstructor } = aggregateCoverageByGroupAndInstructor(roster, coveredIds)
+
+  const notesGroupRows: TLNotesGroupRow[] = byGroup.map(g => ({
+    group_id: g.group_id, group_name: g.group_name, branch_name: g.branch_name,
+    student_count: g.student_count, noted_count: g.covered_count, completion_pct: g.completion_pct,
+  }))
+  const notesInstructorRows: TLNotesInstructorRow[] = byInstructor.map(i => ({
+    instructor_id: i.instructor_id, instructor_name: i.instructor_name,
+    student_count: i.student_count, noted_count: i.covered_count, completion_pct: i.completion_pct,
+  }))
+
+  return {
+    kpis: {
+      total_active_students: roster.studentIds.length,
+      noted_recent_count:    coveredIds.size,
+      completion_pct:        roster.studentIds.length > 0 ? Math.round((coveredIds.size / roster.studentIds.length) * 100) : 0,
+      missing_count:         missingIds.length,
+      overdue_count:         overdueIds.length,
+      recent_notes_count:    recentNotes.length,
+    },
+    by_group:      notesGroupRows,
+    by_instructor: notesInstructorRows,
+    students_missing: buildCoverageGaps(roster, missingIds, overdueIds, latestByStudent, studentNames),
+    recent_activity: recentNotes.map(n => ({
+      id: n.id, student_id: n.student_id, student_name: studentNames.get(n.student_id) ?? 'Unknown',
+      category: n.category, severity: n.severity, author_name: authorNames.get(n.author_id) ?? 'Staff', created_at: n.created_at,
+    })),
+  }
+}
+
+// ── Competition Oversight (visibility only) ─────────────────────────────────
+// student_competitions has no status/registration field — it is a results log,
+// not a live event system. "Participation" here means "has ≥1 recorded result
+// ever"; "recent" means recorded in the current calendar year; "winners" means
+// rank or award is set. There is no data to distinguish "preparing" students.
+
+export async function getTLCompetitionOverview(branchIds: string[]): Promise<TLCompetitionOverview> {
+  const empty: TLCompetitionOverview = {
+    kpis: { total_active_students: 0, participating_count: 0, participation_pct: 0, winners_count: 0, recent_count: 0 },
+    by_group: [], by_instructor: [], winners: [], recent_activity: [],
+  }
+  if (!branchIds.length) return empty
+
+  const db     = createServiceClient()
+  const roster = await resolveBranchAcademicRoster(branchIds, db)
+  if (!roster.studentIds.length) return empty
+
+  const currentYear = new Date().getFullYear()
+
+  const { data: compRows } = await db
+    .from('student_competitions')
+    .select('id, student_id, competition_name, year, rank, award, created_at')
+    .in('student_id', roster.studentIds)
+    .order('created_at', { ascending: false })
+
+  const competitions = (compRows ?? []) as any[]
+
+  const participatingIds = new Set(competitions.map(c => c.student_id as string))
+  const winnerRows        = competitions.filter(c => c.rank || c.award)
+  const recentYearRows    = competitions.filter(c => c.year === currentYear)
+
+  const { studentNames } = await resolveStudentAndAuthorNames(
+    db,
+    [...new Set(competitions.slice(0, ACTIVITY_FEED_LIMIT * 2).map(c => c.student_id as string))],
+    []
+  )
+
+  const { byGroup, byInstructor } = aggregateCoverageByGroupAndInstructor(roster, participatingIds)
+
+  const competitionGroupRows: TLCompetitionGroupRow[] = byGroup.map(g => ({
+    group_id: g.group_id, group_name: g.group_name, branch_name: g.branch_name,
+    student_count: g.student_count, participating_count: g.covered_count, participation_pct: g.completion_pct,
+  }))
+  const competitionInstructorRows: TLCompetitionInstructorRow[] = byInstructor.map(i => ({
+    instructor_id: i.instructor_id, instructor_name: i.instructor_name,
+    student_count: i.student_count, participating_count: i.covered_count, participation_pct: i.completion_pct,
+  }))
+
+  const toActivityItem = (c: any): TLCompetitionActivityItem => ({
+    id: c.id, student_id: c.student_id, student_name: studentNames.get(c.student_id) ?? 'Unknown',
+    competition_name: c.competition_name, year: c.year, rank: c.rank ?? null, award: c.award ?? null, created_at: c.created_at,
+  })
+
+  return {
+    kpis: {
+      total_active_students: roster.studentIds.length,
+      participating_count:   participatingIds.size,
+      participation_pct:     roster.studentIds.length > 0 ? Math.round((participatingIds.size / roster.studentIds.length) * 100) : 0,
+      winners_count:          new Set(winnerRows.map(w => w.student_id)).size,
+      recent_count:           recentYearRows.length,
+    },
+    by_group:        competitionGroupRows,
+    by_instructor:   competitionInstructorRows,
+    winners:         winnerRows.slice(0, ACTIVITY_FEED_LIMIT).map(toActivityItem),
+    recent_activity: competitions.slice(0, ACTIVITY_FEED_LIMIT).map(toActivityItem),
+  }
+}
+
+// ── Compact cross-domain Academic Overview (dashboard composite) ───────────
+// Pure composition over the overviews above plus the existing assignment
+// overview — no new business logic, only aggregation of already-computed rows.
+
+export async function getTLAcademicOverviewKPIs(branchIds: string[]): Promise<TLAcademicOverviewKPIs> {
+  const empty: TLAcademicOverviewKPIs = {
+    evaluation_completion_pct: 0, notes_completion_pct: 0, homework_completion_pct: 0,
+    competition_participation_pct: 0, students_missing_evaluation: 0, students_missing_notes: 0,
+    groups_requiring_attention: 0, instructors_requiring_attention: 0,
+  }
+  if (!branchIds.length) return empty
+
+  const [evalOv, notesOv, compOv, assignOv] = await Promise.all([
+    getTLEvaluationOverview(branchIds),
+    getTLNotesOverview(branchIds),
+    getTLCompetitionOverview(branchIds),
+    getTLAssignmentOverview(branchIds),
+  ])
+
+  const lowGroups = new Set<string>([
+    ...evalOv.by_group.filter(g => g.completion_pct < ATTENTION_THRESHOLD_PCT).map(g => g.group_id),
+    ...notesOv.by_group.filter(g => g.completion_pct < ATTENTION_THRESHOLD_PCT).map(g => g.group_id),
+  ])
+  const lowInstructors = new Set<string>([
+    ...evalOv.by_instructor.filter(i => i.completion_pct < ATTENTION_THRESHOLD_PCT).map(i => i.instructor_id),
+    ...notesOv.by_instructor.filter(i => i.completion_pct < ATTENTION_THRESHOLD_PCT).map(i => i.instructor_id),
+  ])
+
+  return {
+    evaluation_completion_pct:       evalOv.kpis.completion_pct,
+    notes_completion_pct:            notesOv.kpis.completion_pct,
+    homework_completion_pct:         assignOv.kpis.avg_completion_pct,
+    competition_participation_pct:   compOv.kpis.participation_pct,
+    students_missing_evaluation:     evalOv.kpis.missing_count,
+    students_missing_notes:          notesOv.kpis.missing_count,
+    groups_requiring_attention:      lowGroups.size,
+    instructors_requiring_attention: lowInstructors.size,
+  }
 }
