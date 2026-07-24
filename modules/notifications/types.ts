@@ -17,6 +17,8 @@ export type NotificationType =
   | 'COMPETITION_RESULT'
   | 'NEW_HOMEWORK_ASSIGNED'
   | 'NEW_SESSION_RESOURCES'
+  | 'ATTENDANCE_RECORDED'
+  | 'PAYMENT_RECORDED'
 
 export interface Notification {
   id:           string

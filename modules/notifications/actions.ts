@@ -340,6 +340,51 @@ export async function seedNewSessionResourcesNotification(
     )
 }
 
+// Notifies a parent that their child's attendance was recorded (new record)
+// or corrected (status changed) for a session.
+export async function seedAttendanceRecordedNotification(
+  recipientId: string,
+  attendanceRecordId: string,
+  status: string,
+  groupName: string | null,
+): Promise<void> {
+  const db = createServiceClient()
+  const label = status.charAt(0).toUpperCase() + status.slice(1)
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'ATTENDANCE_RECORDED',
+        title:        `Attendance recorded — ${label}${groupName ? ` (${groupName})` : ''}`,
+        href:         '/portal/parent/attendance',
+        dedup_key:    `attendance_recorded:${attendanceRecordId}:${status}:${recipientId}`,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
+// Notifies a parent that a payment was recorded against their child's balance.
+export async function seedPaymentRecordedNotification(
+  recipientId: string,
+  paymentId:   string,
+  amount:      number,
+): Promise<void> {
+  const db = createServiceClient()
+  await db
+    .from('notifications')
+    .upsert(
+      {
+        recipient_id: recipientId,
+        type:         'PAYMENT_RECORDED',
+        title:        `Payment recorded — EGP ${amount.toLocaleString()}`,
+        href:         '/portal/parent/finance',
+        dedup_key:    `payment_recorded:${paymentId}:${recipientId}`,
+      },
+      { onConflict: 'recipient_id,dedup_key', ignoreDuplicates: true }
+    )
+}
+
 // Creates a HOMEWORK_NEEDS_GRADING notification (one per pending batch check).
 export async function seedHomeworkNotification(
   recipientId: string,

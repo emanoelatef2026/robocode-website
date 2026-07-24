@@ -4,6 +4,7 @@ import { useState, useEffect, useTransition } from 'react'
 import type { GroupOperationalRow, GroupStudentOption } from '@/modules/groups/operational'
 import { addStudentsToGroupAction } from '@/modules/groups/modal-actions'
 import { filterStudentOptions } from '../utils'
+import { HistoricalReconciliationDialog } from '@/components/portal/shared/HistoricalReconciliationDialog'
 
 export function QuickAddStudentModal({
   isOpen, group, studentOptions, currentStudentIds, onClose, onAdded,
@@ -20,9 +21,16 @@ export function QuickAddStudentModal({
   const [error, setError]       = useState<string | null>(null)
   const [, startT]              = useTransition()
 
+  // Historical Enrollment Reconciliation — after students are added, walk
+  // them one at a time; the dialog itself skips silently (no completed
+  // sessions, or no active contract for that student) for anyone with
+  // nothing to reconcile.
+  const [reconcileQueue, setReconcileQueue] = useState<string[] | null>(null)
+  const [reconcileIndex, setReconcileIndex] = useState(0)
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (isOpen) { setSearch(''); setSelected(new Set()); setError(null) }
+    if (isOpen) { setSearch(''); setSelected(new Set()); setError(null); setReconcileQueue(null) }
   }, [isOpen])
 
   if (!isOpen) return null
@@ -45,12 +53,28 @@ export function QuickAddStudentModal({
     if (!selected.size) return
     if (isOverCapacity) { setError(`Would exceed capacity of ${group.capacity}.`); return }
     setError(null)
+    const addedIds = Array.from(selected)
     startT(async () => {
-      const res = await addStudentsToGroupAction(group.group_id, Array.from(selected))
+      const res = await addStudentsToGroupAction(group.group_id, addedIds)
       if (!res.success) { setError(res.error?.message ?? 'Failed to add students.'); return }
       onAdded()
-      onClose()
+      // Walk each newly-added student through Historical Enrollment
+      // Reconciliation before closing — addStudentsToGroupAction itself only
+      // flags (non-fatal, no auto-consumption); this is where staff actually
+      // resolve it, per student, for this group.
+      setReconcileIndex(0)
+      setReconcileQueue(addedIds)
     })
+  }
+
+  function advanceReconcileQueue() {
+    const queue = reconcileQueue ?? []
+    if (reconcileIndex + 1 < queue.length) {
+      setReconcileIndex(reconcileIndex + 1)
+    } else {
+      setReconcileQueue(null)
+      onClose()
+    }
   }
 
   return (
@@ -162,6 +186,17 @@ export function QuickAddStudentModal({
           </div>
         </div>
       </div>
+
+      {reconcileQueue && reconcileIndex < reconcileQueue.length && (
+        <HistoricalReconciliationDialog
+          open
+          mode="apply"
+          studentId={reconcileQueue[reconcileIndex]}
+          groupId={group.group_id}
+          onResolved={advanceReconcileQueue}
+          onClose={advanceReconcileQueue}
+        />
+      )}
     </div>
   )
 }

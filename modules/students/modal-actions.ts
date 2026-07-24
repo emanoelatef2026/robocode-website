@@ -4,10 +4,13 @@ import { revalidatePath } from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
 import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
+import { resolveParentForPhone, linkExistingParentToStudent } from '@/modules/parents/identity'
+import type { ParentMatchCandidate } from '@/modules/parents/identity'
 import {
   resolveGroupCourseId,
   closeSameCourseGroupMemberships,
 } from '@/modules/academic/enrollment-integrity'
+import { reconcileGroupJoin, type ReconciliationChoice, type ShortfallResolution } from '@/modules/enrollments/historical-reconciliation'
 import { z } from 'zod'
 import type { ActionResult } from '@/types/app'
 
@@ -22,6 +25,9 @@ const parentContactSchema = z.object({
   is_primary:         z.boolean().default(false),
   is_emergency:       z.boolean().default(true),
   password:           z.string().min(6).optional().or(z.literal('')),
+  // Set once staff resolves an ambiguous phone match from a prior submit
+  resolved_parent_id: z.string().uuid().optional().or(z.literal('')),
+  force_new_parent:   z.boolean().default(false),
 })
 
 const ageSchema = z
@@ -71,6 +77,20 @@ function parseGroupIds(raw: FormDataEntryValue | null | undefined): string[] {
   } catch { return [] }
 }
 
+// Historical Enrollment Reconciliation — resolved dialog choices, keyed by
+// group_id, set by the HistoricalReconciliationDialog before the form submits.
+// Never trusted beyond "which mode did staff pick" — previewHistoricalReconciliation
+// re-derives every count/eligibility fact server-side in applyGroupAssignments.
+type ReconciliationChoiceMap = Record<string, { choice: ReconciliationChoice; shortfallResolution?: ShortfallResolution }>
+
+function parseReconciliationChoices(raw: FormDataEntryValue | null | undefined): ReconciliationChoiceMap {
+  if (!raw) return {}
+  try {
+    const obj = JSON.parse(raw as string)
+    return obj && typeof obj === 'object' ? obj as ReconciliationChoiceMap : {}
+  } catch { return {} }
+}
+
 // Guard: every group a student is assigned to must live in the student's branch.
 // Returns an error message naming the offending groups, or null when all match.
 async function validateGroupsMatchBranch(
@@ -94,7 +114,8 @@ async function applyGroupAssignments(
   db: ReturnType<typeof createServiceClient>,
   studentId: string,
   groupsToAdd: string[],
-  groupsToRemove: string[]
+  groupsToRemove: string[],
+  opts: { userId: string; branchId: string; reconciliationChoices?: ReconciliationChoiceMap } = { userId: '', branchId: '' }
 ) {
   const now = new Date().toISOString()
 
@@ -151,6 +172,19 @@ async function applyGroupAssignments(
       joined_at:       now,
       course_id:       courseId,
     })
+
+    // Historical Enrollment Reconciliation: if the HistoricalReconciliationDialog
+    // ran client-side (StudentFormModal), apply its resolved choice for real.
+    // Otherwise (no-JS fallback, or a group with no pending sessions) this is
+    // the non-fatal flag-only safety net.
+    const resolved = opts.reconciliationChoices?.[groupId]
+    await reconcileGroupJoin({
+      db, studentId, groupId, courseId,
+      branchId:    opts.branchId || null,
+      performedBy: opts.userId,
+      choice:      resolved?.choice,
+      shortfallResolution: resolved?.shortfallResolution,
+    })
   }
 }
 
@@ -175,11 +209,17 @@ function parseParentContacts(raw: string): ParsedParentContacts {
   }
 }
 
+export interface AmbiguousParentWarning {
+  name:       string
+  phone:      string | null
+  candidates: ParentMatchCandidate[]
+}
+
 async function syncParentContacts(
   db: ReturnType<typeof createServiceClient>,
   studentId: string,
   contacts: z.infer<typeof parentContactSchema>[]
-) {
+): Promise<AmbiguousParentWarning[]> {
   // Save existing group UUIDs keyed by phone1 so we preserve stable parent identity
   const { data: existing } = await db
     .from('student_parent_contacts')
@@ -193,7 +233,7 @@ async function syncParentContacts(
 
   await db.from('student_parent_contacts').delete().eq('student_id', studentId)
 
-  if (contacts.length === 0) return
+  if (contacts.length === 0) return []
 
   // Resolve parent_group_id for each contact:
   //   1. Reuse existing UUID for this student+phone
@@ -241,9 +281,30 @@ async function syncParentContacts(
   )
 
   // Create portal accounts for contacts a password was set for (login email is generated)
+  const ambiguous: AmbiguousParentWarning[] = []
+
   for (const c of resolvedContacts) {
     const password = c.password?.trim() || null
     if (!password) continue
+
+    // Before minting a new login, check whether this phone already has a
+    // portal account (e.g. a sibling was enrolled earlier for this parent).
+    const resolution = await resolveParentForPhone(db, c.phone, {
+      resolvedParentId: c.resolved_parent_id || null,
+      forceNew:         c.force_new_parent,
+    })
+
+    if (resolution.kind === 'ambiguous') {
+      // Don't block the whole student save over one contact — leave this
+      // contact without portal access and surface it for manual resolution.
+      ambiguous.push({ name: c.name, phone: c.phone, candidates: resolution.candidates })
+      continue
+    }
+
+    if (resolution.kind === 'link') {
+      await linkExistingParentToStudent(db, resolution.parentId, studentId, c.relation, c.is_primary)
+      continue
+    }
 
     const nameParts = c.name.trim().split(/\s+/)
     const email = await generateUniqueLoginEmail(
@@ -271,6 +332,8 @@ async function syncParentContacts(
       })
     }
   }
+
+  return ambiguous
 }
 
 // ── Create ─────────────────────────────────────────────────────────────────────
@@ -278,7 +341,7 @@ async function syncParentContacts(
 export async function createStudentModal(
   _prev: unknown,
   formData: FormData
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ActionResult<{ id: string; ambiguousParents?: AmbiguousParentWarning[] }>> {
   const raw = {
     password:        formData.get('password'),
     first_name:      formData.get('first_name'),
@@ -367,11 +430,12 @@ export async function createStudentModal(
   }
 
   // 5. Parent contacts
-  await syncParentContacts(db, student.id, contactResult.contacts)
+  const ambiguousParents = await syncParentContacts(db, student.id, contactResult.contacts)
 
   // 8. Group assignments (branch match validated in step 0)
   if (groupsToAdd.length) {
-    await applyGroupAssignments(db, student.id, groupsToAdd, [])
+    const reconciliationChoices = parseReconciliationChoices(formData.get('reconciliation_choices_json'))
+    await applyGroupAssignments(db, student.id, groupsToAdd, [], { userId: user.id, branchId: branch_id, reconciliationChoices })
   }
 
   await db.rpc('write_audit_log', {
@@ -385,7 +449,10 @@ export async function createStudentModal(
 
   revalidatePath('/portal/team-leader/students')
   revalidatePath('/admin/students')
-  return { success: true, data: { id: student.id } }
+  return {
+    success: true,
+    data: { id: student.id, ambiguousParents: ambiguousParents.length ? ambiguousParents : undefined },
+  }
 }
 
 // ── Update ─────────────────────────────────────────────────────────────────────
@@ -393,7 +460,7 @@ export async function createStudentModal(
 export async function updateStudentModal(
   _prev: unknown,
   formData: FormData
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ActionResult<{ id: string; ambiguousParents?: AmbiguousParentWarning[] }>> {
   const raw = {
     id:             formData.get('id'),
     first_name:     formData.get('first_name')    || undefined,
@@ -467,11 +534,12 @@ export async function updateStudentModal(
   }
 
   // Parent contacts sync
-  await syncParentContacts(db, id, contactResult.contacts)
+  const ambiguousParents = await syncParentContacts(db, id, contactResult.contacts)
 
   // Group assignment sync (branch match validated above)
   if (groupsToAdd.length || groupsToRemove.length) {
-    await applyGroupAssignments(db, id, groupsToAdd, groupsToRemove)
+    const reconciliationChoices = parseReconciliationChoices(formData.get('reconciliation_choices_json'))
+    await applyGroupAssignments(db, id, groupsToAdd, groupsToRemove, { userId: user.id, branchId: old.branch_id, reconciliationChoices })
   }
 
   await db.rpc('write_audit_log', {
@@ -485,7 +553,10 @@ export async function updateStudentModal(
   revalidatePath('/portal/team-leader/students')
   revalidatePath(`/portal/team-leader/students/${id}`)
   revalidatePath('/admin/students')
-  return { success: true, data: { id } }
+  return {
+    success: true,
+    data: { id, ambiguousParents: ambiguousParents.length ? ambiguousParents : undefined },
+  }
 }
 
 // ── Delete (soft) ──────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import { requireAuth }              from '@/modules/rbac/guards'
 import { redirect }                  from 'next/navigation'
+import Link                          from 'next/link'
 import {
   listParentContactsOperational,
   getParentBranches,
@@ -42,14 +43,26 @@ export default async function AdminParentsPage() {
   ])
 
   return (
-    <ParentsClient
-      rows={rows}
-      branches={branches}
-      groups={filterOptions.groups}
-      courses={filterOptions.courses}
-      instructors={filterOptions.instructors}
-      studentOptions={studentOptions}
-      isTL
-    />
+    <div>
+      {isSuperAdmin && (
+        <div className="px-4 pt-4 sm:px-6">
+          <Link
+            href="/admin/parents/duplicates"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#64748B] hover:text-[#FF8A1F] hover:underline"
+          >
+            Check for duplicate parent accounts →
+          </Link>
+        </div>
+      )}
+      <ParentsClient
+        rows={rows}
+        branches={branches}
+        groups={filterOptions.groups}
+        courses={filterOptions.courses}
+        instructors={filterOptions.instructors}
+        studentOptions={studentOptions}
+        isTL
+      />
+    </div>
   )
 }

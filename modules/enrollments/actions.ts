@@ -5,6 +5,7 @@ import { requirePermission }        from '@/modules/rbac/guards'
 import { revalidatePath }           from 'next/cache'
 import { logTimelineEvent }         from '@/lib/timeline'
 import { _internalReconcileEnrollment } from '@/modules/attendance/reconciliation'
+import { reconcileGroupJoin }       from '@/modules/enrollments/historical-reconciliation'
 import {
   findActiveEnrollmentForCourse,
   closeSameCourseGroupMemberships,
@@ -477,7 +478,19 @@ export async function createEnrollment(input: CreateEnrollmentInput) {
     throw new Error(seErr.message)
   }
 
-  return { enrollmentId: (seData as any).id as string, groupStudentId }
+  const newEnrollmentId = (seData as any).id as string
+
+  // Historical Enrollment Reconciliation: flags (never auto-consumes) if the
+  // group this student just joined already has completed sessions. Real UI
+  // paths intercept before this and pass a resolved `choice` via
+  // reconcileGroupJoin directly; this call is the non-fatal server-side
+  // safety net for callers of createEnrollment with no dialog in front of it.
+  await reconcileGroupJoin({
+    db, studentId: input.student_id, groupId: input.group_id,
+    courseId, branchId, enrollmentId: newEnrollmentId, performedBy: user.id,
+  })
+
+  return { enrollmentId: newEnrollmentId, groupStudentId }
 }
 
 // ── Transfer enrollment ───────────────────────────────────────────────────────
@@ -589,6 +602,17 @@ export async function transferEnrollment(input: TransferEnrollmentInput) {
       .update({ enrollment_id: newEnrollmentId, group_id: input.new_group_id })
       .eq('enrollment_id', input.enrollment_id)
   }
+
+  // Historical Enrollment Reconciliation: the destination group may already
+  // have completed sessions. The preview's anti-join is keyed on
+  // (schedule_id, student_id) only, so sessions this student already attended
+  // under the OLD enrollment are correctly excluded here — only genuinely new
+  // history is flagged.
+  await reconcileGroupJoin({
+    db, studentId: curr.student_id, groupId: input.new_group_id,
+    courseId: newCourseId, branchId: newBranchId, enrollmentId: newEnrollmentId,
+    performedBy: user.id,
+  })
 
   return { newEnrollmentId, oldEnrollmentId: input.enrollment_id }
 }

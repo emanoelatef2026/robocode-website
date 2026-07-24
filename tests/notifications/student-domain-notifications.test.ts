@@ -102,16 +102,23 @@ describe('Recipient resolution helpers', () => {
     expect(userId).toBeNull()
   })
 
-  it('getParentUserIdsForStudent returns every linked parent user_id', async () => {
+  it('getParentUserIdsForStudent returns every linked parent user_id who has not opted out', async () => {
     const rows = [{ parents: { user_id: 'user-parent-1' } }, { parents: { user_id: 'user-parent-2' } }]
+    const eqCalls: unknown[][] = []
     const db = {
       from: vi.fn(() => ({
-        select: () => ({ eq: () => Promise.resolve({ data: rows, error: null }) }),
+        select: () => ({
+          eq: (...args: unknown[]) => {
+            eqCalls.push(args)
+            return { eq: (...args2: unknown[]) => { eqCalls.push(args2); return Promise.resolve({ data: rows, error: null }) } }
+          },
+        }),
       })),
     }
     ;(createServiceClient as ReturnType<typeof vi.fn>).mockReturnValue(db)
 
     const ids = await getParentUserIdsForStudent('stu-001')
     expect(ids).toEqual(['user-parent-1', 'user-parent-2'])
+    expect(eqCalls).toEqual([['student_id', 'stu-001'], ['can_receive_notifications', true]])
   })
 })

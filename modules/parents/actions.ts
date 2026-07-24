@@ -6,6 +6,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
 import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import { createParentSchema, linkStudentSchema } from './schemas'
+import { resolveParentForPhone, linkExistingParentToStudent, AMBIGUOUS_PARENT_MATCH } from './identity'
 import type { ActionResult } from '@/types/app'
 
 export async function createParent(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
@@ -16,8 +17,11 @@ export async function createParent(_prev: unknown, formData: FormData): Promise<
     password:     formData.get('password'),
     first_name:   formData.get('first_name'),
     last_name:    formData.get('last_name'),
+    phone:        formData.get('phone') || '',
     student_id:   formData.get('student_id') || undefined,
     relationship: formData.get('relationship') || undefined,
+    resolved_parent_id: formData.get('resolved_parent_id') || '',
+    force_new_parent:   formData.get('force_new_parent') || 'false',
   }
 
   const parsed = createParentSchema.safeParse(raw)
@@ -25,7 +29,43 @@ export async function createParent(_prev: unknown, formData: FormData): Promise<
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
 
-  const { password, first_name, last_name, student_id, relationship } = parsed.data
+  const { password, first_name, last_name, phone, student_id, relationship } = parsed.data
+
+  // Before minting a new login, check whether this phone already has a
+  // portal account (e.g. a sibling was enrolled earlier for this parent).
+  const resolution = await resolveParentForPhone(db, phone, {
+    resolvedParentId: parsed.data.resolved_parent_id || null,
+    forceNew:         parsed.data.force_new_parent,
+  })
+
+  if (resolution.kind === 'ambiguous') {
+    return {
+      success: false,
+      error: {
+        code:    AMBIGUOUS_PARENT_MATCH,
+        message: `This phone number matches ${resolution.candidates.length} existing parent accounts. Link to one from the Parents page, or use a different phone number to create a separate account.`,
+        data:    resolution.candidates,
+      },
+    }
+  }
+
+  if (resolution.kind === 'link') {
+    const parentId = resolution.parentId
+    if (student_id && relationship) {
+      await linkExistingParentToStudent(db, parentId, student_id, relationship, true)
+    }
+
+    await db.rpc('write_audit_log', {
+      p_performed_by: user.id,
+      p_action:       'link_student',
+      p_entity_type:  'parent',
+      p_entity_id:    parentId,
+      p_new_values:   { student_id, relationship, reason: 'matched existing account by phone' },
+    })
+
+    revalidatePath('/admin/parents')
+    redirect('/admin/parents')
+  }
 
   const email = await generateUniqueLoginEmail('learner', first_name, last_name, makeEmailLocalPartExists(db))
   const { data: created, error: createError } = await db.auth.admin.createUser({
@@ -38,7 +78,7 @@ export async function createParent(_prev: unknown, formData: FormData): Promise<
   }
   const authUserId = created.user.id
 
-  await db.from('users').upsert({ id: authUserId, email }, { onConflict: 'id' })
+  await db.from('users').upsert({ id: authUserId, email, phone: phone || null }, { onConflict: 'id' })
 
   const { data: existingProfile } = await db
     .from('profiles')
@@ -52,30 +92,18 @@ export async function createParent(_prev: unknown, formData: FormData): Promise<
     await db.from('profiles').update({ first_name, last_name }).eq('user_id', authUserId)
   }
 
-  // Upsert parent record
-  const { data: existingParent } = await db
+  // Store plain text for internal ops visibility (intentional — internal system,
+  // mirrors students.portal_password) so the welcome-message feature can surface it.
+  const { data: parent, error: parentError } = await db
     .from('parents')
+    .insert({ user_id: authUserId, portal_password: password })
     .select('id')
-    .eq('user_id', authUserId)
-    .maybeSingle()
+    .single()
 
-  let parentId: string
-  if (existingParent) {
-    parentId = existingParent.id
-  } else {
-    // Store plain text for internal ops visibility (intentional — internal system,
-    // mirrors students.portal_password) so the welcome-message feature can surface it.
-    const { data: parent, error: parentError } = await db
-      .from('parents')
-      .insert({ user_id: authUserId, portal_password: password })
-      .select('id')
-      .single()
-
-    if (parentError) {
-      return { success: false, error: { code: 'DB_ERROR', message: parentError.message } }
-    }
-    parentId = parent.id
+  if (parentError) {
+    return { success: false, error: { code: 'DB_ERROR', message: parentError.message } }
   }
+  const parentId = parent.id
 
   // Optionally link to a student
   if (student_id && relationship) {

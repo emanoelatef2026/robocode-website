@@ -17,6 +17,8 @@ import {
 import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
 import { checkAndUnlockAchievements } from '@/modules/gamification/achievement-service'
 import { checkAndAwardBadges } from '@/modules/gamification/badge-service'
+import { getParentUserIdsForStudent } from '@/modules/notifications/queries'
+import { seedAttendanceRecordedNotification } from '@/modules/notifications/actions'
 import type { ActionResult } from '@/types/app'
 import type { AttendanceStatus } from '@/types/enums'
 
@@ -211,13 +213,17 @@ export async function recordAttendanceSession(
   // ── Pre-fetch which students already have attendance for this schedule ────────
   // Used below to guard XP from firing again on re-recording (upsert updates, not inserts).
   let existingAttendanceStudentIds = new Set<string>()
+  let existingStatusByStudentId    = new Map<string, string>()
   if (existingSchedule) {
     const { data: existingAtts } = await db
       .from('attendance_records')
-      .select('student_id')
+      .select('student_id, status')
       .eq('schedule_id', scheduleId)
     existingAttendanceStudentIds = new Set(
       (existingAtts ?? []).map((r: any) => r.student_id as string)
+    )
+    existingStatusByStudentId = new Map(
+      (existingAtts ?? []).map((r: any) => [r.student_id as string, r.status as string])
     )
   }
 
@@ -398,6 +404,25 @@ export async function recordAttendanceSession(
         await checkAndAwardBadges(sid)
       }
     } catch { /* XP is never critical — swallow errors */ }
+  })()
+
+  // ── Parent notifications (fire-and-forget) ────────────────────────────────────
+  // Notify on a brand-new record, or when a correction actually changes the
+  // status — not on a re-save that leaves the status untouched.
+  void (async () => {
+    try {
+      for (const rec of (insertedRecords ?? []) as any[]) {
+        const sid = rec.student_id as string
+        const status = rec.status as string
+        const isNew = !existingAttendanceStudentIds.has(sid)
+        if (!isNew && existingStatusByStudentId.get(sid) === status) continue
+
+        const parentUserIds = await getParentUserIdsForStudent(sid)
+        for (const recipientId of parentUserIds) {
+          await seedAttendanceRecordedNotification(recipientId, rec.id, status, groupName)
+        }
+      }
+    } catch { /* notifications are never critical — swallow errors */ }
   })()
 
   revalidatePath('/admin/attendance')

@@ -46,6 +46,10 @@ export interface AppError {
   code: string
   message: string
   field?: string
+  // Structured payload for errors a client needs to act on beyond displaying
+  // the message — e.g. AMBIGUOUS_PARENT_MATCH carries ParentMatchCandidate[]
+  // so the UI can render a disambiguation picker instead of just failing.
+  data?: unknown
 }
 
 // Server Action result wrapper

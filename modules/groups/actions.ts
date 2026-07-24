@@ -16,6 +16,7 @@ import {
   closeSameCourseGroupMemberships,
   findActiveEnrollmentForCourse,
 } from '@/modules/academic/enrollment-integrity'
+import { reconcileGroupJoin } from '@/modules/enrollments/historical-reconciliation'
 import type { ActionResult } from '@/types/app'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
@@ -279,9 +280,12 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
   // Best-effort — failures are non-fatal to keep backward compatibility.
   // Idempotent: reuses an existing ACTIVE enrollment for this student+course
   // instead of creating a duplicate ledger row.
+  let dualWriteEnrollmentId: string | null = null
   try {
     const existingActive = await findActiveEnrollmentForCourse(db, student_id, courseId)
-    if (!existingActive) {
+    if (existingActive) {
+      dualWriteEnrollmentId = existingActive.id
+    } else {
       const { data: gcRow } = await db
         .from('group_courses')
         .select('id, instructor_id')
@@ -289,7 +293,7 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
         .eq('status', 'active')
         .maybeSingle()
 
-      await db.from('student_enrollments').insert({
+      const { data: newEnroll } = await db.from('student_enrollments').insert({
         student_id,
         branch_id:       group.branch_id,
         group_id,
@@ -301,10 +305,21 @@ export async function enrollStudent(_prev: unknown, formData: FormData): Promise
         status:          'ACTIVE',
         enrollment_type,
         created_by:      user.id,
-      })
+      }).select('id').single()
+      dualWriteEnrollmentId = (newEnroll as any)?.id ?? null
     }
   } catch {
     // Non-fatal: enrollment record will be backfilled by migration if missed
+  }
+
+  // Historical Enrollment Reconciliation: non-fatal flag if this group already
+  // has completed sessions (real dialog-driven paths call reconcileGroupJoin
+  // directly with a resolved choice — this is the safety net for this form).
+  if (dualWriteEnrollmentId) {
+    await reconcileGroupJoin({
+      db, studentId: student_id, groupId: group_id, courseId,
+      branchId: group.branch_id, enrollmentId: dualWriteEnrollmentId, performedBy: user.id,
+    })
   }
 
   await db.rpc('write_audit_log', {
@@ -444,6 +459,14 @@ export async function bulkEnrollStudents(
     } else {
       enrolled++
       enrolledIds.push(studentId)
+      // Historical Enrollment Reconciliation: non-fatal flag per student if
+      // this group already has completed sessions. bulkEnrollStudents has no
+      // dialog in front of it (plain admin form) — resolves whatever active
+      // enrollment already exists for this student+course; skips silently if
+      // none, since nothing can be consumed without a contract.
+      await reconcileGroupJoin({
+        db, studentId, groupId, courseId, branchId: grp.branch_id, performedBy: user.id,
+      })
     }
   }
 

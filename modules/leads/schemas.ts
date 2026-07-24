@@ -72,6 +72,9 @@ export const convertToStudentSchema = z.object({
   parent_last:     z.string().min(1, 'Parent last name required'),
   parent_password: z.string().min(6, 'Min 6 characters'),
   parent_phone:    z.string().optional().or(z.literal('')),
+  // Set once staff resolves an ambiguous phone match from a prior submit
+  resolved_parent_id: z.string().uuid().optional().or(z.literal('')),
+  force_new_parent:   z.preprocess(v => v === 'true' || v === true, z.boolean()).default(false),
 })
 
 export const assignToGroupSchema = z.object({

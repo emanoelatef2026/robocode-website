@@ -10,6 +10,8 @@ import type {
   AddRecurringExpenseInput,
 } from './types'
 import { getStudentFinanceDetail, getAccountPromises } from './queries'
+import { getParentUserIdsForStudent } from '@/modules/notifications/queries'
+import { seedPaymentRecordedNotification } from '@/modules/notifications/actions'
 
 // ── Branch access guard helper ─────────────────────────────────────────────────
 
@@ -118,7 +120,7 @@ export async function addPayment(
   // Auto-link to the oldest outstanding installment (FIFO) when not explicit
   const installmentId = input.installment_id ?? await resolveFifoInstallmentId(db, input.account_id)
 
-  const { error } = await db.from('finance_payments').insert({
+  const { data: paymentRow, error } = await db.from('finance_payments').insert({
     student_id:          input.student_id,
     account_id:          input.account_id,
     enrollment_id:       enrollmentId,
@@ -133,9 +135,18 @@ export async function addPayment(
     receipt_image:       input.receipt_image ?? null,
     receipt_notes:       input.receipt_notes ?? null,
     created_by:          user.id,
-  })
+  }).select('id').single()
 
   if (error) return { error: error.message }
+
+  void (async () => {
+    try {
+      const parentUserIds = await getParentUserIdsForStudent(input.student_id)
+      for (const recipientId of parentUserIds) {
+        await seedPaymentRecordedNotification(recipientId, (paymentRow as any).id, input.amount)
+      }
+    } catch { /* notifications are never critical — swallow errors */ }
+  })()
 
   // Explicit balance recompute — ensures correctness even if trigger missed
   const { data: balRow } = await db.rpc('recompute_account_balance' as any, {
@@ -210,7 +221,7 @@ export async function quickPayment(
   // Auto-link to the oldest outstanding installment (FIFO)
   const installmentId = await resolveFifoInstallmentId(db, input.account_id)
 
-  const { error: payErr } = await db.from('finance_payments').insert({
+  const { data: paymentRow, error: payErr } = await db.from('finance_payments').insert({
     student_id:          input.student_id,
     account_id:          input.account_id,
     enrollment_id:       enrollmentId,
@@ -221,9 +232,18 @@ export async function quickPayment(
     allocation_strategy: enrollmentId ? 'MANUAL' : 'AUTO_FIFO',
     notes:               `Quick payment — EGP ${amount}`,
     created_by:          user.id,
-  })
+  }).select('id').single()
 
   if (payErr) return { error: payErr.message }
+
+  void (async () => {
+    try {
+      const parentUserIds = await getParentUserIdsForStudent(input.student_id)
+      for (const recipientId of parentUserIds) {
+        await seedPaymentRecordedNotification(recipientId, (paymentRow as any).id, amount)
+      }
+    } catch { /* notifications are never critical — swallow errors */ }
+  })()
 
   // Explicit balance recompute — guarantees correctness regardless of trigger state
   const { data: balRow } = await db.rpc('recompute_account_balance' as any, {

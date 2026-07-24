@@ -2,8 +2,10 @@
 
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react'
 import { createStudentModal, updateStudentModal, deleteStudentAction } from '@/modules/students/modal-actions'
+import type { AmbiguousParentWarning } from '@/modules/students/modal-actions'
 import type { StudentOperationalRow, GroupPickerOption } from '@/modules/students/operational'
 import type { ActionResult } from '@/types/app'
+import { HistoricalReconciliationDialog, type HistoricalReconciliationResolution } from '@/components/portal/shared/HistoricalReconciliationDialog'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -207,19 +209,60 @@ export default function StudentFormModal({
   }
   const removeGroupLink = (groupId: string) => { setDirty(true); setGroupLinks(prev => prev.filter(g => g.group_id !== groupId)) }
 
+  // ── Historical Enrollment Reconciliation ────────────────────────────────────
+  // Edit mode only — a brand-new student (create mode) doesn't exist yet at
+  // submit time, so there's nothing to preview attendance against; that path
+  // relies on applyGroupAssignments's server-side flag-only safety net instead.
+  const formRef              = useRef<HTMLFormElement>(null)
+  const reconciliationInputRef = useRef<HTMLInputElement>(null)
+  const bypassReconcileRef   = useRef(false)
+  const resolvedChoicesRef   = useRef<Record<string, { choice: unknown; shortfallResolution?: unknown }>>({})
+  const [reconcileQueue, setReconcileQueue] = useState<string[] | null>(null)
+  const [reconcileIndex, setReconcileIndex] = useState(0)
+
+  function handleReconciliationResolved(groupId: string, resolution: HistoricalReconciliationResolution) {
+    if (!resolution.applied) {
+      resolvedChoicesRef.current[groupId] = { choice: resolution.choice, shortfallResolution: resolution.shortfallResolution }
+    }
+    const queue = reconcileQueue ?? []
+    if (reconcileIndex + 1 < queue.length) {
+      setReconcileIndex(reconcileIndex + 1)
+      return
+    }
+    // Done — stamp the hidden field directly on the DOM node (avoids a React
+    // re-render race with the immediately-following requestSubmit) and
+    // re-submit natively.
+    if (reconciliationInputRef.current) {
+      reconciliationInputRef.current.value = JSON.stringify(resolvedChoicesRef.current)
+    }
+    setReconcileQueue(null)
+    bypassReconcileRef.current = true
+    formRef.current?.requestSubmit()
+  }
+
   // ── Dirty state ─────────────────────────────────────────────────────────────
   const [dirty, setDirty] = useState(false)
   const dialogRef         = useRef<HTMLDivElement>(null)
 
   // ── Server action ───────────────────────────────────────────────────────────
   const action = isEdit ? updateStudentModal : createStudentModal
-  const [state, formAction, isPending] = useActionState<ActionResult<{ id: string }> | null, FormData>(
-    action as any,
-    null
-  )
+  const [state, formAction, isPending] = useActionState<
+    ActionResult<{ id: string; ambiguousParents?: AmbiguousParentWarning[] }> | null,
+    FormData
+  >(action as any, null)
 
   useEffect(() => {
-    if (state?.success) onSuccess()
+    if (state?.success) {
+      const ambiguous = state.data.ambiguousParents
+      if (ambiguous?.length) {
+        const names = ambiguous.map(a => a.name).join(', ')
+        // Non-blocking — the student was saved either way. This phone number
+        // matched more than one existing parent account, so no portal login
+        // was auto-created for it; staff resolves the pick from the Parents page.
+        alert(`Saved. Portal account not created for: ${names} — this phone number matches multiple existing parent accounts. Link manually from the Parents page.`)
+      }
+      onSuccess()
+    }
   }, [state]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ESC to close
@@ -287,6 +330,14 @@ export default function StudentFormModal({
       return
     }
     setPwErr(null)
+
+    if (bypassReconcileRef.current) { bypassReconcileRef.current = false; return }
+    if (isEdit && groupsToAdd.length > 0) {
+      e.preventDefault()
+      resolvedChoicesRef.current = {}
+      setReconcileIndex(0)
+      setReconcileQueue(groupsToAdd)
+    }
   }
 
   async function handleConfirmDelete() {
@@ -341,6 +392,7 @@ export default function StudentFormModal({
         )}
 
         <form
+          ref={formRef}
           action={formAction}
           onSubmit={handleSubmit}
           onChange={() => setDirty(true)}
@@ -850,6 +902,7 @@ export default function StudentFormModal({
               {/* Hidden inputs consumed by server action */}
               <input type="hidden" name="groups_to_add_json"    value={JSON.stringify(groupsToAdd)} />
               <input type="hidden" name="groups_to_remove_json" value={JSON.stringify(groupsToRemove)} />
+              <input type="hidden" name="reconciliation_choices_json" ref={reconciliationInputRef} defaultValue="{}" />
             </fieldset>
           )}
 
@@ -913,6 +966,22 @@ export default function StudentFormModal({
           </div>
         </form>
       </div>
+
+      {isEdit && student && reconcileQueue && reconcileIndex < reconcileQueue.length && (() => {
+        const groupId = reconcileQueue[reconcileIndex]
+        const link    = groupLinks.find(g => g.group_id === groupId)
+        return (
+          <HistoricalReconciliationDialog
+            open
+            mode="resolve"
+            studentId={student.student_id}
+            groupId={groupId}
+            courseId={link?.course_id ?? null}
+            onResolved={resolution => handleReconciliationResolved(groupId, resolution)}
+            onClose={() => setReconcileQueue(null)}
+          />
+        )
+      })()}
     </div>
   )
 }

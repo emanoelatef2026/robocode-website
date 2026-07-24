@@ -3,6 +3,8 @@ import { createServiceClient }    from '@/lib/supabase/service'
 import { syncGroupStatus }         from '../lifecycle'
 import { assignGroupCourseService } from '../assignment-service'
 import { generateGroupSchedules }   from './schedule-generation'
+import { resolveGroupCourseId }     from '@/modules/academic/enrollment-integrity'
+import { reconcileGroupJoin }       from '@/modules/enrollments/historical-reconciliation'
 
 type DB = ReturnType<typeof createServiceClient>
 
@@ -39,12 +41,12 @@ export async function updateGroupCoursePlan(
 // Remove: marks status='dropped', preserves enrollment contract.
 // Add:    upserts group_students only (contract created separately via Payment wizard).
 export async function applyStudentChanges(
-  db:        DB,
-  _userId:   string,
-  groupId:   string,
-  _branchId: string,
-  toAdd:     string[],
-  toRemove:  string[],
+  db:       DB,
+  userId:   string,
+  groupId:  string,
+  branchId: string,
+  toAdd:    string[],
+  toRemove: string[],
 ): Promise<void> {
   const now = new Date().toISOString()
 
@@ -65,6 +67,18 @@ export async function applyStudentChanges(
         )
       : Promise.resolve(),
   ])
+
+  // Historical Enrollment Reconciliation: non-fatal flag per newly-added
+  // student if this group already has completed sessions. This form ("contract
+  // created separately via Payment wizard") has no enrollment to consume
+  // against yet, so reconcileGroupJoin's default (no `choice`) applies —
+  // flag only, never auto-consume.
+  if (toAdd.length > 0) {
+    const courseId = await resolveGroupCourseId(db, groupId)
+    for (const studentId of toAdd) {
+      await reconcileGroupJoin({ db, studentId, groupId, courseId, branchId, performedBy: userId })
+    }
+  }
 }
 
 // Assigns (or removes) a course + instructor pair to a group.

@@ -6,6 +6,8 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import { createStudentSchema, updateStudentSchema } from './schemas'
+import { resolveGroupCourseId } from '@/modules/academic/enrollment-integrity'
+import { reconcileGroupJoin } from '@/modules/enrollments/historical-reconciliation'
 import type { ActionResult } from '@/types/app'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
@@ -131,6 +133,13 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
       },
       { onConflict: 'group_id,student_id', ignoreDuplicates: true }
     )
+
+    // Historical Enrollment Reconciliation: non-fatal flag if this group
+    // already has completed sessions.
+    const courseId = await resolveGroupCourseId(db, group_id)
+    await reconcileGroupJoin({
+      db, studentId: student.id, groupId: group_id, courseId, branchId: branch_id, performedBy: user.id,
+    })
   }
 
   await db.rpc('write_audit_log', {

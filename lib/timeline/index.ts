@@ -40,6 +40,8 @@ export type TimelineEventType =
   | 'COMPETITION_LOGGED'
   | 'ACHIEVEMENT_EARNED'
   | 'BADGE_EARNED'
+  // Historical Enrollment Reconciliation
+  | 'HISTORICAL_RECONCILIATION'
 
 export type TimelineEventSeverity = 'INFO' | 'WARNING' | 'CRITICAL'
 
@@ -94,6 +96,7 @@ const SEVERITY_MAP: Record<TimelineEventType, TimelineEventSeverity> = {
   COMPETITION_LOGGED:        'INFO',
   ACHIEVEMENT_EARNED:        'INFO',
   BADGE_EARNED:              'INFO',
+  HISTORICAL_RECONCILIATION: 'INFO',
 }
 
 // ── Log event ──────────────────────────────────────────────────────────────────
@@ -220,6 +223,7 @@ export const TIMELINE_EVENT_LABELS: Record<TimelineEventType, string> = {
   COMPETITION_LOGGED:        'Competition Logged',
   ACHIEVEMENT_EARNED:        'Achievement Earned',
   BADGE_EARNED:              'Badge Earned',
+  HISTORICAL_RECONCILIATION: 'Historical Sessions Reconciled',
 }
 
 // ── Student-visible subset ────────────────────────────────────────────────────
@@ -243,6 +247,7 @@ export const STUDENT_VISIBLE_TIMELINE_EVENT_TYPES: readonly TimelineEventType[] 
   'ACHIEVEMENT_EARNED',
   'BADGE_EARNED',
   'NOTE_ADDED',
+  'HISTORICAL_RECONCILIATION',
 ]
 
 // ── Parent-visible subset ─────────────────────────────────────────────────────
@@ -264,6 +269,7 @@ export const PARENT_VISIBLE_TIMELINE_EVENT_TYPES: readonly TimelineEventType[] =
   'ACHIEVEMENT_EARNED',
   'BADGE_EARNED',
   'NOTE_ADDED',
+  'HISTORICAL_RECONCILIATION',
 ]
 
 // ── Instructor-visible subset ─────────────────────────────────────────────────

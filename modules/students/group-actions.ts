@@ -7,6 +7,7 @@ import {
   resolveGroupCourseId,
   closeSameCourseGroupMemberships,
 } from '@/modules/academic/enrollment-integrity'
+import { reconcileGroupJoin } from '@/modules/enrollments/historical-reconciliation'
 import type { ActionResult } from '@/types/app'
 
 export async function assignStudentToGroup(
@@ -68,6 +69,12 @@ export async function assignStudentToGroup(
       course_id:       courseId,
     })
   }
+
+  // Historical Enrollment Reconciliation: non-fatal flag if this group
+  // already has completed sessions.
+  await reconcileGroupJoin({
+    db, studentId, groupId, courseId, branchId: student.branch_id, performedBy: user.id,
+  })
 
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,

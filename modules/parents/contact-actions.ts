@@ -6,6 +6,7 @@ import { requirePermission } from '@/modules/rbac/guards'
 import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import { listParentContactsOperational, getStudentPickerOptions } from './operational'
 import type { ParentOperationalRow, StudentPickerOption } from './operational'
+import { resolveParentForPhone, linkExistingParentToStudent, AMBIGUOUS_PARENT_MATCH } from './identity'
 import { z } from 'zod'
 import type { ActionResult } from '@/types/app'
 
@@ -23,6 +24,9 @@ const createSchema = z.object({
   student_ids_json:   z.string(),
   // Optional portal access — set a password to create a login (email is generated)
   password:           z.string().min(6).optional().or(z.literal('')),
+  // Set once staff resolves an ambiguous phone match (see AMBIGUOUS_PARENT_MATCH below)
+  resolved_parent_id: z.string().uuid().optional().or(z.literal('')),
+  force_new_parent:   z.preprocess(v => v === 'true' || v === true, z.boolean()).default(false),
 })
 
 const updateSchema = z.object({
@@ -39,6 +43,9 @@ const updateSchema = z.object({
   // portal account (optional)
   user_id:  z.string().uuid().optional().or(z.literal('')),  // existing portal account UUID
   password: z.string().min(6).optional().or(z.literal('')),
+  // Set once staff resolves an ambiguous phone match (see AMBIGUOUS_PARENT_MATCH below)
+  resolved_parent_id: z.string().uuid().optional().or(z.literal('')),
+  force_new_parent:   z.preprocess(v => v === 'true' || v === true, z.boolean()).default(false),
 })
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -82,6 +89,8 @@ export async function createParentContactAction(
     notes:              formData.get('notes')              || '',
     student_ids_json:   formData.get('student_ids_json')   || '[]',
     password:           formData.get('password')           || '',
+    resolved_parent_id: formData.get('resolved_parent_id') || '',
+    force_new_parent:   formData.get('force_new_parent')   || 'false',
   }
 
   const parsed = createSchema.safeParse(raw)
@@ -125,32 +134,54 @@ export async function createParentContactAction(
   // Optional portal account — set a password to create a login (email is generated)
   const password = parsed.data.password?.trim()
   if (password) {
-    const nameParts = name.trim().split(/\s+/)
-    const email = await generateUniqueLoginEmail(
-      'learner', nameParts[0] ?? name, nameParts.slice(1).join(' ') || name, makeEmailLocalPartExists(db)
-    )
-    const { data: authData, error: authErr } = await db.auth.admin.createUser({
-      email, password, email_confirm: true,
+    const resolution = await resolveParentForPhone(db, phone1, {
+      resolvedParentId: parsed.data.resolved_parent_id || null,
+      forceNew:         parsed.data.force_new_parent,
     })
-    if (!authErr && authData?.user) {
-      const uid = authData.user.id
-      await db.from('users').upsert({ id: uid, email, phone: phone1 || null }, { onConflict: 'id' })
-      await db.from('profiles').upsert(
-        { user_id: uid, first_name: nameParts[0] ?? '', last_name: nameParts.slice(1).join(' ') || null },
-        { onConflict: 'user_id' }
+
+    if (resolution.kind === 'ambiguous') {
+      return {
+        success: false,
+        error: {
+          code:    AMBIGUOUS_PARENT_MATCH,
+          message: `This phone number matches ${resolution.candidates.length} existing parent accounts. Link to one, or create a separate new account.`,
+          data:    resolution.candidates,
+        },
+      }
+    }
+
+    if (resolution.kind === 'link') {
+      for (const sid of studentIds) {
+        await linkExistingParentToStudent(db, resolution.parentId, sid, relation, true)
+      }
+    } else {
+      const nameParts = name.trim().split(/\s+/)
+      const email = await generateUniqueLoginEmail(
+        'learner', nameParts[0] ?? name, nameParts.slice(1).join(' ') || name, makeEmailLocalPartExists(db)
       )
-      // Store plain text for internal ops visibility (intentional — internal system,
-      // mirrors students.portal_password) so the welcome-message feature can surface it.
-      const { data: parentRow } = await db.from('parents').insert({ user_id: uid, portal_password: password }).select('id').single()
-      if (parentRow) {
-        await db.from('parent_students').insert(
-          studentIds.map(sid => ({
-            parent_id:    (parentRow as any).id,
-            student_id:   sid,
-            relationship: relation,
-            is_primary:   true,
-          }))
+      const { data: authData, error: authErr } = await db.auth.admin.createUser({
+        email, password, email_confirm: true,
+      })
+      if (!authErr && authData?.user) {
+        const uid = authData.user.id
+        await db.from('users').upsert({ id: uid, email, phone: phone1 || null }, { onConflict: 'id' })
+        await db.from('profiles').upsert(
+          { user_id: uid, first_name: nameParts[0] ?? '', last_name: nameParts.slice(1).join(' ') || null },
+          { onConflict: 'user_id' }
         )
+        // Store plain text for internal ops visibility (intentional — internal system,
+        // mirrors students.portal_password) so the welcome-message feature can surface it.
+        const { data: parentRow } = await db.from('parents').insert({ user_id: uid, portal_password: password }).select('id').single()
+        if (parentRow) {
+          await db.from('parent_students').insert(
+            studentIds.map(sid => ({
+              parent_id:    (parentRow as any).id,
+              student_id:   sid,
+              relationship: relation,
+              is_primary:   true,
+            }))
+          )
+        }
       }
     }
   }
@@ -177,6 +208,8 @@ export async function updateParentContactAction(
     contacts_to_remove_json: formData.get('contacts_to_remove_json') || '[]',
     user_id:                 formData.get('user_id')            || '',
     password:                formData.get('password')           || '',
+    resolved_parent_id:      formData.get('resolved_parent_id') || '',
+    force_new_parent:        formData.get('force_new_parent')   || 'false',
   }
 
   const parsed = updateSchema.safeParse(raw)
@@ -244,41 +277,67 @@ export async function updateParentContactAction(
       await db.from('parents').update({ portal_password: password }).eq('user_id', existingUserId)
     }
   } else if (password) {
-    // Create new portal account for this parent (login email is generated)
-    const nameParts = name.trim().split(/\s+/)
-    const email = await generateUniqueLoginEmail(
-      'learner', nameParts[0] ?? name, nameParts.slice(1).join(' ') || name, makeEmailLocalPartExists(db)
-    )
-    const { data: authData, error: authErr } = await db.auth.admin.createUser({
-      email, password, email_confirm: true,
+    // No existing portal account was passed in — before minting a new login,
+    // check whether this phone number already has one (staff may not know a
+    // parent already has an account from a sibling's enrollment).
+    const resolution = await resolveParentForPhone(db, phone1, {
+      resolvedParentId: parsed.data.resolved_parent_id || null,
+      forceNew:         parsed.data.force_new_parent,
     })
-    if (!authErr && authData?.user) {
-      const uid = authData.user.id
-      await db.from('users').upsert({ id: uid, email, phone: phone1 || null }, { onConflict: 'id' })
-      await db.from('profiles').upsert(
-        { user_id: uid, first_name: nameParts[0] ?? '', last_name: nameParts.slice(1).join(' ') || null },
-        { onConflict: 'user_id' }
+
+    if (resolution.kind === 'ambiguous') {
+      return {
+        success: false,
+        error: {
+          code:    AMBIGUOUS_PARENT_MATCH,
+          message: `This phone number matches ${resolution.candidates.length} existing parent accounts. Link to one, or create a separate new account.`,
+          data:    resolution.candidates,
+        },
+      }
+    }
+
+    // Get all student_ids for this parent group
+    const { data: spcRows } = await db
+      .from('student_parent_contacts')
+      .select('student_id')
+      .eq('parent_group_id', parent_group_id)
+      .eq('status', 'active')
+    const studentIds = (spcRows ?? []).map((r: any) => r.student_id as string)
+
+    if (resolution.kind === 'link') {
+      for (const sid of studentIds) {
+        await linkExistingParentToStudent(db, resolution.parentId, sid, relation, true)
+      }
+    } else {
+      // Create new portal account for this parent (login email is generated)
+      const nameParts = name.trim().split(/\s+/)
+      const email = await generateUniqueLoginEmail(
+        'learner', nameParts[0] ?? name, nameParts.slice(1).join(' ') || name, makeEmailLocalPartExists(db)
       )
-      // Get all student_ids for this parent group
-      const { data: spcRows } = await db
-        .from('student_parent_contacts')
-        .select('student_id')
-        .eq('parent_group_id', parent_group_id)
-        .eq('status', 'active')
-      const studentIds = (spcRows ?? []).map((r: any) => r.student_id as string)
-      if (studentIds.length) {
-        // Store plain text for internal ops visibility (intentional — internal system,
-        // mirrors students.portal_password) so the welcome-message feature can surface it.
-        const { data: parentRow } = await db.from('parents').insert({ user_id: uid, portal_password: password }).select('id').single()
-        if (parentRow) {
-          await db.from('parent_students').insert(
-            studentIds.map(sid => ({
-              parent_id:    (parentRow as any).id,
-              student_id:   sid,
-              relationship: relation,
-              is_primary:   true,
-            }))
-          )
+      const { data: authData, error: authErr } = await db.auth.admin.createUser({
+        email, password, email_confirm: true,
+      })
+      if (!authErr && authData?.user) {
+        const uid = authData.user.id
+        await db.from('users').upsert({ id: uid, email, phone: phone1 || null }, { onConflict: 'id' })
+        await db.from('profiles').upsert(
+          { user_id: uid, first_name: nameParts[0] ?? '', last_name: nameParts.slice(1).join(' ') || null },
+          { onConflict: 'user_id' }
+        )
+        if (studentIds.length) {
+          // Store plain text for internal ops visibility (intentional — internal system,
+          // mirrors students.portal_password) so the welcome-message feature can surface it.
+          const { data: parentRow } = await db.from('parents').insert({ user_id: uid, portal_password: password }).select('id').single()
+          if (parentRow) {
+            await db.from('parent_students').insert(
+              studentIds.map(sid => ({
+                parent_id:    (parentRow as any).id,
+                student_id:   sid,
+                relationship: relation,
+                is_primary:   true,
+              }))
+            )
+          }
         }
       }
     }

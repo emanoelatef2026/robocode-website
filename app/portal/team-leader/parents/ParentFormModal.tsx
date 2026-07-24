@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { createParentContactAction, updateParentContactAction } from '@/modules/parents/contact-actions'
 import type { ParentOperationalRow, StudentPickerOption } from '@/modules/parents/operational'
+import type { ParentMatchCandidate } from '@/modules/parents/identity'
 import type { ActionResult } from '@/types/app'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -82,9 +83,27 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
     { success: false, error: null } as any
   )
 
+  // Ambiguous phone match — set when a matching phone resolves to more than
+  // one existing parent account and needs a human pick before we act.
+  // Derived straight from `state` rather than mirrored into local state, so
+  // it can't drift and there's nothing to reset on success/resubmit.
+  const ambiguousCandidates: ParentMatchCandidate[] | null =
+    state && 'error' in state && state.error?.code === 'AMBIGUOUS_PARENT_MATCH'
+      ? ((state.error.data as ParentMatchCandidate[]) ?? [])
+      : null
+  const lastFormDataRef = useRef<FormData | null>(null)
+
   useEffect(() => {
     if (state && 'success' in state && state.success) onSuccess()
-  }, [state])
+  }, [state, onSuccess])
+
+  function resubmitWith(overrides: { resolved_parent_id?: string; force_new_parent?: boolean }) {
+    const fd = lastFormDataRef.current
+    if (!fd) return
+    if (overrides.resolved_parent_id) fd.set('resolved_parent_id', overrides.resolved_parent_id)
+    if (overrides.force_new_parent)   fd.set('force_new_parent', 'true')
+    formAction(fd)
+  }
 
   // ── Keyboard close ───────────────────────────────────────────────────────────
   useEffect(() => {
@@ -148,7 +167,10 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
         fd.append('password', password.trim())
       }
     }
+    fd.append('resolved_parent_id', '')
+    fd.append('force_new_parent', 'false')
 
+    lastFormDataRef.current = fd
     formAction(fd)
   }
 
@@ -200,6 +222,40 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
             {state && 'error' in state && state.error && (
               <div className="rounded-xl bg-[#FEE2E2] border border-[#FECACA] px-4 py-3 text-sm text-[#DC2626]">
                 {state.error.message}
+              </div>
+            )}
+
+            {/* Ambiguous phone match — pick an existing account or create separately */}
+            {ambiguousCandidates && ambiguousCandidates.length > 0 && (
+              <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-3 space-y-2">
+                <p className="text-xs text-[#92400E]">
+                  This phone number already matches {ambiguousCandidates.length} existing parent account{ambiguousCandidates.length > 1 ? 's' : ''}. Link to one, or create a separate account.
+                </p>
+                <div className="space-y-1.5">
+                  {ambiguousCandidates.map(c => (
+                    <button
+                      key={c.parentId}
+                      type="button"
+                      onClick={() => resubmitWith({ resolved_parent_id: c.parentId })}
+                      disabled={isPending}
+                      className="w-full flex items-center justify-between rounded-lg border border-[#FDE68A] bg-white px-3 py-2 text-left hover:border-[#F59E0B] disabled:opacity-50"
+                    >
+                      <span>
+                        <span className="block text-xs font-medium text-[#0B1F3A]">{c.name}</span>
+                        <span className="block text-[11px] text-[#94A3B8]">{c.email} · {c.childCount} child{c.childCount === 1 ? '' : 'ren'} linked</span>
+                      </span>
+                      <span className="text-[11px] font-semibold text-[#F59E0B]">Link</span>
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => resubmitWith({ force_new_parent: true })}
+                  disabled={isPending}
+                  className="text-[11px] font-medium text-[#64748B] hover:underline disabled:opacity-50"
+                >
+                  None of these — create a separate new account
+                </button>
               </div>
             )}
 

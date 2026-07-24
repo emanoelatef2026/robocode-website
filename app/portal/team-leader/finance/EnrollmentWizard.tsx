@@ -6,6 +6,7 @@ import type { CancellationReport } from '@/modules/enrollments/actions'
 import { addPayment } from '@/modules/finance/actions'
 import type { PaymentMethod } from '@/modules/finance/types'
 import { PAYMENT_METHOD_LABELS } from '@/modules/finance/types'
+import { HistoricalReconciliationDialog } from '@/components/portal/shared/HistoricalReconciliationDialog'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -222,6 +223,10 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
   const [quickPayDate,   setQuickPayDate]   = useState(new Date().toISOString().slice(0, 10))
   const [quickPayRef,    setQuickPayRef]    = useState('')
 
+  // Historical Enrollment Reconciliation — shown after a successful enrollment
+  // into a group, before closing the wizard.
+  const [reconcileEnrollmentId, setReconcileEnrollmentId] = useState<string | null>(null)
+
   // Cancel contract flow
   const [cancelConfirm,   setCancelConfirm]   = useState(false)
   const [cancelling,      setCancelling]      = useState(false)
@@ -345,7 +350,13 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
 
     setSubmitting(false)
     if ('error' in result) { setError(result.error) }
-    else { onSuccess(); onClose() }
+    else if (groupContext?.group_id) {
+      // Group known at enrollment time — check whether it already has
+      // completed sessions before closing the wizard.
+      setReconcileEnrollmentId(result.enrollmentId)
+    } else {
+      onSuccess(); onClose()
+    }
   }
 
   async function handleExistingPaySubmit() {
@@ -1246,6 +1257,19 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
           </div>
         )}
       </div>
+
+      {reconcileEnrollmentId && groupContext && state.student && (
+        <HistoricalReconciliationDialog
+          open
+          mode="apply"
+          studentId={state.student.id}
+          groupId={groupContext.group_id}
+          courseId={groupContext.course_id}
+          enrollmentId={reconcileEnrollmentId}
+          onResolved={() => { setReconcileEnrollmentId(null); onSuccess(); onClose() }}
+          onClose={() => { setReconcileEnrollmentId(null); onSuccess(); onClose() }}
+        />
+      )}
     </div>
   )
 }

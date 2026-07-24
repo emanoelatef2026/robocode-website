@@ -20,6 +20,8 @@ const TYPE_ICON: Record<string, string> = {
   COMPETITION_RESULT:      '🎖️',
   NEW_HOMEWORK_ASSIGNED:   '📚',
   NEW_SESSION_RESOURCES:   '📎',
+  ATTENDANCE_RECORDED:     '✅',
+  PAYMENT_RECORDED:        '💳',
 }
 
 function timeAgo(iso: string): string {

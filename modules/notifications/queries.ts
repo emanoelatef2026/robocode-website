@@ -68,13 +68,15 @@ export async function getStudentUserId(studentId: string): Promise<string | null
   return (data as any)?.user_id ?? null
 }
 
-// Returns the auth user_ids of every parent linked to a student.
+// Returns the auth user_ids of every parent linked to a student who hasn't
+// opted out of notifications (parent_students.can_receive_notifications).
 export async function getParentUserIdsForStudent(studentId: string): Promise<string[]> {
   const db = createServiceClient()
   const { data } = await db
     .from('parent_students')
-    .select('parents!parent_students_parent_id_fkey(user_id)')
+    .select('can_receive_notifications, parents!parent_students_parent_id_fkey(user_id)')
     .eq('student_id', studentId)
+    .eq('can_receive_notifications', true)
 
   return ((data ?? []) as any[])
     .map((row) => row.parents?.user_id as string | undefined)
