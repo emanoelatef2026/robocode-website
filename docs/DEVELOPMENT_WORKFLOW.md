@@ -117,13 +117,22 @@ or remove the hook entirely with `graphify hook uninstall` (or delete
 
 - `.claude/settings.local.json` is gitignored (per-developer permission
   cache) — never share it, never expect it to be present on a fresh clone.
-- `.claude/settings.json`, `.claude/CLAUDE.md`, and `.claude/skills/` **are**
-  tracked — they're shared project configuration (hooks, skill definitions),
-  not per-machine state, so they should stay in sync between the two PCs via
-  normal commits.
+- `.claude/settings.json`, `.claude/CLAUDE.md`, and `.claude/skills/graphify/`
+  **are** tracked — they're shared, hand-authored project configuration
+  (hooks, the graphify skill), not per-machine state, so they should stay in
+  sync between the two PCs via normal commits.
+- `.agents/`, `skills-lock.json`, and everything else under
+  `.claude/skills/` (e.g. `deploy-to-vercel`, `supabase`,
+  `vercel-react-best-practices`) are **gitignored**. These are
+  marketplace-installed skills restored from `skills-lock.json` by the skill
+  installer — regenerable, per-machine, and not meant to be hand-edited or
+  diffed. If you install a new marketplace skill, it will show as untracked
+  right up until you run the install again on the other PC; that's expected
+  and does not need a commit.
 - If Claude Code (or any tool) ever proposes committing `graphify-out/`,
-  `.next/`, or `node_modules/`, that's a bug in the ignore rules, not
-  something to work around by committing anyway — fix `.gitignore` instead.
+  `.next/`, `node_modules/`, `.agents/`, or a non-graphify `.claude/skills/*`
+  folder, that's a bug in the ignore rules, not something to work around by
+  committing anyway — fix `.gitignore` instead.
 
 ## How to avoid merge commits
 

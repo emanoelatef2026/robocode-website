@@ -54,3 +54,12 @@ backfill-org-emails-*.csv
 # Tracking any of it guarantees merge conflicts between machines. See
 # docs/DEVELOPMENT_WORKFLOW.md for how to regenerate it after a pull.
 /graphify-out/
+
+# Claude Code marketplace-installed skills — per-machine, restored from
+# skills-lock.json by the skill installer, not hand-authored project config
+# like .claude/skills/graphify (which stays tracked). See
+# docs/DEVELOPMENT_WORKFLOW.md.
+/.agents/
+/skills-lock.json
+/.claude/skills/*
+!/.claude/skills/graphify/
