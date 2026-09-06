@@ -58,6 +58,8 @@ export const ADMIN_SECTIONS: AdminNavSection[] = [
       { label: 'Attendance',       href: '/admin/attendance',       icon: <Icons.attendance />,  permission: 'manage_attendance' },
       { label: 'Assignments',      href: '/admin/assignments',      icon: <Icons.assignments /> },
       { label: 'Special Sessions', href: '/admin/special-sessions', icon: <Icons.schedules />,   permission: 'manage_schedule' },
+      { label: 'Communications',   href: '/admin/communications',   icon: <Icons.comms /> },
+      { label: 'Semesters',        href: '/admin/semesters',        icon: <Icons.semesters /> },
     ],
   },
   {
@@ -73,6 +75,8 @@ export const ADMIN_SECTIONS: AdminNavSection[] = [
       { label: 'Branches',             href: '/admin/branches',             icon: <Icons.branches />,  superAdminOnly: true },
       { label: 'System Health',        href: '/admin/system-health',        icon: <Icons.health />,    superAdminOnly: true },
       { label: 'Production Readiness', href: '/admin/production-readiness', icon: <Icons.readiness />, superAdminOnly: true },
+      { label: 'Recovery',             href: '/admin/recovery',             icon: <Icons.health />,    superAdminOnly: true },
+      { label: 'System Events',         href: '/admin/system-events',        icon: <Icons.health />,    superAdminOnly: true },
     ],
   },
 ]
@@ -117,6 +121,8 @@ const MORE_ITEMS: AdminNavItem[] = [
   { label: 'Branches',      href: '/admin/branches',       icon: <Icons.branches className="h-6 w-6" />,     superAdminOnly: true },
   { label: 'Comms',         href: '/admin/communications', icon: <Icons.comms className="h-6 w-6" /> },
   { label: 'Semesters',     href: '/admin/semesters',      icon: <Icons.semesters className="h-6 w-6" /> },
+  { label: 'Recovery',      href: '/admin/recovery',       icon: <Icons.health className="h-6 w-6" />,         superAdminOnly: true },
+  { label: 'System Events', href: '/admin/system-events',  icon: <Icons.health className="h-6 w-6" />,         superAdminOnly: true },
 ]
 
 function filterItems(items: AdminNavItem[], role: string, permissions: string[]): BottomNavItem[] {

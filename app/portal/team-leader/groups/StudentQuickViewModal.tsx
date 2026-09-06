@@ -1014,7 +1014,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   async function handleRemoveConsumption(consumptionId: string) {
     const result = await removeConsumptionAction(consumptionId, s.student_id)
     if ('error' in result) {
-      alert(`Failed to remove consumption: ${result.error}`)
+      showToast('error', `Failed to remove consumption: ${result.error}`)
       return
     }
     setLedgerDirty(true)
@@ -1029,7 +1029,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     const result = await reconcileStudentConsumptionAction(s.student_id)
     setReconciling(false)
     if ('error' in result) {
-      alert(`Reconciliation failed: ${result.error}`)
+      showToast('error', `Reconciliation failed: ${result.error}`)
       return
     }
     setLedgerDirty(true)
@@ -1075,7 +1075,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     setWelcomeSending(false)
     if ('error' in result) {
       pending?.close()
-      alert(result.error)
+      showToast('error', result.error)
       return
     }
     if (mobile) {
@@ -1123,7 +1123,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     const result = await getParentEditContextAction(s.parent.id, group.branch_id)
     setParentModalLoading(false)
     if (!result.success) {
-      alert(result.error)
+      showToast('error', result.error)
       return
     }
     setParentEditData(result.data)

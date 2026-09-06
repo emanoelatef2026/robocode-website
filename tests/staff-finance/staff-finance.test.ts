@@ -132,6 +132,8 @@ describe('Payroll export surface excludes instructors', () => {
 
 describe('Instructor My Payments still works after the payroll exclusion fix', () => {
   it('getInstructorPaymentOverview still resolves via staff_payroll_profiles/staff_payment_records', async () => {
+    const now = new Date()
+
     mockDb({
       instructor_branches:    [{ data: [], error: null }],
       instructors:            [{ data: { salary_per_session: 100 }, error: null }, { data: { currency: 'EGP' }, error: null }],
@@ -140,7 +142,7 @@ describe('Instructor My Payments still works after the payroll exclusion fix', (
       session_instructors:    [{ data: [], error: null }],
       finance_adjustments:    [{ data: [], error: null }, { data: [], error: null }],
       staff_payroll_profiles: [{ data: null, error: null }, { data: { id: 'sp-instr-1' }, error: null }],
-      staff_payment_records:  [{ data: [{ amount: 200, month: 7, year: 2026 }], error: null }],
+      staff_payment_records:  [{ data: [{ amount: 200, month: now.getMonth() + 1, year: now.getFullYear() }], error: null }],
     })
 
     const overview = await getInstructorPaymentOverview('instr-001', 'user-001', BRANCH_ID)

@@ -26,6 +26,7 @@ export const TL_SECTIONS: PortalNavSection[] = [
     items: [
       { label: "Groups",       href: "/portal/team-leader/groups",       icon: <Icons.groups /> },
       { label: "Courses",      href: "/portal/team-leader/courses",      icon: <Icons.courses /> },
+      { label: "Assignments",  href: "/portal/team-leader/assignments",  icon: <Icons.assignments /> },
       { label: "Certificates", href: "/portal/team-leader/certificates", icon: <Icons.certificates /> },
       { label: "Portfolio",    href: "/portal/team-leader/portfolio",    icon: <Icons.portfolio /> },
       { label: "Evaluations",  href: "/portal/team-leader/evaluations",  icon: <Icons.evaluations /> },
@@ -44,6 +45,7 @@ export const TL_SECTIONS: PortalNavSection[] = [
   {
     title: "Operations",
     items: [
+      { label: "Attendance",      href: "/portal/team-leader/attendance",      icon: <Icons.attendance /> },
       { label: "Special Sessions", href: "/portal/team-leader/special-sessions", icon: <Icons.schedules /> },
       { label: "Calendar",         href: "/portal/team-leader/calendar",         icon: <Icons.schedules /> },
     ],
@@ -67,12 +69,14 @@ export const TL_BOTTOM_NAV: BottomNavItem[] = [
   { label: "Students",    href: "/portal/team-leader/students",    icon: <Icons.students className="h-6 w-6" /> },
   { label: "Groups",      href: "/portal/team-leader/groups",      icon: <Icons.groups className="h-6 w-6" /> },
   { label: "Instructors", href: "/portal/team-leader/instructors", icon: <Icons.instructors className="h-6 w-6" /> },
+  { label: "Attendance",  href: "/portal/team-leader/attendance",  icon: <Icons.attendance className="h-6 w-6" /> },
 ]
 
 export const TL_BOTTOM_MORE: BottomNavItem[] = [
   { label: "Leads",        href: "/portal/team-leader/leads",                       icon: <Icons.leads className="h-6 w-6" /> },
   { label: "Parents",      href: "/portal/team-leader/parents",                     icon: <Icons.parents className="h-6 w-6" /> },
   { label: "Courses",      href: "/portal/team-leader/courses",                     icon: <Icons.courses className="h-6 w-6" /> },
+  { label: "Assignments",  href: "/portal/team-leader/assignments",                 icon: <Icons.assignments className="h-6 w-6" /> },
   { label: "Certificates", href: "/portal/team-leader/certificates",                icon: <Icons.certificates className="h-6 w-6" /> },
   { label: "Portfolio",    href: "/portal/team-leader/portfolio",                   icon: <Icons.portfolio className="h-6 w-6" /> },
   { label: "Satisfaction", href: "/portal/team-leader/parent-feedback?tab=reviews", icon: <Icons.satisfaction className="h-6 w-6" />, matchPatterns: SATISFACTION_MATCH },

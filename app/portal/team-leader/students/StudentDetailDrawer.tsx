@@ -38,6 +38,12 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
   const [welcomeCanRegenerate, setWelcomeCanRegenerate] = useState(false)
   const [welcomeSending,       setWelcomeSending]       = useState(false)
   const [welcomeRegenerating,  setWelcomeRegenerating]  = useState(false)
+  const [errorMessage,         setErrorMessage]         = useState<string | null>(null)
+
+  function showError(message: string) {
+    setErrorMessage(message)
+    window.setTimeout(() => setErrorMessage(null), 4000)
+  }
 
   // Close on ESC
   useEffect(() => {
@@ -81,7 +87,7 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
     setWelcomeSending(false)
     if ('error' in result) {
       pending?.close()
-      alert(result.error)
+      showError(result.error)
       return
     }
     if (mobile) {
@@ -98,7 +104,7 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
     const result = await generateMissingWelcomeCredentialsAction(s.student_id)
     setWelcomeRegenerating(false)
     if (!result.success) {
-      alert(result.error)
+      showError(result.error)
       return
     }
     const status = await getWelcomeMessageStatusAction(s.student_id)
@@ -214,6 +220,11 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
           {tab === 'attendance' && <AttendanceTab s={s} />}
           {tab === 'contacts' && <ContactsTab s={s} />}
         </div>
+        {errorMessage && (
+          <div role="status" className="absolute bottom-4 left-4 right-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-medium text-red-700 shadow-lg">
+            {errorMessage}
+          </div>
+        )}
       </div>
     </>
   )
