@@ -209,13 +209,13 @@ export function GroupWorkspace({
       )}
 
       {/* Tab bar */}
-      <div className="flex border-b border-[#E2E8F0] shrink-0 bg-white overflow-x-auto">
+      <div className="grid grid-cols-4 border-b border-[#E2E8F0] shrink-0 bg-white md:flex">
         {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={[
-              'flex-1 md:flex-none shrink-0 border-b-2 px-2 md:px-4 py-2.5 text-[11px] md:text-[12px] font-medium transition whitespace-nowrap text-center',
+              'min-w-0 border-b-2 px-1 py-2.5 text-[10px] font-medium leading-tight transition text-center md:flex-none md:px-4 md:text-[12px] md:whitespace-nowrap',
               tab === t.key
                 ? 'border-[#FF8A1F] text-[#FF8A1F]'
                 : 'border-transparent text-[#64748B] hover:text-[#374151]',

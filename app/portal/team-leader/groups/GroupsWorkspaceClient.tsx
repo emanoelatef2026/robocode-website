@@ -157,7 +157,7 @@ export default function GroupsWorkspaceClient({
   }, [isTL, openCreate, setAction, exporting, handleExport])
 
   return (
-    <div className="flex flex-col h-full gap-3">
+    <div className="flex min-h-[calc(100dvh-8.5rem)] flex-col gap-2 md:h-full md:min-h-0 md:gap-3">
 
       {/* Export toast */}
       {exportToast && (
@@ -189,7 +189,7 @@ export default function GroupsWorkspaceClient({
       )}
 
       {/* Split panel workspace */}
-      <div ref={containerRef} className="flex-1 min-h-0 flex overflow-hidden ds-card">
+      <div ref={containerRef} className="flex min-h-0 flex-1 overflow-hidden ds-card">
 
         {/* Left panel */}
         <div

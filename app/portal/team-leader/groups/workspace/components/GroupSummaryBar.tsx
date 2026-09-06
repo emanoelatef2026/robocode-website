@@ -113,7 +113,7 @@ export function GroupSummaryBar({
 
   return (
     <div ref={barRef} className="border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 shrink-0">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <h2 className="text-[15px] font-bold text-[#0B1F3A] truncate">{group.name}</h2>
           {group.code && (
@@ -122,7 +122,7 @@ export function GroupSummaryBar({
           <StatusChip group={group} />
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex max-w-full items-center gap-1.5 shrink-0">
           {group.meeting_link && (
             <a
               href={group.meeting_link}
@@ -148,7 +148,7 @@ export function GroupSummaryBar({
                 : 'text-[#64748B] hover:bg-[#E2E8F0] hover:text-[#1E293B]',
             ].join(' ')}
           >
-            <span className="text-[12px] font-medium">Group details</span>
+              <span className="hidden text-[12px] font-medium sm:inline">Group details</span>
             <svg
               viewBox="0 0 24 24"
               fill="none"

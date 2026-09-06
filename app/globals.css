@@ -293,7 +293,8 @@ body.font-cairo {
 
   .admin-responsive .min-w-52,
   .admin-responsive .min-w-56,
-  .admin-responsive .min-w-85 {
+  .admin-responsive .min-w-85,
+  .admin-responsive .min-w-240 {
     min-width: 0;
     width: 100%;
   }
