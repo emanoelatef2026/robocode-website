@@ -35,7 +35,72 @@ export function GroupStudentsTable({
   const allSelected = sorted.length > 0 && sorted.every(s => selectedIds.has(s.student_id))
 
   return (
-    <div className="overflow-x-auto h-full">
+    <div className="h-full">
+      <div className="space-y-2 overflow-y-auto p-3 md:hidden">
+        <div className="flex items-center justify-between rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2">
+          <span className="text-[11px] font-semibold text-[#64748B]">{sorted.length} students</span>
+          <label className="flex items-center gap-2 text-[11px] font-medium text-[#64748B]">
+            Select all
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={onToggleAll}
+              className="h-4 w-4 cursor-pointer rounded border-[#CBD5E1] accent-[#FF8A1F]"
+            />
+          </label>
+        </div>
+        {sorted.map((s, idx) => {
+          const isSelected = selectedIds.has(s.student_id)
+          const attColor = s.attendance_pct >= 75 ? 'text-[#10B981]'
+                         : s.attendance_pct >= 60 ? 'text-[#F59E0B]'
+                         : s.attendance_pct > 0   ? 'text-[#EF4444]'
+                                                  : 'text-[#CBD5E1]'
+          const sessStat = s.sessions_used != null && s.sessions_total != null
+            ? `${s.sessions_used}/${s.sessions_total}`
+            : s.sessions_used != null ? `${s.sessions_used}` : '—'
+
+          return (
+            <div
+              key={s.student_id}
+              className={`rounded-xl border p-3 transition-colors ${isSelected ? 'border-[#FFB66B] bg-[#FFF7ED]' : 'border-[#E2E8F0] bg-white'}`}
+            >
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => onToggleStudent(s.student_id)}
+                  aria-label={`Select ${s.student_name}`}
+                  className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-[#CBD5E1] accent-[#FF8A1F]"
+                />
+                <button onClick={() => onToggleStudent(s.student_id)} className="min-w-0 flex-1 text-left">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-bold text-[#0B1F3A]">{idx + 1}. {s.student_name}</p>
+                      <p className="mt-0.5 truncate text-[10px] text-[#94A3B8]">
+                        {s.student_code ?? 'No student code'}
+                        {s.age != null ? ` · ${s.age} years` : ''}
+                        {s.attendance_pct > 0 ? <span className={`ml-1 font-semibold ${attColor}`}>· {s.attendance_pct}% attendance</span> : null}
+                      </p>
+                    </div>
+                    <RiskBadge level={s.risk_level} />
+                  </div>
+                </button>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#F1F5F9] pt-2.5 text-[10px]">
+                <div className="min-w-0"><p className="uppercase tracking-wide text-[#94A3B8]">Student phone</p><p className="truncate font-medium text-[#374151]">{s.phone ?? '—'}</p></div>
+                <div className="min-w-0"><p className="uppercase tracking-wide text-[#94A3B8]">Parent phone</p><p className="truncate font-medium text-[#374151]">{s.parent_phone ?? '—'}</p></div>
+                <div><p className="uppercase tracking-wide text-[#94A3B8]">Sessions</p><p className="font-semibold text-[#374151]">{sessStat} · {s.sessions_remaining ?? '—'} left</p></div>
+                <div><p className="uppercase tracking-wide text-[#94A3B8]">Joined</p><p className="font-medium text-[#374151]">{fmtDateShort(s.joined_at)}</p></div>
+                <div><p className="uppercase tracking-wide text-[#94A3B8]">Package</p><p className="font-medium text-[#374151]">{s.subscription_amount ? fmtCurrency(s.subscription_amount) : 'No package'}</p></div>
+                <div><p className="uppercase tracking-wide text-[#94A3B8]">Balance</p><p className={`font-semibold ${s.remaining_balance > 0 ? 'text-[#EF4444]' : 'text-[#374151]'}`}>{s.remaining_balance > 0 ? fmtCurrency(s.remaining_balance) : 'Paid'}</p></div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="hidden h-full overflow-x-auto md:block">
       <table className="w-full text-sm min-w-240">
         <thead className="ds-table-head">
           <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] sticky top-0 z-10">
@@ -164,6 +229,7 @@ export function GroupStudentsTable({
           })}
         </tbody>
       </table>
+      </div>
     </div>
   )
 }

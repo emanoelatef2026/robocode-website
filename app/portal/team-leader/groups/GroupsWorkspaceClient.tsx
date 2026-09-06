@@ -224,22 +224,8 @@ export default function GroupsWorkspaceClient({
         {/* Right workspace */}
         <div className={[
           'flex-1 min-w-0 overflow-hidden flex flex-col',
-          mobilePanel === 'list' ? 'hidden md:flex' : 'flex',
+          'hidden md:flex',
         ].join(' ')}>
-          {mobilePanel === 'detail' && selectedGroup && (
-            <div className="flex items-center border-b border-[#E2E8F0] px-4 py-2.5 md:hidden shrink-0 bg-white">
-              <button
-                onClick={() => setMobilePanel('list')}
-                className="flex items-center gap-1.5 text-[12px] font-medium text-[#64748B] hover:text-[#374151]"
-              >
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                Back to groups
-              </button>
-            </div>
-          )}
-
           {selectedGroup ? (
             <GroupWorkspace
               key={selectedGroup.group_id}
@@ -259,6 +245,56 @@ export default function GroupsWorkspaceClient({
           )}
         </div>
       </div>
+
+      {/* Mobile group workspace dialog. The list stays the primary screen; all
+          group details and actions remain available in one focused surface. */}
+      {mobilePanel === 'detail' && selectedGroup && (
+        <div
+          className="fixed inset-0 z-[60] bg-[#0B1F3A]/45 p-2 md:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${selectedGroup.name} group details`}
+          onMouseDown={e => { if (e.target === e.currentTarget) setMobilePanel('list') }}
+        >
+          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="flex shrink-0 items-center justify-between border-b border-[#E2E8F0] bg-white px-3 py-2">
+              <button
+                onClick={() => setMobilePanel('list')}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-[12px] font-semibold text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0B1F3A]"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                Groups
+              </button>
+              <button
+                onClick={() => setMobilePanel('list')}
+                aria-label="Close group details"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0B1F3A]"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <GroupWorkspace
+                key={`mobile-${selectedGroup.group_id}`}
+                group={selectedGroup}
+                isTL={isTL}
+                isSuperAdmin={isSuperAdmin}
+                onEdit={openEdit}
+                onDelete={handleGroupDeleted}
+                onStudentsChanged={handleStudentsChanged}
+                studentOptions={studentOptions}
+                refreshKey={refreshKey}
+                allGroups={groups}
+                onGraduationCommitted={handleGraduationCommitted}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Create / Edit modal */}
       <GroupFormModal
