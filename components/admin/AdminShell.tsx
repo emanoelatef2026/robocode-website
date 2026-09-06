@@ -34,7 +34,9 @@ export default function AdminShell({ children, role, permissions, email, unreadN
         )}
         bottomNav={<AdminBottomNav role={role} permissions={permissions} />}
       >
-        {children}
+        <div className="admin-responsive min-w-0 max-w-full">
+          {children}
+        </div>
       </AppLayout>
     </TopbarActionProvider>
   )

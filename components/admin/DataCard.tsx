@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function DataCard({ children, className = "", href, noPad }: Props) {
-  const base = `ds-card ${noPad ? "" : "p-4 md:p-5"} ${className}`;
+  const base = `ds-card ${noPad ? "" : "p-3.5 sm:p-4 md:p-5"} ${className}`;
   if (href) {
     return (
       <Link href={href} className={`${base} block transition-all duration-150 hover:shadow-[0_4px_16px_rgba(11,31,58,.10)] hover:border-[#CBD5E1]`}>

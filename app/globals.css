@@ -247,6 +247,62 @@ body.font-cairo {
   box-shadow: 0 1px 4px rgba(11,31,58,.05);
 }
 
+/* ── Admin responsive rules ────────────────────────────────────────────────────
+   Admin pages share a large set of cards, forms, and data tables. Keep the
+   desktop density, but make the mobile layout a single readable column and
+   stop wide table content from expanding the page viewport. */
+@media (max-width: 639px) {
+  .admin-responsive .ds-card {
+    border-radius: 12px;
+  }
+
+  .admin-responsive form .grid-cols-2,
+  .admin-responsive form .grid-cols-3,
+  .admin-responsive .grid-cols-2.gap-4,
+  .admin-responsive .grid-cols-3.gap-4 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-responsive .grid-cols-3.gap-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-responsive table {
+    width: 100% !important;
+    table-layout: fixed;
+    font-size: 11px;
+  }
+
+  .admin-responsive th,
+  .admin-responsive td {
+    max-width: 0;
+    padding: 8px 6px !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    vertical-align: top;
+  }
+
+  .admin-responsive .overflow-x-auto {
+    overflow-x: hidden;
+  }
+
+  .admin-responsive pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .admin-responsive .min-w-52,
+  .admin-responsive .min-w-56,
+  .admin-responsive .min-w-85 {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .admin-responsive .whitespace-nowrap {
+    white-space: normal;
+  }
+}
+
 /* Admin input / select */
 .ds-input {
   border: 1px solid #E2E8F0;

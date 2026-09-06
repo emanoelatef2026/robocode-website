@@ -52,7 +52,7 @@ export function AppLayout({ renderSidebar, renderHeader, bottomNav, fab, childre
         <div className="sticky top-0 z-(--z-header)">
           {renderHeader({ onMenuClick: () => setSidebarOpen(true) })}
         </div>
-        <main className="pb-bottom-nav scroll-smooth-mobile flex-1 overflow-y-auto px-4 pt-4 md:px-7 md:pb-7 md:pt-6">
+        <main className="pb-bottom-nav scroll-smooth-mobile min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pt-4 md:px-7 md:pb-7 md:pt-6">
           {children}
         </main>
       </div>

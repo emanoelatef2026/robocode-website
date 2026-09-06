@@ -64,12 +64,12 @@ export function LiveFilterBar({
 
   return (
     <div className="ds-card px-4 py-2.5">
-      <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Branch — live on change */}
         <select
           value={currentBranchId}
           onChange={e => navigate({ branch: e.target.value })}
-          className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none min-w-[130px] flex-shrink-0"
+          className="min-w-0 flex-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none sm:min-w-[130px] sm:flex-none"
         >
           <option value="">All Branches</option>
           {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -93,19 +93,19 @@ export function LiveFilterBar({
         })}
 
         {/* Custom date range — live on blur */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex min-w-0 flex-1 items-center gap-1 sm:flex-none">
           <input
             type="date" value={from}
             onChange={e => setFrom(e.target.value)}
             onBlur={() => from !== currentDateFrom && navigate({ from })}
-            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none"
+            className="min-w-0 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none sm:w-auto"
           />
           <span className="text-xs text-[#94A3B8]">—</span>
           <input
             type="date" value={to}
             onChange={e => setTo(e.target.value)}
             onBlur={() => to !== currentDateTo && navigate({ to })}
-            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none"
+            className="min-w-0 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none sm:w-auto"
           />
         </div>
 
