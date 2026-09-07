@@ -88,6 +88,21 @@ export function GroupWorkspace({
       .catch(() => setLoading(false))
   }
 
+  // Refresh the selected student in place after an account action. The
+  // selected object otherwise remains a stale snapshot from the group load.
+  function refreshDetailKeepingQuickViewOpen() {
+    getGroupDetailDataAction(group.group_id)
+      .then(d => {
+        setDetailData(d)
+        setQuickViewStudent(current => {
+          if (!current) return current
+          return d.students.find(student => student.student_id === current.student_id) ?? current
+        })
+      })
+      .catch(() => undefined)
+    onStudentsChanged()
+  }
+
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedIds(new Set())
@@ -338,9 +353,9 @@ export function GroupWorkspace({
             setQuickViewStudent(null)
             onStudentsChanged()
           }}
-          // Credentials aren't shown in the group table — sync data in the
-          // background without closing the quick-view dialog.
-          onCredentialsRefreshed={onStudentsChanged}
+          // Keep the quick-view dialog open while replacing its student data
+          // with the latest values from the database.
+          onCredentialsRefreshed={refreshDetailKeepingQuickViewOpen}
           onOpenFullFinance={() => {
             const s = quickViewStudent
             setQuickViewStudent(null)
