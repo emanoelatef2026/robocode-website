@@ -288,8 +288,8 @@ export async function regeneratePortalCredentialsAction(
     const lastName = String((profile as any)?.last_name ?? '').trim()
     const studentEmail = await generateUniqueLoginEmail(
       'learner',
-      firstName || 'student',
-      lastName || studentId.slice(0, 8),
+      firstName,
+      lastName,
       async (localPart) => {
         const { data } = await db
           .from('users')
@@ -340,13 +340,14 @@ export async function regeneratePortalCredentialsAction(
     const parentLastName = String((parentProfile as any)?.last_name ?? '').trim()
     const parentEmail = await generateUniqueLoginEmail(
       'learner',
-      parentFirstName || 'parent',
-      parentLastName || studentId.slice(0, 8),
+      parentFirstName,
+      parentLastName,
       async (localPart) => {
         const { data } = await db
           .from('users')
           .select('id')
           .ilike('email', `${localPart}@${ORG_EMAIL_DOMAIN}`)
+          .neq('id', parent.user_id)
           .maybeSingle()
         return !!data
       },

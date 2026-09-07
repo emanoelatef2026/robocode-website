@@ -1428,7 +1428,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
           >
             <h3 id="regenerate-credentials-title" className="text-[15px] font-bold text-[#0B1F3A]">Regenerate portal credentials?</h3>
             <p className="mt-2 text-[12px] leading-5 text-[#64748B]">
-              This will regenerate the student and parent portal emails from their current names and create new passwords for both accounts. The current emails and passwords will stop working immediately.
+              This will update each portal email from its account holder’s current name and create new passwords for both accounts. If a name has not changed, its email keeps the same format and address.
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
