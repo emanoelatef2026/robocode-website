@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
+import { generateUniqueLoginEmail, ORG_EMAIL_DOMAIN } from '@/lib/generate-login-email'
 import { requirePermission } from '@/modules/rbac/guards'
 import { ROLE_PORTAL_MAP } from '@/types/enums'
 import { normalizeEgyptPhone } from '@/lib/contact-utils'
@@ -278,9 +279,36 @@ export async function regeneratePortalCredentialsAction(
   const studentUserId = (studentRow as any).user_id ?? null
 
   if (studentUserId) {
+    const { data: profile } = await db
+      .from('profiles')
+      .select('first_name, last_name')
+      .eq('user_id', studentUserId)
+      .maybeSingle()
+    const firstName = String((profile as any)?.first_name ?? '').trim()
+    const lastName = String((profile as any)?.last_name ?? '').trim()
+    const studentEmail = await generateUniqueLoginEmail(
+      'learner',
+      firstName || 'student',
+      lastName || studentId.slice(0, 8),
+      async (localPart) => {
+        const { data } = await db
+          .from('users')
+          .select('id')
+          .ilike('email', `${localPart}@${ORG_EMAIL_DOMAIN}`)
+          .neq('id', studentUserId)
+          .maybeSingle()
+        return !!data
+      },
+    )
     const tempPassword = generateTempPassword()
-    const { error } = await db.auth.admin.updateUserById(studentUserId, { password: tempPassword })
+    const { error } = await db.auth.admin.updateUserById(studentUserId, {
+      email: studentEmail,
+      password: tempPassword,
+      email_confirm: true,
+    })
     if (error) return { success: false, error: `Student password reset failed: ${error.message}` }
+    const { error: emailError } = await db.from('users').update({ email: studentEmail }).eq('id', studentUserId)
+    if (emailError) return { success: false, error: `Student email update failed: ${emailError.message}` }
     const { error: dbError } = await db.from('students').update({ portal_password: tempPassword }).eq('id', studentId)
     if (dbError) return { success: false, error: `Student credential save failed: ${dbError.message}` }
     await db.rpc('write_audit_log', {
@@ -288,7 +316,7 @@ export async function regeneratePortalCredentialsAction(
       p_action: 'password_reset',
       p_entity_type: 'student',
       p_entity_id: studentId,
-      p_new_values: { reset_by: user.id, context: 'portal_credential_rotation' },
+      p_new_values: { reset_by: user.id, context: 'portal_credential_rotation', email: studentEmail },
     })
     studentRegenerated = true
   }
