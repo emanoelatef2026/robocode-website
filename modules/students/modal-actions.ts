@@ -13,6 +13,7 @@ import {
 import { reconcileGroupJoin, type ReconciliationChoice, type ShortfallResolution } from '@/modules/enrollments/historical-reconciliation'
 import { z } from 'zod'
 import type { ActionResult } from '@/types/app'
+import { syncParentPortalIdentity, syncStudentCertificateNames } from './linked-data'
 
 // ── Validation ─────────────────────────────────────────────────────────────────
 
@@ -303,6 +304,7 @@ async function syncParentContacts(
 
     if (resolution.kind === 'link') {
       await linkExistingParentToStudent(db, resolution.parentId, studentId, c.relation, c.is_primary)
+      await syncParentPortalIdentity(db, resolution.parentId, c.name)
       continue
     }
 
@@ -493,6 +495,12 @@ export async function updateStudentModal(
   const { data: old } = await db.from('students').select('user_id, branch_id').eq('id', id).single()
   if (!old) return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
 
+  const { data: currentProfile } = await db
+    .from('profiles')
+    .select('first_name, last_name')
+    .eq('user_id', old.user_id)
+    .maybeSingle()
+
   // Groups must be in the student's branch — validate before any mutation
   const groupsToAdd    = parseGroupIds(formData.get('groups_to_add_json'))
   const groupsToRemove = parseGroupIds(formData.get('groups_to_remove_json'))
@@ -515,6 +523,12 @@ export async function updateStudentModal(
   if (Object.keys(profileUpd).length > 0) {
     await db.from('profiles').update(profileUpd).eq('user_id', old.user_id)
   }
+
+  const studentName = [
+    first_name || (currentProfile as any)?.first_name,
+    last_name || (currentProfile as any)?.last_name,
+  ].filter(Boolean).join(' ').trim()
+  if (studentName) await syncStudentCertificateNames(db, id, studentName)
 
   // Phone update
   if (phone !== undefined) {
@@ -553,6 +567,7 @@ export async function updateStudentModal(
   revalidatePath('/portal/team-leader/students')
   revalidatePath(`/portal/team-leader/students/${id}`)
   revalidatePath('/admin/students')
+  revalidatePath('/admin/certificates')
   return {
     success: true,
     data: { id, ambiguousParents: ambiguousParents.length ? ambiguousParents : undefined },

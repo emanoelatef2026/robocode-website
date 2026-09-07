@@ -9,6 +9,7 @@ import { createStudentSchema, updateStudentSchema } from './schemas'
 import { resolveGroupCourseId } from '@/modules/academic/enrollment-integrity'
 import { reconcileGroupJoin } from '@/modules/enrollments/historical-reconciliation'
 import type { ActionResult } from '@/types/app'
+import { syncStudentCertificateNames } from './linked-data'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
   if (typeof raw !== 'string') return null
@@ -195,10 +196,20 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
 
   // ── Name update ──
   if (first_name || last_name) {
+    const { data: currentProfile } = await db
+      .from('profiles')
+      .select('first_name, last_name')
+      .eq('user_id', old.user_id)
+      .maybeSingle()
     const profileUpdate: Record<string, string> = {}
     if (first_name) profileUpdate.first_name = first_name
     if (last_name)  profileUpdate.last_name  = last_name
     await db.from('profiles').update(profileUpdate).eq('user_id', old.user_id)
+    const studentName = [
+      first_name || (currentProfile as any)?.first_name,
+      last_name || (currentProfile as any)?.last_name,
+    ].filter(Boolean).join(' ').trim()
+    if (studentName) await syncStudentCertificateNames(db, id, studentName)
   }
 
   // ── Phone + profile ──
@@ -247,6 +258,7 @@ export async function updateStudent(_prev: unknown, formData: FormData): Promise
   revalidatePath(`/admin/students/${id}`)
   revalidatePath('/portal/team-leader/students')
   revalidatePath(`/portal/team-leader/students/${id}`)
+  revalidatePath('/admin/certificates')
   redirect(returnTo ?? '/admin/students')
 }
 

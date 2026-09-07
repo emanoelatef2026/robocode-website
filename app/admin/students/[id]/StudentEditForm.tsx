@@ -154,7 +154,27 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
           </div>
         )}
 
-        <form action={editAction} className="space-y-4">
+        <form
+          action={editAction}
+          onSubmit={e => {
+            const formData = new FormData(e.currentTarget)
+            const nextName = [formData.get('first_name'), formData.get('last_name')]
+              .map(value => String(value ?? '').trim())
+              .filter(Boolean)
+              .join(' ')
+            const currentName = [student.first_name, student.last_name]
+              .filter(Boolean)
+              .map(value => String(value).trim())
+              .filter(Boolean)
+              .join(' ')
+            if (nextName !== currentName && !window.confirm(
+              'This name change will update all linked certificate recipient names and refresh related parent portal data. Continue?'
+            )) {
+              e.preventDefault()
+            }
+          }}
+          className="space-y-4"
+        >
           <input type="hidden" name="id" value={student.id} />
 
           {/* Name */}

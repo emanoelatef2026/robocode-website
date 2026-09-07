@@ -95,6 +95,7 @@ export default function StudentFormModal({
     : [newContact(true)]
 
   const [contacts, setContacts] = useState<ParentContactBlock[]>(initialContacts)
+  const initialLinkedSnapshot = useRef(JSON.stringify(initialContacts.map(({ _key, password, ...contact }) => contact)))
 
   // ── Age / DOB cross-validation ──────────────────────────────────────────────
   const [ageVal,       setAgeVal]       = useState<string>(isEdit ? String(student?.age ?? '') : '')
@@ -332,6 +333,24 @@ export default function StudentFormModal({
     setPwErr(null)
 
     if (bypassReconcileRef.current) { bypassReconcileRef.current = false; return }
+
+    if (isEdit && student) {
+      const formData = new FormData(e.currentTarget)
+      const nextFirstName = String(formData.get('first_name') ?? '').trim()
+      const nextLastName = String(formData.get('last_name') ?? '').trim()
+      const nameChanged = nextFirstName !== (student.first_name ?? '').trim()
+        || nextLastName !== (student.last_name ?? '').trim()
+      const contactsChanged = JSON.stringify(contacts.map(({ _key, password, ...contact }) => contact))
+        !== initialLinkedSnapshot.current
+
+      if ((nameChanged || contactsChanged) && !window.confirm(
+        'This change will sync the student name, linked parent information and all certificate recipient names. Portal emails will follow the updated account names. Continue?'
+      )) {
+        e.preventDefault()
+        return
+      }
+    }
+
     if (isEdit && groupsToAdd.length > 0) {
       e.preventDefault()
       resolvedChoicesRef.current = {}
