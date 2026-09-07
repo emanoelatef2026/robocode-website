@@ -323,7 +323,7 @@ export async function regeneratePortalCredentialsAction(
 
   const { data: linkRows } = await db
     .from('parent_students')
-    .select('parents!parent_students_parent_id_fkey(id, user_id)')
+    .select('parents!parent_students_parent_id_fkey(id, user_id, users!parents_user_id_fkey(email))')
     .eq('student_id', studentId)
     .order('is_primary', { ascending: false })
     .limit(1)
@@ -331,9 +331,35 @@ export async function regeneratePortalCredentialsAction(
   const parent = link?.parents ?? null
 
   if (parent?.id && parent.user_id) {
+    const { data: parentProfile } = await db
+      .from('profiles')
+      .select('first_name, last_name')
+      .eq('user_id', parent.user_id)
+      .maybeSingle()
+    const parentFirstName = String((parentProfile as any)?.first_name ?? '').trim()
+    const parentLastName = String((parentProfile as any)?.last_name ?? '').trim()
+    const parentEmail = await generateUniqueLoginEmail(
+      'learner',
+      parentFirstName || 'parent',
+      parentLastName || studentId.slice(0, 8),
+      async (localPart) => {
+        const { data } = await db
+          .from('users')
+          .select('id')
+          .ilike('email', `${localPart}@${ORG_EMAIL_DOMAIN}`)
+          .maybeSingle()
+        return !!data
+      },
+    )
     const tempPassword = generateTempPassword()
-    const { error } = await db.auth.admin.updateUserById(parent.user_id, { password: tempPassword })
-    if (error) return { success: false, error: `Parent password reset failed: ${error.message}` }
+    const { error } = await db.auth.admin.updateUserById(parent.user_id, {
+      email: parentEmail,
+      password: tempPassword,
+      email_confirm: true,
+    })
+    if (error) return { success: false, error: `Parent account update failed: ${error.message}` }
+    const { error: emailError } = await db.from('users').update({ email: parentEmail }).eq('id', parent.user_id)
+    if (emailError) return { success: false, error: `Parent email update failed: ${emailError.message}` }
     const { error: dbError } = await db.from('parents').update({ portal_password: tempPassword }).eq('id', parent.id)
     if (dbError) return { success: false, error: `Parent credential save failed: ${dbError.message}` }
     await db.rpc('write_audit_log', {
@@ -341,7 +367,7 @@ export async function regeneratePortalCredentialsAction(
       p_action: 'password_reset',
       p_entity_type: 'parent',
       p_entity_id: parent.id,
-      p_new_values: { reset_by: user.id, context: 'portal_credential_rotation' },
+      p_new_values: { reset_by: user.id, context: 'portal_credential_rotation', email: parentEmail },
     })
     parentRegenerated = true
   }

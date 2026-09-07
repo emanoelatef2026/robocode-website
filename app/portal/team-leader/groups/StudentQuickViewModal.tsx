@@ -193,7 +193,7 @@ function RegenerateCredentialsButton({ generating, onClick }: { generating: bool
     <button
       onClick={onClick}
       disabled={generating}
-      title="Update the student portal email from the current name and generate new passwords"
+      title="Regenerate both portal emails from the current names and generate new passwords"
       className="flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#475569] hover:border-[#0B1F3A] hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-50 transition"
     >
       ↻ {generating ? 'Generating…' : 'Regenerate Credentials'}
@@ -1428,7 +1428,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
           >
             <h3 id="regenerate-credentials-title" className="text-[15px] font-bold text-[#0B1F3A]">Regenerate portal credentials?</h3>
             <p className="mt-2 text-[12px] leading-5 text-[#64748B]">
-              This will update the student portal email to match the latest student name and create new passwords for the student and parent accounts. The current passwords will stop working immediately. The parent portal email will stay unchanged.
+              This will regenerate the student and parent portal emails from their current names and create new passwords for both accounts. The current emails and passwords will stop working immediately.
             </p>
             <div className="mt-4 flex justify-end gap-2">
               <button
