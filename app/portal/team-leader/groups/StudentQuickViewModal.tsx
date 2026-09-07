@@ -28,6 +28,7 @@ import {
   getWelcomeMessageStatusAction,
   sendWelcomeWhatsAppAction,
   generateMissingWelcomeCredentialsAction,
+  regeneratePortalCredentialsAction,
 } from '@/modules/students/welcome-message'
 import { getParentEditContextAction } from '@/modules/parents/contact-actions'
 import type { ParentOperationalRow, StudentPickerOption } from '@/modules/parents/operational'
@@ -183,6 +184,19 @@ function GenerateCredentialsButton({ generating, onClick }: { generating: boolea
       className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-[#FFFBEB] px-3 py-1.5 text-[11px] font-semibold text-[#B45309] hover:bg-[#FEF3C7] disabled:cursor-not-allowed disabled:opacity-50 transition"
     >
       ⚠ {generating ? 'Generating…' : 'Generate Credentials'}
+    </button>
+  )
+}
+
+function RegenerateCredentialsButton({ generating, onClick }: { generating: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={generating}
+      title="Invalidate the current portal passwords and generate new ones"
+      className="flex items-center gap-1.5 rounded-lg border border-[#CBD5E1] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#475569] hover:border-[#0B1F3A] hover:bg-[#F8FAFC] disabled:cursor-not-allowed disabled:opacity-50 transition"
+    >
+      ↻ {generating ? 'Generating…' : 'Regenerate Credentials'}
     </button>
   )
 }
@@ -896,6 +910,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
 
   // Overlay modals
   const [wizardOpen, setWizardOpen] = useState(false)
+  const [credentialConfirmOpen, setCredentialConfirmOpen] = useState(false)
 
   // Parent portal account creation (reuses ParentFormModal from the Parents page)
   const [parentModalOpen,    setParentModalOpen]    = useState(false)
@@ -1116,6 +1131,28 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     onCredentialsRefreshed?.()
   }
 
+  async function handleRegenerateCredentials() {
+    setWelcomeRegenerating(true)
+    const result = await regeneratePortalCredentialsAction(s.student_id)
+    setWelcomeRegenerating(false)
+    if (!result.success) {
+      showToast('error', result.error)
+      return
+    }
+    setCredentialConfirmOpen(false)
+    const [status] = await Promise.all([
+      getWelcomeMessageStatusAction(s.student_id),
+      loadAuthData(),
+      loadParentAuthData(),
+    ])
+    setWelcomeEligible(status.eligibility.eligible)
+    setWelcomeTooltip(status.eligibility.reason)
+    setWelcomeCanRegenerate(status.eligibility.canRegenerate)
+    setWelcomeLastSent(null)
+    showToast('success', 'New credentials generated. The old passwords no longer work.')
+    onCredentialsRefreshed?.()
+  }
+
   // Create parent portal account (embeds the Parents page's ParentFormModal)
   async function handleOpenParentAccountModal() {
     if (!s.parent) return
@@ -1164,7 +1201,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 : s.risk_level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]'
                 :                             'bg-[#E7F8EE] text-[#15803D]'
 
-  const anyOverlayOpen = wizardOpen || parentModalOpen
+  const anyOverlayOpen = wizardOpen || parentModalOpen || credentialConfirmOpen
 
   return (
     <>
@@ -1263,6 +1300,13 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 <GenerateCredentialsButton
                   generating={welcomeRegenerating}
                   onClick={handleGenerateCredentials}
+                />
+              )}
+              {canSendWelcome && !authLoading && !parentAuthLoading
+                && (authData?.has_portal_access || parentAuthData?.has_portal_access) && (
+                <RegenerateCredentialsButton
+                  generating={welcomeRegenerating}
+                  onClick={() => setCredentialConfirmOpen(true)}
                 />
               )}
               {canSendWelcome && !welcomeEligible && !welcomeCanRegenerate
@@ -1371,6 +1415,39 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
           onSuccess={handleParentAccountCreated}
           nested
         />
+      )}
+
+      {credentialConfirmOpen && (
+        <div className="fixed inset-0 z-[85] flex items-center justify-center bg-black/45 px-4" role="presentation">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="regenerate-credentials-title"
+            className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 id="regenerate-credentials-title" className="text-[15px] font-bold text-[#0B1F3A]">Regenerate portal credentials?</h3>
+            <p className="mt-2 text-[12px] leading-5 text-[#64748B]">
+              This will create new passwords for the student and parent accounts. The current passwords will stop working immediately. Emails will stay unchanged.
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={() => setCredentialConfirmOpen(false)}
+                disabled={welcomeRegenerating}
+                className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] font-semibold text-[#64748B] hover:bg-[#F8FAFC] disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleRegenerateCredentials}
+                disabled={welcomeRegenerating}
+                className="rounded-lg bg-[#0B1F3A] px-3 py-2 text-[12px] font-semibold text-white hover:bg-[#16365F] disabled:opacity-50"
+              >
+                {welcomeRegenerating ? 'Generating…' : 'Regenerate'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   )

@@ -259,3 +259,68 @@ export async function generateMissingWelcomeCredentialsAction(
 
   return { success: true, data: { studentRegenerated, parentRegenerated } }
 }
+
+// Explicit password rotation for an existing student/parent account. This is
+// intentionally separate from the missing-password repair above: rotating a
+// live password invalidates the old credential and must be an intentional UI
+// action.
+export async function regeneratePortalCredentialsAction(
+  studentId: string,
+): Promise<{ success: true; data: RegenerateCredentialsResult } | { success: false; error: string }> {
+  const user = await requireWelcomeSenderPermission()
+  const db = createServiceClient()
+
+  const { data: studentRow } = await db.from('students').select('user_id').eq('id', studentId).maybeSingle()
+  if (!studentRow) return { success: false, error: 'Student not found.' }
+
+  let studentRegenerated = false
+  let parentRegenerated = false
+  const studentUserId = (studentRow as any).user_id ?? null
+
+  if (studentUserId) {
+    const tempPassword = generateTempPassword()
+    const { error } = await db.auth.admin.updateUserById(studentUserId, { password: tempPassword })
+    if (error) return { success: false, error: `Student password reset failed: ${error.message}` }
+    const { error: dbError } = await db.from('students').update({ portal_password: tempPassword }).eq('id', studentId)
+    if (dbError) return { success: false, error: `Student credential save failed: ${dbError.message}` }
+    await db.rpc('write_audit_log', {
+      p_performed_by: user.id,
+      p_action: 'password_reset',
+      p_entity_type: 'student',
+      p_entity_id: studentId,
+      p_new_values: { reset_by: user.id, context: 'portal_credential_rotation' },
+    })
+    studentRegenerated = true
+  }
+
+  const { data: linkRows } = await db
+    .from('parent_students')
+    .select('parents!parent_students_parent_id_fkey(id, user_id)')
+    .eq('student_id', studentId)
+    .order('is_primary', { ascending: false })
+    .limit(1)
+  const link = (linkRows ?? [])[0] as unknown as { parents: { id: string; user_id: string } | null } | undefined
+  const parent = link?.parents ?? null
+
+  if (parent?.id && parent.user_id) {
+    const tempPassword = generateTempPassword()
+    const { error } = await db.auth.admin.updateUserById(parent.user_id, { password: tempPassword })
+    if (error) return { success: false, error: `Parent password reset failed: ${error.message}` }
+    const { error: dbError } = await db.from('parents').update({ portal_password: tempPassword }).eq('id', parent.id)
+    if (dbError) return { success: false, error: `Parent credential save failed: ${dbError.message}` }
+    await db.rpc('write_audit_log', {
+      p_performed_by: user.id,
+      p_action: 'password_reset',
+      p_entity_type: 'parent',
+      p_entity_id: parent.id,
+      p_new_values: { reset_by: user.id, context: 'portal_credential_rotation' },
+    })
+    parentRegenerated = true
+  }
+
+  if (!studentRegenerated && !parentRegenerated) {
+    return { success: false, error: 'No portal accounts are available for this student.' }
+  }
+
+  return { success: true, data: { studentRegenerated, parentRegenerated } }
+}
