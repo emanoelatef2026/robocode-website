@@ -70,7 +70,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
     <div className="mx-auto max-w-3xl space-y-6">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="parent-page-header flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#0B1F3A]">Assignments</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">{selected.student_name}</p>
@@ -129,7 +129,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
 
             return (
               <div key={a.id} className="ds-card p-4">
-                <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col items-start gap-2 min-[420px]:flex-row min-[420px]:justify-between">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold text-[#0B1F3A]">{a.title}</h3>

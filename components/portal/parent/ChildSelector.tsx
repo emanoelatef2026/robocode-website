@@ -14,13 +14,13 @@ export default function ChildSelector({ linkedChildren, selectedId, hrefFor }: P
   if (linkedChildren.length <= 1) return null
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex w-full flex-wrap gap-2">
       {linkedChildren.map(c => (
         <Link
           key={c.student_id}
           href={hrefFor(c.student_id)}
           className={[
-            'flex min-h-11 items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-all',
+            'flex min-h-11 min-w-0 max-w-full items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-all',
             c.student_id === selectedId
               ? 'border-[#FF8A1F] bg-[#FF8A1F]/10 text-[#FF8A1F]'
               : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1]',
@@ -32,7 +32,7 @@ export default function ChildSelector({ linkedChildren, selectedId, hrefFor }: P
           ].join(' ')}>
             {c.student_name.charAt(0).toUpperCase()}
           </span>
-          {c.student_name}
+          <span className="min-w-0 truncate">{c.student_name}</span>
         </Link>
       ))}
     </div>

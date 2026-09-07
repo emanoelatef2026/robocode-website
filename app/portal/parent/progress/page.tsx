@@ -61,7 +61,7 @@ export default async function ParentProgressPage({ searchParams }: Props) {
     <div className="mx-auto max-w-3xl space-y-6">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="parent-page-header flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#0B1F3A]">Academic Progress</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">{selected.student_name}</p>
@@ -99,7 +99,7 @@ export default async function ParentProgressPage({ searchParams }: Props) {
           <div className="space-y-4">
             {summary.courses.map(course => (
               <div key={course.id} className="ds-card p-5">
-                <div className="mb-4 flex items-start justify-between gap-4">
+                <div className="mb-4 flex flex-col items-start gap-2 min-[420px]:flex-row min-[420px]:justify-between">
                   <div>
                     <p className="font-semibold text-[#0B1F3A]">{course.course_title}</p>
                     <p className="text-xs text-[#64748B]">{course.group_name}</p>

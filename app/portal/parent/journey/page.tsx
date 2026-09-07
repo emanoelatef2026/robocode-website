@@ -53,7 +53,7 @@ export default async function ParentJourneyPage({ searchParams }: Props) {
     <div className="mx-auto max-w-2xl space-y-4">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="parent-page-header flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#0B1F3A]">Learning Journey</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">Every milestone in {selected.student_name}&apos;s learning story</p>

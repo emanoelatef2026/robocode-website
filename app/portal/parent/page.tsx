@@ -118,7 +118,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
         <div className="space-y-2">
           {pendingMilestone && (
             <div className="rounded-xl border border-[#FF8A1F]/30 bg-[#FFF7ED] p-4">
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                   <p className="font-semibold text-[#0B1F3A]">Share Your Feedback</p>
                   <p className="mt-0.5 text-sm text-[#64748B]">
@@ -128,7 +128,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                 </div>
                 <Link
                   href={childHref('/portal/parent/feedback')}
-                  className="shrink-0 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#e87c18]"
+                  className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#e87c18] sm:min-h-0"
                 >
                   Give Feedback
                 </Link>
@@ -188,7 +188,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                   <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D] shrink-0">Active</span>
                 </div>
 
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="mt-3 grid grid-cols-1 gap-2 text-center text-xs min-[420px]:grid-cols-3">
                   <div className="rounded-lg bg-[#F8FAFC] p-2">
                     <p className={`font-bold text-sm ${c.enrolled_sessions > 0 && c.remaining_sessions <= 2 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
                       {c.enrolled_sessions > 0 ? `${c.remaining_sessions}` : '∞'}

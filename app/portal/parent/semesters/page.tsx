@@ -54,7 +54,7 @@ export default async function ParentHistoryPage({ searchParams }: Props) {
     <div className="mx-auto max-w-3xl space-y-6">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="parent-page-header flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#0B1F3A]">Activity History</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">

@@ -51,7 +51,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
     <div className="mx-auto max-w-3xl space-y-6">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="parent-page-header flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#0B1F3A]">Feedback Center</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">{selected.student_name}</p>
@@ -69,7 +69,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
       />
 
       {/* Tab switcher */}
-      <div className="flex rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-1 gap-1">
+      <div className="grid grid-cols-1 gap-1 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-1 min-[420px]:grid-cols-2">
         {([
           { key: 'session', label: 'Session Feedback', badge: pendingMilestone ? '1' : null },
           { key: 'contact', label: 'Contact Team Leader', badge: null },
@@ -78,7 +78,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
             key={key}
             href={tabHref(key)}
             className={[
-              'flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-[13px] font-medium transition-all',
+              'flex min-h-11 items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-center text-[13px] font-medium transition-all',
               activeTab === key
                 ? 'bg-white text-[#0B1F3A] shadow-sm'
                 : 'text-[#64748B] hover:text-[#0B1F3A]',

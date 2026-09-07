@@ -74,7 +74,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                 <div key={enroll.id} className="overflow-hidden ds-card">
                   {/* Card header */}
                   <div className="bg-linear-to-br from-[#0B1F3A] to-[#1a3460] px-4 py-3 text-white">
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-col items-start gap-2 min-[420px]:flex-row min-[420px]:justify-between">
                       <div>
                         <p className="font-semibold">
                           {enroll.group_name_snapshot ?? enroll.group_name ?? 'Unknown Group'}
@@ -148,7 +148,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
 
                     {/* Pricing row */}
                     {enroll.net_amount > 0 && (
-                      <div className="grid grid-cols-3 gap-2 border-t border-[#F1F5F9] pt-2 text-[11px]">
+                        <div className="grid grid-cols-1 gap-2 border-t border-[#F1F5F9] pt-2 text-[11px] min-[420px]:grid-cols-3">
                         <div>
                           <p className="text-[#64748B]">Course Fee</p>
                           <p className="font-semibold text-[#0B1F3A]">EGP {fmt(enroll.net_amount)}</p>

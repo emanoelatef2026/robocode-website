@@ -47,7 +47,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
     <div className="mx-auto max-w-3xl space-y-6">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="parent-page-header flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#0B1F3A]">Certificates</h1>
           <p className="mt-0.5 text-sm text-[#64748B]">
@@ -81,7 +81,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
           />
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start gap-2 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
           <p className="text-[12px] text-[#64748B]">
             Certificates are issued after course completion.
           </p>
@@ -118,7 +118,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                 c.status === 'revoked' ? 'border-[#FECACA] opacity-60' : 'border-[#E2E8F0]'
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-col items-start gap-2 min-[420px]:flex-row min-[420px]:justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-[14px] font-semibold text-[#0B1F3A] leading-tight">{c.title}</h3>

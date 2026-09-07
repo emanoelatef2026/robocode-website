@@ -51,6 +51,7 @@ export function BottomNav({ items, moreItems = [], getHref = (href) => href }: P
   const pathname = usePathname()
   const [moreOpen, setMoreOpen] = useState(false)
   const hasMore = moreItems.length > 0
+  const moreActive = moreItems.some((item) => isActive(item, pathname))
 
   return (
     <>
@@ -66,10 +67,13 @@ export function BottomNav({ items, moreItems = [], getHref = (href) => href }: P
         {hasMore && (
           <button
             onClick={() => setMoreOpen(true)}
-            className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg py-1.5 text-center text-[#64748B]"
+            aria-expanded={moreOpen}
+            aria-haspopup="dialog"
+            className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg py-1.5 text-center ${moreActive ? 'text-[#FF8A1F]' : 'text-[#64748B]'}`}
           >
             <Icons.more className="h-5 w-5" />
-            <span className="text-[10px] font-medium leading-none">More</span>
+            <span className={`text-[10px] font-medium leading-none ${moreActive ? 'text-[#FF8A1F]' : 'text-[#64748B]'}`}>More</span>
+            {moreActive && <span className="absolute top-0 h-0.5 w-6 rounded-full bg-[#FF8A1F]" />}
           </button>
         )}
       </nav>
@@ -92,6 +96,9 @@ export function BottomNav({ items, moreItems = [], getHref = (href) => href }: P
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.98 }}
               transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="More navigation"
               className="drawer-safe-bottom fixed inset-x-3 z-(--z-sheet-panel) max-h-[70vh] overflow-y-auto rounded-2xl bg-white shadow-2xl md:hidden"
             >
               <div className="flex items-center justify-between border-b border-[#F1F5F9] px-4 py-3">

@@ -68,7 +68,7 @@ export default function ParentHero({ overview, assignmentPct, upcomingClass, nex
 
       <div className="relative p-5">
         {/* Identity + next class — the ONE place student identity is shown */}
-        <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             {overview.avatar_url ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -90,14 +90,14 @@ export default function ParentHero({ overview, assignmentPct, upcomingClass, nex
             </div>
           </div>
 
-          <div className="shrink-0 rounded-xl bg-white/10 px-3 py-2 text-right">
+          <div className="w-full rounded-xl bg-white/10 px-3 py-2 text-left sm:w-auto sm:text-right">
             <p className="text-[9px] font-semibold uppercase tracking-wide text-white/40">Next Class</p>
             <p className="mt-0.5 text-[13px] font-bold text-white">{nextClassLabel ?? 'Not scheduled'}</p>
           </div>
         </div>
 
         {/* Stat chips — everything measurable, at a glance */}
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-1.5 sm:gap-2">
           <StatChip icon="📚" value={overview.active_courses} label={overview.active_courses === 1 ? 'course' : 'courses'} />
           <StatChip
             icon="✅"

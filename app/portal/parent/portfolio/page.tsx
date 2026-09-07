@@ -41,7 +41,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
     <div className="mx-auto max-w-3xl space-y-8">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="parent-page-header flex items-start justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[#0B1F3A]">
             {selected.student_name}&apos;s Portfolio

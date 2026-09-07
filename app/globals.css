@@ -131,6 +131,18 @@ button, [role="button"], a {
 
 /* Ensure inputs don't zoom on focus on iOS (need font-size >= 16px) */
 @media (max-width: 767px) {
+  .parent-page-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .parent-page-header > a {
+    align-self: flex-start;
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+  }
+
   input[type="text"],
   input[type="email"],
   input[type="tel"],
