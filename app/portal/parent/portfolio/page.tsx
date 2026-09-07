@@ -86,7 +86,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
                   )}
                   <div className="p-4 space-y-3">
                     {/* Title + status */}
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-col gap-1 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
                       <h3 className="font-semibold text-[#0B1F3A] leading-snug">{p.title}</h3>
                       <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
                         {statusCfg.label}
@@ -126,7 +126,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
                             href={p.project_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
+                            className="inline-flex min-h-11 items-center rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
                           >
                             Project Link ↗
                           </a>
@@ -136,7 +136,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
                             href={p.video_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
+                            className="inline-flex min-h-11 items-center rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
                           >
                             Video ↗
                           </a>

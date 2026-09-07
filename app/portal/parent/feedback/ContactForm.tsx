@@ -113,7 +113,7 @@ export default function ContactForm({ studentId, studentName }: Props) {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            className="ds-card px-3 py-2 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition"
+            className="ds-card min-h-11 px-3 py-2 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition"
           >
             Choose File
           </button>
@@ -149,7 +149,7 @@ export default function ContactForm({ studentId, studentName }: Props) {
       <button
         onClick={handleSubmit}
         disabled={!canSubmit}
-        className="w-full rounded-xl bg-[#FF8A1F] py-3 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:cursor-not-allowed disabled:opacity-40"
+        className="min-h-11 w-full rounded-xl bg-[#FF8A1F] py-3 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:cursor-not-allowed disabled:opacity-40"
       >
         {pending ? 'Sending…' : 'Send Message'}
       </button>

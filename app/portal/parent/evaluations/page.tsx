@@ -116,12 +116,12 @@ export default async function ParentEvaluationsPage({ searchParams }: Props) {
 
             return (
               <div key={criterion} className="ds-card p-4">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-col gap-2 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
                   <div>
                     <p className="text-[13px] font-bold text-[#0B1F3A]">{label}</p>
                     <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Latest · {formatDate(latest.evaluated_at)}</p>
                   </div>
-                  <div className="shrink-0 text-right">
+                  <div className="shrink-0 text-left min-[420px]:text-right">
                     {latest.rating != null && <RatingStars rating={latest.rating} />}
                     {latest.score != null && <div className="mt-1"><ScoreBar score={latest.score} /></div>}
                   </div>

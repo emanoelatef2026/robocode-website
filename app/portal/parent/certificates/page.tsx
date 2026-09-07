@@ -146,7 +146,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                       href={`/verify/${c.certificate_code}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
+                      className="inline-flex min-h-11 items-center rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
                     >
                       Verify
                     </a>
@@ -154,7 +154,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                       href={`/api/certificates/${c.certificate_code}/pdf`}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#e87c18]"
+                      className="inline-flex min-h-11 items-center rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#e87c18]"
                     >
                       Download PDF
                     </a>

@@ -102,7 +102,7 @@ export default async function ParentHistoryPage({ searchParams }: Props) {
                       <div className={`absolute -left-4 mt-2 h-2.5 w-2.5 rounded-full ring-2 ring-white ${cfg.dotCls}`} />
 
                       <div className={`flex-1 rounded-lg border px-3 py-2.5 ${cfg.cls}`}>
-                        <div className="flex items-start justify-between gap-2">
+                        <div className="flex flex-col gap-1 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
                           <div className="flex items-center gap-1.5">
                             <span className="text-[13px]">{cfg.icon}</span>
                             <span className="text-[13px] font-medium text-[#0B1F3A]">{ev.title}</span>

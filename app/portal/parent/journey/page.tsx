@@ -86,7 +86,7 @@ export default async function ParentJourneyPage({ searchParams }: Props) {
                 {EVENT_ICON[e.event_type as TimelineEventType] ?? '•'}
               </div>
               <div className="ds-card min-w-0 flex-1 px-3.5 py-2.5">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-col gap-1 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
                   <p className="text-[12.5px] font-bold text-[#0B1F3A]">
                     {TIMELINE_EVENT_LABELS[e.event_type as TimelineEventType]}
                   </p>

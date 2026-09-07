@@ -82,7 +82,7 @@ export default async function ParentCompetitionsPage({ searchParams }: Props) {
                 {c.certificate_id && (
                   <Link
                     href={`/portal/parent/certificates${childParam}`}
-                    className="rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+                    className="inline-flex min-h-11 items-center rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
                   >
                     View Certificate
                   </Link>
@@ -90,7 +90,7 @@ export default async function ParentCompetitionsPage({ searchParams }: Props) {
                 {c.project_id && (
                   <Link
                     href={`/portal/parent/portfolio${childParam}`}
-                    className="rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+                    className="inline-flex min-h-11 items-center rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
                   >
                     View Project
                   </Link>

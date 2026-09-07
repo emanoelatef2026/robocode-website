@@ -101,7 +101,7 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
               <button
                 onClick={() => handleAnswer(key as QKey, true)}
                 className={[
-                  'flex-1 rounded-lg border py-2 text-sm font-medium transition-all',
+                  'min-h-11 flex-1 rounded-lg border py-2 text-sm font-medium transition-all',
                   ans === true
                     ? 'border-green-400 bg-[#E7F8EE] text-[#15803D]'
                     : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-green-300',
@@ -112,7 +112,7 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
               <button
                 onClick={() => handleAnswer(key as QKey, false)}
                 className={[
-                  'flex-1 rounded-lg border py-2 text-sm font-medium transition-all',
+                  'min-h-11 flex-1 rounded-lg border py-2 text-sm font-medium transition-all',
                   ans === false
                     ? 'border-[#F87171] bg-[#FEE2E2] text-[#DC2626]'
                     : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#FCA5A5]',
@@ -134,7 +134,7 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
             <button
               key={s}
               onClick={() => setRating(s)}
-              className="rounded text-3xl transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2"
+              className="min-h-11 min-w-11 rounded text-3xl transition-transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2"
               aria-label={`Rate ${s} star${s !== 1 ? 's' : ''}`}
             >
               {s <= rating ? '★' : '☆'}
@@ -168,7 +168,7 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
       <button
         onClick={handleSubmit}
         disabled={!canSubmit}
-        className="w-full rounded-xl bg-[#FF8A1F] py-3 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40 disabled:cursor-not-allowed"
+        className="min-h-11 w-full rounded-xl bg-[#FF8A1F] py-3 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {pending ? 'Submitting…' : 'Submit Feedback'}
       </button>
