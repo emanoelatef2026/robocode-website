@@ -331,13 +331,36 @@ export async function regeneratePortalCredentialsAction(
   const parent = link?.parents ?? null
 
   if (parent?.id && parent.user_id) {
-    const { data: parentProfile } = await db
-      .from('profiles')
-      .select('first_name, last_name')
-      .eq('user_id', parent.user_id)
+    // Use the same parent/contact name shown in the group quick view. Some
+    // legacy portal accounts have placeholder profile names, while
+    // student_parent_contacts contains the real parent name.
+    const { data: contact } = await db
+      .from('student_parent_contacts')
+      .select('name')
+      .eq('student_id', studentId)
+      .eq('status', 'active')
+      .order('is_primary', { ascending: false })
+      .limit(1)
       .maybeSingle()
-    const parentFirstName = String((parentProfile as any)?.first_name ?? '').trim()
-    const parentLastName = String((parentProfile as any)?.last_name ?? '').trim()
+    const contactName = String((contact as any)?.name ?? '').trim()
+    const nameParts = contactName.split(/\s+/).filter(Boolean)
+    const contactFirstName = nameParts[0] ?? ''
+    // For a single-word contact name, pass it as both parts so the standard
+    // learner convention produces `se.selem`, not `se.account`.
+    const contactLastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : contactFirstName
+    const { data: parentProfile } = !contactName
+      ? await db
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('user_id', parent.user_id)
+          .maybeSingle()
+      : { data: null }
+    const parentFirstName = contactName
+      ? contactFirstName
+      : String((parentProfile as any)?.first_name ?? '').trim()
+    const parentLastName = contactName
+      ? contactLastName
+      : String((parentProfile as any)?.last_name ?? '').trim()
     const parentEmail = await generateUniqueLoginEmail(
       'learner',
       parentFirstName,
