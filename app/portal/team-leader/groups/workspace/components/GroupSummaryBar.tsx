@@ -182,6 +182,14 @@ export function GroupSummaryBar({
         </div>
       </div>
 
+      <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] sm:grid-cols-3 lg:grid-cols-5">
+        <div className="min-w-0"><span className="text-[#94A3B8]">Course </span><span className="font-semibold text-[#374151]">{group.course_name ?? '—'}</span></div>
+        <div className="min-w-0"><span className="text-[#94A3B8]">Instructor </span><span className="font-semibold text-[#374151]">{group.lead_instructor_name ?? 'Unassigned'}</span></div>
+        <div className="min-w-0"><span className="text-[#94A3B8]">Schedule </span><span className="font-semibold text-[#374151]">{sched || '—'}</span></div>
+        <div className="min-w-0"><span className="text-[#94A3B8]">Started </span><span className="font-semibold text-[#374151]">{fmtDate(group.start_date)}</span></div>
+        <div className="min-w-0"><span className="text-[#94A3B8]">Fees </span><span className="font-semibold text-[#15803D]">{group.payment_completion_pct == null ? '—' : `${group.payment_completion_pct}% paid`}</span></div>
+      </div>
+
       {mounted && infoOpen && popupPos && createPortal(
         <>
           <div

@@ -1,6 +1,7 @@
 import type { GroupOperationalRow, GroupFormOptions } from '@/modules/groups/operational'
 import type { Filters, QuickFilter } from '../types'
 import { applyFilters } from '../utils'
+import { DAYS_FULL } from '../utils'
 import { GroupListItem } from './GroupListItem'
 import { getCohortLifecycleStage } from '@/modules/groups/lifecycle-stage'
 
@@ -36,11 +37,12 @@ export function GroupSidebar({
   onSelect:       (g: GroupOperationalRow) => void
 }) {
   const baseFiltered   = applyFilters(allGroups, { ...filters, quickFilter: '' })
-  const searchFiltered = applyFilters(allGroups, { q: filters.q, branch_id: '', quickFilter: '' })
+  const searchFiltered = applyFilters(allGroups, { q: filters.q, branch_id: '', quickFilter: '', day_of_week: filters.day_of_week })
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="border-b border-[#E2E8F0] px-3 py-2 space-y-1.5 shrink-0">
+    <div className="flex flex-col">
+      <div className="border-b border-[#E2E8F0] bg-[#F8FAFC] p-3">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <input
           type="text"
           value={filters.q}
@@ -48,7 +50,6 @@ export function GroupSidebar({
           placeholder="Search name, instructor, course…"
           className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:bg-white"
         />
-        <div className={options.branches.length > 1 ? 'grid grid-cols-2 gap-1.5' : ''}>
           {options.branches.length > 1 && (
             <select
               value={filters.branch_id}
@@ -63,6 +64,17 @@ export function GroupSidebar({
               ))}
             </select>
           )}
+          <select
+            value={filters.day_of_week}
+            onChange={e => onFilterChange({ day_of_week: e.target.value })}
+            className={[
+              'w-full rounded-lg border px-2 py-1.5 text-[12px] outline-none focus:border-[#FF8A1F] transition',
+              filters.day_of_week ? 'border-[#FF8A1F] bg-[#FFF7ED] text-[#FF8A1F] font-medium' : 'border-[#E2E8F0] bg-white text-[#374151]',
+            ].join(' ')}
+          >
+            <option value="">All Days</option>
+            {Object.entries(DAYS_FULL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
           <select
             value={filters.quickFilter}
             onChange={e => onFilterChange({ quickFilter: e.target.value as QuickFilter })}
@@ -82,7 +94,7 @@ export function GroupSidebar({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="p-3">
         {groups.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-14 text-[#94A3B8]">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="mb-3 h-9 w-9 opacity-30">
@@ -91,14 +103,16 @@ export function GroupSidebar({
             <p className="text-[12px]">No groups found.</p>
           </div>
         ) : (
-          groups.map(g => (
-            <GroupListItem
-              key={g.group_id}
-              group={g}
-              selected={g.group_id === selectedId}
-              onClick={() => onSelect(g)}
-            />
-          ))
+          <div className="space-y-3">
+            {groups.map(g => (
+              <GroupListItem
+                key={g.group_id}
+                group={g}
+                selected={g.group_id === selectedId}
+                onClick={() => onSelect(g)}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>

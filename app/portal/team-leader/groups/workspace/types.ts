@@ -11,8 +11,9 @@ export interface Filters {
   q:           string
   branch_id:   string
   quickFilter: QuickFilter
+  day_of_week: string
 }
 
-export const DEFAULT_FILTERS: Filters = { q: '', branch_id: '', quickFilter: '' }
+export const DEFAULT_FILTERS: Filters = { q: '', branch_id: '', quickFilter: '', day_of_week: '' }
 
 export type WorkspaceTab = 'students' | 'attendance' | 'finance' | 'performance'

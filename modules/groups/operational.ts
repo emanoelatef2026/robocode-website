@@ -61,6 +61,9 @@ export interface GroupOperationalRow {
   graduated_at:            string | null
   graduated_to_group_id:   string | null
   graduated_from_group_id: string | null
+  payment_completion_pct:  number | null
+  payment_paid_amount:     number
+  payment_total_amount:    number
 }
 
 export interface EnrolledStudentBasic {
@@ -126,7 +129,7 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
 
   const groupIds = groupRows.map((g: any) => g.id as string)
 
-  const [gcResult, enrolledResult, schedResult] = await Promise.all([
+  const [gcResult, enrolledResult, schedResult, financeResult] = await Promise.all([
     db.from('group_courses')
       .select(`group_id, course_id, total_sessions, open_ended, courses!group_courses_course_id_fkey(title)`)
       .in('group_id', groupIds)
@@ -147,6 +150,10 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
     db.from('groups')
       .select('id, duration_minutes, end_date, meeting_link')
       .in('id', groupIds),
+    db.from('student_financial_accounts')
+      .select('group_id, paid_amount, remaining_amount, status')
+      .in('group_id', groupIds)
+      .neq('status', 'CANCELLED'),
   ])
 
   const courseMap = new Map<string, { course_id: string; course_name: string; planned_sessions: number | null; open_ended: boolean }>()
@@ -185,6 +192,17 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
     })
   }
 
+  const paymentMap = new Map<string, { paid: number; total: number }>()
+  for (const account of (financeResult.data ?? []) as any[]) {
+    if (!account.group_id) continue
+    const current = paymentMap.get(account.group_id) ?? { paid: 0, total: 0 }
+    const paid    = Number(account.paid_amount ?? 0)
+    const balance = Number(account.remaining_amount ?? 0)
+    current.paid  += paid
+    current.total += paid + balance
+    paymentMap.set(account.group_id, current)
+  }
+
   const metricsMap = await getGroupMetrics(groupIds)
 
   const now       = new Date()
@@ -219,6 +237,7 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
     const capacityPct  = g.capacity ? Math.round((studentCount / g.capacity) * 100) : null
     const metrics      = metricsMap.get(g.id)
     const sched        = schedMap.get(g.id)
+    const payment      = paymentMap.get(g.id)
 
     let startsSoon = false
     if (g.start_date) {
@@ -269,6 +288,9 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
       graduated_at:            g.graduated_at ?? null,
       graduated_to_group_id:   g.graduated_to_group_id ?? null,
       graduated_from_group_id: g.graduated_from_group_id ?? null,
+      payment_completion_pct:  payment && payment.total > 0 ? Math.round((payment.paid / payment.total) * 100) : null,
+      payment_paid_amount:     payment?.paid ?? 0,
+      payment_total_amount:    payment?.total ?? 0,
     }
   })
 }

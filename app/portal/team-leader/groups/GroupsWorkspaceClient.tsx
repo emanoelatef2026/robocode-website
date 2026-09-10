@@ -7,9 +7,7 @@ import GroupFormModal from './GroupFormModal'
 import type { GroupOperationalRow, GroupFormOptions, GroupStudentOption } from '@/modules/groups/operational'
 import { GroupSidebar } from './workspace/components/GroupSidebar'
 import { CompactKpiStrip, PageHeaderKpiStrip } from './workspace/components/KpiStrips'
-import { EmptyWorkspace } from './workspace/components/EmptyWorkspace'
 import { GroupWorkspace } from './workspace/GroupWorkspace'
-import { useGroupPanel } from './workspace/hooks/useGroupPanel'
 import { applyFilters } from './workspace/utils'
 import { DEFAULT_FILTERS } from './workspace/types'
 import type { Filters } from './workspace/types'
@@ -46,9 +44,6 @@ export default function GroupsWorkspaceClient({
   const [modalOpen, setModalOpen]   = useState(false)
   const [modalMode, setModalMode]   = useState<'create' | 'edit'>('create')
   const [editGroup, setEditGroup]   = useState<GroupOperationalRow | undefined>()
-
-  // Resizable panel
-  const { containerRef, panelWidth, isDesktop, handleDividerMouseDown, handleDividerDoubleClick } = useGroupPanel()
 
   // Export state
   const [exporting, setExporting]     = useState(false)
@@ -93,7 +88,6 @@ export default function GroupsWorkspaceClient({
   function handleGroupDeleted() {
     const nextGroup = visible.find(g => g.group_id !== selectedGroupId) ?? null
     setSelectedGroupId(nextGroup?.group_id ?? null)
-    if (!nextGroup) setMobilePanel('list')
     router.refresh()
   }
 
@@ -188,17 +182,12 @@ export default function GroupsWorkspaceClient({
         <CompactKpiStrip groups={groups} />
       )}
 
-      {/* Split panel workspace */}
-      <div ref={containerRef} className="flex min-h-0 flex-1 overflow-hidden ds-card">
+      {/* Full-width group operations list */}
+      <div className="min-h-0 flex-1 overflow-hidden ds-card">
 
         {/* Left panel */}
         <div
-          className={[
-            'shrink-0 border-r border-[#E2E8F0] overflow-hidden flex flex-col',
-            mobilePanel === 'detail' ? 'hidden md:flex' : 'flex',
-            !isDesktop ? 'w-full' : '',
-          ].join(' ')}
-          style={isDesktop ? { width: `${panelWidth}%` } : undefined}
+          className="flex flex-col"
         >
           <GroupSidebar
             groups={visible}
@@ -213,19 +202,14 @@ export default function GroupsWorkspaceClient({
 
         {/* Resizable divider */}
         <div
-          className="hidden md:flex w-1 shrink-0 cursor-col-resize flex-col items-center justify-center bg-[#F1F5F9] hover:bg-[#FF8A1F]/20 active:bg-[#FF8A1F]/30 transition-colors select-none group"
-          onMouseDown={handleDividerMouseDown}
-          onDoubleClick={handleDividerDoubleClick}
+          className="hidden"
           title="Drag to resize · Double-click to cycle widths (20 / 30 / 40%)"
         >
           <div className="h-8 w-0.5 rounded-full bg-[#CBD5E1] group-hover:bg-[#FF8A1F]/70 transition-colors" />
         </div>
 
         {/* Right workspace */}
-        <div className={[
-          'flex-1 min-w-0 overflow-hidden flex flex-col',
-          'hidden md:flex',
-        ].join(' ')}>
+        <div className="hidden border-t border-[#E2E8F0]">
           {selectedGroup ? (
             <GroupWorkspace
               key={selectedGroup.group_id}
@@ -240,9 +224,7 @@ export default function GroupsWorkspaceClient({
               allGroups={groups}
               onGraduationCommitted={handleGraduationCommitted}
             />
-          ) : (
-            <EmptyWorkspace />
-          )}
+          ) : null}
         </div>
       </div>
 
@@ -250,13 +232,13 @@ export default function GroupsWorkspaceClient({
           group details and actions remain available in one focused surface. */}
       {mobilePanel === 'detail' && selectedGroup && (
         <div
-          className="fixed inset-0 z-[60] bg-[#0B1F3A]/45 p-2 md:hidden"
+          className="fixed inset-0 z-[60] bg-[#0B1F3A]/45 p-2 md:p-6"
           role="dialog"
           aria-modal="true"
           aria-label={`${selectedGroup.name} group details`}
           onMouseDown={e => { if (e.target === e.currentTarget) setMobilePanel('list') }}
         >
-          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
+          <div className="mx-auto flex h-full max-w-7xl min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
             <div className="flex shrink-0 items-center justify-between border-b border-[#E2E8F0] bg-white px-3 py-2">
               <button
                 onClick={() => setMobilePanel('list')}

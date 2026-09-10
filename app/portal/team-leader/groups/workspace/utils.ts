@@ -40,6 +40,7 @@ export function fmtDateShort(iso: string | null | undefined): string {
 export function applyFilters(groups: GroupOperationalRow[], f: Filters): GroupOperationalRow[] {
   return groups.filter(g => {
     if (f.branch_id && g.branch_id !== f.branch_id) return false
+    if (f.day_of_week && g.day_of_week !== f.day_of_week) return false
     if (f.quickFilter === 'draft'          && getCohortLifecycleStage(g) !== 'draft')                  return false
     if (f.quickFilter === 'open'           && getCohortLifecycleStage(g) !== 'open')                   return false
     if (f.quickFilter === 'running'        && getCohortLifecycleStage(g) !== 'running')                return false
