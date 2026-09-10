@@ -295,9 +295,8 @@ export function GroupAttendanceTab({
 
   if (loading && !sessions.length) return <LoadingSpinner />
 
-  const now      = new Date()
-  const past     = sessions.filter(s => new Date(s.scheduled_at) < now)
-  const upcoming = sessions.filter(s => new Date(s.scheduled_at) >= now)
+  const completed = sessions.filter(s => s.status === 'completed')
+  const past      = completed
 
   function showToast(type: 'success' | 'error', msg: string) {
     setToast({ type, msg })
@@ -378,7 +377,7 @@ export function GroupAttendanceTab({
                                               : 'text-[#0B1F3A]',
           },
           { label: 'Students',      value: String(group.student_count), color: 'text-[#0B1F3A]' },
-          { label: 'Sessions Done', value: String(past.length),         color: 'text-[#0B1F3A]' },
+          { label: 'Sessions Done', value: String(completed.length),    color: 'text-[#0B1F3A]' },
         ].map(card => (
           <div key={card.label} className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
             <p className="text-[10px] text-[#94A3B8] uppercase tracking-wide">{card.label}</p>
@@ -390,7 +389,7 @@ export function GroupAttendanceTab({
       {isTL && (
         <div className="flex items-center justify-between gap-2">
           <p className="text-[11px] text-[#94A3B8]">
-            {sessions.length} session{sessions.length !== 1 ? 's' : ''}
+            {completed.length} completed session{completed.length !== 1 ? 's' : ''}
             {past.length > 0 && <span className="ml-1 text-[#10B981]">· {past.length} recorded</span>}
           </p>
           <div className="flex gap-2">
@@ -412,32 +411,21 @@ export function GroupAttendanceTab({
         </div>
       )}
 
-      {upcoming.length > 0 && (
-        <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Upcoming</p>
-          <div className="divide-y divide-[#F1F5F9] ds-card">
-            {upcoming.slice(0, 5).map(s => (
-              <WsSessionRow key={s.id} session={s} {...sessionRowProps} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {past.length > 0 && (
+      {completed.length > 0 && (
         <div>
           <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Recorded Sessions</p>
           <div className="divide-y divide-[#F1F5F9] ds-card">
-            {past.map(s => (
+            {completed.map(s => (
               <WsSessionRow key={s.id} session={s} {...sessionRowProps} />
             ))}
           </div>
         </div>
       )}
 
-      {!past.length && !upcoming.length && !isTL && (
+      {!completed.length && !isTL && (
         <p className="py-10 text-center text-sm text-[#94A3B8]">No sessions recorded yet.</p>
       )}
-      {!past.length && !upcoming.length && isTL && (
+      {!completed.length && isTL && (
         <div className="py-10 text-center">
           <p className="text-sm text-[#94A3B8] mb-3">No sessions recorded yet.</p>
           <button onClick={onOpenAddSession}
