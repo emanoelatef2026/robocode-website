@@ -2,7 +2,7 @@ import 'server-only'
 import { createServiceClient }      from '@/lib/supabase/service'
 import { getGroupMetrics }          from '@/modules/tl-dashboard/queries'
 import { getInstructorFilterOptions } from '@/modules/query-standards'
-import { summarizeGroupPayments }   from '@/modules/groups/payment-summary'
+import { summarizeGroupFinance }    from '@/modules/groups/payment-summary'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -130,7 +130,7 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
 
   const groupIds = groupRows.map((g: any) => g.id as string)
 
-  const [gcResult, enrolledResult, schedResult, enrollmentResult] = await Promise.all([
+  const [gcResult, enrolledResult, schedResult] = await Promise.all([
     db.from('group_courses')
       .select(`group_id, course_id, total_sessions, open_ended, courses!group_courses_course_id_fkey(title)`)
       .in('group_id', groupIds)
@@ -151,9 +151,6 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
     db.from('groups')
       .select('id, duration_minutes, end_date, meeting_link')
       .in('id', groupIds),
-    db.from('student_enrollments')
-      .select('id, group_id, student_id')
-      .in('group_id', groupIds)
   ])
 
   const courseMap = new Map<string, { course_id: string; course_name: string; planned_sessions: number | null; open_ended: boolean }>()
@@ -192,33 +189,14 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
     })
   }
 
-  const enrollmentRows = (enrollmentResult.data ?? []) as any[]
-  const enrollmentIds = enrollmentRows.map((enrollment) => enrollment.id as string)
-  const studentIds = [...new Set(enrollmentRows.map((enrollment) => enrollment.student_id as string))]
-  const financeColumns = 'id, group_id, enrollment_id, student_id, paid_amount, remaining_amount'
-  const [directFinanceResult, enrollmentFinanceResult, legacyFinanceResult] = await Promise.all([
-    db.from('student_financial_accounts')
-      .select(financeColumns)
-      .in('group_id', groupIds)
-      .neq('status', 'CANCELLED'),
-    enrollmentIds.length
-      ? db.from('student_financial_accounts')
-        .select(financeColumns)
-        .in('enrollment_id', enrollmentIds)
-        .neq('status', 'CANCELLED')
-      : Promise.resolve({ data: [] }),
-    studentIds.length
-      ? db.from('student_financial_accounts')
-        .select(financeColumns)
-        .in('student_id', studentIds)
-        .neq('status', 'CANCELLED')
-      : Promise.resolve({ data: [] }),
-  ])
-  const paymentMap = summarizeGroupPayments(groupIds, enrollmentRows, [
-    ...((directFinanceResult.data ?? []) as any[]),
-    ...((enrollmentFinanceResult.data ?? []) as any[]),
-    ...((legacyFinanceResult.data ?? []) as any[]),
-  ])
+  const groupStudents = (enrolledResult.data ?? []) as any[]
+  const studentIds = [...new Set(groupStudents.map((student) => student.student_id as string))]
+  const financeResult = studentIds.length
+    ? await db.from('student_financial_accounts')
+      .select('id, student_id, paid_amount, remaining_amount')
+      .in('student_id', studentIds)
+    : { data: [] }
+  const paymentMap = summarizeGroupFinance(groupStudents, (financeResult.data ?? []) as any[])
 
   const metricsMap = await getGroupMetrics(groupIds)
 
