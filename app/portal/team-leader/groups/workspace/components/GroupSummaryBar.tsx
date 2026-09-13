@@ -47,16 +47,6 @@ export function GroupSummaryBar({
     }
   }, [infoOpen])
 
-  function handleToggle() {
-    if (infoOpen) {
-      setInfoOpen(false); setPopupPos(null)
-    } else {
-      const rect = barRef.current?.getBoundingClientRect()
-      if (rect) setPopupPos({ top: rect.bottom + 2, left: rect.left, width: rect.width })
-      setInfoOpen(true)
-    }
-  }
-
   const sched = [
     group.day_of_week ? DAYS_FULL[group.day_of_week] : null,
     fmt12(group.start_time),
@@ -137,30 +127,6 @@ export function GroupSummaryBar({
               Meeting
             </a>
           )}
-
-          <button
-            onClick={handleToggle}
-            aria-label={infoOpen ? 'Close group details' : 'View group details'}
-            className={[
-              'flex h-9 items-center gap-1.5 rounded-lg px-2.5 transition-colors duration-150',
-              infoOpen
-                ? 'bg-[#FF8A1F]/10 text-[#FF8A1F] hover:bg-[#FF8A1F]/20'
-                : 'text-[#64748B] hover:bg-[#E2E8F0] hover:text-[#1E293B]',
-            ].join(' ')}
-          >
-              <span className="hidden text-[12px] font-medium sm:inline">Group details</span>
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`h-4 w-4 transition-transform duration-200 ${infoOpen ? 'rotate-180' : ''}`}
-            >
-              <path d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
 
           {isTL && (
             <GroupActionsDropdown
