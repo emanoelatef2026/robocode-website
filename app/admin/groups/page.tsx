@@ -16,8 +16,18 @@ export default async function AdminGroupsPage() {
 
   let branchIds: string[] = user.branchIds ?? []
   if (isSuperAdmin) {
-    const { data } = await db.from('branches').select('id').eq('is_active', true)
-    branchIds = (data ?? [] as { id: string }[]).map(b => b.id)
+    const loadBranches = () => db.from('branches').select('id').eq('is_active', true)
+    let { data: activeBranches, error: branchesError } = await loadBranches()
+    if (branchesError?.message.toLowerCase().includes('gateway timeout')) {
+      console.warn('[AdminGroupsPage] retrying after branch lookup gateway timeout')
+      const retry = await loadBranches()
+      activeBranches = retry.data
+      branchesError = retry.error
+    }
+    if (branchesError) {
+      throw new Error(`Failed to load branches: ${branchesError.message}`)
+    }
+    branchIds = (activeBranches ?? []).map(b => b.id)
   }
 
   const defaultBranchId = branchIds[0] ?? ''
