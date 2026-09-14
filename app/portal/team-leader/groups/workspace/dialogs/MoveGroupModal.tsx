@@ -19,10 +19,11 @@ export function MoveGroupModal({
   const [search, setSearch]               = useState('')
   const [error, setError]                 = useState<string | null>(null)
   const [loading, setLoading]             = useState(false)
+  const [contractMode, setContractMode]   = useState<'continue' | 'new'>('new')
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (isOpen) { setTargetGroupId(null); setSearch(''); setError(null); setLoading(false) }
+    if (isOpen) { setTargetGroupId(null); setSearch(''); setError(null); setLoading(false); setContractMode('new') }
   }, [isOpen])
 
   if (!isOpen) return null
@@ -53,7 +54,11 @@ export function MoveGroupModal({
     setError(null)
     try {
       await Promise.all(Array.from(selectedIds).map(sid => removeStudentFromGroupAction(currentGroup.group_id, sid)))
-      const res = await addStudentsToGroupAction(targetGroupId, Array.from(selectedIds))
+      const res = await addStudentsToGroupAction(
+        targetGroupId,
+        Array.from(selectedIds),
+        Object.fromEntries(Array.from(selectedIds).map(id => [id, contractMode])),
+      )
       if (!res.success) {
         setError(res.error?.message ?? 'Failed to add students to new group')
         return
@@ -144,6 +149,24 @@ export function MoveGroupModal({
         </div>
 
         <div className="shrink-0 border-t border-[#E2E8F0] px-5 py-4">
+          <div className="mb-3 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+            <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+              Contract for moved students
+            </label>
+            <select
+              value={contractMode}
+              onChange={e => setContractMode(e.target.value as 'continue' | 'new')}
+              className="mt-2 w-full rounded-md border border-[#E2E8F0] bg-white px-2 py-2 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F]"
+            >
+              <option value="new">Start new contract</option>
+              <option value="continue">Continue existing contract</option>
+            </select>
+            <p className="mt-1.5 text-[11px] text-[#64748B]">
+              {contractMode === 'new'
+                ? 'The previous contract and its payments stay separate.'
+                : 'The existing balance and payments move with the student.'}
+            </p>
+          </div>
           {error && (
             <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{error}</p>
           )}

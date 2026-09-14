@@ -4,7 +4,7 @@ import { revalidatePath }      from 'next/cache'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import type { ActionResult }   from '@/types/app'
-import { applyStudentChanges } from './db-ops'
+import { applyStudentChanges, type ContractChoiceMap } from './db-ops'
 
 const GROUPS_PATH = '/portal/team-leader/groups'
 
@@ -29,6 +29,7 @@ export async function removeStudentFromGroupAction(
 export async function addStudentsToGroupAction(
   groupId:    string,
   studentIds: string[],
+  contractChoices: ContractChoiceMap = {},
 ): Promise<ActionResult<void>> {
   if (!studentIds.length) return { success: true, data: undefined }
 
@@ -60,7 +61,7 @@ export async function addStudentsToGroupAction(
     }
   }
 
-  await applyStudentChanges(db, user.id, groupId, existing.branch_id, studentIds, [])
+  await applyStudentChanges(db, user.id, groupId, existing.branch_id, studentIds, [], contractChoices)
   revalidatePath(GROUPS_PATH)
   return { success: true, data: undefined }
 }

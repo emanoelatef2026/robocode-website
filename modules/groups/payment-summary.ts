@@ -6,6 +6,7 @@ export interface GroupFinanceStudent {
 export interface GroupFinanceAccount {
   id: string
   student_id: string
+  group_id: string | null
   paid_amount: number | string | null
   remaining_amount: number | string | null
 }
@@ -22,14 +23,17 @@ export function summarizeGroupFinance(
   groupStudents: GroupFinanceStudent[],
   accounts: GroupFinanceAccount[],
 ): Map<string, GroupPaymentSummary> {
-  const accountByStudent = new Map<string, GroupFinanceAccount>()
+  const accountByGroupStudent = new Map<string, GroupFinanceAccount>()
   for (const account of accounts) {
-    if (!accountByStudent.has(account.student_id)) accountByStudent.set(account.student_id, account)
+    if (account.group_id) {
+      const key = `${account.group_id}:${account.student_id}`
+      if (!accountByGroupStudent.has(key)) accountByGroupStudent.set(key, account)
+    }
   }
 
   const summary = new Map<string, GroupPaymentSummary>()
   for (const groupStudent of groupStudents) {
-    const account = accountByStudent.get(groupStudent.student_id)
+    const account = accountByGroupStudent.get(`${groupStudent.group_id}:${groupStudent.student_id}`)
     if (!account) continue
     const current = summary.get(groupStudent.group_id) ?? { paid: 0, total: 0 }
     const paid = Number(account.paid_amount ?? 0)

@@ -193,8 +193,9 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
   const studentIds = [...new Set(groupStudents.map((student) => student.student_id as string))]
   const financeResult = studentIds.length
     ? await db.from('student_financial_accounts')
-      .select('id, student_id, paid_amount, remaining_amount')
+      .select('id, student_id, group_id, paid_amount, remaining_amount')
       .in('student_id', studentIds)
+      .in('group_id', groupIds)
     : { data: [] }
   const paymentMap = summarizeGroupFinance(groupStudents, (financeResult.data ?? []) as any[])
 

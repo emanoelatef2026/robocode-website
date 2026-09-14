@@ -3,10 +3,12 @@ import { createServiceClient }    from '@/lib/supabase/service'
 import { syncGroupStatus }         from '../lifecycle'
 import { assignGroupCourseService } from '../assignment-service'
 import { generateGroupSchedules }   from './schedule-generation'
-import { resolveGroupCourseId }     from '@/modules/academic/enrollment-integrity'
+import { resolveGroupCourseId, closeSameCourseGroupMemberships } from '@/modules/academic/enrollment-integrity'
 import { reconcileGroupJoin }       from '@/modules/enrollments/historical-reconciliation'
 
 type DB = ReturnType<typeof createServiceClient>
+export type ContractJoinMode = 'continue' | 'new'
+export type ContractChoiceMap = Record<string, ContractJoinMode>
 
 // Updates the group's academic plan on its active group_courses row, then
 // auto-fills the schedules table forward through the last planned session
@@ -47,8 +49,11 @@ export async function applyStudentChanges(
   branchId: string,
   toAdd:    string[],
   toRemove: string[],
+  contractChoices: ContractChoiceMap = {},
 ): Promise<void> {
   const now = new Date().toISOString()
+
+  const courseId = await resolveGroupCourseId(db, groupId)
 
   await Promise.all([
     toRemove.length > 0
@@ -62,23 +67,104 @@ export async function applyStudentChanges(
           toAdd.map(studentId => ({
             group_id: groupId, student_id: studentId,
             enrollment_type: 'primary', status: 'active', joined_at: now,
+            course_id: courseId,
           })),
           { onConflict: 'group_id,student_id' },
         )
       : Promise.resolve(),
   ])
 
-  // Historical Enrollment Reconciliation: non-fatal flag per newly-added
-  // student if this group already has completed sessions. This form ("contract
-  // created separately via Payment wizard") has no enrollment to consume
-  // against yet, so reconcileGroupJoin's default (no `choice`) applies —
-  // flag only, never auto-consume.
+  // Close the previous membership only after the new membership is safely
+  // written. This is the shared chokepoint for create/edit/quick-add flows.
   if (toAdd.length > 0) {
-    const courseId = await resolveGroupCourseId(db, groupId)
     for (const studentId of toAdd) {
+      await closeSameCourseGroupMemberships(db, {
+        studentId, courseId, excludeGroupId: groupId,
+        reason: `Superseded by ${contractChoices[studentId] === 'new' ? 'new contract in' : 'move to'} group ${groupId}.`,
+      })
+      await applyContractChoice(db, userId, {
+        studentId, groupId, courseId, branchId,
+        mode: contractChoices[studentId] ?? 'new',
+      })
       await reconcileGroupJoin({ db, studentId, groupId, courseId, branchId, performedBy: userId })
     }
   }
+}
+
+export async function applyContractChoice(
+  db: DB,
+  userId: string,
+  input: { studentId: string; groupId: string; courseId: string | null; branchId: string; mode: ContractJoinMode },
+): Promise<void> {
+  if (!input.courseId) return
+
+  const { data: membership } = await db.from('group_students')
+    .select('id').eq('group_id', input.groupId).eq('student_id', input.studentId).maybeSingle()
+  if (!membership) return
+
+  const { data: current } = await db.from('student_enrollments')
+    .select('id, group_id, group_student_id, branch_id, group_course_id, instructor_id, enrollment_type, pricing_plan, total_amount, discount_amount, net_amount, enrolled_sessions, consumed_sessions, notes')
+    .eq('student_id', input.studentId).eq('course_id', input.courseId).eq('status', 'ACTIVE')
+    .order('created_at', { ascending: true }).limit(1).maybeSingle()
+
+  if (input.mode === 'continue' && current) {
+    await db.from('student_enrollments').update({
+      group_id: input.groupId,
+      group_student_id: (membership as { id: string }).id,
+      branch_id: input.branchId,
+    }).eq('id', (current as { id: string }).id)
+    await db.from('student_financial_accounts')
+      .update({ group_id: input.groupId })
+      .eq('enrollment_id', (current as { id: string }).id)
+    return
+  }
+
+  if (input.mode === 'new' && current) {
+    await db.from('student_enrollments').update({
+      status: 'CANCELLED',
+      end_date: new Date().toISOString().slice(0, 10),
+      notes: `Closed when a new contract was started in group ${input.groupId}.`,
+    }).eq('id', (current as { id: string }).id)
+  }
+
+  const { data: gc } = await db.from('group_courses')
+    .select('id, instructor_id').eq('group_id', input.groupId).eq('course_id', input.courseId)
+    .eq('status', 'active').maybeSingle()
+
+  const { data: enrollment } = await db.from('student_enrollments').insert({
+    student_id: input.studentId,
+    branch_id: input.branchId,
+    group_id: input.groupId,
+    course_id: input.courseId,
+    group_course_id: (gc as any)?.id ?? null,
+    group_student_id: (membership as { id: string }).id,
+    instructor_id: (gc as any)?.instructor_id ?? null,
+    start_date: new Date().toISOString().slice(0, 10),
+    status: 'ACTIVE',
+    enrollment_type: 'primary',
+    total_amount: 0,
+    discount_amount: 0,
+    net_amount: 0,
+    enrolled_sessions: 0,
+    consumed_sessions: 0,
+    pricing_snapshot: { total_amount: 0, discount_amount: 0, net_amount: 0, enrolled_sessions: 0 },
+    created_by: userId,
+  }).select('id').single()
+  if (!enrollment) return
+
+  await db.from('student_financial_accounts').insert({
+    student_id: input.studentId,
+    branch_id: input.branchId,
+    group_id: input.groupId,
+    enrollment_id: (enrollment as { id: string }).id,
+    total_amount: 0,
+    discount_amount: 0,
+    net_amount: 0,
+    paid_amount: 0,
+    remaining_amount: 0,
+    status: 'PAID',
+    created_by: userId,
+  })
 }
 
 // Assigns (or removes) a course + instructor pair to a group.

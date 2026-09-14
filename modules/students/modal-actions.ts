@@ -11,6 +11,7 @@ import {
   closeSameCourseGroupMemberships,
 } from '@/modules/academic/enrollment-integrity'
 import { reconcileGroupJoin, type ReconciliationChoice, type ShortfallResolution } from '@/modules/enrollments/historical-reconciliation'
+import { applyContractChoice, type ContractJoinMode } from '@/modules/groups/actions/db-ops'
 import { z } from 'zod'
 import type { ActionResult } from '@/types/app'
 import { syncParentPortalIdentity, syncStudentCertificateNames } from './linked-data'
@@ -83,6 +84,17 @@ function parseGroupIds(raw: FormDataEntryValue | null | undefined): string[] {
 // Never trusted beyond "which mode did staff pick" — previewHistoricalReconciliation
 // re-derives every count/eligibility fact server-side in applyGroupAssignments.
 type ReconciliationChoiceMap = Record<string, { choice: ReconciliationChoice; shortfallResolution?: ShortfallResolution }>
+type ContractChoiceMap = Record<string, ContractJoinMode>
+
+function parseContractChoices(raw: FormDataEntryValue | null | undefined): ContractChoiceMap {
+  if (!raw) return {}
+  try {
+    const obj = JSON.parse(raw as string)
+    return obj && typeof obj === 'object'
+      ? Object.fromEntries(Object.entries(obj).filter(([, mode]) => mode === 'continue' || mode === 'new')) as ContractChoiceMap
+      : {}
+  } catch { return {} }
+}
 
 function parseReconciliationChoices(raw: FormDataEntryValue | null | undefined): ReconciliationChoiceMap {
   if (!raw) return {}
@@ -116,7 +128,7 @@ async function applyGroupAssignments(
   studentId: string,
   groupsToAdd: string[],
   groupsToRemove: string[],
-  opts: { userId: string; branchId: string; reconciliationChoices?: ReconciliationChoiceMap } = { userId: '', branchId: '' }
+    opts: { userId: string; branchId: string; reconciliationChoices?: ReconciliationChoiceMap; contractChoices?: ContractChoiceMap } = { userId: '', branchId: '' }
 ) {
   const now = new Date().toISOString()
 
@@ -172,6 +184,14 @@ async function applyGroupAssignments(
       status:          'active',
       joined_at:       now,
       course_id:       courseId,
+    })
+
+    await applyContractChoice(db, opts.userId, {
+      studentId,
+      groupId,
+      courseId,
+      branchId: opts.branchId,
+      mode: opts.contractChoices?.[groupId] ?? 'new',
     })
 
     // Historical Enrollment Reconciliation: if the HistoricalReconciliationDialog
@@ -437,7 +457,8 @@ export async function createStudentModal(
   // 8. Group assignments (branch match validated in step 0)
   if (groupsToAdd.length) {
     const reconciliationChoices = parseReconciliationChoices(formData.get('reconciliation_choices_json'))
-    await applyGroupAssignments(db, student.id, groupsToAdd, [], { userId: user.id, branchId: branch_id, reconciliationChoices })
+    const contractChoices = parseContractChoices(formData.get('contract_choices_json'))
+    await applyGroupAssignments(db, student.id, groupsToAdd, [], { userId: user.id, branchId: branch_id, reconciliationChoices, contractChoices })
   }
 
   await db.rpc('write_audit_log', {
@@ -553,7 +574,8 @@ export async function updateStudentModal(
   // Group assignment sync (branch match validated above)
   if (groupsToAdd.length || groupsToRemove.length) {
     const reconciliationChoices = parseReconciliationChoices(formData.get('reconciliation_choices_json'))
-    await applyGroupAssignments(db, id, groupsToAdd, groupsToRemove, { userId: user.id, branchId: old.branch_id, reconciliationChoices })
+    const contractChoices = parseContractChoices(formData.get('contract_choices_json'))
+    await applyGroupAssignments(db, id, groupsToAdd, groupsToRemove, { userId: user.id, branchId: old.branch_id, reconciliationChoices, contractChoices })
   }
 
   await db.rpc('write_audit_log', {

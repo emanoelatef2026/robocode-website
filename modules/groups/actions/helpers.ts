@@ -11,6 +11,19 @@ export function parseStudentIds(raw: string | undefined): string[] {
   }
 }
 
+export function parseContractChoices(raw: string | undefined): Record<string, 'continue' | 'new'> {
+  if (!raw) return {}
+  try {
+    const value = JSON.parse(raw)
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
+    return Object.fromEntries(
+      Object.entries(value).filter(([, mode]) => mode === 'continue' || mode === 'new'),
+    ) as Record<string, 'continue' | 'new'>
+  } catch {
+    return {}
+  }
+}
+
 // Builds the DB insert payload for a new group.
 export function buildGroupInsert(data: GroupCoreInput): Record<string, unknown> {
   const base: Record<string, unknown> = {

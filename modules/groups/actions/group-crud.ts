@@ -5,7 +5,7 @@ import { createServiceClient }  from '@/lib/supabase/service'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import type { ActionResult }    from '@/types/app'
 import { createSchema, updateSchema } from './validators'
-import { parseStudentIds, buildGroupInsert, buildGroupUpdate, stripUndefined } from './helpers'
+import { parseStudentIds, parseContractChoices, buildGroupInsert, buildGroupUpdate, stripUndefined } from './helpers'
 import { applyStudentChanges, assignCourseAndInstructor, updateGroupCoursePlan } from './db-ops'
 
 const GROUPS_PATH = '/portal/team-leader/groups'
@@ -37,7 +37,7 @@ export async function createGroupModal(
     ['branch_id','name','type','capacity','day_of_week','start_time','duration_minutes',
      'start_date','end_date','meeting_link','notes','course_id','instructor_id',
      'asst_instructor_id','students_to_add_json','planned_sessions','open_ended',
-     'robocode_share_percent']
+     'robocode_share_percent','contract_choices_json']
       .map(k => [k, formData.get(k) ?? '']),
   )
 
@@ -68,7 +68,7 @@ export async function createGroupModal(
     await assignCourseAndInstructor(db, gid, course_id, instructor_id, asst_instructor_id, user.id)
     if (course_id) await updateGroupCoursePlan(db, gid, planned_sessions, open_ended ?? false, user.id)
     const toAdd = parseStudentIds(students_to_add_json)
-    if (toAdd.length) await applyStudentChanges(db, user.id, gid, rest.branch_id, toAdd, [])
+    if (toAdd.length) await applyStudentChanges(db, user.id, gid, rest.branch_id, toAdd, [], parseContractChoices(formData.get('contract_choices_json') as string))
     await db.rpc('write_audit_log', {
       p_performed_by: user.id, p_action: 'create', p_entity_type: 'group',
       p_entity_id: gid, p_new_values: { name: rest.name, type: rest.type }, p_branch_id: rest.branch_id,
@@ -103,7 +103,7 @@ export async function updateGroupModal(
     ['id','branch_id','name','type','status','capacity','day_of_week','start_time',
      'duration_minutes','start_date','end_date','meeting_link','notes','course_id',
      'instructor_id','asst_instructor_id','students_to_add_json','students_to_remove_json',
-     'planned_sessions','open_ended','robocode_share_percent']
+     'planned_sessions','open_ended','robocode_share_percent','contract_choices_json']
       .map(k => [k, formData.get(k) ?? '']),
   )
 
@@ -155,7 +155,7 @@ export async function updateGroupModal(
     if (memberBranchErr) {
       return { success: false, error: { code: 'VALIDATION', message: memberBranchErr } }
     }
-    await applyStudentChanges(db, user.id, id, existing.branch_id, toAdd, toRemove)
+    await applyStudentChanges(db, user.id, id, existing.branch_id, toAdd, toRemove, parseContractChoices(formData.get('contract_choices_json') as string))
   }
 
   await db.rpc('write_audit_log', {

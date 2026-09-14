@@ -163,6 +163,7 @@ export default function StudentFormModal({
       return opt ? [opt] : []
     })
   })
+  const [contractChoices, setContractChoices] = useState<Record<string, 'continue' | 'new'>>({})
   const [groupPickerQ,      setGroupPickerQ]      = useState('')
   const [showGroupPicker,   setShowGroupPicker]   = useState(false)
   const [groupPickerBranch, setGroupPickerBranch] = useState('')
@@ -205,10 +206,15 @@ export default function StudentFormModal({
   const addGroupLink = (g: GroupPickerOption) => {
     setDirty(true)
     setGroupLinks(prev => [...prev, g])
+    setContractChoices(prev => ({ ...prev, [g.group_id]: 'new' }))
     // First group picked before a branch was chosen — follow the group's branch
     if (!isEdit && !selectedBranchId) setSelectedBranchId(g.branch_id)
   }
-  const removeGroupLink = (groupId: string) => { setDirty(true); setGroupLinks(prev => prev.filter(g => g.group_id !== groupId)) }
+  const removeGroupLink = (groupId: string) => {
+    setDirty(true)
+    setGroupLinks(prev => prev.filter(g => g.group_id !== groupId))
+    setContractChoices(prev => { const next = { ...prev }; delete next[groupId]; return next })
+  }
 
   // ── Historical Enrollment Reconciliation ────────────────────────────────────
   // Edit mode only — a brand-new student (create mode) doesn't exist yet at
@@ -815,6 +821,17 @@ export default function StudentFormModal({
                             {g.course_name ?? '—'}{g.instructor_name ? ` · ${g.instructor_name}` : ''}
                           </p>
                           {sessionStr && <p className="text-[11px] text-[#64748B]">{sessionStr}</p>}
+                          {!originalGroupIds.has(g.group_id) && (
+                            <select
+                              value={contractChoices[g.group_id] ?? 'new'}
+                              onChange={e => setContractChoices(prev => ({ ...prev, [g.group_id]: e.target.value as 'continue' | 'new' }))}
+                              className="mt-1 rounded-md border border-[#E2E8F0] bg-white px-2 py-1 text-[11px] text-[#374151] outline-none focus:border-[#FF8A1F]"
+                              aria-label={`Contract mode for ${g.group_name}`}
+                            >
+                              <option value="new">Start new contract</option>
+                              <option value="continue">Continue existing contract</option>
+                            </select>
+                          )}
                           <p className="text-[11px] text-[#94A3B8]">
                             {g.student_count}{g.capacity != null ? `/${g.capacity}` : ''} students
                             {' · '}{g.status}
@@ -921,6 +938,7 @@ export default function StudentFormModal({
               {/* Hidden inputs consumed by server action */}
               <input type="hidden" name="groups_to_add_json"    value={JSON.stringify(groupsToAdd)} />
               <input type="hidden" name="groups_to_remove_json" value={JSON.stringify(groupsToRemove)} />
+              <input type="hidden" name="contract_choices_json" value={JSON.stringify(contractChoices)} />
               <input type="hidden" name="reconciliation_choices_json" ref={reconciliationInputRef} defaultValue="{}" />
             </fieldset>
           )}

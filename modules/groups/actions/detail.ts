@@ -126,8 +126,9 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       : none,
     studentIds.length
       ? db.from('student_financial_accounts')
-          .select('id, student_id, paid_amount, remaining_amount, status')
+          .select('id, student_id, group_id, paid_amount, remaining_amount, status')
           .in('student_id', studentIds)
+          .eq('group_id', groupId)
       : none,
     // Parent portal accounts — separate legacy system (parents/users), not linked to
     // student_parent_contacts. Only populated when a portal login was created via the

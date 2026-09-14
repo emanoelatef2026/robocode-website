@@ -26,6 +26,7 @@ interface StudentLink {
   parent_phone:       string | null
   attendance_pct:     number | null
   sessions_remaining: number | null
+  contract_mode: 'continue' | 'new'
 }
 
 interface Props {
@@ -703,6 +704,7 @@ export default function GroupFormModal({
             parent_phone:       opt?.parent_phone  ?? null,
             attendance_pct:     opt?.attendance_pct     ?? null,
             sessions_remaining: opt?.sessions_remaining ?? null,
+            contract_mode: 'continue',
           }
         })
       )
@@ -764,6 +766,7 @@ export default function GroupFormModal({
         branch_name: s.branch_name, age: s.age, phone: s.phone,
         parent_phone: s.parent_phone, attendance_pct: s.attendance_pct,
         sessions_remaining: s.sessions_remaining,
+        contract_mode: 'new',
       }]
     })
     setPickerQ('')
@@ -781,6 +784,9 @@ export default function GroupFormModal({
   const studentsToAdd = links.filter(l => !originalIds.has(l.student_id)).map(l => l.student_id)
   const addJson       = JSON.stringify(studentsToAdd)
   const removeJson    = JSON.stringify(toRemove)
+  const contractChoices = Object.fromEntries(
+    links.filter(l => studentsToAdd.includes(l.student_id)).map(l => [l.student_id, l.contract_mode]),
+  )
 
   const name        = group?.name                  ?? ''
   const type        = group?.type                  ?? 'class'
@@ -817,6 +823,7 @@ export default function GroupFormModal({
           {mode === 'edit' && <input type="hidden" name="id" value={group?.group_id} />}
           <input type="hidden" name="students_to_add_json"    value={addJson} />
           <input type="hidden" name="students_to_remove_json" value={removeJson} />
+          <input type="hidden" name="contract_choices_json" value={JSON.stringify(contractChoices)} />
 
           {/* ── Basic Info ─────────────────────────────────────────────────── */}
           <section>
@@ -1107,6 +1114,7 @@ export default function GroupFormModal({
                   <span className="flex-1 text-[10px] font-semibold text-[#94A3B8]">Name · Code · Age</span>
                   <span className="hidden w-28 shrink-0 text-[10px] font-semibold text-[#94A3B8] sm:block">Phone</span>
                   <span className="hidden w-28 shrink-0 text-[10px] font-semibold text-[#94A3B8] sm:block">Parent</span>
+                  <span className="hidden w-40 shrink-0 text-[10px] font-semibold text-[#94A3B8] sm:block">Contract</span>
                   <span className="w-14 shrink-0 text-right text-[10px] font-semibold text-[#94A3B8]">Sess.</span>
                   <span className="w-5 shrink-0" />
                 </div>
@@ -1123,6 +1131,19 @@ export default function GroupFormModal({
                     </div>
                     <span className="hidden w-28 shrink-0 font-mono text-[11px] text-[#374151] sm:block truncate">{l.phone ?? '—'}</span>
                     <span className="hidden w-28 shrink-0 font-mono text-[11px] text-[#64748B] sm:block truncate">{l.parent_phone ?? '—'}</span>
+                    {studentsToAdd.includes(l.student_id) ? (
+                      <select
+                        value={l.contract_mode}
+                        onChange={e => setLinks(prev => prev.map(item => item.student_id === l.student_id
+                          ? { ...item, contract_mode: e.target.value as 'continue' | 'new' }
+                          : item))}
+                        className="w-40 shrink-0 rounded-md border border-[#E2E8F0] bg-white px-1.5 py-1 text-[10px] text-[#374151] outline-none focus:border-[#FF8A1F]"
+                        aria-label={`Contract mode for ${l.student_name}`}
+                      >
+                        <option value="new">Start new contract</option>
+                        <option value="continue">Continue existing</option>
+                      </select>
+                    ) : <span className="hidden w-40 shrink-0 text-[10px] text-[#94A3B8] sm:block">Existing contract</span>}
                     <span className={`w-14 shrink-0 text-right text-[11px] ${sessColor(l.sessions_remaining)}`}>
                       {l.sessions_remaining != null ? `${l.sessions_remaining} left` : '—'}
                     </span>

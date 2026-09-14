@@ -18,6 +18,7 @@ export function QuickAddStudentModal({
 }) {
   const [search, setSearch]     = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [contractModes, setContractModes] = useState<Record<string, 'continue' | 'new'>>({})
   const [error, setError]       = useState<string | null>(null)
   const [, startT]              = useTransition()
 
@@ -30,7 +31,7 @@ export function QuickAddStudentModal({
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (isOpen) { setSearch(''); setSelected(new Set()); setError(null); setReconcileQueue(null) }
+    if (isOpen) { setSearch(''); setSelected(new Set()); setContractModes({}); setError(null); setReconcileQueue(null) }
   }, [isOpen])
 
   if (!isOpen) return null
@@ -42,8 +43,13 @@ export function QuickAddStudentModal({
   function toggleStudent(id: string) {
     setSelected(prev => {
       const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
+      if (next.has(id)) {
+        next.delete(id)
+        setContractModes(modes => { const copy = { ...modes }; delete copy[id]; return copy })
+      } else {
+        next.add(id)
+        setContractModes(modes => ({ ...modes, [id]: 'new' }))
+      }
       return next
     })
     setError(null)
@@ -55,7 +61,7 @@ export function QuickAddStudentModal({
     setError(null)
     const addedIds = Array.from(selected)
     startT(async () => {
-      const res = await addStudentsToGroupAction(group.group_id, addedIds)
+      const res = await addStudentsToGroupAction(group.group_id, addedIds, contractModes)
       if (!res.success) { setError(res.error?.message ?? 'Failed to add students.'); return }
       onAdded()
       // Walk each newly-added student through Historical Enrollment
@@ -166,6 +172,30 @@ export function QuickAddStudentModal({
         </div>
 
         <div className="shrink-0 border-t border-[#E2E8F0] px-5 py-4">
+          {selected.size > 0 && (
+            <div className="mb-3 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-3">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Contract for selected students</p>
+              <div className="space-y-2">
+                {Array.from(selected).map(id => {
+                  const student = studentOptions.find(s => s.student_id === id)
+                  return (
+                    <div key={id} className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate text-[12px] font-medium text-[#374151]">{student?.student_name ?? id}</span>
+                      <select
+                        value={contractModes[id] ?? 'new'}
+                        onChange={e => setContractModes(modes => ({ ...modes, [id]: e.target.value as 'continue' | 'new' }))}
+                        className="shrink-0 rounded-md border border-[#E2E8F0] bg-white px-2 py-1 text-[11px] text-[#374151] outline-none focus:border-[#FF8A1F]"
+                        aria-label={`Contract mode for ${student?.student_name ?? id}`}
+                      >
+                        <option value="new">Start new contract</option>
+                        <option value="continue">Continue existing</option>
+                      </select>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
           {error && (
             <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{error}</p>
           )}
