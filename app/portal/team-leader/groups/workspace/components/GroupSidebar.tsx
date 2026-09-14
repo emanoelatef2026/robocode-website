@@ -38,6 +38,14 @@ export function GroupSidebar({
 }) {
   const baseFiltered   = applyFilters(allGroups, { ...filters, quickFilter: '' })
   const searchFiltered = applyFilters(allGroups, { q: filters.q, branch_id: '', quickFilter: '', day_of_week: filters.day_of_week })
+  // Keep the branch filter available even if the form-options request was
+  // incomplete. The operational group rows already contain the authoritative
+  // branch id/name pair, so they are a reliable fallback for this UI filter.
+  const branchOptions = options.branches.length
+    ? options.branches
+    : Array.from(
+        new Map(allGroups.map(g => [g.branch_id, { id: g.branch_id, name: g.branch_name }])).values(),
+      ).sort((a, b) => a.name.localeCompare(b.name))
 
   return (
     <div className="flex flex-col">
@@ -50,14 +58,14 @@ export function GroupSidebar({
           placeholder="Search name, instructor, course…"
           className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:bg-white"
         />
-          {options.branches.length > 1 && (
+          {branchOptions.length > 0 && (
             <select
               value={filters.branch_id}
               onChange={e => onFilterChange({ branch_id: e.target.value })}
               className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F]"
             >
               <option value="">All Branches ({searchFiltered.length})</option>
-              {options.branches.map(b => (
+              {branchOptions.map(b => (
                 <option key={b.id} value={b.id}>
                   {b.name} ({searchFiltered.filter(g => g.branch_id === b.id).length})
                 </option>

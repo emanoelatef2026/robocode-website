@@ -28,6 +28,19 @@ export default async function AdminGroupsPage() {
       throw new Error(`Failed to load branches: ${branchesError.message}`)
     }
     branchIds = (activeBranches ?? []).map(b => b.id)
+
+    // A missing/NULL is_active flag must not make the Super Admin workspace
+    // appear empty. Super Admin is allowed to see every branch, so use all
+    // branches as a safe fallback when the active-only lookup returns none.
+    if (!branchIds.length) {
+      const { data: allBranches, error: allBranchesError } = await db
+        .from('branches')
+        .select('id')
+      if (allBranchesError) {
+        throw new Error(`Failed to load branches: ${allBranchesError.message}`)
+      }
+      branchIds = (allBranches ?? []).map(b => b.id)
+    }
   }
 
   const defaultBranchId = branchIds[0] ?? ''
