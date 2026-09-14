@@ -100,25 +100,35 @@ export async function listGroupsOperational(branchIds: string[]): Promise<GroupO
   if (!branchIds.length) return []
   const db = createServiceClient()
 
-  const { data: groups, error: groupsError } = await db
+  const loadGroups = () => db
     .from('groups')
     .select(`
-      id, branch_id, name, code, type, capacity, status,
-      start_date, day_of_week, time, notes, completed_sessions, robocode_share_percent,
-      graduated_at, graduated_to_group_id, graduated_from_group_id,
-      branches!groups_branch_id_fkey(name),
-      group_instructors!group_instructors_group_id_fkey(
-        instructor_id, role, from_session, to_session, allocation_status,
-        instructors!group_instructors_instructor_id_fkey(
-          users!instructors_user_id_fkey(
-            profiles!profiles_user_id_fkey(first_name, last_name)
+        id, branch_id, name, code, type, capacity, status,
+        start_date, day_of_week, time, notes, completed_sessions, robocode_share_percent,
+        graduated_at, graduated_to_group_id, graduated_from_group_id,
+        branches!groups_branch_id_fkey(name),
+        group_instructors!group_instructors_group_id_fkey(
+          instructor_id, role, from_session, to_session, allocation_status,
+          instructors!group_instructors_instructor_id_fkey(
+            users!instructors_user_id_fkey(
+              profiles!profiles_user_id_fkey(first_name, last_name)
+            )
           )
         )
-      )
-    `)
+      `)
     .in('branch_id', branchIds)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
+
+  let { data: groups, error: groupsError } = await loadGroups()
+  // Supabase can transiently return a gateway timeout for this nested read.
+  // Retry once so a temporary upstream timeout does not blank the whole page.
+  if (groupsError?.message.toLowerCase().includes('gateway timeout')) {
+    console.warn('[listGroupsOperational] retrying after gateway timeout')
+    const retry = await loadGroups()
+    groups = retry.data
+    groupsError = retry.error
+  }
 
   if (groupsError) {
     console.error('[listGroupsOperational] groups query failed:', groupsError.message, groupsError.details)
