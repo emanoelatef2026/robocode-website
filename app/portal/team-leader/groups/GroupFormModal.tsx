@@ -59,6 +59,9 @@ const TYPES = [
 
 const STATUSES = ['forming','active','completed','cancelled']
 
+// The group workspace dialog uses z-[60], so this form must stay above it.
+export const GROUP_FORM_MODAL_LAYER = 'z-[70]'
+
 function normalizeEgyptianPhone(input: string): string {
   const digits = input.replace(/\D/g, '')
   if (digits.startsWith('002') && digits.length >= 13) return '0' + digits.slice(3)
@@ -798,7 +801,7 @@ export default function GroupFormModal({
   const title = mode === 'create' ? 'New Group' : `Edit: ${group?.name}`
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className={`fixed inset-0 ${GROUP_FORM_MODAL_LAYER} flex items-end sm:items-center justify-center`}>
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       <div className="relative z-10 w-full sm:max-w-2xl max-h-[95vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl">
