@@ -51,14 +51,13 @@ export async function getPendingFeedbackSessions(
   const gcIds        = gcRowsData.map(gc => gc.id)
   const groupIdByGc  = new Map(gcRowsData.map(gc => [gc.id, gc.group_id]))
 
-  // Recently completed sessions
-  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  // Pending feedback must not expire after a fixed number of days. A student
+  // may log in later, and the request should remain until it is submitted.
   const { data: schedRows } = await db
     .from('schedules')
     .select('id, scheduled_at, group_course_id')
     .in('group_course_id', gcIds)
     .eq('status', 'completed')
-    .gte('scheduled_at', cutoff)
     .order('scheduled_at', { ascending: false })
     // Filter by the student's attendance below before applying the UI limit.
     // Limiting here could fill the page with absent/already-reviewed sessions
