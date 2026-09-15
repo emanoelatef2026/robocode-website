@@ -6,6 +6,12 @@ import type {
   InstructorRatingSummary,
 } from './types'
 
+export const FEEDBACK_ELIGIBLE_ATTENDANCE_STATUSES = ['present', 'late', 'makeup'] as const
+
+export function isFeedbackEligibleAttendanceStatus(status: string | null | undefined): boolean {
+  return FEEDBACK_ELIGIBLE_ATTENDANCE_STATUSES.includes(status as typeof FEEDBACK_ELIGIBLE_ATTENDANCE_STATUSES[number])
+}
+
 // ── Check if a student has already submitted feedback for a session ────────────
 
 export async function hasStudentSubmittedFeedback(
@@ -39,7 +45,6 @@ export async function getPendingFeedbackSessions(
     .from('group_courses')
     .select('id, group_id')
     .in('group_id', activeGroupIds)
-    .eq('status', 'active')
   const gcRowsData = (gcRows ?? []) as { id: string; group_id: string }[]
   if (gcRowsData.length === 0) return []
 
@@ -55,11 +60,29 @@ export async function getPendingFeedbackSessions(
     .eq('status', 'completed')
     .gte('scheduled_at', cutoff)
     .order('scheduled_at', { ascending: false })
-    .limit(limit)
+    // Filter by the student's attendance below before applying the UI limit.
+    // Limiting here could fill the page with absent/already-reviewed sessions
+    // and hide an older session that still needs feedback.
+    .limit(Math.max(limit * 10, 30))
 
   if (!schedRows || schedRows.length === 0) return []
 
   const schedIds = schedRows.map((s: any) => s.id as string)
+
+  // A review belongs to a student who attended the session, not merely to
+  // every current group member. This also keeps feedback available after a
+  // group/course is completed or the student's membership is later changed.
+  const { data: attendanceRows } = await db
+    .from('attendance_records')
+    .select('schedule_id, status')
+    .eq('student_id', studentId)
+    .in('schedule_id', schedIds)
+  const attendedIds = new Set(
+    (attendanceRows ?? [])
+      .filter((r: any) => isFeedbackEligibleAttendanceStatus(r.status))
+      .map((r: any) => r.schedule_id as string)
+  )
+  if (attendedIds.size === 0) return []
 
   // Exclude sessions where student already submitted feedback
   const { data: submitted } = await db
@@ -81,7 +104,8 @@ export async function getPendingFeedbackSessions(
   const groupNameById = new Map(((groupRows ?? []) as any[]).map(g => [g.id as string, g.name as string]))
 
   return schedRows
-    .filter((s: any) => !submittedIds.has(s.id))
+    .filter((s: any) => attendedIds.has(s.id) && !submittedIds.has(s.id))
+    .slice(0, limit)
     .map((s: any) => ({
       schedule_id:  s.id,
       group_name:   groupNameById.get(groupIdByGc.get(s.group_course_id) ?? '') ?? '',
