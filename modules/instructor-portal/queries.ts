@@ -42,6 +42,18 @@ interface GcContext {
   gcToGroupId: Map<string, string>
 }
 
+// A group can be handed off between instructors. History must therefore use
+// the instructor's allocation range instead of treating group membership as
+// ownership of every session in that group.
+export function isSessionWithinInstructorAllocation(
+  sessionNumber: number | null,
+  allocation?: { from_session: number; to_session: number | null },
+): boolean {
+  if (!allocation || sessionNumber == null) return true
+  return sessionNumber >= allocation.from_session &&
+    (allocation.to_session == null || sessionNumber <= allocation.to_session)
+}
+
 export async function resolveGcContext(
   instructorId: string,
   db: ReturnType<typeof createServiceClient>
@@ -1383,6 +1395,21 @@ export async function listSessionHistory(
     }])
   )
 
+  const groupIds = [...new Set((gcMeta ?? []).map((r: any) => r.group_id as string))]
+  const { data: allocationRows } = groupIds.length > 0
+    ? await db
+        .from('group_instructors')
+        .select('group_id, from_session, to_session')
+        .eq('instructor_id', instructorId)
+        .in('group_id', groupIds)
+    : { data: [] as any[] }
+  const allocationByGroup = new Map<string, { from_session: number; to_session: number | null }>(
+    (allocationRows ?? []).map((r: any) => [r.group_id as string, {
+      from_session: r.from_session ?? 1,
+      to_session: r.to_session ?? null,
+    }])
+  )
+
   // Filter to specific group if requested
   const filteredGcIds = filters?.groupId
     ? gcIds.filter((id) => gcInfo.get(id)?.groupId === filters.groupId)
@@ -1429,6 +1456,18 @@ export async function listSessionHistory(
       return t.toLowerCase().includes(q)
     })
   }
+
+  // Do not show sessions that belong to another instructor's allocation in a
+  // shared/handoff group. Sessions without a number remain visible for legacy
+  // rows created before canonical numbering was introduced.
+  filteredSessions = filteredSessions.filter((s) => {
+    const groupId = gcInfo.get(s.group_course_id)?.groupId
+    return isSessionWithinInstructorAllocation(
+      s.session_number ?? null,
+      groupId ? allocationByGroup.get(groupId) : undefined,
+    )
+  })
+  if (filteredSessions.length === 0) return []
 
   // Use canonical session_number from DB (assigned on INSERT, immutable).
   // total_in_group = max completed session_number per gc = group's canonical progress.
