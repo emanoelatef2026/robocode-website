@@ -79,8 +79,19 @@ export async function getTLKPIs(branchIds: string[]): Promise<TLKPIs> {
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
+  // Resolve the branch's active students once, then use the IDs to scope the
+  // related reads below. This keeps the KPI values unchanged while avoiding
+  // full-table scans of attendance, feedback, progress, and group membership.
+  const { data: activeStudentRows, count: activeStudents } = await db
+    .from('students')
+    .select('id', { count: 'exact' })
+    .in('branch_id', branchIds)
+    .eq('status', 'active')
+    .is('deleted_at', null)
+    .limit(10000)
+  const activeStudentIds = (activeStudentRows ?? []).map((row: any) => row.id as string)
+
   const [
-    { count: activeStudents },
     attData,
     assignData,
     feedbackData,
@@ -88,44 +99,48 @@ export async function getTLKPIs(branchIds: string[]): Promise<TLKPIs> {
     certReadyData,
     { count: openMessages },
   ] = await Promise.all([
-    // 1. Active students
-    db.from('students')
-      .select('id', { count: 'exact', head: true })
-      .in('branch_id', branchIds)
-      .eq('status', 'active')
-      .is('deleted_at', null),
+    // 1. Monthly attendance (present+late+makeup / total)
+    activeStudentIds.length > 0
+      ? db.from('attendance_records')
+          .select('status, students!attendance_records_student_id_fkey(branch_id)')
+          .in('student_id', activeStudentIds)
+          .gte('recorded_at', monthStart)
+      : Promise.resolve({ data: [] }),
 
-    // 2. Monthly attendance (present+late+makeup / total)
-    db.from('attendance_records')
-      .select('status, students!attendance_records_student_id_fkey(branch_id)')
-      .gte('recorded_at', monthStart),
+    // 2. Homework completion (submissions / total published for branch)
+    activeStudentIds.length > 0
+      ? db.from('group_students')
+          .select('group_id, students!group_students_student_id_fkey(branch_id)')
+          .in('student_id', activeStudentIds)
+          .eq('status', 'active')
+      : Promise.resolve({ data: [] }),
 
-    // 3. Homework completion (submissions / total published for branch)
-    db.from('group_students')
-      .select('group_id, students!group_students_student_id_fkey(branch_id)')
-      .eq('status', 'active'),
+    // 3. Parent satisfaction avg
+    activeStudentIds.length > 0
+      ? db.from('parent_feedback')
+          .select('rating, students!parent_feedback_student_id_fkey(branch_id)')
+          .in('student_id', activeStudentIds)
+      : Promise.resolve({ data: [] }),
 
-    // 4. Parent satisfaction avg
-    db.from('parent_feedback')
-      .select('rating, students!parent_feedback_student_id_fkey(branch_id)'),
+    // 4. Pending portfolio reviews
+    activeStudentIds.length > 0
+      ? db.from('portfolio_projects')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pending_review')
+          .eq('is_archived', false)
+          .in('student_id', activeStudentIds)
+      : Promise.resolve({ count: 0 }),
 
-    // 5. Pending portfolio reviews
-    db.from('portfolio_projects')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending_review')
-      .eq('is_archived', false)
-      .in(
-        'student_id',
-        (await db.from('students').select('id').in('branch_id', branchIds).eq('status', 'active').is('deleted_at', null)).data?.map((r: any) => r.id) ?? []
-      ),
+    // 5. Cert ready (high completion, no certificate yet)
+    activeStudentIds.length > 0
+      ? db.from('student_course_progress')
+          .select('student_id, completion_percentage')
+          .in('student_id', activeStudentIds)
+          .gte('completion_percentage', 90)
+          .eq('status', 'active')
+      : Promise.resolve({ data: [] }),
 
-    // 6. Cert ready (high completion, no certificate yet)
-    db.from('student_course_progress')
-      .select('student_id, completion_percentage')
-      .gte('completion_percentage', 90)
-      .eq('status', 'active'),
-
-    // 7. Open parent messages
+    // 6. Open parent messages
     db.from('parent_messages')
       .select('id', { count: 'exact', head: true })
       .in('branch_id', branchIds)
