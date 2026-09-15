@@ -210,7 +210,7 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
     const { data: gcRows } = await db
       .from('group_courses')
       .select(
-        `id, group_id, course_id,
+        `id, group_id, course_id, total_sessions,
          groups!group_courses_group_id_fkey(
            name, code, day_of_week, time,
            branches!groups_branch_id_fkey(name)
@@ -222,7 +222,6 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
 
     if (gcRows && gcRows.length > 0) {
       const gcGroupIds = (gcRows as any[]).map((r) => r.group_id as string)
-      const gcFullIds  = (gcRows as any[]).map((r) => r.id        as string)
 
       const [gsRes, completedRes, giRes] = await Promise.all([
         db.from('group_students').select('group_id').in('group_id', gcGroupIds).eq('status', 'active'),
@@ -237,16 +236,9 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
           .eq('instructor_id', instructorId),
       ])
 
-      // Safe fetch of total_sessions (null = open-ended group)
       const totalSessionsMap: Record<string, number | null> = {}
-      const { data: tsRows, error: tsErr } = await db
-        .from('group_courses')
-        .select('id, total_sessions')
-        .in('id', gcFullIds)
-      if (!tsErr && tsRows) {
-        for (const r of tsRows) {
-          totalSessionsMap[(r as any).id] = (r as any).total_sessions ?? null
-        }
+      for (const r of gcRows as any[]) {
+        totalSessionsMap[r.id] = r.total_sessions ?? null
       }
 
       const studentMap:         Record<string, number> = {}
@@ -370,30 +362,46 @@ export async function getTopStudentsAcrossInstructorGroups(
   instructorId: string,
   limit = 5
 ): Promise<InstructorTopStudent[]> {
-  const groups = await listInstructorGroups(instructorId)
-  if (groups.length === 0) return []
+  const db = createServiceClient()
+  const { groupIds } = await resolveGcContext(instructorId)
+  if (groupIds.length === 0) return []
 
-  const perGroup = await Promise.all(
-    groups.map(async (g) => {
-      const entries = await getGroupLeaderboard(g.group_id)
-      return entries.slice(0, limit).map((e) => ({
-        student_id:    e.student_id,
-        student_name:  e.student_name,
-        total_xp:      e.total_xp,
-        current_level: e.current_level,
-        group_id:      g.group_id,
-        group_name:    g.group_name,
-      }))
-    })
-  )
+  const { data: gsRows } = await db
+    .from('group_students')
+    .select('group_id, student_id')
+    .in('group_id', groupIds)
+    .eq('status', 'active')
+  const memberships = (gsRows ?? []) as any[]
+  const studentIds = [...new Set(memberships.map((row) => row.student_id as string))]
+  if (studentIds.length === 0) return []
 
-  const merged = new Map<string, InstructorTopStudent>()
-  for (const entry of perGroup.flat()) {
-    const existing = merged.get(entry.student_id)
-    if (!existing || entry.total_xp > existing.total_xp) merged.set(entry.student_id, entry)
+  const [{ data: studentRows }, { data: groupRows }] = await Promise.all([
+    db.from('students')
+      .select('id, total_xp, current_level, users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
+      .in('id', studentIds)
+      .is('deleted_at', null)
+      .order('total_xp', { ascending: false }),
+    db.from('groups').select('id, name').in('id', groupIds),
+  ])
+
+  const groupNames = new Map<string, string>((groupRows ?? []).map((row: any) => [row.id, row.name ?? '']))
+  const firstGroupByStudent = new Map<string, string>()
+  for (const row of memberships) {
+    if (!firstGroupByStudent.has(row.student_id)) firstGroupByStudent.set(row.student_id, row.group_id)
   }
 
-  return [...merged.values()].sort((a, b) => b.total_xp - a.total_xp).slice(0, limit)
+  return (studentRows ?? []).map((row: any): InstructorTopStudent => {
+    const profile = row.users?.profiles
+    const groupId = firstGroupByStudent.get(row.id) ?? ''
+    return {
+      student_id: row.id,
+      student_name: [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Unknown',
+      total_xp: Number(row.total_xp ?? 0),
+      current_level: Number(row.current_level ?? 1),
+      group_id: groupId,
+      group_name: groupNames.get(groupId) ?? '',
+    }
+  }).slice(0, limit)
 }
 
 // ── Group Detail ──────────────────────────────────────────────────────────────
