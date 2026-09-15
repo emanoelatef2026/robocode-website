@@ -1,6 +1,6 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
 import {
-  getStudentDashboardData,
+  getStudentEnrollment,
   getStudentAttendanceHistory,
 } from '@/modules/student-portal/queries'
 import Link from 'next/link'
@@ -17,16 +17,15 @@ const STATUS_CONFIG: Record<string, { label: string; emoji: string; cls: string;
   excused: { label: 'Excused', emoji: '📋', cls: 'bg-[#EFF6FF] text-[#1D4ED8]', iconBg: 'bg-[#E6F6FE]' },
   makeup:  { label: 'Makeup',  emoji: '🔁', cls: 'bg-purple-100 text-purple-700', iconBg: 'bg-[#F3E8FF]' },
 }
-
 export default async function StudentSessionsPage() {
   const user = await requirePortalRole('student')
 
-  const [data, records] = await Promise.all([
-    getStudentDashboardData(user.id),
+  const [enrollment, records] = await Promise.all([
+    getStudentEnrollment(user.id),
     getStudentAttendanceHistory(user.id),
   ])
 
-  if (!data) {
+  if (!enrollment) {
     return (
       <div className="flex h-48 items-center justify-center text-sm text-[#64748B]">
         No student record found.
@@ -46,7 +45,7 @@ export default async function StudentSessionsPage() {
         <div>
           <h1 className="text-base font-bold text-[#0B1F3A]">Sessions</h1>
           <p className="mt-0.5 text-xs text-[#64748B]">
-            {data.group_name ?? 'No group enrolled'}{data.course_title ? ` · ${data.course_title}` : ''}
+            {enrollment.group_name ?? 'No group enrolled'}{enrollment.course_title ? ` · ${enrollment.course_title}` : ''}
           </p>
         </div>
         <Link href="/portal/student/attendance" className="shrink-0 text-xs font-semibold text-[#FF8A1F] hover:underline">
@@ -123,3 +122,4 @@ export default async function StudentSessionsPage() {
     </div>
   )
 }
+

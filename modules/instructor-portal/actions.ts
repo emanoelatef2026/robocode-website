@@ -541,13 +541,17 @@ export async function endSession(
   }
 
   // ── 5. Gamification (XP for attending students) ────────────────────────────────
-  for (const rec of (attRows ?? []) as any[]) {
-    if (!ATTENDANCE_PRESENCE_STATUSES.has(rec.status as string)) continue
-    const xp = rec.status === 'present' ? XP_AWARDS.ATTENDANCE_PRESENT : XP_AWARDS.ATTENDANCE_LATE
-    await awardXP(rec.student_id as string, xp, true)
-    await checkAndUnlockAchievements(rec.student_id as string)
-    await checkAndAwardBadges(rec.student_id as string)
-  }
+  // Keep the dependency order for each student (XP first, then unlock checks),
+  // but process different students concurrently. The old loop made a whole
+  // group wait through dozens of independent database round-trips.
+  await Promise.all((attRows ?? [])
+    .filter((rec: any) => ATTENDANCE_PRESENCE_STATUSES.has(rec.status as string))
+    .map(async (rec: any) => {
+      const xp = rec.status === 'present' ? XP_AWARDS.ATTENDANCE_PRESENT : XP_AWARDS.ATTENDANCE_LATE
+      await awardXP(rec.student_id as string, xp, true)
+      await checkAndUnlockAchievements(rec.student_id as string)
+      await checkAndAwardBadges(rec.student_id as string)
+    }))
 
   await db.rpc('write_audit_log', {
     p_performed_by: user.id,

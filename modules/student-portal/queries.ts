@@ -56,6 +56,75 @@ export async function getStudentProfileHeader(userId: string): Promise<StudentPr
 // Tries the course-level instructor first, then falls back to the group's lead
 // instructor (group_instructors). Shared by every query below that needs to
 // display "who teaches this group" — previously duplicated verbatim in 2 places.
+export interface StudentShellData {
+  student_name: string
+  group_name: string | null
+  current_streak: number
+  group_rank: number | null
+  current_level: number
+  total_xp: number
+  xp_progress_pct: number
+  xp_to_next_level: number
+}
+
+// Only the persistent shell needs this data. Keeping the comprehensive
+// dashboard out of the layout prevents every sub-page from loading it.
+export async function getStudentShellData(userId: string): Promise<StudentShellData | null> {
+  const db = createServiceClient()
+  const { data: studentRow } = await db
+    .from('students')
+    .select(`id, total_xp, current_level, current_streak,
+      users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .maybeSingle()
+
+  if (!studentRow) return null
+
+  const row = studentRow as any
+  const studentId = row.id as string
+  const profile = row.users?.profiles
+  const studentName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Student'
+
+  const { data: membershipRows } = await db
+    .from('group_students')
+    .select('group_id, groups!group_students_group_id_fkey(name)')
+    .eq('student_id', studentId)
+    .eq('status', 'active')
+    .order('joined_at', { ascending: true })
+    .order('id', { ascending: true })
+
+  const primaryMembership = (membershipRows ?? [])[0] as any
+  const groupId = primaryMembership?.group_id as string | undefined
+  let groupRank: number | null = null
+
+  if (groupId) {
+    const { data: groupStudents } = await db
+      .from('group_students')
+      .select('student_id, students!group_students_student_id_fkey(total_xp)')
+      .eq('group_id', groupId)
+      .eq('status', 'active')
+    const ranked = (groupStudents ?? [])
+      .filter((member: any) => member.students)
+      .sort((a: any, b: any) => Number(b.students?.total_xp ?? 0) - Number(a.students?.total_xp ?? 0))
+    const index = ranked.findIndex((member: any) => member.student_id === studentId)
+    groupRank = index >= 0 ? index + 1 : null
+  }
+
+  const totalXp = Number(row.total_xp ?? 0)
+  const levelProgress = getLevelProgress(totalXp)
+  return {
+    student_name: studentName,
+    group_name: primaryMembership?.groups?.name ?? null,
+    current_streak: Number(row.current_streak ?? 0),
+    group_rank: groupRank,
+    current_level: Number(row.current_level ?? 1),
+    total_xp: totalXp,
+    xp_progress_pct: levelProgress.progressPct,
+    xp_to_next_level: Math.max(0, levelProgress.nextLevelXp - totalXp),
+  }
+}
+
 async function resolveGroupInstructorName(
   db: ReturnType<typeof createServiceClient>,
   groupId: string,
@@ -94,11 +163,15 @@ export async function getStudentDashboardData(
   if (!studentId) return null
 
   // Student name
-  const { data: studentRow } = await db
-    .from('students')
-    .select('users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))')
-    .eq('id', studentId)
-    .maybeSingle()
+  const [{ data: studentRow }, activeGroupIds] = await Promise.all([
+    db.from('students')
+      .select(`id, total_xp, current_level, current_streak, best_streak,
+        users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
+      .eq('id', studentId)
+      .is('deleted_at', null)
+      .maybeSingle(),
+    resolveActiveGroupIds(db, studentId),
+  ])
   const sp          = (studentRow as any)?.users?.profiles
   const studentName = [sp?.first_name, sp?.last_name].filter(Boolean).join(' ') || 'Student'
 
@@ -107,22 +180,14 @@ export async function getStudentDashboardData(
   // change); activeGroupIds is every concurrently active group and drives
   // every count/stat below so a student in 2+ courses sees a true combined
   // total instead of just one course's numbers.
-  const groupId        = await resolvePrimaryActiveGroupId(db, studentId)
-  const activeGroupIds = await resolveActiveGroupIds(db, studentId)
+  const groupId = activeGroupIds[0] ?? null
 
   // ── Gamification data (fetched early — independent of group) ─────────────────
-  const { data: gamRow } = await db
-    .from('students')
-    .select('total_xp, current_level, current_streak, best_streak')
-    .eq('id', studentId)
-    .is('deleted_at', null)
-    .maybeSingle()
-
-  const totalXp      = Number((gamRow as any)?.total_xp      ?? 0)
-  const currentLevel = Number((gamRow as any)?.current_level ?? 1)
+  const totalXp      = Number((studentRow as any)?.total_xp      ?? 0)
+  const currentLevel = Number((studentRow as any)?.current_level ?? 1)
   const xpProgress   = getLevelProgress(totalXp)
-  const currentStreak = Number((gamRow as any)?.current_streak ?? 0)
-  const bestStreak    = Number((gamRow as any)?.best_streak    ?? 0)
+  const currentStreak = Number((studentRow as any)?.current_streak ?? 0)
+  const bestStreak    = Number((studentRow as any)?.best_streak    ?? 0)
 
   // Achievement + badge counts
   const [{ count: achievementCount }, { count: badgeCount }, { count: certCount }] = await Promise.all([

@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { cache } from 'react'
 import { ACADEMICALLY_CONSUMING_SESSION_STATUSES } from '@/modules/academic/constants'
 import { getStudentNotes } from '@/modules/student-notes/queries'
 import { getGroupLeaderboard } from '@/modules/gamification/queries'
@@ -54,7 +55,7 @@ export function isSessionWithinInstructorAllocation(
     (allocation.to_session == null || sessionNumber <= allocation.to_session)
 }
 
-export async function resolveGcContext(
+async function resolveGcContextInternal(
   instructorId: string,
   db: ReturnType<typeof createServiceClient>
 ): Promise<GcContext> {
@@ -86,6 +87,13 @@ export async function resolveGcContext(
     gcToGroupId: gcMap,
   }
 }
+
+// React cache is request-scoped for Server Components. It deduplicates the
+// repeated ownership lookup made by dashboard widgets without persisting
+// authorization-sensitive data across requests.
+export const resolveGcContext = cache(async (instructorId: string): Promise<GcContext> => {
+  return resolveGcContextInternal(instructorId, createServiceClient())
+})
 
 // ── Helper: calculate next occurrence from day_of_week + time ─────────────────
 
@@ -162,7 +170,7 @@ export async function getInstructorDashboardStats(
   instructorId: string
 ): Promise<InstructorDashboardStats> {
   const db = createServiceClient()
-  const { gcIds, groupIds } = await resolveGcContext(instructorId, db)
+  const { gcIds, groupIds } = await resolveGcContext(instructorId)
 
   const [studentRes, completedRes] = await Promise.all([
     groupIds.length > 0
@@ -191,7 +199,7 @@ export async function getInstructorDashboardStats(
 
 export async function listInstructorGroups(instructorId: string): Promise<InstructorGroup[]> {
   const db = createServiceClient()
-  const { gcIds, groupIds, gcToGroupId } = await resolveGcContext(instructorId, db)
+  const { gcIds, groupIds, gcToGroupId } = await resolveGcContext(instructorId)
 
   if (groupIds.length === 0) return []
 
@@ -881,7 +889,7 @@ export async function listPendingSubmissions(
   limit = 10
 ): Promise<PendingSubmissionItem[]> {
   const db = createServiceClient()
-  const { gcIds } = await resolveGcContext(instructorId, db)
+  const { gcIds } = await resolveGcContext(instructorId)
   if (gcIds.length === 0) return []
 
   const { data: gcRows } = await db
@@ -1023,7 +1031,7 @@ export async function getStudentsRequiringAttention(
   limit = 5
 ): Promise<StudentAttentionItem[]> {
   const db = createServiceClient()
-  const { gcIds } = await resolveGcContext(instructorId, db)
+  const { gcIds } = await resolveGcContext(instructorId)
   if (gcIds.length === 0) return []
 
   const { data: gcMeta } = await db
@@ -1100,7 +1108,7 @@ export async function getStudentsMissingEvaluation(
   limit = 20
 ): Promise<StudentMissingEvaluationItem[]> {
   const db = createServiceClient()
-  const { groupIds } = await resolveGcContext(instructorId, db)
+  const { groupIds } = await resolveGcContext(instructorId)
   if (groupIds.length === 0) return []
 
   const { data: groupRows } = await db.from('groups').select('id, name').in('id', groupIds)
@@ -1324,7 +1332,7 @@ export async function getUpcomingSessionsForInstructor(
 ): Promise<InstructorSession[]> {
   const db  = createServiceClient()
   const now = new Date().toISOString()
-  const { gcIds } = await resolveGcContext(instructorId, db)
+  const { gcIds } = await resolveGcContext(instructorId)
   if (gcIds.length === 0) return []
 
   const { data: gcMeta } = await db
@@ -1374,7 +1382,7 @@ export async function listSessionHistory(
   filters?: SessionHistoryFilters
 ): Promise<SessionHistoryItem[]> {
   const db = createServiceClient()
-  const { gcIds } = await resolveGcContext(instructorId, db)
+  const { gcIds } = await resolveGcContext(instructorId)
   if (gcIds.length === 0) return []
 
   // Fetch group/course metadata for all gcIds
@@ -1645,7 +1653,7 @@ export async function searchStudentsForInstructor(
 ): Promise<StudentSearchResult[]> {
   if (!query.trim()) return []
   const db = createServiceClient()
-  const { groupIds } = await resolveGcContext(instructorId, db)
+  const { groupIds } = await resolveGcContext(instructorId)
   if (groupIds.length === 0) return []
 
   const { data: gsRows } = await db
@@ -1800,7 +1808,7 @@ export async function listInboxSubmissions(
   limit = 100
 ): Promise<InboxSubmissionItem[]> {
   const db = createServiceClient()
-  const { gcIds } = await resolveGcContext(instructorId, db)
+  const { gcIds } = await resolveGcContext(instructorId)
   if (gcIds.length === 0) return []
 
   // Optionally filter to a single group
@@ -1962,7 +1970,7 @@ export async function getTodaySessions(instructorId: string): Promise<TodaySessi
   const todayEnd = new Date()
   todayEnd.setHours(23, 59, 59, 999)
 
-  const { gcIds, gcToGroupId } = await resolveGcContext(instructorId, db)
+  const { gcIds, gcToGroupId } = await resolveGcContext(instructorId)
 
   // ── Path A: primary group sessions (existing behavior) ──────────────────
   const primaryRows: TodaySession[] = []
@@ -2126,7 +2134,7 @@ export async function getCertReadyStudentsForInstructor(
   limit = 8
 ): Promise<CertReadyStudent[]> {
   const db = createServiceClient()
-  const { groupIds } = await resolveGcContext(instructor.id, db)
+  const { groupIds } = await resolveGcContext(instructor.id)
   if (groupIds.length === 0) return []
 
   const { data: gsRows } = await db
@@ -2180,7 +2188,7 @@ export async function getCompetitionActivityForInstructor(
   limit = 5
 ): Promise<CompetitionActivitySummary> {
   const db = createServiceClient()
-  const { groupIds } = await resolveGcContext(instructorId, db)
+  const { groupIds } = await resolveGcContext(instructorId)
   if (groupIds.length === 0) return { total_records: 0, students_with_competitions: 0, recent: [] }
 
   const { data: gsRows } = await db

@@ -1,11 +1,11 @@
 import { requirePortalRole } from '@/modules/rbac/guards'
-import { getStudentDashboardData } from '@/modules/student-portal/queries'
+import { getStudentShellData } from '@/modules/student-portal/queries'
 import { getUnreadNotificationCount } from '@/modules/notifications/queries'
 import StudentShell from '@/components/portal/student/StudentShell'
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePortalRole('student')
-  const data = await getStudentDashboardData(user.id)
+  const data = await getStudentShellData(user.id)
 
   let unreadNotifications = 0
   try {

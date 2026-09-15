@@ -34,7 +34,7 @@ export default async function InstructorCalendarPage({ searchParams }: Props) {
   // Primary sessions via group_courses — resolved through both direct
   // group_courses.instructor_id assignment and the group_instructors pivot,
   // so co-taught / pivot-only groups still show on the calendar.
-  const { gcIds: myGcIds } = await resolveGcContext(instructor.id, db)
+  const { gcIds: myGcIds } = await resolveGcContext(instructor.id)
 
   const [primaryRes, specialSessions] = await Promise.all([
     showPrimary && myGcIds.length > 0

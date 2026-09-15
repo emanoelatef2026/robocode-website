@@ -1,6 +1,6 @@
 ﻿import { requirePortalRole } from '@/modules/rbac/guards'
 import {
-  getStudentDashboardData,
+  getStudentEnrollment,
   getStudentAttendanceHistory,
 } from '@/modules/student-portal/queries'
 import Link from 'next/link'
@@ -16,12 +16,12 @@ const STATUS_CONFIG: Record<string, { label: string; cls: string }> = {
 export default async function StudentAttendancePage() {
   const user = await requirePortalRole('student')
 
-  const [data, records] = await Promise.all([
-    getStudentDashboardData(user.id),
+  const [enrollment, records] = await Promise.all([
+    getStudentEnrollment(user.id),
     getStudentAttendanceHistory(user.id),
   ])
 
-  if (!data) {
+  if (!enrollment) {
     return (
       <div className="flex h-48 items-center justify-center text-sm text-[#64748B]">
         No student record found.
@@ -29,7 +29,10 @@ export default async function StudentAttendancePage() {
     )
   }
 
-  const attendancePct = data.att_pct
+  const attPresent = records.filter((r) => r.status === 'present').length
+  const attAbsent  = records.filter((r) => r.status === 'absent').length
+  const attLate    = records.filter((r) => r.status === 'late').length
+  const attendancePct = records.length > 0 ? Math.round((attPresent / records.length) * 100) : 0
 
   return (
     <div className="mx-auto max-w-3xl space-y-3">
@@ -37,7 +40,7 @@ export default async function StudentAttendancePage() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-base font-bold text-[#0B1F3A]">Attendance</h1>
-          <p className="text-xs text-[#64748B]">{data.group_name ?? 'No group enrolled'}</p>
+        <p className="text-xs text-[#64748B]">{enrollment.group_name ?? 'No group enrolled'}</p>
         </div>
         <Link href="/portal/student" className="shrink-0 text-xs text-[#FF8A1F] hover:underline">← Dashboard</Link>
       </div>
@@ -45,10 +48,10 @@ export default async function StudentAttendancePage() {
       {/* Summary stat cards */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { label: 'Present', value: data.att_present, color: 'text-[#10B981]' },
-          { label: 'Absent',  value: data.att_absent,  color: 'text-[#EF4444]'   },
-          { label: 'Late',    value: data.att_late,    color: 'text-yellow-600' },
-          { label: 'Total',   value: data.att_total,   color: 'text-[#0B1F3A]' },
+          { label: 'Present', value: attPresent, color: 'text-[#10B981]' },
+          { label: 'Absent',  value: attAbsent,  color: 'text-[#EF4444]'   },
+          { label: 'Late',    value: attLate,    color: 'text-yellow-600' },
+          { label: 'Total',   value: records.length, color: 'text-[#0B1F3A]' },
         ].map(({ label, value, color }) => (
           <div key={label} className="ds-card p-3 text-center">
             <p className={`text-xl font-bold leading-none ${color}`}>{value}</p>
