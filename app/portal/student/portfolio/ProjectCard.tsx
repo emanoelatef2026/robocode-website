@@ -39,19 +39,19 @@ export default function ProjectCard({ project: p }: { project: PortfolioProjectL
       <div className="p-3.5 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-sm font-semibold text-[#0B1F3A] leading-tight">{p.title}</h3>
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusCfg.cls}`}>
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
             {statusCfg.label}
           </span>
         </div>
 
         <div className="flex items-center gap-1.5 flex-wrap">
           {p.category && (
-            <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] text-[#64748B]">
+            <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] text-[#64748B]">
               {CATEGORY_ICONS[p.category]} {p.category}
             </span>
           )}
           {p.final_score != null && (
-            <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-medium text-[#15803D]">
+            <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-medium text-[#15803D]">
               Score: {p.final_score}
             </span>
           )}

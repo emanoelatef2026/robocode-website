@@ -33,7 +33,7 @@ export default async function TLCompetitionsPage({ searchParams }: Props) {
     <div className="space-y-5">
       <div>
         <h1 className="text-[18px] font-bold text-[#0B1F3A]">Competition Oversight</h1>
-        <p className="mt-0.5 text-[12px] text-[#64748B]">
+        <p className="mt-0.5 text-[13px] text-[#64748B]">
           Read-only view of recorded competition participation and results across your branches.
         </p>
       </div>
@@ -80,7 +80,7 @@ export default async function TLCompetitionsPage({ searchParams }: Props) {
                   { key: 'competition', header: 'Competition', cell: (r: typeof winners[number]) => (
                     <div>
                       <p className="text-[#374151]">{r.competition_name}</p>
-                      <p className="text-[11px] text-[#94A3B8]">{r.year}</p>
+                      <p className="text-[12px] text-[#94A3B8]">{r.year}</p>
                     </div>
                   ) },
                   { key: 'result', header: 'Result', cell: (r: typeof winners[number]) => (
@@ -106,7 +106,7 @@ export default async function TLCompetitionsPage({ searchParams }: Props) {
                   { key: 'result', header: 'Result', cell: (r: typeof recent_activity[number]) => (
                     r.rank || r.award
                       ? <MetricPill label={[r.rank, r.award].filter(Boolean).join(' · ')} variant="green" />
-                      : <span className="text-[11px] text-[#94A3B8]">Recorded</span>
+                      : <span className="text-[12px] text-[#94A3B8]">Recorded</span>
                   ) },
                   { key: 'when', header: 'When', align: 'right', cell: (r: typeof recent_activity[number]) => <span className="text-[#64748B]">{formatDate(r.created_at)}</span> },
                 ]}
@@ -126,7 +126,7 @@ export default async function TLCompetitionsPage({ searchParams }: Props) {
           <OperationalTable
             columns={[
               { key: 'group', header: 'Group', cell: (r: typeof by_group[number]) => (
-                <Link href={`/portal/team-leader/groups/${r.group_id}`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">{r.group_name}</Link>
+                <Link href={`/portal/team-leader/groups/${r.group_id}`} className="font-medium text-[#0B1F3A] hover:text-[#9A3412]">{r.group_name}</Link>
               ) },
               ...(user.branchIds.length > 1 ? [{ key: 'branch', header: 'Branch', cell: (r: typeof by_group[number]) => <span className="text-[#64748B]">{r.branch_name ?? '—'}</span> }] : []),
               { key: 'students', header: 'Students', align: 'right', cell: (r: typeof by_group[number]) => <span className="text-[#64748B]">{r.student_count}</span> },
@@ -147,7 +147,7 @@ export default async function TLCompetitionsPage({ searchParams }: Props) {
           <OperationalTable
             columns={[
               { key: 'instructor', header: 'Instructor', cell: (r: typeof by_instructor[number]) => (
-                <Link href="/portal/team-leader/instructors" className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">{r.instructor_name}</Link>
+                <Link href="/portal/team-leader/instructors" className="font-medium text-[#0B1F3A] hover:text-[#9A3412]">{r.instructor_name}</Link>
               ) },
               { key: 'students', header: 'Students', align: 'right', cell: (r: typeof by_instructor[number]) => <span className="text-[#64748B]">{r.student_count}</span> },
               { key: 'participating', header: 'Participating', align: 'right', cell: (r: typeof by_instructor[number]) => <span className="text-[#64748B]">{r.participating_count}</span> },

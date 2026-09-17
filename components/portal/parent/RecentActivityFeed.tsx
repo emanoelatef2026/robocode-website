@@ -82,7 +82,7 @@ export default function RecentActivityFeed({ activity, evaluations, competitions
     <div className="ds-card p-4">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-sm font-semibold text-[#0B1F3A]">Recent Activity</p>
-        <Link href={childHref('/portal/parent/journey')} className="text-[12px] text-[#FF8A1F] hover:underline">
+        <Link href={childHref('/portal/parent/journey')} className="text-[13px] text-[#FF8A1F] hover:underline">
           Full journey →
         </Link>
       </div>
@@ -102,9 +102,9 @@ export default function RecentActivityFeed({ activity, evaluations, competitions
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-medium text-[#0B1F3A]">{item.title}</p>
-                {item.subtitle && <p className="truncate text-[11px] text-[#64748B]">{item.subtitle}</p>}
+                {item.subtitle && <p className="truncate text-[12px] text-[#64748B]">{item.subtitle}</p>}
               </div>
-              <p className="shrink-0 text-[11px] text-[#64748B]">
+              <p className="shrink-0 text-[12px] text-[#64748B]">
                 {new Date(item.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
               </p>
             </Link>

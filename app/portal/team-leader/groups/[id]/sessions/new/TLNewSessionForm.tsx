@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState } from 'react'
 import { createSchedule } from '@/modules/schedule/actions'
@@ -40,7 +40,7 @@ export default function TLNewSessionForm({ groupId, groupCourseId, branchId }: P
               name="scheduled_at"
               type="datetime-local"
               required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
           <div>
@@ -54,7 +54,7 @@ export default function TLNewSessionForm({ groupId, groupCourseId, branchId }: P
               max="480"
               defaultValue="60"
               required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
         </div>
@@ -65,7 +65,7 @@ export default function TLNewSessionForm({ groupId, groupCourseId, branchId }: P
             <select
               name="type"
               defaultValue="regular"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               {['regular', 'makeup', 'exam', 'event'].map((t) => (
                 <option key={t} value={t} className="capitalize">{t}</option>
@@ -76,7 +76,7 @@ export default function TLNewSessionForm({ groupId, groupCourseId, branchId }: P
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Delivery</label>
             <select
               name="delivery"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               <option value="">Not specified</option>
               <option value="offline">Offline</option>
@@ -94,7 +94,7 @@ export default function TLNewSessionForm({ groupId, groupCourseId, branchId }: P
             name="topic"
             required
             placeholder="e.g. Variables &amp; Loops"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -104,7 +104,7 @@ export default function TLNewSessionForm({ groupId, groupCourseId, branchId }: P
             <input
               name="room"
               placeholder="e.g. Room 3A"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
           <div>
@@ -113,7 +113,7 @@ export default function TLNewSessionForm({ groupId, groupCourseId, branchId }: P
               name="meeting_url"
               type="url"
               placeholder="https://meet.google.com/…"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
         </div>

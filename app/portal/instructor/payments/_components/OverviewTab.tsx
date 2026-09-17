@@ -48,7 +48,7 @@ export default function OverviewTab({ overview, breakdown, filters }: Props) {
           <EmptyState title="No sessions found" description="Try adjusting the filters above." />
         ) : (
           <div className="mt-3 overflow-hidden ds-card">
-            <div className="hidden lg:grid grid-cols-[110px_1fr_90px_1fr_110px_110px] gap-3 border-b border-[#F1F5F9] bg-[#F8FAFC] px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-[#94A3B8]">
+            <div className="hidden lg:grid grid-cols-[110px_1fr_90px_1fr_110px_110px] gap-3 border-b border-[#F1F5F9] bg-[#F8FAFC] px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-[#94A3B8]">
               <span>Date</span>
               <span>Session</span>
               <span>Type</span>
@@ -62,23 +62,23 @@ export default function OverviewTab({ overview, breakdown, filters }: Props) {
                 return (
                   <div key={s.schedule_id} className="px-4 py-3">
                     <div className="hidden lg:grid grid-cols-[110px_1fr_90px_1fr_110px_110px] items-center gap-3">
-                      <span className="text-[12px] text-[#64748B]">{dateFull}</span>
-                      <span className="text-[12px] text-[#0B1F3A] truncate">{s.topic ?? '—'}</span>
-                      <span className="text-[12px] font-semibold text-[#0B1F3A]">{SESSION_TYPE_LABELS[s.session_type]}</span>
-                      <span className="text-[12px] text-[#64748B] truncate">{s.group_name}</span>
-                      <span className="text-[12px] font-bold text-[#0B1F3A]">{fmtEGP(s.amount)}</span>
+                      <span className="text-[13px] text-[#64748B]">{dateFull}</span>
+                      <span className="text-[13px] text-[#0B1F3A] truncate">{s.topic ?? '—'}</span>
+                      <span className="text-[13px] font-semibold text-[#0B1F3A]">{SESSION_TYPE_LABELS[s.session_type]}</span>
+                      <span className="text-[13px] text-[#64748B] truncate">{s.group_name}</span>
+                      <span className="text-[13px] font-bold text-[#0B1F3A]">{fmtEGP(s.amount)}</span>
                       <StatusBadge status={s.status} dot />
                     </div>
                     <div className="lg:hidden">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-[11px] text-[#94A3B8]">{dateFull}</span>
+                        <span className="text-[12px] text-[#94A3B8]">{dateFull}</span>
                         <StatusBadge status={s.status} dot />
                       </div>
                       <div className="mt-1 flex items-baseline justify-between gap-2">
                         <p className="truncate text-[13px] font-semibold text-[#0B1F3A]">{s.topic ?? s.group_name}</p>
                         <span className="shrink-0 text-[13px] font-bold text-[#0B1F3A]">{fmtEGP(s.amount)}</span>
                       </div>
-                      <p className="mt-0.5 text-[11px] text-[#64748B]">
+                      <p className="mt-0.5 text-[12px] text-[#64748B]">
                         {SESSION_TYPE_LABELS[s.session_type]} · {s.group_name}
                       </p>
                     </div>

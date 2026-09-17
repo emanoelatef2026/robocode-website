@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState } from 'react'
 import { tlReviewProject, tlAssignBadge } from '@/modules/portfolio/tl-actions'
@@ -21,7 +21,7 @@ interface Props {
   currentStatus:   string | null
 }
 
-const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
 export default function TLProjectReviewForm({ projectId, studentId, currentFeedback, currentScore, currentStatus }: Props) {
   const [reviewState, reviewAction, reviewPending] = useActionState<ActionResult<void> | null, FormData>(
@@ -70,11 +70,11 @@ export default function TLProjectReviewForm({ projectId, studentId, currentFeedb
 
         <div className="flex items-center gap-3">
           <button type="submit" disabled={reviewPending}
-            className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e07818] disabled:opacity-60 transition">
+            className="rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#e07818] disabled:opacity-60 transition">
             {reviewPending ? 'Saving…' : 'Save Review'}
           </button>
           <button type="button" onClick={() => setShowBadge((b) => !b)}
-            className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] hover:border-[#FF8A1F] transition">
+            className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#64748B] hover:border-[#0E7490] transition">
             {showBadge ? 'Hide Badge' : '🏅 Assign Badge'}
           </button>
         </div>

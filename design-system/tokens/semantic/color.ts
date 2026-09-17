@@ -24,22 +24,22 @@ export const SEMANTIC_STATUS_COLOR: Record<StatusBucketKey, StatusColorTriple> =
   danger: { bg: PRIMITIVE_COLOR.redSoft, text: PRIMITIVE_COLOR.redDark, dot: PRIMITIVE_COLOR.red },
   info: { bg: PRIMITIVE_COLOR.blueSoft, text: PRIMITIVE_COLOR.blueDark, dot: PRIMITIVE_COLOR.blue },
   neutral: { bg: PRIMITIVE_COLOR.slateSoft, text: PRIMITIVE_COLOR.slateDark, dot: PRIMITIVE_COLOR.slate },
-  special: { bg: PRIMITIVE_COLOR.purpleSoft, text: PRIMITIVE_COLOR.purpleDark, dot: PRIMITIVE_COLOR.purple },
+  special: { bg: PRIMITIVE_COLOR.orangeSoft, text: PRIMITIVE_COLOR.orangeStrongHover, dot: PRIMITIVE_COLOR.orangeStrong },
 };
 
 export interface SemanticColorTokens {
-  bg: { canvas: string; card: string; muted: string };
-  border: { default: string; soft: string };
+  bg: { canvas: string; card: string; muted: string; strong: string };
+  border: { default: string; strong: string; soft: string };
   text: { primary: string; secondary: string; tertiary: string; muted: string; mutedSoft: string; onBrand: string };
-  brand: { primary: string; primaryHover: string; accent: string; accentSoft: string; secondary: string };
+  brand: { primary: string; primaryHover: string; accent: string; accentStrong: string; accentStrongHover: string; accentSoft: string; secondary: string; secondaryStrong: string };
   status: Record<StatusBucketKey, StatusColorTriple>;
   interactive: { focusRing: string; disabled: string };
 }
 
 /** Today's one shipped Theme (DESIGN.md's palette). See `tokens/theme/light.ts`. */
 export const LIGHT_SEMANTIC_COLOR: SemanticColorTokens = {
-  bg: { canvas: PRIMITIVE_COLOR.bg, card: PRIMITIVE_COLOR.bgCard, muted: PRIMITIVE_COLOR.bgMuted },
-  border: { default: PRIMITIVE_COLOR.border, soft: PRIMITIVE_COLOR.borderSoft },
+  bg: { canvas: PRIMITIVE_COLOR.bg, card: PRIMITIVE_COLOR.bgCard, muted: PRIMITIVE_COLOR.bgMuted, strong: PRIMITIVE_COLOR.bgStrong },
+  border: { default: PRIMITIVE_COLOR.border, strong: PRIMITIVE_COLOR.borderStrong, soft: PRIMITIVE_COLOR.borderSoft },
   text: {
     primary: PRIMITIVE_COLOR.text,
     secondary: PRIMITIVE_COLOR.text2,
@@ -52,11 +52,14 @@ export const LIGHT_SEMANTIC_COLOR: SemanticColorTokens = {
     primary: PRIMITIVE_COLOR.navy,
     primaryHover: PRIMITIVE_COLOR.navyLight,
     accent: PRIMITIVE_COLOR.orange,
+    accentStrong: PRIMITIVE_COLOR.orangeStrong,
+    accentStrongHover: PRIMITIVE_COLOR.orangeStrongHover,
     accentSoft: PRIMITIVE_COLOR.orangeSoft,
     secondary: PRIMITIVE_COLOR.cyan,
+    secondaryStrong: PRIMITIVE_COLOR.cyanStrong,
   },
   status: SEMANTIC_STATUS_COLOR,
-  interactive: { focusRing: "rgba(255,138,31,.12)", disabled: PRIMITIVE_COLOR.mutedSoft },
+  interactive: { focusRing: "rgba(14,116,144,.18)", disabled: PRIMITIVE_COLOR.mutedSoft },
 };
 
 /**
@@ -67,8 +70,8 @@ export const LIGHT_SEMANTIC_COLOR: SemanticColorTokens = {
  * Parent checking a balance at night (DSA §5.6).
  */
 export const DARK_SEMANTIC_COLOR: SemanticColorTokens = {
-  bg: { canvas: "#0A1526", card: "#0F1F38", muted: "#132A4A" },
-  border: { default: "#1E3A5F", soft: "#17304F" },
+  bg: { canvas: "#0A1526", card: "#0F1F38", muted: "#132A4A", strong: "#1E3A5F" },
+  border: { default: "#1E3A5F", strong: "#3E5B7B", soft: "#17304F" },
   text: {
     primary: "#F1F5F9",
     secondary: "#CBD5E1",
@@ -81,8 +84,11 @@ export const DARK_SEMANTIC_COLOR: SemanticColorTokens = {
     primary: "#38BDF8",
     primaryHover: "#7DD3FC",
     accent: PRIMITIVE_COLOR.orange,
+    accentStrong: "#FFB15A",
+    accentStrongHover: "#FFCB83",
     accentSoft: PRIMITIVE_COLOR.orangeSoft,
     secondary: PRIMITIVE_COLOR.cyan,
+    secondaryStrong: "#67E8F9",
   },
   status: {
     success: { bg: "#0F2E20", text: "#4ADE80", dot: PRIMITIVE_COLOR.green },
@@ -92,5 +98,5 @@ export const DARK_SEMANTIC_COLOR: SemanticColorTokens = {
     neutral: { bg: "#1E293B", text: "#CBD5E1", dot: PRIMITIVE_COLOR.slate },
     special: { bg: "#2E1B47", text: "#D8B4FE", dot: PRIMITIVE_COLOR.purple },
   },
-  interactive: { focusRing: "rgba(255,138,31,.24)", disabled: "#475569" },
+  interactive: { focusRing: "rgba(103,232,249,.32)", disabled: "#475569" },
 };

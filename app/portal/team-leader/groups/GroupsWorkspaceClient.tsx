@@ -137,7 +137,7 @@ export default function GroupsWorkspaceClient({
         {isTL && (
           <button
             onClick={openCreate}
-            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+            className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#C2410C] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -151,7 +151,7 @@ export default function GroupsWorkspaceClient({
   }, [isTL, openCreate, setAction, exporting, handleExport])
 
   return (
-    <div className="flex min-h-[calc(100dvh-8.5rem)] flex-col gap-2 md:h-full md:min-h-0 md:gap-3">
+    <div className="flex flex-col gap-2 md:gap-3">
 
       {/* Export toast */}
       {exportToast && (
@@ -183,7 +183,7 @@ export default function GroupsWorkspaceClient({
       )}
 
       {/* Full-width group operations list */}
-      <div className="min-h-0 flex-1 overflow-hidden ds-card">
+      <div className="ds-card">
 
         {/* Left panel */}
         <div
@@ -205,7 +205,7 @@ export default function GroupsWorkspaceClient({
           className="hidden"
           title="Drag to resize · Double-click to cycle widths (20 / 30 / 40%)"
         >
-          <div className="h-8 w-0.5 rounded-full bg-[#CBD5E1] group-hover:bg-[#FF8A1F]/70 transition-colors" />
+          <div className="h-8 w-0.5 rounded-full bg-[#CBD5E1] group-hover:bg-[#C2410C]/70 transition-colors" />
         </div>
 
         {/* Right workspace */}
@@ -242,7 +242,7 @@ export default function GroupsWorkspaceClient({
             <div className="flex shrink-0 items-center justify-between border-b border-[#E2E8F0] bg-white px-3 py-2">
               <button
                 onClick={() => setMobilePanel('list')}
-                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-[12px] font-semibold text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0B1F3A]"
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2 text-[13px] font-semibold text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0B1F3A]"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                   <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />

@@ -29,8 +29,8 @@ function StatChip({ icon, value, label, tone, href }: {
   const content = (
     <>
       <span className="text-[14px]">{icon}</span>
-      <span className={`text-[12px] font-bold ${tone === 'warn' ? 'text-[#FCD34D]' : 'text-white'}`}>{value}</span>
-      <span className="text-[10px] text-white/50">{label}</span>
+      <span className={`text-[13px] font-bold ${tone === 'warn' ? 'text-[#FCD34D]' : 'text-white'}`}>{value}</span>
+      <span className="text-[11px] text-white/50">{label}</span>
     </>
   )
   if (href) return <Link href={href} className={cls}>{content}</Link>
@@ -83,7 +83,7 @@ export default function ParentHero({ overview, assignmentPct, upcomingClass, nex
             )}
             <div className="min-w-0">
               <h1 className="truncate text-[20px] font-extrabold leading-tight text-white">{overview.student_name}</h1>
-              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-white/45">
+              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[12px] text-white/45">
                 {overview.branch_name && <span>{overview.branch_name}</span>}
                 <StatusBadge status={overview.status} dot />
               </div>
@@ -91,7 +91,7 @@ export default function ParentHero({ overview, assignmentPct, upcomingClass, nex
           </div>
 
           <div className="w-full rounded-xl bg-white/10 px-3 py-2 text-left sm:w-auto sm:text-right">
-            <p className="text-[9px] font-semibold uppercase tracking-wide text-white/40">Next Class</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-white/40">Next Class</p>
             <p className="mt-0.5 text-[13px] font-bold text-white">{nextClassLabel ?? 'Not scheduled'}</p>
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function ParentHero({ overview, assignmentPct, upcomingClass, nex
 
         {/* Latest highlights — the ONE place these appear */}
         {(overview.latest_evaluation || overview.latest_achievement) && (
-          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 border-t border-white/10 pt-3 text-[12px] text-white/70">
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 border-t border-white/10 pt-3 text-[13px] text-white/70">
             {overview.latest_evaluation && (
               <p>
                 <span className="font-semibold text-white/90">Latest evaluation:</span>{' '}

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState } from 'react'
 import { updateBranch, deleteBranch } from '@/modules/branches/actions'
@@ -51,7 +51,7 @@ export default function BranchEditForm({ branch }: Props) {
             name="name"
             required
             defaultValue={branch.name}
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -63,7 +63,7 @@ export default function BranchEditForm({ branch }: Props) {
             name="type"
             required
             defaultValue={branch.type}
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           >
             <option value="offline">Offline</option>
             <option value="online">Online</option>
@@ -76,7 +76,7 @@ export default function BranchEditForm({ branch }: Props) {
           <input
             name="location"
             defaultValue={branch.location ?? ''}
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -86,7 +86,7 @@ export default function BranchEditForm({ branch }: Props) {
             name="phone"
             type="tel"
             defaultValue={branch.phone ?? ''}
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -95,7 +95,7 @@ export default function BranchEditForm({ branch }: Props) {
           <select
             name="timezone"
             defaultValue={branch.timezone}
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           >
             {TIMEZONES.map((tz) => (
               <option key={tz} value={tz}>{tz}</option>

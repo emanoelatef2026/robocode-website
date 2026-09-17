@@ -15,7 +15,7 @@ export function SummaryTab({ summary, dateFrom, dateTo, monthLabel }: Props) {
       <div className="ds-card p-5">
         <p className="text-[13px] font-semibold text-[#0B1F3A] mb-1">Period</p>
         <p className="text-[22px] font-extrabold text-[#0B1F3A]">{monthLabel}</p>
-        <p className="text-[11px] text-[#94A3B8] mt-1">{dateFrom} → {dateTo}</p>
+        <p className="text-[12px] text-[#94A3B8] mt-1">{dateFrom} → {dateTo}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -29,10 +29,10 @@ export function SummaryTab({ summary, dateFrom, dateTo, monthLabel }: Props) {
         <SummaryCard label="Total Advances"        value={fmtEGP(summary.total_advance)} color="amber" />
       </div>
 
-      <div className="rounded-xl border border-[#FF8A1F]/30 bg-[#FFF7F0] p-4">
-        <p className="text-[12px] font-semibold text-[#FF8A1F]">Grand Total Net Payroll</p>
+      <div className="rounded-xl border border-[#0E7490]/30 bg-[#FFF7F0] p-4">
+        <p className="text-[13px] font-semibold text-[#C2410C]">Grand Total Net Payroll</p>
         <p className="text-[28px] font-extrabold text-[#0B1F3A] mt-1">{fmtEGP(summary.total_net)}</p>
-        <p className="text-[11px] text-[#94A3B8] mt-0.5">{summary.currency} · {monthLabel}</p>
+        <p className="text-[12px] text-[#94A3B8] mt-0.5">{summary.currency} · {monthLabel}</p>
       </div>
     </div>
   )

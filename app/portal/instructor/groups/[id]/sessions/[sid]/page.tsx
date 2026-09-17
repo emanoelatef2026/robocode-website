@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId, getSessionDetail } from '@/modules/instructor-portal/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -65,7 +65,7 @@ export default async function SessionDetailPage({ params }: Props) {
             {STATUS_LABELS[session.status] ?? session.status}
           </span>
           {session.type === 'makeup' && (
-            <span className="rounded-full border border-purple-200 bg-purple-50 px-2.5 py-0.5 text-xs font-medium text-purple-700">
+            <span className="rounded-full border border-[#A5E5ED] bg-[#F0FAFB] px-2.5 py-0.5 text-xs font-medium text-[#0E7490]">
               Makeup Session
             </span>
           )}
@@ -97,7 +97,7 @@ export default async function SessionDetailPage({ params }: Props) {
                   className={[
                     'flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold transition',
                     isCurrent
-                      ? 'bg-[#FF8A1F] text-white ring-2 ring-[#FF8A1F] ring-offset-1'
+                      ? 'bg-[#C2410C] text-white ring-2 ring-[#FF8A1F] ring-offset-1'
                       : isDone
                         ? 'bg-[#E7F8EE] text-[#15803D] hover:bg-emerald-200'
                         : isCanceled
@@ -204,7 +204,7 @@ export default async function SessionDetailPage({ params }: Props) {
               </div>
               <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
                 <div
-                  className="h-full rounded-full bg-[#FF8A1F] transition-all"
+                  className="h-full rounded-full bg-[#C2410C] transition-all"
                   style={{ width: `${Math.round((markedCount / session.student_count) * 100)}%` }}
                 />
               </div>

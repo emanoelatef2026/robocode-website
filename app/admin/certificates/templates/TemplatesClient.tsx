@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -39,7 +39,7 @@ export default function TemplatesClient({ templates }: Props) {
       <button
         type="button"
         onClick={openNew}
-        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#C2410C] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
           <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -85,7 +85,7 @@ export default function TemplatesClient({ templates }: Props) {
                       <button
                         type="button"
                         onClick={() => setModal({ mode: 'edit', templateId: t.id })}
-                        className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                        className="text-xs font-medium text-[#C2410C] hover:underline"
                       >
                         Edit
                       </button>

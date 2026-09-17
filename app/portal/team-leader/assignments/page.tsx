@@ -1,4 +1,4 @@
-﻿import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { listAssignments }                      from '@/modules/assignments/queries'
 import { getTLAssignmentOverview }              from '@/modules/tl-analytics/queries'
 import SearchInput                              from '@/components/admin/SearchInput'
@@ -82,7 +82,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
       <TopbarAction>
         <Link
           href="/portal/team-leader/assignments/new"
-          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#C2410C] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -103,7 +103,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
           <div key={k.label} className="ds-card p-3">
             <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
             <p className="text-xl font-bold text-[#0B1F3A]">{k.value}</p>
-            <p className="text-[11px] text-[#64748B]">{k.label}</p>
+            <p className="text-[12px] text-[#64748B]">{k.label}</p>
           </div>
         ))}
       </div>
@@ -194,11 +194,11 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                       return (
                         <tr key={a.id} className="ds-table-row">
                           <td className="px-4 py-3">
-                            <Link href={`/portal/team-leader/assignments/${a.id}`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">{a.title}</Link>
-                            {isOverdue && <span className="ml-2 inline-block rounded-full bg-[#FEE2E2] px-1.5 py-0.5 text-[10px] font-medium text-[#EF4444]">Overdue</span>}
+                            <Link href={`/portal/team-leader/assignments/${a.id}`} className="font-medium text-[#0B1F3A] hover:text-[#9A3412]">{a.title}</Link>
+                            {isOverdue && <span className="ml-2 inline-block rounded-full bg-[#FEE2E2] px-1.5 py-0.5 text-[11px] font-medium text-[#EF4444]">Overdue</span>}
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${TYPE_COLORS[a.type] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
+                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${TYPE_COLORS[a.type] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
                               {TYPE_LABELS[a.type] ?? a.type}
                             </span>
                           </td>
@@ -209,7 +209,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                           <td className="px-4 py-3 text-right text-[#64748B]">{a.submission_count}</td>
                           <td className="px-4 py-3"><StatusBadge status={a.status} /></td>
                           <td className="px-4 py-3 text-right">
-                            <Link href={`/portal/team-leader/assignments/${a.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">Manage</Link>
+                            <Link href={`/portal/team-leader/assignments/${a.id}`} className="text-xs font-medium text-[#C2410C] hover:underline">Manage</Link>
                           </td>
                         </tr>
                       )
@@ -226,11 +226,11 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                       <div className="min-w-0 flex-1">
                         <Link href={`/portal/team-leader/assignments/${a.id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">{a.title}</Link>
                         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${TYPE_COLORS[a.type] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>{TYPE_LABELS[a.type] ?? a.type}</span>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${TYPE_COLORS[a.type] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>{TYPE_LABELS[a.type] ?? a.type}</span>
                           <StatusBadge status={a.status} />
                         </div>
                       </div>
-                      <Link href={`/portal/team-leader/assignments/${a.id}`} className="shrink-0 rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center">
+                      <Link href={`/portal/team-leader/assignments/${a.id}`} className="shrink-0 rounded-lg bg-[#C2410C]/10 px-3 py-1.5 text-[13px] font-semibold text-[#C2410C] min-h-9 flex items-center">
                         Manage →
                       </Link>
                     </div>
@@ -269,7 +269,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                   {by_group.map(g => (
                     <tr key={g.group_id} className="ds-table-row">
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">
-                        <Link href={`/portal/team-leader/groups/${g.group_id}`} className="hover:text-[#FF8A1F]">{g.group_name}</Link>
+                        <Link href={`/portal/team-leader/groups/${g.group_id}`} className="hover:text-[#9A3412]">{g.group_name}</Link>
                       </td>
                       {user.branchIds.length > 1 && <td className="px-4 py-3 text-xs text-[#64748B]">{g.branch_name ?? '—'}</td>}
                       <td className="px-4 py-3 text-right text-[#64748B]">{g.assignment_count}</td>
@@ -313,7 +313,7 @@ export default async function TLAssignmentsPage({ searchParams }: Props) {
                   {by_instructor.map(i => (
                     <tr key={i.instructor_id} className="ds-table-row">
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">
-                        <Link href="/portal/team-leader/instructors" className="hover:text-[#FF8A1F]">{i.instructor_name}</Link>
+                        <Link href="/portal/team-leader/instructors" className="hover:text-[#9A3412]">{i.instructor_name}</Link>
                       </td>
                       <td className="px-4 py-3 text-right text-[#64748B]">{i.assignment_count}</td>
                       <td className="px-4 py-3">{pctBar(i.avg_completion_pct)}</td>

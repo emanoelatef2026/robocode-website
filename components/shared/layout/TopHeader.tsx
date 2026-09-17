@@ -31,25 +31,25 @@ export default function TopHeader({ onMenuClick, role, sections, branchName, cen
 
   return (
     <header
-      className="flex shrink-0 items-center gap-3 border-b border-[#E2E8F0] bg-white px-4 md:px-6"
+      className="flex shrink-0 items-center gap-3 border-b border-[var(--border)] bg-white px-4 md:px-6"
       style={{ height: "var(--header-height)" }}
     >
       <button
         onClick={onMenuClick}
-        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E2E8F0] bg-white transition hover:border-[#94A3B8] md:hidden"
+        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--border)] bg-white transition hover:border-[#94A3B8] md:hidden"
         aria-label="Open menu"
       >
-        <MenuIcon className="h-4.5 w-4.5 text-[#64748B]" />
+        <MenuIcon className="h-4.5 w-4.5 text-[var(--muted)]" />
       </button>
 
       {centerSlot ?? (
         <>
           <div className="hidden md:block">
-            <h1 className="text-[17px] font-extrabold leading-tight tracking-tight text-[#0B1F3A]">{pageTitle}</h1>
-            <p className="mt-0.5 text-[11px] leading-none text-[#94A3B8]">{subtitle}</p>
+            <h1 className="text-[20px] font-bold leading-tight tracking-[-0.02em] text-[var(--navy)]">{pageTitle}</h1>
+            <p className="mt-1 text-[13px] font-normal leading-none text-[#64748B]">{subtitle}</p>
           </div>
           <div className="block md:hidden">
-            <h1 className="text-[16px] font-extrabold text-[#0B1F3A]">{pageTitle}</h1>
+            <h1 className="text-[18px] font-bold tracking-[-0.02em] text-[var(--navy)]">{pageTitle}</h1>
           </div>
         </>
       )}
@@ -60,8 +60,8 @@ export default function TopHeader({ onMenuClick, role, sections, branchName, cen
 
       {branchName && (
         <div className="hidden items-center gap-1.5 rounded-[10px] border border-[#e4e9f0] bg-white px-3 py-1.5 md:flex">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#FF8A1F]" />
-          <span className="text-[12px] font-semibold text-[#0B1F3A]">{branchName}</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-[#C2410C]" />
+          <span className="text-[13px] font-semibold text-[#0B1F3A]">{branchName}</span>
         </div>
       )}
 

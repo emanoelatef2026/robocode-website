@@ -59,13 +59,13 @@ export default function MethodsTab({ paymentMethods }: { paymentMethods: Instruc
   return (
     <form onSubmit={handleSubmit} className="ds-card max-w-xl space-y-4 p-4">
       <div>
-        <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+        <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">
           Preferred Payment Method
         </label>
         <select
           value={method}
           onChange={e => setMethod(e.target.value as InstructorPreferredMethod)}
-          className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+          className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
         >
           {PREFERRED_METHOD_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -73,71 +73,71 @@ export default function MethodsTab({ paymentMethods }: { paymentMethods: Instruc
 
       {method === 'vodafone_cash' && (
         <div>
-          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+          <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">
             Vodafone Cash Number
           </label>
           <input
             type="text" inputMode="numeric" value={wallet}
             onChange={e => setWallet(e.target.value)}
             placeholder="01xxxxxxxxx"
-            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
           />
-          <p className="mt-1 text-[11px] text-[#94A3B8]">Must be exactly 11 digits.</p>
+          <p className="mt-1 text-[12px] text-[#94A3B8]">Must be exactly 11 digits.</p>
         </div>
       )}
 
       {method === 'instapay' && (
         <>
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">
               Instapay Number <span className="text-[#EF4444]">*</span>
             </label>
             <input
               type="text" value={instapayNo}
               onChange={e => setInstapayNo(e.target.value)}
               placeholder="01xxxxxxxxx"
-              className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+              className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
             />
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+            <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">
               Instapay Payment Link <span className="text-[#EF4444]">*</span>
             </label>
             <input
               type="url" value={payLink}
               onChange={e => setPayLink(e.target.value)}
               placeholder="https://ipn.eg/S/..."
-              className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+              className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
             />
           </div>
-          <p className="text-[11px] text-[#94A3B8]">Both the number and payment link are required for Instapay.</p>
+          <p className="text-[12px] text-[#94A3B8]">Both the number and payment link are required for Instapay.</p>
         </>
       )}
 
       {method === 'bank_transfer' && (
         <div>
-          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+          <label className="mb-1 block text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">
             Bank Account Number
           </label>
           <input
             type="text" value={bankAcct}
             onChange={e => setBankAcct(e.target.value)}
-            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
           />
         </div>
       )}
 
       {method === 'cash' && (
-        <p className="text-[12px] text-[#64748B]">No additional details needed for cash payments.</p>
+        <p className="text-[13px] text-[#64748B]">No additional details needed for cash payments.</p>
       )}
 
-      {error && <p className="text-[12px] font-medium text-[#EF4444]">{error}</p>}
-      {success && !error && <p className="text-[12px] font-medium text-[#15803D]">Payment methods updated.</p>}
+      {error && <p className="text-[13px] font-medium text-[#EF4444]">{error}</p>}
+      {success && !error && <p className="text-[13px] font-medium text-[#15803D]">Payment methods updated.</p>}
 
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-[12px] font-semibold text-white transition hover:bg-[#e07818] disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-lg bg-[#C2410C] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#9A3412] disabled:cursor-not-allowed disabled:opacity-40"
       >
         {pending ? 'Saving…' : 'Save Payment Methods'}
       </button>

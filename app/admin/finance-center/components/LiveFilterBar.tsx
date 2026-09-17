@@ -69,7 +69,7 @@ export function LiveFilterBar({
         <select
           value={currentBranchId}
           onChange={e => navigate({ branch: e.target.value })}
-          className="min-w-0 flex-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none sm:min-w-[130px] sm:flex-none"
+          className="min-w-0 flex-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-xs focus:border-[#0E7490] focus:outline-none sm:min-w-[130px] sm:flex-none"
         >
           <option value="">All Branches</option>
           {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -82,9 +82,9 @@ export function LiveFilterBar({
             p === 'year'  && currentDateFrom === `${new Date().getFullYear()}-01-01` ? true : false
           return (
             <button key={p} onClick={() => preset(p)}
-              className={`rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition flex-shrink-0 ${
+              className={`rounded-lg border px-2.5 py-1.5 text-[12px] font-medium transition flex-shrink-0 ${
                 isActive
-                  ? 'border-[#FF8A1F] bg-orange-50 text-[#FF8A1F]'
+                  ? 'border-[#0E7490] bg-orange-50 text-[#C2410C]'
                   : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A]'
               }`}>
               {p === 'month' ? 'This Month' : p === 'year' ? 'This Year' : p === '3m' ? 'Last 3M' : 'Last 6M'}
@@ -98,19 +98,19 @@ export function LiveFilterBar({
             type="date" value={from}
             onChange={e => setFrom(e.target.value)}
             onBlur={() => from !== currentDateFrom && navigate({ from })}
-            className="min-w-0 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none sm:w-auto"
+            className="min-w-0 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs focus:border-[#0E7490] focus:outline-none sm:w-auto"
           />
           <span className="text-xs text-[#94A3B8]">—</span>
           <input
             type="date" value={to}
             onChange={e => setTo(e.target.value)}
             onBlur={() => to !== currentDateTo && navigate({ to })}
-            className="min-w-0 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs focus:border-[#FF8A1F] focus:outline-none sm:w-auto"
+            className="min-w-0 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-xs focus:border-[#0E7490] focus:outline-none sm:w-auto"
           />
         </div>
 
         {hasFilters && (
-          <button onClick={clear} className="text-[11px] text-[#94A3B8] hover:text-[#EF4444] underline flex-shrink-0">
+          <button onClick={clear} className="text-[12px] text-[#94A3B8] hover:text-[#EF4444] underline flex-shrink-0">
             Clear
           </button>
         )}
@@ -118,8 +118,8 @@ export function LiveFilterBar({
         {rightAction && <div className="ml-auto flex-shrink-0">{rightAction}</div>}
 
         {/* Inline filter status */}
-        <div className={`${rightAction ? '' : 'ml-auto'} flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] flex-shrink-0 ${hasFilters ? 'bg-orange-50 text-[#FF8A1F]' : 'bg-[#F8FAFC] text-[#94A3B8]'}`}>
-          <span className={`h-1.5 w-1.5 rounded-full ${hasFilters ? 'bg-[#FF8A1F]' : 'bg-[#CBD5E1]'}`} />
+        <div className={`${rightAction ? '' : 'ml-auto'} flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] flex-shrink-0 ${hasFilters ? 'bg-orange-50 text-[#C2410C]' : 'bg-[#F8FAFC] text-[#94A3B8]'}`}>
+          <span className={`h-1.5 w-1.5 rounded-full ${hasFilters ? 'bg-[#C2410C]' : 'bg-[#CBD5E1]'}`} />
           {hasFilters ? filterParts.join(' · ') : 'All data'}
         </div>
       </div>

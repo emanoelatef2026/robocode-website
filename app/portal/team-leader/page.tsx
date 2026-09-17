@@ -1,4 +1,4 @@
-﻿import { Suspense }                    from 'react'
+import { Suspense }                    from 'react'
 import Link                             from 'next/link'
 import { requirePortalRole }            from '@/modules/rbac/guards'
 import { getTLKPIs, getTodayAttendanceSummary } from '@/modules/tl-dashboard/queries'
@@ -53,7 +53,7 @@ async function AttendanceSummary({ branchIds }: { branchIds: string[] }) {
       ].map(k => (
         <div key={k.label} className={`min-w-0 rounded-xl border px-2 py-1.5 md:px-4 md:py-3 text-center ${k.cls}`}>
           <p className="truncate text-[15px] font-extrabold leading-none md:text-2xl">{k.value}</p>
-          <p className="mt-0.5 truncate text-[9px] font-medium leading-tight md:text-[11px]">{k.label}</p>
+          <p className="mt-0.5 truncate text-[9px] font-medium leading-tight md:text-[12px]">{k.label}</p>
         </div>
       ))}
     </div>
@@ -92,7 +92,7 @@ async function FinanceKPIStrip({ branchIds }: { branchIds: string[] }) {
           <p className={`truncate text-[13px] font-extrabold leading-none md:text-[18px] ${t.alert ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
             {t.value}
           </p>
-          <p className="mt-0.5 truncate text-[8px] font-medium leading-tight text-[#64748B] md:text-[10px]">{t.label}</p>
+          <p className="mt-0.5 truncate text-[8px] font-medium leading-tight text-[#64748B] md:text-[11px]">{t.label}</p>
         </div>
       ))}
     </div>
@@ -116,7 +116,7 @@ async function HeaderKPIs({ branchIds }: { branchIds: string[] }) {
           href={k.href}
           className="min-w-0 ds-card px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1] hover:shadow-sm"
         >
-          <p className="truncate text-[8px] font-bold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">{k.label}</p>
+          <p className="truncate text-[8px] font-bold uppercase tracking-wide text-[#94A3B8] md:text-[11px]">{k.label}</p>
           <p className="mt-0.5 truncate text-[15px] font-extrabold leading-none text-[#0B1F3A] md:text-[24px]">{k.value}</p>
         </Link>
       ))}
@@ -144,7 +144,7 @@ function SectionNav() {
         <a
           key={s.href}
           href={s.href}
-          className="shrink-0 rounded-full border border-[#E2E8F0] bg-white px-3 py-1.5 text-[11px] font-medium text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A] transition"
+          className="shrink-0 rounded-full border border-[#E2E8F0] bg-white px-3 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A] transition"
         >
           {s.label}
         </a>

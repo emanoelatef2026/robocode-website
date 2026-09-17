@@ -1,4 +1,4 @@
-﻿import { createServiceClient }     from '@/lib/supabase/service'
+import { createServiceClient }     from '@/lib/supabase/service'
 import { requirePermission }        from '@/modules/rbac/guards'
 import { getBranch }                from '@/modules/branches/queries'
 import { getBranchFinanceSnapshot } from '@/modules/finance/queries'
@@ -159,7 +159,7 @@ function KPICard({
       <div className={`mb-2 h-1.5 w-7 rounded-full ${color} opacity-80`} />
       <p className={`text-2xl font-bold ${alert && value !== 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>{value}</p>
       <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
-      {sub && <p className="mt-1 text-[11px] text-[#94A3B8]">{sub}</p>}
+      {sub && <p className="mt-1 text-[12px] text-[#94A3B8]">{sub}</p>}
     </div>
   )
 }
@@ -260,7 +260,7 @@ export default async function BranchPerformancePage({ params }: Props) {
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">Finance Snapshot</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <KPICard label="Net Revenue"      value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.net_amount)}`}  color="bg-[#FF8A1F]" />
+            <KPICard label="Net Revenue"      value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.net_amount)}`}  color="bg-[#C2410C]" />
             <KPICard label="Collected"        value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.paid_amount)}`} color="bg-[#10B981]" />
             <KPICard label="Outstanding"      value={`EGP ${new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(finance.outstanding)}`} color={finance.outstanding > 0 ? 'bg-[#EF4444]' : 'bg-[#10B981]'} />
             <KPICard label="Collection Rate"  value={`${finance.collection_rate}%`} color={finance.collection_rate >= 80 ? 'bg-[#10B981]' : finance.collection_rate >= 50 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]'} />
@@ -293,12 +293,12 @@ export default async function BranchPerformancePage({ params }: Props) {
                   <div key={s.student_id} className="flex items-center justify-between px-4 py-3">
                     <div>
                       <p className="text-sm font-medium text-[#0B1F3A]">{s.student_name}</p>
-                      {s.parent_phone_1 && <p className="text-[11px] text-[#64748B]">{s.parent_phone_1}</p>}
+                      {s.parent_phone_1 && <p className="text-[12px] text-[#64748B]">{s.parent_phone_1}</p>}
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-[#EF4444]">EGP {new Intl.NumberFormat('en-EG',{maximumFractionDigits:0}).format(s.remaining_amount)}</p>
                       {s.days_overdue > 0 && (
-                        <p className="text-[11px] text-[#F87171]">{s.days_overdue}d overdue</p>
+                        <p className="text-[12px] text-[#F87171]">{s.days_overdue}d overdue</p>
                       )}
                     </div>
                   </div>
@@ -311,16 +311,16 @@ export default async function BranchPerformancePage({ params }: Props) {
 
       {/* ── Quick links ────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-2 pt-2">
-        <Link href={`/admin/students?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+        <Link href={`/admin/students?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
           Students →
         </Link>
-        <Link href={`/admin/groups?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+        <Link href={`/admin/groups?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
           Groups →
         </Link>
-        <Link href={`/admin/leads?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+        <Link href={`/admin/leads?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
           Leads →
         </Link>
-        <Link href={`/admin/finance?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+        <Link href={`/admin/finance?branch=${id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
           Finance →
         </Link>
       </div>

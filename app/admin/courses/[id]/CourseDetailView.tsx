@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -31,7 +31,7 @@ export default function CourseDetailView({ course, returnPath = '/admin/courses'
     router.push(returnPath)
   }
 
-  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
   return (
     <div className="space-y-5">

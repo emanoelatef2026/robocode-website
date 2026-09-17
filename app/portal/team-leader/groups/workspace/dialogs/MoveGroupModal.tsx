@@ -81,7 +81,7 @@ export function MoveGroupModal({
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 md:px-5 py-3 md:py-4 shrink-0">
           <div>
             <h3 className="text-[14px] md:text-[15px] font-bold text-[#0B1F3A]">Move to Group</h3>
-            <p className="mt-0.5 text-[12px] text-[#64748B]">
+            <p className="mt-0.5 text-[13px] text-[#64748B]">
               Moving {selectedIds.size} student{selectedIds.size !== 1 ? 's' : ''} from {currentGroup.name}
             </p>
           </div>
@@ -99,9 +99,9 @@ export function MoveGroupModal({
             onChange={e => setSearch(e.target.value)}
             placeholder="Search groups by name, course, branch…"
             autoFocus
-            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:bg-white"
+            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#0B1F3A] outline-none focus:border-[#0E7490] focus:bg-white"
           />
-          <p className="mt-1.5 text-[11px] text-[#94A3B8]">{filtered.length} available groups</p>
+          <p className="mt-1.5 text-[12px] text-[#94A3B8]">{filtered.length} available groups</p>
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0">
@@ -124,22 +124,22 @@ export function MoveGroupModal({
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className={[
                       'h-4 w-4 shrink-0 rounded-full border-2 flex items-center justify-center',
-                      isSelected ? 'border-[#FF8A1F] bg-[#FF8A1F]' : 'border-[#CBD5E1]',
+                      isSelected ? 'border-[#0E7490] bg-[#C2410C]' : 'border-[#CBD5E1]',
                     ].join(' ')}>
                       {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                     </div>
                     <div className="min-w-0">
                       <p className="text-[13px] font-semibold text-[#0B1F3A] truncate">{g.name}</p>
-                      <p className="text-[11px] text-[#64748B] truncate">
+                      <p className="text-[12px] text-[#64748B] truncate">
                         {g.course_name ?? '—'} · {g.branch_name}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {isOverCap && (
-                      <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">Over cap</span>
+                      <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#B45309]">Over cap</span>
                     )}
-                    <span className="text-[11px] text-[#94A3B8]">{capDisplay}</span>
+                    <span className="text-[12px] text-[#94A3B8]">{capDisplay}</span>
                     <StatusChip group={g} />
                   </div>
                 </div>
@@ -150,28 +150,28 @@ export function MoveGroupModal({
 
         <div className="shrink-0 border-t border-[#E2E8F0] px-5 py-4">
           <div className="mb-3 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-3">
-            <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+            <label className="block text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">
               Contract for moved students
             </label>
             <select
               value={contractMode}
               onChange={e => setContractMode(e.target.value as 'continue' | 'new')}
-              className="mt-2 w-full rounded-md border border-[#E2E8F0] bg-white px-2 py-2 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F]"
+              className="mt-2 w-full rounded-md border border-[#E2E8F0] bg-white px-2 py-2 text-[13px] text-[#374151] outline-none focus:border-[#0E7490]"
             >
               <option value="new">Start new contract</option>
               <option value="continue">Continue existing contract</option>
             </select>
-            <p className="mt-1.5 text-[11px] text-[#64748B]">
+            <p className="mt-1.5 text-[12px] text-[#64748B]">
               {contractMode === 'new'
                 ? 'The previous contract and its payments stay separate.'
                 : 'The existing balance and payments move with the student.'}
             </p>
           </div>
           {error && (
-            <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{error}</p>
+            <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[13px] text-[#EF4444]">{error}</p>
           )}
           {wouldOverfill && !error && (
-            <p className="mb-3 rounded-lg bg-[#FFFBEB] px-3 py-2 text-[12px] text-[#B45309]">
+            <p className="mb-3 rounded-lg bg-[#FFFBEB] px-3 py-2 text-[13px] text-[#B45309]">
               Warning: this will exceed the target group&apos;s capacity.
             </p>
           )}
@@ -185,7 +185,7 @@ export function MoveGroupModal({
             <button
               onClick={handleMove}
               disabled={!targetGroupId || loading}
-              className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 rounded-lg bg-[#C2410C] py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Moving…' : targetGroup ? `Move to ${targetGroup.name}` : 'Select a Group'}
             </button>

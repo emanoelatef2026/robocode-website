@@ -39,15 +39,15 @@ function NavContent({
     <div className={`flex h-full flex-col ${pinFooter ? "" : "overflow-y-auto"}`}>
       <PortalLogo />
 
-      <div className="px-5 pb-1">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/25">Parent Portal</p>
+      <div className="px-5 pb-2">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">Parent Portal</p>
       </div>
 
       {/* Children switcher */}
       <div className="px-3 pt-2 pb-1">
-        <p className="mb-1 px-2 text-[9px] font-semibold uppercase tracking-[0.15em] text-white/25">Children</p>
+        <p className="mb-1.5 px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/40">Children</p>
         {linkedChildren.length === 0 ? (
-          <p className="px-2 text-[12px] text-white/50">No children linked</p>
+          <p className="px-2 text-[13px] text-white/50">No children linked</p>
         ) : (
           linkedChildren.map((child) => {
             const active  = currentChildId === child.student_id
@@ -58,18 +58,18 @@ function NavContent({
                 href={switchChildHref(child.student_id)}
                 onClick={onClose}
                 className={[
-                  'flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[12px] font-medium transition-all duration-150',
-                  active ? 'bg-[#FF8A1F]/15 text-[#FF8A1F]' : 'text-white/50 hover:bg-white/5 hover:text-white/80',
+                  'flex min-h-9 items-center gap-2.5 rounded-[10px] px-2.5 py-1.5 text-[13px] font-medium transition-colors duration-150',
+                  active ? 'bg-[#302B2D] text-[#FF9A36]' : 'text-white/72 hover:bg-white/6 hover:text-white',
                 ].join(' ')}
               >
                 <span className={[
-                  'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold',
-                  active ? 'bg-[#FF8A1F] text-white' : 'bg-white/10 text-white/50',
+                  'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
+                  active ? 'bg-[#FF9A36] text-[#07182D]' : 'bg-white/10 text-white/60',
                 ].join(' ')}>
                   {initial}
                 </span>
                 <span className="truncate">{child.student_name}</span>
-                {active && <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF8A1F]" />}
+                {active && <span className="ml-auto h-[5px] w-[5px] shrink-0 rounded-full bg-[#FF9A36]" />}
               </Link>
             )
           })
@@ -87,13 +87,13 @@ function NavContent({
               href={navHref(item.href)}
               onClick={onClose}
               className={[
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150',
-                active ? 'bg-[#FF8A1F]/15 text-[#FF8A1F]' : 'text-white/50 hover:bg-white/5 hover:text-white/80',
+                'flex min-h-10 items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium transition-colors duration-150',
+                active ? 'bg-[#302B2D] text-[#FF9A36]' : 'text-white/72 hover:bg-white/6 hover:text-white',
               ].join(' ')}
             >
-              <span className={active ? 'text-[#FF8A1F]' : 'text-white/35'}>{parentIcon(item.key)}</span>
+              <span className={active ? 'text-[#FF9A36]' : 'text-white/55'}>{parentIcon(item.key)}</span>
               {item.label}
-              {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-[#FF8A1F]" />}
+              {active && <span className="ml-auto h-[5px] w-[5px] rounded-full bg-[#FF9A36]" />}
             </Link>
           )
         })}
@@ -121,7 +121,7 @@ interface Props {
 export default function ParentSidebar({ isOpen, onClose, linkedChildren, email }: Props) {
   return (
     <>
-      <aside className="hidden w-(--sidebar-width) shrink-0 bg-[#0B1F3A] md:flex md:flex-col">
+      <aside className="hidden w-(--sidebar-width) shrink-0 bg-[#07182D] md:flex md:flex-col">
         <Suspense fallback={<div className="flex-1" />}>
           <NavContent linkedChildren={linkedChildren} email={email} />
         </Suspense>
@@ -135,7 +135,7 @@ export default function ParentSidebar({ isOpen, onClose, linkedChildren, email }
             animate={{ x: 0 }}
             exit={{ x: -224 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="drawer-safe-bottom fixed top-0 left-0 z-(--z-drawer) w-(--drawer-width) bg-[#0B1F3A] md:hidden"
+            className="drawer-safe-bottom fixed top-0 left-0 z-(--z-drawer) w-(--drawer-width) bg-[#07182D] md:hidden"
           >
             <Suspense fallback={<div className="flex-1" />}>
               <NavContent linkedChildren={linkedChildren} email={email} onClose={onClose} pinFooter={false} />

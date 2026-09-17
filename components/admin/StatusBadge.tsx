@@ -7,56 +7,56 @@ interface StatusConfig {
 
 const STATUS_CONFIG: Record<string, StatusConfig> = {
   // Attendance
-  present:    { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Present",    dot: "bg-[#10B981]" },
-  absent:     { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]", label: "Absent",     dot: "bg-[#EF4444]" },
-  late:       { bg: "bg-[#FFFBEB]", text: "text-[#B45309]", label: "Late",       dot: "bg-[#F59E0B]" },
-  excused:    { bg: "bg-[#E0F2FE]", text: "text-[#0369A1]", label: "Excused",    dot: "bg-[#38BDF8]" },
-  makeup:     { bg: "bg-[#F3E8FF]", text: "text-[#6B21A8]", label: "Makeup",     dot: "bg-[#A855F7]" },
+  present:    { bg: "bg-[#E7F8EE]", text: "text-[#166534]", label: "Present",    dot: "bg-[#16A34A]" },
+  absent:     { bg: "bg-[#FEECEC]", text: "text-[#991B1B]", label: "Absent",     dot: "bg-[#DC2626]" },
+  late:       { bg: "bg-[#FFF7E6]", text: "text-[#92400E]", label: "Late",       dot: "bg-[#D97706]" },
+  excused:    { bg: "bg-[#E6F6FB]", text: "text-[#155E75]", label: "Excused",    dot: "bg-[#0E7490]" },
+  makeup:     { bg: "bg-[#FFF1E2]", text: "text-[#9A3412]", label: "Makeup",     dot: "bg-[#C2410C]" },
   // People / Groups
-  active:     { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Active",     dot: "bg-[#10B981]" },
+  active:     { bg: "bg-[#E7F8EE]", text: "text-[#166534]", label: "Active",     dot: "bg-[#16A34A]" },
   inactive:   { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "Inactive",   dot: "bg-[#94A3B8]" },
-  graduated:  { bg: "bg-[#E0F2FE]", text: "text-[#0369A1]", label: "Graduated",  dot: "bg-[#38BDF8]" },
-  paused:     { bg: "bg-[#FFFBEB]", text: "text-[#B45309]", label: "Paused",     dot: "bg-[#F59E0B]" },
-  banned:     { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]", label: "Banned",     dot: "bg-[#EF4444]" },
-  on_leave:   { bg: "bg-[#FFF1E2]", text: "text-[#FF8A1F]", label: "On Leave",   dot: "bg-[#FF8A1F]" },
-  dropped:    { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]", label: "Dropped",    dot: "bg-[#EF4444]" },
-  waitlisted: { bg: "bg-[#F3E8FF]", text: "text-[#6B21A8]", label: "Waitlisted", dot: "bg-[#A855F7]" },
+  graduated:  { bg: "bg-[#E6F6FB]", text: "text-[#155E75]", label: "Graduated",  dot: "bg-[#0E7490]" },
+  paused:     { bg: "bg-[#FFF7E6]", text: "text-[#92400E]", label: "Paused",     dot: "bg-[#D97706]" },
+  banned:     { bg: "bg-[#FEECEC]", text: "text-[#991B1B]", label: "Banned",     dot: "bg-[#DC2626]" },
+  on_leave:   { bg: "bg-[#FFF1E2]", text: "text-[#9A3412]", label: "On Leave",   dot: "bg-[#C2410C]" },
+  dropped:    { bg: "bg-[#FEECEC]", text: "text-[#991B1B]", label: "Dropped",    dot: "bg-[#DC2626]" },
+  waitlisted: { bg: "bg-[#FFF1E2]", text: "text-[#9A3412]", label: "Waitlisted", dot: "bg-[#C2410C]" },
   // Groups / Courses / Sessions
-  forming:    { bg: "bg-[#FFFBEB]", text: "text-[#B45309]", label: "Forming",    dot: "bg-[#F59E0B]" },
-  completed:  { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Completed",  dot: "bg-[#10B981]" },
+  forming:    { bg: "bg-[#FFF7E6]", text: "text-[#92400E]", label: "Forming",    dot: "bg-[#D97706]" },
+  completed:  { bg: "bg-[#E7F8EE]", text: "text-[#166534]", label: "Completed",  dot: "bg-[#16A34A]" },
   // Cohort lifecycle stages (Phase 1) — open/running/archived are derived
   // presentation labels (getCohortLifecycleStage), never a DB status. 'draft'
   // reuses the existing entry below (Assignments section) — same label/tone
   // already fits a not-yet-ready cohort.
   open:       { bg: "bg-[#EFF6FF]", text: "text-[#1D4ED8]", label: "Open",       dot: "bg-[#3B82F6]" },
-  running:    { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Running",    dot: "bg-[#10B981]" },
+  running:    { bg: "bg-[#E7F8EE]", text: "text-[#166534]", label: "Running",    dot: "bg-[#16A34A]" },
   archived:   { bg: "bg-[#F1F5F9]", text: "text-[#64748B]", label: "Archived",   dot: "bg-[#64748B]" },
   // Phase 2: a Draft cohort created by the Graduation Wizard, not yet given
   // a course/instructor/schedule — see modules/groups/actions/graduation.ts.
-  setup_required: { bg: "bg-[#FFFBEB]", text: "text-[#B45309]", label: "Draft – Setup Required", dot: "bg-[#F59E0B]" },
+  setup_required: { bg: "bg-[#FFF7E6]", text: "text-[#92400E]", label: "Draft – Setup Required", dot: "bg-[#D97706]" },
   ongoing:    { bg: "bg-[#EFF6FF]", text: "text-[#1D4ED8]", label: "Ongoing",    dot: "bg-[#3B82F6]" },
   scheduled:  { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "Scheduled",  dot: "bg-[#94A3B8]" },
-  cancelled:  { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]", label: "Cancelled",  dot: "bg-[#EF4444]" },
+  cancelled:  { bg: "bg-[#FEECEC]", text: "text-[#991B1B]", label: "Cancelled",  dot: "bg-[#DC2626]" },
   postponed:  { bg: "bg-[#FFF7ED]", text: "text-[#C2410C]", label: "Postponed",  dot: "bg-[#FB923C]" },
-  online:     { bg: "bg-[#E0F2FE]", text: "text-[#0369A1]", label: "Online",     dot: "bg-[#38BDF8]" },
+  online:     { bg: "bg-[#E6F6FB]", text: "text-[#155E75]", label: "Online",     dot: "bg-[#0E7490]" },
   offline:    { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "Offline",    dot: "bg-[#94A3B8]" },
-  hybrid:     { bg: "bg-[#F3E8FF]", text: "text-[#6B21A8]", label: "Hybrid",     dot: "bg-[#A855F7]" },
+  hybrid:     { bg: "bg-[#FFF1E2]", text: "text-[#9A3412]", label: "Hybrid",     dot: "bg-[#C2410C]" },
   // Leads / Finance
-  pending:    { bg: "bg-[#FFF1E2]", text: "text-[#FF8A1F]", label: "Pending",    dot: "bg-[#FF8A1F]" },
-  converted:  { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Converted",  dot: "bg-[#10B981]" },
-  lost:       { bg: "bg-[#FEF2F2]", text: "text-[#B91C1C]", label: "Lost",       dot: "bg-[#EF4444]" },
+  pending:    { bg: "bg-[#FFF7E6]", text: "text-[#92400E]", label: "Pending",    dot: "bg-[#D97706]" },
+  converted:  { bg: "bg-[#E7F8EE]", text: "text-[#166534]", label: "Converted",  dot: "bg-[#16A34A]" },
+  lost:       { bg: "bg-[#FEECEC]", text: "text-[#991B1B]", label: "Lost",       dot: "bg-[#DC2626]" },
   // Assignments
-  published:  { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Published",  dot: "bg-[#10B981]" },
+  published:  { bg: "bg-[#E7F8EE]", text: "text-[#166534]", label: "Published",  dot: "bg-[#16A34A]" },
   draft:      { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "Draft",      dot: "bg-[#94A3B8]" },
   closed:     { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "Closed",     dot: "bg-[#94A3B8]" },
-  submitted:  { bg: "bg-[#E0F2FE]", text: "text-[#0369A1]", label: "Submitted",  dot: "bg-[#38BDF8]" },
-  graded:     { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Graded",     dot: "bg-[#10B981]" },
-  returned:   { bg: "bg-[#FFFBEB]", text: "text-[#B45309]", label: "Returned",   dot: "bg-[#F59E0B]" },
-  under_review:           { bg: "bg-[#F3E8FF]", text: "text-[#6B21A8]", label: "Under Review",    dot: "bg-[#A855F7]" },
-  resubmission_requested: { bg: "bg-[#FFF1E2]", text: "text-[#FF8A1F]", label: "Resubmission",   dot: "bg-[#FF8A1F]" },
-  resubmitted:            { bg: "bg-[#E0F2FE]", text: "text-[#0369A1]", label: "Resubmitted",    dot: "bg-[#38BDF8]" },
+  submitted:  { bg: "bg-[#E6F6FB]", text: "text-[#155E75]", label: "Submitted",  dot: "bg-[#0E7490]" },
+  graded:     { bg: "bg-[#E7F8EE]", text: "text-[#166534]", label: "Graded",     dot: "bg-[#16A34A]" },
+  returned:   { bg: "bg-[#FFF7E6]", text: "text-[#92400E]", label: "Returned",   dot: "bg-[#D97706]" },
+  under_review:           { bg: "bg-[#FFF1E2]", text: "text-[#9A3412]", label: "Under Review",    dot: "bg-[#C2410C]" },
+  resubmission_requested: { bg: "bg-[#FFF1E2]", text: "text-[#9A3412]", label: "Resubmission",   dot: "bg-[#C2410C]" },
+  resubmitted:            { bg: "bg-[#E6F6FB]", text: "text-[#155E75]", label: "Resubmitted",    dot: "bg-[#0E7490]" },
   // Booleans
-  true:  { bg: "bg-[#E7F8EE]", text: "text-[#15803D]", label: "Yes", dot: "bg-[#10B981]" },
+  true:  { bg: "bg-[#E7F8EE]", text: "text-[#166534]", label: "Yes", dot: "bg-[#16A34A]" },
   false: { bg: "bg-[#F1F5F9]", text: "text-[#475569]", label: "No",  dot: "bg-[#94A3B8]" },
 };
 

@@ -1,4 +1,4 @@
-﻿import { requirePortalRole }       from '@/modules/rbac/guards'
+import { requirePortalRole }       from '@/modules/rbac/guards'
 import { getParentChildren }       from '@/modules/parents/parent-portal-queries'
 import { getParentChildFinance }   from '@/modules/finance/queries'
 import { listStudentEnrollments }  from '@/modules/enrollments/queries'
@@ -85,12 +85,12 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                           </p>
                         )}
                         {(enroll.instructor_name_snapshot ?? enroll.instructor_name) && (
-                          <p className="text-[11px] text-white/50 mt-0.5">
+                          <p className="text-[12px] text-white/50 mt-0.5">
                             {enroll.instructor_name_snapshot ?? enroll.instructor_name}
                           </p>
                         )}
                       </div>
-                      <span className="shrink-0 rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-white/80">
+                      <span className="shrink-0 rounded-full border border-white/20 bg-white/10 px-2 py-0.5 text-[11px] font-semibold text-white/80">
                         {ENROLLMENT_STATUS_LABELS[enroll.status]}
                       </span>
                     </div>
@@ -148,7 +148,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
 
                     {/* Pricing row */}
                     {enroll.net_amount > 0 && (
-                        <div className="grid grid-cols-1 gap-2 border-t border-[#F1F5F9] pt-2 text-[11px] min-[420px]:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-2 border-t border-[#F1F5F9] pt-2 text-[12px] min-[420px]:grid-cols-3">
                         <div>
                           <p className="text-[#64748B]">Course Fee</p>
                           <p className="font-semibold text-[#0B1F3A]">EGP {fmt(enroll.net_amount)}</p>
@@ -217,7 +217,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
               {/* Financial summary card */}
               <div className="ds-card overflow-hidden">
                 <div className="bg-linear-to-br from-[#0B1F3A] to-[#1a3460] px-5 py-4 text-white">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-white/40">
                     {label ?? 'Payment Summary'}
                   </p>
                   <h1 className="mt-1 text-xl font-bold">{selected.student_name}</h1>
@@ -252,7 +252,7 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                           i < items.length - 2 ? 'border-b' : '',
                         ].join(' ')}
                       >
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#64748B]">{itemLabel}</p>
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B]">{itemLabel}</p>
                         <p className={`mt-0.5 text-sm ${cls}`}>{value}</p>
                       </div>
                     ))
@@ -287,11 +287,11 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                       <div key={inst.id} className="flex items-center justify-between ds-card px-4 py-3">
                         <div>
                           <p className="text-sm font-semibold text-[#0B1F3A]">Installment #{inst.installment_number}</p>
-                          <p className="text-[12px] text-[#64748B]">Due: {dateFmt(inst.due_date)}</p>
+                          <p className="text-[13px] text-[#64748B]">Due: {dateFmt(inst.due_date)}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-bold text-[#0B1F3A]">EGP {fmt(Number(inst.amount))}</p>
-                          <span className={`text-[11px] font-semibold ${INSTALLMENT_STATUS_COLORS[inst.status as keyof typeof INSTALLMENT_STATUS_COLORS] ?? ''} rounded-full px-2 py-0.5`}>
+                          <span className={`text-[12px] font-semibold ${INSTALLMENT_STATUS_COLORS[inst.status as keyof typeof INSTALLMENT_STATUS_COLORS] ?? ''} rounded-full px-2 py-0.5`}>
                             {inst.status}
                           </span>
                         </div>
@@ -310,14 +310,14 @@ export default async function ParentFinancePage({ searchParams }: Props) {
                       <div key={i} className="flex items-center justify-between ds-card px-4 py-3">
                         <div>
                           <p className="text-sm font-semibold text-[#10B981]">EGP {fmt(Number(p.amount))}</p>
-                          <p className="text-[12px] text-[#64748B]">{dateFmt(p.payment_date)}</p>
+                          <p className="text-[13px] text-[#64748B]">{dateFmt(p.payment_date)}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-xs text-[#64748B]">
                             {PAYMENT_METHOD_LABELS[p.payment_method as keyof typeof PAYMENT_METHOD_LABELS] ?? p.payment_method}
                           </p>
                           {p.reference_number && (
-                            <p className="text-[11px] text-[#64748B]">#{p.reference_number}</p>
+                            <p className="text-[12px] text-[#64748B]">#{p.reference_number}</p>
                           )}
                         </div>
                       </div>

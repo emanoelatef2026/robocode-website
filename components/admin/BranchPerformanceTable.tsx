@@ -52,7 +52,7 @@ export default async function BranchPerformanceTable() {
                 />
               </div>
               <p
-                className="font-orbitron text-[10px] font-bold mt-[3px] text-center"
+                className="font-orbitron text-[11px] font-bold mt-[3px] text-center"
                 style={{ color: s.rateFg }}
               >
                 {b.collection_rate}%
@@ -69,7 +69,7 @@ export default async function BranchPerformanceTable() {
             {/* Status badge */}
             <div className="w-[76px] text-end">
               <span
-                className="text-[10px] font-bold px-[9px] py-[3px] rounded-[20px]"
+                className="text-[11px] font-bold px-[9px] py-[3px] rounded-[20px]"
                 style={{ background: s.tagBg, color: s.tagFg }}
               >
                 {s.label}

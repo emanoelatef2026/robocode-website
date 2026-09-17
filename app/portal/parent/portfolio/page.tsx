@@ -1,4 +1,4 @@
-﻿import { requirePortalRole }    from '@/modules/rbac/guards'
+import { requirePortalRole }    from '@/modules/rbac/guards'
 import { getParentChildren }   from '@/modules/parents/parent-portal-queries'
 import { getChildPortfolioDetail } from '@/modules/portfolio/queries'
 import { PROJECT_STATUS_CONFIG }   from '@/modules/portfolio/types'
@@ -88,7 +88,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
                     {/* Title + status */}
                     <div className="flex flex-col gap-1 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
                       <h3 className="font-semibold text-[#0B1F3A] leading-snug">{p.title}</h3>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[12px] font-medium ${statusCfg.cls}`}>
                         {statusCfg.label}
                       </span>
                     </div>
@@ -96,12 +96,12 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
                     {/* Category + course */}
                     <div className="flex flex-wrap gap-1.5">
                       {p.category && (
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${catCls}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[12px] font-medium ${catCls}`}>
                           {p.category}
                         </span>
                       )}
                       {p.course_title && (
-                        <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] text-[#64748B]">
+                        <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[12px] text-[#64748B]">
                           {p.course_title}
                         </span>
                       )}
@@ -126,7 +126,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
                             href={p.project_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex min-h-11 items-center rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
+                            className="inline-flex min-h-11 items-center rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
                           >
                             Project Link ↗
                           </a>
@@ -136,7 +136,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
                             href={p.video_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex min-h-11 items-center rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
+                            className="inline-flex min-h-11 items-center rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
                           >
                             Video ↗
                           </a>
@@ -147,7 +147,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
                     {/* Instructor review feedback */}
                     {p.instructor_feedback && (
                       <div className="rounded-lg bg-[#F8FAFC] border border-[#F1F5F9] px-3 py-2.5">
-                        <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
+                        <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
                           Instructor Review
                         </p>
                         <p className="text-[13px] text-[#64748B] whitespace-pre-wrap leading-relaxed">
@@ -201,7 +201,7 @@ export default async function ParentPortfolioPage({ searchParams }: Props) {
                 <div>
                   <p className="font-medium text-[#0B1F3A]">{a.title}</p>
                   {a.description && <p className="text-[13px] text-[#64748B]">{a.description}</p>}
-                  <p className="mt-1 text-[11px] text-[#64748B] capitalize">
+                  <p className="mt-1 text-[12px] text-[#64748B] capitalize">
                     {a.achievement_type} · {new Date(a.date_awarded).toLocaleDateString('en-GB')}
                   </p>
                 </div>

@@ -29,8 +29,8 @@ export function DataCardHeader({ title, sub, action }: HeaderProps) {
   return (
     <div className="flex items-center justify-between gap-3 mb-4">
       <div>
-        <h2 className="text-[13.5px] font-bold text-[#0B1F3A]">{title}</h2>
-        {sub && <p className="mt-0.5 text-[11px] text-[#64748B]">{sub}</p>}
+        <h2 className="text-[16px] font-semibold text-[#0B1F3A]">{title}</h2>
+        {sub && <p className="mt-1 text-[13px] font-normal text-[#64748B]">{sub}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>

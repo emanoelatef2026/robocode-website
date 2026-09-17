@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState } from 'react'
 import { updateGroup } from '@/modules/groups/actions'
@@ -35,7 +35,7 @@ export default function TLGroupEditForm({ group }: Props) {
             name="name"
             required
             defaultValue={group.name}
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -45,7 +45,7 @@ export default function TLGroupEditForm({ group }: Props) {
             <select
               name="type"
               defaultValue={group.type}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               {['class', 'workshop', 'bootcamp', 'trial', 'makeup'].map((t) => (
                 <option key={t} value={t} className="capitalize">{t}</option>
@@ -57,7 +57,7 @@ export default function TLGroupEditForm({ group }: Props) {
             <select
               name="status"
               defaultValue={group.status}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               {['forming', 'active', 'completed', 'cancelled'].map((s) => (
                 <option key={s} value={s} className="capitalize">{s}</option>
@@ -72,7 +72,7 @@ export default function TLGroupEditForm({ group }: Props) {
             <div className="flex h-10.5 items-center rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3">
               <span className="font-mono text-sm text-[#64748B]">{group.code ?? '—'}</span>
             </div>
-            <p className="mt-1 text-[11px] text-[#94A3B8]">Auto-generated · cannot be changed</p>
+            <p className="mt-1 text-[12px] text-[#94A3B8]">Auto-generated · cannot be changed</p>
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Capacity</label>
@@ -82,7 +82,7 @@ export default function TLGroupEditForm({ group }: Props) {
               min="1"
               max="500"
               defaultValue={group.capacity ?? ''}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
         </div>

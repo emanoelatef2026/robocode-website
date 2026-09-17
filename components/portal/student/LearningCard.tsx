@@ -67,11 +67,11 @@ export default function LearningCard({ data, basePath = '/portal/student', child
           <p className="truncate text-[14px] font-bold text-[#0B1F3A]">
             {data.course_title ?? 'General Sessions'}
           </p>
-          <p className="mt-0.5 truncate text-[11.5px] text-[#64748B]">
+          <p className="mt-0.5 truncate text-[12px] text-[#64748B]">
             {data.group_name ?? '—'}{data.instructor_name ? ` · ${data.instructor_name}` : ''}
           </p>
         </div>
-        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${cert.cls}`}>
+        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${cert.cls}`}>
           {cert.label}
         </span>
       </div>
@@ -79,8 +79,8 @@ export default function LearningCard({ data, basePath = '/portal/student', child
       {/* Sessions progress */}
       <div className="mt-3">
         <div className="mb-1 flex items-baseline justify-between">
-          <span className="text-[11px] font-semibold text-[#64748B]">Sessions</span>
-          <span className="text-[11px] font-bold text-[#0B1F3A]">
+          <span className="text-[12px] font-semibold text-[#64748B]">Sessions</span>
+          <span className="text-[12px] font-bold text-[#0B1F3A]">
             {data.consumed_sessions}/{data.enrolled_sessions || '—'}
           </span>
         </div>
@@ -91,15 +91,15 @@ export default function LearningCard({ data, basePath = '/portal/student', child
       <div className="mt-3 grid grid-cols-2 gap-3">
         <div>
           <div className="mb-1 flex items-baseline justify-between">
-            <span className="text-[10.5px] font-semibold text-[#64748B]">Attendance</span>
-            <span className="text-[10.5px] font-bold text-[#15803D]">{data.att_pct}%</span>
+            <span className="text-[11px] font-semibold text-[#64748B]">Attendance</span>
+            <span className="text-[11px] font-bold text-[#15803D]">{data.att_pct}%</span>
           </div>
           <MiniBar value={data.att_pct} color="#10B981" />
         </div>
         <div>
           <div className="mb-1 flex items-baseline justify-between">
-            <span className="text-[10.5px] font-semibold text-[#64748B]">Progress</span>
-            <span className="text-[10.5px] font-bold text-[#1D4ED8]">
+            <span className="text-[11px] font-semibold text-[#64748B]">Progress</span>
+            <span className="text-[11px] font-bold text-[#1D4ED8]">
               {data.progress_pct != null ? `${Math.round(data.progress_pct)}%` : '—'}
             </span>
           </div>
@@ -110,16 +110,16 @@ export default function LearningCard({ data, basePath = '/portal/student', child
       {/* Upcoming session */}
       <div className="mt-3 rounded-xl bg-[#F8FAFC] px-3 py-2">
         {data.next_session_at ? (
-          <p className="text-[11.5px] text-[#0B1F3A]">
+          <p className="text-[12px] text-[#0B1F3A]">
             Next class: <span className="font-bold">{formatDate(data.next_session_at)}</span>
             {data.next_session_topic && <span className="text-[#64748B]"> · {data.next_session_topic}</span>}
           </p>
         ) : nextClassLabel ? (
-          <p className="text-[11.5px] text-[#0B1F3A]">
+          <p className="text-[12px] text-[#0B1F3A]">
             Regular schedule: <span className="font-bold">{nextClassLabel}</span>
           </p>
         ) : (
-          <p className="text-[11.5px] text-[#64748B]">No upcoming session scheduled.</p>
+          <p className="text-[12px] text-[#64748B]">No upcoming session scheduled.</p>
         )}
       </div>
 
@@ -127,14 +127,14 @@ export default function LearningCard({ data, basePath = '/portal/student', child
       <div className="mt-3 flex flex-wrap gap-2">
         <Link
           href={`${basePath}/attendance${qs}`}
-          className="rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+          className="rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
         >
           View Attendance
         </Link>
         {data.certificate_status !== 'in_progress' && (
           <Link
             href={`${basePath}/certificates${qs}`}
-            className="rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+            className="rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
           >
             {data.certificate_status === 'issued' ? 'Download Certificate' : 'Claim Certificate'}
           </Link>
@@ -142,7 +142,7 @@ export default function LearningCard({ data, basePath = '/portal/student', child
         {!hideContinueLearning && (
           <Link
             href={`${basePath}/assignments${qs}`}
-            className="rounded-full bg-[#FF8A1F] px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-[#E67A15]"
+            className="rounded-full bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-bold text-white transition hover:bg-[#E67A15]"
           >
             Continue Learning →
           </Link>

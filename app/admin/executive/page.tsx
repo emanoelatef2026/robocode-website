@@ -1,4 +1,4 @@
-﻿import { requirePortalRole }        from '@/modules/rbac/guards'
+import { requirePortalRole }        from '@/modules/rbac/guards'
 import { getBranchPerformance }     from '@/modules/tl-dashboard/queries'
 import { createServiceClient }      from '@/lib/supabase/service'
 import Link                         from 'next/link'
@@ -14,7 +14,7 @@ function HealthBadge({ score }: { score: number }) {
     score >= 55 ? { label: 'Watch',     cls: 'bg-[#FFFBEB] text-[#B45309]'   } :
     { label: 'At Risk',   cls: 'bg-[#FEE2E2] text-[#DC2626]'   }
   return (
-    <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${cls}`}>
+    <div className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${cls}`}>
       <span>{score}</span>
       <span>{label}</span>
     </div>
@@ -64,7 +64,7 @@ export default async function ExecutiveOpsDashboard() {
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-end gap-3">
-        <Link href="/admin/system-health" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+        <Link href="/admin/system-health" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
           System Health →
         </Link>
       </div>
@@ -83,7 +83,7 @@ export default async function ExecutiveOpsDashboard() {
         ].map(k => (
           <div key={k.label} className={`rounded-xl border bg-white p-3 ${k.badge === 'alert' ? 'border-[#FECACA]' : 'border-[#E2E8F0]'}`}>
             <p className={`text-xl font-bold ${k.cls}`}>{k.value}</p>
-            <p className="text-[10px] text-[#64748B]">{k.label}</p>
+            <p className="text-[11px] text-[#64748B]">{k.label}</p>
           </div>
         ))}
       </div>
@@ -114,10 +114,10 @@ export default async function ExecutiveOpsDashboard() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-bold text-[#94A3B8]">#{idx + 1}</span>
+                      <span className="text-[12px] font-bold text-[#94A3B8]">#{idx + 1}</span>
                       <p className="font-semibold text-[#0B1F3A]">{b.branch_name}</p>
                       {b.critical_tasks > 0 && (
-                        <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#EF4444]">
+                        <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-semibold text-[#EF4444]">
                           {b.critical_tasks} critical
                         </span>
                       )}
@@ -127,7 +127,7 @@ export default async function ExecutiveOpsDashboard() {
                   <HealthBadge score={b.operational_health_score} />
                 </div>
 
-                <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6 text-center text-[11px]">
+                <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6 text-center text-[12px]">
                   {[
                     { label: 'Students',   value: String(b.active_students), cls: 'text-[#0B1F3A]' },
                     { label: 'Collected',  value: `EGP ${fmt(b.revenue_collected)}`, cls: 'text-[#10B981]' },
@@ -157,7 +157,7 @@ export default async function ExecutiveOpsDashboard() {
               <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-left">
                   {['Course', 'Active', 'Revenue', 'Retention', 'Dropout', 'At Risk'].map(h => (
-                    <th key={h} className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">{h}</th>
+                    <th key={h} className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -181,7 +181,7 @@ export default async function ExecutiveOpsDashboard() {
                     </td>
                     <td className="px-4 py-3">
                       {Number(r.risk_students) > 0 ? (
-                        <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#EF4444]">
+                        <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-semibold text-[#EF4444]">
                           {r.risk_students}
                         </span>
                       ) : (
@@ -204,7 +204,7 @@ export default async function ExecutiveOpsDashboard() {
           { label: 'Integrity',  href: '/admin/system-health', icon: '🔍' },
           { label: 'Branches',   href: '/admin/branches',  icon: '🏢' },
         ].map(l => (
-          <Link key={l.label} href={l.href} className="flex items-center gap-2 ds-card p-4 text-sm font-medium text-[#0B1F3A] hover:border-[#FF8A1F] hover:text-[#FF8A1F] transition-colors">
+          <Link key={l.label} href={l.href} className="flex items-center gap-2 ds-card p-4 text-sm font-medium text-[#0B1F3A] hover:border-[#0E7490] hover:text-[#9A3412] transition-colors">
             <span>{l.icon}</span>
             <span>{l.label}</span>
           </Link>

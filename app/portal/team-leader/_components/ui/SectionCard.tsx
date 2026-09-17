@@ -12,10 +12,10 @@ interface SectionCardProps {
 
 export function SectionCard({ title, action, children, className = '', noPad = false }: SectionCardProps) {
   return (
-    <div className={`ds-card shadow-sm ${className}`}>
+    <div className={`rounded-2xl border border-[#D7E0EA] bg-white ${className}`}>
       {(title || action) && (
-        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
-          {title && <h3 className="text-sm font-semibold text-[#1E293B]">{title}</h3>}
+        <div className="flex items-center justify-between border-b border-[#EDF1F5] px-5 py-4">
+          {title && <h3 className="text-[16px] font-semibold text-[#0B1F3A]">{title}</h3>}
           {action && <div className="flex items-center gap-2">{action}</div>}
         </div>
       )}

@@ -1,4 +1,4 @@
-﻿import { listCertificates, listActiveTemplates, listCertificateTemplates } from '@/modules/certificates/queries'
+import { listCertificates, listActiveTemplates, listCertificateTemplates } from '@/modules/certificates/queries'
 import { requirePermission }                      from '@/modules/rbac/guards'
 import { listCourses }                            from '@/modules/courses/queries'
 import { listSemesters }                          from '@/modules/semesters/queries'
@@ -153,7 +153,7 @@ export default async function CertificatesPage({ searchParams }: Props) {
                           </a>
                           <Link
                             href={`/admin/certificates/${c.id}`}
-                            className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                            className="text-xs font-medium text-[#C2410C] hover:underline"
                           >
                             View
                           </Link>

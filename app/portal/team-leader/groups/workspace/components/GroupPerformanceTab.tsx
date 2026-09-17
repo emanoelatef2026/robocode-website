@@ -20,10 +20,10 @@ export function GroupPerformanceTab({ group }: { group: GroupOperationalRow }) {
     <div className="p-4 space-y-4">
       {alerts.length > 0 && (
         <div className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-4">
-          <p className="mb-2 text-[12px] font-semibold text-[#B45309]">Active Alerts</p>
+          <p className="mb-2 text-[13px] font-semibold text-[#B45309]">Active Alerts</p>
           <ul className="space-y-1">
             {alerts.map(a => (
-              <li key={a} className="flex items-center gap-2 text-[12px] text-[#B45309]">
+              <li key={a} className="flex items-center gap-2 text-[13px] text-[#B45309]">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#F59E0B] shrink-0" />
                 {a}
               </li>
@@ -38,7 +38,7 @@ export function GroupPerformanceTab({ group }: { group: GroupOperationalRow }) {
             <div className="flex items-start justify-between mb-1.5">
               <div>
                 <p className="text-[13px] font-semibold text-[#374151]">{m.label}</p>
-                <p className="text-[11px] text-[#94A3B8]">{m.desc}</p>
+                <p className="text-[12px] text-[#94A3B8]">{m.desc}</p>
               </div>
               <span className={`text-[15px] font-bold ${
                 m.value >= 75 ? 'text-[#10B981]' :

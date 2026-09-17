@@ -80,7 +80,7 @@ export default function ScheduleTrialModal({
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-4">
           <div>
             <h2 className="text-[15px] font-bold text-[#0B1F3A]">Schedule Trial Session</h2>
-            <p className="mt-0.5 text-[12px] text-[#64748B]">
+            <p className="mt-0.5 text-[13px] text-[#64748B]">
               {leads.length === 1
                 ? leads[0].name
                 : `${leads.length} leads selected`}
@@ -102,7 +102,7 @@ export default function ScheduleTrialModal({
             {leads.map(l => (
               <span
                 key={l.id}
-                className="rounded-full bg-purple-100 px-2.5 py-0.5 text-[11px] font-semibold text-purple-700"
+                className="rounded-full bg-purple-100 px-2.5 py-0.5 text-[12px] font-semibold text-purple-700"
               >
                 {l.name}
               </span>
@@ -113,14 +113,14 @@ export default function ScheduleTrialModal({
         {/* Form */}
         <form action={formAction} className="space-y-4 p-5">
           {!state.success && state.error?.message && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-[12px] text-red-700">
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-[13px] text-red-700">
               {state.error.message}
             </p>
           )}
 
           {/* Branch */}
           <div>
-            <label className="mb-1 block text-[12px] font-semibold text-[#0B1F3A]">Branch</label>
+            <label className="mb-1 block text-[13px] font-semibold text-[#0B1F3A]">Branch</label>
             <select
               name="branch_id"
               required
@@ -135,9 +135,9 @@ export default function ScheduleTrialModal({
 
           {/* Instructor */}
           <div>
-            <label className="mb-1 block text-[12px] font-semibold text-[#0B1F3A]">Instructor</label>
+            <label className="mb-1 block text-[13px] font-semibold text-[#0B1F3A]">Instructor</label>
             {instructors.length === 0 ? (
-              <p className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-[12px] text-orange-700">
+              <p className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-[13px] text-orange-700">
                 No active instructors found for this branch.
               </p>
             ) : (
@@ -156,7 +156,7 @@ export default function ScheduleTrialModal({
 
           {/* Date & Time */}
           <div>
-            <label className="mb-1 block text-[12px] font-semibold text-[#0B1F3A]">Date &amp; Time</label>
+            <label className="mb-1 block text-[13px] font-semibold text-[#0B1F3A]">Date &amp; Time</label>
             <input
               type="datetime-local"
               name="scheduled_at"
@@ -168,7 +168,7 @@ export default function ScheduleTrialModal({
 
           {/* Duration */}
           <div>
-            <label className="mb-1 block text-[12px] font-semibold text-[#0B1F3A]">Duration (minutes)</label>
+            <label className="mb-1 block text-[13px] font-semibold text-[#0B1F3A]">Duration (minutes)</label>
             <input
               type="number"
               name="duration_minutes"
@@ -181,7 +181,7 @@ export default function ScheduleTrialModal({
 
           {/* Notes */}
           <div>
-            <label className="mb-1 block text-[12px] font-semibold text-[#0B1F3A]">Notes (optional)</label>
+            <label className="mb-1 block text-[13px] font-semibold text-[#0B1F3A]">Notes (optional)</label>
             <textarea
               name="notes"
               rows={2}

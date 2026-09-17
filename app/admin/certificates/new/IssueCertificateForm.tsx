@@ -25,7 +25,7 @@ interface Props {
 
 const MAX_PROJECTS = 20
 
-const inputClass = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+const inputClass = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
 const CERT_TYPES = [
   { value: 'semester_completion', label: 'Semester Completion' },
@@ -245,7 +245,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
                       key={p.id}
                       className={`flex cursor-pointer items-start gap-2 rounded-lg border px-3 py-2 transition ${
                         checked
-                          ? 'border-[#FF8A1F] bg-[#FFF7ED]'
+                          ? 'border-[#0E7490] bg-[#FFF7ED]'
                           : 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1]'
                       }`}
                     >
@@ -258,7 +258,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
                       <span className="min-w-0">
                         <span className="block text-xs font-medium text-[#0B1F3A] leading-tight">{p.title}</span>
                         {p.course_title && (
-                          <span className="block text-[10px] text-[#94A3B8] truncate">{p.course_title}</span>
+                          <span className="block text-[11px] text-[#94A3B8] truncate">{p.course_title}</span>
                         )}
                       </span>
                     </label>
@@ -306,7 +306,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
             placeholder="e.g. Pictoblox Coding, Python Programming, Arduino & Robotics…"
             className={inputClass}
           />
-          <p className="mt-1 text-[11px] text-[#94A3B8]">
+          <p className="mt-1 text-[12px] text-[#94A3B8]">
             Displayed prominently on the certificate. Auto-filled when you select a course below — editable.
           </p>
         </div>
@@ -334,7 +334,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
               </p>
             </div>
             {projects.length > 0 && (
-              <span className="rounded-full bg-[#FF8A1F]/10 px-2 py-0.5 text-xs font-medium text-[#FF8A1F]">
+              <span className="rounded-full bg-[#C2410C]/10 px-2 py-0.5 text-xs font-medium text-[#C2410C]">
                 {projects.length} project{projects.length !== 1 ? 's' : ''}
               </span>
             )}
@@ -367,7 +367,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
                     >▼</button>
                   </div>
 
-                  <span className="w-5 shrink-0 text-center text-[10px] text-[#CBD5E1] font-mono">{i + 1}</span>
+                  <span className="w-5 shrink-0 text-center text-[11px] text-[#CBD5E1] font-mono">{i + 1}</span>
 
                   {/* Title or edit input */}
                   {editingIdx === i ? (
@@ -379,7 +379,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
                         if (e.key === 'Enter') { e.preventDefault(); saveEdit() }
                         if (e.key === 'Escape') setEditingIdx(null)
                       }}
-                      className="flex-1 rounded border border-[#FF8A1F] bg-white px-2 py-1 text-sm text-[#0B1F3A] outline-none"
+                      className="flex-1 rounded border border-[#0E7490] bg-white px-2 py-1 text-sm text-[#0B1F3A] outline-none"
                     />
                   ) : (
                     <span className="flex-1 text-sm text-[#0B1F3A]">{p.title}</span>
@@ -389,7 +389,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
                     <button
                       type="button"
                       onClick={saveEdit}
-                      className="shrink-0 text-xs font-medium text-[#FF8A1F] hover:text-[#e87c18]"
+                      className="shrink-0 text-xs font-medium text-[#C2410C] hover:text-[#e87c18]"
                     >Save</button>
                   ) : (
                     <button
@@ -418,13 +418,13 @@ export default function IssueCertificateForm({ templates, students, semesters, c
                 onChange={(e) => setNewTitle(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addProject() } }}
                 placeholder="Add extra project name…"
-                className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+                className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
               />
               <button
                 type="button"
                 onClick={addProject}
                 disabled={!newTitle.trim()}
-                className="shrink-0 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40 transition"
+                className="shrink-0 rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40 transition"
               >+ Add</button>
             </div>
           )}

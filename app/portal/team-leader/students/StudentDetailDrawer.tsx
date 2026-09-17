@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState } from 'react'
 import { buildWhatsAppUrl } from '@/lib/contact-utils'
@@ -132,14 +132,14 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
             <h2 className="text-base font-bold text-[#0B1F3A] truncate">{s.student_name}</h2>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               {s.student_code && (
-                <span className="font-mono text-[10px] text-[#94A3B8] bg-[#F1F5F9] px-1.5 py-0.5 rounded">
+                <span className="font-mono text-[11px] text-[#94A3B8] bg-[#F1F5F9] px-1.5 py-0.5 rounded">
                   #{s.student_code}
                 </span>
               )}
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${opCfg.color} ${opCfg.text}`}>
+              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${opCfg.color} ${opCfg.text}`}>
                 {opCfg.label}
               </span>
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${riskClr}`}>
+              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${riskClr}`}>
                 {s.risk_level} Risk
               </span>
             </div>
@@ -166,7 +166,7 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
               )}
               {onAssign && (
                 <button onClick={onAssign}
-                  className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-sm font-medium text-white hover:bg-[#e87c18]">
+                  className="flex-1 rounded-lg bg-[#C2410C] py-2 text-sm font-medium text-white hover:bg-[#e87c18]">
                   Assign Group
                 </button>
               )}
@@ -192,7 +192,7 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
             </div>
             {/* Explicit reason — never leave the disabled button unexplained */}
             {!welcomeEligible && welcomeTooltip && (
-              <p className="mt-1.5 text-[10px] font-medium text-[#B45309]">⚠ {welcomeTooltip}</p>
+              <p className="mt-1.5 text-[11px] font-medium text-[#B45309]">⚠ {welcomeTooltip}</p>
             )}
           </div>
         )}
@@ -205,7 +205,7 @@ export default function StudentDetailDrawer({ student: s, isTL, onClose, onEdit,
               onClick={() => setTab(t)}
               className={`flex-1 py-2.5 text-xs font-medium capitalize transition
                 ${tab === t
-                  ? 'border-b-2 border-[#FF8A1F] text-[#FF8A1F]'
+                  ? 'border-b-2 border-[#0E7490] text-[#C2410C]'
                   : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
             >
               {t}
@@ -237,7 +237,7 @@ function OverviewTab({ s }: { s: StudentOperationalRow }) {
     <>
       <section className="rounded-xl border border-[#E2E8F0] p-4 space-y-2.5">
         <h3 className="text-xs font-semibold text-[#64748B] uppercase tracking-wide">Identity</h3>
-        <Row label="Student Phone">{s.student_phone ? <a href={`tel:${s.student_phone}`} className="text-[#0B1F3A] hover:text-[#FF8A1F]">{s.student_phone}</a> : '—'}</Row>
+        <Row label="Student Phone">{s.student_phone ? <a href={`tel:${s.student_phone}`} className="text-[#0B1F3A] hover:text-[#9A3412]">{s.student_phone}</a> : '—'}</Row>
         <Row label="Age">{s.age !== null ? `${s.age} years` : '—'}</Row>
         {s.date_of_birth && (
           <Row label="Date of Birth">
@@ -270,17 +270,17 @@ function OverviewTab({ s }: { s: StudentOperationalRow }) {
             <p className={`text-base font-bold ${s.attendance_pct >= 80 ? 'text-[#10B981]' : s.attendance_pct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
               {s.attendance_pct}%
             </p>
-            <p className="text-[11px] text-[#94A3B8]">Attendance</p>
+            <p className="text-[12px] text-[#94A3B8]">Attendance</p>
           </div>
           <div className="rounded-lg bg-[#F8FAFC] px-2 py-3">
             <p className={`text-base font-bold ${s.enrolled_sessions > 0 && s.remaining_sessions <= 2 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
               {s.enrolled_sessions > 0 ? `${s.remaining_sessions}/${s.enrolled_sessions}` : '—'}
             </p>
-            <p className="text-[11px] text-[#94A3B8]">Sessions</p>
+            <p className="text-[12px] text-[#94A3B8]">Sessions</p>
           </div>
           <div className="rounded-lg bg-[#F8FAFC] px-2 py-3">
             <p className="text-base font-bold text-[#0B1F3A]">{s.consecutive_absences}</p>
-            <p className="text-[11px] text-[#94A3B8]">Consec. Absent</p>
+            <p className="text-[12px] text-[#94A3B8]">Consec. Absent</p>
           </div>
         </div>
       </section>
@@ -291,7 +291,7 @@ function OverviewTab({ s }: { s: StudentOperationalRow }) {
           <h3 className="mb-2 text-xs font-semibold text-[#B45309] uppercase tracking-wide">Risk Flags</h3>
           <div className="flex flex-wrap gap-1.5">
             {s.risk_flags.map(f => (
-              <span key={f} className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">
+              <span key={f} className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#B45309]">
                 {f.replace(/_/g, ' ')}
               </span>
             ))}
@@ -303,7 +303,7 @@ function OverviewTab({ s }: { s: StudentOperationalRow }) {
       {s.active_enrollment_count > 1 && (
         <div className="rounded-xl border border-blue-100 bg-[#EFF6FF] px-4 py-3">
           <p className="text-xs font-semibold text-[#1D4ED8]">{s.active_enrollment_count} active contracts</p>
-          <p className="text-[11px] text-[#2563EB] mt-0.5">This student has multiple simultaneous enrollments.</p>
+          <p className="text-[12px] text-[#2563EB] mt-0.5">This student has multiple simultaneous enrollments.</p>
         </div>
       )}
     </>
@@ -328,7 +328,7 @@ function GroupsTab({ s }: { s: StudentOperationalRow }) {
         <div className="rounded-xl border border-[#E2E8F0] p-4 space-y-2.5">
           <div className="flex items-start justify-between">
             <h3 className="text-sm font-semibold text-[#0B1F3A]">{s.group_name}</h3>
-            <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">CURRENT</span>
+            <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-semibold text-[#15803D]">CURRENT</span>
           </div>
           {s.course_name     && <Row label="Course">{s.course_name}</Row>}
           {s.instructor_name && <Row label="Instructor">{s.instructor_name}</Row>}
@@ -360,9 +360,9 @@ function GroupsTab({ s }: { s: StudentOperationalRow }) {
                 <p className="text-[13px] font-semibold text-[#0B1F3A]">{h.group_name}</p>
                 <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[9px] font-semibold text-[#64748B]">PAST</span>
               </div>
-              {h.course_name     && <p className="text-[11px] text-[#64748B]">Course: {h.course_name}</p>}
-              {h.instructor_name && <p className="text-[11px] text-[#64748B]">Instructor: {h.instructor_name}</p>}
-              <div className="flex items-center gap-3 text-[10px] text-[#94A3B8]">
+              {h.course_name     && <p className="text-[12px] text-[#64748B]">Course: {h.course_name}</p>}
+              {h.instructor_name && <p className="text-[12px] text-[#64748B]">Instructor: {h.instructor_name}</p>}
+              <div className="flex items-center gap-3 text-[11px] text-[#94A3B8]">
                 {h.joined_at && (
                   <span>Joined {new Date(h.joined_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 )}
@@ -420,9 +420,9 @@ function AttendanceTab({ s }: { s: StudentOperationalRow }) {
             style={{ width: `${Math.min(s.attendance_pct, 100)}%` }}
           />
         </div>
-        <div className="mt-1 flex justify-between text-[10px] text-[#94A3B8]">
+        <div className="mt-1 flex justify-between text-[11px] text-[#94A3B8]">
           <span>0%</span>
-          <span className="text-[#FF8A1F]">60% threshold</span>
+          <span className="text-[#C2410C]">60% threshold</span>
           <span>100%</span>
         </div>
       </div>
@@ -449,25 +449,25 @@ function ContactsTab({ s }: { s: StudentOperationalRow }) {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-semibold text-[#0B1F3A]">{c.name}</p>
-              <p className="text-[11px] text-[#94A3B8] capitalize">{c.relation}</p>
+              <p className="text-[12px] text-[#94A3B8] capitalize">{c.relation}</p>
             </div>
             <div className="flex gap-1">
-              {c.is_primary   && <span className="rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-semibold text-[#1D4ED8]">Primary</span>}
-              {c.is_emergency && <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#EF4444]">Emergency</span>}
+              {c.is_primary   && <span className="rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[11px] font-semibold text-[#1D4ED8]">Primary</span>}
+              {c.is_emergency && <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-semibold text-[#EF4444]">Emergency</span>}
             </div>
           </div>
           <div className="space-y-1.5">
             {c.phone1 && (
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-[#94A3B8]">Phone 1</span>
+                <span className="text-[12px] text-[#94A3B8]">Phone 1</span>
                 <div className="flex items-center gap-2">
-                  <a href={`tel:${c.phone1}`} className="text-[12px] text-[#0B1F3A] hover:text-[#FF8A1F]">{c.phone1}</a>
+                  <a href={`tel:${c.phone1}`} className="text-[13px] text-[#0B1F3A] hover:text-[#9A3412]">{c.phone1}</a>
                   {c.whatsapp_preferred && (
                     <a
                       href={buildWhatsAppUrl(c.phone1, null) ?? '#'}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[10px] text-[#25D366] border border-[#25D366]/30 rounded px-1.5 py-0.5"
+                      className="text-[11px] text-[#25D366] border border-[#25D366]/30 rounded px-1.5 py-0.5"
                     >
                       WA
                     </a>
@@ -477,8 +477,8 @@ function ContactsTab({ s }: { s: StudentOperationalRow }) {
             )}
             {c.phone2 && (
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-[#94A3B8]">Phone 2</span>
-                <a href={`tel:${c.phone2}`} className="text-[12px] text-[#0B1F3A] hover:text-[#FF8A1F]">{c.phone2}</a>
+                <span className="text-[12px] text-[#94A3B8]">Phone 2</span>
+                <a href={`tel:${c.phone2}`} className="text-[13px] text-[#0B1F3A] hover:text-[#9A3412]">{c.phone2}</a>
               </div>
             )}
           </div>

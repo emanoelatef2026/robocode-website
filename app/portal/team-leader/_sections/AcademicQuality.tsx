@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { getAcademicQualityData } from '@/modules/tl-dashboard/dashboard-v2-queries'
 import { getTLAcademicOverviewKPIs } from '@/modules/tl-analytics/queries'
 import { ScoreBar } from '../_components/RiskBadge'
@@ -8,9 +8,9 @@ function QualityTile({ label, value, sub, href, colorCls }: {
 }) {
   const inner = (
     <>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
       <p className={`mt-1.5 text-[22px] font-extrabold leading-none ${colorCls ?? 'text-[#0B1F3A]'}`}>{value}</p>
-      {sub && <p className="mt-1 text-[10px] text-[#94A3B8]">{sub}</p>}
+      {sub && <p className="mt-1 text-[11px] text-[#94A3B8]">{sub}</p>}
     </>
   )
 
@@ -27,14 +27,14 @@ function MetricRow({ label, value, href }: { label: string; value: number; href?
   return (
     <div className="flex items-center gap-3 border-b border-[#F1F5F9] px-4 py-3 last:border-0">
       <div className="min-w-0 flex-1">
-        <p className="text-[12px] font-medium text-[#0B1F3A]">{label}</p>
+        <p className="text-[13px] font-medium text-[#0B1F3A]">{label}</p>
         <div className="mt-1.5">
           <ScoreBar value={value} />
         </div>
       </div>
       <span className={`shrink-0 text-[13px] font-bold ${color}`}>{value}%</span>
       {href && (
-        <Link href={href} className="shrink-0 text-[10px] text-[#FF8A1F] hover:underline">View →</Link>
+        <Link href={href} className="shrink-0 text-[11px] text-[#C2410C] hover:underline">View →</Link>
       )}
     </div>
   )
@@ -50,7 +50,7 @@ export default async function AcademicQuality({ branchIds }: { branchIds: string
     <section id="academic">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-[16px] font-bold text-[#0B1F3A]">Academic Quality</h2>
-        <Link href="/portal/team-leader/assignments" className="text-[12px] font-medium text-[#FF8A1F] hover:underline">
+        <Link href="/portal/team-leader/assignments" className="text-[13px] font-medium text-[#C2410C] hover:underline">
           Assignments →
         </Link>
       </div>

@@ -18,7 +18,7 @@ export default function DashCard({ title, count, badge, action, children, accent
         <div className="flex items-center gap-2 min-w-0">
           <p className="truncate text-[13px] font-semibold text-[#0B1F3A]">{title}</p>
           {count != null && count > 0 && (
-            <span className="flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[#FF8A1F] px-1.5 text-[10px] font-bold text-white">
+            <span className="flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[#C2410C] px-1.5 text-[11px] font-bold text-white">
               {count > 99 ? '99+' : count}
             </span>
           )}
@@ -38,7 +38,7 @@ interface DashCardEmptyProps {
 
 export function DashCardEmpty({ text, emoji = '' }: DashCardEmptyProps) {
   return (
-    <p className="px-4 py-5 md:py-8 text-center text-[12px] text-[#94A3B8]">
+    <p className="px-4 py-5 md:py-8 text-center text-[13px] text-[#94A3B8]">
       {emoji && <span className="mr-1.5">{emoji}</span>}{text}
     </p>
   )

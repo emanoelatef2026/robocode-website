@@ -26,7 +26,7 @@ export default function HistoryTab({ history }: { history: InstructorMonthlyPaym
             >
               <div>
                 <p className="text-[13px] font-semibold text-[#0B1F3A]">{MONTH_NAMES[m.month - 1]} {m.year}</p>
-                <p className="mt-0.5 text-[11px] text-[#64748B]">
+                <p className="mt-0.5 text-[12px] text-[#64748B]">
                   Earned {fmtEGP(m.earned)} · Paid {fmtEGP(m.paid)}
                   {m.outstanding > 0 && <span className="text-[#EF4444]"> · Outstanding {fmtEGP(m.outstanding)}</span>}
                 </p>
@@ -42,11 +42,11 @@ export default function HistoryTab({ history }: { history: InstructorMonthlyPaym
             {isOpen && (
               <div className="border-t border-[#F1F5F9] bg-[#F8FAFC] px-4 py-3">
                 {m.payments.length === 0 ? (
-                  <p className="text-[12px] italic text-[#94A3B8]">No payments recorded this month.</p>
+                  <p className="text-[13px] italic text-[#94A3B8]">No payments recorded this month.</p>
                 ) : (
                   <div className="space-y-1.5">
                     {m.payments.map(p => (
-                      <div key={p.id} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-[12px]">
+                      <div key={p.id} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-[13px]">
                         <div>
                           <span className="font-semibold text-[#0B1F3A]">{fmtEGP(p.amount)}</span>
                           <span className="ml-2 text-[#64748B]">{p.payment_method ?? '—'}</span>

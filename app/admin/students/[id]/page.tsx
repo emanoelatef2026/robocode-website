@@ -1,4 +1,4 @@
-﻿import { getStudent } from '@/modules/students/queries'
+import { getStudent } from '@/modules/students/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import { createServiceClient } from '@/lib/supabase/service'
 import { listBranches } from '@/modules/branches/queries'
@@ -128,7 +128,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
               className={[
                 'px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
                 tab === t.id
-                  ? 'border-[#FF8A1F] text-[#FF8A1F]'
+                  ? 'border-[#0E7490] text-[#C2410C]'
                   : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]',
               ].join(' ')}
             >
@@ -191,7 +191,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
                   <td className="px-4 py-2.5 capitalize text-[#64748B]">{h.groups?.type ?? '—'}</td>
                   <td className="px-4 py-2.5">
                     <span className={[
-                      'inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium capitalize',
+                      'inline-flex rounded-full px-2 py-0.5 text-[12px] font-medium capitalize',
                       h.enrollment_type === 'primary' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-purple-50 text-purple-700',
                     ].join(' ')}>
                       {h.enrollment_type}
@@ -202,7 +202,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
                   </td>
                   <td className="px-4 py-2.5 text-right">
                     {h.groups?.id && (
-                      <Link href={`/admin/groups/${h.groups.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
+                      <Link href={`/admin/groups/${h.groups.id}`} className="text-xs font-medium text-[#C2410C] hover:underline">
                         Open group
                       </Link>
                     )}
@@ -243,7 +243,7 @@ export default async function StudentDetailPage({ params, searchParams }: Props)
                   </td>
                   <td className="px-4 py-2.5 capitalize text-[#64748B]">{h.groups?.type ?? '—'}</td>
                   <td className="px-4 py-2.5">
-                    <span className={['inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium capitalize', h.enrollment_type === 'primary' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-purple-50 text-purple-700'].join(' ')}>
+                    <span className={['inline-flex rounded-full px-2 py-0.5 text-[12px] font-medium capitalize', h.enrollment_type === 'primary' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-purple-50 text-purple-700'].join(' ')}>
                       {h.enrollment_type}
                     </span>
                   </td>

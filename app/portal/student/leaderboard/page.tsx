@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getGroupLeaderboard } from '@/modules/gamification/queries'
 import { resolvePrimaryActiveGroupId } from '@/modules/academic/enrollment-integrity'
@@ -68,7 +68,7 @@ export default async function StudentLeaderboardPage() {
         <div>
           <h1 className="text-[15px] font-bold text-[#0B1F3A]">Group Leaderboard</h1>
           {groupName && (
-            <p className="mt-0.5 text-[11px] text-[#64748B]">{groupName}</p>
+            <p className="mt-0.5 text-[12px] text-[#64748B]">{groupName}</p>
           )}
         </div>
         <Link href="/portal/student" className="text-xs text-[#FF8A1F] hover:underline">← Dashboard</Link>
@@ -80,11 +80,11 @@ export default async function StudentLeaderboardPage() {
           <span className="text-sm font-bold text-[#FF8A1F]">#{selfEntry.rank}</span>
           <div className="flex-1">
             <p className="text-[12.5px] font-semibold text-[#0B1F3A]">Your Position</p>
-            <p className="text-[10px] text-[#64748B]">
+            <p className="text-[11px] text-[#64748B]">
               {selfEntry.total_xp.toLocaleString()} XP · Level {selfEntry.current_level}
             </p>
           </div>
-          <span className="text-[10px] text-[#64748B]">out of {entries.length}</span>
+          <span className="text-[11px] text-[#64748B]">out of {entries.length}</span>
         </div>
       )}
 
@@ -106,9 +106,9 @@ export default async function StudentLeaderboardPage() {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[12.5px] font-semibold text-[#0B1F3A]">
                   {entry.student_name}
-                  {entry.is_self && <span className="ml-1.5 text-[10px] font-normal text-[#FF8A1F]">(You)</span>}
+                  {entry.is_self && <span className="ml-1.5 text-[11px] font-normal text-[#FF8A1F]">(You)</span>}
                 </p>
-                <p className="text-[10px] text-[#64748B]">
+                <p className="text-[11px] text-[#64748B]">
                   {entry.total_xp.toLocaleString()} XP · Lv.{entry.current_level} · {entry.project_count} projects
                 </p>
               </div>
@@ -127,17 +127,17 @@ export default async function StudentLeaderboardPage() {
                 key={entry.student_id}
                 className={`flex items-center gap-3 px-3.5 py-2.5 ${entry.is_self ? 'bg-[#FFF7ED]' : ''}`}
               >
-                <span className="w-5 shrink-0 text-center text-[10px] font-semibold text-[#64748B]">#{entry.rank}</span>
+                <span className="w-5 shrink-0 text-center text-[11px] font-semibold text-[#64748B]">#{entry.rank}</span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[12.5px] font-medium text-[#0B1F3A]">
                     {entry.student_name}
-                    {entry.is_self && <span className="ml-1.5 text-[10px] font-normal text-[#FF8A1F]">(You)</span>}
+                    {entry.is_self && <span className="ml-1.5 text-[11px] font-normal text-[#FF8A1F]">(You)</span>}
                   </p>
-                  <p className="text-[10px] text-[#64748B]">
+                  <p className="text-[11px] text-[#64748B]">
                     {entry.total_xp.toLocaleString()} XP · Lv.{entry.current_level}
                   </p>
                 </div>
-                <span className="shrink-0 text-[10px] text-[#64748B]">{entry.project_count} proj.</span>
+                <span className="shrink-0 text-[11px] text-[#64748B]">{entry.project_count} proj.</span>
               </div>
             ))}
           </div>
@@ -153,7 +153,7 @@ export default async function StudentLeaderboardPage() {
       {/* XP earning tips */}
       <div className="ds-card p-4">
         <p className="mb-2.5 text-sm font-semibold text-[#0B1F3A]">How to earn XP</p>
-        <div className="space-y-1.5 text-[11px] text-[#64748B]">
+        <div className="space-y-1.5 text-[12px] text-[#64748B]">
           <div className="flex justify-between"><span>✅ Attend a session</span><span className="font-semibold text-[#0B1F3A]">+25 XP</span></div>
           <div className="flex justify-between"><span>📝 Submit an assignment</span><span className="font-semibold text-[#0B1F3A]">+40 XP</span></div>
           <div className="flex justify-between"><span>🌟 Excellent grade (90%+)</span><span className="font-semibold text-[#0B1F3A]">+60 XP</span></div>

@@ -14,7 +14,7 @@ function LevelBadge({ level }: { level: number }) {
   ]
   const tier = tiers.find(t => level >= t.min && level <= t.max) ?? tiers[0]
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${tier.bg} ${tier.text}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${tier.bg} ${tier.text}`}>
       ⭐ Lv.{level} {tier.label}
     </span>
   )
@@ -24,8 +24,8 @@ function StatChip({ icon, value, label }: { icon: string; value: string | number
   return (
     <div className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-[5px]">
       <span className="text-[14px]">{icon}</span>
-      <span className="text-[11px] font-bold text-white">{value}</span>
-      <span className="text-[9px] text-white/50">{label}</span>
+      <span className="text-[12px] font-bold text-white">{value}</span>
+      <span className="text-[11px] text-white/50">{label}</span>
     </div>
   )
 }
@@ -79,7 +79,7 @@ export default function HeroHeader({
               <p className="truncate text-[18px] font-extrabold leading-tight text-white">
                 Hey, {firstName}! 👋
               </p>
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10.5px] text-white/45">
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] text-white/45">
                 {studentCode && <span>#{studentCode}</span>}
                 {branchName && <span>· {branchName}</span>}
                 <StatusBadge status={status} dot />
@@ -88,7 +88,7 @@ export default function HeroHeader({
           </div>
           <div className="shrink-0">
             {isStudentOfWeek ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#F59E0B] px-2.5 py-1 text-[10px] font-extrabold text-[#0B1F3A]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-[#F59E0B] px-2.5 py-1 text-[11px] font-extrabold text-[#0B1F3A]">
                 🏆 Star of the Week!
               </span>
             ) : (
@@ -104,9 +104,9 @@ export default function HeroHeader({
               <span className="text-[28px] font-extrabold leading-none text-white" style={{ fontFamily: 'var(--font-orbitron)' }}>
                 {totalXp.toLocaleString()}
               </span>
-              <span className="text-[12px] font-semibold text-white/50">XP</span>
+              <span className="text-[13px] font-semibold text-white/50">XP</span>
             </div>
-            <span className="text-[10.5px] text-white/50">
+            <span className="text-[11px] text-white/50">
               {isMaxLevel ? '🏆 Max Level!' : `${xpToNextLevel.toLocaleString()} XP → Lv.${currentLevel + 1}`}
             </span>
           </div>

@@ -22,7 +22,7 @@ export function FinanceTab({ detail }: { detail: InstructorDetailData }) {
 
       <div>
         <SectionLabel>Payment Details</SectionLabel>
-        <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-3 text-[12px]">
+        <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-3 text-[13px]">
           <div className="flex justify-between">
             <span className="text-[#94A3B8]">Preferred Method</span>
             <span className="font-medium text-[#0B1F3A]">

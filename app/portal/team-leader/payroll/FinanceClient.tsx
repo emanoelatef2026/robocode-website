@@ -163,7 +163,7 @@ export default function FinanceClient({
             {activeTab === "staff" && (
               <button
                 onClick={openCreateStaff}
-                className="flex items-center gap-1.5 rounded-lg bg-[#0B1F3A] px-3 py-2 text-[12px] font-semibold text-white hover:bg-[#1a2f4a] transition"
+                className="flex items-center gap-1.5 rounded-lg bg-[#0B1F3A] px-3 py-2 text-[13px] font-semibold text-white hover:bg-[#1a2f4a] transition"
               >
                 <span className="text-lg leading-none">+</span> Add Employee
               </button>
@@ -179,18 +179,18 @@ export default function FinanceClient({
               onClick={() => { setActiveTab(tab.id); setSearch("") }}
               className={`px-4 py-2 text-[13px] font-semibold border-b-2 transition -mb-px ${
                 activeTab === tab.id
-                  ? "border-[#FF8A1F] text-[#FF8A1F]"
+                  ? "border-[#0E7490] text-[#C2410C]"
                   : "border-transparent text-[#64748B] hover:text-[#0B1F3A]"
               }`}
             >
               {tab.label}
               {tab.id === "instructors" && (
-                <span className="ml-1.5 rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-bold text-[#64748B]">
+                <span className="ml-1.5 rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[11px] font-bold text-[#64748B]">
                   {instructors.length}
                 </span>
               )}
               {tab.id === "staff" && (
-                <span className="ml-1.5 rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-bold text-[#64748B]">
+                <span className="ml-1.5 rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[11px] font-bold text-[#64748B]">
                   {staff.length}
                 </span>
               )}
@@ -216,7 +216,7 @@ export default function FinanceClient({
                   <button
                     key={p.key}
                     onClick={() => applyDatePreset(p.key)}
-                    className="rounded-md border border-[#E2E8F0] bg-white px-2.5 py-1 text-[11px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC] transition"
+                    className="rounded-md border border-[#E2E8F0] bg-white px-2.5 py-1 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC] transition"
                   >
                     {p.label}
                   </button>
@@ -231,9 +231,9 @@ export default function FinanceClient({
                     setDateFrom(v)
                     if (v) navigate({ date_from: v, date_to: dateTo, branch: branchId })
                   }}
-                  className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                  className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[13px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
                 />
-                <span className="text-[11px] text-[#94A3B8]">to</span>
+                <span className="text-[12px] text-[#94A3B8]">to</span>
                 <input
                   type="date"
                   value={dateTo}
@@ -242,7 +242,7 @@ export default function FinanceClient({
                     setDateTo(v)
                     if (v) navigate({ date_from: dateFrom, date_to: v, branch: branchId })
                   }}
-                  className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                  className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[13px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
                 />
               </div>
             </>
@@ -256,7 +256,7 @@ export default function FinanceClient({
                   setStaffMonth(m)
                   applyStaffMonthFilter(m, staffYear)
                 }}
-                className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[13px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
               >
                 {MONTHS.map(m => (
                   <option key={m.value} value={m.value}>{m.label}</option>
@@ -269,7 +269,7 @@ export default function FinanceClient({
                   setStaffYear(y)
                   applyStaffMonthFilter(staffMonth, y)
                 }}
-                className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[13px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
               >
                 {[2024, 2025, 2026, 2027].map(y => (
                   <option key={y} value={y}>{y}</option>
@@ -291,7 +291,7 @@ export default function FinanceClient({
                   navigate({ date_from: from, date_to: to, branch: e.target.value })
                 }
               }}
-              className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+              className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[13px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
             >
               <option value="all">All Branches</option>
               {branches.map(b => (
@@ -307,7 +307,7 @@ export default function FinanceClient({
                 placeholder={`Search ${TABS.find(t => t.id === activeTab)?.label.toLowerCase() ?? activeTab}…`}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="rounded-lg border border-[#E2E8F0] pl-8 pr-3 py-1.5 text-[12px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 w-44"
+                className="rounded-lg border border-[#E2E8F0] pl-8 pr-3 py-1.5 text-[13px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30 w-44"
               />
               <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

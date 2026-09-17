@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -43,7 +43,7 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
         <button
           type="button"
           onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
+          className="inline-flex items-center gap-2 rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -61,7 +61,7 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
               name="q"
               defaultValue={search}
               placeholder="Search by title…"
-              className="min-w-56 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/10"
+              className="min-w-56 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/10"
             />
             <button
               type="submit"
@@ -95,7 +95,7 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
               <button
                 type="button"
                 onClick={openCreate}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18]"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18]"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -151,7 +151,7 @@ export default function CoursesListClient({ courses, total, page, totalPages, se
                         <button
                           type="button"
                           onClick={() => openEdit(course.id)}
-                          className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                          className="text-xs font-medium text-[#C2410C] hover:underline"
                         >
                           Edit
                         </button>

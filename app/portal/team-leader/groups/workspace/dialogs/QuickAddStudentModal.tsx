@@ -92,7 +92,7 @@ export function QuickAddStudentModal({
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 md:px-5 py-3 md:py-4 shrink-0">
           <div>
             <h3 className="text-[14px] md:text-[15px] font-bold text-[#0B1F3A]">Add Student</h3>
-            <p className="mt-0.5 text-[12px] text-[#64748B]">to {group.name}</p>
+            <p className="mt-0.5 text-[13px] text-[#64748B]">to {group.name}</p>
           </div>
           <button onClick={onClose} className="rounded-lg p-2 text-[#94A3B8] hover:bg-[#F1F5F9] transition">
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -108,9 +108,9 @@ export function QuickAddStudentModal({
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by name, code, phone…"
             autoFocus
-            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:bg-white"
+            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#0B1F3A] outline-none focus:border-[#0E7490] focus:bg-white"
           />
-          <div className="mt-2 flex items-center justify-between text-[11px] text-[#64748B]">
+          <div className="mt-2 flex items-center justify-between text-[12px] text-[#64748B]">
             <span>{filtered.length} available</span>
             {group.capacity && (
               <span className={isOverCapacity ? 'font-semibold text-[#EF4444]' : ''}>
@@ -137,7 +137,7 @@ export function QuickAddStudentModal({
                 <div className="flex items-start gap-3">
                   <div className={[
                     'mt-0.5 h-4 w-4 shrink-0 rounded border-2 flex items-center justify-center',
-                    isSelected ? 'border-[#FF8A1F] bg-[#FF8A1F]' : 'border-[#CBD5E1]',
+                    isSelected ? 'border-[#0E7490] bg-[#C2410C]' : 'border-[#CBD5E1]',
                   ].join(' ')}>
                     {isSelected && (
                       <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none">
@@ -148,21 +148,21 @@ export function QuickAddStudentModal({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="text-[13px] font-semibold text-[#0B1F3A]">{s.student_name}</p>
-                      {s.student_code && <span className="font-mono text-[10px] text-[#94A3B8]">{s.student_code}</span>}
-                      {s.age != null && <span className="text-[11px] text-[#64748B]">{s.age}y</span>}
+                      {s.student_code && <span className="font-mono text-[11px] text-[#94A3B8]">{s.student_code}</span>}
+                      {s.age != null && <span className="text-[12px] text-[#64748B]">{s.age}y</span>}
                     </div>
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                      {s.phone && <span className="font-mono text-[11px] text-[#64748B]">{s.phone}</span>}
-                      {s.parent_phone && <span className="font-mono text-[11px] text-[#94A3B8]">P: {s.parent_phone}</span>}
-                      <span className="text-[11px] text-[#94A3B8]">{s.branch_name}</span>
+                      {s.phone && <span className="font-mono text-[12px] text-[#64748B]">{s.phone}</span>}
+                      {s.parent_phone && <span className="font-mono text-[12px] text-[#94A3B8]">P: {s.parent_phone}</span>}
+                      <span className="text-[12px] text-[#94A3B8]">{s.branch_name}</span>
                       {s.sessions_remaining != null && (
-                        <span className={`text-[11px] ${s.sessions_remaining <= 2 ? 'font-medium text-[#EF4444]' : 'text-[#64748B]'}`}>
+                        <span className={`text-[12px] ${s.sessions_remaining <= 2 ? 'font-medium text-[#EF4444]' : 'text-[#64748B]'}`}>
                           {s.sessions_remaining} sess. left
                         </span>
                       )}
                     </div>
                     {s.group_name && (
-                      <p className="mt-0.5 text-[11px] text-[#F59E0B]">Currently in: {s.group_name}</p>
+                      <p className="mt-0.5 text-[12px] text-[#F59E0B]">Currently in: {s.group_name}</p>
                     )}
                   </div>
                 </div>
@@ -174,17 +174,17 @@ export function QuickAddStudentModal({
         <div className="shrink-0 border-t border-[#E2E8F0] px-5 py-4">
           {selected.size > 0 && (
             <div className="mb-3 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-3">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Contract for selected students</p>
+              <p className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Contract for selected students</p>
               <div className="space-y-2">
                 {Array.from(selected).map(id => {
                   const student = studentOptions.find(s => s.student_id === id)
                   return (
                     <div key={id} className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate text-[12px] font-medium text-[#374151]">{student?.student_name ?? id}</span>
+                      <span className="min-w-0 truncate text-[13px] font-medium text-[#374151]">{student?.student_name ?? id}</span>
                       <select
                         value={contractModes[id] ?? 'new'}
                         onChange={e => setContractModes(modes => ({ ...modes, [id]: e.target.value as 'continue' | 'new' }))}
-                        className="shrink-0 rounded-md border border-[#E2E8F0] bg-white px-2 py-1 text-[11px] text-[#374151] outline-none focus:border-[#FF8A1F]"
+                        className="shrink-0 rounded-md border border-[#E2E8F0] bg-white px-2 py-1 text-[12px] text-[#374151] outline-none focus:border-[#0E7490]"
                         aria-label={`Contract mode for ${student?.student_name ?? id}`}
                       >
                         <option value="new">Start new contract</option>
@@ -197,7 +197,7 @@ export function QuickAddStudentModal({
             </div>
           )}
           {error && (
-            <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{error}</p>
+            <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[13px] text-[#EF4444]">{error}</p>
           )}
           <div className="flex gap-2">
             <button
@@ -209,7 +209,7 @@ export function QuickAddStudentModal({
             <button
               onClick={handleAdd}
               disabled={!selected.size || isOverCapacity}
-              className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 rounded-lg bg-[#C2410C] py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition disabled:cursor-not-allowed disabled:opacity-50"
             >
               {selected.size > 0 ? `Add (${selected.size}) to Group` : 'Add to Group'}
             </button>

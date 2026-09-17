@@ -133,7 +133,7 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
         <div className="flex border-b border-[#E2E8F0] px-2 md:px-4 shrink-0 overflow-x-auto">
           {SECTIONS.map(s => (
             <button key={s.key} onClick={() => setSection(s.key)}
-              className={`flex-1 md:flex-none px-2 md:px-3 py-2.5 text-[11px] md:text-[12px] font-medium border-b-2 transition whitespace-nowrap text-center ${section === s.key ? 'border-[#FF8A1F] text-[#FF8A1F]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'}`}>
+              className={`flex-1 md:flex-none px-2 md:px-3 py-2.5 text-[12px] md:text-[13px] font-medium border-b-2 transition whitespace-nowrap text-center ${section === s.key ? 'border-[#0E7490] text-[#C2410C]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'}`}>
               {s.label}
             </button>
           ))}
@@ -151,7 +151,7 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
                 <FormField label="Alt. Phone" value={altPhone} onChange={setAltPhone} />
               </div>
               <div>
-                <label className="mb-2 block text-[12px] font-medium text-[#374151]">
+                <label className="mb-2 block text-[13px] font-medium text-[#374151]">
                   Branches <span className="text-[#EF4444]">*</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -159,23 +159,23 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
                     const active = branchIds.includes(b.id)
                     return (
                       <button key={b.id} type="button" onClick={() => toggleBranch(b.id)}
-                        className={`rounded-full px-3 py-1.5 text-[12px] font-medium border transition ${active ? 'bg-[#0B1F3A] border-[#0B1F3A] text-white' : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#0B1F3A]'}`}>
+                        className={`rounded-full px-3 py-1.5 text-[13px] font-medium border transition ${active ? 'bg-[#0B1F3A] border-[#0B1F3A] text-white' : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#0B1F3A]'}`}>
                         {b.name}
                       </button>
                     )
                   })}
                 </div>
                 {branchIds.length === 0 && (
-                  <p className="mt-1 text-[11px] text-[#F87171]">Select at least one branch</p>
+                  <p className="mt-1 text-[12px] text-[#F87171]">Select at least one branch</p>
                 )}
                 {branchIds.length > 0 && (
-                  <p className="mt-1 text-[11px] text-[#94A3B8]">Primary branch: {options.branches.find(b => b.id === branchIds[0])?.name}</p>
+                  <p className="mt-1 text-[12px] text-[#94A3B8]">Primary branch: {options.branches.find(b => b.id === branchIds[0])?.name}</p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Status</label>
-                  <select value={status} onChange={e => setStatus(e.target.value)} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F]">
+                  <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Status</label>
+                  <select value={status} onChange={e => setStatus(e.target.value)} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]">
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                     <option value="on_leave">On Leave</option>
@@ -185,9 +185,9 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
               </div>
               <FormField label="Hire Date" value={hireDate} onChange={setHireDate} type="date" />
               <div>
-                <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Bio</label>
+                <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Bio</label>
                 <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Short instructor biography…"
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F] resize-none" />
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490] resize-none" />
               </div>
             </>
           )}
@@ -196,14 +196,14 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
             <>
               {isEdit && (
                 <div>
-                  <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Login email</label>
+                  <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Login email</label>
                   <input value={instructor!.user_email ?? ''} disabled
                     className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#64748B]" />
                 </div>
               )}
               <FormField label={isEdit ? 'New Password (leave blank to keep)' : 'Password'} type="password" value={password} onChange={setPassword} placeholder="min. 6 characters" required={!isEdit} />
               <div>
-                <label className="mb-2 block text-[12px] font-medium text-[#374151]">Specializations</label>
+                <label className="mb-2 block text-[13px] font-medium text-[#374151]">Specializations</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {SPECIALIZATIONS_LIST.map(s => {
                     const active = specs.split(',').map(x => x.trim()).includes(s)
@@ -213,19 +213,19 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
                           const cur = specs.split(',').map(x => x.trim()).filter(Boolean)
                           setSpecs(active ? cur.filter(x => x !== s).join(', ') : [...cur, s].join(', '))
                         }}
-                        className={`rounded-full px-3 py-1 text-[12px] font-medium border transition ${active ? 'bg-[#FF8A1F] border-[#FF8A1F] text-white' : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#FF8A1F]'}`}>
+                        className={`rounded-full px-3 py-1 text-[13px] font-medium border transition ${active ? 'bg-[#C2410C] border-[#0E7490] text-white' : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#0E7490]'}`}>
                         {s}
                       </button>
                     )
                   })}
                 </div>
                 <input value={specs} onChange={e => setSpecs(e.target.value)} placeholder="Or type comma-separated…"
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] outline-none focus:border-[#FF8A1F]" />
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] outline-none focus:border-[#0E7490]" />
               </div>
               <div>
-                <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Internal Notes</label>
+                <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Internal Notes</label>
                 <textarea value={internalNotes} onChange={e => setInternalNotes(e.target.value)} rows={4} placeholder="Private admin notes…"
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F] resize-none" />
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490] resize-none" />
               </div>
             </>
           )}
@@ -235,8 +235,8 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Salary per Session" type="number" value={salary} onChange={setSalary} />
                 <div>
-                  <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Currency</label>
-                  <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F]">
+                  <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Currency</label>
+                  <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]">
                     <option value="EGP">EGP</option>
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
@@ -244,8 +244,8 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
                 </div>
               </div>
               <div>
-                <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Preferred Payment Method</label>
-                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F]">
+                <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Preferred Payment Method</label>
+                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]">
                   <option value="">— Select —</option>
                   <option value="vodafone_cash">Vodafone Cash</option>
                   <option value="instapay">Instapay</option>
@@ -256,14 +256,14 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
               <FormField label="Instapay Number" value={instapay}      onChange={setInstapay}     placeholder="01X XXXX XXXX" required={paymentMethod === 'instapay'} />
               <FormField label="Instapay Payment Link" value={paymentLink} onChange={setPaymentLink} placeholder="https://ipn.eg/S/..." required={paymentMethod === 'instapay'} />
               {paymentMethod === 'instapay' && (
-                <p className="-mt-2 text-[11px] text-[#94A3B8]">Both the Instapay number and payment link are required.</p>
+                <p className="-mt-2 text-[12px] text-[#94A3B8]">Both the Instapay number and payment link are required.</p>
               )}
               <FormField label="Wallet Number"   value={wallet}        onChange={setWallet}       required={paymentMethod === 'vodafone_cash'} />
               <FormField label="Bank Account Number" value={bankAccount} onChange={setBankAccount} required={paymentMethod === 'bank_transfer'} />
               <div>
-                <label className="mb-1.5 block text-[12px] font-medium text-[#374151]">Payment Notes</label>
+                <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Payment Notes</label>
                 <textarea value={paymentNotes} onChange={e => setPaymentNotes(e.target.value)} rows={2}
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F] resize-none" />
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490] resize-none" />
               </div>
             </>
           )}
@@ -279,12 +279,12 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
           {section === 'availability' && (
             <>
               <div>
-                <label className="mb-2 block text-[12px] font-medium text-[#374151]">Working Days</label>
+                <label className="mb-2 block text-[13px] font-medium text-[#374151]">Working Days</label>
                 <div className="flex flex-wrap gap-2">
                   {WORKING_DAYS.map(d => (
                     <button key={d} type="button"
                       onClick={() => setWorkingDays(prev => prev.includes(d) ? prev.filter(x => x !== d) : [...prev, d])}
-                      className={`rounded-full px-3 py-1 text-[12px] font-medium border transition ${workingDays.includes(d) ? 'bg-[#0B1F3A] border-[#0B1F3A] text-white' : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#0B1F3A]'}`}>
+                      className={`rounded-full px-3 py-1 text-[13px] font-medium border transition ${workingDays.includes(d) ? 'bg-[#0B1F3A] border-[#0B1F3A] text-white' : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#0B1F3A]'}`}>
                       {d}
                     </button>
                   ))}
@@ -296,11 +296,11 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
         </div>
 
         <div className="flex items-center justify-between border-t border-[#E2E8F0] px-4 md:px-6 py-3 md:py-4 shrink-0">
-          {error ? <p className="text-[12px] text-[#EF4444] flex-1 mr-4">{error}</p> : <div />}
+          {error ? <p className="text-[13px] text-[#EF4444] flex-1 mr-4">{error}</p> : <div />}
           <div className="flex gap-2 shrink-0">
-            <button onClick={onClose} className="rounded-lg border border-[#E2E8F0] px-3 md:px-4 py-2 text-[12px] md:text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition">Cancel</button>
+            <button onClick={onClose} className="rounded-lg border border-[#E2E8F0] px-3 md:px-4 py-2 text-[13px] md:text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition">Cancel</button>
             <button onClick={handleSubmit} disabled={isPending}
-              className="rounded-lg bg-[#FF8A1F] px-4 md:px-5 py-2 text-[12px] md:text-[13px] font-semibold text-white hover:bg-[#e87c18] disabled:opacity-50 transition">
+              className="rounded-lg bg-[#C2410C] px-4 md:px-5 py-2 text-[13px] md:text-[13px] font-semibold text-white hover:bg-[#e87c18] disabled:opacity-50 transition">
               {isPending ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Instructor'}
             </button>
           </div>

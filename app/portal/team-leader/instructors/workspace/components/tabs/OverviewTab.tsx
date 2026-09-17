@@ -29,13 +29,13 @@ export function OverviewTab({ detail }: { detail: InstructorDetailData }) {
     <div className="space-y-5">
       {/* Identity card */}
       <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-        <div className="grid grid-cols-2 gap-2.5 text-[12px]">
+        <div className="grid grid-cols-2 gap-2.5 text-[13px]">
           {instructor.user_email && (
             <div><span className="text-[#94A3B8]">Email: </span><span className="text-[#0B1F3A]">{instructor.user_email}</span></div>
           )}
           {instructor.phone && (
             <div><span className="text-[#94A3B8]">Phone: </span>
-              <a href={`tel:${instructor.phone}`} className="text-[#0B1F3A] hover:text-[#FF8A1F]">{instructor.phone}</a>
+              <a href={`tel:${instructor.phone}`} className="text-[#0B1F3A] hover:text-[#9A3412]">{instructor.phone}</a>
             </div>
           )}
           {instructor.alt_phone && (
@@ -56,7 +56,7 @@ export function OverviewTab({ detail }: { detail: InstructorDetailData }) {
           {instructor.specializations?.length > 0 && (
             <div className="col-span-2 flex flex-wrap gap-1">
               {instructor.specializations.map(s => (
-                <span key={s} className="rounded-full bg-[#FF8A1F]/10 px-2 py-0.5 text-[10px] font-medium text-[#FF8A1F]">{s}</span>
+                <span key={s} className="rounded-full bg-[#C2410C]/10 px-2 py-0.5 text-[11px] font-medium text-[#C2410C]">{s}</span>
               ))}
             </div>
           )}
@@ -85,9 +85,9 @@ export function OverviewTab({ detail }: { detail: InstructorDetailData }) {
                   <div className={`h-2 w-2 shrink-0 rounded-full ${meta.dot}`} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-semibold text-[#0B1F3A]">{s.group_name}</p>
-                    <p className="text-[11px] text-[#64748B]">{fmtTime(s.scheduled_at)} · {s.duration_minutes}min · {s.student_count} students</p>
+                    <p className="text-[12px] text-[#64748B]">{fmtTime(s.scheduled_at)} · {s.duration_minutes}min · {s.student_count} students</p>
                   </div>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${meta.cls}`}>{meta.label}</span>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${meta.cls}`}>{meta.label}</span>
                 </div>
               )
             })}
@@ -105,7 +105,7 @@ export function OverviewTab({ detail }: { detail: InstructorDetailData }) {
                 <span className="text-[#EF4444] shrink-0">⚠</span>
                 <div>
                   <p className="text-[13px] font-medium text-[#991B1B]">{s.group_name}</p>
-                  <p className="text-[11px] text-[#EF4444]">{fmtDate(s.scheduled_at)} · {fmtTime(s.scheduled_at)}</p>
+                  <p className="text-[12px] text-[#EF4444]">{fmtDate(s.scheduled_at)} · {fmtTime(s.scheduled_at)}</p>
                 </div>
               </div>
             ))}
@@ -122,7 +122,7 @@ export function OverviewTab({ detail }: { detail: InstructorDetailData }) {
               <div key={g.id} className="flex items-center justify-between rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-2.5">
                 <div>
                   <p className="text-[13px] font-medium text-[#78350F]">{g.name}</p>
-                  <p className="text-[11px] text-[#F59E0B]">{g.course_name ?? 'No course'} · {g.student_count} students</p>
+                  <p className="text-[12px] text-[#F59E0B]">{g.course_name ?? 'No course'} · {g.student_count} students</p>
                 </div>
                 <span className="text-[18px] font-bold text-[#F59E0B]">{g.attendance_rate}%</span>
               </div>
@@ -143,7 +143,7 @@ export function OverviewTab({ detail }: { detail: InstructorDetailData }) {
                   <div className={`h-2 w-2 shrink-0 rounded-full ${meta.dot}`} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-semibold text-[#0B1F3A]">{s.group_name}</p>
-                    <p className="text-[11px] text-[#64748B]">{fmtDate(s.scheduled_at)} · {fmtTime(s.scheduled_at)}</p>
+                    <p className="text-[12px] text-[#64748B]">{fmtDate(s.scheduled_at)} · {fmtTime(s.scheduled_at)}</p>
                   </div>
                 </div>
               )
@@ -156,7 +156,7 @@ export function OverviewTab({ detail }: { detail: InstructorDetailData }) {
       {instructor.bio && (
         <div>
           <SectionLabel>Bio</SectionLabel>
-          <p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3 text-[12px] text-[#374151] leading-relaxed">{instructor.bio}</p>
+          <p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3 text-[13px] text-[#374151] leading-relaxed">{instructor.bio}</p>
         </div>
       )}
     </div>

@@ -31,9 +31,9 @@ export function InstructorPaymentMethodsPanel({ instructorId, refreshKey }: { in
 
   return (
     <div className="rounded-xl border border-[#E2E8F0] bg-white p-4 space-y-3">
-      <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider">Payment Methods</p>
+      <p className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-wider">Payment Methods</p>
       {methods === null ? (
-        <p className="text-[12px] text-[#94A3B8]">Loading…</p>
+        <p className="text-[13px] text-[#94A3B8]">Loading…</p>
       ) : (
         <div className="space-y-1.5">
           <ModalRow label="Preferred" right={methods.payment_method ? PREFERRED_METHOD_LABELS[methods.payment_method] : "—"} />
@@ -41,13 +41,13 @@ export function InstructorPaymentMethodsPanel({ instructorId, refreshKey }: { in
           {methods.instapay_number     && <ModalRow label="Instapay Number" right={methods.instapay_number} />}
           {methods.payment_link        && (
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[12px] text-[#64748B]">Instapay Link</span>
+              <span className="text-[13px] text-[#64748B]">Instapay Link</span>
               <div className="flex items-center gap-1.5 min-w-0">
                 <a
                   href={methods.payment_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="truncate text-[12px] text-[#FF8A1F] hover:underline max-w-[140px]"
+                  className="truncate text-[13px] text-[#C2410C] hover:underline max-w-[140px]"
                   title={methods.payment_link}
                 >
                   {methods.payment_link}
@@ -55,7 +55,7 @@ export function InstructorPaymentMethodsPanel({ instructorId, refreshKey }: { in
                 <button
                   onClick={copyLink}
                   title="Copy link"
-                  className="shrink-0 rounded-md border border-[#E2E8F0] px-1.5 py-0.5 text-[10px] font-semibold text-[#64748B] hover:bg-[#F8FAFC]"
+                  className="shrink-0 rounded-md border border-[#E2E8F0] px-1.5 py-0.5 text-[11px] font-semibold text-[#64748B] hover:bg-[#F8FAFC]"
                 >
                   {copied ? "✓" : "Copy"}
                 </button>
@@ -64,7 +64,7 @@ export function InstructorPaymentMethodsPanel({ instructorId, refreshKey }: { in
           )}
           {methods.bank_account_number && <ModalRow label="Bank Account" right={methods.bank_account_number} />}
           {methods.payment_method === "instapay" && (!methods.instapay_number || !methods.payment_link) && (
-            <p className="pt-1 text-[11px] font-semibold text-[#B45309]">
+            <p className="pt-1 text-[12px] font-semibold text-[#B45309]">
               ⚠ Instapay is incomplete — both number and link are required.
             </p>
           )}

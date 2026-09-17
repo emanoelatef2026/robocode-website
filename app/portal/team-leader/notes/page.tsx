@@ -38,7 +38,7 @@ export default async function TLNotesPage({ searchParams }: Props) {
     <div className="space-y-5">
       <div>
         <h1 className="text-[18px] font-bold text-[#0B1F3A]">Student Notes Oversight</h1>
-        <p className="mt-0.5 text-[12px] text-[#64748B]">
+        <p className="mt-0.5 text-[13px] text-[#64748B]">
           Which instructors are documenting student progress, and which students have no recent note.
         </p>
       </div>
@@ -85,7 +85,7 @@ export default async function TLNotesPage({ searchParams }: Props) {
                   { key: 'student', header: 'Student', cell: (r: typeof students_missing[number]) => (
                     <div>
                       <p className="font-medium text-[#0B1F3A]">{r.student_name}</p>
-                      <p className="text-[11px] text-[#94A3B8]">{r.group_name ?? '—'}</p>
+                      <p className="text-[12px] text-[#94A3B8]">{r.group_name ?? '—'}</p>
                     </div>
                   ) },
                   { key: 'status', header: 'Status', cell: (r: typeof students_missing[number]) => (
@@ -135,7 +135,7 @@ export default async function TLNotesPage({ searchParams }: Props) {
           <OperationalTable
             columns={[
               { key: 'group', header: 'Group', cell: (r: typeof by_group[number]) => (
-                <Link href={`/portal/team-leader/groups/${r.group_id}`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">{r.group_name}</Link>
+                <Link href={`/portal/team-leader/groups/${r.group_id}`} className="font-medium text-[#0B1F3A] hover:text-[#9A3412]">{r.group_name}</Link>
               ) },
               ...(user.branchIds.length > 1 ? [{ key: 'branch', header: 'Branch', cell: (r: typeof by_group[number]) => <span className="text-[#64748B]">{r.branch_name ?? '—'}</span> }] : []),
               { key: 'students', header: 'Students', align: 'right', cell: (r: typeof by_group[number]) => <span className="text-[#64748B]">{r.student_count}</span> },
@@ -156,7 +156,7 @@ export default async function TLNotesPage({ searchParams }: Props) {
           <OperationalTable
             columns={[
               { key: 'instructor', header: 'Instructor', cell: (r: typeof by_instructor[number]) => (
-                <Link href="/portal/team-leader/instructors" className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">{r.instructor_name}</Link>
+                <Link href="/portal/team-leader/instructors" className="font-medium text-[#0B1F3A] hover:text-[#9A3412]">{r.instructor_name}</Link>
               ) },
               { key: 'students', header: 'Students', align: 'right', cell: (r: typeof by_instructor[number]) => <span className="text-[#64748B]">{r.student_count}</span> },
               { key: 'noted', header: 'Noted', align: 'right', cell: (r: typeof by_instructor[number]) => <span className="text-[#64748B]">{r.noted_count}</span> },

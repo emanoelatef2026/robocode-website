@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState } from 'react'
 import { createInstructor } from '@/modules/instructors/actions'
@@ -31,7 +31,7 @@ export default function NewInstructorForm({ branches, groups }: Props) {
     })
   }
 
-  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
   return (
     <div className="ds-card p-6">
@@ -131,7 +131,7 @@ export default function NewInstructorForm({ branches, groups }: Props) {
                       value={g.id}
                       checked={selectedGrp.has(g.id)}
                       onChange={() => toggleGroup(g.id)}
-                      className="rounded border-[#CBD5E1] text-[#FF8A1F] focus:ring-[#FF8A1F]"
+                      className="rounded border-[#CBD5E1] text-[#C2410C] focus:ring-[#0E7490]"
                     />
                     <span className="text-sm text-[#0B1F3A]">
                       {g.name}

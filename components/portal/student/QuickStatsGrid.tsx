@@ -19,11 +19,11 @@ function StatTile({ label, emoji, value, sub, href, bgFrom, bgTo, textColor, sub
       style={{ background: `linear-gradient(135deg, ${bgFrom} 0%, ${bgTo} 100%)` }}
     >
       <div className="flex items-center justify-between">
-        <p className={`text-[9.5px] font-bold uppercase tracking-wider ${subColor}`}>{label}</p>
+        <p className={`text-[11px] font-bold uppercase tracking-wider ${subColor}`}>{label}</p>
         <span className="text-[18px]">{emoji}</span>
       </div>
       <p className={`mt-1.5 text-[22px] font-extrabold leading-none ${textColor}`}>{value}</p>
-      <p className={`mt-0.5 text-[10px] font-medium ${subColor}`}>{sub}</p>
+      <p className={`mt-0.5 text-[11px] font-medium ${subColor}`}>{sub}</p>
     </div>
   )
   if (href) {

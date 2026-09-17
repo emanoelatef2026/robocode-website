@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import Link from 'next/link'
@@ -12,7 +12,7 @@ interface Action {
 
 const ACTIONS: Action[] = [
   { label: 'Add Student',     icon: '👤', href: '/portal/team-leader/students/new',                       color: 'bg-[#0B1F3A]'  },
-  { label: 'Enroll/Collect',  icon: '💰', href: '/portal/team-leader/finance',                            color: 'bg-[#FF8A1F]'  },
+  { label: 'Enroll/Collect',  icon: '💰', href: '/portal/team-leader/finance',                            color: 'bg-[#C2410C]'  },
   { label: 'Create Group',    icon: '📚', href: '/portal/team-leader/groups?action=create',               color: 'bg-indigo-600' },
   { label: 'Add Payment',     icon: '💳', href: '/portal/team-leader/finance?mode=payment',               color: 'bg-[#047857]'  },
   { label: 'Trial Session',   icon: '🟣', href: '/portal/team-leader/special-sessions/new?type=trial',   color: 'bg-purple-600' },
@@ -35,7 +35,7 @@ export default function QuickActionDock() {
                 key={action.label}
                 href={action.href}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-2.5 rounded-xl ${action.color} px-4 py-2.5 text-[12px] font-semibold text-white shadow-lg hover:opacity-90 transition`}
+                className={`flex items-center gap-2.5 rounded-xl ${action.color} px-4 py-2.5 text-[13px] font-semibold text-white shadow-lg hover:opacity-90 transition`}
               >
                 <span>{action.icon}</span>
                 <span>{action.label}</span>
@@ -47,7 +47,7 @@ export default function QuickActionDock() {
         {/* FAB button */}
         <button
           onClick={() => setOpen(v => !v)}
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-[#FF8A1F] text-white shadow-xl hover:bg-[#e87c18] transition active:scale-95"
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-[#C2410C] text-white shadow-xl hover:bg-[#e87c18] transition active:scale-95"
           aria-label="Quick actions"
           aria-expanded={open}
         >
@@ -107,7 +107,7 @@ export default function QuickActionDock() {
           <div className="mx-4">
             <button
               onClick={() => setOpen(true)}
-              className="w-full rounded-xl bg-[#FF8A1F] py-3 text-[13px] font-bold text-white shadow-lg hover:bg-[#e87c18] active:scale-[0.98] transition"
+              className="w-full rounded-xl bg-[#C2410C] py-3 text-[13px] font-bold text-white shadow-lg hover:bg-[#e87c18] active:scale-[0.98] transition"
             >
               + Quick Action
             </button>

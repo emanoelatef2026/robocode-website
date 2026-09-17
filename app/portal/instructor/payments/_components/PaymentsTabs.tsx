@@ -39,7 +39,7 @@ export default function PaymentsTabs({
             href={`/portal/instructor/payments?tab=${t.key}`}
             className={`px-3.5 py-2 text-[13px] font-semibold transition ${
               tab === t.key
-                ? 'border-b-2 border-[#FF8A1F] text-[#FF8A1F]'
+                ? 'border-b-2 border-[#C2410C] text-[#C2410C]'
                 : 'border-b-2 border-transparent text-[#64748B] hover:text-[#0B1F3A]'
             }`}
           >

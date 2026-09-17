@@ -1,4 +1,4 @@
-﻿import { getLead, getLeadTimeline } from '@/modules/leads/queries'
+import { getLead, getLeadTimeline } from '@/modules/leads/queries'
 import { requireAuth }              from '@/modules/rbac/guards'
 import { notFound }                 from 'next/navigation'
 import Link                         from 'next/link'
@@ -23,7 +23,7 @@ const PIPELINE_ORDER: LeadStatus[] = [
 function Field({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">{label}</p>
+      <p className="text-[12px] font-semibold uppercase tracking-wider text-[#94A3B8]">{label}</p>
       <p className="mt-0.5 text-sm text-[#0B1F3A]">{value ?? <span className="text-[#94A3B8]">—</span>}</p>
     </div>
   )
@@ -57,7 +57,7 @@ export default async function AdminLeadDetailPage({ params }: Props) {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
-          <Link href="/admin/leads" className="text-xs text-[#94A3B8] hover:text-[#FF8A1F]">
+          <Link href="/admin/leads" className="text-xs text-[#94A3B8] hover:text-[#9A3412]">
             ← Back to Leads
           </Link>
           <div className="mt-1 flex items-center gap-2">
@@ -84,7 +84,7 @@ export default async function AdminLeadDetailPage({ params }: Props) {
       {/* ── Pipeline progress bar ──────────────────────────────────────── */}
       {!isLost && (
         <div className="ds-card p-4">
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Pipeline</p>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Pipeline</p>
           <div className="flex items-center gap-1 overflow-x-auto">
             {PIPELINE_ORDER.map((s, i) => {
               const active  = s === lead.status
@@ -93,8 +93,8 @@ export default async function AdminLeadDetailPage({ params }: Props) {
               return (
                 <div key={s} className="flex items-center gap-1 shrink-0">
                   <div className={[
-                    'rounded-full px-2.5 py-1 text-[11px] font-medium transition',
-                    active  ? 'bg-[#FF8A1F] text-white' :
+                    'rounded-full px-2.5 py-1 text-[12px] font-medium transition',
+                    active  ? 'bg-[#C2410C] text-white' :
                     passed  ? 'bg-[#E7F8EE] text-[#15803D]' :
                               'bg-[#F1F5F9] text-[#94A3B8]',
                   ].join(' ')}>
@@ -128,7 +128,7 @@ export default async function AdminLeadDetailPage({ params }: Props) {
 
       {/* ── Details grid ───────────────────────────────────────────────── */}
       <div className="ds-card p-5">
-        <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Lead Details</p>
+        <p className="mb-4 text-[12px] font-semibold uppercase tracking-wider text-[#94A3B8]">Lead Details</p>
         <div className="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3">
           <Field label="Child Name"        value={lead.child_name} />
           <Field label="Parent Name"       value={lead.parent_name} />
@@ -152,7 +152,7 @@ export default async function AdminLeadDetailPage({ params }: Props) {
 
         {lead.notes && (
           <div className="mt-4 border-t border-[#E2E8F0] pt-4">
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Notes</p>
+            <p className="mb-1 text-[12px] font-semibold uppercase tracking-wider text-[#94A3B8]">Notes</p>
             <p className="whitespace-pre-wrap text-sm text-[#0B1F3A]">{lead.notes}</p>
           </div>
         )}
@@ -161,7 +161,7 @@ export default async function AdminLeadDetailPage({ params }: Props) {
       {/* ── Trial Sessions ─────────────────────────────────────────────── */}
       {trialHistory.length > 0 && (
         <div className="ds-card p-5">
-          <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+          <p className="mb-4 text-[12px] font-semibold uppercase tracking-wider text-[#94A3B8]">
             Trial Sessions ({trialHistory.length})
           </p>
           <div className="space-y-2">
@@ -173,17 +173,17 @@ export default async function AdminLeadDetailPage({ params }: Props) {
                     {' · '}
                     {new Date(t.scheduled_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                   </p>
-                  <p className="text-[11px] text-[#64748B]">
+                  <p className="text-[12px] text-[#64748B]">
                     {t.instructor_name ?? 'Unassigned'} · {t.branch_name}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {t.attendance_status === 'present' ? (
-                    <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">Present</span>
+                    <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-semibold text-[#15803D]">Present</span>
                   ) : t.attendance_status === 'absent' ? (
-                    <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#DC2626]">Absent</span>
+                    <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-semibold text-[#DC2626]">Absent</span>
                   ) : null}
-                  <span className="capitalize text-[11px] text-[#94A3B8]">{t.status}</span>
+                  <span className="capitalize text-[12px] text-[#94A3B8]">{t.status}</span>
                 </div>
               </div>
             ))}
@@ -193,7 +193,7 @@ export default async function AdminLeadDetailPage({ params }: Props) {
 
       {/* ── Timeline ───────────────────────────────────────────────────── */}
       <div className="ds-card p-5">
-        <p className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+        <p className="mb-4 text-[12px] font-semibold uppercase tracking-wider text-[#94A3B8]">
           Activity Timeline
         </p>
 
@@ -203,13 +203,13 @@ export default async function AdminLeadDetailPage({ params }: Props) {
           <ol className="space-y-3">
             {timeline.map(event => (
               <li key={event.id} className="flex gap-3">
-                <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#FF8A1F]" />
+                <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#C2410C]" />
                 <div className="flex-1">
                   <div className="flex items-baseline justify-between gap-2">
                     <p className="text-xs font-semibold capitalize text-[#0B1F3A]">
                       {event.event_type.replace(/_/g, ' ')}
                     </p>
-                    <p className="shrink-0 text-[11px] text-[#94A3B8]">
+                    <p className="shrink-0 text-[12px] text-[#94A3B8]">
                       {new Date(event.created_at).toLocaleDateString('en-GB', {
                         day: '2-digit', month: 'short', year: 'numeric',
                       })}
@@ -219,7 +219,7 @@ export default async function AdminLeadDetailPage({ params }: Props) {
                     <p className="mt-0.5 text-xs text-[#64748B]">{event.note}</p>
                   )}
                   {event.created_by_name && (
-                    <p className="mt-0.5 text-[11px] text-[#94A3B8]">by {event.created_by_name}</p>
+                    <p className="mt-0.5 text-[12px] text-[#94A3B8]">by {event.created_by_name}</p>
                   )}
                 </div>
               </li>

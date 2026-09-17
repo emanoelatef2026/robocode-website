@@ -107,7 +107,7 @@ export function GroupSummaryBar({
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <h2 className="text-[15px] font-bold text-[#0B1F3A] truncate">{group.name}</h2>
           {group.code && (
-            <span className="font-mono text-[11px] text-[#94A3B8] shrink-0 hidden sm:inline">{group.code}</span>
+            <span className="font-mono text-[12px] text-[#94A3B8] shrink-0 hidden sm:inline">{group.code}</span>
           )}
           <StatusChip group={group} />
         </div>
@@ -118,9 +118,9 @@ export function GroupSummaryBar({
               href={group.meeting_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 ds-card px-2.5 py-1.5 text-[11px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition"
+              className="flex items-center gap-1 ds-card px-2.5 py-1.5 text-[12px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition"
             >
-              <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#FF8A1F]">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#C2410C]">
                 <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
                 <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
               </svg>
@@ -148,7 +148,7 @@ export function GroupSummaryBar({
         </div>
       </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] sm:grid-cols-3 lg:grid-cols-5">
+      <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[12px] sm:grid-cols-3 lg:grid-cols-5">
         <div className="min-w-0"><span className="text-[#94A3B8]">Course </span><span className="font-semibold text-[#374151]">{group.course_name ?? '—'}</span></div>
         <div className="min-w-0"><span className="text-[#94A3B8]">Instructor </span><span className="font-semibold text-[#374151]">{group.lead_instructor_name ?? 'Unassigned'}</span></div>
         <div className="min-w-0"><span className="text-[#94A3B8]">Schedule </span><span className="font-semibold text-[#374151]">{sched || '—'}</span></div>
@@ -175,8 +175,8 @@ export function GroupSummaryBar({
                 >
                   <span className="shrink-0 text-[#94A3B8]">{item.icon}</span>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8] leading-none mb-0.5">{item.label}</p>
-                    <p className="text-[12px] font-semibold text-[#374151] truncate">{item.value}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] leading-none mb-0.5">{item.label}</p>
+                    <p className="text-[13px] font-semibold text-[#374151] truncate">{item.value}</p>
                   </div>
                 </div>
               ))}

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
@@ -41,7 +41,7 @@ function GroupCard({ group }: { group: GroupHealthRow }) {
       <div className={`flex items-start justify-between gap-2 border-b px-4 py-3 ${borderCls}`}>
         <div className="min-w-0">
           <p className="truncate text-[13px] font-semibold text-[#0B1F3A]">{group.group_name}</p>
-          {schedule && <p className="mt-0.5 text-[10px] text-[#94A3B8]">{schedule}</p>}
+          {schedule && <p className="mt-0.5 text-[11px] text-[#94A3B8]">{schedule}</p>}
         </div>
         <HealthBadge status={health_status} />
       </div>
@@ -64,12 +64,12 @@ function GroupCard({ group }: { group: GroupHealthRow }) {
       {/* Meta */}
       <div className="px-4 py-2.5 space-y-1.5">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[11px] text-[#64748B] truncate">
+          <span className="text-[12px] text-[#64748B] truncate">
             {group.instructor_name
               ? <span>👤 {group.instructor_name}</span>
               : <span className="text-[#F59E0B] font-medium">⚠ No instructor</span>}
           </span>
-          {group.course_name && <span className="text-[10px] text-[#94A3B8] truncate max-w-[100px]">{group.course_name}</span>}
+          {group.course_name && <span className="text-[11px] text-[#94A3B8] truncate max-w-[100px]">{group.course_name}</span>}
         </div>
 
         <ScoreBar value={attPct} />
@@ -96,7 +96,7 @@ function GroupCard({ group }: { group: GroupHealthRow }) {
         )}
 
         {/* Last / next session */}
-        <div className="flex items-center justify-between text-[10px] text-[#94A3B8]">
+        <div className="flex items-center justify-between text-[11px] text-[#94A3B8]">
           <span>Last: {fmtDate(group.last_session_date)}</span>
           {group.next_session_at && <span className="text-[#3B82F6]">Next: {fmtDate(group.next_session_at)}</span>}
         </div>
@@ -106,13 +106,13 @@ function GroupCard({ group }: { group: GroupHealthRow }) {
       <div className={`flex items-center gap-2 border-t px-4 py-2.5 ${borderCls}`}>
         <Link
           href={`/portal/team-leader/groups/${group.group_id}`}
-          className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-center text-[11px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+          className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-center text-[12px] font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]"
         >
           Open
         </Link>
         <Link
           href={`/portal/team-leader/attendance/record?group=${group.group_id}`}
-          className="flex-1 rounded-lg bg-[#FF8A1F] py-1.5 text-center text-[11px] font-semibold text-white hover:bg-[#e87c18]"
+          className="flex-1 rounded-lg bg-[#C2410C] py-1.5 text-center text-[12px] font-semibold text-white hover:bg-[#e87c18]"
         >
           Attendance
         </Link>
@@ -177,7 +177,7 @@ export default function GroupHealthBoardClient({ groups }: { groups: GroupHealth
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search groups..."
-            className="w-full ds-card py-2 pl-8 pr-3 text-[12px] text-[#0B1F3A] placeholder-[#CBD5E1] focus:border-[#FF8A1F] focus:outline-none"
+            className="w-full ds-card py-2 pl-8 pr-3 text-[13px] text-[#0B1F3A] placeholder-[#CBD5E1] focus:border-[#0E7490] focus:outline-none"
           />
         </div>
 
@@ -192,7 +192,7 @@ export default function GroupHealthBoardClient({ groups }: { groups: GroupHealth
             <button
               key={chip.key}
               onClick={() => setFilter(chip.key as FilterKey)}
-              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition ${
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium transition ${
                 filter === chip.key
                   ? 'bg-[#0B1F3A] text-white'
                   : 'border border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#CBD5E1]'
@@ -212,7 +212,7 @@ export default function GroupHealthBoardClient({ groups }: { groups: GroupHealth
         <select
           value={sort}
           onChange={e => setSort(e.target.value as SortKey)}
-          className="ds-card py-2 pl-3 pr-7 text-[12px] text-[#64748B] focus:border-[#FF8A1F] focus:outline-none"
+          className="ds-card py-2 pl-3 pr-7 text-[13px] text-[#64748B] focus:border-[#0E7490] focus:outline-none"
         >
           <option value="health">Sort: Health</option>
           <option value="danger">Sort: Danger First</option>

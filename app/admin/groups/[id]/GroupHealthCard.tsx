@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Group Health Card
  * 0–100 score with color-coded status and per-criterion breakdown.
  * Shows exact reasons for score deductions.
@@ -198,12 +198,12 @@ function FactorRow({ factor }: { factor: HealthFactor }) {
           <p className={`text-xs font-medium ${factor.passed ? 'text-[#15803D]' : pct > 0 ? 'text-[#B45309]' : 'text-[#DC2626]'}`}>
             {factor.label}
           </p>
-          <span className="text-[11px] font-semibold text-[#64748B] shrink-0">
+          <span className="text-[12px] font-semibold text-[#64748B] shrink-0">
             {factor.earned}/{factor.points}
           </span>
         </div>
         {factor.reason && (
-          <p className="mt-0.5 text-[11px] text-[#94A3B8]">{factor.reason}</p>
+          <p className="mt-0.5 text-[12px] text-[#94A3B8]">{factor.reason}</p>
         )}
       </div>
     </div>
@@ -239,7 +239,7 @@ export default async function GroupHealthCard({ groupId, capacity }: Props) {
         </div>
         <div className="text-right shrink-0">
           <p className={`text-3xl font-bold ${c.ring}`}>{h.score}</p>
-          <p className="text-[11px] text-[#94A3B8]">/ 100</p>
+          <p className="text-[12px] text-[#94A3B8]">/ 100</p>
         </div>
       </div>
 
@@ -259,13 +259,13 @@ export default async function GroupHealthCard({ groupId, capacity }: Props) {
       {/* ── Capacity bar ────────────────────────────────────────────── */}
       {h.capacity !== null && (
         <div className="mt-4 border-t border-[#E2E8F0] pt-3">
-          <div className="flex justify-between text-[11px] text-[#64748B] mb-1">
+          <div className="flex justify-between text-[12px] text-[#64748B] mb-1">
             <span>Enrollment</span>
             <span>{h.studentCount} / {h.capacity} ({fillPct}%)</span>
           </div>
           <div className="h-1.5 rounded-full bg-[#F1F5F9]">
             <div
-              className={`h-1.5 rounded-full ${(fillPct ?? 0) >= 90 ? 'bg-[#10B981]' : (fillPct ?? 0) >= 50 ? 'bg-[#FF8A1F]' : 'bg-[#CBD5E1]'}`}
+              className={`h-1.5 rounded-full ${(fillPct ?? 0) >= 90 ? 'bg-[#10B981]' : (fillPct ?? 0) >= 50 ? 'bg-[#C2410C]' : 'bg-[#CBD5E1]'}`}
               style={{ width: `${fillPct ?? 0}%` }}
             />
           </div>
@@ -275,7 +275,7 @@ export default async function GroupHealthCard({ groupId, capacity }: Props) {
       {/* ── Cert readiness ──────────────────────────────────────────── */}
       {h.certTotalCount > 0 && (
         <div className="mt-3 border-t border-[#E2E8F0] pt-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Cert Readiness</p>
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-[#94A3B8]">Cert Readiness</p>
           <div className="mt-1 flex items-center gap-2">
             <div className="flex-1 h-1.5 rounded-full bg-[#F1F5F9]">
               <div

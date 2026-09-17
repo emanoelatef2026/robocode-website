@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useTransition, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -11,7 +11,7 @@ interface Props {
   template: CertificateTemplate
 }
 
-const inputClass = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+const inputClass = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
 const CERT_TYPES = [
   { value: 'semester_completion', label: 'Semester Completion' },
@@ -153,7 +153,7 @@ export default function EditTemplateForm({ template }: Props) {
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#C2410C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isPending && (
               <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">

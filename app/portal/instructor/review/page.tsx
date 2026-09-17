@@ -45,7 +45,7 @@ export default async function ReviewCenterPage({ searchParams }: Props) {
           Everything waiting on you, in one place — {totalPending} item{totalPending !== 1 ? 's' : ''}
         </p>
         {groupId && (
-          <Link href="/portal/instructor/review" className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-[#FF8A1F] hover:underline">
+          <Link href="/portal/instructor/review" className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-[#C2410C] hover:underline">
             Filtered to one group — show all →
           </Link>
         )}
@@ -65,7 +65,7 @@ export default async function ReviewCenterPage({ searchParams }: Props) {
               <h2 className="text-sm font-semibold text-[#0B1F3A]">
                 Homework <span className="text-[#94A3B8] font-normal">({homework.length})</span>
               </h2>
-              <Link href="/portal/instructor/homework" className="text-xs font-medium text-[#FF8A1F] hover:underline">
+              <Link href="/portal/instructor/homework" className="text-xs font-medium text-[#C2410C] hover:underline">
                 Open Homework Inbox →
               </Link>
             </div>
@@ -99,7 +99,7 @@ export default async function ReviewCenterPage({ searchParams }: Props) {
               <h2 className="text-sm font-semibold text-[#0B1F3A]">
                 Portfolio Projects <span className="text-[#94A3B8] font-normal">({projects.length})</span>
               </h2>
-              <Link href="/portal/instructor/portfolio" className="text-xs font-medium text-[#FF8A1F] hover:underline">
+              <Link href="/portal/instructor/portfolio" className="text-xs font-medium text-[#C2410C] hover:underline">
                 Open Portfolio Review →
               </Link>
             </div>
@@ -121,7 +121,7 @@ export default async function ReviewCenterPage({ searchParams }: Props) {
                         <p className="truncate text-sm font-medium text-[#0B1F3A]">{p.title}</p>
                         <p className="truncate text-xs text-[#64748B]">by {p.student_name}</p>
                       </div>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusCfg.cls}`}>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
                         {statusCfg.label}
                       </span>
                     </Link>

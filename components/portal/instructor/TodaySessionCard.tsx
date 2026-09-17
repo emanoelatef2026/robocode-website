@@ -3,8 +3,8 @@ import StatusBadge from '@/components/admin/StatusBadge'
 import type { TodaySession } from '@/modules/instructor-portal/types'
 
 const STATUS_ACTION: Record<string, { label: string; style: string }> = {
-  scheduled:             { label: 'Start Session',     style: 'bg-[#10B981] text-white hover:bg-emerald-600' },
-  ongoing:               { label: 'Continue Session',  style: 'bg-[#FF8A1F] text-white hover:bg-[#e07818]' },
+  scheduled:             { label: 'Start Session',     style: 'bg-[#0E7490] text-white hover:bg-[#155E75]' },
+  ongoing:               { label: 'Continue Session',  style: 'bg-[#C2410C] text-white hover:bg-[#9A3412]' },
   completed:             { label: 'View Session',      style: 'bg-[#F1F5F9] text-[#0B1F3A] hover:bg-[#E2E8F0]' },
   postponed:             { label: 'View Details',      style: 'bg-[#F1F5F9] text-[#0B1F3A] hover:bg-[#E2E8F0]' },
   cancelled:             { label: 'View Session',      style: 'bg-[#F1F5F9] text-[#94A3B8] hover:bg-[#E2E8F0]' },
@@ -13,7 +13,7 @@ const STATUS_ACTION: Record<string, { label: string; style: string }> = {
 
 const SESSION_TYPE_BADGE: Record<string, { label: string; style: string } | null> = {
   primary: null,
-  trial:   { label: '🟣 Trial',  style: 'bg-purple-100 text-purple-700' },
+  trial:   { label: '🟣 Trial',  style: 'bg-[#E0F7FA] text-[#0E7490]' },
   makeup:  { label: '🟠 Makeup', style: 'bg-orange-100 text-orange-700' },
 }
 
@@ -44,7 +44,7 @@ export default function TodaySessionCard({ session, groupId }: Props) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           {typeBadge && (
-            <span className={`mb-1 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${typeBadge.style}`}>
+            <span className={`mb-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${typeBadge.style}`}>
               {typeBadge.label}
             </span>
           )}
@@ -85,7 +85,7 @@ export default function TodaySessionCard({ session, groupId }: Props) {
       {/* Action button */}
       <Link
         href={href}
-        className={`block rounded-lg px-4 py-2 text-center text-xs font-semibold transition ${action.style}`}
+        className={`block min-h-10 rounded-[10px] px-4 py-2 text-center text-[13px] font-semibold transition ${action.style}`}
       >
         {action.label}
       </Link>

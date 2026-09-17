@@ -41,7 +41,7 @@ export default function NewSpecialSessionForm({ branches, instructors, defaultTy
 
       {/* Type selector */}
       <div>
-        <p className="text-[12px] font-semibold text-[#0B1F3A] mb-2">Session Type</p>
+        <p className="text-[13px] font-semibold text-[#0B1F3A] mb-2">Session Type</p>
         <div className="flex gap-2">
           <button
             type="button"
@@ -75,7 +75,7 @@ export default function NewSpecialSessionForm({ branches, instructors, defaultTy
 
         {/* Branch */}
         <div>
-          <label className="block text-[12px] font-semibold text-[#0B1F3A] mb-1">Branch</label>
+          <label className="block text-[13px] font-semibold text-[#0B1F3A] mb-1">Branch</label>
           {branches.length === 0 ? (
             <p className="rounded-lg bg-amber-50 px-3 py-2 text-[13px] text-amber-700">
               No branches assigned to your account. Contact a super admin.
@@ -95,7 +95,7 @@ export default function NewSpecialSessionForm({ branches, instructors, defaultTy
 
         {/* Instructor */}
         <div>
-          <label className="block text-[12px] font-semibold text-[#0B1F3A] mb-1">Instructor</label>
+          <label className="block text-[13px] font-semibold text-[#0B1F3A] mb-1">Instructor</label>
           <select
             name="instructor_id"
             required
@@ -112,7 +112,7 @@ export default function NewSpecialSessionForm({ branches, instructors, defaultTy
 
         {/* Date & Time */}
         <div>
-          <label className="block text-[12px] font-semibold text-[#0B1F3A] mb-1">Date &amp; Time</label>
+          <label className="block text-[13px] font-semibold text-[#0B1F3A] mb-1">Date &amp; Time</label>
           <input
             type="datetime-local"
             name="scheduled_at"
@@ -123,7 +123,7 @@ export default function NewSpecialSessionForm({ branches, instructors, defaultTy
 
         {/* Duration */}
         <div>
-          <label className="block text-[12px] font-semibold text-[#0B1F3A] mb-1">Duration (minutes)</label>
+          <label className="block text-[13px] font-semibold text-[#0B1F3A] mb-1">Duration (minutes)</label>
           <input
             type="number"
             name="duration_minutes"
@@ -137,7 +137,7 @@ export default function NewSpecialSessionForm({ branches, instructors, defaultTy
         {/* Trial-only: Course Name */}
         {sessionType === 'trial' && (
           <div>
-            <label className="block text-[12px] font-semibold text-[#0B1F3A] mb-1">Course (optional)</label>
+            <label className="block text-[13px] font-semibold text-[#0B1F3A] mb-1">Course (optional)</label>
             <input
               type="text"
               name="course_name"
@@ -149,7 +149,7 @@ export default function NewSpecialSessionForm({ branches, instructors, defaultTy
 
         {/* Notes */}
         <div>
-          <label className="block text-[12px] font-semibold text-[#0B1F3A] mb-1">Notes (optional)</label>
+          <label className="block text-[13px] font-semibold text-[#0B1F3A] mb-1">Notes (optional)</label>
           <textarea
             name="notes"
             rows={3}

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -56,7 +56,7 @@ export default function GradeForm({ submission, nextSubmissionId }: Props) {
         <select
           name="status"
           defaultValue={submission.status ?? 'graded'}
-          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#C2410C] focus:outline-none"
         >
           {STATUSES.map(({ value, label }) => (
             <option key={value} value={value}>{label}</option>
@@ -75,7 +75,7 @@ export default function GradeForm({ submission, nextSubmissionId }: Props) {
           defaultValue={submission.score ?? ''}
           min={0}
           step={0.5}
-          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#C2410C] focus:outline-none"
           placeholder="Leave blank for no score"
         />
       </div>
@@ -89,7 +89,7 @@ export default function GradeForm({ submission, nextSubmissionId }: Props) {
           name="feedback"
           defaultValue={submission.feedback ?? ''}
           rows={4}
-          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#C2410C] focus:outline-none"
           placeholder="Write your feedback here…"
         />
       </div>
@@ -103,7 +103,7 @@ export default function GradeForm({ submission, nextSubmissionId }: Props) {
           name="public_feedback"
           defaultValue={submission.public_feedback ?? ''}
           rows={2}
-          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#C2410C] focus:outline-none"
           placeholder="Optional short summary for parents…"
         />
       </div>
@@ -125,7 +125,7 @@ export default function GradeForm({ submission, nextSubmissionId }: Props) {
       <button
         type="submit"
         disabled={pending || advancing}
-        className="w-full rounded-lg bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e07818] disabled:opacity-60 transition"
+        className="w-full rounded-lg bg-[#C2410C] py-2.5 text-sm font-medium text-white hover:bg-[#9A3412] disabled:opacity-60 transition"
       >
         {pending ? 'Saving…' : advancing ? 'Saved ✓' : 'Save Grade'}
       </button>

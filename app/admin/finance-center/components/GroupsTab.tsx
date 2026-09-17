@@ -18,7 +18,7 @@ const STATUS_COLORS: Record<string, string> = {
 function StatusBadge({ status }: { status: string }) {
   const cls = STATUS_COLORS[status] ?? 'bg-[#F3F4F6] text-[#6B7280]'
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${cls}`}>
+    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${cls}`}>
       {status}
     </span>
   )
@@ -79,7 +79,7 @@ export function GroupsTab({
 
   const SortTh = ({ col, label }: { col: keyof GroupPnL; label: string }) => (
     <th
-      className="px-3 py-2.5 text-right text-[11px] font-medium text-[#64748B] whitespace-nowrap cursor-pointer hover:text-[#0B1F3A] select-none"
+      className="px-3 py-2.5 text-right text-[12px] font-medium text-[#64748B] whitespace-nowrap cursor-pointer hover:text-[#0B1F3A] select-none"
       onClick={() => toggleSort(col)}
     >
       {label}{sortCol === col ? (sortAsc ? ' ↑' : ' ↓') : ''}
@@ -150,9 +150,9 @@ export function GroupsTab({
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`rounded-full px-2.5 py-1 text-[11px] font-semibold transition border flex-shrink-0 ${
+                  className={`rounded-full px-2.5 py-1 text-[12px] font-semibold transition border flex-shrink-0 ${
                     isActive
-                      ? 'border-[#FF8A1F] bg-orange-50 text-[#FF8A1F]'
+                      ? 'border-[#0E7490] bg-orange-50 text-[#C2410C]'
                       : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
                   }`}
                 >
@@ -164,7 +164,7 @@ export function GroupsTab({
             <input
               type="text" placeholder="Search…"
               value={search} onChange={e => setSearch(e.target.value)}
-              className="rounded-lg border border-[#E2E8F0] px-3 py-1 text-xs focus:border-[#FF8A1F] focus:outline-none w-32 flex-shrink-0"
+              className="rounded-lg border border-[#E2E8F0] px-3 py-1 text-xs focus:border-[#0E7490] focus:outline-none w-32 flex-shrink-0"
             />
             <button
               onClick={() => exportGroupsExcel(filtered)}
@@ -174,7 +174,7 @@ export function GroupsTab({
             </button>
             <button
               onClick={() => setAddOpen(true)}
-              className="rounded-lg bg-[#FF8A1F] px-3 py-1 text-xs font-semibold text-white hover:bg-[#e07a1a] flex-shrink-0 ml-auto"
+              className="rounded-lg bg-[#C2410C] px-3 py-1 text-xs font-semibold text-white hover:bg-[#e07a1a] flex-shrink-0 ml-auto"
             >
               + Add Expense
             </button>
@@ -186,11 +186,11 @@ export function GroupsTab({
               <Colgroup />
               <thead>
                 <tr>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-medium text-[#64748B]">Group</th>
-                  <th className="px-3 py-2.5 text-left text-[11px] font-medium text-[#64748B]">Branch</th>
-                  <th className="px-3 py-2.5 text-center text-[11px] font-medium text-[#64748B]">Status</th>
-                  <th className="px-3 py-2.5 text-center text-[11px] font-medium text-[#64748B]">Students</th>
-                  <th className="px-3 py-2.5 text-center text-[11px] font-medium text-[#64748B]">Share %</th>
+                  <th className="px-3 py-2.5 text-left text-[12px] font-medium text-[#64748B]">Group</th>
+                  <th className="px-3 py-2.5 text-left text-[12px] font-medium text-[#64748B]">Branch</th>
+                  <th className="px-3 py-2.5 text-center text-[12px] font-medium text-[#64748B]">Status</th>
+                  <th className="px-3 py-2.5 text-center text-[12px] font-medium text-[#64748B]">Students</th>
+                  <th className="px-3 py-2.5 text-center text-[12px] font-medium text-[#64748B]">Share %</th>
                   <SortTh col="net_expected_revenue"   label="Net Expected" />
                   <SortTh col="net_collected_revenue"  label="Net Collected" />
                   <SortTh col="outstanding"            label="Outstanding" />
@@ -203,7 +203,7 @@ export function GroupsTab({
                   <SortTh col="total_expenses"         label="Total Exp" />
                   <SortTh col="expected_profit"        label="Exp. Profit" />
                   <SortTh col="actual_profit"          label="Act. Profit" />
-                  <th className="px-3 py-2.5 text-center text-[11px] font-medium text-[#64748B]">Rate</th>
+                  <th className="px-3 py-2.5 text-center text-[12px] font-medium text-[#64748B]">Rate</th>
                   <th className="px-3 py-2.5" />
                 </tr>
               </thead>
@@ -248,7 +248,7 @@ export function GroupsTab({
                   <td className="px-3 py-3">
                     <button
                       onClick={ev => { ev.stopPropagation(); setDetailId(g.group_id) }}
-                      className="text-[11px] font-medium text-[#FF8A1F] hover:underline whitespace-nowrap"
+                      className="text-[12px] font-medium text-[#C2410C] hover:underline whitespace-nowrap"
                     >
                       Details →
                     </button>

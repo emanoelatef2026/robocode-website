@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useTransition, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -93,7 +93,7 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
               required
               defaultValue={selectedGroupId ?? ''}
               onChange={handleGroupChange}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               <option value="">Select active group…</option>
               {groups.map((g) => (
@@ -114,7 +114,7 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
                 type="datetime-local"
                 required
                 defaultValue={new Date().toISOString().slice(0, 16)}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
               />
             </div>
             <div>
@@ -125,7 +125,7 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
                 min={15}
                 max={480}
                 defaultValue={60}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
               />
             </div>
           </div>
@@ -135,7 +135,7 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
             <select
               name="delivery"
               defaultValue="offline"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               <option value="offline">Offline</option>
               <option value="online">Online</option>
@@ -155,7 +155,7 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
               placeholder="e.g. Introduction to loops, Algebra chapter 3, Variables and data types…"
               required
               maxLength={200}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
 
@@ -245,7 +245,7 @@ export default function AttendanceRecordForm({ groups, selectedGroupId, selected
               <button
                 type="submit"
                 disabled={isPending || students.length === 0 || !topic.trim()}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-lg bg-[#C2410C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isPending ? 'Saving…' : 'Save Attendance'}
               </button>

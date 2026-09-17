@@ -79,17 +79,17 @@ export default async function ParentNotesPage({ searchParams }: Props) {
               <div key={n.id} className="ds-card p-3.5">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold text-[#475569]">
+                    <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-semibold text-[#475569]">
                       {CATEGORY_LABEL[n.category] ?? n.category}
                     </span>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${severity.cls}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${severity.cls}`}>
                       {severity.label}
                     </span>
                   </div>
-                  <span className="text-[10.5px] text-[#94A3B8]">{formatDate(n.created_at)}</span>
+                  <span className="text-[11px] text-[#94A3B8]">{formatDate(n.created_at)}</span>
                 </div>
                 <p className="mt-2 text-[12.5px] leading-relaxed text-[#0B1F3A]">{n.content}</p>
-                <p className="mt-1.5 text-[10.5px] text-[#94A3B8]">
+                <p className="mt-1.5 text-[11px] text-[#94A3B8]">
                   {n.author_name}{n.schedule_topic ? ` · ${n.schedule_topic}` : ''}
                 </p>
               </div>

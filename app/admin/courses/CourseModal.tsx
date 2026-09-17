@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useRef, useEffect, useActionState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -18,7 +18,7 @@ interface Props {
 }
 
 const cls =
-  'w-full ds-card px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+  'w-full ds-card px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
 // ── Inner components ─────────────────────────────────────────────────────────
 
@@ -37,7 +37,7 @@ function AccordionSection({
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="flex w-full items-center justify-between py-3.5 text-sm font-semibold text-[#0B1F3A] transition-colors hover:text-[#FF8A1F]"
+        className="flex w-full items-center justify-between py-3.5 text-sm font-semibold text-[#0B1F3A] transition-colors hover:text-[#9A3412]"
       >
         {title}
         <svg
@@ -78,7 +78,7 @@ function Field({
         {required && <span className="ml-0.5 text-[#EF4444]">*</span>}
       </label>
       {children}
-      {hint && <p className="mt-1 text-[10px] text-[#94A3B8]">{hint}</p>}
+      {hint && <p className="mt-1 text-[11px] text-[#94A3B8]">{hint}</p>}
     </div>
   )
 }
@@ -564,7 +564,7 @@ export default function CourseModal({ onClose, mode, courseId }: Props) {
               type="submit"
               form="course-form"
               disabled={pending || (mode === 'edit' && !course)}
-              className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18] disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#C2410C] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18] disabled:opacity-60"
             >
               {pending ? (
                 <>

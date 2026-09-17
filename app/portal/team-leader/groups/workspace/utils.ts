@@ -69,7 +69,7 @@ export function buildKpis(groups: GroupOperationalRow[]) {
     { label: 'Active',         value: groups.filter(g => g.status === 'active').length,  color: 'bg-[#38BDF8]' },
     { label: 'Low Attendance', value: groups.filter(g => g.is_low_attendance).length,     color: 'bg-[#EF4444]' },
     { label: 'No Instructor',  value: groups.filter(g => !g.has_instructor).length,       color: 'bg-[#F59E0B]' },
-    { label: 'Under Capacity', value: groups.filter(g => g.is_low_capacity).length,       color: 'bg-[#FF8A1F]' },
+    { label: 'Under Capacity', value: groups.filter(g => g.is_low_capacity).length,       color: 'bg-[#C2410C]' },
     { label: 'Overloaded',     value: groups.filter(g => g.is_overloaded).length,         color: 'bg-[#7C3AED]' },
     { label: 'Starting Soon',  value: groups.filter(g => g.starts_soon).length,           color: 'bg-[#10B981]' },
   ]

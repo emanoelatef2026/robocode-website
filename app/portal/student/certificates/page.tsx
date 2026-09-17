@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import { getOwnCertificates } from '@/modules/certificates/queries'
 import { getCertificateEligibility } from '@/modules/student-portal/queries'
 
@@ -37,7 +37,7 @@ export default async function StudentCertificatesPage() {
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">Certificate Status</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Certificate Status</p>
                   {eligibility.is_eligible ? (
                     <>
                       <p className="mt-1 text-sm font-bold text-[#15803D]">✓ Eligible for Certificate</p>
@@ -63,7 +63,7 @@ export default async function StudentCertificatesPage() {
                       ? `${Math.round((eligibility.consumed_sessions / eligibility.enrolled_sessions) * 100)}%`
                       : '—'}
                   </p>
-                  <p className="text-[10px] text-[#64748B]">progress</p>
+                  <p className="text-[11px] text-[#64748B]">progress</p>
                 </div>
               </div>
 
@@ -79,7 +79,7 @@ export default async function StudentCertificatesPage() {
               )}
 
               {eligibility.course_title && (
-                <p className="mt-2 text-[10px] text-[#64748B]">
+                <p className="mt-2 text-[11px] text-[#64748B]">
                   {eligibility.course_title}{eligibility.group_name ? ` · ${eligibility.group_name}` : ''}
                 </p>
               )}
@@ -107,14 +107,14 @@ export default async function StudentCertificatesPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="text-[14px] font-semibold text-[#0B1F3A] leading-tight">{c.title}</h3>
                     {c.status === 'revoked' && (
-                      <span className="shrink-0 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-medium text-[#EF4444]">Revoked</span>
+                      <span className="shrink-0 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[12px] font-medium text-[#EF4444]">Revoked</span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-[12px] text-[#64748B]">
+                  <p className="mt-0.5 text-[13px] text-[#64748B]">
                     {TYPE_LABELS[c.certificate_type] ?? c.certificate_type}
                     {c.course_title && ` · ${c.course_title}`}
                   </p>
-                  <p className="mt-1 text-[11px] text-[#64748B]">
+                  <p className="mt-1 text-[12px] text-[#64748B]">
                     Issued {new Date(c.issued_at).toLocaleDateString('en-GB')} · <span className="font-mono">{c.certificate_code}</span>
                   </p>
                 </div>
@@ -126,7 +126,7 @@ export default async function StudentCertificatesPage() {
                       href={`/verify/${c.certificate_code}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC] text-center"
+                      className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC] text-center"
                     >
                       Verify
                     </a>
@@ -134,7 +134,7 @@ export default async function StudentCertificatesPage() {
                       href={`/api/certificates/${c.certificate_code}/pdf`}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#e87c18] text-center"
+                      className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[13px] font-medium text-white hover:bg-[#e87c18] text-center"
                     >
                       Download PDF
                     </a>
@@ -149,7 +149,7 @@ export default async function StudentCertificatesPage() {
                     href={`/verify/${c.certificate_code}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[#E2E8F0] text-center text-[12px] font-medium text-[#0B1F3A]"
+                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[#E2E8F0] text-center text-[13px] font-medium text-[#0B1F3A]"
                   >
                     Verify
                   </a>
@@ -157,7 +157,7 @@ export default async function StudentCertificatesPage() {
                     href={`/api/certificates/${c.certificate_code}/pdf`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg bg-[#FF8A1F] text-center text-[12px] font-medium text-white"
+                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg bg-[#FF8A1F] text-center text-[13px] font-medium text-white"
                   >
                     Download PDF
                   </a>

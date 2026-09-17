@@ -27,14 +27,14 @@ export default function SectionPreviewCard({ icon, iconBg, title, count, countLa
         <div className="flex items-baseline gap-1.5">
           <p className="text-[12.5px] font-bold text-[#0B1F3A]">{title}</p>
           {!!count && count > 0 && (
-            <span className="text-[10.5px] font-semibold text-[#64748B]">{count} {countLabel}</span>
+            <span className="text-[11px] font-semibold text-[#64748B]">{count} {countLabel}</span>
           )}
         </div>
-        <p className="mt-0.5 truncate text-[11px] text-[#64748B]">
+        <p className="mt-0.5 truncate text-[12px] text-[#64748B]">
           {hasItems ? (preview ?? 'View details') : emptyText}
         </p>
       </div>
-      <span className="shrink-0 text-[11px] font-bold text-[#FF8A1F]">→</span>
+      <span className="shrink-0 text-[12px] font-bold text-[#FF8A1F]">→</span>
     </Link>
   )
 }

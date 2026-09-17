@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState } from 'react'
 import { createInstructor } from '@/modules/instructors/actions'
@@ -33,7 +33,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
         ) : (
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Branch <span className="text-[#EF4444]">*</span></label>
-            <select name="branch_id" required className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+            <select name="branch_id" required className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20">
               <option value="">— Select branch —</option>
               {(branches ?? []).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
@@ -49,7 +49,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
             <input
               name="first_name"
               required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
           <div>
@@ -59,7 +59,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
             <input
               name="last_name"
               required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
         </div>
@@ -74,7 +74,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
             required
             autoComplete="new-password"
             placeholder="Minimum 6 characters"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -83,7 +83,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Employee ID</label>
             <input
               name="employee_id"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
               placeholder="e.g. EMP-001"
             />
           </div>
@@ -92,7 +92,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
             <input
               name="hire_date"
               type="date"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
         </div>
@@ -104,7 +104,7 @@ export default function TLNewInstructorForm({ branchId, branchIds, branches }: P
           <input
             name="specializations"
             placeholder="Python, Robotics, Web Development (comma-separated)"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -47,14 +47,14 @@ function RubricBuilder({ initial }: { initial: RubricCriteria[] }) {
             value={c.label}
             onChange={(e) => update(c.id, 'label', e.target.value)}
             placeholder="Criterion label…"
-            className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+            className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
           />
           <input
             type="number"
             value={c.max_points}
             onChange={(e) => update(c.id, 'max_points', Number(e.target.value))}
             min="0"
-            className="w-20 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+            className="w-20 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
           />
           <span className="text-xs text-[#94A3B8]">pts</span>
           <button
@@ -71,7 +71,7 @@ function RubricBuilder({ initial }: { initial: RubricCriteria[] }) {
       <button
         type="button"
         onClick={add}
-        className="text-sm font-medium text-[#FF8A1F] hover:underline"
+        className="text-sm font-medium text-[#C2410C] hover:underline"
       >
         + Add criterion
       </button>
@@ -128,7 +128,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
               name="title"
               defaultValue={assignment.title}
               required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
 
@@ -138,7 +138,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
               <select
                 name="type"
                 defaultValue={assignment.type}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
               >
                 {TYPES.map((t) => (
                   <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
@@ -150,7 +150,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
               <select
                 name="submission_type"
                 defaultValue={assignment.submission_type}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
               >
                 {SUBMISSION_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>{t.label}</option>
@@ -167,7 +167,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
                 type="number"
                 min="0"
                 defaultValue={assignment.max_score}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
               />
             </div>
             <div>
@@ -176,7 +176,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
                 name="due_at"
                 type="datetime-local"
                 defaultValue={dueValue}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
               />
             </div>
           </div>
@@ -187,7 +187,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
               name="description"
               rows={2}
               defaultValue={assignment.description ?? ''}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
             />
           </div>
 
@@ -197,7 +197,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
               name="instructions"
               rows={5}
               defaultValue={assignment.instructions ?? ''}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
             />
           </div>
 
@@ -243,7 +243,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
                 min="1"
                 max="10"
                 defaultValue={assignment.max_resubmissions}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
               />
             </div>
           </div>
@@ -261,7 +261,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
             <select
               name="status"
               defaultValue={assignment.status}
-              className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+              className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
             >
               <option value="draft">Draft</option>
               <option value="published">Published</option>
@@ -304,7 +304,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
                   <td className="px-4 py-3">
                     <StatusBadge status={s.status} />
                     {s.is_late && (
-                      <span className="ml-1 text-[10px] text-[#EF4444]">late</span>
+                      <span className="ml-1 text-[11px] text-[#EF4444]">late</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-[#64748B]">
@@ -316,7 +316,7 @@ export default function AssignmentDetailView({ assignment, submissions }: Props)
                   <td className="px-4 py-3 text-right">
                     <Link
                       href={`/admin/assignments/${assignment.id}/submissions/${s.id}`}
-                      className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                      className="text-xs font-medium text-[#C2410C] hover:underline"
                     >
                       Grade
                     </Link>

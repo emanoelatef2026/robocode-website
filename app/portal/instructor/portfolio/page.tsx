@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId } from '@/modules/instructor-portal/queries'
 import { listProjectsForInstructorReview } from '@/modules/portfolio/queries'
 import { PROJECT_STATUS_CONFIG, BADGE_EMOJIS } from '@/modules/portfolio/types'
@@ -61,7 +61,7 @@ export default async function InstructorPortfolioPage({ searchParams }: Props) {
             className={[
               'flex-1 rounded-lg px-3 py-2 text-center text-sm font-medium transition',
               tab === t.key
-                ? 'bg-[#FF8A1F] text-white'
+                ? 'bg-[#C2410C] text-white'
                 : 'text-[#64748B] hover:bg-[#F8FAFC]',
             ].join(' ')}
           >
@@ -100,7 +100,7 @@ export default async function InstructorPortfolioPage({ searchParams }: Props) {
                         <p className="font-semibold text-[#0B1F3A]">{p.title}</p>
                         <p className="text-xs text-[#94A3B8]">by {p.student_name}</p>
                       </div>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusCfg.cls}`}>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
                         {statusCfg.label}
                       </span>
                     </div>

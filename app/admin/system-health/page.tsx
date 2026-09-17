@@ -1,4 +1,4 @@
-﻿import { createServiceClient }    from '@/lib/supabase/service'
+import { createServiceClient }    from '@/lib/supabase/service'
 import { requireAuth }            from '@/modules/rbac/guards'
 import { redirect }               from 'next/navigation'
 import { getEventSummaryCounts }  from '@/modules/observability'
@@ -308,7 +308,7 @@ function CheckCard({ section }: { section: CheckSection }) {
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-[#10B981]" />
           <p className="text-sm font-semibold">{title}</p>
-          <span className="ml-auto rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-medium text-[#15803D]">All clear</span>
+          <span className="ml-auto rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[12px] font-medium text-[#15803D]">All clear</span>
         </div>
       </div>
     )
@@ -319,7 +319,7 @@ function CheckCard({ section }: { section: CheckSection }) {
       <div className="flex items-center gap-2 border-b border-[#E2E8F0] px-4 py-3 bg-[#F8FAFC]">
         <span className={`h-2 w-2 rounded-full ${dot[severity]}`} />
         <p className={`text-sm font-semibold ${colors.header}`}>{title}</p>
-        <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-medium ${colors.badge}`}>
+        <span className={`ml-auto rounded-full px-2 py-0.5 text-[12px] font-medium ${colors.badge}`}>
           {items.length} issue{items.length !== 1 ? 's' : ''}
         </span>
       </div>
@@ -332,7 +332,7 @@ function CheckCard({ section }: { section: CheckSection }) {
             >
               <div>
                 <p className="text-sm font-medium text-[#0B1F3A]">{item.name}</p>
-                {item.sub && <p className="text-[11px] text-[#94A3B8]">{item.sub}</p>}
+                {item.sub && <p className="text-[12px] text-[#94A3B8]">{item.sub}</p>}
               </div>
               <svg viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5 text-[#CBD5E1] shrink-0">
                 <path fillRule="evenodd" d="M6.22 3.22a.75.75 0 011.06 0l4.25 4.25a.75.75 0 010 1.06L7.28 12.78a.75.75 0 01-1.06-1.06L9.94 8 6.22 4.28a.75.75 0 010-1.06z" clipRule="evenodd" />
@@ -474,10 +474,10 @@ export default async function SystemHealthPage() {
     <div className="max-w-4xl space-y-5">
       {/* ── Actions ────────────────────────────────────────────────────── */}
       <div className="flex justify-end items-center gap-2">
-        <Link href="/admin/system-events" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+        <Link href="/admin/system-events" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
           Event Log
         </Link>
-        <Link href="/admin/executive" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+        <Link href="/admin/executive" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
           Exec Ops
         </Link>
       </div>
@@ -495,7 +495,7 @@ export default async function SystemHealthPage() {
         ].map(k => (
           <div key={k.label} className={`rounded-xl border bg-white p-3 ${(k as any).badge ? 'border-[#FECACA]' : 'border-[#E2E8F0]'}`}>
             <p className={`text-xl font-bold ${k.cls}`}>{k.value}</p>
-            <p className="text-[10px] text-[#64748B]">{k.label}</p>
+            <p className="text-[11px] text-[#64748B]">{k.label}</p>
           </div>
         ))}
       </div>
@@ -513,9 +513,9 @@ export default async function SystemHealthPage() {
                 <span className="text-base">{a.severity === 'CRITICAL' ? '🚨' : a.severity === 'HIGH' ? '⚠️' : '📊'}</span>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">{a.alert_type?.replace(/_/g, ' ')}</p>
-                  <p className="text-[12px]">{a.message}{a.branch_name ? ` — ${a.branch_name}` : ''}</p>
+                  <p className="text-[13px]">{a.message}{a.branch_name ? ` — ${a.branch_name}` : ''}</p>
                 </div>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${a.severity === 'CRITICAL' ? 'bg-[#FECACA] text-[#991B1B]' : 'bg-[#FDE68A] text-[#92400E]'}`}>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${a.severity === 'CRITICAL' ? 'bg-[#FECACA] text-[#991B1B]' : 'bg-[#FDE68A] text-[#92400E]'}`}>
                   {a.severity}
                 </span>
               </div>
@@ -529,16 +529,16 @@ export default async function SystemHealthPage() {
         <div className="rounded-xl border border-[#FECACA] bg-white overflow-hidden">
           <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 py-3 bg-[#FEE2E2]">
             <p className="text-sm font-semibold text-[#991B1B]">Dead Letter Jobs ({deadLetterJobs.length})</p>
-            <Link href="/admin/system-events?type=JOB_DEAD_LETTER" className="text-[11px] text-[#EF4444] hover:underline">View all →</Link>
+            <Link href="/admin/system-events?type=JOB_DEAD_LETTER" className="text-[12px] text-[#EF4444] hover:underline">View all →</Link>
           </div>
           <div className="divide-y divide-[#F1F5F9]">
             {deadLetterJobs.slice(0, 5).map((job: JobRow) => (
               <div key={job.id} className="flex items-center justify-between px-4 py-3">
                 <div>
                   <p className="text-sm font-medium text-[#0B1F3A]">{job.type}</p>
-                  <p className="text-[11px] text-[#EF4444] truncate max-w-80">{job.error ?? 'Unknown error'}</p>
+                  <p className="text-[12px] text-[#EF4444] truncate max-w-80">{job.error ?? 'Unknown error'}</p>
                 </div>
-                <p className="text-[11px] text-[#94A3B8]">{new Date(job.created_at).toLocaleDateString('en-GB')}</p>
+                <p className="text-[12px] text-[#94A3B8]">{new Date(job.created_at).toLocaleDateString('en-GB')}</p>
               </div>
             ))}
           </div>
@@ -552,7 +552,7 @@ export default async function SystemHealthPage() {
             Daily Integrity Check {latestIntegrityRun ? `(${new Date(latestIntegrityRun.run_at).toLocaleString('en-GB')})` : ''}
           </p>
           {latestIntegrityRun && (
-            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${latestIntegrityRun.ok ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#FECACA] text-[#991B1B]'}`}>
+            <span className={`rounded-full px-2 py-0.5 text-[12px] font-semibold ${latestIntegrityRun.ok ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#FECACA] text-[#991B1B]'}`}>
               {latestIntegrityRun.ok ? 'All clear' : `${latestIntegrityRun.breached.length} breached`}
             </span>
           )}
@@ -577,9 +577,9 @@ export default async function SystemHealthPage() {
       {/* ── Original issue counts header ────────────────────────────────── */}
       <div className="flex items-center gap-2">
         <h2 className="text-[15px] font-semibold text-[#0B1F3A]">Integrity &amp; Operational Gaps</h2>
-        {criticalCount > 0 && <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#DC2626]">{criticalCount} critical</span>}
-        {warningCount > 0 && <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">{warningCount} warnings</span>}
-        {infoCount > 0 && <span className="rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[10px] font-semibold text-[#1D4ED8]">{infoCount} info</span>}
+        {criticalCount > 0 && <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-semibold text-[#DC2626]">{criticalCount} critical</span>}
+        {warningCount > 0 && <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#B45309]">{warningCount} warnings</span>}
+        {infoCount > 0 && <span className="rounded-full bg-[#EFF6FF] px-2 py-0.5 text-[11px] font-semibold text-[#1D4ED8]">{infoCount} info</span>}
       </div>
 
       {/* ── Health Score ───────────────────────────────────────────────── */}
@@ -596,7 +596,7 @@ export default async function SystemHealthPage() {
               style={{ width: `${healthScore}%` }}
             />
           </div>
-          <p className="mt-1.5 text-[11px] text-[#94A3B8]">
+          <p className="mt-1.5 text-[12px] text-[#94A3B8]">
             {criticalCount} critical · {warningCount} warnings · {infoCount} info · {totalIssues} total issues
           </p>
         </div>

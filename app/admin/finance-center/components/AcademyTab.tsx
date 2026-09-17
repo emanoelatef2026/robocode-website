@@ -72,7 +72,7 @@ export function AcademyTab({
       <div className="ds-card">
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Monthly Trend — Last 6 Months</p>
-          <div className="flex items-center gap-4 text-[11px] text-[#64748B]">
+          <div className="flex items-center gap-4 text-[12px] text-[#64748B]">
             <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#10B981]" /> Collected</span>
             <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-sm bg-[#EF4444]" /> Expenses</span>
           </div>
@@ -84,14 +84,14 @@ export function AcademyTab({
               const eH = maxBar > 0 ? Math.round((m.total_expenses / maxBar) * 100) : 2
               return (
                 <div key={m.month} className="flex flex-1 flex-col items-center gap-1.5">
-                  <p className={`text-[10px] font-semibold ${m.actual_profit >= 0 ? 'text-[#15803D]' : 'text-[#EF4444]'}`}>
+                  <p className={`text-[11px] font-semibold ${m.actual_profit >= 0 ? 'text-[#15803D]' : 'text-[#EF4444]'}`}>
                     {m.actual_profit >= 0 ? '+' : '−'}{fmtK(Math.abs(m.actual_profit)).replace('EGP ', '')}
                   </p>
                   <div className="flex w-full items-end gap-0.5">
                     <div className="flex-1 rounded-t-sm bg-[#10B981]" style={{ height: `${Math.max(cH, 2)}px` }} />
                     <div className="flex-1 rounded-t-sm bg-[#EF4444]"     style={{ height: `${Math.max(eH, 2)}px` }} />
                   </div>
-                  <p className="text-[10px] text-[#94A3B8]">{m.label}</p>
+                  <p className="text-[11px] text-[#94A3B8]">{m.label}</p>
                 </div>
               )
             })}
@@ -105,7 +105,7 @@ export function AcademyTab({
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Academy Expenses</p>
           <button
             onClick={() => setAddOpen(true)}
-            className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#e07a1a]"
+            className="rounded-lg bg-[#C2410C] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#e07a1a]"
           >
             + Add Academy Expense
           </button>
@@ -128,7 +128,7 @@ export function AcademyTab({
                     {new Date(e.expense_date).toLocaleDateString('en-EG', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="rounded bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-medium text-[#64748B]">
+                    <span className="rounded bg-[#F1F5F9] px-2 py-0.5 text-[12px] font-medium text-[#64748B]">
                       {EXPENSE_TYPE_LABELS[e.expense_type]}
                     </span>
                   </td>

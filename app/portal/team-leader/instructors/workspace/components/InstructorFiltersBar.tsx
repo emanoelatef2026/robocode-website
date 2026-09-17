@@ -36,10 +36,10 @@ export function InstructorFiltersBar({
               value={searchQ}
               onChange={e => onSearchChange(e.target.value)}
               placeholder="Search name, code, branch…"
-              className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] pl-8 pr-3 py-1.5 text-[11px] md:text-[12px] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+              className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] pl-8 pr-3 py-1.5 text-[12px] md:text-[13px] outline-none focus:border-[#0E7490] focus:bg-white transition"
             />
           </div>
-          <span className="md:hidden text-[10px] text-[#94A3B8] shrink-0 whitespace-nowrap">
+          <span className="md:hidden text-[11px] text-[#94A3B8] shrink-0 whitespace-nowrap">
             {visibleCount !== totalCount ? `${visibleCount}/${totalCount}` : `${totalCount}`}
           </span>
         </div>
@@ -50,7 +50,7 @@ export function InstructorFiltersBar({
             <select
               value={branchFilter}
               onChange={e => onBranchChange(e.target.value)}
-              className="flex-1 md:flex-none rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 md:px-3 py-1 md:py-1.5 text-[11px] md:text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+              className="flex-1 md:flex-none rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 md:px-3 py-1 md:py-1.5 text-[12px] md:text-[13px] text-[#374151] outline-none focus:border-[#0E7490] focus:bg-white transition"
             >
               <option value="">All Branches</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -59,7 +59,7 @@ export function InstructorFiltersBar({
           <select
             value={quickFilter}
             onChange={e => onQuickFilterChange(e.target.value as QuickFilter)}
-            className={`flex-1 md:flex-none rounded-lg border px-2 md:px-3 py-1 md:py-1.5 text-[11px] md:text-[12px] outline-none transition ${quickFilter ? 'border-[#FF8A1F] bg-[#FFF7ED] text-[#FF8A1F]' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#374151] focus:border-[#FF8A1F] focus:bg-white'}`}
+            className={`flex-1 md:flex-none rounded-lg border px-2 md:px-3 py-1 md:py-1.5 text-[12px] md:text-[13px] outline-none transition ${quickFilter ? 'border-[#0E7490] bg-[#FFF7ED] text-[#C2410C]' : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#374151] focus:border-[#0E7490] focus:bg-white'}`}
           >
             <option value="">All Status</option>
             <option value="active">Active ({instructors.filter(i => i.status === 'active').length})</option>
@@ -70,12 +70,12 @@ export function InstructorFiltersBar({
           {hasActiveFilter && (
             <button
               onClick={onClear}
-              className="rounded-lg border border-[#E2E8F0] px-2 md:px-3 py-1 md:py-1.5 text-[11px] md:text-[12px] text-[#64748B] hover:bg-[#F1F5F9] transition shrink-0"
+              className="rounded-lg border border-[#E2E8F0] px-2 md:px-3 py-1 md:py-1.5 text-[12px] md:text-[13px] text-[#64748B] hover:bg-[#F1F5F9] transition shrink-0"
             >
               Clear
             </button>
           )}
-          <span className="hidden md:block ml-auto text-[11px] text-[#94A3B8] whitespace-nowrap">
+          <span className="hidden md:block ml-auto text-[12px] text-[#94A3B8] whitespace-nowrap">
             {visibleCount !== totalCount ? `${visibleCount} of ${totalCount}` : `${totalCount} instructors`}
           </span>
         </div>

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState, useTransition } from 'react'
 import { saveGroupAcademicConfig, addGroupInstructor, removeGroupInstructor } from '@/modules/groups/actions'
@@ -25,7 +25,7 @@ export default function AcademicConfigCard({ groupId, config, courses, instructo
   const hasInstructor = !!config.instructor_id
   const isActive      = hasCourse && hasInstructor
 
-  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15 bg-white'
+  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15 bg-white'
 
   const assignedIds = new Set([
     config.instructor_id,
@@ -37,7 +37,7 @@ export default function AcademicConfigCard({ groupId, config, courses, instructo
     <div className="ds-card p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold text-[#0B1F3A]">Group Configuration</h2>
-        <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${
           isActive ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#FFFBEB] text-[#B45309]'
         }`}>
           {isActive ? 'Active' : 'Forming'}
@@ -125,7 +125,7 @@ export default function AcademicConfigCard({ groupId, config, courses, instructo
         <p className="mb-3 text-xs font-semibold text-[#0B1F3A]">
           Additional Instructors
           {config.additional_instructors.length > 0 && (
-            <span className="ml-1.5 rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-medium text-[#64748B]">
+            <span className="ml-1.5 rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[11px] font-medium text-[#64748B]">
               {config.additional_instructors.length}
             </span>
           )}
@@ -202,7 +202,7 @@ function AddInstructorForm({
       <select
         value={selectedId}
         onChange={(e) => setSelectedId(e.target.value)}
-        className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15 bg-white"
+        className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15 bg-white"
       >
         <option value="">— Add instructor —</option>
         {instructors.map((i) => (

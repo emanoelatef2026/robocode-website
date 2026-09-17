@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getParentChildren,
   getChildAssignments,
@@ -105,7 +105,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
           >
             {f.label}
             <span className={[
-              'rounded-full px-1.5 py-0.5 text-[10px] font-bold',
+              'rounded-full px-1.5 py-0.5 text-[11px] font-bold',
               filterKey === f.key ? 'bg-[#FF8A1F] text-white' : 'bg-[#F1F5F9] text-[#64748B]',
             ].join(' ')}>
               {counts[f.key]}
@@ -133,11 +133,11 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <h3 className="font-semibold text-[#0B1F3A]">{a.title}</h3>
-                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>
+                      <span className={`rounded-full px-2 py-0.5 text-[12px] font-medium ${cfg.cls}`}>
                         {cfg.text}
                       </span>
                       {a.is_late && (
-                        <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-medium text-[#EF4444]">
+                        <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[12px] font-medium text-[#EF4444]">
                           Late
                         </span>
                       )}
@@ -145,10 +145,10 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
 
                     {/* Course — no "Semester:" prefix */}
                     {a.course_title && (
-                      <p className="mt-0.5 text-[12px] text-[#64748B]">{a.course_title}</p>
+                      <p className="mt-0.5 text-[13px] text-[#64748B]">{a.course_title}</p>
                     )}
 
-                    <div className="mt-2 flex flex-wrap gap-4 text-[12px] text-[#64748B]">
+                    <div className="mt-2 flex flex-wrap gap-4 text-[13px] text-[#64748B]">
                       {a.due_at && (
                         <span>
                           Due {new Date(a.due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -171,7 +171,7 @@ export default async function ParentAssignmentsPage({ searchParams }: Props) {
                 {/* Public feedback only */}
                 {a.public_feedback && (
                   <div className="mt-3 rounded-lg bg-[#F8FAFC] border border-[#F1F5F9] px-3 py-2.5">
-                    <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">
+                    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
                       Instructor Feedback
                     </p>
                     <p className="text-[13px] text-[#64748B] whitespace-pre-wrap">{a.public_feedback}</p>

@@ -27,7 +27,7 @@ export default async function AdminSpecialSessionsPage({ searchParams }: Props) 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-[18px] font-bold text-[#0B1F3A]">Special Sessions</h1>
-          <p className="text-[12px] text-[#64748B] mt-0.5">
+          <p className="text-[13px] text-[#64748B] mt-0.5">
             {trialCount} trial · {makeupCount} makeup
           </p>
         </div>
@@ -43,9 +43,9 @@ export default async function AdminSpecialSessionsPage({ searchParams }: Props) 
           <Link
             key={t.label}
             href={t.href}
-            className={`rounded-full border px-3 py-1 text-[12px] font-semibold transition ${
+            className={`rounded-full border px-3 py-1 text-[13px] font-semibold transition ${
               t.active
-                ? 'border-[#FF8A1F] bg-[#FF8A1F]/10 text-[#FF8A1F]'
+                ? 'border-[#0E7490] bg-[#C2410C]/10 text-[#C2410C]'
                 : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
             }`}
           >
@@ -59,7 +59,7 @@ export default async function AdminSpecialSessionsPage({ searchParams }: Props) 
       ) : (
         <div className="overflow-hidden ds-card">
           <div className="border-b border-[#E2E8F0] px-4 py-2.5">
-            <p className="text-[12px] font-semibold text-[#0B1F3A]">
+            <p className="text-[13px] font-semibold text-[#0B1F3A]">
               {sessions.length} session{sessions.length !== 1 ? 's' : ''}
             </p>
           </div>
@@ -76,7 +76,7 @@ export default async function AdminSpecialSessionsPage({ searchParams }: Props) 
                   className="flex items-center justify-between gap-3 px-4 py-3"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${color}`}>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${color}`}>
                       {label}
                     </span>
                     <div className="min-w-0">
@@ -89,7 +89,7 @@ export default async function AdminSpecialSessionsPage({ searchParams }: Props) 
                           hour: '2-digit', minute: '2-digit',
                         })}
                       </p>
-                      <p className="text-[11px] text-[#64748B] truncate">
+                      <p className="text-[12px] text-[#64748B] truncate">
                         {s.instructor_name ?? 'Unassigned'} · {s.branch_name} · {s.participant_count} participant{s.participant_count !== 1 ? 's' : ''}
                       </p>
                     </div>

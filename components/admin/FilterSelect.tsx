@@ -34,7 +34,7 @@ export default function FilterSelect({ name, value, placeholder, options, classN
       onChange={(e) => handleChange(e.target.value)}
       className={
         className ??
-        'h-10 rounded-lg border border-[#E2E8F0] px-3 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] bg-white min-w-30'
+        'ds-filter-select text-sm'
       }
     >
       <option value="">{placeholder}</option>

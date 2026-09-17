@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useTopbarAction } from '@/components/shared/layout/TopbarActionContext'
@@ -266,7 +266,7 @@ export default function StudentsClient({
           <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
             <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
             <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-            <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+            <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
           </div>
         ))}
       </div>
@@ -280,14 +280,14 @@ export default function StudentsClient({
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Name, code, phone…"
-            className="min-w-0 flex-1 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+            className="min-w-0 flex-1 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
           />
           {/* Filters toggle — all viewports */}
           <button
             onClick={() => setShowFilters(f => !f)}
             className={`flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition
               ${showFilters || activeFilterCount > 0
-                ? 'border-[#FF8A1F] bg-[#FF8A1F]/10 text-[#FF8A1F]'
+                ? 'border-[#0E7490] bg-[#C2410C]/10 text-[#C2410C]'
                 : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:border-[#CBD5E1]'}`}
           >
             <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -295,7 +295,7 @@ export default function StudentsClient({
             </svg>
             <span className="hidden sm:inline">Filters</span>
             {activeFilterCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF8A1F] text-[10px] font-bold text-white">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#C2410C] text-[11px] font-bold text-white">
                 {activeFilterCount}
               </span>
             )}
@@ -316,13 +316,13 @@ export default function StudentsClient({
             {activeFilters.map(chip => (
               <span
                 key={chip.key}
-                className="inline-flex items-center gap-1 rounded-full border border-[#FF8A1F]/30 bg-[#FF8A1F]/10 px-2.5 py-1 text-[11px] font-medium text-[#FF8A1F]"
+                className="inline-flex items-center gap-1 rounded-full border border-[#0E7490]/30 bg-[#C2410C]/10 px-2.5 py-1 text-[12px] font-medium text-[#C2410C]"
               >
                 {chip.label}
                 <button
                   onClick={chip.clear}
                   aria-label={`Remove filter: ${chip.label}`}
-                  className="ml-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-[#FF8A1F]/20"
+                  className="ml-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-[#C2410C]/20"
                 >
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -342,57 +342,57 @@ export default function StudentsClient({
             >
               {branches.length > 1 && (
                 <select value={filterBranch} onChange={e => { setFilterBranch(e.target.value); pushFilters({ branch_id: e.target.value }) }}
-                  className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                  className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                   <option value="">All Branches</option>
                   {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                 </select>
               )}
               <select value={filterGroup} onChange={e => { setFilterGroup(e.target.value); pushFilters({ group_id: e.target.value }) }}
-                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                 <option value="">All Groups</option>
                 {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
               {courses.length > 0 && (
                 <select value={filterCourse} onChange={e => { setFilterCourse(e.target.value); pushFilters({ course_id: e.target.value }) }}
-                  className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                  className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                   <option value="">All Courses</option>
                   {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                 </select>
               )}
               <select value={filterRisk} onChange={e => { setFilterRisk(e.target.value); pushFilters({ risk: e.target.value }) }}
-                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                 <option value="">All Risk Levels</option>
                 <option value="HIGH">High Risk</option>
                 <option value="MEDIUM">Medium Risk</option>
                 <option value="LOW">Low Risk</option>
               </select>
               <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); pushFilters({ op_status: e.target.value }) }}
-                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                 <option value="">All Statuses</option>
                 {Object.entries(OP_STATUS_CONFIG).map(([k, v]) => (
                   <option key={k} value={k}>{v.label}</option>
                 ))}
               </select>
               <select value={filterActive} onChange={e => { setFilterActive(e.target.value); pushFilters({ active: e.target.value }) }}
-                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                 <option value="">Active + Inactive</option>
                 <option value="active">Active Only</option>
                 <option value="inactive">Inactive Only</option>
               </select>
               <select value={filterHasGrp} onChange={e => { setFilterHasGrp(e.target.value); pushFilters({ has_group: e.target.value }) }}
-                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                 <option value="">Has Group / No Group</option>
                 <option value="yes">Has Group</option>
                 <option value="no">No Group</option>
               </select>
               <select value={filterMulti} onChange={e => { setFilterMulti(e.target.value); pushFilters({ multi: e.target.value }) }}
-                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                 <option value="">All Contracts</option>
                 <option value="1">Multi-Contract Only</option>
               </select>
               {instructors.length > 0 && (
                 <select value={filterInstructor} onChange={e => { setFilterInstructor(e.target.value); pushFilters({ instructor_id: e.target.value }) }}
-                  className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                  className="min-w-0 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                   <option value="">All Instructors</option>
                   {instructors.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
                 </select>
@@ -419,7 +419,7 @@ export default function StudentsClient({
               {/* Header */}
               <div className="flex items-center justify-between px-4 pb-3 pt-1">
                 <p className="text-sm font-semibold text-[#0B1F3A]">
-                  Filters {activeFilterCount > 0 && <span className="ml-1 text-[#FF8A1F]">({activeFilterCount})</span>}
+                  Filters {activeFilterCount > 0 && <span className="ml-1 text-[#C2410C]">({activeFilterCount})</span>}
                 </p>
                 <button
                   onClick={() => setShowFilters(false)}
@@ -434,33 +434,33 @@ export default function StudentsClient({
               <div className="space-y-2 px-4">
                 {branches.length > 1 && (
                   <select value={filterBranch} onChange={e => { setFilterBranch(e.target.value); pushFilters({ branch_id: e.target.value }) }}
-                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                     <option value="">All Branches</option>
                     {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 )}
                 <select value={filterGroup} onChange={e => { setFilterGroup(e.target.value); pushFilters({ group_id: e.target.value }) }}
-                  className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                  className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                   <option value="">All Groups</option>
                   {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
                 {courses.length > 0 && (
                   <select value={filterCourse} onChange={e => { setFilterCourse(e.target.value); pushFilters({ course_id: e.target.value }) }}
-                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                     <option value="">All Courses</option>
                     {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
                   </select>
                 )}
                 <div className="grid grid-cols-2 gap-2">
                   <select value={filterRisk} onChange={e => { setFilterRisk(e.target.value); pushFilters({ risk: e.target.value }) }}
-                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                     <option value="">All Risk</option>
                     <option value="HIGH">High</option>
                     <option value="MEDIUM">Medium</option>
                     <option value="LOW">Low</option>
                   </select>
                   <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); pushFilters({ op_status: e.target.value }) }}
-                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                     <option value="">All Statuses</option>
                     {Object.entries(OP_STATUS_CONFIG).map(([k, v]) => (
                       <option key={k} value={k}>{v.label}</option>
@@ -469,13 +469,13 @@ export default function StudentsClient({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <select value={filterActive} onChange={e => { setFilterActive(e.target.value); pushFilters({ active: e.target.value }) }}
-                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                     <option value="">Any Status</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                   </select>
                   <select value={filterHasGrp} onChange={e => { setFilterHasGrp(e.target.value); pushFilters({ has_group: e.target.value }) }}
-                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                     <option value="">Group / No Group</option>
                     <option value="yes">Has Group</option>
                     <option value="no">No Group</option>
@@ -483,13 +483,13 @@ export default function StudentsClient({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <select value={filterMulti} onChange={e => { setFilterMulti(e.target.value); pushFilters({ multi: e.target.value }) }}
-                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                     <option value="">Any Contract</option>
                     <option value="1">Multi Only</option>
                   </select>
                   {instructors.length > 0 && (
                     <select value={filterInstructor} onChange={e => { setFilterInstructor(e.target.value); pushFilters({ instructor_id: e.target.value }) }}
-                      className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                      className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                       <option value="">All Instructors</option>
                       {instructors.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
                     </select>
@@ -506,7 +506,7 @@ export default function StudentsClient({
                 </button>
                 <button
                   onClick={() => setShowFilters(false)}
-                  className="flex-1 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-semibold text-white"
+                  className="flex-1 rounded-xl bg-[#C2410C] py-2.5 text-sm font-semibold text-white"
                 >
                   Apply
                 </button>
@@ -596,7 +596,7 @@ export default function StudentsClient({
                     </div>
 
                     {/* Row 2: code · age · group */}
-                    <div className="mt-0.5 flex items-center gap-x-1.5 overflow-hidden text-[10px] text-[#94A3B8]">
+                    <div className="mt-0.5 flex items-center gap-x-1.5 overflow-hidden text-[11px] text-[#94A3B8]">
                       {row.student_code && (
                         <span className="shrink-0 font-mono">#{row.student_code}</span>
                       )}
@@ -609,7 +609,7 @@ export default function StudentsClient({
                     </div>
 
                     {/* Row 3: stats · phone / assign */}
-                    <div className="mt-1 flex min-w-0 items-center gap-x-1 text-[10px]">
+                    <div className="mt-1 flex min-w-0 items-center gap-x-1 text-[11px]">
                       <span className={`shrink-0 font-semibold ${row.attendance_pct < 60 ? 'text-[#EF4444]' : row.attendance_pct < 80 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                         {row.attendance_pct}%
                       </span>
@@ -626,14 +626,14 @@ export default function StudentsClient({
                       {!row.group_id && isTL ? (
                         <button
                           onClick={e => { e.stopPropagation(); setAssignStudent(row) }}
-                          className="shrink-0 rounded-md bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309] active:bg-[#FEF3C7]"
+                          className="shrink-0 rounded-md bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#B45309] active:bg-[#FEF3C7]"
                         >
                           Assign
                         </button>
                       ) : row.primary_contact_phone ? (
                         <a
                           href={`tel:${row.primary_contact_phone}`}
-                          className="shrink-0 text-[10px] text-[#64748B]"
+                          className="shrink-0 text-[11px] text-[#64748B]"
                           onClick={e => e.stopPropagation()}
                         >
                           {row.primary_contact_phone}
@@ -700,14 +700,14 @@ export default function StudentsClient({
                           <p className="font-medium text-[#0B1F3A]">{row.student_name}</p>
                           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                             {row.student_code && (
-                              <span className="font-mono text-[10px] text-[#94A3B8]">#{row.student_code}</span>
+                              <span className="font-mono text-[11px] text-[#94A3B8]">#{row.student_code}</span>
                             )}
                             {row.age !== null && (
-                              <span className="text-[10px] text-[#94A3B8]">Age {row.age}</span>
+                              <span className="text-[11px] text-[#94A3B8]">Age {row.age}</span>
                             )}
                           </div>
                           {row.student_phone && (
-                            <p className="text-[11px] text-[#94A3B8]">{row.student_phone}</p>
+                            <p className="text-[12px] text-[#94A3B8]">{row.student_phone}</p>
                           )}
                         </td>
 
@@ -715,7 +715,7 @@ export default function StudentsClient({
                         <td className="px-4 py-3">
                           <p className="text-[#0B1F3A]">{row.group_name ?? '—'}</p>
                           {row.course_name && (
-                            <p className="text-[11px] text-[#94A3B8]">{row.course_name}</p>
+                            <p className="text-[12px] text-[#94A3B8]">{row.course_name}</p>
                           )}
                         </td>
 
@@ -731,7 +731,7 @@ export default function StudentsClient({
                               <p className={`font-medium ${row.remaining_sessions <= 2 ? 'text-[#EF4444]' : row.remaining_sessions <= 5 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                                 {row.remaining_sessions} left
                               </p>
-                              <p className="text-[11px] text-[#94A3B8]">{row.consumed_sessions}/{row.enrolled_sessions} used</p>
+                              <p className="text-[12px] text-[#94A3B8]">{row.consumed_sessions}/{row.enrolled_sessions} used</p>
                             </>
                           ) : (
                             <span className="text-[#94A3B8]">—</span>
@@ -749,22 +749,22 @@ export default function StudentsClient({
                             </div>
                             <span className="text-xs text-[#64748B]">{row.attendance_pct}%</span>
                           </div>
-                          <p className="text-[11px] text-[#94A3B8]">{row.sessions_attended}/{row.total_sessions} sessions</p>
+                          <p className="text-[12px] text-[#94A3B8]">{row.sessions_attended}/{row.total_sessions} sessions</p>
                         </td>
 
                         {/* Risk */}
                         <td className="px-4 py-3">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${riskCfg.color} ${riskCfg.text}`}>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${riskCfg.color} ${riskCfg.text}`}>
                             {row.risk_level}
                           </span>
                           {row.consecutive_absences >= 2 && (
-                            <p className="mt-0.5 text-[10px] text-[#EF4444]">{row.consecutive_absences} absent</p>
+                            <p className="mt-0.5 text-[11px] text-[#EF4444]">{row.consecutive_absences} absent</p>
                           )}
                         </td>
 
                         {/* Operational status */}
                         <td className="px-4 py-3">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${opCfg.color} ${opCfg.text}`}>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${opCfg.color} ${opCfg.text}`}>
                             {opCfg.label}
                           </span>
                         </td>
@@ -773,22 +773,22 @@ export default function StudentsClient({
                         <td className="px-4 py-3">
                           {row.parent_contacts.length > 0 ? (
                             <>
-                              <p className="text-[12px] font-medium text-[#0B1F3A]">{row.parent_contacts[0].name}</p>
+                              <p className="text-[13px] font-medium text-[#0B1F3A]">{row.parent_contacts[0].name}</p>
                               {row.parent_contacts[0].phone1 && (
                                 <a
                                   href={`tel:${row.parent_contacts[0].phone1}`}
-                                  className="text-[11px] text-[#64748B] hover:text-[#FF8A1F]"
+                                  className="text-[12px] text-[#64748B] hover:text-[#9A3412]"
                                   onClick={e => e.stopPropagation()}
                                 >
                                   {row.parent_contacts[0].phone1}
                                 </a>
                               )}
                               {row.parent_contact_count > 1 && (
-                                <p className="text-[10px] text-[#94A3B8]">+{row.parent_contact_count - 1} more</p>
+                                <p className="text-[11px] text-[#94A3B8]">+{row.parent_contact_count - 1} more</p>
                               )}
                             </>
                           ) : (
-                            <span className="text-[11px] text-[#F87171]">No contact</span>
+                            <span className="text-[12px] text-[#F87171]">No contact</span>
                           )}
                         </td>
 
@@ -798,7 +798,7 @@ export default function StudentsClient({
                             {!row.group_id && isTL && (
                               <button
                                 onClick={() => setAssignStudent(row)}
-                                className="rounded-lg bg-[#FFFBEB] px-2.5 py-1 text-[11px] font-semibold text-[#B45309] hover:bg-[#FEF3C7]"
+                                className="rounded-lg bg-[#FFFBEB] px-2.5 py-1 text-[12px] font-semibold text-[#B45309] hover:bg-[#FEF3C7]"
                               >
                                 Assign
                               </button>
@@ -806,14 +806,14 @@ export default function StudentsClient({
                             {isTL && (
                               <button
                                 onClick={() => setEditStudent(row)}
-                                className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[11px] font-medium text-[#64748B] hover:border-[#CBD5E1]"
+                                className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[12px] font-medium text-[#64748B] hover:border-[#CBD5E1]"
                               >
                                 Edit
                               </button>
                             )}
                             <button
                               onClick={() => setDrawerStudent(row)}
-                              className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                              className="text-xs font-medium text-[#C2410C] hover:underline"
                             >
                               View
                             </button>

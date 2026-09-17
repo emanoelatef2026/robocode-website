@@ -49,20 +49,20 @@ export function GroupSidebar({
 
   return (
     <div className="flex flex-col">
-      <div className="border-b border-[#E2E8F0] bg-[#F8FAFC] p-3">
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="sticky top-0 z-10 border-b border-[#E2E8F0] bg-[#F5F7FA] p-3">
+        <div className="grid gap-2 rounded-[14px] border border-[#D7E0EA] bg-white p-2 sm:grid-cols-2 lg:grid-cols-4">
         <input
           type="text"
           value={filters.q}
           onChange={e => onFilterChange({ q: e.target.value })}
           placeholder="Search name, instructor, course…"
-          className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-[12px] text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:bg-white"
+          className="ds-input ds-search-field h-10 w-full px-3 text-[14px] font-normal text-[#0F172A] placeholder:text-[#94A3B8]"
         />
           {branchOptions.length > 0 && (
             <select
               value={filters.branch_id}
               onChange={e => onFilterChange({ branch_id: e.target.value })}
-              className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F]"
+              className="ds-filter-select w-full text-[14px] font-normal"
             >
               <option value="">All Branches ({searchFiltered.length})</option>
               {branchOptions.map(b => (
@@ -75,10 +75,7 @@ export function GroupSidebar({
           <select
             value={filters.day_of_week}
             onChange={e => onFilterChange({ day_of_week: e.target.value })}
-            className={[
-              'w-full rounded-lg border px-2 py-1.5 text-[12px] outline-none focus:border-[#FF8A1F] transition',
-              filters.day_of_week ? 'border-[#FF8A1F] bg-[#FFF7ED] text-[#FF8A1F] font-medium' : 'border-[#E2E8F0] bg-white text-[#374151]',
-            ].join(' ')}
+            className="ds-filter-select w-full text-[14px] font-normal"
           >
             <option value="">All Days</option>
             {Object.entries(DAYS_FULL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
@@ -86,12 +83,7 @@ export function GroupSidebar({
           <select
             value={filters.quickFilter}
             onChange={e => onFilterChange({ quickFilter: e.target.value as QuickFilter })}
-            className={[
-              'w-full rounded-lg border px-2 py-1.5 text-[12px] outline-none focus:border-[#FF8A1F] transition',
-              filters.quickFilter
-                ? 'border-[#FF8A1F] bg-[#FFF7ED] text-[#FF8A1F] font-medium'
-                : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#374151]',
-            ].join(' ')}
+            className="ds-filter-select w-full text-[14px] font-normal"
           >
             {QUICK_FILTER_OPTIONS.map(opt => (
               <option key={opt.value} value={opt.value}>
@@ -103,12 +95,15 @@ export function GroupSidebar({
       </div>
 
       <div className="p-3">
+        <p className="mb-2 text-[13px] font-medium text-[#52677F]" aria-live="polite">
+          Showing {groups.length} of {allGroups.length} groups
+        </p>
         {groups.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-14 text-[#94A3B8]">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="mb-3 h-9 w-9 opacity-30">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <p className="text-[12px]">No groups found.</p>
+            <p className="text-[13px]">No groups found.</p>
           </div>
         ) : (
           <div className="space-y-3">

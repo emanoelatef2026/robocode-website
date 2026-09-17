@@ -1,4 +1,4 @@
-﻿import Link                              from 'next/link'
+import Link                              from 'next/link'
 import { getLiveDashboardPayrollSummary } from '@/modules/staff-finance/queries'
 import { fmtEGP }                         from '@/modules/staff-finance/types'
 
@@ -12,10 +12,10 @@ export default async function InstructorPayrollWidget({ branchIds }: { branchIds
   return (
     <div className="ds-card p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-semibold text-[#0B1F3A]">Payroll — {label}</p>
+        <p className="text-[13px] font-semibold text-[#0B1F3A]">Payroll — {label}</p>
         <Link
           href="/portal/team-leader/payroll"
-          className="text-[11px] font-medium text-[#FF8A1F] hover:text-[#e07018] transition"
+          className="text-[12px] font-medium text-[#C2410C] hover:text-[#e07018] transition"
         >
           View →
         </Link>
@@ -23,7 +23,7 @@ export default async function InstructorPayrollWidget({ branchIds }: { branchIds
 
       {!summary.has_data ? (
         <div className="rounded-lg border border-dashed border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4 text-center">
-          <p className="text-[12px] text-[#94A3B8]">No completed sessions in {label} yet.</p>
+          <p className="text-[13px] text-[#94A3B8]">No completed sessions in {label} yet.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-2">
@@ -33,8 +33,8 @@ export default async function InstructorPayrollWidget({ branchIds }: { branchIds
             </p>
             <p className="mt-0.5 text-[9px] font-medium text-[#94A3B8]">Instructors</p>
           </div>
-          <div className="rounded-lg border border-[#FF8A1F]/30 bg-[#FFF7F0] px-3 py-2.5 text-center">
-            <p className="text-[14px] font-extrabold leading-none text-[#FF8A1F]">
+          <div className="rounded-lg border border-[#0E7490]/30 bg-[#FFF7F0] px-3 py-2.5 text-center">
+            <p className="text-[14px] font-extrabold leading-none text-[#C2410C]">
               {fmtEGP(summary.total_net)}
             </p>
             <p className="mt-0.5 text-[9px] font-medium text-[#94A3B8]">Net Payroll</p>

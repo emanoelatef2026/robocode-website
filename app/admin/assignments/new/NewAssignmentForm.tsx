@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState } from 'react'
 import { createAssignment } from '@/modules/assignments/actions'
@@ -54,7 +54,7 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
             <select
               value={selectedCourse}
               onChange={(e) => setSelectedCourse(e.target.value)}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               <option value="">Select course…</option>
               {courses.map((c) => (
@@ -67,7 +67,7 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
             <select
               name="module_id"
               required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               <option value="">Select semester…</option>
               {filteredModules.map((m) => (
@@ -86,7 +86,7 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
             name="title"
             required
             placeholder="e.g. Build a Calculator App"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -97,7 +97,7 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
             <select
               name="type"
               required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               {TYPES.map((t) => (
                 <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
@@ -108,7 +108,7 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
             <label className="mb-1 block text-xs font-medium text-[#64748B]">Submission type *</label>
             <select
               name="submission_type"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               {SUBMISSION_TYPES.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
@@ -126,7 +126,7 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
               type="number"
               min="0"
               defaultValue="100"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
           <div>
@@ -134,7 +134,7 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
             <input
               name="due_at"
               type="datetime-local"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
         </div>
@@ -146,7 +146,7 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
             name="description"
             rows={2}
             placeholder="Brief overview of the assignment…"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -157,7 +157,7 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
             name="instructions"
             rows={4}
             placeholder="Detailed step-by-step instructions for students…"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -181,7 +181,7 @@ export default function NewAssignmentForm({ modules, courses }: Props) {
         <div className="flex items-center justify-between pt-2">
           <select
             name="status"
-            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
           >
             <option value="draft">Save as Draft</option>
             <option value="published">Publish immediately</option>

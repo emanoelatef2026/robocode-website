@@ -27,7 +27,7 @@ export default function ChildSelector({ linkedChildren, selectedId, hrefFor }: P
           ].join(' ')}
         >
           <span className={[
-            'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold',
+            'flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
             c.student_id === selectedId ? 'bg-[#FF8A1F] text-white' : 'bg-[#E2E8F0] text-[#64748B]',
           ].join(' ')}>
             {c.student_name.charAt(0).toUpperCase()}

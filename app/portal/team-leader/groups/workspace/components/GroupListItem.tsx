@@ -8,8 +8,8 @@ function ProgressMetric({ label, detail, value, color }: { label: string; detail
   return (
     <div className="min-w-0">
       <div className="mb-1 flex items-baseline justify-between gap-2">
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</span>
-        <span className="shrink-0 text-[11px] font-bold text-[#0B1F3A]">{detail}</span>
+        <span className="text-[12px] font-semibold uppercase tracking-[0.06em] text-[#64748B]">{label}</span>
+        <span className="shrink-0 text-[13px] font-semibold text-[#0B1F3A]">{detail}</span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-[#E2E8F0]">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
@@ -40,34 +40,25 @@ export function GroupListItem({ group, selected, onClick }: { group: GroupOperat
     ? `${DAYS_FULL[group.day_of_week] ?? group.day_of_week}${group.start_time ? ` · ${fmt12(group.start_time)}` : ''}`
     : 'Schedule not set'
   const stage = getCohortLifecycleStage(group)
-  const stageClass = stage === 'running'
-    ? 'border-l-4 border-l-[#10B981] bg-[#F0FDF4]/50'
-    : stage === 'completed'
-      ? 'border-l-4 border-l-[#6366F1] bg-[#EEF2FF]/50'
-      : stage === 'draft'
-        ? 'border-l-4 border-l-[#F59E0B] bg-[#FFFBEB]/50'
-        : 'border-l-4 border-l-[#CBD5E1]'
-
   return (
     <button onClick={onClick} className={[
-      'w-full rounded-xl border bg-white p-2 text-left transition content-visibility-auto',
-      stageClass,
-      selected ? 'border-[#FF8A1F] ring-2 ring-[#FF8A1F]/15' : 'border-[#E2E8F0] hover:border-[#CBD5E1] hover:shadow-sm',
+      'w-full rounded-xl border border-[#D7E0EA] bg-white p-2 md:p-4 text-left transition-[border-color,box-shadow,background-color] content-visibility-auto',
+      selected ? 'border-[#0E7490] bg-[#F7FCFD] ring-2 ring-[#0E7490]/15' : 'hover:border-[#B8C6D6] hover:bg-[#FCFDFE] hover:shadow-sm',
     ].join(' ')} data-group-stage={stage} data-payment-status={paymentStatus}>
       <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center">
         <div className="min-w-0 xl:w-[25%]">
-          <div className="flex items-center gap-2"><p className="truncate text-[15px] font-bold text-[#0B1F3A]">{group.name}</p><StatusChip group={group} /></div>
-          <p className="mt-0.5 truncate text-[11px] text-[#64748B]">{group.course_name ?? 'Course not assigned'} <span className="text-[#CBD5E1]">·</span> {group.branch_name}</p>
-          <p className="mt-0.5 text-[11px] font-medium text-[#475569]">{schedule}{group.start_date ? ` · Started ${fmtDateShort(group.start_date)}` : ''}</p>
+          <div className="flex items-center gap-2"><p className="truncate text-[15px] font-semibold text-[#0B1F3A]">{group.name}</p><StatusChip group={group} /></div>
+          <p className="mt-1 truncate text-[13px] text-[#64748B]">{group.course_name ?? 'Course not assigned'} <span className="text-[#CBD5E1]">·</span> {group.branch_name}</p>
+          <p className="mt-1 text-[13px] font-medium text-[#475569]">{schedule}{group.start_date ? ` · Started ${fmtDateShort(group.start_date)}` : ''}</p>
         </div>
-        <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-[12px] sm:grid-cols-4 xl:w-[35%]">
-          <div className="sm:col-span-2"><p className="text-[#94A3B8]">Instructor</p><p className="font-semibold text-[#0B1F3A]">{group.lead_instructor_name ?? 'Unassigned'}</p></div>
-          <div><p className="text-[#94A3B8]">Students</p><p className="font-semibold text-[#0B1F3A]">{group.student_count}{group.capacity ? ` / ${group.capacity}` : ''}</p></div>
-          <div><p className="text-[#94A3B8]">Attendance</p><p className="font-semibold text-[#0B1F3A]">{group.attendance_avg}%</p></div>
-          <div><p className="text-[#94A3B8]">Health</p><p className="font-semibold text-[#0B1F3A]">{group.health_score}%</p></div>
+        <div className="grid grid-cols-2 gap-x-5 gap-y-2 text-[13px] sm:grid-cols-4 xl:w-[35%]">
+          <div className="sm:col-span-2"><p className="text-[#64748B]">Instructor</p><p className="font-semibold text-[#0B1F3A]">{group.lead_instructor_name ?? 'Unassigned'}</p></div>
+          <div><p className="text-[#64748B]">Students</p><p className="font-semibold text-[#0B1F3A]">{group.student_count}{group.capacity ? ` / ${group.capacity}` : ''}</p></div>
+          <div><p className="text-[#64748B]">Attendance</p><p className="font-semibold text-[#0B1F3A]">{group.attendance_avg}%</p></div>
+          <div><p className="text-[#64748B]">Health</p><p className="font-semibold text-[#0B1F3A]">{group.health_score}%</p></div>
         </div>
         <div className="grid flex-1 gap-2 sm:grid-cols-2 xl:min-w-[23rem]">
-          <ProgressMetric label="Sessions" detail={sessionDetail} value={sessionPct} color="bg-[#FF8A1F]" />
+          <ProgressMetric label="Sessions" detail={sessionDetail} value={sessionPct} color="bg-[#C2410C]" />
           <ProgressMetric label="Fees" detail={paymentDetail} value={group.payment_completion_pct} color={paymentColor} />
         </div>
       </div>

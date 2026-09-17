@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
 import { useState } from "react"
@@ -36,7 +36,7 @@ export default function HistoryFilterPanel({ groups, from, to, groupId, topic, t
           </svg>
           Filters
           {hasActive && (
-            <span className="inline-flex h-2 w-2 rounded-full bg-[#FF8A1F]" />
+            <span className="inline-flex h-2 w-2 rounded-full bg-[#C2410C]" />
           )}
         </span>
         <svg
@@ -55,11 +55,11 @@ export default function HistoryFilterPanel({ groups, from, to, groupId, topic, t
           {/* Row 1: Group + dates + topic */}
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4 md:gap-3">
             <div className="col-span-2 md:col-span-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Group</label>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Group</label>
               <select
                 name="groupId"
                 defaultValue={groupId ?? ""}
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
               >
                 <option value="">All groups</option>
                 {groups.map(g => (
@@ -69,33 +69,33 @@ export default function HistoryFilterPanel({ groups, from, to, groupId, topic, t
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">From</label>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">From</label>
               <input
                 type="date"
                 name="from"
                 defaultValue={from ?? ""}
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">To</label>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">To</label>
               <input
                 type="date"
                 name="to"
                 defaultValue={to ?? ""}
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
               />
             </div>
 
             <div className="col-span-2 md:col-span-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Topic</label>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Topic</label>
               <input
                 type="text"
                 name="topic"
                 defaultValue={topic ?? ""}
                 placeholder="Search topic…"
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[12px] text-[#374151] placeholder-[#CBD5E1] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[13px] text-[#374151] placeholder-[#CBD5E1] outline-none focus:border-[#C2410C] focus:bg-white transition"
               />
             </div>
           </div>
@@ -104,14 +104,14 @@ export default function HistoryFilterPanel({ groups, from, to, groupId, topic, t
           <div className="mt-2.5 flex items-center gap-2">
             <button
               type="submit"
-              className="rounded-lg bg-[#FF8A1F] px-3.5 py-1.5 text-[12px] font-semibold text-white hover:bg-[#e07818] active:scale-[0.98] transition"
+              className="rounded-lg bg-[#C2410C] px-3.5 py-1.5 text-[13px] font-semibold text-white hover:bg-[#9A3412] active:scale-[0.98] transition"
             >
               Apply
             </button>
             {hasActive && (
               <Link
                 href={tab && tab !== 'done' ? `/portal/instructor/history?tab=${tab}` : '/portal/instructor/history'}
-                className="rounded-lg border border-[#E2E8F0] px-3.5 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#CBD5E1] transition"
+                className="rounded-lg border border-[#E2E8F0] px-3.5 py-1.5 text-[13px] font-medium text-[#64748B] hover:border-[#CBD5E1] transition"
               >
                 Clear
               </Link>

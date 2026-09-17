@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState } from 'react'
 import { gradeSubmission } from '@/modules/assignments/submissions/actions'
@@ -19,7 +19,7 @@ function ExternalLink({ href, label }: { href: string; label: string }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex items-center gap-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm text-[#0B1F3A] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+      className="inline-flex items-center gap-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm text-[#0B1F3A] transition hover:border-[#0E7490] hover:text-[#9A3412]"
     >
       {label}
       <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
@@ -55,12 +55,12 @@ export default function GradingView({ assignment, submission }: Props) {
           <div className="flex items-center gap-2">
             <StatusBadge status={submission.status} />
             {submission.is_late && (
-              <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-medium text-[#EF4444]">
+              <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[12px] font-medium text-[#EF4444]">
                 Late
               </span>
             )}
             {submission.resubmission_count > 0 && (
-              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-medium text-[#B45309]">
+              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[12px] font-medium text-[#B45309]">
                 Resubmission #{submission.resubmission_count}
               </span>
             )}
@@ -149,7 +149,7 @@ export default function GradingView({ assignment, submission }: Props) {
                         ...prev,
                         [criterion.id]: Number(e.target.value),
                       }))}
-                      className="w-16 rounded-lg border border-[#E2E8F0] px-2 py-1 text-sm text-center text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+                      className="w-16 rounded-lg border border-[#E2E8F0] px-2 py-1 text-sm text-center text-[#0B1F3A] outline-none focus:border-[#0E7490]"
                     />
                     <span className="w-12 text-xs text-[#94A3B8]">/ {criterion.max_points}</span>
                   </div>
@@ -170,7 +170,7 @@ export default function GradingView({ assignment, submission }: Props) {
                 min="0"
                 max={assignment.max_score}
                 defaultValue={submission.score ?? ''}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
               />
             </div>
             <div>
@@ -178,7 +178,7 @@ export default function GradingView({ assignment, submission }: Props) {
               <select
                 name="status"
                 defaultValue={submission.status}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
               >
                 <option value="submitted">Submitted</option>
                 <option value="under_review">Under review</option>
@@ -197,7 +197,7 @@ export default function GradingView({ assignment, submission }: Props) {
               rows={3}
               defaultValue={submission.feedback ?? ''}
               placeholder="Only visible to the student and instructors…"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
             />
           </div>
 
@@ -208,7 +208,7 @@ export default function GradingView({ assignment, submission }: Props) {
               rows={2}
               defaultValue={submission.public_feedback ?? ''}
               placeholder="Visible to parents…"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
             />
           </div>
 

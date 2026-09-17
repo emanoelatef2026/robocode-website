@@ -40,12 +40,12 @@ function EvaluationFields({ studentId, groupId, onSaved }: FieldsProps) {
       )}
 
       <div>
-        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Criterion</p>
+        <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Criterion</p>
         <select
           value={criterion}
           onChange={(e) => setCriterion(e.target.value as EvaluationCriterion)}
           aria-label="Evaluation criterion"
-          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#C2410C] focus:outline-none"
         >
           {EVALUATION_CRITERIA.map((c) => (
             <option key={c} value={c}>{EVALUATION_CRITERION_LABELS[c]}</option>
@@ -60,13 +60,13 @@ function EvaluationFields({ studentId, groupId, onSaved }: FieldsProps) {
           required
           placeholder="Custom criterion name"
           aria-label="Custom criterion name"
-          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#C2410C] focus:outline-none"
         />
       )}
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Score (0-100)</p>
+          <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Score (0-100)</p>
           <input
             type="number"
             name="score"
@@ -74,11 +74,11 @@ function EvaluationFields({ studentId, groupId, onSaved }: FieldsProps) {
             max={100}
             placeholder="—"
             aria-label="Score out of 100"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#C2410C] focus:outline-none"
           />
         </div>
         <div>
-          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Rating (1-5)</p>
+          <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Rating (1-5)</p>
           <input
             type="number"
             name="rating"
@@ -86,7 +86,7 @@ function EvaluationFields({ studentId, groupId, onSaved }: FieldsProps) {
             max={5}
             placeholder="—"
             aria-label="Rating out of 5"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#C2410C] focus:outline-none"
           />
         </div>
       </div>
@@ -96,7 +96,7 @@ function EvaluationFields({ studentId, groupId, onSaved }: FieldsProps) {
         rows={2}
         placeholder="Feedback (optional)…"
         aria-label="Feedback"
-        className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+        className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#C2410C] focus:outline-none"
       />
 
       <div className="flex items-center justify-between gap-3">
@@ -113,7 +113,7 @@ function EvaluationFields({ studentId, groupId, onSaved }: FieldsProps) {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-lg bg-[#FF8A1F] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#e07818] disabled:opacity-60 transition"
+          className="rounded-lg bg-[#C2410C] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#9A3412] disabled:opacity-60 transition"
         >
           {pending ? 'Saving…' : 'Add Evaluation'}
         </button>
@@ -146,7 +146,7 @@ export default function StudentEvaluationModal({ studentId, studentName, groupId
         aria-label={`Quick-evaluate ${studentName}`}
         title="Quick evaluation"
         onClick={() => setOpen(true)}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded p-1 text-[#94A3B8] transition hover:text-[#FF8A1F]"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded p-1 text-[#94A3B8] transition hover:text-[#9A3412]"
       >
         <span className="text-[15px]">⭐</span>
       </button>
@@ -154,10 +154,10 @@ export default function StudentEvaluationModal({ studentId, studentName, groupId
       {open && (
         <div
           ref={backdropRef}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          className="ds-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
           onMouseDown={(e) => { if (e.target === backdropRef.current) close() }}
         >
-          <div className="w-full max-w-sm rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xl">
+          <div className="ds-modal-panel w-full max-w-sm p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-[#0B1F3A]">Quick Evaluation</h3>

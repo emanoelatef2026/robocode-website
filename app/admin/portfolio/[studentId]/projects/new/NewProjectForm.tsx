@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState } from 'react'
 import { createProject } from '@/modules/portfolio/actions'
@@ -16,7 +16,7 @@ interface Props {
   semesters:   SemesterOption[]
 }
 
-const inputClass = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+const inputClass = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
 export default function NewProjectForm({ studentId, portfolioId, courses, semesters }: Props) {
   const [state, action] = useActionState<ActionResult<{ id: string }> | null, FormData>(
@@ -105,11 +105,11 @@ export default function NewProjectForm({ studentId, portfolioId, courses, semest
 
         <div className="flex gap-6">
           <label className="flex items-center gap-2 text-sm text-[#0B1F3A]">
-            <input type="checkbox" name="is_featured" value="true" className="h-4 w-4 rounded border-[#E2E8F0] text-[#FF8A1F]" />
+            <input type="checkbox" name="is_featured" value="true" className="h-4 w-4 rounded border-[#E2E8F0] text-[#C2410C]" />
             Featured
           </label>
           <label className="flex items-center gap-2 text-sm text-[#0B1F3A]">
-            <input type="checkbox" name="is_public" value="true" className="h-4 w-4 rounded border-[#E2E8F0] text-[#FF8A1F]" />
+            <input type="checkbox" name="is_public" value="true" className="h-4 w-4 rounded border-[#E2E8F0] text-[#C2410C]" />
             Public
           </label>
         </div>

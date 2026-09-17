@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getInstructorByUserId,
   getGroupForInstructor,
@@ -83,11 +83,11 @@ export default async function GroupDetailPage({ params }: Props) {
             {group.group_name}
           </h1>
           {isActive ? (
-            <span className="inline-flex shrink-0 rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#15803D]">
+            <span className="inline-flex shrink-0 rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#15803D]">
               Active
             </span>
           ) : (
-            <span className="inline-flex shrink-0 rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#B45309]">
+            <span className="inline-flex shrink-0 rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#B45309]">
               Forming
             </span>
           )}
@@ -111,11 +111,11 @@ export default async function GroupDetailPage({ params }: Props) {
           <div className="mt-2.5">
             <div className="mb-1 flex items-center justify-between text-xs text-[#64748B]">
               <span>Session {group.completed_sessions} / {group.total_sessions}</span>
-              {totalPct !== null && <span className="font-medium text-[#FF8A1F]">{totalPct}%</span>}
+              {totalPct !== null && <span className="font-medium text-[#C2410C]">{totalPct}%</span>}
             </div>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
               <div
-                className="h-full rounded-full bg-[#FF8A1F] transition-all"
+                className="h-full rounded-full bg-[#C2410C] transition-all"
                 style={{ width: `${totalPct ?? 0}%` }}
               />
             </div>
@@ -174,15 +174,15 @@ export default async function GroupDetailPage({ params }: Props) {
         return (
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="ds-card px-4 py-3.5">
-              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-[#94A3B8]">Class Pulse</p>
+              <p className="mb-2 text-[12px] font-bold uppercase tracking-wide text-[#94A3B8]">Class Pulse</p>
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-lg bg-[#F8FAFC] px-2 py-2.5 text-center">
                   <p className="text-lg font-bold leading-none text-[#0B1F3A]">{avgPct !== null ? `${avgPct}%` : '—'}</p>
-                  <p className="mt-1 text-[10px] text-[#94A3B8]">avg attendance</p>
+                  <p className="mt-1 text-[11px] text-[#94A3B8]">avg attendance</p>
                 </div>
                 <div className={`rounded-lg px-2 py-2.5 text-center ${atRisk > 0 ? 'bg-[#FEE2E2]' : 'bg-[#F8FAFC]'}`}>
                   <p className={`text-lg font-bold leading-none ${atRisk > 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>{atRisk}</p>
-                  <p className="mt-1 text-[10px] text-[#94A3B8]">at risk</p>
+                  <p className="mt-1 text-[11px] text-[#94A3B8]">at risk</p>
                 </div>
               </div>
             </div>
@@ -190,9 +190,9 @@ export default async function GroupDetailPage({ params }: Props) {
             {leaderboard.length > 0 && (
               <div className="ds-card px-4 py-3.5">
                 <div className="mb-2 flex items-center justify-between">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#94A3B8]">Leaderboard</p>
+                  <p className="text-[12px] font-bold uppercase tracking-wide text-[#94A3B8]">Leaderboard</p>
                   {studentOfWeek && (
-                    <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">
+                    <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#B45309]">
                       🏆 {studentOfWeek.student_name}
                     </span>
                   )}
@@ -202,7 +202,7 @@ export default async function GroupDetailPage({ params }: Props) {
                     <div key={s.student_id} className="flex items-center gap-2 text-sm">
                       <span className="w-4 shrink-0 text-xs font-bold text-[#94A3B8]">#{s.rank}</span>
                       <span className="min-w-0 flex-1 truncate text-[#0B1F3A]">{s.student_name}</span>
-                      <span className="shrink-0 text-xs font-semibold text-[#FF8A1F]">{s.total_xp.toLocaleString()} XP</span>
+                      <span className="shrink-0 text-xs font-semibold text-[#C2410C]">{s.total_xp.toLocaleString()} XP</span>
                     </div>
                   ))}
                 </div>
@@ -252,14 +252,14 @@ export default async function GroupDetailPage({ params }: Props) {
                   <div className="min-w-0 flex-1">
                     <div className="flex min-w-0 items-center gap-1.5">
                       {att?.attention && (
-                        <span className="shrink-0 text-[11px] text-[#EF4444]">⚠</span>
+                        <span className="shrink-0 text-[12px] text-[#EF4444]">⚠</span>
                       )}
                       <p className="truncate text-sm font-medium text-[#0B1F3A]">{displayName}</p>
                     </div>
 
                     {att && att.total > 0 ? (
                       /* Attendance stats inline */
-                      <div className="mt-0.5 flex items-center gap-2 text-[11px]">
+                      <div className="mt-0.5 flex items-center gap-2 text-[12px]">
                         <span className="font-semibold text-[#10B981]">{att.present}P</span>
                         <span className="text-[#E2E8F0]">·</span>
                         <span className="font-semibold text-[#EF4444]">{att.absent}A</span>
@@ -269,7 +269,7 @@ export default async function GroupDetailPage({ params }: Props) {
                         <span className={`font-bold ${pctColor}`}>{att.pct}%</span>
                       </div>
                     ) : (
-                      <p className="mt-0.5 text-[11px] capitalize text-[#94A3B8]">
+                      <p className="mt-0.5 text-[12px] capitalize text-[#94A3B8]">
                         {s.enrollment_type}
                         {isActive && group.sessions.length > 0 ? ' · no attendance yet' : ''}
                       </p>
@@ -294,7 +294,7 @@ export default async function GroupDetailPage({ params }: Props) {
           {pendingReviewCount > 0 && (
             <Link
               href={`/portal/instructor/review?groupId=${id}`}
-              className="text-xs font-medium text-[#FF8A1F] hover:underline"
+              className="text-xs font-medium text-[#C2410C] hover:underline"
             >
               {pendingReviewCount} to review →
             </Link>
@@ -339,7 +339,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   </p>
                 </div>
 
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${SESSION_STATUS[s.status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${SESSION_STATUS[s.status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
                   {s.status}
                 </span>
               </Link>

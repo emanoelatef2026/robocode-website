@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import Link from "next/link"
@@ -154,18 +154,18 @@ function VideoCard({
 
       <div className="p-3">
         <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${platformCls}`}>
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${platformCls}`}>
             {platform}
           </span>
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${status.cls}`}>
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.cls}`}>
             {status.label}
           </span>
-          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] text-[#64748B]">
+          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] text-[#64748B]">
             {video.category}
           </span>
         </div>
         <p className="line-clamp-1 text-[13px] font-semibold text-[#0B1F3A]">{video.title}</p>
-        <p className="mt-0.5 line-clamp-2 text-[11.5px] text-[#64748B]">{video.description}</p>
+        <p className="mt-0.5 line-clamp-2 text-[12px] text-[#64748B]">{video.description}</p>
       </div>
     </div>
   )
@@ -184,18 +184,18 @@ function VideoModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+      className="ds-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-[#0B1F3A] shadow-2xl"
+        className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-white/10 bg-[#0B1F3A] shadow-[0_24px_56px_rgba(7,24,45,.38)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center gap-3 px-4 py-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] font-bold text-white">{video.title}</p>
-            <p className="text-[10px] text-white/40">{getPlatformLabel(video.video_url)} · {video.category}</p>
+            <p className="text-[11px] text-white/40">{getPlatformLabel(video.video_url)} · {video.category}</p>
           </div>
           <button
             onClick={onClose}
@@ -237,12 +237,12 @@ function VideoModal({
 
         {/* Footer */}
         <div className="flex items-center justify-between gap-3 px-4 py-3">
-          <p className="line-clamp-2 text-[11px] text-white/50">{video.description}</p>
+          <p className="line-clamp-2 text-[12px] text-white/50">{video.description}</p>
           <a
             href={video.video_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 text-[11px] text-[#FF8A1F] hover:underline"
+            className="shrink-0 text-[12px] text-[#FF8A1F] hover:underline"
           >
             Open original →
           </a>
@@ -263,14 +263,14 @@ export default function VideoGallery({ videos }: { videos: VideoProject[] }) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[16px] font-bold text-[#0B1F3A]">My Videos</h1>
-          <p className="mt-0.5 text-[11.5px] text-[#64748B]">
+          <p className="mt-0.5 text-[12px] text-[#64748B]">
             {videos.length} video{videos.length !== 1 ? 's' : ''} shared
             {videos.length > 0 && ' · +150 XP each'}
           </p>
         </div>
         <Link
           href="/portal/student/portfolio"
-          className="flex min-h-11 items-center rounded-xl bg-[#FF8A1F] px-3.5 text-[12px] font-bold text-white transition hover:bg-[#e87a10]"
+          className="flex min-h-11 items-center rounded-xl bg-[#FF8A1F] px-3.5 text-[13px] font-bold text-white transition hover:bg-[#e87a10]"
         >
           + Add Video
         </Link>
@@ -280,7 +280,7 @@ export default function VideoGallery({ videos }: { videos: VideoProject[] }) {
       {videos.length === 0 && (
         <div className="rounded-xl border border-[#FFD166]/40 bg-[#FFF7E6] px-4 py-3.5">
           <p className="text-[12.5px] font-semibold text-[#B45309]">🎥 Share your first video and earn 150 XP!</p>
-          <p className="mt-0.5 text-[11px] text-[#92400E]">
+          <p className="mt-0.5 text-[12px] text-[#92400E]">
             Add a YouTube, TikTok, Instagram, or Google Drive link to any portfolio project.
           </p>
         </div>
@@ -297,10 +297,10 @@ export default function VideoGallery({ videos }: { videos: VideoProject[] }) {
         <div className="rounded-2xl border border-dashed border-[#E2E8F0] py-16 text-center">
           <p className="text-4xl">🎬</p>
           <p className="mt-3 text-sm font-semibold text-[#0B1F3A]">No videos yet</p>
-          <p className="mt-1 text-[12px] text-[#64748B]">Add a video URL to any portfolio project to see it here.</p>
+          <p className="mt-1 text-[13px] text-[#64748B]">Add a video URL to any portfolio project to see it here.</p>
           <Link
             href="/portal/student/portfolio"
-            className="mt-4 inline-block rounded-xl bg-[#FF8A1F] px-4 py-2 text-[12px] font-bold text-white transition hover:bg-[#e87a10]"
+            className="mt-4 inline-block rounded-xl bg-[#FF8A1F] px-4 py-2 text-[13px] font-bold text-white transition hover:bg-[#e87a10]"
           >
             Go to Portfolio
           </Link>
@@ -309,7 +309,7 @@ export default function VideoGallery({ videos }: { videos: VideoProject[] }) {
 
       {/* Supported platforms note */}
       {videos.length > 0 && (
-        <p className="text-center text-[10.5px] text-[#64748B]">
+        <p className="text-center text-[11px] text-[#64748B]">
           Supports YouTube · TikTok · Instagram · Facebook · Google Drive
         </p>
       )}

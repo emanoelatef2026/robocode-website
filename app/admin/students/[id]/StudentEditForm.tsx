@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState, useTransition } from 'react'
 import {
@@ -66,7 +66,7 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
 
   const [enrollState, enrollAction] = useActionState<ActionResult<void> | null, FormData>(enrollStudent, null)
 
-  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
   const handleDelete = async () => {
     if (!confirm('Remove this student? This cannot be undone.')) return
@@ -290,7 +290,7 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
                     disabled={isPending}
                     onClick={() => handleChangeType(g.id, student.id, g.enrollment_type)}
                     className={[
-                      'rounded-full px-2 py-0.5 text-[11px] font-medium capitalize cursor-pointer transition hover:opacity-75 disabled:opacity-50',
+                      'rounded-full px-2 py-0.5 text-[12px] font-medium capitalize cursor-pointer transition hover:opacity-75 disabled:opacity-50',
                       g.enrollment_type === 'primary' ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-purple-50 text-purple-700',
                     ].join(' ')}
                     title="Click to toggle type"
@@ -315,7 +315,7 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
         {availableGroups.length > 0 && (
           <form action={enrollAction} className="flex gap-2">
             <input type="hidden" name="student_id" value={student.id} />
-            <select name="group_id" required className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]">
+            <select name="group_id" required className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#0E7490]">
               <option value="">Enroll in group…</option>
               {availableGroups.map((g) => (
                 <option key={g.id} value={g.id}>{g.name}{g.code ? ` (${g.code})` : ''}</option>
@@ -345,10 +345,10 @@ export default function StudentEditForm({ student, branches, availableGroups, cu
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="New password (min 6 characters)"
-                className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+                className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
               />
               <button type="button" disabled={isPending} onClick={handleSetPassword}
-                className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-50">
+                className="rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-50">
                 Set Password
               </button>
             </div>

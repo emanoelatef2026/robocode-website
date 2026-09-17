@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { assignGroupCourse } from '@/modules/groups/actions'
@@ -76,14 +76,14 @@ export default function TLAssignCourseForm({
         <div className="mb-1 flex items-center justify-between">
           <label className="text-xs font-medium text-[#64748B]">Course</label>
           {age && !isDirty && (
-            <span className="text-[10px] text-[#94A3B8]">{age}</span>
+            <span className="text-[11px] text-[#94A3B8]">{age}</span>
           )}
         </div>
         <select
           name="course_id"
           value={courseId}
           onChange={e => setCourseId(e.target.value)}
-          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
         >
           <option value="">No course assigned</option>
           {courses.map((c) => (
@@ -98,7 +98,7 @@ export default function TLAssignCourseForm({
           name="instructor_id"
           value={instructorId}
           onChange={e => setInstructorId(e.target.value)}
-          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
         >
           <option value="">No instructor assigned</option>
           {instructors.map((i) => (

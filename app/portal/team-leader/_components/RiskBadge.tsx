@@ -1,4 +1,4 @@
-﻿interface RiskBadgeProps {
+interface RiskBadgeProps {
   score: number
   label?: string
   size?: 'sm' | 'md'
@@ -6,7 +6,7 @@
 
 export default function RiskBadge({ score, label, size = 'sm' }: RiskBadgeProps) {
   const { cls, text } = getRiskStyle(score)
-  const sizeClass = size === 'md' ? 'px-2.5 py-1 text-[11px]' : 'px-2 py-0.5 text-[10px]'
+  const sizeClass = size === 'md' ? 'px-2.5 py-1 text-[12px]' : 'px-2 py-0.5 text-[11px]'
   return (
     <span className={`inline-flex items-center gap-1 rounded-full font-semibold ${cls} ${sizeClass}`}>
       <span className={`h-1.5 w-1.5 rounded-full ${getDotColor(score)}`} />
@@ -23,7 +23,7 @@ export function HealthBadge({ status }: { status: 'healthy' | 'warning' | 'dange
   }
   const labels = { healthy: 'Healthy', warning: 'Warning', danger: 'At Risk' }
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${map[status]}`}>
+    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${map[status]}`}>
       {labels[status]}
     </span>
   )
@@ -62,7 +62,7 @@ export function InstructorScoreBadge({ score }: { score: number }) {
             : score >= 55 ? 'bg-[#FFFBEB] text-[#B45309]'
             :               'bg-[#FEE2E2] text-[#DC2626]'
   return (
-    <span className={`rounded-lg px-2.5 py-1 text-[12px] font-bold tabular-nums ${cls}`}>
+    <span className={`rounded-lg px-2.5 py-1 text-[13px] font-bold tabular-nums ${cls}`}>
       {score}
     </span>
   )

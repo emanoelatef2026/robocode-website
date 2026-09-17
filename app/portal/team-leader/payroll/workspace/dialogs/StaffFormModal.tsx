@@ -91,13 +91,13 @@ export function StaffFormModal({
           <div className="space-y-3">
             {staffModal.mode === "create" && (
               <div>
-                <label className="text-[12px] font-semibold text-[#0B1F3A]">Search User</label>
+                <label className="text-[13px] font-semibold text-[#0B1F3A]">Search User</label>
                 <div className="relative mt-1">
                   <input
                     placeholder="Name or email…"
                     value={sfUserQ}
                     onChange={e => searchUsers(e.target.value)}
-                    className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                    className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
                   />
                   {sfUserOpts.length > 0 && (
                     <div className="absolute z-10 left-0 right-0 top-full mt-1 ds-card shadow-xl max-h-48 overflow-y-auto">
@@ -115,7 +115,7 @@ export function StaffFormModal({
                           <Avatar name={u.display_name} />
                           <div>
                             <p className="text-[13px] font-medium text-[#0B1F3A]">{u.display_name}</p>
-                            <p className="text-[11px] text-[#94A3B8]">{u.email}</p>
+                            <p className="text-[12px] text-[#94A3B8]">{u.email}</p>
                           </div>
                         </button>
                       ))}
@@ -123,14 +123,14 @@ export function StaffFormModal({
                   )}
                 </div>
                 {sfUserId && (
-                  <p className="mt-1.5 text-[11px] text-[#10B981] font-medium">✓ Selected: {sfUserName}</p>
+                  <p className="mt-1.5 text-[12px] text-[#10B981] font-medium">✓ Selected: {sfUserName}</p>
                 )}
               </div>
             )}
 
             {branches.length > 0 && (
               <div>
-                <label className="text-[12px] font-semibold text-[#0B1F3A]">Branch</label>
+                <label className="text-[13px] font-semibold text-[#0B1F3A]">Branch</label>
                 <select
                   value={sfWorksAllBranches ? "__all__" : sfBranch}
                   onChange={e => {
@@ -142,7 +142,7 @@ export function StaffFormModal({
                       setSfBranch(e.target.value)
                     }
                   }}
-                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
                 >
                   <option value="__all__">🌐 All Branches</option>
                   {branches.map(b => (
@@ -150,7 +150,7 @@ export function StaffFormModal({
                   ))}
                 </select>
                 {sfWorksAllBranches && (
-                  <p className="mt-1 text-[11px] text-[#64748B]">
+                  <p className="mt-1 text-[12px] text-[#64748B]">
                     Home branch: <span className="font-medium">{branches.find(b => b.id === sfBranch)?.name ?? "—"}</span>
                   </p>
                 )}
@@ -159,11 +159,11 @@ export function StaffFormModal({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[12px] font-semibold text-[#0B1F3A]">Role</label>
+                <label className="text-[13px] font-semibold text-[#0B1F3A]">Role</label>
                 <select
                   value={sfRole}
                   onChange={e => setSfRole(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
                 >
                   {ROLE_OPTIONS.map(r => (
                     <option key={r} value={r}>{STAFF_ROLE_LABELS[r] ?? r}</option>
@@ -171,34 +171,34 @@ export function StaffFormModal({
                 </select>
               </div>
               <div>
-                <label className="text-[12px] font-semibold text-[#0B1F3A]">Department</label>
+                <label className="text-[13px] font-semibold text-[#0B1F3A]">Department</label>
                 <input
                   value={sfDept}
                   onChange={e => setSfDept(e.target.value)}
                   placeholder="e.g. Operations, HR, Finance…"
-                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-[12px] font-semibold text-[#0B1F3A]">Basic Salary (EGP)</label>
+              <label className="text-[13px] font-semibold text-[#0B1F3A]">Basic Salary (EGP)</label>
               <input
                 type="number" min="0" step="100"
                 value={sfSalary}
                 onChange={e => setSfSalary(e.target.value)}
                 placeholder="0"
-                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[12px] font-semibold text-[#0B1F3A]">Payment Method</label>
+                <label className="text-[13px] font-semibold text-[#0B1F3A]">Payment Method</label>
                 <select
                   value={sfMethod}
                   onChange={e => setSfMethod(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
                 >
                   {Object.entries(STAFF_PAYMENT_METHOD_LABELS).map(([v, l]) => (
                     <option key={v} value={v}>{l}</option>
@@ -206,32 +206,32 @@ export function StaffFormModal({
                 </select>
               </div>
               <div>
-                <label className="text-[12px] font-semibold text-[#0B1F3A]">Reference</label>
+                <label className="text-[13px] font-semibold text-[#0B1F3A]">Reference</label>
                 <input
                   value={sfRef}
                   onChange={e => setSfRef(e.target.value)}
                   placeholder="Account / phone / IBAN"
-                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-[12px] font-semibold text-[#0B1F3A]">Notes</label>
+              <label className="text-[13px] font-semibold text-[#0B1F3A]">Notes</label>
               <textarea
                 rows={2}
                 value={sfNotes}
                 onChange={e => setSfNotes(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 resize-none"
+                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30 resize-none"
               />
             </div>
 
             <div>
-              <label className="text-[12px] font-semibold text-[#0B1F3A]">Employment Status</label>
+              <label className="text-[13px] font-semibold text-[#0B1F3A]">Employment Status</label>
               <select
                 value={sfEmploymentStatus}
                 onChange={e => setSfEmploymentStatus(e.target.value as EmploymentStatus)}
-                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-2.5 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
               >
                 <option value="active">Active</option>
                 <option value="on_leave">On Leave</option>
@@ -239,13 +239,13 @@ export function StaffFormModal({
               </select>
             </div>
 
-            {sfErr && <p className="text-[12px] text-[#EF4444]">{sfErr}</p>}
+            {sfErr && <p className="text-[13px] text-[#EF4444]">{sfErr}</p>}
             <div className="flex gap-2 pt-1">
               {staffModal.mode === "edit" && row && (
                 <button
                   onClick={() => { onClose(); onDelete(row.profile_id) }}
                   disabled={sfBusy}
-                  className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-[12px] font-semibold text-[#EF4444] hover:bg-[#FEE2E2] transition disabled:opacity-50"
+                  className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-[13px] font-semibold text-[#EF4444] hover:bg-[#FEE2E2] transition disabled:opacity-50"
                 >
                   Delete
                 </button>

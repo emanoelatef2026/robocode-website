@@ -59,13 +59,13 @@ export function SidebarNavLink({
         }}
         onMouseLeave={onHideTooltip}
         className={[
-          "flex items-center justify-center rounded-lg p-2.5 transition-all duration-150",
+          "flex items-center justify-center rounded-[10px] p-2.5 transition-colors duration-150",
           active
-            ? "bg-[#FF8A1F]/15 text-[#FF8A1F]"
-            : "text-white/50 hover:bg-white/5 hover:text-white/80",
+            ? "bg-[#302B2D] text-[#FF9A36]"
+            : "text-white/72 hover:bg-white/6 hover:text-white",
         ].join(" ")}
       >
-        <span className={active ? "text-[#FF8A1F]" : "text-white/35"}>{icon}</span>
+        <span className={active ? "text-[#FF9A36]" : "text-white/55"}>{icon}</span>
       </Link>
     )
   }
@@ -75,15 +75,15 @@ export function SidebarNavLink({
       href={href}
       onClick={onClose}
       className={[
-        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
+        "flex min-h-10 items-center gap-3 rounded-[10px] px-3 py-2.5 text-[14px] font-medium transition-colors duration-150",
         active
-          ? "bg-[#FF8A1F]/15 text-[#FF8A1F]"
-          : "text-white/50 hover:bg-white/5 hover:text-white/80",
+          ? "bg-[#302B2D] text-[#FF9A36]"
+          : "text-white/72 hover:bg-white/6 hover:text-white",
       ].join(" ")}
     >
-      <span className={active ? "text-[#FF8A1F]" : "text-white/35"}>{icon}</span>
+      <span className={active ? "text-[#FF9A36]" : "text-white/55"}>{icon}</span>
       {label}
-      {active && <span className="ms-auto h-[5px] w-[5px] shrink-0 rounded-full bg-[#FF8A1F]" />}
+      {active && <span className="ms-auto h-[5px] w-[5px] shrink-0 rounded-full bg-[#FF9A36]" />}
     </Link>
   )
 }
@@ -101,7 +101,7 @@ export function SidebarSection({ title, first, collapsed, children }: SidebarSec
   return (
     <div className={first ? "mb-1" : "mt-4"}>
       {title && !collapsed && (
-        <p className="mb-1.5 px-3 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/25">
+        <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-white/35">
           {title}
         </p>
       )}
@@ -160,12 +160,12 @@ function PortalSidebarContent({
       {/* Logo + collapse toggle */}
       <div className={[
         "flex shrink-0 items-center border-b border-white/8",
-        collapsed ? "justify-center px-2 py-2" : "justify-between pe-2",
+        collapsed ? "justify-center px-2 py-3" : "justify-between pe-2",
       ].join(" ")}>
         {!collapsed && <PortalLogo />}
         <button
           onClick={onToggleCollapse}
-          className="hidden h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white/30 transition hover:bg-white/10 hover:text-white/60 md:flex"
+          className="hidden h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white/35 transition-colors hover:bg-white/10 hover:text-white md:flex"
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <Icons.chevronRight className="h-3.5 w-3.5" /> : <Icons.chevronLeft className="h-3.5 w-3.5" />}
@@ -178,11 +178,11 @@ function PortalSidebarContent({
         collapsed ? "justify-center px-2 py-1.5" : "gap-1.5 px-4 py-1.5",
       ].join(" ")}>
         <span
-          className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#10B981]"
+        className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#16A34A]"
           style={{ animation: 'rcpulse 2s infinite' }}
         />
         {!collapsed && (
-          <span className="text-[9px] font-medium text-white/35">All Systems Operational</span>
+          <span className="text-[11px] font-medium text-white/45">All Systems Operational</span>
         )}
       </div>
 
@@ -236,7 +236,7 @@ function PortalSidebarContent({
             zIndex: 9999,
             pointerEvents: 'none',
           }}
-          className="rounded-lg bg-[#0B1F3A] border border-white/10 px-2.5 py-1.5 text-[12px] font-medium text-white shadow-xl whitespace-nowrap"
+          className="rounded-lg bg-[#0B1F3A] border border-white/10 px-2.5 py-1.5 text-[13px] font-medium text-white shadow-xl whitespace-nowrap"
         >
           {tooltip.label}
           <div className="absolute right-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-r-[#0B1F3A]" />
@@ -293,7 +293,7 @@ export default function PortalSidebar({
     <>
       {/* Desktop sidebar — width animated on collapse */}
       <aside className={[
-        "hidden shrink-0 bg-[#0B1F3A] transition-[width] duration-200 ease-in-out md:flex md:flex-col",
+        "hidden shrink-0 bg-[#07182D] transition-[width] duration-200 ease-in-out md:flex md:flex-col",
         collapsed ? "w-(--sidebar-width-collapsed)" : "w-(--sidebar-width)",
       ].join(" ")}>
         <PortalSidebarContent
@@ -312,7 +312,7 @@ export default function PortalSidebar({
             animate={{ x: 0 }}
             exit={{ x: -224 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="drawer-safe-bottom fixed top-0 left-0 z-(--z-drawer) w-(--drawer-width) bg-[#0B1F3A] md:hidden"
+            className="drawer-safe-bottom fixed top-0 left-0 z-(--z-drawer) w-(--drawer-width) bg-[#07182D] md:hidden"
           >
             <PortalSidebarContent
               {...contentProps}

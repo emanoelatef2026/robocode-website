@@ -1,4 +1,4 @@
-﻿import { requirePermission }       from '@/modules/rbac/guards'
+import { requirePermission }       from '@/modules/rbac/guards'
 import { listFinancialAccounts, getFinanceKPIs } from '@/modules/finance/queries'
 import { listBranches }            from '@/modules/branches/queries'
 import { listGroups }              from '@/modules/groups/queries'
@@ -82,7 +82,7 @@ export default async function AdminFinancePage({ searchParams }: Props) {
       <div className="flex justify-end">
         <Link
           href="/admin/finance/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
+          className="inline-flex items-center gap-2 rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -128,7 +128,7 @@ export default async function AdminFinancePage({ searchParams }: Props) {
             ]}
           />
           {status && (
-            <Link href={buildUrl({ status: undefined })} className="text-xs text-[#FF8A1F] hover:underline">
+            <Link href={buildUrl({ status: undefined })} className="text-xs text-[#C2410C] hover:underline">
               Clear ×
             </Link>
           )}

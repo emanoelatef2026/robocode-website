@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
@@ -75,7 +75,7 @@ export default function ParentsClient({
     setAction(
       <button
         onClick={openCreate}
-        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#C2410C] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
           <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -167,7 +167,7 @@ export default function ParentsClient({
           <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
             <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
             <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-            <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+            <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
           </div>
         ))}
       </div>
@@ -179,13 +179,13 @@ export default function ParentsClient({
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Name, phone, student, course…"
-            className="flex-1 min-w-0 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+            className="flex-1 min-w-0 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
           />
           <button
             onClick={() => setShowFilters(f => !f)}
             className={`flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition
               ${showFilters || activeFilterCount > 0
-                ? 'border-[#FF8A1F] bg-[#FF8A1F]/10 text-[#FF8A1F]'
+                ? 'border-[#0E7490] bg-[#C2410C]/10 text-[#C2410C]'
                 : 'border-[#E2E8F0] bg-[#F8FAFC] text-[#64748B] hover:border-[#CBD5E1]'}`}
           >
             <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -193,7 +193,7 @@ export default function ParentsClient({
             </svg>
             Filters
             {activeFilterCount > 0 && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF8A1F] text-[10px] font-bold text-white">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#C2410C] text-[11px] font-bold text-white">
                 {activeFilterCount}
               </span>
             )}
@@ -212,7 +212,7 @@ export default function ParentsClient({
           <div className="flex flex-wrap gap-2 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
             {branches.length > 1 && (
               <select value={filterBranch} onChange={e => { setFilterBranch(e.target.value); pushFilters({ branch_id: e.target.value }) }}
-                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                 <option value="">All Branches</option>
                 {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
@@ -220,7 +220,7 @@ export default function ParentsClient({
 
             {instructors.length > 0 && (
               <select value={filterInstructor} onChange={e => { setFilterInstructor(e.target.value); pushFilters({ instructor_id: e.target.value }) }}
-                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                 <option value="">All Instructors</option>
                 {instructors.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
               </select>
@@ -228,7 +228,7 @@ export default function ParentsClient({
 
             {courses.length > 0 && (
               <select value={filterCourse} onChange={e => { setFilterCourse(e.target.value); pushFilters({ course_id: e.target.value }) }}
-                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                 <option value="">All Courses</option>
                 {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
               </select>
@@ -236,14 +236,14 @@ export default function ParentsClient({
 
             {groups.length > 0 && (
               <select value={filterGroup} onChange={e => { setFilterGroup(e.target.value); pushFilters({ group_id: e.target.value }) }}
-                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                 <option value="">All Groups</option>
                 {groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
             )}
 
             <select value={filterHealth} onChange={e => { setFilterHealth(e.target.value); pushFilters({ health: e.target.value }) }}
-              className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+              className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
               <option value="">All Health</option>
               {Object.entries(HEALTH_CONFIG).map(([k, v]) => (
                 <option key={k} value={k}>{v.label}</option>
@@ -251,13 +251,13 @@ export default function ParentsClient({
             </select>
 
             <select value={filterMulti} onChange={e => { setFilterMulti(e.target.value); pushFilters({ multi: e.target.value }) }}
-              className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+              className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
               <option value="">All Families</option>
               <option value="1">Multi-Child Only</option>
             </select>
 
             <select value={filterRisk} onChange={e => { setFilterRisk(e.target.value); pushFilters({ has_risk: e.target.value }) }}
-              className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+              className="ds-card px-3 py-1.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
               <option value="">All Risk Levels</option>
               <option value="1">Has Attendance Risk</option>
             </select>
@@ -289,18 +289,18 @@ export default function ParentsClient({
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="text-[15px] font-semibold text-[#0B1F3A] leading-tight">{row.parent_name}</p>
-                        {row.email && <p className="text-[11px] text-[#94A3B8] truncate">{row.email}</p>}
+                        {row.email && <p className="text-[12px] text-[#94A3B8] truncate">{row.email}</p>}
                         {row.phone && (
-                          <a href={`tel:${row.phone}`} className="text-[12px] text-[#64748B]" onClick={e => e.stopPropagation()}>
+                          <a href={`tel:${row.phone}`} className="text-[13px] text-[#64748B]" onClick={e => e.stopPropagation()}>
                             {row.phone}
                           </a>
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${hCfg.color} ${hCfg.text}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${hCfg.color} ${hCfg.text}`}>
                           {hCfg.label}
                         </span>
-                        <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold text-[#64748B]">
+                        <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-semibold text-[#64748B]">
                           {row.children_count} child{row.children_count !== 1 ? 'ren' : ''}
                         </span>
                       </div>
@@ -310,7 +310,7 @@ export default function ParentsClient({
                     {row.children.length > 0 && (
                       <div className="mt-2 space-y-1">
                         {row.children.slice(0, 2).map(c => (
-                          <div key={c.student_id} className="flex items-center gap-1.5 text-[11px] text-[#64748B]">
+                          <div key={c.student_id} className="flex items-center gap-1.5 text-[12px] text-[#64748B]">
                             <span className="font-medium text-[#0B1F3A]">{c.student_name}</span>
                             {c.age !== null && <span>· Age {c.age}</span>}
                             {c.group_name && <span>· {c.group_name}</span>}
@@ -320,7 +320,7 @@ export default function ParentsClient({
                           </div>
                         ))}
                         {row.children.length > 2 && (
-                          <p className="text-[10px] text-[#94A3B8]">+{row.children.length - 2} more children</p>
+                          <p className="text-[11px] text-[#94A3B8]">+{row.children.length - 2} more children</p>
                         )}
                       </div>
                     )}
@@ -331,11 +331,11 @@ export default function ParentsClient({
                           <a
                             href={buildWhatsAppUrl(row.phone, null) ?? '#'}
                             target="_blank" rel="noopener noreferrer"
-                            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#25D366] hover:bg-[#E7F8EE]"
+                            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] font-medium text-[#25D366] hover:bg-[#E7F8EE]"
                           >
                             WhatsApp
                           </a>
-                          <a href={`tel:${row.phone}`} className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">
+                          <a href={`tel:${row.phone}`} className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">
                             Call
                           </a>
                         </>
@@ -344,14 +344,14 @@ export default function ParentsClient({
                         {isTL && (
                           <button
                             onClick={() => setEditParent(row)}
-                            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC]"
+                            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] font-medium text-[#64748B] hover:bg-[#F8FAFC]"
                           >
                             Edit
                           </button>
                         )}
                         <button
                           onClick={() => setDrawerParent(row)}
-                          className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F]"
+                          className="rounded-lg bg-[#C2410C]/10 px-3 py-1.5 text-[13px] font-semibold text-[#C2410C]"
                         >
                           View →
                         </button>
@@ -389,7 +389,7 @@ export default function ParentsClient({
                         <td className="px-4 py-3">
                           <p className="font-medium text-[#0B1F3A]">{row.parent_name}</p>
                           {row.email && (
-                            <p className="text-[11px] text-[#94A3B8] max-w-48 truncate">{row.email}</p>
+                            <p className="text-[12px] text-[#94A3B8] max-w-48 truncate">{row.email}</p>
                           )}
                         </td>
 
@@ -397,11 +397,11 @@ export default function ParentsClient({
                         <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                           {row.phone ? (
                             <div className="flex items-center gap-1.5">
-                              <a href={`tel:${row.phone}`} className="text-sm text-[#0B1F3A] hover:text-[#FF8A1F]">{row.phone}</a>
+                              <a href={`tel:${row.phone}`} className="text-sm text-[#0B1F3A] hover:text-[#9A3412]">{row.phone}</a>
                               <a
                                 href={buildWhatsAppUrl(row.phone, null) ?? '#'}
                                 target="_blank" rel="noopener noreferrer"
-                                className="rounded border border-[#25D366]/30 px-1.5 py-0.5 text-[10px] font-medium text-[#25D366] hover:bg-[#E7F8EE]"
+                                className="rounded border border-[#25D366]/30 px-1.5 py-0.5 text-[11px] font-medium text-[#25D366] hover:bg-[#E7F8EE]"
                               >
                                 WA
                               </a>
@@ -417,7 +417,7 @@ export default function ParentsClient({
                             {row.children_count} child{row.children_count !== 1 ? 'ren' : ''}
                           </p>
                           {row.children.length > 0 && (
-                            <p className="text-[11px] text-[#94A3B8] truncate max-w-32">
+                            <p className="text-[12px] text-[#94A3B8] truncate max-w-32">
                               {row.children.map(c => c.student_name).join(', ')}
                             </p>
                           )}
@@ -430,7 +430,7 @@ export default function ParentsClient({
                               <p className={`font-medium ${row.near_exhaustion_children_count > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                                 {row.total_sessions_remaining} remaining
                               </p>
-                              <p className="text-[11px] text-[#94A3B8]">across {row.active_contracts_count} contract{row.active_contracts_count !== 1 ? 's' : ''}</p>
+                              <p className="text-[12px] text-[#94A3B8]">across {row.active_contracts_count} contract{row.active_contracts_count !== 1 ? 's' : ''}</p>
                             </>
                           ) : (
                             <span className="text-[#94A3B8]">—</span>
@@ -439,7 +439,7 @@ export default function ParentsClient({
 
                         {/* Health */}
                         <td className="px-4 py-3">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${hCfg.color} ${hCfg.text}`}>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${hCfg.color} ${hCfg.text}`}>
                             {hCfg.label}
                           </span>
                         </td>
@@ -483,7 +483,7 @@ export default function ParentsClient({
                             )}
                             <button
                               onClick={() => setDrawerParent(row)}
-                              className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                              className="text-xs font-medium text-[#C2410C] hover:underline"
                             >
                               View
                             </button>

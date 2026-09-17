@@ -27,7 +27,7 @@ export default function ProgressBar({ value, color, height = 6, className = "", 
         />
       </div>
       {showLabel && (
-        <span className="shrink-0 text-[11px] font-bold font-orbitron" style={{ color: fill }}>
+        <span className="shrink-0 text-[12px] font-bold font-orbitron" style={{ color: fill }}>
           {pct}%
         </span>
       )}

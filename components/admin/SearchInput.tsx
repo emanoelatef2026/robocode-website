@@ -48,7 +48,7 @@ export default function SearchInput({ placeholder = "Search…", className = "" 
         value={value}
         onChange={handleChange}
         placeholder={placeholder}
-        className="ds-input h-9 w-full py-2 pl-9 pr-4 text-[13px] text-[#0B1F3A] placeholder-[#94A3B8]"
+        className="ds-input ds-search-field w-full py-2 pl-9 pr-4 text-[13px] text-[#0B1F3A] placeholder-[#94A3B8]"
       />
     </div>
   );

@@ -1,4 +1,4 @@
-﻿import { requirePortalRole }           from '@/modules/rbac/guards'
+import { requirePortalRole }           from '@/modules/rbac/guards'
 import { getParentChildren }           from '@/modules/parents/parent-portal-queries'
 import { getChildSessionsProgress }    from '@/modules/parents/parent-portal-queries'
 import { getPendingFeedbackMilestone } from '@/modules/parent-feedback/queries'
@@ -86,7 +86,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
           >
             {label}
             {badge && (
-              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF8A1F] text-[9px] font-bold text-white">
+              <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#FF8A1F] text-[11px] font-bold text-white">
                 {badge}
               </span>
             )}
@@ -141,7 +141,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
                       ))}
                     </div>
                   </div>
-                  <p className="mt-1 text-[11px] text-[#64748B]">
+                  <p className="mt-1 text-[12px] text-[#64748B]">
                     {new Date(fb.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </p>
                   {fb.notes && (
@@ -185,11 +185,11 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
                           <p className="text-[13px] font-medium text-[#0B1F3A]">
                             {CATEGORY_LABELS[msg.category] ?? msg.category}
                           </p>
-                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[12px] font-medium ${statusCfg.cls}`}>
                             {statusCfg.label}
                           </span>
                         </div>
-                        <p className="mt-1 text-[11px] text-[#64748B]">
+                        <p className="mt-1 text-[12px] text-[#64748B]">
                           {new Date(msg.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
                       </div>
@@ -202,10 +202,10 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
                   <table className="w-full text-[13px]">
                     <thead className="ds-table-head">
                       <tr className="border-b border-[#F1F5F9] text-left">
-                        <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Date</th>
-                        <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Category</th>
-                        <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Status</th>
-                        <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Last Updated</th>
+                        <th className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Date</th>
+                        <th className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Category</th>
+                        <th className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Status</th>
+                        <th className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Last Updated</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F8FAFC]">
@@ -220,7 +220,7 @@ export default async function ParentFeedbackPage({ searchParams }: Props) {
                               {CATEGORY_LABELS[msg.category] ?? msg.category}
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
+                              <span className={`rounded-full px-2 py-0.5 text-[12px] font-medium ${statusCfg.cls}`}>
                                 {statusCfg.label}
                               </span>
                             </td>

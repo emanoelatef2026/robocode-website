@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { enrollStudentFull, cancelContract } from '@/modules/enrollments/actions'
@@ -334,6 +334,13 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
     const result = await enrollStudentFull({
       student_id:               state.student.id,
       branch_id:                state.student.branch_id,
+      // Keep a contract created from a group student attached to that
+      // group's course lineage. The badge below is not display-only: the
+      // server uses these fields to create the enrollment/account link and
+      // to reconcile completed sessions for this group.
+      group_id:                 groupContext?.group_id ?? null,
+      course_id:                groupContext?.course_id ?? null,
+      instructor_id:            groupContext?.instructor_id ?? null,
       start_date:               state.startDate,
       enrollment_type:          state.enrollmentType,
       enrolled_sessions:        parseInt(state.enrolledSessions) || 0,
@@ -410,7 +417,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
           <div className="flex items-center gap-3">
             <div className="flex gap-1.5">
               {[1,2,3].map(n => (
-                <span key={n} className={`h-2 w-2 rounded-full ${n === state.step ? 'bg-[#FF8A1F]' : n < state.step ? 'bg-[#10B981]' : 'bg-[#E2E8F0]'}`} />
+                <span key={n} className={`h-2 w-2 rounded-full ${n === state.step ? 'bg-[#C2410C]' : n < state.step ? 'bg-[#10B981]' : 'bg-[#E2E8F0]'}`} />
               ))}
             </div>
             <button onClick={onClose} className="rounded-lg p-1.5 text-[#64748B] hover:bg-[#F1F5F9]">
@@ -437,12 +444,12 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                   onChange={e => { setSearch(e.target.value); setSelectedIndex(-1) }}
                   onKeyDown={handleSearchKeyDown}
                   placeholder="Name, code, phone, parent, group…"
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] py-3 pl-10 pr-10 text-sm text-[#0B1F3A] placeholder:text-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] py-3 pl-10 pr-10 text-sm text-[#0B1F3A] placeholder:text-[#94A3B8] focus:border-[#0E7490] focus:outline-none"
                   aria-label="Search students"
                 />
                 {searching && (
                   <span className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#0E7490] border-t-transparent" />
                   </span>
                 )}
               </div>
@@ -453,7 +460,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                   <select
                     value={mFilterFinStatus}
                     onChange={e => { setMFilterFinStatus(e.target.value); setSelectedIndex(-1) }}
-                    className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1 text-xs text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                    className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1 text-xs text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                   >
                     <option value="">All status</option>
                     <option value="BLOCKED">Blocked</option>
@@ -462,12 +469,12 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                     <option value="CURRENT">Current</option>
                   </select>
 
-                  <label className="flex cursor-pointer items-center gap-1 text-[11px] text-[#64748B]">
+                  <label className="flex cursor-pointer items-center gap-1 text-[12px] text-[#64748B]">
                     <input type="checkbox" checked={mFilterExhausted} onChange={e => { setMFilterExhausted(e.target.checked); setSelectedIndex(-1) }}
                       className="h-3 w-3 rounded accent-[#FF8A1F]" />
                     Exhausted
                   </label>
-                  <label className="flex cursor-pointer items-center gap-1 text-[11px] text-[#64748B]">
+                  <label className="flex cursor-pointer items-center gap-1 text-[12px] text-[#64748B]">
                     <input type="checkbox" checked={mFilterNoPackage} onChange={e => { setMFilterNoPackage(e.target.checked); setSelectedIndex(-1) }}
                       className="h-3 w-3 rounded accent-[#FF8A1F]" />
                     No Package
@@ -476,13 +483,13 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                   {hasModalFilter && (
                     <button
                       onClick={() => { setMFilterFinStatus(''); setMFilterExhausted(false); setMFilterNoPackage(false); setSelectedIndex(-1) }}
-                      className="text-[11px] text-[#FF8A1F] hover:underline"
+                      className="text-[12px] text-[#C2410C] hover:underline"
                     >
                       Clear ×
                     </button>
                   )}
 
-                  <span className="ml-auto text-[10px] text-[#94A3B8]">
+                  <span className="ml-auto text-[11px] text-[#94A3B8]">
                     {displayResults.length} result{displayResults.length !== 1 ? 's' : ''} · ↑↓ Enter
                   </span>
                 </div>
@@ -506,7 +513,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                       ref={el => { resultRefs.current[idx] = el }}
                       onClick={() => selectStudent(s)}
                       className={`w-full flex items-start gap-3 px-5 py-3 text-left transition-colors border-l-2 ${
-                        isSelected ? 'bg-orange-50 border-[#FF8A1F]' : 'hover:bg-[#F8FAFC] border-transparent'
+                        isSelected ? 'bg-orange-50 border-[#0E7490]' : 'hover:bg-[#F8FAFC] border-transparent'
                       }`}
                       role="option" aria-selected={isSelected}
                     >
@@ -514,7 +521,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                       <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
                         isExhausted ? 'bg-purple-100 text-purple-700' :
                         s.financial_status === 'OVERDUE' || s.financial_status === 'BLOCKED' ? 'bg-[#FEE2E2] text-[#DC2626]' :
-                        'bg-[#FF8A1F]/10 text-[#FF8A1F]'
+                        'bg-[#C2410C]/10 text-[#C2410C]'
                       }`}>
                         {s.name.charAt(0).toUpperCase()}
                       </div>
@@ -526,29 +533,29 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                             <Highlight text={s.name} query={search} />
                           </span>
                           {s.code && (
-                            <span className="rounded bg-[#F1F5F9] px-1.5 py-px font-mono text-[10px] text-[#64748B]">
+                            <span className="rounded bg-[#F1F5F9] px-1.5 py-px font-mono text-[11px] text-[#64748B]">
                               <Highlight text={s.code} query={search} />
                             </span>
                           )}
                           {s.age != null && (
-                            <span className="text-[11px] text-[#94A3B8]">{s.age}y</span>
+                            <span className="text-[12px] text-[#94A3B8]">{s.age}y</span>
                           )}
                         </div>
 
                         {/* Row 2: phones */}
                         <div className="flex flex-wrap gap-x-3 gap-y-0.5">
                           {s.phone && (
-                            <span className="text-[11px] text-[#64748B]">
+                            <span className="text-[12px] text-[#64748B]">
                               📱 <Highlight text={s.phone} query={search} />
                             </span>
                           )}
                           {s.parent_name && (
-                            <span className="text-[11px] text-[#64748B]">
+                            <span className="text-[12px] text-[#64748B]">
                               👤 <Highlight text={s.parent_name} query={search} />
                             </span>
                           )}
                           {s.parent_phone && (
-                            <span className="text-[11px] text-[#64748B]">
+                            <span className="text-[12px] text-[#64748B]">
                               <Highlight text={s.parent_phone} query={search} />
                             </span>
                           )}
@@ -556,39 +563,39 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
 
                         {/* Row 3: branch · group · status badges */}
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                          <span className="rounded bg-[#F1F5F9] px-1.5 py-px text-[11px] font-medium text-[#64748B]">
+                          <span className="rounded bg-[#F1F5F9] px-1.5 py-px text-[12px] font-medium text-[#64748B]">
                             {s.branch_name}
                           </span>
                           {s.active_group_name && (
-                            <span className="text-[11px] text-[#64748B]">
+                            <span className="text-[12px] text-[#64748B]">
                               <Highlight text={s.active_group_name} query={search} />
                             </span>
                           )}
                           {s.financial_status && (
-                            <span className={`rounded-full px-1.5 py-px text-[10px] font-semibold ${FIN_BADGE[s.financial_status] ?? 'bg-[#F1F5F9] text-[#475569]'}`}>
+                            <span className={`rounded-full px-1.5 py-px text-[11px] font-semibold ${FIN_BADGE[s.financial_status] ?? 'bg-[#F1F5F9] text-[#475569]'}`}>
                               {FIN_LABEL[s.financial_status] ?? s.financial_status}
                             </span>
                           )}
                           {noPackage && (
-                            <span className="rounded-full bg-[#FFFBEB] px-1.5 py-px text-[10px] font-semibold text-[#B45309]">
+                            <span className="rounded-full bg-[#FFFBEB] px-1.5 py-px text-[11px] font-semibold text-[#B45309]">
                               No Package
                             </span>
                           )}
                           {isExhausted && (
-                            <span className="rounded-full bg-purple-50 px-1.5 py-px text-[10px] font-semibold text-purple-700">
+                            <span className="rounded-full bg-purple-50 px-1.5 py-px text-[11px] font-semibold text-purple-700">
                               Exhausted
                             </span>
                           )}
                           {isCritical && !isExhausted && (
-                            <span className="rounded-full bg-[#FEE2E2] px-1.5 py-px text-[10px] font-semibold text-[#EF4444]">
+                            <span className="rounded-full bg-[#FEE2E2] px-1.5 py-px text-[11px] font-semibold text-[#EF4444]">
                               {sessLeft} sess. left
                             </span>
                           )}
                           {sessTot > 0 && !isExhausted && !isCritical && (
-                            <span className="text-[11px] text-[#64748B]">{sessLeft}/{sessTot} sess.</span>
+                            <span className="text-[12px] text-[#64748B]">{sessLeft}/{sessTot} sess.</span>
                           )}
                           {s.active_enrollments_count > 1 && (
-                            <span className="text-[10px] text-[#94A3B8]">{s.active_enrollments_count} active</span>
+                            <span className="text-[11px] text-[#94A3B8]">{s.active_enrollments_count} active</span>
                           )}
                         </div>
                       </div>
@@ -603,7 +610,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
               <div className="px-5 py-4 text-center">
                 <p className="text-sm text-[#64748B]">No results match the active filters.</p>
                 <button onClick={() => { setMFilterFinStatus(''); setMFilterExhausted(false); setMFilterNoPackage(false) }}
-                  className="mt-1 text-xs text-[#FF8A1F] hover:underline">Clear filters</button>
+                  className="mt-1 text-xs text-[#C2410C] hover:underline">Clear filters</button>
               </div>
             )}
             {search.length >= 2 && !searching && results.length === 0 && (
@@ -612,7 +619,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                 <p className="mt-1 text-xs text-[#94A3B8]">Try: student code · partial phone · parent name · Arabic name</p>
                 <div className="mt-4 flex flex-col gap-2">
                   <a href="/portal/team-leader/students/new" target="_blank" rel="noopener noreferrer"
-                    className="rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm font-medium text-[#0B1F3A] transition-colors hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+                    className="rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm font-medium text-[#0B1F3A] transition-colors hover:border-[#0E7490] hover:text-[#9A3412]">
                     + Create New Student
                   </a>
                   <a href="/portal/team-leader/leads" target="_blank" rel="noopener noreferrer"
@@ -624,7 +631,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
             )}
             {search.length >= 2 && searching && results.length === 0 && (
               <div className="px-5 py-8 text-center">
-                <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
+                <div className="mx-auto h-5 w-5 animate-spin rounded-full border-2 border-[#0E7490] border-t-transparent" />
               </div>
             )}
             {search.length < 2 && (
@@ -642,19 +649,19 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
 
             {/* Selected student card */}
             <div className="flex items-center gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FF8A1F]/10 text-sm font-bold text-[#FF8A1F]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#C2410C]/10 text-sm font-bold text-[#C2410C]">
                 {state.student.name.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-2">
                   <p className="text-sm font-semibold text-[#0B1F3A]">{state.student.name}</p>
                   {state.student.code && (
-                    <span className="rounded bg-[#E2E8F0] px-1.5 py-px font-mono text-[10px] text-[#64748B]">
+                    <span className="rounded bg-[#E2E8F0] px-1.5 py-px font-mono text-[11px] text-[#64748B]">
                       {state.student.code}
                     </span>
                   )}
                   {state.student.age != null && (
-                    <span className="text-[11px] text-[#94A3B8]">{state.student.age}y</span>
+                    <span className="text-[12px] text-[#94A3B8]">{state.student.age}y</span>
                   )}
                 </div>
                 <p className="text-xs text-[#64748B]">
@@ -665,7 +672,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
               {!groupContext && (
                 <button
                   onClick={() => { setState(prev => ({ ...prev, step: 1, student: null })); setSearch(''); setWarnings([]) }}
-                  className="shrink-0 text-xs text-[#FF8A1F] hover:underline"
+                  className="shrink-0 text-xs text-[#C2410C] hover:underline"
                 >
                   Change
                 </button>
@@ -684,14 +691,14 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                 <button
                   type="button"
                   onClick={() => setPayMode('existing')}
-                  className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${payMode === 'existing' ? 'bg-[#FF8A1F] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
+                  className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${payMode === 'existing' ? 'bg-[#C2410C] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
                 >
                   Pay Existing Package
                 </button>
                 <button
                   type="button"
                   onClick={() => setPayMode('new')}
-                  className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${payMode === 'new' ? 'bg-[#FF8A1F] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
+                  className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors ${payMode === 'new' ? 'bg-[#C2410C] text-white shadow-sm' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
                 >
                   + New Contract
                 </button>
@@ -721,7 +728,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                             <p className="text-sm font-medium text-[#0B1F3A]">
                               {pkg.course_name ?? pkg.group_name ?? 'Contract'}
                             </p>
-                            {!canPay && <p className="text-[10px] text-[#94A3B8]">No account</p>}
+                            {!canPay && <p className="text-[11px] text-[#94A3B8]">No account</p>}
                           </button>
                         )
                       })}
@@ -733,7 +740,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                 {selectedPkg && (
                   <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] divide-y divide-[#F1F5F9]">
                     <div className="px-4 py-2.5">
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Contract Summary</p>
+                      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Contract Summary</p>
                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
                         <div>
                           <span className="text-[#94A3B8]">Course</span>
@@ -759,21 +766,21 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                     </div>
                     <div className="grid grid-cols-3 divide-x divide-[#F1F5F9] px-0">
                       <div className="px-4 py-2.5 text-center">
-                        <p className="text-[10px] text-[#94A3B8]">Sessions Left</p>
+                        <p className="text-[11px] text-[#94A3B8]">Sessions Left</p>
                         <p className={`text-sm font-bold ${selectedPkg.remaining_sessions <= 0 ? 'text-purple-700' : selectedPkg.remaining_sessions <= 3 ? 'text-[#EF4444]' : 'text-[#1D4ED8]'}`}>
                           {selectedPkg.remaining_sessions <= 0 ? 'Exhausted' : selectedPkg.remaining_sessions}
                         </p>
                         {selectedPkg.enrolled_sessions > 0 && (
-                          <p className="text-[10px] text-[#94A3B8]">of {selectedPkg.enrolled_sessions}</p>
+                          <p className="text-[11px] text-[#94A3B8]">of {selectedPkg.enrolled_sessions}</p>
                         )}
                       </div>
                       <div className="px-4 py-2.5 text-center">
-                        <p className="text-[10px] text-[#94A3B8]">Paid</p>
+                        <p className="text-[11px] text-[#94A3B8]">Paid</p>
                         <p className="text-sm font-bold text-[#15803D]">EGP {fmt(selectedPkg.paid_amount)}</p>
-                        <p className="text-[10px] text-[#94A3B8]">of {fmt(selectedPkg.net_amount)}</p>
+                        <p className="text-[11px] text-[#94A3B8]">of {fmt(selectedPkg.net_amount)}</p>
                       </div>
                       <div className={`px-4 py-2.5 text-center ${selectedPkg.remaining_amount > 0 ? 'bg-[#FEE2E2]' : 'bg-[#E7F8EE]'}`}>
-                        <p className="text-[10px] text-[#94A3B8]">Remaining</p>
+                        <p className="text-[11px] text-[#94A3B8]">Remaining</p>
                         <p className={`text-sm font-bold ${selectedPkg.remaining_amount > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
                           {selectedPkg.remaining_amount > 0 ? `EGP ${fmt(selectedPkg.remaining_amount)}` : 'Paid ✓'}
                         </p>
@@ -793,7 +800,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                         onChange={e => setQuickPayAmt(e.target.value)}
                         placeholder="0.00"
                         autoFocus
-                        className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                       />
                       {/* Quick-amount buttons */}
                       {selectedPkg.remaining_amount > 0 && (
@@ -801,7 +808,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                           {[500, 1000, 2000].filter(a => a <= selectedPkg.remaining_amount).map(a => (
                             <button key={a} type="button"
                               onClick={() => setQuickPayAmt(String(a))}
-                              className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${quickPayAmt === String(a) ? 'border-[#FF8A1F] bg-orange-50 text-[#FF8A1F]' : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'}`}>
+                              className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${quickPayAmt === String(a) ? 'border-[#0E7490] bg-orange-50 text-[#C2410C]' : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'}`}>
                               +{fmt(a)}
                             </button>
                           ))}
@@ -819,7 +826,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                         <select
                           value={quickPayMethod}
                           onChange={e => setQuickPayMethod(e.target.value as PaymentMethod)}
-                          className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                          className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                         >
                           {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
                             <option key={k} value={k}>{v}</option>
@@ -832,19 +839,19 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                           type="date"
                           value={quickPayDate}
                           onChange={e => setQuickPayDate(e.target.value)}
-                          className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                          className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                         />
                       </div>
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-[#64748B]">
-                        Reference <span className="text-[11px] text-[#94A3B8]">(optional)</span>
+                        Reference <span className="text-[12px] text-[#94A3B8]">(optional)</span>
                       </label>
                       <input
                         value={quickPayRef}
                         onChange={e => setQuickPayRef(e.target.value)}
                         placeholder="e.g. Instapay ref, receipt #"
-                        className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                       />
                     </div>
 
@@ -861,7 +868,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                         type="button"
                         onClick={handleExistingPaySubmit}
                         disabled={submitting || !quickPayAmt}
-                        className="flex items-center gap-2 rounded-xl bg-[#FF8A1F] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#e87c18] disabled:opacity-40"
+                        className="flex items-center gap-2 rounded-xl bg-[#C2410C] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#e87c18] disabled:opacity-40"
                       >
                         {submitting && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />}
                         Add Payment
@@ -891,7 +898,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                       <p><span className="text-[#64748B]">Sessions remaining:</span> {selectedPkg.remaining_sessions} of {selectedPkg.enrolled_sessions}</p>
                       <p><span className="text-[#64748B]">Balance due:</span> EGP {fmt(selectedPkg.remaining_amount)}</p>
                     </div>
-                    <p className="text-[11px] text-[#EF4444]">
+                    <p className="text-[12px] text-[#EF4444]">
                       This action is irreversible. The contract will be archived and no new payments or sessions will be allowed.
                     </p>
                     {cancelErr && <p className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs font-medium text-[#DC2626]">{cancelErr}</p>}
@@ -957,7 +964,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
               <>
             {state.student.active_summaries.length > 0 && (
               <div>
-                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
+                <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">
                   Current Active Enrollments ({state.student.active_summaries.length})
                 </p>
                 <div className="divide-y divide-[#F1F5F9] rounded-xl border border-[#E2E8F0]">
@@ -965,15 +972,15 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                     <div key={i} className="flex items-center justify-between px-3 py-2">
                       <div className="min-w-0">
                         <p className="truncate text-xs font-medium text-[#0B1F3A]">{e.course_name ?? '—'}</p>
-                        {e.group_name && <p className="truncate text-[11px] text-[#94A3B8]">{e.group_name}</p>}
+                        {e.group_name && <p className="truncate text-[12px] text-[#94A3B8]">{e.group_name}</p>}
                       </div>
                       <div className="ml-3 shrink-0 text-right">
                         {e.financial_status && (
-                          <p className={`text-[10px] font-semibold ${
+                          <p className={`text-[11px] font-semibold ${
                             { CURRENT:'text-[#10B981]', DUE_SOON:'text-[#F59E0B]', OVERDUE:'text-[#EF4444]', BLOCKED:'text-[#DC2626]' }[e.financial_status] ?? 'text-[#64748B]'
                           }`}>{e.financial_status}</p>
                         )}
-                        <p className="text-[11px] text-[#94A3B8]">{e.remaining_sessions} sess. left</p>
+                        <p className="text-[12px] text-[#94A3B8]">{e.remaining_sessions} sess. left</p>
                       </div>
                     </div>
                   ))}
@@ -1004,10 +1011,10 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                     <button key={n} type="button"
                       onClick={() => setState(prev => ({ ...prev, enrolledSessions: String(n) }))}
                       className={`rounded-xl border-2 py-3 text-center transition-all ${
-                        active ? 'border-[#FF8A1F] bg-orange-50 shadow-sm' : 'border-[#E2E8F0] hover:border-[#CBD5E1]'
+                        active ? 'border-[#0E7490] bg-orange-50 shadow-sm' : 'border-[#E2E8F0] hover:border-[#CBD5E1]'
                       }`}>
-                      <span className={`block text-xl font-bold leading-tight ${active ? 'text-[#FF8A1F]' : 'text-[#0B1F3A]'}`}>{n}</span>
-                      <span className="text-[10px] text-[#94A3B8]">sessions</span>
+                      <span className={`block text-xl font-bold leading-tight ${active ? 'text-[#C2410C]' : 'text-[#0B1F3A]'}`}>{n}</span>
+                      <span className="text-[11px] text-[#94A3B8]">sessions</span>
                     </button>
                   )
                 })}
@@ -1017,10 +1024,10 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                     <button type="button"
                       onClick={() => setState(prev => ({ ...prev, enrolledSessions: '0' }))}
                       className={`rounded-xl border-2 py-3 text-center transition-all ${
-                        active ? 'border-[#FF8A1F] bg-orange-50 shadow-sm' : 'border-[#E2E8F0] hover:border-[#CBD5E1]'
+                        active ? 'border-[#0E7490] bg-orange-50 shadow-sm' : 'border-[#E2E8F0] hover:border-[#CBD5E1]'
                       }`}>
-                      <span className={`block text-xl font-bold leading-tight ${active ? 'text-[#FF8A1F]' : 'text-[#0B1F3A]'}`}>∞</span>
-                      <span className="text-[10px] text-[#94A3B8]">unlimited</span>
+                      <span className={`block text-xl font-bold leading-tight ${active ? 'text-[#C2410C]' : 'text-[#0B1F3A]'}`}>∞</span>
+                      <span className="text-[11px] text-[#94A3B8]">unlimited</span>
                     </button>
                   )
                 })()}
@@ -1030,7 +1037,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                 value={state.enrolledSessions}
                 onChange={e => { const v = e.target.value; if (v === '' || parseInt(v) >= 0) setState(prev => ({ ...prev, enrolledSessions: v })) }}
                 placeholder="Or enter a custom number (0 = unlimited)"
-                className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
               />
             </div>
 
@@ -1041,7 +1048,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                 <select
                   value={state.enrollmentType}
                   onChange={e => setState(prev => ({ ...prev, enrollmentType: e.target.value as 'primary' | 'secondary' }))}
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                 >
                   <option value="primary">Primary</option>
                   <option value="secondary">Secondary</option>
@@ -1052,7 +1059,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                 <input
                   type="date" value={state.startDate}
                   onChange={e => setState(prev => ({ ...prev, startDate: e.target.value }))}
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                 />
               </div>
             </div>
@@ -1079,7 +1086,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                   )}
                   <button
                     onClick={() => setState(prev => ({ ...prev, step: 3 }))}
-                    className="flex-1 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18]"
+                    className="flex-1 rounded-xl bg-[#C2410C] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18]"
                   >
                     Next: Finance →
                   </button>
@@ -1110,14 +1117,14 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                 <input type="number" min="0" step="50" value={state.totalAmount}
                   onChange={e => setState(prev => ({ ...prev, totalAmount: e.target.value }))}
                   placeholder="e.g. 3000"
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none" />
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none" />
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-[#64748B]">Discount (EGP)</label>
                 <input type="number" min="0" step="50" value={state.discountAmount}
                   onChange={e => setState(prev => ({ ...prev, discountAmount: e.target.value }))}
                   placeholder="0"
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none" />
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none" />
               </div>
             </div>
 
@@ -1137,13 +1144,13 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                     const clamped = raw === '' ? '' : String(Math.min(Math.max(n || 0, 0), 36))
                     setState(prev => ({ ...prev, installmentCount: clamped }))
                   }}
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none" />
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none" />
               </div>
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-[#64748B]">First Due Date</label>
                 <input type="date" value={state.firstDueDate}
                   onChange={e => setState(prev => ({ ...prev, firstDueDate: e.target.value }))}
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none" />
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none" />
               </div>
             </div>
 
@@ -1154,32 +1161,32 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-[11px] text-[#94A3B8]">Amount Paid Now</label>
+                  <label className="mb-1 block text-[12px] text-[#94A3B8]">Amount Paid Now</label>
                   <input type="number" min="0" value={state.initPayAmount}
                     onChange={e => setState(prev => ({ ...prev, initPayAmount: e.target.value }))}
                     placeholder="0"
-                    className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none" />
+                    className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none" />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] text-[#94A3B8]">Method</label>
+                  <label className="mb-1 block text-[12px] text-[#94A3B8]">Method</label>
                   <select value={state.initPayMethod}
                     onChange={e => setState(prev => ({ ...prev, initPayMethod: e.target.value as PaymentMethod }))}
-                    className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                    className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                     {Object.entries(PAYMENT_METHOD_LABELS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] text-[#94A3B8]">Payment Date</label>
+                  <label className="mb-1 block text-[12px] text-[#94A3B8]">Payment Date</label>
                   <input type="date" value={state.initPayDate}
                     onChange={e => setState(prev => ({ ...prev, initPayDate: e.target.value }))}
-                    className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none" />
+                    className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none" />
                 </div>
                 <div>
-                  <label className="mb-1 block text-[11px] text-[#94A3B8]">Reference (optional)</label>
+                  <label className="mb-1 block text-[12px] text-[#94A3B8]">Reference (optional)</label>
                   <input value={state.initPayRef}
                     onChange={e => setState(prev => ({ ...prev, initPayRef: e.target.value }))}
                     placeholder="Instapay ref, etc."
-                    className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none" />
+                    className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none" />
                 </div>
               </div>
             </div>
@@ -1247,7 +1254,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
               <button
                 disabled={submitting || !state.totalAmount || net <= 0}
                 onClick={handleSubmit}
-                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40"
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#C2410C] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40"
               >
                 {submitting ? (
                   <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Creating…</>

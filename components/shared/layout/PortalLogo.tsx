@@ -12,7 +12,7 @@ export function PortalLogo({ className = "" }: { className?: string }) {
         <Image src="/logo.png" alt="Robocode" width={23} height={23} className="h-[23px] w-[23px] object-contain" />
       </div>
       <span
-        className="text-[12px] font-bold tracking-[.04em] text-white"
+        className="text-[13px] font-bold tracking-[.04em] text-white"
         style={{ fontFamily: "var(--font-orbitron)" }}
       >
         ROBOCODE

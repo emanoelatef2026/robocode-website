@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useTransition, useEffect, useRef } from 'react'
 import { createTemplate, updateTemplate, getTemplateForEdit } from '@/modules/certificates/actions'
@@ -13,7 +13,7 @@ interface Props {
 }
 
 const inputClass =
-  'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+  'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
 const CERT_TYPES = [
   { value: 'semester_completion', label: 'Semester Completion' },
@@ -277,7 +277,7 @@ export default function TemplateFormModal({ mode, templateId, onClose, onSuccess
                   <button
                     type="submit"
                     disabled={isPending}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18] disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-lg bg-[#C2410C] px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18] disabled:opacity-60"
                   >
                     {isPending ? (
                       <>

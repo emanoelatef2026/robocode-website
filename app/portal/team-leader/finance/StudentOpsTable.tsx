@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
@@ -220,7 +220,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               placeholder="Search name, code, phone, parent, group…"
-              className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] py-2 pl-9 pr-3 text-sm text-[#0B1F3A] placeholder:text-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
+              className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] py-2 pl-9 pr-3 text-sm text-[#0B1F3A] placeholder:text-[#94A3B8] focus:border-[#0E7490] focus:outline-none"
             />
           </div>
 
@@ -254,7 +254,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
           </label>
 
           {hasFilter && (
-            <button onClick={clearFilters} className="text-xs text-[#FF8A1F] hover:underline">Clear ×</button>
+            <button onClick={clearFilters} className="text-xs text-[#C2410C] hover:underline">Clear ×</button>
           )}
 
           <span className="ml-auto text-xs text-[#94A3B8]">{filtered.length} students</span>
@@ -271,7 +271,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
 
           <button
             onClick={() => setShowWizard(true)}
-            className="inline-flex items-center gap-1 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18]"
+            className="inline-flex items-center gap-1 rounded-lg bg-[#C2410C] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18]"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -325,8 +325,8 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                         {/* Student */}
                         <td className="px-3 py-2.5">
                           <button onClick={() => setSelectedStudent(row)} className="w-full text-left">
-                            <p className="truncate font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">{row.student_name}</p>
-                            <p className="text-[11px] text-[#94A3B8]">
+                            <p className="truncate font-medium text-[#0B1F3A] hover:text-[#9A3412]">{row.student_name}</p>
+                            <p className="text-[12px] text-[#94A3B8]">
                               {row.student_code ? `#${row.student_code}` : ''}
                               {multiBranch && row.branch_name ? ` · ${row.branch_name}` : ''}
                             </p>
@@ -339,12 +339,12 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                             ? <p className="truncate text-xs font-medium text-[#0B1F3A]">{row.group_name}</p>
                             : row.course_name
                               ? <p className="truncate text-xs text-[#0B1F3A]">{row.course_name}</p>
-                              : <span className="text-[11px] font-medium text-[#F59E0B]">No group</span>}
+                              : <span className="text-[12px] font-medium text-[#F59E0B]">No group</span>}
                           {row.course_name && row.group_name && (
-                            <p className="truncate text-[11px] text-[#94A3B8]">{row.course_name}</p>
+                            <p className="truncate text-[12px] text-[#94A3B8]">{row.course_name}</p>
                           )}
                           {!row.course_name && row.group_start_date && (
-                            <p className="text-[11px] text-[#94A3B8]">Since {fmtDateShort(row.group_start_date)}</p>
+                            <p className="text-[12px] text-[#94A3B8]">Since {fmtDateShort(row.group_start_date)}</p>
                           )}
                         </td>
 
@@ -352,7 +352,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                         <td className="px-3 py-2.5">
                           {row.instructor_name
                             ? <p className="truncate text-xs text-[#64748B]">{row.instructor_name}</p>
-                            : <span className="text-[11px] font-medium text-[#F59E0B]">Unassigned</span>}
+                            : <span className="text-[12px] font-medium text-[#F59E0B]">Unassigned</span>}
                         </td>
 
                         {/* Sessions (attendance + package) */}
@@ -364,7 +364,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                             <span className="text-[#94A3B8]">/{row.total_sessions}</span>
                           </p>
                           {row.enrolled_sessions > 0 && (
-                            <p className={`text-[11px] font-medium ${
+                            <p className={`text-[12px] font-medium ${
                               ex === 'EXHAUSTED' ? 'text-[#EF4444]' :
                               ex === 'CRITICAL'  ? 'text-[#EF4444]' :
                               ex === 'WARNING'   ? 'text-[#F59E0B]' : 'text-[#10B981]'
@@ -378,17 +378,17 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                         <td className="px-3 py-2.5">
                           <div className="flex flex-col gap-1">
                             {statusBadge && (
-                              <span className={`inline-block w-fit rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusBadge.cls}`}>
+                              <span className={`inline-block w-fit rounded-full border px-2 py-0.5 text-[11px] font-semibold ${statusBadge.cls}`}>
                                 {statusBadge.label}
                               </span>
                             )}
                             {actionBadge && (
-                              <span className={`inline-block w-fit rounded-full border px-2 py-0.5 text-[10px] font-semibold ${actionBadge.cls}`}>
+                              <span className={`inline-block w-fit rounded-full border px-2 py-0.5 text-[11px] font-semibold ${actionBadge.cls}`}>
                                 {actionBadge.label}
                               </span>
                             )}
                             {!statusBadge && !actionBadge && (
-                              <span className="text-[10px] text-[#10B981]">✓ OK</span>
+                              <span className="text-[11px] text-[#10B981]">✓ OK</span>
                             )}
                           </div>
                         </td>
@@ -407,10 +407,10 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                               <span className="text-xs text-[#10B981]">Paid ✓</span>
                             )
                           ) : (
-                            <span className="text-[11px] font-medium text-[#F59E0B]">No pkg</span>
+                            <span className="text-[12px] font-medium text-[#F59E0B]">No pkg</span>
                           )}
                           {row.next_due_date && row.days_overdue > 0 && (
-                            <p className="text-[10px] font-medium text-[#EF4444]">{row.days_overdue}d late</p>
+                            <p className="text-[11px] font-medium text-[#EF4444]">{row.days_overdue}d late</p>
                           )}
                         </td>
 
@@ -425,7 +425,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                             {row.total_sessions > 0 ? `${row.attendance_pct}%` : '—'}
                           </span>
                           {row.consecutive_absences >= 3 && (
-                            <p className="text-[10px] font-medium text-[#EF4444]">{row.consecutive_absences} consec.</p>
+                            <p className="text-[11px] font-medium text-[#EF4444]">{row.consecutive_absences} consec.</p>
                           )}
                         </td>
 
@@ -458,7 +458,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                             <button
                               onClick={() => setSelectedStudent(row)}
                               title="View detail"
-                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#FF8A1F] hover:bg-orange-50"
+                              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#C2410C] hover:bg-orange-50"
                             >
                               <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                                 <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -496,7 +496,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                       </div>
                       <div className="flex shrink-0 flex-col items-end gap-1">
                         {statusBadge && (
-                          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusBadge.cls}`}>
+                          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${statusBadge.cls}`}>
                             {statusBadge.label}
                           </span>
                         )}
@@ -561,7 +561,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
                         </>
                       )}
                       <button onClick={() => setSelectedStudent(row)}
-                        className="ml-auto rounded-lg bg-orange-50 px-2.5 py-1 text-xs font-medium text-[#FF8A1F]">
+                        className="ml-auto rounded-lg bg-orange-50 px-2.5 py-1 text-xs font-medium text-[#C2410C]">
                         View Detail →
                       </button>
                     </div>
@@ -603,7 +603,7 @@ export default function StudentOpsTable({ rows, branchIds, branches, groups, ins
         </button>
         <button
           onClick={() => setShowWizard(true)}
-          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-medium text-white"
+          className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#C2410C] py-2.5 text-sm font-medium text-white"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -627,7 +627,7 @@ function Select({
     <select
       value={value}
       onChange={e => onChange(e.target.value)}
-      className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+      className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
     >
       <option value="">{placeholder}</option>
       {children}

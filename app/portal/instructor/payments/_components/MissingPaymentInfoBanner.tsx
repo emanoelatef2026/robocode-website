@@ -8,13 +8,13 @@ export default function MissingPaymentInfoBanner() {
       </svg>
       <div className="min-w-0 flex-1">
         <p className="text-[13px] font-semibold text-[#92400E]">Payment info incomplete</p>
-        <p className="text-[12px] text-[#B45309]">
+        <p className="text-[13px] text-[#B45309]">
           Add your preferred payment method so we can pay you correctly.
         </p>
       </div>
       <Link
         href="/portal/instructor/payments?tab=methods"
-        className="shrink-0 rounded-lg bg-[#B45309] px-3 py-1.5 text-[12px] font-semibold text-white transition hover:bg-[#92400E]"
+        className="shrink-0 rounded-lg bg-[#B45309] px-3 py-1.5 text-[13px] font-semibold text-white transition hover:bg-[#92400E]"
       >
         Add now
       </Link>

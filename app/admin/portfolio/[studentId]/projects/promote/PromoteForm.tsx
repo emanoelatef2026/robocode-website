@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState } from 'react'
 import { promoteSubmission } from '@/modules/portfolio/actions'
@@ -12,7 +12,7 @@ interface Props {
   submissions: PromotableSubmission[]
 }
 
-const inputClass = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+const inputClass = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
 export default function PromoteForm({ studentId, submissions }: Props) {
   const [state, action] = useActionState<ActionResult<{ id: string }> | null, FormData>(

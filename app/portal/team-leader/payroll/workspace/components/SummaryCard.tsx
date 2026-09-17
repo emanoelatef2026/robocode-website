@@ -9,7 +9,7 @@ export function SummaryCard({
   return (
     <div className="ds-card px-4 py-3">
       <p className={`text-[18px] font-extrabold ${textCls}`}>{value}</p>
-      <p className="text-[11px] font-medium text-[#94A3B8] mt-0.5">{label}</p>
+      <p className="text-[12px] font-medium text-[#94A3B8] mt-0.5">{label}</p>
     </div>
   )
 }

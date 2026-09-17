@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { getParentEscalationData, type ParentEscalationItem } from '@/modules/tl-dashboard/dashboard-v2-queries'
 import DashCard, { DashCardEmpty, DashRow } from '../_components/DashCard'
 import WaCallButtons from '../_components/WaCallButtons'
@@ -30,16 +30,16 @@ function EscalationRow({ item }: { item: ParentEscalationItem }) {
             </p>
           </div>
           {item.subject && (
-            <p className="mt-0.5 truncate text-[11px] text-[#64748B]">{item.subject}</p>
+            <p className="mt-0.5 truncate text-[12px] text-[#64748B]">{item.subject}</p>
           )}
-          <p className="mt-0.5 text-[10px] text-[#94A3B8]">{fmtAge(item.age_hours)} · {item.status.replace('_', ' ')}</p>
+          <p className="mt-0.5 text-[11px] text-[#94A3B8]">{fmtAge(item.age_hours)} · {item.status.replace('_', ' ')}</p>
         </>
       }
       actions={
         <div className="flex flex-col gap-1">
           <Link
             href={`/portal/team-leader/parent-feedback?tab=messages&id=${item.id}`}
-            className="rounded-lg bg-[#0B1F3A] px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#1a3352]"
+            className="rounded-lg bg-[#0B1F3A] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#1a3352]"
           >
             Reply
           </Link>
@@ -67,12 +67,12 @@ export default async function ParentEscalation({ branchIds }: { branchIds: strin
         count={escalations.length}
         badge={
           highCount > 0
-            ? <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#DC2626]">{highCount} high</span>
+            ? <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-semibold text-[#DC2626]">{highCount} high</span>
             : undefined
         }
         accent={highCount > 0 ? 'border-[#FECACA]' : escalations.length > 0 ? 'border-[#FDE68A]' : 'border-[#E2E8F0]'}
         action={
-          <Link href="/portal/team-leader/parent-feedback?tab=messages&status=submitted" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
+          <Link href="/portal/team-leader/parent-feedback?tab=messages&status=submitted" className="text-[12px] font-medium text-[#C2410C] hover:underline">
             View all →
           </Link>
         }

@@ -4,30 +4,33 @@
 :root {
   /* Brand */
   --navy:        #0B1F3A;
+  --navy-deep:   #07182D;
   --navy-light:  #163560;
   --orange:      #FF8A1F;
   --orange-soft: #FFB15A;
-  --cyan:        #38BDF8;
+  --cyan:        #10B6D3;
+  --cyan-strong: #0E7490;
+  --orange-strong: #C2410C;
 
   /* Status colours */
   --green:       #10B981;
   --green-soft:  #E7F8EE;
-  --green-dark:  #15803D;
-  --amber:       #F59E0B;
-  --amber-soft:  #FFFBEB;
-  --amber-dark:  #B45309;
+  --green-dark:  #166534;
+  --amber:       #D97706;
+  --amber-soft:  #FFF7E6;
+  --amber-dark:  #92400E;
   --red:         #EF4444;
-  --red-soft:    #FEF2F2;
-  --red-dark:    #B91C1C;
+  --red-soft:    #FEECEC;
+  --red-dark:    #991B1B;
 
   /* Surfaces */
-  --bg:          #F8FAFC;
+  --bg:          #F5F7FA;
   --bg-card:     #FFFFFF;
   --bg-muted:    #F1F5F9;
 
   /* Borders */
-  --border:      #E2E8F0;
-  --border-soft: #e7ebf1;
+  --border:      #D7E0EA;
+  --border-soft: #EDF1F5;
 
   /* Typography */
   --text:        #0F172A;
@@ -37,7 +40,7 @@
   --muted-soft:  #94A3B8;
 
   /* Legacy aliases kept for Tailwind var() usage */
-  --background:  #F8FAFC;
+  --background:  #F5F7FA;
   --foreground:  #0F172A;
 
   /* Elevation */
@@ -62,7 +65,7 @@
   --safe-right:  env(safe-area-inset-right, 0px);
 
   /* ── Portal layout system (single source of truth for every portal shell) ──── */
-  --sidebar-width:           224px;
+  --sidebar-width:           240px;
   --sidebar-width-collapsed: 56px;
   --drawer-width:            224px;
   --header-height:           64px;
@@ -254,9 +257,50 @@ body.font-cairo {
 /* Standard admin card */
 .ds-card {
   background: #fff;
-  border: 1px solid #e7ebf1;
+  border: 1px solid var(--border-soft);
   border-radius: 16px;
   box-shadow: 0 1px 4px rgba(11,31,58,.05);
+}
+
+/* Operational portals use a calm product type scale; Orbitron remains for
+   public, brand-led pages rather than dense working screens. */
+.lms-shell h1,
+.lms-shell h2,
+.lms-shell h3,
+.lms-shell h4 {
+  font-family: var(--font-poppins), sans-serif;
+}
+
+/* Form controls are shared product infrastructure, not page decoration. This
+   baseline catches legacy Admin/TL forms that predate the shared components. */
+.lms-shell input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='hidden']),
+.lms-shell select:not([multiple]),
+.lms-shell textarea {
+  font-family: var(--font-poppins), sans-serif;
+  font-size: 14px;
+  color: #0F172A;
+}
+.lms-shell input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='hidden']),
+.lms-shell select:not([multiple]) {
+  min-height: var(--ds-control-height-md, 40px);
+  border-color: var(--ds-control-border, #D7E0EA);
+}
+.lms-shell textarea {
+  border-color: var(--ds-control-border, #D7E0EA);
+}
+.lms-shell input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='hidden']):hover,
+.lms-shell select:not([multiple]):hover,
+.lms-shell textarea:hover {
+  border-color: var(--ds-control-border-hover, #B8C6D6);
+}
+.lms-shell input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='hidden']):focus,
+.lms-shell select:not([multiple]):focus,
+.lms-shell textarea:focus {
+  border-color: var(--ds-control-focus, #0E7490);
+  box-shadow: 0 0 0 3px rgba(14,116,144,.16);
+}
+@media (min-width: 768px) {
+  .lms-shell table { font-size: 13px; }
 }
 
 /* ── Admin responsive rules ────────────────────────────────────────────────────
@@ -316,18 +360,145 @@ body.font-cairo {
   }
 }
 
+/* LMS control language — shared by Admin and Team Leader */
+:root {
+  --ds-control-height-sm: 36px;
+  --ds-control-height-md: 40px;
+  --ds-control-height-lg: 44px;
+  --ds-control-radius: 10px;
+  --ds-toolbar-radius: 14px;
+  --ds-control-border: #D7E0EA;
+  --ds-control-border-hover: #B8C6D6;
+  --ds-control-surface: #FFFFFF;
+  --ds-control-surface-subtle: #F8FAFC;
+  --ds-control-focus: #0E7490;
+  --ds-subtitle: #52677F;
+  --ds-label: #475569;
+}
+
+.ds-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--ds-control-border);
+  border-radius: var(--ds-toolbar-radius);
+  background: var(--ds-control-surface);
+}
+
 /* Admin input / select */
 .ds-input {
-  border: 1px solid #E2E8F0;
-  border-radius: 10px;
-  background: #fff;
+  border: 1px solid var(--ds-control-border);
+  border-radius: var(--ds-control-radius);
+  background: var(--ds-control-surface);
   color: #0F172A;
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
+}
+.ds-input:hover:not(:disabled) {
+  border-color: var(--ds-control-border-hover);
 }
 .ds-input:focus {
-  border-color: #FF8A1F;
-  box-shadow: 0 0 0 3px rgba(255,138,31,.12);
+  border-color: var(--ds-control-focus);
+  box-shadow: 0 0 0 3px rgba(14,116,144,.16);
+}
+
+.ds-search-field {
+  height: var(--ds-control-height-md);
+  border-color: var(--ds-control-border);
+  background: var(--ds-control-surface-subtle);
+}
+.ds-search-field:focus {
+  background: var(--ds-control-surface);
+}
+
+.ds-filter-select,
+select.ds-input {
+  height: var(--ds-control-height-md);
+  min-width: 150px;
+  appearance: none;
+  padding: 0 36px 0 12px;
+  border: 1px solid var(--ds-control-border);
+  border-radius: var(--ds-control-radius);
+  color: #0F172A;
+  background-color: var(--ds-control-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 20 20' fill='none' stroke='%2352677F' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 7.5 5 5 5-5'/%3E%3C/svg%3E");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+}
+.ds-filter-select:hover:not(:disabled),
+select.ds-input:hover:not(:disabled) { border-color: var(--ds-control-border-hover); }
+.ds-filter-select:focus,
+select.ds-input:focus { border-color: var(--ds-control-focus); box-shadow: 0 0 0 3px rgba(14,116,144,.16); }
+
+.ds-menu {
+  overflow: hidden;
+  border: 1px solid var(--ds-control-border);
+  border-radius: 12px;
+  background: var(--ds-control-surface);
+  box-shadow: 0 12px 32px rgba(7, 24, 45, .14);
+}
+.ds-menu-heading {
+  color: var(--ds-label);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.ds-menu-item {
+  min-height: 44px;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+.ds-menu-item:hover,
+.ds-menu-item[data-active='true'] {
+  background: #EEF7F8;
+  color: #0B1F3A;
+}
+
+.ds-page-subtitle {
+  color: var(--ds-subtitle);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+/* Portal controls inherit the same calm, legible language as the staff portals.
+   Individual student achievement surfaces remain intentionally expressive. */
+.lms-shell label {
+  color: var(--ds-label);
+  font-size: 13px;
+  font-weight: 600;
+}
+.lms-shell input:not([type='checkbox']):not([type='radio']):not([type='file']),
+.lms-shell textarea,
+.lms-shell select {
+  border-color: var(--ds-control-border);
+  border-radius: var(--ds-control-radius);
+  color: #0F172A;
+}
+.lms-shell input:not([type='checkbox']):not([type='radio']):not([type='file']):hover:not(:disabled),
+.lms-shell textarea:hover:not(:disabled),
+.lms-shell select:hover:not(:disabled) {
+  border-color: var(--ds-control-border-hover);
+}
+.lms-shell input:not([type='checkbox']):not([type='radio']):not([type='file']):focus,
+.lms-shell textarea:focus,
+.lms-shell select:focus {
+  border-color: var(--ds-control-focus);
+  box-shadow: 0 0 0 3px rgba(14,116,144,.16);
+}
+.ds-modal-backdrop {
+  background: rgba(7, 24, 45, .7);
+  backdrop-filter: blur(2px);
+}
+.ds-modal-panel {
+  border: 1px solid var(--ds-control-border);
+  border-radius: 16px;
+  background: #FFFFFF;
+  box-shadow: 0 24px 56px rgba(7,24,45,.28);
 }
 
 /* Admin primary button */
@@ -343,26 +514,27 @@ body.font-cairo {
   padding: 8px 16px;
   border: none;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  transition: background 140ms ease, box-shadow 140ms ease, transform 100ms ease;
 }
 .ds-btn-primary:hover { background: #163560; box-shadow: 0 4px 14px rgba(11,31,58,.25); }
-.ds-btn-primary:active { transform: scale(0.98); }
+.ds-btn-primary:active { transform: translateY(1px); }
 
 .ds-btn-orange {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   border-radius: 10px;
-  background: #FF8A1F;
+  background: var(--orange-strong);
   color: #fff;
   font-size: 13px;
   font-weight: 600;
   padding: 8px 16px;
   border: none;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
+  transition: background 140ms ease, box-shadow 140ms ease, transform 100ms ease;
 }
-.ds-btn-orange:hover { background: #e87c18; }
+.ds-btn-orange:hover { background: #9A3412; box-shadow: 0 4px 14px rgba(194,65,12,.20); }
+.ds-btn-orange:active { transform: translateY(1px); }
 
 .ds-btn-ghost {
   display: inline-flex;
@@ -374,18 +546,30 @@ body.font-cairo {
   font-size: 13px;
   font-weight: 600;
   padding: 8px 16px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--ds-control-border);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
 }
-.ds-btn-ghost:hover { border-color: #94A3B8; color: #0B1F3A; background: #F8FAFC; }
+.ds-btn-ghost:hover { border-color: var(--ds-control-border-hover); color: #0B1F3A; background: var(--ds-control-surface-subtle); }
+.ds-btn-primary:focus-visible,
+.ds-btn-orange:focus-visible,
+.ds-btn-ghost:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(14,116,144,.24);
+}
+
+@media (max-width: 639px) {
+  .ds-filter-bar { align-items: stretch; }
+  .ds-filter-bar > * { width: 100%; }
+  .ds-filter-select { width: 100%; min-width: 0; }
+}
 
 /* Table primitives */
 .ds-table-head th {
   background: #F8FAFC;
-  border-bottom: 1px solid #e7ebf1;
-  padding: 10px 14px;
-  font-size: 10.5px;
+  border-bottom: 1px solid #D7E0EA;
+  padding: 12px 14px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .07em;
@@ -394,8 +578,8 @@ body.font-cairo {
   text-align: start;
 }
 .ds-table-row td {
-  padding: 12px 14px;
-  border-bottom: 1px solid #f1f4f8;
+  padding: 13px 14px;
+  border-bottom: 1px solid #EDF1F5;
   font-size: 13px;
   color: #0F172A;
   vertical-align: middle;

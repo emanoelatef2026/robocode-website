@@ -86,7 +86,7 @@ export default async function StudentJourneyPage({ searchParams }: Props) {
             <Link
               key={c.key}
               href={c.key === 'all' ? '/portal/student/journey' : `/portal/student/journey?type=${c.key}`}
-              className={`rounded-full px-3 py-1.5 text-[11.5px] font-semibold transition ${
+              className={`rounded-full px-3 py-1.5 text-[12px] font-semibold transition ${
                 active ? 'bg-[#0B1F3A] text-white' : 'bg-white border border-[#E2E8F0] text-[#475569] hover:border-[#FF8A1F]'
               }`}
             >
@@ -116,12 +116,12 @@ export default async function StudentJourneyPage({ searchParams }: Props) {
               <div className="ds-card min-w-0 flex-1 px-3.5 py-2.5">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-[12.5px] font-bold text-[#0B1F3A]">{TIMELINE_EVENT_LABELS[e.event_type]}</p>
-                  <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9.5px] font-semibold ${TIMELINE_SEVERITY_COLORS[e.severity]}`}>
+                  <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${TIMELINE_SEVERITY_COLORS[e.severity]}`}>
                     {timeAgo(e.created_at)}
                   </span>
                 </div>
-                {e.notes && <p className="mt-0.5 text-[11.5px] text-[#64748B]">{e.notes}</p>}
-                {e.created_by_name && <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">by {e.created_by_name}</p>}
+                {e.notes && <p className="mt-0.5 text-[12px] text-[#64748B]">{e.notes}</p>}
+                {e.created_by_name && <p className="mt-0.5 text-[11px] text-[#94A3B8]">by {e.created_by_name}</p>}
               </div>
             </div>
           ))}

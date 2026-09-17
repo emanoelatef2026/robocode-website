@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect } from 'react'
 
@@ -30,7 +30,7 @@ export default function AdminError({ error, reset }: Props) {
       </div>
       <button
         onClick={reset}
-        className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e87c18]"
+        className="rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e87c18]"
       >
         Try again
       </button>

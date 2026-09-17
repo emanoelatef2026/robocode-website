@@ -35,7 +35,7 @@ const CERT_TYPES = [
 ]
 
 const inputCls =
-  'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+  'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
@@ -244,11 +244,11 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                 <div
                   key={label}
                   className={[
-                    'flex-1 py-2.5 text-center text-[11px] font-semibold transition border-b-2',
-                    active ? 'border-[#FF8A1F] text-[#FF8A1F]' : done ? 'border-transparent text-[#15803D]' : 'border-transparent text-[#94A3B8]',
+                    'flex-1 py-2.5 text-center text-[12px] font-semibold transition border-b-2',
+                    active ? 'border-[#0E7490] text-[#C2410C]' : done ? 'border-transparent text-[#15803D]' : 'border-transparent text-[#94A3B8]',
                   ].join(' ')}
                 >
-                  <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full mr-1 text-[9px] font-bold ${active ? 'bg-[#FF8A1F] text-white' : done ? 'bg-[#15803D] text-white' : 'bg-[#E2E8F0] text-[#94A3B8]'}`}>
+                  <span className={`inline-flex h-4 w-4 items-center justify-center rounded-full mr-1 text-[9px] font-bold ${active ? 'bg-[#C2410C] text-white' : done ? 'bg-[#15803D] text-white' : 'bg-[#E2E8F0] text-[#94A3B8]'}`}>
                     {done ? '✓' : n}
                   </span>
                   {label}
@@ -310,7 +310,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                   placeholder="e.g. Scratch Coding, Python Programming, Arduino & Robotics…"
                   className={inputCls}
                 />
-                <p className="mt-1 text-[11px] text-[#94A3B8]">
+                <p className="mt-1 text-[12px] text-[#94A3B8]">
                   Printed prominently on every certificate. Auto-filled from group course.
                 </p>
               </div>
@@ -377,7 +377,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                   type="button"
                   onClick={handleGoToStep2}
                   disabled={!step1Valid || optionsLoading}
-                  className="rounded-lg bg-[#FF8A1F] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
+                  className="rounded-lg bg-[#C2410C] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
                 >
                   Next →
                 </button>
@@ -392,7 +392,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
               <div className="space-y-2">
                 <p className="text-sm font-semibold text-[#0B1F3A]">Choose project source</p>
 
-                <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${projectMode === 'same' ? 'border-[#FF8A1F] bg-[#FFF7ED]' : 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1]'}`}>
+                <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${projectMode === 'same' ? 'border-[#0E7490] bg-[#FFF7ED]' : 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1]'}`}>
                   <input
                     type="radio"
                     name="project_mode"
@@ -409,7 +409,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                   </div>
                 </label>
 
-                <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${projectMode === 'portfolio' ? 'border-[#FF8A1F] bg-[#FFF7ED]' : 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1]'}`}>
+                <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${projectMode === 'portfolio' ? 'border-[#0E7490] bg-[#FFF7ED]' : 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1]'}`}>
                   <input
                     type="radio"
                     name="project_mode"
@@ -436,7 +436,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                       <p className="text-xs text-[#94A3B8]">1–{MAX_PROJECTS} projects, no duplicates</p>
                     </div>
                     {sharedProjects.length > 0 && (
-                      <span className="rounded-full bg-[#FF8A1F]/10 px-2.5 py-0.5 text-xs font-semibold text-[#FF8A1F]">
+                      <span className="rounded-full bg-[#C2410C]/10 px-2.5 py-0.5 text-xs font-semibold text-[#C2410C]">
                         {sharedProjects.length}
                       </span>
                     )}
@@ -450,7 +450,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                     <ul className="max-h-52 overflow-y-auto space-y-1.5">
                       {sharedProjects.map((p, i) => (
                         <li key={i} className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2">
-                          <span className="w-5 shrink-0 text-center text-[10px] font-mono text-[#CBD5E1]">{i + 1}</span>
+                          <span className="w-5 shrink-0 text-center text-[11px] font-mono text-[#CBD5E1]">{i + 1}</span>
                           <span className="flex-1 text-sm text-[#0B1F3A]">{p.title}</span>
                           <button
                             type="button"
@@ -471,13 +471,13 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                         onChange={e => setNewTitle(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addProject() } }}
                         placeholder="Add project name…"
-                        className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+                        className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
                       />
                       <button
                         type="button"
                         onClick={addProject}
                         disabled={!newTitle.trim()}
-                        className="shrink-0 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40 transition"
+                        className="shrink-0 rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40 transition"
                       >+ Add</button>
                     </div>
                   )}
@@ -503,7 +503,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                 <button
                   type="button"
                   onClick={handleGoToStep3}
-                  className="rounded-lg bg-[#FF8A1F] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18]"
+                  className="rounded-lg bg-[#C2410C] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18]"
                 >
                   Next →
                 </button>
@@ -516,7 +516,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
             <>
               {previewLoading && (
                 <div className="flex flex-col items-center justify-center gap-2 py-10 text-sm text-[#94A3B8]">
-                  <svg className="h-6 w-6 animate-spin text-[#FF8A1F]" viewBox="0 0 24 24" fill="none">
+                  <svg className="h-6 w-6 animate-spin text-[#C2410C]" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"/>
                   </svg>
@@ -557,9 +557,9 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                          <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student</th>
-                          <th className="px-4 py-2.5 text-center text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Projects</th>
-                          <th className="px-4 py-2.5 text-right text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Status</th>
+                          <th className="px-4 py-2.5 text-left text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student</th>
+                          <th className="px-4 py-2.5 text-center text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Projects</th>
+                          <th className="px-4 py-2.5 text-right text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#F1F5F9]">
@@ -577,15 +577,15 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                             </td>
                             <td className="px-4 py-2.5 text-right">
                               {s.status === 'already_issued' ? (
-                                <span className="inline-block rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-semibold text-[#64748B]">
+                                <span className="inline-block rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[12px] font-semibold text-[#64748B]">
                                   Already Issued
                                 </span>
                               ) : projectMode === 'portfolio' && !s.has_portfolio ? (
-                                <span className="inline-block rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#92400E]">
+                                <span className="inline-block rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[12px] font-semibold text-[#92400E]">
                                   Ready · No Portfolio
                                 </span>
                               ) : (
-                                <span className="inline-block rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-semibold text-[#15803D]">
+                                <span className="inline-block rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[12px] font-semibold text-[#15803D]">
                                   Ready
                                 </span>
                               )}
@@ -608,7 +608,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                   type="button"
                   onClick={handleGoToStep4}
                   disabled={previewLoading || readyCount === 0}
-                  className="rounded-lg bg-[#FF8A1F] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
+                  className="rounded-lg bg-[#C2410C] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
                 >
                   Continue →
                 </button>
@@ -670,7 +670,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                   type="button"
                   onClick={handleGenerate}
                   disabled={generating}
-                  className="flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-60"
+                  className="flex items-center gap-2 rounded-lg bg-[#C2410C] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-60"
                 >
                   {generating && (
                     <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
@@ -723,7 +723,7 @@ export function BulkCertificatesModal({ isOpen, group, students, onClose, onSucc
                 <button
                   type="button"
                   onClick={() => { onSuccess(); onClose() }}
-                  className="rounded-lg bg-[#FF8A1F] px-6 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18]"
+                  className="rounded-lg bg-[#C2410C] px-6 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18]"
                 >
                   Done
                 </button>

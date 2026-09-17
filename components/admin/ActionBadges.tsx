@@ -1,4 +1,4 @@
-﻿import type { RecommendedAction } from '@/modules/actions-engine'
+import type { RecommendedAction } from '@/modules/actions-engine'
 
 interface Props {
   actions: RecommendedAction[]
@@ -17,13 +17,13 @@ export default function ActionBadges({ actions, max = 3 }: Props) {
         <span
           key={a.code}
           title={a.description}
-          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${a.color} ${a.textColor}`}
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${a.color} ${a.textColor}`}
         >
           {a.icon} {a.label}
         </span>
       ))}
       {rest > 0 && (
-        <span className="inline-flex items-center rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold text-[#475569]">
+        <span className="inline-flex items-center rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-semibold text-[#475569]">
           +{rest} more
         </span>
       )}

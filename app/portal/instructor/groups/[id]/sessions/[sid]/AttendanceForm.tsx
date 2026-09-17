@@ -23,7 +23,7 @@ const CHIP_ACTIVE: Record<AttStatus, string> = {
   absent:  'bg-[#EF4444] text-white',
   late:    'bg-yellow-500 text-white',
   excused: 'bg-[#3B82F6] text-white',
-  makeup:  'bg-purple-500 text-white',
+  makeup:  'bg-[#0E7490] text-white',
 }
 
 const CHIP_INACTIVE = 'bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]'
@@ -41,7 +41,7 @@ const SUMMARY_CHIP: Record<AttStatus, string> = {
   absent:  'bg-[#FEE2E2] text-[#DC2626]',
   late:    'bg-yellow-100 text-yellow-700',
   excused: 'bg-[#EFF6FF] text-[#1D4ED8]',
-  makeup:  'bg-purple-100 text-purple-700',
+  makeup:  'bg-[#E0F7FA] text-[#0E7490]',
 }
 
 function initStatus(r: SessionAttendanceRow): AttStatus {
@@ -108,7 +108,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
           className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none ${
             topicTouched && !topicValid
               ? 'border-[#FCA5A5] focus:border-[#F87171] bg-[#FEE2E2]'
-              : 'border-[#E2E8F0] focus:border-[#FF8A1F]'
+              : 'border-[#E2E8F0] focus:border-[#C2410C]'
           }`}
         />
         {topicTouched && !topicValid && (
@@ -146,7 +146,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
                   type="button"
                   aria-label={`Mark all students ${LABEL[st].toLowerCase()}`}
                   onClick={() => markAll(st)}
-                  className={`rounded px-2.5 py-1.5 text-[11px] font-medium transition hover:opacity-80 ${CHIP_ACTIVE[st]}`}
+                  className={`rounded px-2.5 py-1.5 text-[12px] font-medium transition hover:opacity-80 ${CHIP_ACTIVE[st]}`}
                 >
                   All {LABEL[st]}
                 </button>
@@ -174,7 +174,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
                       href={`/portal/instructor/groups/${groupId}/students/${r.student_id}`}
                       className="flex min-w-0 flex-1 items-center gap-3"
                     >
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EFF6FF] text-[11px] font-bold text-[#3B82F6]">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EFF6FF] text-[12px] font-bold text-[#3B82F6]">
                         {r.student_name[0]?.toUpperCase() ?? '?'}
                       </div>
                       <span className="min-w-0 flex-1 truncate text-sm font-medium text-[#0B1F3A] hover:underline">
@@ -217,7 +217,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
                         type="button"
                         onClick={() => setStatus(r.student_id, s)}
                         className={[
-                          'flex-1 rounded-md py-1 text-[11px] font-semibold transition active:scale-95',
+                          'flex-1 rounded-md py-1 text-[12px] font-semibold transition active:scale-95',
                           s === st ? CHIP_ACTIVE[s] : CHIP_INACTIVE,
                         ].join(' ')}
                       >
@@ -234,7 +234,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
                         value={noteVal}
                         onChange={(e) => setNotes((prev) => ({ ...prev, [r.student_id]: e.target.value }))}
                         placeholder="Attendance note…"
-                        className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-xs placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-xs placeholder-[#94A3B8] focus:border-[#C2410C] focus:outline-none"
                       />
                     </div>
                   )}
@@ -249,7 +249,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic 
         <button
           type="submit"
           disabled={pending || !topicValid}
-          className="w-full rounded-lg bg-[#FF8A1F] py-2.5 text-sm font-semibold text-white transition hover:bg-[#e07818] disabled:opacity-60"
+          className="w-full rounded-lg bg-[#C2410C] py-2.5 text-sm font-semibold text-white transition hover:bg-[#9A3412] disabled:opacity-60"
         >
           {pending ? 'Saving…' : 'Save Attendance'}
         </button>

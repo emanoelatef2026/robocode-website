@@ -22,7 +22,7 @@ export default async function BranchEditPage({ params }: Props) {
         </Link>
         <Link
           href={`/admin/branches/${id}/performance`}
-          className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e87c18]"
+          className="rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e87c18]"
         >
           View Performance
         </Link>

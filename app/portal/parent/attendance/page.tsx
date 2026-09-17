@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getParentChildren,
   getChildAttendance,
@@ -23,7 +23,7 @@ function TrendBar({ label, count, total, color }: { label: string; count: number
   const pct = total > 0 ? Math.round((count / total) * 100) : 0
   return (
     <div>
-      <div className="mb-1 flex justify-between text-[12px]">
+      <div className="mb-1 flex justify-between text-[13px]">
         <span className="text-[#64748B]">{label}</span>
         <span className="font-semibold text-[#0B1F3A]">{pct}% ({count})</span>
       </div>
@@ -121,7 +121,7 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
       {/* Attendance trend breakdown */}
       {summary.total > 0 && (
         <div className="ds-card p-5 space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Attendance Trend</p>
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Attendance Trend</p>
           <TrendBar label="Present" count={summary.present} total={summary.total} color="bg-[#10B981]"  />
           <TrendBar label="Absent"  count={summary.absent}  total={summary.total} color="bg-[#EF4444]"    />
           <TrendBar label="Late"    count={summary.late}    total={summary.total} color="bg-yellow-500" />
@@ -155,12 +155,12 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
                 : '—'
               return (
                 <div key={r.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className="shrink-0 text-[11px] font-semibold text-[#64748B] w-6 text-right">{records.length - idx}</span>
+                  <span className="shrink-0 text-[12px] font-semibold text-[#64748B] w-6 text-right">{records.length - idx}</span>
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-medium text-[#0B1F3A]">{dateStr}</p>
-                    {r.course_title && <p className="text-[11px] text-[#64748B]">{r.course_title}</p>}
+                    {r.course_title && <p className="text-[12px] text-[#64748B]">{r.course_title}</p>}
                   </div>
-                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>
+                  <span className={`shrink-0 rounded-full px-2 py-0.5 text-[12px] font-medium ${cfg.cls}`}>
                     {cfg.label}
                   </span>
                 </div>
@@ -173,11 +173,11 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
             <table className="w-full text-[13px]">
               <thead className="ds-table-head">
                 <tr className="border-b border-[#F1F5F9] text-left">
-                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">#</th>
-                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Date</th>
-                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Status</th>
-                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Course</th>
-                  <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Note</th>
+                  <th className="px-5 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">#</th>
+                  <th className="px-5 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Date</th>
+                  <th className="px-5 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Status</th>
+                  <th className="px-5 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Course</th>
+                  <th className="px-5 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Note</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#F8FAFC]">
@@ -188,10 +188,10 @@ export default async function ParentAttendancePage({ searchParams }: Props) {
                     : '—'
                   return (
                     <tr key={r.id} className="hover:bg-[#F8FAFC]">
-                      <td className="px-5 py-3 text-[12px] text-[#64748B]">{records.length - idx}</td>
+                      <td className="px-5 py-3 text-[13px] text-[#64748B]">{records.length - idx}</td>
                       <td className="px-5 py-3 text-[#0B1F3A]">{dateStr}</td>
                       <td className="px-5 py-3">
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>{cfg.label}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[12px] font-medium ${cfg.cls}`}>{cfg.label}</span>
                       </td>
                       <td className="px-5 py-3 text-[#64748B]">{r.course_title ?? '—'}</td>
                       <td className="px-5 py-3 text-[#64748B]">{r.note ?? '—'}</td>

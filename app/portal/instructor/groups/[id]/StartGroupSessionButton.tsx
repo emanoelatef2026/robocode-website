@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -45,13 +45,13 @@ export default function StartGroupSessionButton({ groupId, groupCourseId, branch
           onChange={e => { setTopic(e.target.value); setTouched(false) }}
           onBlur={() => setTouched(true)}
           placeholder="Session topic (required)"
-          className="w-full min-w-0 rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+          className="w-full min-w-0 rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#C2410C] focus:outline-none"
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleStart() } }}
         />
         <button
           onClick={handleStart}
           disabled={isPending}
-          className="w-full rounded-lg bg-[#FF8A1F] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#e07818] disabled:opacity-60 transition sm:w-auto sm:shrink-0 sm:whitespace-nowrap"
+          className="w-full rounded-lg bg-[#C2410C] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#9A3412] disabled:opacity-60 transition sm:w-auto sm:shrink-0 sm:whitespace-nowrap"
         >
           {isPending ? 'Starting…' : 'Start Session'}
         </button>

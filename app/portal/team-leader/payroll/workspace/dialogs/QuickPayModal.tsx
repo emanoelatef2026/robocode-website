@@ -47,7 +47,7 @@ export function QuickPayModal({ target, onClose, onSuccess }: Props) {
       {target && (
         <Modal onClose={onClose} title={`Record Payment — ${target.display_name}`}>
           <div className="space-y-3">
-            <div className="rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-2 text-[12px]">
+            <div className="rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-2 text-[13px]">
               <span className="text-[#64748B]">Net this month: </span>
               <span className="font-bold text-[#0B1F3A]">{fmtEGP(target.net_amount)}</span>
               {target.total_paid > 0 && (
@@ -61,31 +61,31 @@ export function QuickPayModal({ target, onClose, onSuccess }: Props) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[12px] font-semibold text-[#0B1F3A]">Amount (EGP)</label>
+                <label className="text-[13px] font-semibold text-[#0B1F3A]">Amount (EGP)</label>
                 <input type="number" min="0" step="100" value={qpAmount} onChange={e => setQpAmount(e.target.value)} placeholder="0"
-                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
               </div>
               <div>
-                <label className="text-[12px] font-semibold text-[#0B1F3A]">Payment Date</label>
+                <label className="text-[13px] font-semibold text-[#0B1F3A]">Payment Date</label>
                 <input type="date" value={qpDate} onChange={e => setQpDate(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                  className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
               </div>
             </div>
             <div>
-              <label className="text-[12px] font-semibold text-[#0B1F3A]">Method</label>
+              <label className="text-[13px] font-semibold text-[#0B1F3A]">Method</label>
               <select value={qpMethod} onChange={e => setQpMethod(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30">
+                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30">
                 {Object.entries(STAFF_PAYMENT_METHOD_LABELS).map(([v, l]) => (
                   <option key={v} value={v}>{l}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="text-[12px] font-semibold text-[#0B1F3A]">Notes (optional)</label>
+              <label className="text-[13px] font-semibold text-[#0B1F3A]">Notes (optional)</label>
               <input value={qpNotes} onChange={e => setQpNotes(e.target.value)} placeholder="Reference, receipt no…"
-                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
             </div>
-            {qpErr && <p className="text-[12px] text-[#EF4444]">{qpErr}</p>}
+            {qpErr && <p className="text-[13px] text-[#EF4444]">{qpErr}</p>}
             <div className="flex gap-2 pt-1">
               <button onClick={onClose} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">Cancel</button>
               <button onClick={submit} disabled={qpBusy} className="flex-1 rounded-lg bg-[#059669] py-2 text-[13px] font-semibold text-white hover:bg-[#047857] disabled:opacity-50">

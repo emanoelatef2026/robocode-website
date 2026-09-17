@@ -1,4 +1,4 @@
-﻿import { requirePermission }          from '@/modules/rbac/guards'
+import { requirePermission }          from '@/modules/rbac/guards'
 import { listStudentOperations, getFilterOptions } from '@/modules/finance/queries'
 
 function fmt(n: number) {
@@ -82,7 +82,7 @@ export default async function StudentOperationsPage() {
           <div key={k.label} className="ds-card p-3">
             <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
             <p className="text-lg font-bold text-[#0B1F3A]">{k.value}</p>
-            <p className="text-[11px] text-[#64748B]">{k.label}</p>
+            <p className="text-[12px] text-[#64748B]">{k.label}</p>
           </div>
         ))}
       </div>

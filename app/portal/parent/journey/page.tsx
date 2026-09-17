@@ -90,12 +90,12 @@ export default async function ParentJourneyPage({ searchParams }: Props) {
                   <p className="text-[12.5px] font-bold text-[#0B1F3A]">
                     {TIMELINE_EVENT_LABELS[e.event_type as TimelineEventType]}
                   </p>
-                  <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9.5px] font-semibold ${TIMELINE_SEVERITY_COLORS[e.severity]}`}>
+                  <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${TIMELINE_SEVERITY_COLORS[e.severity]}`}>
                     {timeAgo(e.created_at)}
                   </span>
                 </div>
-                {e.notes && <p className="mt-0.5 text-[11.5px] text-[#64748B]">{e.notes}</p>}
-                {e.created_by_name && <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">by {e.created_by_name}</p>}
+                {e.notes && <p className="mt-0.5 text-[12px] text-[#64748B]">{e.notes}</p>}
+                {e.created_by_name && <p className="mt-0.5 text-[11px] text-[#94A3B8]">by {e.created_by_name}</p>}
               </div>
             </div>
           ))}

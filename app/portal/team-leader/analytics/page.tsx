@@ -1,4 +1,4 @@
-﻿import { requirePortalRole }      from '@/modules/rbac/guards'
+import { requirePortalRole }      from '@/modules/rbac/guards'
 import {
   getTLStudentsOverview,
   getTLGroupsOverview,
@@ -189,7 +189,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
           <section>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-base font-semibold text-[#0B1F3A]">Students</h2>
-              <Link href={tabHref('students')} className="text-xs text-[#FF8A1F] hover:underline">View details →</Link>
+              <Link href={tabHref('students')} className="text-xs text-[#C2410C] hover:underline">View details →</Link>
             </div>
             <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-5">
               {[
@@ -202,7 +202,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                 <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
                   <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
                   <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
                 </div>
               ))}
             </div>
@@ -212,7 +212,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
           <section>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-base font-semibold text-[#0B1F3A]">Finance</h2>
-              <Link href={tabHref('finance')} className="text-xs text-[#FF8A1F] hover:underline">View details →</Link>
+              <Link href={tabHref('finance')} className="text-xs text-[#C2410C] hover:underline">View details →</Link>
             </div>
             <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
               {[
@@ -224,7 +224,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                 <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
                   <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
                   <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
                 </div>
               ))}
             </div>
@@ -234,7 +234,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
           <section>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-base font-semibold text-[#0B1F3A]">Groups</h2>
-              <Link href={tabHref('groups')} className="text-xs text-[#FF8A1F] hover:underline">View details →</Link>
+              <Link href={tabHref('groups')} className="text-xs text-[#C2410C] hover:underline">View details →</Link>
             </div>
             <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
               {[
@@ -246,7 +246,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                 <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
                   <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
                   <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
                 </div>
               ))}
             </div>
@@ -256,7 +256,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
           <section>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-base font-semibold text-[#0B1F3A]">Leads</h2>
-              <Link href={tabHref('leads')} className="text-xs text-[#FF8A1F] hover:underline">View details →</Link>
+              <Link href={tabHref('leads')} className="text-xs text-[#C2410C] hover:underline">View details →</Link>
             </div>
             <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
               {[
@@ -268,7 +268,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                 <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
                   <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
                   <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
                 </div>
               ))}
             </div>
@@ -325,7 +325,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
                 <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
                 <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
               </div>
             ))}
           </div>
@@ -349,8 +349,8 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                     {atRiskResult.data.map(s => (
                       <tr key={`${s.student_id}-${s.course_id}`} className="ds-table-row">
                         <td className="px-4 py-2.5">
-                          <Link href={`/portal/team-leader/students/${s.student_id}`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">{s.student_name}</Link>
-                          <div className="text-[11px] text-[#94A3B8]">{s.student_email}</div>
+                          <Link href={`/portal/team-leader/students/${s.student_id}`} className="font-medium text-[#0B1F3A] hover:text-[#9A3412]">{s.student_name}</Link>
+                          <div className="text-[12px] text-[#94A3B8]">{s.student_email}</div>
                         </td>
                         <td className="px-4 py-2.5 text-[#64748B]">{s.group_name}</td>
                         <td className="px-4 py-2.5">{pct(s.attendance_score)}</td>
@@ -358,7 +358,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                         <td className="px-4 py-2.5">{pct(s.assignment_score)}</td>
                         <td className="px-4 py-2.5">
                           {s.risk_reasons.map(r => (
-                            <span key={r} className="mr-1 inline-block rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-medium text-[#EF4444]">
+                            <span key={r} className="mr-1 inline-block rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-medium text-[#EF4444]">
                               {r === 'low_completion' ? 'Low Overall' : 'Low Attendance'}
                             </span>
                           ))}
@@ -392,7 +392,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
                 <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
                 <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
               </div>
             ))}
           </div>
@@ -422,7 +422,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
             <section>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base font-semibold text-[#0B1F3A]">Collection Queue</h2>
-                <Link href="/portal/team-leader/finance" className="text-xs text-[#FF8A1F] hover:underline">View all →</Link>
+                <Link href="/portal/team-leader/finance" className="text-xs text-[#C2410C] hover:underline">View all →</Link>
               </div>
 
               {collectionQueue.overdue30.length > 0 && (
@@ -469,7 +469,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
           {collectionQueue && collectionQueue.overdue30.length === 0 && collectionQueue.overdue14.length === 0 && collectionQueue.dueThisWeek.length === 0 && financeKPIs.total_students === 0 && (
             <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No financial accounts in this branch yet.</p>
-              <Link href="/portal/team-leader/finance/new" className="mt-2 inline-block text-xs text-[#FF8A1F]">Create first account →</Link>
+              <Link href="/portal/team-leader/finance/new" className="mt-2 inline-block text-xs text-[#C2410C]">Create first account →</Link>
             </div>
           )}
 
@@ -520,7 +520,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
                 <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
                 <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
               </div>
             ))}
           </div>
@@ -528,7 +528,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
           {groupsData.groups.length === 0 ? (
             <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No active groups found.</p>
-              <Link href="/portal/team-leader/groups/new" className="mt-2 inline-block text-xs text-[#FF8A1F]">Create a group →</Link>
+              <Link href="/portal/team-leader/groups/new" className="mt-2 inline-block text-xs text-[#C2410C]">Create a group →</Link>
             </div>
           ) : (
             <div className="ds-card overflow-x-auto">
@@ -544,7 +544,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                   {groupsData.groups.map(g => (
                     <tr key={g.group_id} className="ds-table-row">
                       <td className="px-4 py-2.5">
-                        <Link href={`/portal/team-leader/groups/${g.group_id}`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">{g.group_name}</Link>
+                        <Link href={`/portal/team-leader/groups/${g.group_id}`} className="font-medium text-[#0B1F3A] hover:text-[#9A3412]">{g.group_name}</Link>
                       </td>
                       {branchIds.length > 1 && <td className="px-4 py-2.5 text-xs text-[#64748B]">{g.branch_name ?? '—'}</td>}
                       <td className="px-4 py-2.5 text-[#64748B]">{g.student_count}</td>
@@ -576,7 +576,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
           {instructorData.length === 0 ? (
             <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No instructor data found.</p>
-              <Link href="/portal/team-leader/instructors/new" className="mt-2 inline-block text-xs text-[#FF8A1F]">Add instructor →</Link>
+              <Link href="/portal/team-leader/instructors/new" className="mt-2 inline-block text-xs text-[#C2410C]">Add instructor →</Link>
             </div>
           ) : (
             <div className="ds-card overflow-x-auto">
@@ -592,7 +592,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                   {instructorData.map(i => (
                     <tr key={i.instructor_id} className="ds-table-row">
                       <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
-                        <Link href="/portal/team-leader/instructors" className="hover:text-[#FF8A1F]">{i.instructor_name}</Link>
+                        <Link href="/portal/team-leader/instructors" className="hover:text-[#9A3412]">{i.instructor_name}</Link>
                       </td>
                       <td className="px-4 py-2.5 text-[#64748B]">{i.active_groups}</td>
                       <td className="px-4 py-2.5 text-[#64748B]">{i.active_students}</td>
@@ -628,7 +628,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
                 <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
                 <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
               </div>
             ))}
           </div>
@@ -664,7 +664,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                         {s.status.replace(/_/g, ' ').toLowerCase()}
                       </span>
                       <div className="flex items-center gap-2">
-                        <div className="h-1.5 rounded-full bg-[#FF8A1F]" style={{ width: `${Math.round((s.count / leadsData.total) * 80)}px` }} />
+                        <div className="h-1.5 rounded-full bg-[#C2410C]" style={{ width: `${Math.round((s.count / leadsData.total) * 80)}px` }} />
                         <span className="text-xs font-medium text-[#0B1F3A]">{s.count}</span>
                       </div>
                     </div>
@@ -696,7 +696,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                           <div className="flex items-center gap-2">
                             <div className="h-1.5 w-24 rounded-full bg-[#F1F5F9]">
                               <div
-                                className="h-full rounded-full bg-[#FF8A1F]"
+                                className="h-full rounded-full bg-[#C2410C]"
                                 style={{ width: `${leadsData.total > 0 ? Math.round((s.count / leadsData.total) * 100) : 0}%` }}
                               />
                             </div>
@@ -716,7 +716,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
           {leadsData.total === 0 && (
             <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No leads in your branch yet.</p>
-              <Link href="/portal/team-leader/leads/new" className="mt-2 inline-block text-xs text-[#FF8A1F]">Add a lead →</Link>
+              <Link href="/portal/team-leader/leads/new" className="mt-2 inline-block text-xs text-[#C2410C]">Add a lead →</Link>
             </div>
           )}
         </div>
@@ -736,7 +736,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
               <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
                 <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
                 <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+                <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
               </div>
             ))}
           </div>
@@ -758,7 +758,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                     {assignmentData.by_instructor.map(i => (
                       <tr key={i.instructor_id} className="ds-table-row">
                         <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
-                          <Link href="/portal/team-leader/instructors" className="hover:text-[#FF8A1F]">{i.instructor_name}</Link>
+                          <Link href="/portal/team-leader/instructors" className="hover:text-[#9A3412]">{i.instructor_name}</Link>
                         </td>
                         <td className="px-4 py-2.5 text-[#64748B]">{i.assignment_count}</td>
                         <td className="px-4 py-2.5">
@@ -804,8 +804,8 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                     {assignmentData.by_group.map(g => (
                       <tr key={g.group_id} className="ds-table-row">
                         <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
-                          <Link href={`/portal/team-leader/groups/${g.group_id}`} className="hover:text-[#FF8A1F]">{g.group_name}</Link>
-                          {g.branch_name && branchIds.length > 1 && <div className="text-[11px] text-[#94A3B8]">{g.branch_name}</div>}
+                          <Link href={`/portal/team-leader/groups/${g.group_id}`} className="hover:text-[#9A3412]">{g.group_name}</Link>
+                          {g.branch_name && branchIds.length > 1 && <div className="text-[12px] text-[#94A3B8]">{g.branch_name}</div>}
                         </td>
                         <td className="px-4 py-2.5 text-[#64748B]">{g.assignment_count}</td>
                         <td className="px-4 py-2.5 text-[#64748B]">{g.submission_count}</td>
@@ -834,7 +834,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
           {assignmentData.kpis.total_published === 0 && (
             <div className="ds-card px-6 py-10 text-center">
               <p className="text-sm text-[#94A3B8]">No published assignments in your branches yet.</p>
-              <Link href="/portal/team-leader/assignments/new" className="mt-2 inline-block text-xs text-[#FF8A1F]">Create first assignment →</Link>
+              <Link href="/portal/team-leader/assignments/new" className="mt-2 inline-block text-xs text-[#C2410C]">Create first assignment →</Link>
             </div>
           )}
         </div>

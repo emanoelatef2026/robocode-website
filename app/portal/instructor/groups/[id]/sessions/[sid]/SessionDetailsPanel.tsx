@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -69,7 +69,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#C2410C] focus:ring-2 focus:ring-[#0E7490]/15'
   const selectCls = `${cls} bg-white`
 
   const isCancelled = session.status === 'cancelled' || session.status === 'cancelled_with_makeup'
@@ -204,7 +204,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
           </div>
 
           <button type="submit" disabled={isPending}
-            className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e07818] disabled:opacity-60 transition">
+            className="rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#9A3412] disabled:opacity-60 transition">
             Save Details
           </button>
         </form>
@@ -224,7 +224,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
                     {hw.due_at && ` · Due ${new Date(hw.due_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
                   </p>
                 </div>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${hw.status === 'published' ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-yellow-100 text-yellow-700'}`}>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${hw.status === 'published' ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-yellow-100 text-yellow-700'}`}>
                   {hw.status}
                 </span>
               </div>
@@ -241,7 +241,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
 
         {!hwOpen ? (
           <button type="button" onClick={() => setHwOpen(true)}
-            className="w-full rounded-lg border border-dashed border-[#E2E8F0] py-2 text-sm text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F] transition">
+            className="w-full rounded-lg border border-dashed border-[#E2E8F0] py-2 text-sm text-[#64748B] hover:border-[#C2410C] hover:text-[#9A3412] transition">
             + Create Homework
           </button>
         ) : (
@@ -319,7 +319,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
 
             <div className="flex gap-2">
               <button type="submit"
-                className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-sm font-medium text-white hover:bg-[#e07818] transition">
+                className="flex-1 rounded-lg bg-[#C2410C] py-2 text-sm font-medium text-white hover:bg-[#9A3412] transition">
                 Create &amp; Publish
               </button>
               <button type="button" onClick={() => setHwOpen(false)}
@@ -355,7 +355,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
           <input value={newResTitle} onChange={(e) => setNewResTitle(e.target.value)}
             placeholder="Label (optional)" className={cls} />
           <button type="button" onClick={handleAddResource} disabled={isPending}
-            className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm font-medium text-[#0B1F3A] hover:border-[#FF8A1F] hover:text-[#FF8A1F] disabled:opacity-60 transition">
+            className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm font-medium text-[#0B1F3A] hover:border-[#C2410C] hover:text-[#9A3412] disabled:opacity-60 transition">
             Add Resource
           </button>
         </div>
@@ -372,9 +372,9 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
                   {rec.title || PROVIDER_LABELS[rec.provider] || 'Recording'}
                 </a>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="text-[10px] text-[#94A3B8]">{PROVIDER_LABELS[rec.provider]}</span>
+                  <span className="text-[11px] text-[#94A3B8]">{PROVIDER_LABELS[rec.provider]}</span>
                   {rec.visible_to_students && (
-                    <span className="rounded-full bg-[#EFF6FF] px-1.5 py-0.5 text-[9px] font-medium text-[#2563EB]">Students</span>
+                    <span className="rounded-full bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-medium text-[#2563EB]">Students</span>
                   )}
                   <button type="button"
                     onClick={() => startTransition(async () => { await removeSessionRecording(rec.id, session.id, groupId) })}
@@ -399,7 +399,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
             placeholder="Recording URL (Drive, YouTube, Zoom, Loom…)" className={cls} />
           <input name="title" placeholder="Label (optional)" className={cls} />
           <button type="submit"
-            className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm font-medium text-[#0B1F3A] hover:border-[#FF8A1F] hover:text-[#FF8A1F] transition">
+            className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm font-medium text-[#0B1F3A] hover:border-[#C2410C] hover:text-[#9A3412] transition">
             Add Recording
           </button>
         </form>
@@ -414,13 +414,13 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
               <p className="mb-2 text-xs font-medium text-[#64748B]">End session</p>
               <div className="mb-3 space-y-1.5">
                 <div className={`flex items-center gap-2 text-xs ${allMarked ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
-                  <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${allMarked ? 'bg-[#E7F8EE]' : 'bg-[#F1F5F9]'}`}>
+                  <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[11px] font-bold ${allMarked ? 'bg-[#E7F8EE]' : 'bg-[#F1F5F9]'}`}>
                     {allMarked ? '✓' : '○'}
                   </span>
                   Attendance — {markedCount}/{session.student_count} marked
                 </div>
                 <div className={`flex items-center gap-2 text-xs ${(session.topic || session.notes) ? 'text-[#10B981]' : 'text-[#64748B]'}`}>
-                  <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-bold ${(session.topic || session.notes) ? 'bg-[#E7F8EE]' : 'bg-[#F1F5F9]'}`}>
+                  <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[11px] font-bold ${(session.topic || session.notes) ? 'bg-[#E7F8EE]' : 'bg-[#F1F5F9]'}`}>
                     {(session.topic || session.notes) ? '✓' : '○'}
                   </span>
                   Notes — {(session.topic || session.notes) ? 'added' : 'required'}
@@ -524,7 +524,7 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
                       <label className="mb-1 block text-xs font-medium text-[#991B1B]">Makeup date</label>
                       <input name="makeup_date" type="datetime-local"
                         className="w-full rounded-lg border border-[#FECACA] bg-white px-3 py-2 text-sm outline-none focus:border-[#F87171]" />
-                      <p className="mt-0.5 text-[10px] text-[#EF4444]">Defaults to +7 days if left empty.</p>
+                      <p className="mt-0.5 text-[11px] text-[#EF4444]">Defaults to +7 days if left empty.</p>
                     </div>
                   )}
 

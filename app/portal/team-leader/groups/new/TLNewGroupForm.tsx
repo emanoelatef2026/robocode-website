@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState } from 'react'
 import { createGroup } from '@/modules/groups/actions'
@@ -33,7 +33,7 @@ export default function TLNewGroupForm({ branchId, branchIds, branches }: Props)
         ) : (
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Branch <span className="text-[#EF4444]">*</span></label>
-            <select name="branch_id" required className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+            <select name="branch_id" required className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20">
               <option value="">— Select branch —</option>
               {(branches ?? []).map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
@@ -49,7 +49,7 @@ export default function TLNewGroupForm({ branchId, branchIds, branches }: Props)
             name="name"
             required
             placeholder="e.g. Scratch Beginners A"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -60,7 +60,7 @@ export default function TLNewGroupForm({ branchId, branchIds, branches }: Props)
           <select
             name="type"
             defaultValue="class"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           >
             {['class', 'workshop', 'bootcamp', 'trial', 'makeup'].map((t) => (
               <option key={t} value={t} className="capitalize">{t}</option>
@@ -76,7 +76,7 @@ export default function TLNewGroupForm({ branchId, branchIds, branches }: Props)
             min="1"
             max="500"
             placeholder="Leave blank for unlimited"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 

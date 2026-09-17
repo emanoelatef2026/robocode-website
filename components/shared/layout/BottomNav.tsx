@@ -38,11 +38,11 @@ function TabLink({ item, active, href }: { item: BottomNavItem; active: boolean;
       href={href}
       className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg py-1.5 text-center"
     >
-      <span className={active ? "text-[#FF8A1F]" : "text-[#94A3B8]"}>{item.icon}</span>
-      <span className={`text-[10px] font-medium leading-none ${active ? "text-[#FF8A1F]" : "text-[#64748B]"}`}>
+      <span className={active ? "text-[#C2410C]" : "text-[#94A3B8]"}>{item.icon}</span>
+      <span className={`text-[11px] font-medium leading-none ${active ? "text-[#C2410C]" : "text-[#64748B]"}`}>
         {item.label}
       </span>
-      {active && <span className="absolute top-0 h-0.5 w-6 rounded-full bg-[#FF8A1F]" />}
+      {active && <span className="absolute top-0 h-0.5 w-6 rounded-full bg-[#C2410C]" />}
     </Link>
   )
 }
@@ -56,7 +56,7 @@ export function BottomNav({ items, moreItems = [], getHref = (href) => href }: P
   return (
     <>
       <nav
-        className="bottom-nav-safe fixed inset-x-0 bottom-0 z-(--z-bottom-nav) grid border-t border-[#E2E8F0] bg-white/95 pt-1.5 backdrop-blur-sm md:hidden"
+        className="bottom-nav-safe fixed inset-x-0 bottom-0 z-(--z-bottom-nav) grid border-t border-[#D7E0EA] bg-white/95 pt-1.5 shadow-[0_-8px_24px_rgba(7,24,45,.06)] backdrop-blur-sm md:hidden"
         style={{ gridTemplateColumns: `repeat(${items.length + (hasMore ? 1 : 0)}, minmax(0, 1fr))`, height: "var(--bottom-nav-height)" }}
       >
         {items.map((item) => (
@@ -69,11 +69,11 @@ export function BottomNav({ items, moreItems = [], getHref = (href) => href }: P
             onClick={() => setMoreOpen(true)}
             aria-expanded={moreOpen}
             aria-haspopup="dialog"
-            className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg py-1.5 text-center ${moreActive ? 'text-[#FF8A1F]' : 'text-[#64748B]'}`}
+            className={`relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg py-1.5 text-center ${moreActive ? 'text-[#C2410C]' : 'text-[#64748B]'}`}
           >
             <Icons.more className="h-5 w-5" />
-            <span className={`text-[10px] font-medium leading-none ${moreActive ? 'text-[#FF8A1F]' : 'text-[#64748B]'}`}>More</span>
-            {moreActive && <span className="absolute top-0 h-0.5 w-6 rounded-full bg-[#FF8A1F]" />}
+            <span className={`text-[11px] font-medium leading-none ${moreActive ? 'text-[#C2410C]' : 'text-[#64748B]'}`}>More</span>
+            {moreActive && <span className="absolute top-0 h-0.5 w-6 rounded-full bg-[#C2410C]" />}
           </button>
         )}
       </nav>
@@ -99,9 +99,9 @@ export function BottomNav({ items, moreItems = [], getHref = (href) => href }: P
               role="dialog"
               aria-modal="true"
               aria-label="More navigation"
-              className="drawer-safe-bottom fixed inset-x-3 z-(--z-sheet-panel) max-h-[70vh] overflow-y-auto rounded-2xl bg-white shadow-2xl md:hidden"
+              className="drawer-safe-bottom fixed inset-x-3 z-(--z-sheet-panel) max-h-[70vh] overflow-y-auto rounded-2xl border border-[#D7E0EA] bg-white shadow-[0_16px_40px_rgba(7,24,45,.18)] md:hidden"
             >
-              <div className="flex items-center justify-between border-b border-[#F1F5F9] px-4 py-3">
+              <div className="flex items-center justify-between border-b border-[#D7E0EA] px-4 py-3">
                 <span className="text-[13px] font-bold text-[#0B1F3A]">More</span>
                 <button onClick={() => setMoreOpen(false)} className="flex h-7 w-7 items-center justify-center rounded-lg text-[#94A3B8] hover:bg-[#F1F5F9]" aria-label="Close">
                   <CloseIcon className="h-4 w-4" />
@@ -115,7 +115,7 @@ export function BottomNav({ items, moreItems = [], getHref = (href) => href }: P
                     onClick={() => setMoreOpen(false)}
                     className="flex flex-col items-center gap-1.5 rounded-xl py-3 text-center active:bg-[#F8FAFC]"
                   >
-                    <span className={isActive(item, pathname) ? "text-[#FF8A1F]" : "text-[#475569]"}>{item.icon}</span>
+                    <span className={isActive(item, pathname) ? "text-[#C2410C]" : "text-[#475569]"}>{item.icon}</span>
                     <span className="text-[10.5px] font-medium leading-tight text-[#334155]">{item.label}</span>
                   </Link>
                 ))}

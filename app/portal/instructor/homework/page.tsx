@@ -58,7 +58,7 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
               className={[
                 'px-4 py-2 text-sm font-medium capitalize transition',
                 filter === f
-                  ? 'bg-[#FF8A1F] text-white'
+                  ? 'bg-[#C2410C] text-white'
                   : 'text-[#64748B] hover:bg-[#F8FAFC]',
               ].join(' ')}
             >
@@ -92,7 +92,7 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
           </div>
 
           {/* Header row (desktop) */}
-          <div className="hidden grid-cols-[1fr_1fr_1fr_110px_90px] gap-4 border-b border-[#F1F5F9] px-5 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] lg:grid">
+          <div className="hidden grid-cols-[1fr_1fr_1fr_110px_90px] gap-4 border-b border-[#F1F5F9] px-5 py-2 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8] lg:grid">
             <span>Student</span>
             <span>Assignment</span>
             <span>Group</span>
@@ -110,7 +110,7 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
                 <div>
                   <p className="font-medium text-[#0B1F3A] text-sm">{s.student_name}</p>
                   {s.is_late && (
-                    <span className="text-[10px] text-[#EF4444]">late</span>
+                    <span className="text-[11px] text-[#EF4444]">late</span>
                   )}
                 </div>
                 <p className="text-sm text-[#64748B] truncate">{s.assignment_title}</p>
@@ -122,12 +122,12 @@ export default async function HomeworkInboxPage({ searchParams }: Props) {
                   <StatusBadge status={s.status} />
                   {s.is_late && <StatusBadge status="late" />}
                   {s.resubmission_count > 0 && (
-                    <span className="rounded-full bg-[#F3E8FF] px-1.5 py-0.5 text-[10px] font-medium text-[#6B21A8]">
+                    <span className="rounded-full bg-[#F3E8FF] px-1.5 py-0.5 text-[11px] font-medium text-[#6B21A8]">
                       resub {s.resubmission_count}
                     </span>
                   )}
                   {s.score !== null && (
-                    <span className="text-[10px] text-[#64748B]">{s.score}/100</span>
+                    <span className="text-[11px] text-[#64748B]">{s.score}/100</span>
                   )}
                 </div>
               </Link>

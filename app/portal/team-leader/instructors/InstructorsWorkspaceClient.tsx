@@ -77,7 +77,7 @@ export default function InstructorsWorkspaceClient({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
             </svg>
             <p className="text-[15px] font-semibold text-[#94A3B8]">No instructors found</p>
-            <p className="mt-1 text-[12px] text-[#CBD5E1]">Try adjusting your filters</p>
+            <p className="mt-1 text-[13px] text-[#CBD5E1]">Try adjusting your filters</p>
           </div>
         ) : filters.viewMode === 'grid' ? (
           <div className="p-2 md:p-5 grid grid-cols-1 gap-1.5 md:gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">

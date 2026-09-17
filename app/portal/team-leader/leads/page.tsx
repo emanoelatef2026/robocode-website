@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   listLeads, getLeadKPIs, getLeadsBySource,
   getOwnershipKPIs, getAgingLeads, getFollowUpsDue,
@@ -32,7 +32,7 @@ interface Props {
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${LEAD_STATUS_COLORS[status as keyof typeof LEAD_STATUS_COLORS] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-semibold ${LEAD_STATUS_COLORS[status as keyof typeof LEAD_STATUS_COLORS] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
       {status.replace(/_/g, ' ')}
     </span>
   )
@@ -47,7 +47,7 @@ function DaysBadge({ days, status }: { days: number; status: string }) {
       ? 'bg-[#F8FAFC] text-[#64748B]'
       : 'text-[#94A3B8]'
   return (
-    <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] ${cls}`}>
+    <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[12px] ${cls}`}>
       {days}d
     </span>
   )
@@ -65,9 +65,9 @@ function KPICard({
   ].join(' ')
   const inner = (
     <>
-      <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] leading-tight md:text-[10px]">{label}</p>
+      <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] leading-tight md:text-[11px]">{label}</p>
       <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-xl ${color}`}>{value}</p>
-      {sub && <p className="mt-0.5 truncate text-[8px] text-[#94A3B8] leading-tight md:text-[10px]">{sub}</p>}
+      {sub && <p className="mt-0.5 truncate text-[8px] text-[#94A3B8] leading-tight md:text-[11px]">{sub}</p>}
     </>
   )
   return href
@@ -76,7 +76,7 @@ function KPICard({
 }
 
 function SectionTitle({ title }: { title: string }) {
-  return <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#94A3B8]">{title}</p>
+  return <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#94A3B8]">{title}</p>
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
       <TopbarAction>
         <Link
           href="/portal/team-leader/leads/new"
-          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#C2410C] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -236,13 +236,13 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                       <Link href={`/portal/team-leader/leads/${l.id}`} className="text-sm font-medium text-[#0B1F3A] hover:underline">
                         {l.child_name}
                       </Link>
-                      <p className="text-[11px] text-[#64748B]">
+                      <p className="text-[12px] text-[#64748B]">
                         {l.assigned_name ?? 'Unassigned'}
                         {l.phone ? ` · ${l.phone}` : ''}
                       </p>
                     </div>
                     <StatusBadge status={l.status} />
-                    <span className="shrink-0 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-semibold text-[#DC2626]">
+                    <span className="shrink-0 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[12px] font-semibold text-[#DC2626]">
                       {l.days_in_stage}d
                     </span>
                   </div>
@@ -269,12 +269,12 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                       <Link href={`/portal/team-leader/leads/${l.id}`} className="text-sm font-medium text-[#0B1F3A] hover:underline">
                         {l.child_name}
                       </Link>
-                      <p className="text-[11px] text-[#64748B]">
+                      <p className="text-[12px] text-[#64748B]">
                         {l.assigned_name ?? 'Unassigned'}
                         {l.phone ? ` · ${l.phone}` : ''}
                       </p>
                     </div>
-                    <span className={`shrink-0 text-[11px] font-medium ${l.days_overdue > 0 ? 'text-[#EF4444]' : 'text-orange-600'}`}>
+                    <span className={`shrink-0 text-[12px] font-medium ${l.days_overdue > 0 ? 'text-[#EF4444]' : 'text-orange-600'}`}>
                       {l.days_overdue > 0 ? `${l.days_overdue}d overdue` : 'Due today'}
                     </span>
                     <StatusBadge status={l.status} />
@@ -300,7 +300,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                   <div key={o.user_id ?? 'unassigned'}>
                     <div className="mb-1 flex items-center justify-between gap-2">
                       <span className="text-sm font-medium text-[#0B1F3A] truncate">{o.name}</span>
-                      <div className="flex items-center gap-3 shrink-0 text-[11px] text-[#64748B]">
+                      <div className="flex items-center gap-3 shrink-0 text-[12px] text-[#64748B]">
                         <span>{o.active} active</span>
                         <span className="font-semibold text-[#10B981]">{o.conversion_rate}%</span>
                         <span className="font-bold text-[#0B1F3A]">{o.total}</span>
@@ -308,7 +308,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-[#F1F5F9]">
                       <div
-                        className="h-full rounded-full bg-[#FF8A1F]"
+                        className="h-full rounded-full bg-[#C2410C]"
                         style={{ width: `${Math.min(pct, 100)}%` }}
                       />
                     </div>
@@ -334,7 +334,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
                         >
                           {LEAD_SOURCE_LABELS[s.source as keyof typeof LEAD_SOURCE_LABELS] ?? s.source}
                         </Link>
-                        <span className="shrink-0 text-[11px] font-bold text-[#0B1F3A]">{s.count} <span className="font-normal text-[#94A3B8]">({pct}%)</span></span>
+                        <span className="shrink-0 text-[12px] font-bold text-[#0B1F3A]">{s.count} <span className="font-normal text-[#94A3B8]">({pct}%)</span></span>
                       </div>
                       <div className="h-1.5 overflow-hidden rounded-full bg-[#F1F5F9]">
                         <div className="h-full rounded-full bg-[#19C6F4]" style={{ width: `${pct}%` }} />
@@ -355,7 +355,7 @@ export default async function TLLeadsPage({ searchParams }: Props) {
           <FilterSelect name="status"  options={statusOptions} placeholder="All Statuses" value={status ?? ''} />
           <FilterSelect name="source"  options={sourceOptions} placeholder="All Sources"  value={source ?? ''} />
           {unassignedOnly && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-semibold text-orange-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-1 text-[12px] font-semibold text-orange-700">
               Unassigned only
               <Link href="/portal/team-leader/leads" className="ml-1 text-orange-400 hover:text-orange-700">×</Link>
             </span>

@@ -1,4 +1,4 @@
-﻿import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission } from '@/modules/rbac/guards'
 import { listAcademicYears } from '@/modules/academic-years/queries'
 import NewSemesterForm from './NewSemesterForm'
 import Link from 'next/link'
@@ -22,7 +22,7 @@ export default async function NewSemesterPage() {
           <p className="text-sm text-[#64748B]">You need an academic year before creating a semester.</p>
           <Link
             href="/admin/semesters/academic-years"
-            className="mt-3 inline-block text-sm font-medium text-[#FF8A1F] hover:underline"
+            className="mt-3 inline-block text-sm font-medium text-[#C2410C] hover:underline"
           >
             Create academic year →
           </Link>

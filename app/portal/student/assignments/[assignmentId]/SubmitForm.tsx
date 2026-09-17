@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useRef, useState } from 'react'
 import { submitAssignment } from '@/modules/assignments/submissions/actions'
@@ -170,7 +170,7 @@ export default function SubmitForm({ assignmentId, submissionType, submission, m
                   <button
                     type="button"
                     onClick={() => removeImage(i)}
-                    className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#EF4444] text-[9px] font-bold text-white hover:bg-[#DC2626] transition"
+                    className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#EF4444] text-[11px] font-bold text-white hover:bg-[#DC2626] transition"
                   >
                     ✕
                   </button>

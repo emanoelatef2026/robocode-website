@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import type { Course } from '@/modules/courses/types'
@@ -16,7 +16,7 @@ function ResourceLink({ label, url }: { label: string; url: string }) {
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] transition hover:border-[#FF8A1F] hover:bg-[#FFF7EF]"
+      className="flex items-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] transition hover:border-[#C2410C] hover:bg-[#FFF7EF]"
     >
       <span className="text-base">
         {isYouTube ? '▶' : isDrive ? '📁' : '🔗'}
@@ -33,7 +33,7 @@ function ResourceLink({ label, url }: { label: string; url: string }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">{title}</p>
+      <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-[#94A3B8]">{title}</p>
       {children}
     </div>
   )
@@ -79,7 +79,7 @@ export default function InstructorCoursePanel({ course }: Props) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="rounded-lg border border-[#FF8A1F] px-2.5 py-1 text-xs font-medium text-[#FF8A1F] transition hover:bg-[#FFF7EF]"
+              className="rounded-lg border border-[#C2410C] px-2.5 py-1 text-xs font-medium text-[#C2410C] transition hover:bg-[#FFF7EF]"
             >
               Open
             </a>

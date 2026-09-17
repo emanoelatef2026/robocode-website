@@ -1,4 +1,4 @@
-﻿import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { createServiceClient }                  from '@/lib/supabase/service'
 import { notFound }                             from 'next/navigation'
 import Link                                     from 'next/link'
@@ -119,7 +119,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
     <div className="space-y-5">
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-between gap-3">
-        <Link href="/portal/team-leader/students" className="text-sm text-[#94A3B8] hover:text-[#FF8A1F]">← Students</Link>
+        <Link href="/portal/team-leader/students" className="text-sm text-[#94A3B8] hover:text-[#9A3412]">← Students</Link>
         <div className="flex gap-2">
           <Link
             href={`/portal/team-leader/students/${studentId}/edit`}
@@ -167,9 +167,9 @@ export default async function TLStudentDetailPage({ params }: Props) {
                   {i > 0 && <hr className="border-[#E2E8F0]" />}
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-medium text-[#0B1F3A]">{c.name}</span>
-                    <span className="text-[10px] text-[#94A3B8] capitalize">({c.relation})</span>
-                    {c.is_primary   && <span className="rounded-full bg-[#EFF6FF] px-1.5 py-0.5 text-[10px] font-semibold text-[#1D4ED8]">Primary</span>}
-                    {c.is_emergency && <span className="rounded-full bg-[#FEE2E2] px-1.5 py-0.5 text-[10px] font-semibold text-[#EF4444]">Emergency</span>}
+                    <span className="text-[11px] text-[#94A3B8] capitalize">({c.relation})</span>
+                    {c.is_primary   && <span className="rounded-full bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-semibold text-[#1D4ED8]">Primary</span>}
+                    {c.is_emergency && <span className="rounded-full bg-[#FEE2E2] px-1.5 py-0.5 text-[11px] font-semibold text-[#EF4444]">Emergency</span>}
                   </div>
                   <dl className="space-y-1 text-sm">
                     {c.phone1 && (
@@ -178,7 +178,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
                         <dd className="flex items-center gap-2">
                           <a href={`tel:${c.phone1}`} className="text-[#0B1F3A]">{c.phone1}</a>
                           {c.whatsapp_preferred && (
-                            <a href={buildWhatsAppUrl(c.phone1, null) ?? '#'} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#25D366] border border-[#25D366]/30 rounded px-1.5 py-0.5">WA</a>
+                            <a href={buildWhatsAppUrl(c.phone1, null) ?? '#'} target="_blank" rel="noopener noreferrer" className="text-[11px] text-[#25D366] border border-[#25D366]/30 rounded px-1.5 py-0.5">WA</a>
                           )}
                         </dd>
                       </div>
@@ -219,11 +219,11 @@ export default async function TLStudentDetailPage({ params }: Props) {
                         {e.courseName ?? 'Unknown Course'}
                       </p>
                       {e.contract_code && (
-                        <span className="font-mono text-[10px] text-[#94A3B8] bg-[#F1F5F9] px-1.5 py-0.5 rounded">
+                        <span className="font-mono text-[11px] text-[#94A3B8] bg-[#F1F5F9] px-1.5 py-0.5 rounded">
                           {e.contract_code}
                         </span>
                       )}
-                      <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">ACTIVE</span>
+                      <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-semibold text-[#15803D]">ACTIVE</span>
                     </div>
                     <p className="mt-0.5 text-xs text-[#64748B]">
                       {[e.groupName, e.instructor_name_snapshot].filter(Boolean).join(' · ')}
@@ -260,7 +260,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
                 {e.actions.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {e.actions.map((a: any) => (
-                      <span key={a.code} title={a.description} className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${a.color} ${a.textColor}`}>
+                      <span key={a.code} title={a.description} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${a.color} ${a.textColor}`}>
                         {a.icon} {a.label}
                       </span>
                     ))}
@@ -269,7 +269,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
 
                 {/* Finance quick info */}
                 {e.acc?.next_due_date && (
-                  <p className="mt-2 text-[11px] text-[#94A3B8]">
+                  <p className="mt-2 text-[12px] text-[#94A3B8]">
                     Next due: <span className="font-medium text-[#64748B]">{fmtDate(e.acc.next_due_date)}</span>
                   </p>
                 )}
@@ -299,15 +299,15 @@ export default async function TLStudentDetailPage({ params }: Props) {
                   <tr key={e.id} className="ds-table-row">
                     <td className="px-4 py-3">
                       <p className="font-medium text-[#0B1F3A]">{e.courseName ?? '—'}</p>
-                      {e.groupName && <p className="text-[11px] text-[#94A3B8]">{e.groupName}</p>}
-                      {e.contract_code && <p className="font-mono text-[10px] text-[#94A3B8]">{e.contract_code}</p>}
+                      {e.groupName && <p className="text-[12px] text-[#94A3B8]">{e.groupName}</p>}
+                      {e.contract_code && <p className="font-mono text-[11px] text-[#94A3B8]">{e.contract_code}</p>}
                     </td>
                     <td className="px-4 py-3 text-[#64748B]">
                       {e.enrolled_sessions > 0 ? `${e.consumed_sessions}/${e.enrolled_sessions}` : '—'}
                     </td>
                     <td className="px-4 py-3 text-[#0B1F3A]">EGP {fmt(e.net_amount)}</td>
                     <td className="px-4 py-3">
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold
                         ${e.status === 'COMPLETED'   ? 'bg-[#F1F5F9] text-[#475569]' :
                           e.status === 'TRANSFERRED' ? 'bg-[#EFF6FF] text-[#2563EB]' :
                           e.status === 'DROPPED'     ? 'bg-[#FEE2E2] text-[#EF4444]' :
@@ -315,7 +315,7 @@ export default async function TLStudentDetailPage({ params }: Props) {
                         {e.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[11px] text-[#94A3B8]">
+                    <td className="px-4 py-3 text-[12px] text-[#94A3B8]">
                       {fmtDate(e.start_date)} → {fmtDate(e.end_date)}
                     </td>
                   </tr>
@@ -351,15 +351,15 @@ export default async function TLStudentDetailPage({ params }: Props) {
                     <td className="px-4 py-3 text-[#64748B]">{t.branch_name}</td>
                     <td className="px-4 py-3">
                       {t.attendance_status === 'present' ? (
-                        <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">Present</span>
+                        <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-semibold text-[#15803D]">Present</span>
                       ) : t.attendance_status === 'absent' ? (
-                        <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#DC2626]">Absent</span>
+                        <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-semibold text-[#DC2626]">Absent</span>
                       ) : (
-                        <span className="text-[11px] text-[#94A3B8]">—</span>
+                        <span className="text-[12px] text-[#94A3B8]">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="capitalize text-[11px] text-[#64748B]">{t.status}</span>
+                      <span className="capitalize text-[12px] text-[#64748B]">{t.status}</span>
                     </td>
                   </tr>
                 ))}

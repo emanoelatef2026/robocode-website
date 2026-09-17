@@ -32,7 +32,7 @@ function ScoreBar({ score }: { score: number }) {
       <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[#F1F5F9]">
         <div className="h-full rounded-full bg-[#3B82F6]" style={{ width: `${pct}%` }} />
       </div>
-      <span className="text-[11px] font-bold text-[#1D4ED8]">{score}%</span>
+      <span className="text-[12px] font-bold text-[#1D4ED8]">{score}%</span>
     </div>
   )
 }
@@ -119,7 +119,7 @@ export default async function ParentEvaluationsPage({ searchParams }: Props) {
                 <div className="flex flex-col gap-2 min-[420px]:flex-row min-[420px]:items-start min-[420px]:justify-between">
                   <div>
                     <p className="text-[13px] font-bold text-[#0B1F3A]">{label}</p>
-                    <p className="mt-0.5 text-[10.5px] text-[#94A3B8]">Latest · {formatDate(latest.evaluated_at)}</p>
+                    <p className="mt-0.5 text-[11px] text-[#94A3B8]">Latest · {formatDate(latest.evaluated_at)}</p>
                   </div>
                   <div className="shrink-0 text-left min-[420px]:text-right">
                     {latest.rating != null && <RatingStars rating={latest.rating} />}
@@ -128,7 +128,7 @@ export default async function ParentEvaluationsPage({ searchParams }: Props) {
                 </div>
 
                 {latest.feedback && (
-                  <p className="mt-2.5 rounded-xl bg-[#F8FAFC] px-3 py-2 text-[11.5px] leading-relaxed text-[#475569]">
+                  <p className="mt-2.5 rounded-xl bg-[#F8FAFC] px-3 py-2 text-[12px] leading-relaxed text-[#475569]">
                     “{latest.feedback}”
                   </p>
                 )}
@@ -137,12 +137,12 @@ export default async function ParentEvaluationsPage({ searchParams }: Props) {
 
                 {list.length > 1 && (
                   <details className="mt-2.5">
-                    <summary className="cursor-pointer text-[11px] font-semibold text-[#FF8A1F]">
+                    <summary className="cursor-pointer text-[12px] font-semibold text-[#FF8A1F]">
                       History ({list.length - 1} earlier)
                     </summary>
                     <div className="mt-2 space-y-2 border-t border-[#F1F5F9] pt-2">
                       {list.slice(1).map(e => (
-                        <div key={e.id} className="flex items-center justify-between gap-2 text-[11px]">
+                        <div key={e.id} className="flex items-center justify-between gap-2 text-[12px]">
                           <span className="text-[#64748B]">{formatDate(e.evaluated_at)}</span>
                           <div className="flex items-center gap-2">
                             {e.rating != null && <RatingStars rating={e.rating} />}

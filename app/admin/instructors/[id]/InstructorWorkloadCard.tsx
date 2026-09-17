@@ -1,4 +1,4 @@
-﻿import { createServiceClient }         from '@/lib/supabase/service'
+import { createServiceClient }         from '@/lib/supabase/service'
 import { getInstructorRatingSummary }   from '@/modules/feedback/queries'
 
 interface WorkloadData {
@@ -146,7 +146,7 @@ export default async function InstructorWorkloadCard({ instructorId, userId }: P
         ].map(({ label, value }) => (
           <div key={label} className="rounded-lg bg-[#F8FAFC] px-3 py-2.5">
             <p className="text-lg font-bold text-[#0B1F3A]">{value}</p>
-            <p className="text-[11px] text-[#64748B]">{label}</p>
+            <p className="text-[12px] text-[#64748B]">{label}</p>
           </div>
         ))}
       </div>

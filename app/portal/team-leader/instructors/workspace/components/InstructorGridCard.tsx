@@ -24,32 +24,32 @@ export function InstructorGridCard({
       className={[
         'group relative cursor-pointer rounded-xl border bg-white transition-all duration-150',
         selected
-          ? 'border-[#FF8A1F] shadow-[0_0_0_2px_rgba(255,138,31,0.20)]'
-          : 'border-[#E2E8F0] active:bg-[#F8FAFC] md:hover:border-[#FF8A1F]/50 md:hover:shadow-md md:hover:-translate-y-0.5',
+          ? 'border-[#0E7490] shadow-[0_0_0_2px_rgba(255,138,31,0.20)]'
+          : 'border-[#E2E8F0] active:bg-[#F8FAFC] md:hover:border-[#0E7490]/50 md:hover:shadow-md md:hover:-translate-y-0.5',
       ].join(' ')}
     >
       {/* Mobile: compact horizontal row */}
       <div className="flex items-center gap-2.5 px-3 py-2.5 md:hidden">
         <div className="relative shrink-0">
-          <div className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold ${selected ? 'bg-[#FF8A1F] text-white' : 'bg-[#0B1F3A] text-white'}`}>
+          <div className={`flex h-8 w-8 items-center justify-center rounded-full text-[12px] font-bold ${selected ? 'bg-[#C2410C] text-white' : 'bg-[#0B1F3A] text-white'}`}>
             {ini}
           </div>
           <span className={`absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border-2 border-white ${instructor.status === 'active' ? 'bg-[#10B981]' : instructor.status === 'inactive' ? 'bg-[#94A3B8]' : 'bg-[#F59E0B]'}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-bold text-[#0B1F3A] truncate leading-tight">{name}</p>
-          <p className="text-[10px] text-[#64748B] truncate mt-0.5 leading-tight">
+          <p className="text-[13px] font-bold text-[#0B1F3A] truncate leading-tight">{name}</p>
+          <p className="text-[11px] text-[#64748B] truncate mt-0.5 leading-tight">
             {instructor.branch_names.join(', ')}
             {instructor.instructor_code ? ` · ${instructor.instructor_code}` : ''}
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
           <div className="text-center">
-            <p className="text-[12px] font-bold text-[#0B1F3A] leading-none">{instructor.group_count}</p>
+            <p className="text-[13px] font-bold text-[#0B1F3A] leading-none">{instructor.group_count}</p>
             <p className="text-[8px] text-[#94A3B8] mt-0.5">Gr</p>
           </div>
           <div className="text-center">
-            <p className="text-[12px] font-bold text-[#0B1F3A] leading-none">{instructor.student_count}</p>
+            <p className="text-[13px] font-bold text-[#0B1F3A] leading-none">{instructor.student_count}</p>
             <p className="text-[8px] text-[#94A3B8] mt-0.5">St</p>
           </div>
           {instructor.today_sessions_count > 0 ? (
@@ -58,7 +58,7 @@ export function InstructorGridCard({
             </span>
           ) : (
             <div className="text-center">
-              <p className={`text-[12px] font-bold leading-none ${instructor.attendance_compliance > 0 ? attColor(instructor.attendance_compliance) : 'text-[#CBD5E1]'}`}>
+              <p className={`text-[13px] font-bold leading-none ${instructor.attendance_compliance > 0 ? attColor(instructor.attendance_compliance) : 'text-[#CBD5E1]'}`}>
                 {instructor.attendance_compliance > 0 ? `${instructor.attendance_compliance}%` : '—'}
               </p>
               <p className="text-[8px] text-[#94A3B8] mt-0.5">Att</p>
@@ -102,7 +102,7 @@ export function InstructorGridCard({
             <p className="text-[9px] text-[#94A3B8]">Att.</p>
           </div>
         </div>
-        <div className="flex items-center justify-between px-3 pb-2.5 text-[10px]">
+        <div className="flex items-center justify-between px-3 pb-2.5 text-[11px]">
           {instructor.today_sessions_count > 0
             ? <span className="rounded bg-[#FFFBEB] px-2 py-0.5 font-semibold text-[#B45309]">{instructor.today_sessions_count} today</span>
             : <span className="text-[#CBD5E1]">No sessions today</span>
@@ -115,19 +115,19 @@ export function InstructorGridCard({
         {canManage && (
           <div className="flex gap-1 border-t border-[#F1F5F9] px-2 py-2 opacity-0 transition-opacity group-hover:opacity-100">
             <button onClick={e => { e.stopPropagation(); onClick() }}
-              className="flex-1 rounded-lg bg-[#F8FAFC] py-1.5 text-[10px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition">
+              className="flex-1 rounded-lg bg-[#F8FAFC] py-1.5 text-[11px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition">
               View
             </button>
             <button onClick={onAssign}
-              className="flex-1 rounded-lg bg-[#FF8A1F] py-1.5 text-[10px] font-semibold text-white hover:bg-[#e87c18] transition">
+              className="flex-1 rounded-lg bg-[#C2410C] py-1.5 text-[11px] font-semibold text-white hover:bg-[#e87c18] transition">
               Assign
             </button>
             <button onClick={onEdit}
-              className="flex-1 rounded-lg bg-[#F8FAFC] py-1.5 text-[10px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition">
+              className="flex-1 rounded-lg bg-[#F8FAFC] py-1.5 text-[11px] font-medium text-[#374151] hover:bg-[#F1F5F9] transition">
               Edit
             </button>
             <button onClick={onDelete}
-              className="flex-1 rounded-lg border border-[#FECACA] py-1.5 text-[10px] font-medium text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition">
+              className="flex-1 rounded-lg border border-[#FECACA] py-1.5 text-[11px] font-medium text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition">
               Delete
             </button>
             {waUrl && (

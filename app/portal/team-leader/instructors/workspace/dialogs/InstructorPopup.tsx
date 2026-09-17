@@ -69,7 +69,7 @@ export function InstructorPopup({
             {/* Mobile header */}
             <div className="md:hidden px-4 pt-2 pb-3 space-y-2.5">
               <div className="flex items-start gap-2.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-bold bg-[#0B1F3A] text-white">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[13px] font-bold bg-[#0B1F3A] text-white">
                   {initials(instructor.first_name, instructor.last_name, instructor.user_email)}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -96,7 +96,7 @@ export function InstructorPopup({
                 </button>
               </div>
 
-              <div className="flex items-center gap-2.5 text-[11px]">
+              <div className="flex items-center gap-2.5 text-[12px]">
                 <span><strong className="text-[#0B1F3A]">{instructor.group_count}</strong> <span className="text-[#94A3B8]">groups</span></span>
                 <span className="text-[#E2E8F0]">·</span>
                 <span><strong className="text-[#0B1F3A]">{instructor.student_count}</strong> <span className="text-[#94A3B8]">students</span></span>
@@ -111,14 +111,14 @@ export function InstructorPopup({
               <div className="flex items-center gap-1.5">
                 {waUrl && (
                   <a href={waUrl} target="_blank" rel="noopener noreferrer"
-                    className="flex items-center gap-1 rounded-lg bg-[#10B981] px-2.5 py-1.5 text-[11px] font-medium text-white active:bg-[#059669] transition">
+                    className="flex items-center gap-1 rounded-lg bg-[#10B981] px-2.5 py-1.5 text-[12px] font-medium text-white active:bg-[#059669] transition">
                     <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 shrink-0"><path d={WA_PATH}/></svg>
                     WA
                   </a>
                 )}
                 {canManage && (
                   <button onClick={onAssignGroup}
-                    className="flex-1 rounded-lg bg-[#FF8A1F] px-2.5 py-1.5 text-[11px] font-semibold text-white active:bg-[#e87c18] transition text-center">
+                    className="flex-1 rounded-lg bg-[#C2410C] px-2.5 py-1.5 text-[12px] font-semibold text-white active:bg-[#e87c18] transition text-center">
                     + Assign Group
                   </button>
                 )}
@@ -126,7 +126,7 @@ export function InstructorPopup({
                   <div className="relative">
                     <button
                       onClick={() => setOverflowOpen(v => !v)}
-                      className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] text-[#374151] active:bg-[#F8FAFC] transition flex items-center gap-1"
+                      className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] text-[#374151] active:bg-[#F8FAFC] transition flex items-center gap-1"
                     >
                       More
                       <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 shrink-0">
@@ -138,20 +138,20 @@ export function InstructorPopup({
                         <div className="fixed inset-0 z-[51]" onClick={() => setOverflowOpen(false)} />
                         <div className="absolute right-0 top-full mt-1 z-[52] w-36 ds-card shadow-xl overflow-hidden">
                           <button onClick={() => { setOverflowOpen(false); onEdit() }}
-                            className="flex w-full items-center px-4 py-3 text-[12px] font-medium text-[#374151] active:bg-[#F8FAFC]">Edit</button>
+                            className="flex w-full items-center px-4 py-3 text-[13px] font-medium text-[#374151] active:bg-[#F8FAFC]">Edit</button>
                           <div className="h-px bg-[#F1F5F9]" />
                           <button onClick={() => { setOverflowOpen(false); onArchive() }}
-                            className="flex w-full items-center px-4 py-3 text-[12px] font-medium text-[#F59E0B] active:bg-[#FFFBEB]">Archive</button>
+                            className="flex w-full items-center px-4 py-3 text-[13px] font-medium text-[#F59E0B] active:bg-[#FFFBEB]">Archive</button>
                           <div className="h-px bg-[#F1F5F9]" />
                           <button onClick={() => { setOverflowOpen(false); onDelete() }}
-                            className="flex w-full items-center px-4 py-3 text-[12px] font-medium text-[#EF4444] active:bg-[#FEE2E2]">Delete</button>
+                            className="flex w-full items-center px-4 py-3 text-[13px] font-medium text-[#EF4444] active:bg-[#FEE2E2]">Delete</button>
                         </div>
                       </>
                     )}
                   </div>
                 )}
                 {!canManage && (
-                  <button onClick={onClose} className="ml-auto rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[11px] text-[#64748B] active:bg-[#F8FAFC] transition">
+                  <button onClick={onClose} className="ml-auto rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] text-[#64748B] active:bg-[#F8FAFC] transition">
                     Close
                   </button>
                 )}
@@ -165,28 +165,28 @@ export function InstructorPopup({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h2 className="text-[16px] font-bold text-[#0B1F3A]">{name}</h2>
-                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${statusCls(instructor.status)}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${statusCls(instructor.status)}`}>
                       {instructor.status.replace('_', ' ')}
                     </span>
                     {instructor.instructor_code && (
-                      <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 font-mono text-[10px] text-[#94A3B8]">{instructor.instructor_code}</span>
+                      <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 font-mono text-[11px] text-[#94A3B8]">{instructor.instructor_code}</span>
                     )}
                   </div>
                   <div className="mt-1 flex flex-wrap gap-1">
                     {instructor.branch_names.map(b => (
-                      <span key={b} className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] text-[#64748B]">{b}</span>
+                      <span key={b} className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[11px] text-[#64748B]">{b}</span>
                     ))}
                   </div>
                   {phone && (
-                    <p className="mt-0.5 text-[12px] text-[#64748B]">
-                      <a href={`tel:${phone}`} className="hover:text-[#FF8A1F]">{phone}</a>
+                    <p className="mt-0.5 text-[13px] text-[#64748B]">
+                      <a href={`tel:${phone}`} className="hover:text-[#9A3412]">{phone}</a>
                     </p>
                   )}
-                  <div className="mt-2 flex items-center gap-4 text-[11px]">
+                  <div className="mt-2 flex items-center gap-4 text-[12px]">
                     <span className="text-[#64748B]"><strong className="text-[#0B1F3A]">{instructor.group_count}</strong> groups</span>
                     <span className="text-[#64748B]"><strong className="text-[#0B1F3A]">{instructor.student_count}</strong> students</span>
                     {instructor.today_sessions_count > 0 && (
-                      <span className="rounded bg-[#FFFBEB] px-1.5 py-0.5 text-[10px] font-semibold text-[#B45309]">
+                      <span className="rounded bg-[#FFFBEB] px-1.5 py-0.5 text-[11px] font-semibold text-[#B45309]">
                         {instructor.today_sessions_count} today
                       </span>
                     )}
@@ -195,17 +195,17 @@ export function InstructorPopup({
                 <div className="flex shrink-0 items-center gap-1.5 flex-wrap justify-end">
                   {waUrl && (
                     <a href={waUrl} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1 rounded-lg bg-[#10B981] px-2.5 py-1.5 text-[11px] font-medium text-white hover:bg-[#059669] transition">
+                      className="flex items-center gap-1 rounded-lg bg-[#10B981] px-2.5 py-1.5 text-[12px] font-medium text-white hover:bg-[#059669] transition">
                       <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3"><path d={WA_PATH}/></svg>
                       WA
                     </a>
                   )}
                   {canManage && (
                     <>
-                      <button onClick={onAssignGroup} className="rounded-lg bg-[#FF8A1F] px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-[#e87c18] transition">Assign Group</button>
-                      <button onClick={onEdit} className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] text-[#374151] hover:bg-[#F8FAFC] transition">Edit</button>
-                      <button onClick={onArchive} className="rounded-lg border border-[#FEE2E2] px-2.5 py-1.5 text-[11px] text-[#EF4444] hover:bg-[#FEE2E2] transition">Archive</button>
-                      <button onClick={onDelete} className="rounded-lg border border-red-500 px-2.5 py-1.5 text-[11px] font-semibold text-[#EF4444] hover:bg-[#DC2626] hover:text-white transition">Delete</button>
+                      <button onClick={onAssignGroup} className="rounded-lg bg-[#C2410C] px-2.5 py-1.5 text-[12px] font-semibold text-white hover:bg-[#e87c18] transition">Assign Group</button>
+                      <button onClick={onEdit} className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] text-[#374151] hover:bg-[#F8FAFC] transition">Edit</button>
+                      <button onClick={onArchive} className="rounded-lg border border-[#FEE2E2] px-2.5 py-1.5 text-[12px] text-[#EF4444] hover:bg-[#FEE2E2] transition">Archive</button>
+                      <button onClick={onDelete} className="rounded-lg border border-red-500 px-2.5 py-1.5 text-[12px] font-semibold text-[#EF4444] hover:bg-[#DC2626] hover:text-white transition">Delete</button>
                     </>
                   )}
                   <button onClick={onClose} className="rounded-lg border border-[#E2E8F0] p-1.5 text-[#94A3B8] hover:bg-[#F1F5F9] transition">
@@ -224,10 +224,10 @@ export function InstructorPopup({
               const count = tabCount(tab.key)
               return (
                 <button key={tab.key} onClick={() => onTabChange(tab.key)}
-                  className={`flex flex-1 md:flex-none items-center justify-center gap-1 md:gap-1.5 whitespace-nowrap px-2 md:px-5 py-2.5 md:py-3 text-[11px] md:text-[12px] font-medium border-b-2 transition ${activeTab === tab.key ? 'border-[#FF8A1F] text-[#FF8A1F]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'}`}>
+                  className={`flex flex-1 md:flex-none items-center justify-center gap-1 md:gap-1.5 whitespace-nowrap px-2 md:px-5 py-2.5 md:py-3 text-[12px] md:text-[13px] font-medium border-b-2 transition ${activeTab === tab.key ? 'border-[#0E7490] text-[#C2410C]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'}`}>
                   {tab.label}
                   {count !== null && count > 0 && (
-                    <span className={`rounded-full px-1 py-0.5 text-[9px] font-bold ${activeTab === tab.key ? 'bg-[#FF8A1F] text-white' : 'bg-[#F1F5F9] text-[#64748B]'}`}>{count}</span>
+                    <span className={`rounded-full px-1 py-0.5 text-[9px] font-bold ${activeTab === tab.key ? 'bg-[#C2410C] text-white' : 'bg-[#F1F5F9] text-[#64748B]'}`}>{count}</span>
                   )}
                 </button>
               )
@@ -237,7 +237,7 @@ export function InstructorPopup({
           {/* Tab content */}
           <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 md:py-5" style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}>
             {loading ? <Spinner /> : !detail ? (
-              <div className="flex items-center justify-center py-16 text-[12px] text-[#94A3B8]">Failed to load instructor data</div>
+              <div className="flex items-center justify-center py-16 text-[13px] text-[#94A3B8]">Failed to load instructor data</div>
             ) : (
               <>
                 {activeTab === 'overview'   && <OverviewTab detail={detail} />}

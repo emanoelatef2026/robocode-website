@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useTransition, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -82,7 +82,7 @@ export default function CertificateDetailView({ certificate }: Props) {
       <div className="ds-card p-6 space-y-4">
         <div className="grid grid-cols-2 gap-x-8 gap-y-4">
           <Field label="Certificate Code">
-            <span className="font-mono text-sm font-bold text-[#FF8A1F]">{certificate.certificate_code}</span>
+            <span className="font-mono text-sm font-bold text-[#C2410C]">{certificate.certificate_code}</span>
           </Field>
           <Field label="Status">
             <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -125,7 +125,7 @@ export default function CertificateDetailView({ certificate }: Props) {
                 .map((p, i) => (
                   <span
                     key={i}
-                    className="rounded-full border border-[#FF8A1F] bg-[#FFF7ED] px-3 py-1 text-xs font-medium text-[#FF8A1F]"
+                    className="rounded-full border border-[#0E7490] bg-[#FFF7ED] px-3 py-1 text-xs font-medium text-[#C2410C]"
                   >
                     {p.title}
                   </span>

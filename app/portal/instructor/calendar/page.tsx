@@ -83,7 +83,7 @@ export default async function InstructorCalendarPage({ searchParams }: Props) {
     list.push({
       id:    s.id,
       label: s.type === 'trial' ? '🟣 Trial' : '🟠 Makeup',
-      color: s.type === 'trial' ? 'bg-purple-100 text-purple-700' : 'bg-orange-100 text-orange-700',
+      color: s.type === 'trial' ? 'bg-[#E0F7FA] text-[#0E7490]' : 'bg-orange-100 text-orange-700',
       href:  `/portal/instructor/special-sessions/${s.id}`,
       time:  new Date(s.scheduled_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
     })
@@ -123,7 +123,7 @@ export default async function InstructorCalendarPage({ searchParams }: Props) {
           <Link
             key={f.key}
             href={`${filterBase}&filter=${f.key}`}
-            className={`rounded-full border px-3 py-1.5 text-[11px] font-semibold transition ${
+            className={`rounded-full border px-3 py-1.5 text-[12px] font-semibold transition ${
               filter === f.key
                 ? 'border-[#0B1F3A] bg-[#0B1F3A] text-white'
                 : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
@@ -137,7 +137,7 @@ export default async function InstructorCalendarPage({ searchParams }: Props) {
       <div className="ds-card overflow-hidden">
         <div className="grid grid-cols-7 border-b border-[#E2E8F0]">
           {DAY_LABELS.map(d => (
-            <div key={d} className="py-2 text-center text-[10px] font-bold uppercase tracking-widest text-[#94A3B8]">{d}</div>
+            <div key={d} className="py-2 text-center text-[11px] font-bold uppercase tracking-widest text-[#94A3B8]">{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7 divide-x divide-y divide-[#F1F5F9]">
@@ -151,16 +151,16 @@ export default async function InstructorCalendarPage({ searchParams }: Props) {
             const isToday = dateStr === now.toISOString().slice(0, 10)
             return (
               <div key={day} className={`min-h-[80px] p-1 ${isToday ? 'bg-blue-50' : ''}`}>
-                <p className={`text-[11px] font-semibold mb-1 ${isToday ? 'text-[#3B82F6]' : 'text-[#64748B]'}`}>{day}</p>
+                <p className={`text-[12px] font-semibold mb-1 ${isToday ? 'text-[#3B82F6]' : 'text-[#64748B]'}`}>{day}</p>
                 <div className="space-y-0.5">
                   {events.slice(0, 3).map(ev => (
                     <Link key={ev.id} href={ev.href}
-                      className={`block truncate rounded px-1 py-0.5 text-[9px] font-semibold leading-tight ${ev.color}`}
+                      className={`block truncate rounded px-1 py-0.5 text-[11px] font-semibold leading-tight ${ev.color}`}
                       title={`${ev.time} ${ev.label}`}>
                       {ev.time} {ev.label}
                     </Link>
                   ))}
-                  {events.length > 3 && <p className="text-[9px] text-[#94A3B8] px-1">+{events.length - 3} more</p>}
+                  {events.length > 3 && <p className="text-[11px] text-[#94A3B8] px-1">+{events.length - 3} more</p>}
                 </div>
               </div>
             )

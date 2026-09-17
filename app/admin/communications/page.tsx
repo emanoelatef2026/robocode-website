@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Super Admin: Parent Communications Center
  *
  * Aggregates all parent messages across branches.
@@ -227,11 +227,11 @@ export default async function CommunicationsPage({ searchParams }: Props) {
                         <td className="px-4 py-3 max-w-48">
                           <p className="truncate text-xs text-[#0B1F3A]" title={msg.message}>{msg.message}</p>
                           {msg.internal_note && (
-                            <p className="mt-0.5 truncate text-[11px] text-[#94A3B8]">Note: {msg.internal_note}</p>
+                            <p className="mt-0.5 truncate text-[12px] text-[#94A3B8]">Note: {msg.internal_note}</p>
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${sc.cls}`}>
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-[12px] font-medium ${sc.cls}`}>
                             {sc.label}
                           </span>
                         </td>

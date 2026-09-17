@@ -45,7 +45,7 @@ export default async function DuplicateParentsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="text-left text-[11px] uppercase tracking-wide text-[#94A3B8] border-b border-[#E2E8F0]">
+                    <tr className="text-left text-[12px] uppercase tracking-wide text-[#94A3B8] border-b border-[#E2E8F0]">
                       <th className="pb-2 pr-4">Name</th>
                       <th className="pb-2 pr-4">Login email</th>
                       <th className="pb-2 pr-4">Created</th>
@@ -58,7 +58,7 @@ export default async function DuplicateParentsPage() {
                         <td className="py-2 pr-4 font-medium text-[#0B1F3A]">
                           <Link href={`/admin/parents/${a.parentId}`} className="hover:underline">{a.name}</Link>
                         </td>
-                        <td className="py-2 pr-4 font-mono text-[12px] text-[#64748B]">{a.email}</td>
+                        <td className="py-2 pr-4 font-mono text-[13px] text-[#64748B]">{a.email}</td>
                         <td className="py-2 pr-4 text-[#64748B]">{new Date(a.createdAt).toLocaleDateString()}</td>
                         <td className="py-2 text-[#64748B]">
                           {a.children.length === 0 ? '—' : a.children.map(c => c.name).join(', ')}

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState, useEffect } from 'react'
 import { useRouter }                            from 'next/navigation'
@@ -69,7 +69,7 @@ const TABS = [
 
 type TabId = typeof TABS[number]['id']
 
-const inputCls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+const inputCls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 const labelCls = 'mb-1 block text-sm font-medium text-[#0B1F3A]'
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -125,7 +125,7 @@ export default function LeadDetailClient({
             <h2 className="font-semibold text-[#0B1F3A]">Lead Information</h2>
             <div className="flex items-center gap-2">
               {isAging && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#FEE2E2] px-2.5 py-1 text-[11px] font-semibold text-[#DC2626]">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#FEE2E2] px-2.5 py-1 text-[12px] font-semibold text-[#DC2626]">
                   ⚠ Stuck {daysInStage}d
                 </span>
               )}
@@ -179,7 +179,7 @@ export default function LeadDetailClient({
           </div>
           {lead.notes && (
             <div className="border-t border-[#E2E8F0] px-5 py-4">
-              <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Notes</p>
+              <p className="mb-1 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Notes</p>
               <p className="whitespace-pre-wrap text-sm text-[#0B1F3A]">{lead.notes}</p>
             </div>
           )}
@@ -196,7 +196,7 @@ export default function LeadDetailClient({
                 className={[
                   'whitespace-nowrap flex-1 px-4 py-3 text-[13px] font-medium transition',
                   tab === t.id
-                    ? 'border-b-2 border-[#FF8A1F] text-[#FF8A1F]'
+                    ? 'border-b-2 border-[#0E7490] text-[#C2410C]'
                     : 'text-[#64748B] hover:text-[#0B1F3A]',
                 ].join(' ')}
               >
@@ -454,7 +454,7 @@ export default function LeadDetailClient({
                       <input type="hidden" name="lead_id" value={lead.id} />
 
                       <fieldset className="rounded-lg border border-[#E2E8F0] p-4">
-                        <legend className="px-2 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student Account</legend>
+                        <legend className="px-2 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student Account</legend>
                         <div className="mt-3 grid gap-4 sm:grid-cols-2">
                           <div>
                             <label className={labelCls}>First Name <span className="text-[#EF4444]">*</span></label>
@@ -479,7 +479,7 @@ export default function LeadDetailClient({
                       </fieldset>
 
                       <fieldset className="rounded-lg border border-[#E2E8F0] p-4">
-                        <legend className="px-2 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Parent Account</legend>
+                        <legend className="px-2 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Parent Account</legend>
                         <div className="mt-3 grid gap-4 sm:grid-cols-2">
                           <div>
                             <label className={labelCls}>First Name <span className="text-[#EF4444]">*</span></label>
@@ -569,7 +569,7 @@ export default function LeadDetailClient({
                       {event.note && (
                         <p className="mt-0.5 text-xs text-[#64748B]">{event.note}</p>
                       )}
-                      <p className="mt-1 text-[11px] text-[#94A3B8]">
+                      <p className="mt-1 text-[12px] text-[#94A3B8]">
                         {event.created_by_name && (
                           <span className="font-medium text-[#64748B]">{event.created_by_name} · </span>
                         )}
@@ -588,10 +588,10 @@ export default function LeadDetailClient({
 
         {/* Status flow reference */}
         <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Stage Thresholds</p>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Stage Thresholds</p>
           <div className="space-y-1.5">
             {(Object.entries(AGING_THRESHOLDS) as [string, number][]).map(([s, d]) => (
-              <div key={s} className="flex items-center justify-between text-[11px]">
+              <div key={s} className="flex items-center justify-between text-[12px]">
                 <span className={`rounded-full px-2 py-0.5 font-semibold ${LEAD_STATUS_COLORS[s as keyof typeof LEAD_STATUS_COLORS]}`}>
                   {s.replace(/_/g, ' ')}
                 </span>
@@ -613,11 +613,11 @@ function InfoRow({ label, value, highlight = false, sub }: {
 }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
+      <p className="text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">{label}</p>
       <p className={`mt-0.5 text-sm font-medium ${highlight ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
         {value ?? <span className="text-[#CBD5E1]">—</span>}
       </p>
-      {sub && <p className="text-[11px] text-[#94A3B8]">{sub}</p>}
+      {sub && <p className="text-[12px] text-[#94A3B8]">{sub}</p>}
     </div>
   )
 }

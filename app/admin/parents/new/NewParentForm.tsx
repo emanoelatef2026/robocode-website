@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useRef, useState } from 'react'
 import { createParent } from '@/modules/parents/actions'
@@ -59,15 +59,15 @@ export default function NewParentForm({ students }: Props) {
             >
               <span>
                 <span className="block text-xs font-medium text-[#0B1F3A]">{c.name}</span>
-                <span className="block text-[11px] text-[#94A3B8]">{c.email} · {c.childCount} child{c.childCount === 1 ? '' : 'ren'} linked</span>
+                <span className="block text-[12px] text-[#94A3B8]">{c.email} · {c.childCount} child{c.childCount === 1 ? '' : 'ren'} linked</span>
               </span>
-              <span className="text-[11px] font-semibold text-[#F59E0B]">Link</span>
+              <span className="text-[12px] font-semibold text-[#F59E0B]">Link</span>
             </button>
           ))}
           <button
             type="button"
             onClick={createSeparateAccount}
-            className="text-[11px] font-medium text-[#64748B] hover:underline"
+            className="text-[12px] font-medium text-[#64748B] hover:underline"
           >
             None of these — create a separate new account
           </button>
@@ -86,7 +86,7 @@ export default function NewParentForm({ students }: Props) {
             <input
               name="first_name"
               required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
           <div>
@@ -96,7 +96,7 @@ export default function NewParentForm({ students }: Props) {
             <input
               name="last_name"
               required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             />
           </div>
         </div>
@@ -109,7 +109,7 @@ export default function NewParentForm({ students }: Props) {
             name="phone"
             type="tel"
             placeholder="01xxxxxxxxx"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -123,7 +123,7 @@ export default function NewParentForm({ students }: Props) {
             required
             autoComplete="new-password"
             placeholder="Minimum 6 characters"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
         </div>
 
@@ -134,7 +134,7 @@ export default function NewParentForm({ students }: Props) {
             <label className="mb-1 block text-sm font-medium text-[#64748B]">Student</label>
             <select
               name="student_id"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               <option value="">None</option>
               {students.map((s) => (
@@ -151,7 +151,7 @@ export default function NewParentForm({ students }: Props) {
             <select
               name="relationship"
               defaultValue="guardian"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
             >
               <option value="father">Father</option>
               <option value="mother">Mother</option>

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useTransition } from 'react'
 import { updateMessageStatus }     from '@/modules/parent-messages/actions'
@@ -39,7 +39,7 @@ export default function MessageActions({ messageId, currentStatus, currentNote }
         <select
           value={status}
           onChange={e => { setStatus(e.target.value as MessageStatus); setSaved(false) }}
-          className="ds-card px-3 py-1.5 text-[13px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+          className="ds-card px-3 py-1.5 text-[13px] text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
         >
           {STATUS_OPTIONS.map(o => (
             <option key={o.value} value={o.value}>{o.label}</option>
@@ -48,19 +48,19 @@ export default function MessageActions({ messageId, currentStatus, currentNote }
         <button
           onClick={handleSave}
           disabled={pending}
-          className="rounded-lg bg-[#0B1F3A] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#1a3460] disabled:opacity-50 transition"
+          className="rounded-lg bg-[#0B1F3A] px-3 py-1.5 text-[13px] font-medium text-white hover:bg-[#1a3460] disabled:opacity-50 transition"
         >
           {pending ? 'Saving…' : 'Update Status'}
         </button>
-        {saved  && <span className="text-[12px] text-[#10B981]">✓ Saved</span>}
-        {error  && <span className="text-[12px] text-[#EF4444]">{error}</span>}
+        {saved  && <span className="text-[13px] text-[#10B981]">✓ Saved</span>}
+        {error  && <span className="text-[13px] text-[#EF4444]">{error}</span>}
       </div>
       <textarea
         value={note}
         onChange={e => { setNote(e.target.value); setSaved(false) }}
         rows={2}
         placeholder="Internal note (optional, not visible to parent)…"
-        className="w-full resize-none rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#0B1F3A] placeholder:text-[#CBD5E1] focus:border-[#FF8A1F] focus:outline-none"
+        className="w-full resize-none rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-[13px] text-[#0B1F3A] placeholder:text-[#CBD5E1] focus:border-[#0E7490] focus:outline-none"
       />
     </div>
   )

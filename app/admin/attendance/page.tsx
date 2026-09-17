@@ -1,4 +1,4 @@
-﻿import { requirePermission }                                  from '@/modules/rbac/guards'
+import { requirePermission }                                  from '@/modules/rbac/guards'
 import { listStudentOperations }                              from '@/modules/finance/queries'
 import { computeAttendanceHealth, ATTENDANCE_TREND_CONFIG }  from '@/modules/operational-engine'
 import {
@@ -101,7 +101,7 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
       <TopbarAction>
         <Link
           href="/admin/attendance/record"
-          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#C2410C] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -121,7 +121,7 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
               name="branch"
               defaultValue={branchParam}
               onChange={undefined}
-              className="ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+              className="ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
               onBlur={undefined}
             >
               <option value="">All Branches</option>
@@ -150,7 +150,7 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
                 label: 'Record Session',
                 desc:  'Log today or any past session',
                 href:  '/admin/attendance/record',
-                color: 'bg-[#FF8A1F]',
+                color: 'bg-[#C2410C]',
                 icon:  (
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
                     <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
@@ -183,7 +183,7 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
                 label: 'Near Exhaustion',
                 desc:  `${nearExhaustion} students · ≤2 sessions left`,
                 href:  attHref('exhausted'),
-                color: nearExhaustion > 0 ? 'bg-[#FF8A1F]' : 'bg-[#94A3B8]',
+                color: nearExhaustion > 0 ? 'bg-[#C2410C]' : 'bg-[#94A3B8]',
                 icon:  (
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
@@ -213,7 +213,7 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
             <div className="ds-card p-5">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[#0B1F3A]">Reconciliation Health</h2>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${integrityHealthy ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${integrityHealthy ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
                   {integrityHealthy ? 'HEALTHY' : 'NEEDS ATTENTION'}
                 </span>
               </div>
@@ -266,7 +266,7 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
             <div className="ds-card p-5">
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-[#0B1F3A]">Recent Sessions</h2>
-                <Link href="/admin/attendance?view=monitor" className="text-xs font-medium text-[#FF8A1F] hover:underline">
+                <Link href="/admin/attendance?view=monitor" className="text-xs font-medium text-[#C2410C] hover:underline">
                   View all →
                 </Link>
               </div>
@@ -287,7 +287,7 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
                           })}
                         </p>
                       </div>
-                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${STATUS_PILL[r.status] ?? 'bg-[#F1F5F9] text-[#475569]'}`}>
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${STATUS_PILL[r.status] ?? 'bg-[#F1F5F9] text-[#475569]'}`}>
                         {r.status}
                       </span>
                     </li>
@@ -336,11 +336,11 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
               <Link
                 key={k.label}
                 href={attHref(k.att)}
-                className={`block ds-card p-3 transition hover:border-[#CBD5E1] ${attF === k.att && k.att ? 'border-[#FF8A1F] bg-orange-50' : ''}`}
+                className={`block ds-card p-3 transition hover:border-[#CBD5E1] ${attF === k.att && k.att ? 'border-[#0E7490] bg-orange-50' : ''}`}
               >
                 <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
                 <p className="text-lg font-bold text-[#0B1F3A]">{k.value}</p>
-                <p className="text-[11px] text-[#64748B]">{k.label}</p>
+                <p className="text-[12px] text-[#64748B]">{k.label}</p>
               </Link>
             ))}
           </div>
@@ -353,12 +353,12 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
               name="q"
               defaultValue={search}
               placeholder="Search student, group, instructor…"
-              className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none min-w-52"
+              className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none min-w-52"
             />
             <select
               name="risk"
               defaultValue={riskF}
-              className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+              className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
             >
               <option value="">All Risk Levels</option>
               <option value="HIGH">High Risk</option>
@@ -368,7 +368,7 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
             <select
               name="att"
               defaultValue={attF}
-              className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+              className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
             >
               <option value="">All Students</option>
               <option value="low">Below 60%</option>
@@ -376,7 +376,7 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
               <option value="never">Never Attended</option>
               <option value="exhausted">Sessions Exhausted</option>
             </select>
-            <button type="submit" className="rounded-xl bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18]">
+            <button type="submit" className="rounded-xl bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18]">
               Filter
             </button>
             {(search || riskF || attF) && (
@@ -407,16 +407,16 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
                           <Link href={`/admin/students/${row.student_id}`} className="text-[15px] font-semibold text-[#0B1F3A]">
                             {row.student_name}
                           </Link>
-                          <p className="text-[12px] text-[#64748B]">
+                          <p className="text-[13px] text-[#64748B]">
                             {row.group_name ?? '—'}{row.instructor_name ? ` · ${row.instructor_name}` : ''}
                           </p>
                         </div>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold
                           ${row.risk_level === 'HIGH' ? 'bg-[#FEE2E2] text-[#EF4444]' : row.risk_level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#E7F8EE] text-[#15803D]'}`}>
                           {row.risk_level}
                         </span>
                       </div>
-                      <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px]">
+                      <div className="mt-2 grid grid-cols-3 gap-1.5 text-[12px]">
                         <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
                           <p className={`font-bold text-sm ${row.attendance_pct < 60 ? 'text-[#EF4444]' : row.attendance_pct < 80 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
                             {row.attendance_pct}%
@@ -477,14 +477,14 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
                         return (
                           <tr key={row.enrollment_id ?? row.student_id} className="ds-table-row">
                             <td className="px-4 py-3">
-                              <Link href={`/admin/students/${row.student_id}`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">
+                              <Link href={`/admin/students/${row.student_id}`} className="font-medium text-[#0B1F3A] hover:text-[#9A3412]">
                                 {row.student_name}
                               </Link>
-                              {row.student_code && <p className="font-mono text-[10px] text-[#94A3B8]">#{row.student_code}</p>}
+                              {row.student_code && <p className="font-mono text-[11px] text-[#94A3B8]">#{row.student_code}</p>}
                             </td>
                             <td className="px-4 py-3 text-[#64748B]">
                               <p>{row.group_name ?? '—'}</p>
-                              {row.instructor_name && <p className="text-[11px] text-[#94A3B8]">{row.instructor_name}</p>}
+                              {row.instructor_name && <p className="text-[12px] text-[#94A3B8]">{row.instructor_name}</p>}
                             </td>
                             <td className="px-4 py-3 text-center">
                               <div className="flex flex-col items-center gap-1">
@@ -516,24 +516,24 @@ export default async function AdminAttendancePage({ searchParams }: Props) {
                                 <span className="text-[#94A3B8]">∞</span>
                               )}
                             </td>
-                            <td className="px-4 py-3 text-[11px] text-[#94A3B8]">
+                            <td className="px-4 py-3 text-[12px] text-[#94A3B8]">
                               {row.last_attendance_date
                                 ? new Date(row.last_attendance_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
                                 : '—'}
                             </td>
                             <td className="px-4 py-3">
                               <div className="flex flex-col gap-1">
-                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
+                                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold
                                   ${row.risk_level === 'HIGH' ? 'bg-[#FEE2E2] text-[#EF4444]' : row.risk_level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#E7F8EE] text-[#15803D]'}`}>
                                   {row.risk_level}
                                 </span>
-                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${trend.color} ${trend.text}`}>
+                                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${trend.color} ${trend.text}`}>
                                   {trend.label}
                                 </span>
                               </div>
                             </td>
                             <td className="px-4 py-3 text-right">
-                              <Link href={`/admin/students/${row.student_id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
+                              <Link href={`/admin/students/${row.student_id}`} className="text-xs font-medium text-[#C2410C] hover:underline">
                                 View
                               </Link>
                             </td>

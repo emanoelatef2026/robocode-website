@@ -1,4 +1,4 @@
-﻿import { requirePermission }       from '@/modules/rbac/guards'
+import { requirePermission }       from '@/modules/rbac/guards'
 import { getCollectionQueue }       from '@/modules/finance/queries'
 import QueueClient                  from './QueueClient'
 import Link                         from 'next/link'
@@ -110,7 +110,7 @@ function QueueSection({
           <h2 className="text-sm font-semibold text-[#0B1F3A]">{title}</h2>
           <p className="text-xs text-[#94A3B8]">{subtitle}</p>
         </div>
-        <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-bold ${badgeCls}`}>
+        <span className={`ml-auto rounded-full px-2 py-0.5 text-[12px] font-bold ${badgeCls}`}>
           {badgeLabel}
         </span>
       </div>

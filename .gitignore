@@ -63,3 +63,4 @@ backfill-org-emails-*.csv
 /skills-lock.json
 /.claude/skills/*
 !/.claude/skills/graphify/
+.gstack/

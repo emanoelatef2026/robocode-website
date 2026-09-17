@@ -47,12 +47,12 @@ export default async function TrialConversionWidget({ branchIds }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">
           This Month
         </p>
         <Link
           href="/portal/team-leader/special-sessions"
-          className="text-[11px] font-semibold text-[#FF8A1F] hover:underline"
+          className="text-[12px] font-semibold text-[#C2410C] hover:underline"
         >
           View All →
         </Link>
@@ -71,7 +71,7 @@ export default async function TrialConversionWidget({ branchIds }: Props) {
             }`}>
               {t.value}
             </p>
-            <p className="mt-0.5 truncate text-[8px] font-medium leading-tight text-[#64748B] md:text-[10px]">
+            <p className="mt-0.5 truncate text-[8px] font-medium leading-tight text-[#64748B] md:text-[11px]">
               {t.label}
             </p>
             {t.sub && (
@@ -82,7 +82,7 @@ export default async function TrialConversionWidget({ branchIds }: Props) {
       </div>
 
       {stats.trials_this_month === 0 && (
-        <p className="text-[12px] text-[#94A3B8]">
+        <p className="text-[13px] text-[#94A3B8]">
           No trial sessions this month.{' '}
           <Link href="/portal/team-leader/special-sessions/new?type=trial" className="text-[#A855F7] hover:underline font-medium">
             Create one →

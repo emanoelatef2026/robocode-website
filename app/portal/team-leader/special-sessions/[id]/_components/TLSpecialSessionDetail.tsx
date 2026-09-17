@@ -66,7 +66,7 @@ export default function TLSpecialSessionDetail(props: Props) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${badgeColor}`}>{badgeLabel}</span>
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${badgeColor}`}>{badgeLabel}</span>
             <StatusBadge status={session.status} dot />
           </div>
           <h1 className="text-[18px] font-bold text-[#0B1F3A]">
@@ -100,13 +100,13 @@ export default function TLSpecialSessionDetail(props: Props) {
       {endError && (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3">
           <p className="text-[13px] font-semibold text-red-700">Failed to end session</p>
-          <p className="text-[12px] text-red-600 mt-0.5">{endError}</p>
+          <p className="text-[13px] text-red-600 mt-0.5">{endError}</p>
         </div>
       )}
 
       {session.notes && (
         <div className="rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] p-3">
-          <p className="text-[11px] font-semibold text-[#64748B] mb-1">Notes</p>
+          <p className="text-[12px] font-semibold text-[#64748B] mb-1">Notes</p>
           <p className="text-[13px] text-[#0B1F3A]">{session.notes}</p>
         </div>
       )}
@@ -181,27 +181,27 @@ function TrialStudentsPanel({
         {isActive && addMode === 'none' && (
           <div className="flex gap-2">
             <button onClick={() => setAddMode('lead')}
-              className="rounded-lg bg-[#F1F5F9] px-3 py-1.5 text-[12px] font-semibold text-[#0B1F3A] hover:bg-[#E2E8F0]">
+              className="rounded-lg bg-[#F1F5F9] px-3 py-1.5 text-[13px] font-semibold text-[#0B1F3A] hover:bg-[#E2E8F0]">
               From Lead
             </button>
             <button onClick={() => setAddMode('new')}
-              className="rounded-lg bg-[#A855F7] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#9333EA]">
+              className="rounded-lg bg-[#A855F7] px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-[#9333EA]">
               New Student
             </button>
           </div>
         )}
         {addMode !== 'none' && (
-          <button onClick={() => setAddMode('none')} className="text-[12px] text-[#64748B] hover:underline">Cancel</button>
+          <button onClick={() => setAddMode('none')} className="text-[13px] text-[#64748B] hover:underline">Cancel</button>
         )}
       </div>
 
       {/* Add from lead */}
       {addMode === 'lead' && (
         <form action={fromLeadAction} className="border-b border-[#E2E8F0] p-4 space-y-3 bg-purple-50">
-          {!fromLeadState.success && fromLeadState.error?.message && <p className="text-[12px] text-red-600">{fromLeadState.error.message}</p>}
+          {!fromLeadState.success && fromLeadState.error?.message && <p className="text-[13px] text-red-600">{fromLeadState.error.message}</p>}
           <input type="hidden" name="schedule_id" value={session.id} />
           <div>
-            <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Select Lead</label>
+            <label className="block text-[12px] font-semibold text-[#64748B] mb-1">Select Lead</label>
             <select name="lead_id" required className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px]">
               <option value="">-- Select a lead --</option>
               {leads.map(l => (
@@ -221,26 +221,26 @@ function TrialStudentsPanel({
       {/* Add new student */}
       {addMode === 'new' && (
         <form action={newStudentAction} className="border-b border-[#E2E8F0] p-4 space-y-3 bg-purple-50">
-          {!newStudentState.success && newStudentState.error?.message && <p className="text-[12px] text-red-600">{newStudentState.error.message}</p>}
+          {!newStudentState.success && newStudentState.error?.message && <p className="text-[13px] text-red-600">{newStudentState.error.message}</p>}
           <input type="hidden" name="schedule_id" value={session.id} />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Student Name *</label>
+              <label className="block text-[12px] font-semibold text-[#64748B] mb-1">Student Name *</label>
               <input type="text" name="student_name" required placeholder="Full name"
                 className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px]" />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Parent Phone *</label>
+              <label className="block text-[12px] font-semibold text-[#64748B] mb-1">Parent Phone *</label>
               <input type="text" name="parent_phone" required placeholder="+20..."
                 className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px]" />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Student Phone</label>
+              <label className="block text-[12px] font-semibold text-[#64748B] mb-1">Student Phone</label>
               <input type="text" name="student_phone" placeholder="Optional"
                 className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px]" />
             </div>
             <div>
-              <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Notes</label>
+              <label className="block text-[12px] font-semibold text-[#64748B] mb-1">Notes</label>
               <input type="text" name="notes" placeholder="Optional"
                 className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px]" />
             </div>
@@ -260,7 +260,7 @@ function TrialStudentsPanel({
             <div key={s.id} className="flex items-center justify-between px-4 py-3 gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-[13px] font-semibold text-[#0B1F3A] truncate">{s.student_name}</p>
-                <p className="text-[11px] text-[#64748B]">
+                <p className="text-[12px] text-[#64748B]">
                   {s.parent_phone ? `Parent: ${s.parent_phone}` : ''}
                   {s.lead_id ? ' · Linked to lead' : ' · Ad-hoc'}
                 </p>
@@ -269,7 +269,7 @@ function TrialStudentsPanel({
                 value={attendanceMap[s.id] ?? 'absent'}
                 onChange={e => onAttendanceChange(prev => ({ ...prev, [s.id]: e.target.value }))}
                 disabled={!isOngoing}
-                className="rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#A855F7] disabled:opacity-60 disabled:bg-[#F8FAFC] shrink-0"
+                className="rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#A855F7] disabled:opacity-60 disabled:bg-[#F8FAFC] shrink-0"
               >
                 <option value="present">Present</option>
                 <option value="absent">Absent</option>
@@ -290,7 +290,7 @@ function TrialStudentsPanel({
           >
             {savePending ? 'Saving…' : 'Save Attendance'}
           </button>
-          <p className="text-[11px] text-[#64748B]">Attendance is also saved automatically when you end the session.</p>
+          <p className="text-[12px] text-[#64748B]">Attendance is also saved automatically when you end the session.</p>
         </div>
       )}
     </div>
@@ -319,33 +319,33 @@ function MakeupStudentsPanel({ session, isActive }: { session: MakeupSession; is
         <h2 className="text-[14px] font-bold text-[#0B1F3A]">Makeup Students ({session.students.length})</h2>
         {isActive && !addMode && (
           <button onClick={() => setAddMode(true)}
-            className="rounded-lg bg-[#F59E0B] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#D97706]">
+            className="rounded-lg bg-[#F59E0B] px-3 py-1.5 text-[13px] font-semibold text-white hover:bg-[#D97706]">
             + Add Student
           </button>
         )}
         {addMode && (
-          <button onClick={() => setAddMode(false)} className="text-[12px] text-[#64748B] hover:underline">Cancel</button>
+          <button onClick={() => setAddMode(false)} className="text-[13px] text-[#64748B] hover:underline">Cancel</button>
         )}
       </div>
 
       {addMode && (
         <form action={addAction} className="border-b border-[#E2E8F0] p-4 space-y-3 bg-orange-50">
-          {!addState.success && addState.error?.message && <p className="text-[12px] text-red-600">{addState.error.message}</p>}
+          {!addState.success && addState.error?.message && <p className="text-[13px] text-red-600">{addState.error.message}</p>}
           <input type="hidden" name="schedule_id" value={session.id} />
           <div>
-            <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Student ID</label>
+            <label className="block text-[12px] font-semibold text-[#64748B] mb-1">Student ID</label>
             <input type="text" name="student_id" required placeholder="Student UUID"
               className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] font-mono" />
           </div>
           <div>
-            <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Mode</label>
+            <label className="block text-[12px] font-semibold text-[#64748B] mb-1">Mode</label>
             <select name="mode" required className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px]">
               <option value="EXTRA">Extra (+1 session consumed)</option>
               <option value="REPLACE_MISSED">Replace Missed (no consumption)</option>
             </select>
           </div>
           <div>
-            <label className="block text-[11px] font-semibold text-[#64748B] mb-1">Missed Session ID (for REPLACE_MISSED)</label>
+            <label className="block text-[12px] font-semibold text-[#64748B] mb-1">Missed Session ID (for REPLACE_MISSED)</label>
             <input type="text" name="replaced_session_id" placeholder="Optional – schedule UUID"
               className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] font-mono" />
           </div>
@@ -364,7 +364,7 @@ function MakeupStudentsPanel({ session, isActive }: { session: MakeupSession; is
             <div key={s.id} className="flex items-center justify-between px-4 py-3">
               <div>
                 <p className="text-[13px] font-semibold text-[#0B1F3A]">{s.student_name}</p>
-                <p className="text-[11px] text-[#64748B]">
+                <p className="text-[12px] text-[#64748B]">
                   {s.mode === 'EXTRA' ? (
                     <span className="text-orange-600 font-medium">Extra (+1 session)</span>
                   ) : (
@@ -375,7 +375,7 @@ function MakeupStudentsPanel({ session, isActive }: { session: MakeupSession; is
                 </p>
               </div>
               {s.attendance_status && (
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${
                   s.attendance_status === 'present' ? 'bg-green-100 text-green-700' :
                   s.attendance_status === 'late'    ? 'bg-yellow-100 text-yellow-700' :
                   'bg-red-100 text-red-700'

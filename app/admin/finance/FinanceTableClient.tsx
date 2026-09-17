@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState, useTransition, useCallback } from 'react'
 import Link from 'next/link'
 import {
@@ -68,7 +68,7 @@ export default function FinanceTableClient({ accounts, exportUrl }: { accounts: 
           <a
             href={exportUrl}
             download
-            className="inline-flex items-center gap-1.5 ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F] transition-colors"
+            className="inline-flex items-center gap-1.5 ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412] transition-colors"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
               <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -77,7 +77,7 @@ export default function FinanceTableClient({ accounts, exportUrl }: { accounts: 
           </a>
           <Link
             href="/admin/finance/queue"
-            className="inline-flex items-center gap-1.5 ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F] transition-colors"
+            className="inline-flex items-center gap-1.5 ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412] transition-colors"
           >
             Collections Queue →
           </Link>
@@ -95,13 +95,13 @@ export default function FinanceTableClient({ accounts, exportUrl }: { accounts: 
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <p className="text-[15px] font-semibold text-[#0B1F3A] leading-tight truncate">{item.student_name}</p>
-                {item.student_code && <p className="mt-0.5 font-mono text-[11px] text-[#94A3B8]">{item.student_code}</p>}
+                {item.student_code && <p className="mt-0.5 font-mono text-[12px] text-[#94A3B8]">{item.student_code}</p>}
               </div>
-              <span className={`inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[item.status]}`}>
+              <span className={`inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[12px] font-medium ${STATUS_COLORS[item.status]}`}>
                 {STATUS_LABELS[item.status]}
               </span>
             </div>
-            <div className="mt-2 grid grid-cols-3 gap-2 text-[12px]">
+            <div className="mt-2 grid grid-cols-3 gap-2 text-[13px]">
               <div>
                 <p className="text-[#94A3B8]">Paid</p>
                 <p className="font-semibold text-[#10B981]">EGP {fmt(item.paid_amount)}</p>
@@ -117,7 +117,7 @@ export default function FinanceTableClient({ accounts, exportUrl }: { accounts: 
                 <p className="font-medium text-[#0B1F3A]">{dateFmt(item.next_due_date)}</p>
               </div>
             </div>
-            <div className="mt-2 flex items-center gap-2 text-[12px] text-[#64748B]">
+            <div className="mt-2 flex items-center gap-2 text-[13px] text-[#64748B]">
               <span>{item.branch_name}</span>
               {item.group_name && <><span>·</span><span>{item.group_name}</span></>}
               {item.parent_phone_1 && <><span>·</span><span className="font-medium text-[#0B1F3A]">{item.parent_phone_1}</span></>}
@@ -156,20 +156,20 @@ export default function FinanceTableClient({ accounts, exportUrl }: { accounts: 
               >
                 <td className="px-4 py-3">
                   <p className="font-medium text-[#0B1F3A]">{item.student_name}</p>
-                  {item.student_code && <p className="font-mono text-[11px] text-[#94A3B8]">{item.student_code}</p>}
+                  {item.student_code && <p className="font-mono text-[12px] text-[#94A3B8]">{item.student_code}</p>}
                 </td>
                 <td className="px-4 py-3">
                   <p className="text-[#64748B]">{item.parent_name ?? '—'}</p>
-                  {item.parent_phone_1 && <p className="text-[12px] font-medium text-[#0B1F3A]">{item.parent_phone_1}</p>}
+                  {item.parent_phone_1 && <p className="text-[13px] font-medium text-[#0B1F3A]">{item.parent_phone_1}</p>}
                 </td>
                 <td className="px-4 py-3">
                   <p className="text-[#64748B]">{item.branch_name}</p>
-                  {item.group_name && <p className="text-[12px] text-[#94A3B8]">{item.group_name}</p>}
+                  {item.group_name && <p className="text-[13px] text-[#94A3B8]">{item.group_name}</p>}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <p className="font-medium text-[#0B1F3A]">EGP {fmt(item.net_amount)}</p>
                   {item.discount_amount > 0 && (
-                    <p className="text-[11px] text-[#10B981]">-EGP {fmt(item.discount_amount)} disc.</p>
+                    <p className="text-[12px] text-[#10B981]">-EGP {fmt(item.discount_amount)} disc.</p>
                   )}
                 </td>
                 <td className="px-4 py-3 text-right font-semibold text-[#10B981]">
@@ -184,7 +184,7 @@ export default function FinanceTableClient({ accounts, exportUrl }: { accounts: 
                   {item.next_due_date ? (
                     <span className={item.days_overdue > 0 ? 'text-[#EF4444] font-medium' : ''}>
                       {dateFmt(item.next_due_date)}
-                      {item.days_overdue > 0 && <span className="ml-1 text-[11px]">({item.days_overdue}d late)</span>}
+                      {item.days_overdue > 0 && <span className="ml-1 text-[12px]">({item.days_overdue}d late)</span>}
                     </span>
                   ) : '—'}
                 </td>
@@ -192,16 +192,16 @@ export default function FinanceTableClient({ accounts, exportUrl }: { accounts: 
                   {dateFmt(item.last_payment_date ?? null)}
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[item.status]}`}>
+                  <span className={`inline-flex rounded-full border px-2 py-0.5 text-[12px] font-medium ${STATUS_COLORS[item.status]}`}>
                     {STATUS_LABELS[item.status]}
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${PRIORITY_COLORS[item.priority]}`}>
+                  <span className={`inline-flex rounded-full px-2 py-0.5 text-[12px] font-semibold ${PRIORITY_COLORS[item.priority]}`}>
                     {item.priority}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right text-xs font-medium text-[#FF8A1F]">
+                <td className="px-4 py-3 text-right text-xs font-medium text-[#C2410C]">
                   Open →
                 </td>
               </tr>
@@ -282,7 +282,7 @@ function FinanceModal({
               className={[
                 'whitespace-nowrap px-3 py-2.5 text-sm font-medium border-b-2 transition-colors shrink-0',
                 tab === t.id
-                  ? 'border-[#FF8A1F] text-[#FF8A1F]'
+                  ? 'border-[#0E7490] text-[#C2410C]'
                   : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]',
               ].join(' ')}
             >
@@ -295,7 +295,7 @@ function FinanceModal({
         <div className="flex-1 overflow-y-auto p-5">
           {loading && (
             <div className="flex items-center justify-center py-16">
-              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0E7490] border-t-transparent" />
             </div>
           )}
           {!loading && !detail && (
@@ -340,32 +340,32 @@ function SummaryTab({ detail }: { detail: StudentFinanceDetail }) {
       {/* Student + parent */}
       <div className="grid grid-cols-2 gap-3 rounded-xl bg-[#F8FAFC] p-4">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Student</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Student</p>
           <p className="mt-0.5 text-sm font-semibold text-[#0B1F3A]">{student.name}</p>
-          <p className="text-[12px] text-[#64748B]">{student.email}</p>
-          {student.phone && <p className="text-[12px] text-[#64748B]">{student.phone}</p>}
+          <p className="text-[13px] text-[#64748B]">{student.email}</p>
+          {student.phone && <p className="text-[13px] text-[#64748B]">{student.phone}</p>}
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Parent</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Parent</p>
           <p className="mt-0.5 text-sm font-semibold text-[#0B1F3A]">{student.parent_name ?? '—'}</p>
-          {student.parent_phone_1 && <p className="text-[12px] text-[#64748B]">{student.parent_phone_1}</p>}
-          {student.parent_phone_2 && <p className="text-[12px] text-[#64748B]">{student.parent_phone_2}</p>}
+          {student.parent_phone_1 && <p className="text-[13px] text-[#64748B]">{student.parent_phone_1}</p>}
+          {student.parent_phone_2 && <p className="text-[13px] text-[#64748B]">{student.parent_phone_2}</p>}
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Branch</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Branch</p>
           <p className="mt-0.5 text-sm text-[#0B1F3A]">{student.branch_name}</p>
         </div>
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Group / Course</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Group / Course</p>
           <p className="mt-0.5 text-sm text-[#0B1F3A]">{student.group_name ?? '—'}</p>
-          {student.course_title && <p className="text-[12px] text-[#94A3B8]">{student.course_title}</p>}
+          {student.course_title && <p className="text-[13px] text-[#94A3B8]">{student.course_title}</p>}
         </div>
       </div>
 
       {/* Financial summary */}
       <div className="rounded-xl border border-[#E2E8F0]">
         <div className="border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Financial Summary</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Financial Summary</p>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-[#E2E8F0]">
           {[
@@ -377,7 +377,7 @@ function SummaryTab({ detail }: { detail: StudentFinanceDetail }) {
             { label: 'Next Due',  value: dateFmt(account.next_due_date),         cls: 'text-[#0B1F3A]' },
           ].map(({ label, value, cls }) => (
             <div key={label} className="bg-white px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">{label}</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">{label}</p>
               <p className={`mt-0.5 text-sm ${cls}`}>{value}</p>
             </div>
           ))}
@@ -389,7 +389,7 @@ function SummaryTab({ detail }: { detail: StudentFinanceDetail }) {
             </span>
             <div className="flex flex-1 items-center gap-2 max-w-[180px]">
               <div className="flex-1 h-2 rounded-full bg-[#F1F5F9] overflow-hidden">
-                <div className="h-full rounded-full bg-[#FF8A1F]" style={{ width: `${pct}%` }} />
+                <div className="h-full rounded-full bg-[#C2410C]" style={{ width: `${pct}%` }} />
               </div>
               <span className="text-xs font-medium text-[#64748B]">{pct}%</span>
             </div>
@@ -406,11 +406,11 @@ function SummaryTab({ detail }: { detail: StudentFinanceDetail }) {
               <div key={p.id} className="flex items-center justify-between rounded-lg bg-[#F8FAFC] px-3 py-2.5">
                 <div>
                   <p className="text-sm font-semibold text-[#10B981]">EGP {fmt(p.amount)}</p>
-                  <p className="text-[11px] text-[#94A3B8]">
+                  <p className="text-[12px] text-[#94A3B8]">
                     {PAYMENT_METHOD_LABELS[p.payment_method]} · {timeFmt(p.payment_date)}
                   </p>
                 </div>
-                {p.reference_number && <p className="text-[11px] text-[#64748B]">#{p.reference_number}</p>}
+                {p.reference_number && <p className="text-[12px] text-[#64748B]">#{p.reference_number}</p>}
               </div>
             ))}
           </div>
@@ -458,7 +458,7 @@ function InstallmentsTab({ detail, accountId, onRefresh }: { detail: StudentFina
                   <p className="text-sm font-semibold text-[#0B1F3A]">Installment #{inst.installment_number}</p>
                   <p className="mt-0.5 text-xs text-[#64748B]">Due: {dateFmt(inst.due_date)}</p>
                 </div>
-                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>
+                <span className={`rounded-full px-2 py-0.5 text-[12px] font-semibold ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>
                   {inst.status}
                 </span>
               </div>
@@ -469,7 +469,7 @@ function InstallmentsTab({ detail, accountId, onRefresh }: { detail: StudentFina
                   { l: 'Remaining', v: `EGP ${fmt(inst.amount - inst.paid_amount)}`,         cls: inst.amount - inst.paid_amount > 0 ? 'text-[#EF4444]' : 'text-[#94A3B8]' },
                 ].map(({ l, v, cls }) => (
                   <div key={l}>
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">{l}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">{l}</p>
                     <p className={`mt-0.5 text-sm font-semibold ${cls}`}>{v}</p>
                   </div>
                 ))}
@@ -477,7 +477,7 @@ function InstallmentsTab({ detail, accountId, onRefresh }: { detail: StudentFina
               {inst.amount > 0 && inst.status !== 'PAID' && (
                 <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
                   <div
-                    className="h-full rounded-full bg-[#FF8A1F]"
+                    className="h-full rounded-full bg-[#C2410C]"
                     style={{ width: `${Math.min(100, Math.round((inst.paid_amount / inst.amount) * 100))}%` }}
                   />
                 </div>
@@ -494,20 +494,20 @@ function InstallmentsTab({ detail, accountId, onRefresh }: { detail: StudentFina
             <div>
               <label className="block text-xs font-medium text-[#64748B] mb-1">Amount (EGP) *</label>
               <input name="amount" type="number" min="1" step="0.01" required
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
             </div>
             <div>
               <label className="block text-xs font-medium text-[#64748B] mb-1">Due Date *</label>
               <input name="due_date" type="date" required
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
             </div>
           </div>
           <input name="notes" placeholder="Notes (optional)"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
           {err && <p className="text-xs text-[#EF4444]">{err}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={pending}
-              className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-sm font-semibold text-white disabled:opacity-50">
+              className="flex-1 rounded-lg bg-[#C2410C] py-2 text-sm font-semibold text-white disabled:opacity-50">
               {pending ? 'Saving…' : 'Save'}
             </button>
             <button type="button" onClick={() => setShowAdd(false)}
@@ -518,7 +518,7 @@ function InstallmentsTab({ detail, accountId, onRefresh }: { detail: StudentFina
         </form>
       ) : (
         <button onClick={() => setShowAdd(true)}
-          className="w-full rounded-xl border-2 border-dashed border-[#E2E8F0] py-3 text-sm text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F] transition-colors">
+          className="w-full rounded-xl border-2 border-dashed border-[#E2E8F0] py-3 text-sm text-[#64748B] hover:border-[#0E7490]/40 hover:text-[#9A3412] transition-colors">
           + Add Installment
         </button>
       )}
@@ -569,20 +569,20 @@ function PaymentTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDe
           <input name="amount" type="number" min="0.01" step="0.01"
             defaultValue={detail.account.remaining_amount > 0 ? detail.account.remaining_amount : undefined}
             required
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
         </div>
         <div>
           <label className="block text-xs font-medium text-[#64748B] mb-1">Date *</label>
           <input name="payment_date" type="date"
             defaultValue={new Date().toISOString().slice(0, 10)} required
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
         </div>
       </div>
 
       <div>
         <label className="block text-xs font-medium text-[#64748B] mb-1">Method *</label>
         <select name="payment_method" required
-          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20">
           {(Object.entries(PAYMENT_METHOD_LABELS) as [PaymentMethod, string][]).map(([v, l]) => (
             <option key={v} value={v}>{l}</option>
           ))}
@@ -593,7 +593,7 @@ function PaymentTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDe
         <div>
           <label className="block text-xs font-medium text-[#64748B] mb-1">Apply to installment (optional)</label>
           <select name="installment_id"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20">
             <option value="">— General payment —</option>
             {pendingInsts.map(i => (
               <option key={i.id} value={i.id}>
@@ -608,12 +608,12 @@ function PaymentTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDe
         <div>
           <label className="block text-xs font-medium text-[#64748B] mb-1">Reference #</label>
           <input name="reference_number" placeholder="e.g. TRX-12345"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
         </div>
         <div>
           <label className="block text-xs font-medium text-[#64748B] mb-1">Notes</label>
           <input name="notes"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
         </div>
       </div>
 
@@ -621,7 +621,7 @@ function PaymentTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDe
       {ok  && <p className="rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#10B981]">Payment recorded successfully.</p>}
 
       <button type="submit" disabled={pending}
-        className="w-full rounded-xl bg-[#FF8A1F] py-3 text-sm font-bold text-white shadow-sm hover:bg-[#e87c18] disabled:opacity-50 transition-colors">
+        className="w-full rounded-xl bg-[#C2410C] py-3 text-sm font-bold text-white shadow-sm hover:bg-[#e87c18] disabled:opacity-50 transition-colors">
         {pending ? 'Recording…' : 'Record Payment'}
       </button>
     </form>
@@ -655,14 +655,14 @@ function NotesTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDeta
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-3">
         <textarea name="note_text" rows={3} required placeholder="Add a finance note (e.g. Parent promised payment next week)…"
-          className="w-full rounded-xl border border-[#E2E8F0] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20 resize-none" />
+          className="w-full rounded-xl border border-[#E2E8F0] px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20 resize-none" />
         <div className="flex items-center justify-between gap-3">
           <label className="flex items-center gap-2 text-xs text-[#64748B]">
             <input name="is_internal" type="checkbox" className="rounded" />
             Internal (hidden from parents)
           </label>
           <button type="submit" disabled={pending}
-            className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 shrink-0">
+            className="rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 shrink-0">
             {pending ? 'Adding…' : 'Add Note'}
           </button>
         </div>
@@ -678,10 +678,10 @@ function NotesTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDeta
               <div className="flex items-start gap-2">
                 <p className="flex-1 text-sm text-[#0B1F3A]">{n.note_text}</p>
                 {n.is_internal && (
-                  <span className="shrink-0 rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">Internal</span>
+                  <span className="shrink-0 rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#B45309]">Internal</span>
                 )}
               </div>
-              <p className="mt-1.5 text-[11px] text-[#94A3B8]">
+              <p className="mt-1.5 text-[12px] text-[#94A3B8]">
                 {n.created_by_name ?? 'Staff'} · {timeFmt(n.created_at)}
               </p>
             </div>
@@ -727,7 +727,7 @@ function ActivitiesTab({ detail, accountId, onRefresh }: { detail: StudentFinanc
           <div>
             <label className="block text-xs font-medium text-[#64748B] mb-1">Type *</label>
             <select name="activity_type" required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20">
               {(Object.entries(ACTIVITY_TYPE_LABELS) as [ActivityType, string][]).map(([v, l]) => (
                 <option key={v} value={v}>{l}</option>
               ))}
@@ -736,7 +736,7 @@ function ActivitiesTab({ detail, accountId, onRefresh }: { detail: StudentFinanc
           <div>
             <label className="block text-xs font-medium text-[#64748B] mb-1">Notes</label>
             <input name="notes" placeholder="Optional…"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
           </div>
         </div>
         {err && <p className="text-xs text-[#EF4444]">{err}</p>}
@@ -753,12 +753,12 @@ function ActivitiesTab({ detail, accountId, onRefresh }: { detail: StudentFinanc
           <div className="absolute left-0 top-2 bottom-0 w-0.5 bg-[#E2E8F0]" />
           {detail.activities.map(act => (
             <div key={act.id} className="relative pl-6 pb-4">
-              <span className="absolute left-[-8px] top-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-[#E2E8F0] bg-white text-[11px]">
+              <span className="absolute left-[-8px] top-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-[#E2E8F0] bg-white text-[12px]">
                 {ACTIVITY_ICONS[act.activity_type] ?? '•'}
               </span>
               <p className="text-sm font-semibold text-[#0B1F3A]">{ACTIVITY_TYPE_LABELS[act.activity_type]}</p>
               {act.notes && <p className="mt-0.5 text-xs text-[#64748B]">{act.notes}</p>}
-              <p className="mt-0.5 text-[11px] text-[#94A3B8]">{act.created_by_name ?? 'Staff'} · {timeFmt(act.created_at)}</p>
+              <p className="mt-0.5 text-[12px] text-[#94A3B8]">{act.created_by_name ?? 'Staff'} · {timeFmt(act.created_at)}</p>
             </div>
           ))}
         </div>
@@ -815,7 +815,7 @@ function PromisesTab({ detail, accountId, onRefresh }: { detail: StudentFinanceD
   return (
     <div className="space-y-3">
       {promises === null ? (
-        <div className="py-6 text-center"><div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" /></div>
+        <div className="py-6 text-center"><div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-[#0E7490] border-t-transparent" /></div>
       ) : promises.length === 0 ? (
         <p className="py-6 text-center text-sm text-[#94A3B8]">No promises recorded.</p>
       ) : (
@@ -824,15 +824,15 @@ function PromisesTab({ detail, accountId, onRefresh }: { detail: StudentFinanceD
             <div key={p.id} className="flex items-start justify-between rounded-lg border border-[#E2E8F0] px-4 py-3">
               <div>
                 <p className="text-sm font-semibold text-[#0B1F3A]">EGP {fmt(p.promised_amount)}</p>
-                <p className="text-[11px] text-[#64748B]">By {dateFmt(p.promised_date)}</p>
-                {p.notes && <p className="text-[11px] text-[#94A3B8]">{p.notes}</p>}
-                <p className="text-[11px] text-[#94A3B8]">{p.created_by_name ?? 'Staff'}</p>
+                <p className="text-[12px] text-[#64748B]">By {dateFmt(p.promised_date)}</p>
+                {p.notes && <p className="text-[12px] text-[#94A3B8]">{p.notes}</p>}
+                <p className="text-[12px] text-[#94A3B8]">{p.created_by_name ?? 'Staff'}</p>
               </div>
               <div className="flex flex-col items-end gap-1.5">
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusCls[p.status] ?? ''}`}>{p.status}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${statusCls[p.status] ?? ''}`}>{p.status}</span>
                 {p.status === 'ACTIVE' && (
                   <button onClick={() => fulfill(p.id)} disabled={pending}
-                    className="text-[11px] text-[#10B981] hover:underline disabled:opacity-50">
+                    className="text-[12px] text-[#10B981] hover:underline disabled:opacity-50">
                     Mark Fulfilled
                   </button>
                 )}
@@ -849,16 +849,16 @@ function PromisesTab({ detail, accountId, onRefresh }: { detail: StudentFinanceD
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Amount (EGP) *</label>
               <input name="promised_amount" type="number" min="1" step="0.01" required
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Promised By *</label>
               <input name="promised_date" type="date" required
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
             </div>
           </div>
           <input name="notes" placeholder="Notes (optional)"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
           {err && <p className="text-xs text-[#EF4444]">{err}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={pending}
@@ -871,7 +871,7 @@ function PromisesTab({ detail, accountId, onRefresh }: { detail: StudentFinanceD
         </form>
       ) : (
         <button onClick={() => setShowAdd(true)}
-          className="w-full rounded-xl border-2 border-dashed border-[#E2E8F0] py-3 text-sm text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F]">
+          className="w-full rounded-xl border-2 border-dashed border-[#E2E8F0] py-3 text-sm text-[#64748B] hover:border-[#0E7490]/40 hover:text-[#9A3412]">
           + Record Promise to Pay
         </button>
       )}
@@ -912,10 +912,10 @@ function QuickActionsFooter({
 
   return (
     <div className="shrink-0 border-t border-[#E2E8F0] bg-[#F8FAFC] px-5 py-3">
-      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Quick Actions</p>
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Quick Actions</p>
       <div className="flex flex-wrap gap-2">
         <button onClick={() => setTab('payment')}
-          className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#e87c18]">
+          className="rounded-lg bg-[#C2410C] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#e87c18]">
           + Payment
         </button>
         {waLink && (
@@ -938,15 +938,15 @@ function QuickActionsFooter({
           </a>
         )}
         <button onClick={() => setTab('notes')}
-          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F]">
+          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#0E7490]/40 hover:text-[#9A3412]">
           + Note
         </button>
         <button disabled={pending} onClick={() => logActivity('PAYMENT_REMINDER')}
-          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F] disabled:opacity-50">
+          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#0E7490]/40 hover:text-[#9A3412] disabled:opacity-50">
           {pending ? '…' : 'Log Reminder'}
         </button>
         <button onClick={() => setTab('activities')}
-          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F]">
+          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#0E7490]/40 hover:text-[#9A3412]">
           Activities
         </button>
       </div>

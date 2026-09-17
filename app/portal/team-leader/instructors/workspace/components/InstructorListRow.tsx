@@ -28,7 +28,7 @@ export function InstructorListRow({
           <div className="min-w-0">
             <p className="truncate text-[13px] font-semibold text-[#0B1F3A]">{name}</p>
             {instructor.instructor_code && (
-              <span className="font-mono text-[10px] text-[#94A3B8]">{instructor.instructor_code}</span>
+              <span className="font-mono text-[11px] text-[#94A3B8]">{instructor.instructor_code}</span>
             )}
           </div>
         </div>
@@ -44,32 +44,32 @@ export function InstructorListRow({
       <td className="px-4 py-2.5 text-center text-[13px] font-semibold text-[#0B1F3A]">{instructor.student_count}</td>
       <td className="px-4 py-2.5 text-center">
         {instructor.today_sessions_count > 0
-          ? <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#B45309]">{instructor.today_sessions_count}</span>
-          : <span className="text-[11px] text-[#CBD5E1]">—</span>
+          ? <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[12px] font-semibold text-[#B45309]">{instructor.today_sessions_count}</span>
+          : <span className="text-[12px] text-[#CBD5E1]">—</span>
         }
       </td>
       <td className="px-4 py-2.5 text-center">
-        <span className={`text-[12px] font-bold ${instructor.attendance_compliance > 0 ? attColor(instructor.attendance_compliance) : 'text-[#CBD5E1]'}`}>
+        <span className={`text-[13px] font-bold ${instructor.attendance_compliance > 0 ? attColor(instructor.attendance_compliance) : 'text-[#CBD5E1]'}`}>
           {instructor.attendance_compliance > 0 ? `${instructor.attendance_compliance}%` : '—'}
         </span>
       </td>
-      <td className="px-4 py-2.5 text-[12px] text-[#64748B]">
+      <td className="px-4 py-2.5 text-[13px] text-[#64748B]">
         {instructor.salary_per_session ? fmtCurrency(instructor.salary_per_session) : <span className="text-[#CBD5E1]">—</span>}
       </td>
       <td className="px-4 py-2.5">
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${statusCls(instructor.status)}`}>
+        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${statusCls(instructor.status)}`}>
           {instructor.status.replace('_', ' ')}
         </span>
       </td>
       {canManage && (
         <td className="px-3 py-2.5">
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button onClick={onAssign} className="rounded bg-[#FF8A1F] px-2 py-1 text-[10px] font-semibold text-white hover:bg-[#e87c18] transition">Assign</button>
-            <button onClick={onEdit}   className="rounded border border-[#E2E8F0] px-2 py-1 text-[10px] text-[#374151] hover:bg-[#F1F5F9] transition">Edit</button>
-            <button onClick={onDelete} className="rounded border border-[#FECACA] px-2 py-1 text-[10px] text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition">Delete</button>
+            <button onClick={onAssign} className="rounded bg-[#C2410C] px-2 py-1 text-[11px] font-semibold text-white hover:bg-[#e87c18] transition">Assign</button>
+            <button onClick={onEdit}   className="rounded border border-[#E2E8F0] px-2 py-1 text-[11px] text-[#374151] hover:bg-[#F1F5F9] transition">Edit</button>
+            <button onClick={onDelete} className="rounded border border-[#FECACA] px-2 py-1 text-[11px] text-[#EF4444] hover:bg-[#EF4444] hover:text-white transition">Delete</button>
             {wa && buildWhatsAppUrl(wa, null) && (
               <a href={buildWhatsAppUrl(wa, null)!} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
-                className="rounded border border-[#A7F3D0] bg-[#E7F8EE] px-2 py-1 text-[10px] text-[#10B981] hover:bg-[#E7F8EE] transition">WA</a>
+                className="rounded border border-[#A7F3D0] bg-[#E7F8EE] px-2 py-1 text-[11px] text-[#10B981] hover:bg-[#E7F8EE] transition">WA</a>
             )}
           </div>
         </td>

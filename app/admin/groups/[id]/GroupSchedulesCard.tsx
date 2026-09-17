@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useTransition } from 'react'
 import { createGroupSchedule, deleteGroupSchedule } from '@/modules/groups/actions'
@@ -36,7 +36,7 @@ export default function GroupSchedulesCard({ groupId, hasCourse, schedules }: Pr
     })
   }
 
-  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15 bg-white'
+  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15 bg-white'
 
   // Default scheduled_at: tomorrow same time as now
   const tomorrow = new Date(Date.now() + 86_400_000)
@@ -173,7 +173,7 @@ export default function GroupSchedulesCard({ groupId, hasCourse, schedules }: Pr
                       <td className="px-4 py-3 text-[#64748B]">{s.duration_minutes} min</td>
                       <td className="px-4 py-3 text-[#64748B] capitalize">{TYPE_LABELS[s.type] ?? s.type}</td>
                       <td className="px-4 py-3">
-                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[s.status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[12px] font-medium ${STATUS_COLORS[s.status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
                           {s.status}
                         </span>
                       </td>

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, useTransition } from 'react'
 import type { ParentOperationalRow, LinkedChild } from '@/modules/parents/operational'
@@ -52,8 +52,8 @@ export default function ParentDetailDrawer({ parent: p, isTL, onClose, onEdit }:
           <div className="min-w-0 flex-1">
             <h2 className="text-base font-bold text-[#0B1F3A] truncate">{p.parent_name}</h2>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              {p.email && <span className="text-[11px] text-[#94A3B8]">{p.email}</span>}
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${hCfg.color} ${hCfg.text}`}>
+              {p.email && <span className="text-[12px] text-[#94A3B8]">{p.email}</span>}
+              <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${hCfg.color} ${hCfg.text}`}>
                 {hCfg.label}
               </span>
             </div>
@@ -88,7 +88,7 @@ export default function ParentDetailDrawer({ parent: p, isTL, onClose, onEdit }:
               onClick={() => setTab(t)}
               className={`shrink-0 px-3 py-2.5 text-xs font-medium capitalize transition whitespace-nowrap
                 ${tab === t
-                  ? 'border-b-2 border-[#FF8A1F] text-[#FF8A1F]'
+                  ? 'border-b-2 border-[#0E7490] text-[#C2410C]'
                   : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
             >
               {t}
@@ -120,9 +120,9 @@ function OverviewTab({ p, hCfg }: { p: ParentOperationalRow; hCfg: { label: stri
         <Row label="Phone">
           {p.phone ? (
             <div className="flex items-center gap-2">
-              <a href={`tel:${p.phone}`} className="text-[#0B1F3A] hover:text-[#FF8A1F]">{p.phone}</a>
+              <a href={`tel:${p.phone}`} className="text-[#0B1F3A] hover:text-[#9A3412]">{p.phone}</a>
               <a href={buildWhatsAppUrl(p.phone, null) ?? '#'} target="_blank" rel="noopener noreferrer"
-                className="rounded border border-[#25D366]/30 px-1.5 py-0.5 text-[10px] font-medium text-[#25D366]">
+                className="rounded border border-[#25D366]/30 px-1.5 py-0.5 text-[11px] font-medium text-[#25D366]">
                 WA
               </a>
             </div>
@@ -136,19 +136,19 @@ function OverviewTab({ p, hCfg }: { p: ParentOperationalRow; hCfg: { label: stri
         <div className="grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg bg-[#F8FAFC] px-2 py-3">
             <p className="text-base font-bold text-[#0B1F3A]">{p.children_count}</p>
-            <p className="text-[11px] text-[#94A3B8]">Children</p>
+            <p className="text-[12px] text-[#94A3B8]">Children</p>
           </div>
           <div className="rounded-lg bg-[#F8FAFC] px-2 py-3">
             <p className={`text-base font-bold ${p.near_exhaustion_children_count > 0 ? 'text-[#F59E0B]' : 'text-[#0B1F3A]'}`}>
               {p.total_sessions_remaining}
             </p>
-            <p className="text-[11px] text-[#94A3B8]">Sessions Left</p>
+            <p className="text-[12px] text-[#94A3B8]">Sessions Left</p>
           </div>
           <div className="rounded-lg bg-[#F8FAFC] px-2 py-3">
             <p className={`text-base font-bold ${p.attendance_risk_children_count > 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
               {p.attendance_risk_children_count}
             </p>
-            <p className="text-[11px] text-[#94A3B8]">At-Risk Kids</p>
+            <p className="text-[12px] text-[#94A3B8]">At-Risk Kids</p>
           </div>
         </div>
       </section>
@@ -159,17 +159,17 @@ function OverviewTab({ p, hCfg }: { p: ParentOperationalRow; hCfg: { label: stri
           <h3 className="mb-2 text-xs font-semibold text-[#B45309] uppercase tracking-wide">Flags</h3>
           <div className="flex flex-wrap gap-1.5">
             {p.children_count > 1 && (
-              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700">
+              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-[11px] font-bold text-purple-700">
                 Multi-Child Family
               </span>
             )}
             {p.attendance_risk_children_count > 0 && (
-              <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-bold text-[#EF4444]">
+              <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-bold text-[#EF4444]">
                 {p.attendance_risk_children_count} child{p.attendance_risk_children_count > 1 ? 'ren' : ''} at attendance risk
               </span>
             )}
             {p.near_exhaustion_children_count > 0 && (
-              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-bold text-[#B45309]">
+              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-bold text-[#B45309]">
                 {p.near_exhaustion_children_count} child{p.near_exhaustion_children_count > 1 ? 'ren' : ''} near session end
               </span>
             )}
@@ -178,7 +178,7 @@ function OverviewTab({ p, hCfg }: { p: ParentOperationalRow; hCfg: { label: stri
       )}
 
       {p.last_attendance_at && (
-        <p className="text-center text-[11px] text-[#94A3B8]">
+        <p className="text-center text-[12px] text-[#94A3B8]">
           Last family attendance: {new Date(p.last_attendance_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
         </p>
       )}
@@ -214,7 +214,7 @@ function ChildrenTab({ p }: { p: ParentOperationalRow }) {
   return (
     <div className="space-y-3">
       {activeCount > 0 && inactiveCount > 0 && (
-        <p className="text-[11px] font-medium text-[#64748B]">
+        <p className="text-[12px] font-medium text-[#64748B]">
           {activeCount} active · {inactiveCount} inactive
         </p>
       )}
@@ -231,9 +231,9 @@ function ChildCard({ c }: { c: LinkedChild }) {
         <div>
           <p className="text-sm font-semibold text-[#0B1F3A]">{c.student_name}</p>
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            {c.student_code && <span className="font-mono text-[10px] text-[#94A3B8]">#{c.student_code}</span>}
-            {c.age !== null && <span className="text-[10px] text-[#94A3B8]">Age {c.age}</span>}
-            <span className="text-[10px] text-[#94A3B8] capitalize">{c.relationship}</span>
+            {c.student_code && <span className="font-mono text-[11px] text-[#94A3B8]">#{c.student_code}</span>}
+            {c.age !== null && <span className="text-[11px] text-[#94A3B8]">Age {c.age}</span>}
+            <span className="text-[11px] text-[#94A3B8] capitalize">{c.relationship}</span>
             {/* Status chip */}
             <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${isInactive ? 'bg-[#F1F5F9] text-[#64748B]' : 'bg-[#E7F8EE] text-[#15803D]'}`}>
               {isInactive ? 'INACTIVE' : 'ACTIVE'}
@@ -241,18 +241,18 @@ function ChildCard({ c }: { c: LinkedChild }) {
           </div>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${RISK_CLR[c.risk_level]}`}>
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${RISK_CLR[c.risk_level]}`}>
             {c.risk_level}
           </span>
           {c.is_primary && (
-            <span className="rounded-full bg-[#FF8A1F]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#FF8A1F]">
+            <span className="rounded-full bg-[#C2410C]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#C2410C]">
               PRIMARY
             </span>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-1.5 text-center text-[11px]">
+      <div className="grid grid-cols-3 gap-1.5 text-center text-[12px]">
         <div className="rounded-lg bg-[#F8FAFC] px-2 py-2">
           <p className={`font-bold ${c.attendance_pct >= 80 ? 'text-[#10B981]' : c.attendance_pct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
             {c.attendance_pct}%
@@ -275,7 +275,7 @@ function ChildCard({ c }: { c: LinkedChild }) {
 
       {/* Last attendance */}
       {c.last_attendance_date && (
-        <p className="text-[10px] text-[#94A3B8]">
+        <p className="text-[11px] text-[#94A3B8]">
           Last attended: {new Date(c.last_attendance_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
         </p>
       )}
@@ -313,10 +313,10 @@ function ContractsTab({ p }: { p: ParentOperationalRow }) {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-sm font-semibold text-[#0B1F3A]">{c.student_name}</p>
-              {c.course_name && <p className="text-[11px] text-[#64748B]">{c.course_name}</p>}
+              {c.course_name && <p className="text-[12px] text-[#64748B]">{c.course_name}</p>}
             </div>
             {c.remaining_sessions <= 2 && (
-              <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-bold text-[#EF4444]">
+              <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-bold text-[#EF4444]">
                 NEAR END
               </span>
             )}
@@ -332,8 +332,8 @@ function ContractsTab({ p }: { p: ParentOperationalRow }) {
           {/* Sessions progress */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-medium text-[#64748B]">Sessions Used</span>
-              <span className="text-[11px] font-bold text-[#0B1F3A]">
+              <span className="text-[12px] font-medium text-[#64748B]">Sessions Used</span>
+              <span className="text-[12px] font-bold text-[#0B1F3A]">
                 {c.consumed_sessions}/{c.enrolled_sessions}
               </span>
             </div>
@@ -343,7 +343,7 @@ function ContractsTab({ p }: { p: ParentOperationalRow }) {
                 style={{ width: `${Math.min((c.consumed_sessions / Math.max(c.enrolled_sessions, 1)) * 100, 100)}%` }}
               />
             </div>
-            <p className={`mt-1 text-[11px] font-medium ${c.remaining_sessions <= 2 ? 'text-[#EF4444]' : c.remaining_sessions <= 5 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
+            <p className={`mt-1 text-[12px] font-medium ${c.remaining_sessions <= 2 ? 'text-[#EF4444]' : c.remaining_sessions <= 5 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
               {c.remaining_sessions} session{c.remaining_sessions !== 1 ? 's' : ''} remaining
             </p>
           </div>
@@ -356,7 +356,7 @@ function ContractsTab({ p }: { p: ParentOperationalRow }) {
                 style={{ width: `${Math.min(c.attendance_pct, 100)}%` }}
               />
             </div>
-            <span className="text-[11px] text-[#64748B]">{c.attendance_pct}% attendance</span>
+            <span className="text-[12px] text-[#64748B]">{c.attendance_pct}% attendance</span>
           </div>
         </div>
       ))}
@@ -381,7 +381,7 @@ function AttendanceTab({ p }: { p: ParentOperationalRow }) {
         <div key={c.student_id} className="rounded-xl border border-[#E2E8F0] p-4 space-y-2.5">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold text-[#0B1F3A]">{c.student_name}</p>
-            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${RISK_CLR[c.risk_level]}`}>
+            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${RISK_CLR[c.risk_level]}`}>
               {c.risk_level}
             </span>
           </div>
@@ -389,8 +389,8 @@ function AttendanceTab({ p }: { p: ParentOperationalRow }) {
           {/* Attendance bar */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] text-[#64748B]">Attendance Rate</span>
-              <span className={`text-[12px] font-bold ${c.attendance_pct >= 80 ? 'text-[#10B981]' : c.attendance_pct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
+              <span className="text-[12px] text-[#64748B]">Attendance Rate</span>
+              <span className={`text-[13px] font-bold ${c.attendance_pct >= 80 ? 'text-[#10B981]' : c.attendance_pct >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]'}`}>
                 {c.attendance_pct}%
               </span>
             </div>
@@ -420,16 +420,16 @@ function AttendanceTab({ p }: { p: ParentOperationalRow }) {
           {/* Trend label */}
           {c.consecutive_absences >= 3 ? (
             <div className="rounded-lg border border-[#FEE2E2] bg-[#FEE2E2] px-3 py-2">
-              <p className="text-[11px] font-semibold text-[#DC2626]">Warning: {c.consecutive_absences} consecutive absences</p>
-              <p className="text-[10px] text-[#EF4444] mt-0.5">Immediate follow-up recommended.</p>
+              <p className="text-[12px] font-semibold text-[#DC2626]">Warning: {c.consecutive_absences} consecutive absences</p>
+              <p className="text-[11px] text-[#EF4444] mt-0.5">Immediate follow-up recommended.</p>
             </div>
           ) : c.consecutive_absences >= 2 ? (
             <div className="rounded-lg border border-amber-100 bg-[#FFFBEB] px-3 py-2">
-              <p className="text-[11px] font-semibold text-[#B45309]">{c.consecutive_absences} consecutive absences — monitor closely</p>
+              <p className="text-[12px] font-semibold text-[#B45309]">{c.consecutive_absences} consecutive absences — monitor closely</p>
             </div>
           ) : c.student_status !== 'active' ? (
             <div className="rounded-lg border border-slate-100 bg-[#F8FAFC] px-3 py-2">
-              <p className="text-[11px] text-[#64748B]">Student is inactive</p>
+              <p className="text-[12px] text-[#64748B]">Student is inactive</p>
             </div>
           ) : null}
         </div>
@@ -492,7 +492,7 @@ function CommunicationTab({ p }: { p: ParentOperationalRow }) {
             </a>
           </div>
         ) : (
-          <p className="text-[12px] text-[#F87171]">No phone number on file</p>
+          <p className="text-[13px] text-[#F87171]">No phone number on file</p>
         )}
       </section>
 
@@ -508,7 +508,7 @@ function CommunicationTab({ p }: { p: ParentOperationalRow }) {
               rel="noopener noreferrer"
               className="flex items-center justify-between w-full rounded-xl border border-[#25D366]/30 bg-[#25D366]/5 px-3 py-2.5 hover:bg-[#25D366]/10"
             >
-              <span className="text-[12px] font-medium text-[#25D366]">{t.label}</span>
+              <span className="text-[13px] font-medium text-[#25D366]">{t.label}</span>
               <svg className="h-3.5 w-3.5 text-[#25D366] shrink-0" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
@@ -532,7 +532,7 @@ function CommunicationTab({ p }: { p: ParentOperationalRow }) {
                     {c.risk_level}
                   </span>
                 </div>
-                <div className="text-[11px] text-[#64748B] space-y-0.5">
+                <div className="text-[12px] text-[#64748B] space-y-0.5">
                   {c.group_name      && <p>Group: {c.group_name}</p>}
                   {c.instructor_name && <p>Instructor: {c.instructor_name}</p>}
                   {c.course_name     && <p>Course: {c.course_name}</p>}
@@ -598,13 +598,13 @@ function AccountTab({ p }: { p: ParentOperationalRow }) {
         <h3 className="text-xs font-semibold text-[#64748B] uppercase tracking-wide">Login Account</h3>
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] text-[#94A3B8]">Email</p>
+            <p className="text-[12px] text-[#94A3B8]">Email</p>
             <p className="text-sm font-medium text-[#0B1F3A] truncate">{p.email || '—'}</p>
           </div>
           {p.email && (
             <button
               onClick={copyEmail}
-              className="shrink-0 rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#64748B] hover:border-[#CBD5E1] transition"
+              className="shrink-0 rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#CBD5E1] transition"
             >
               {copied ? 'Copied!' : 'Copy'}
             </button>
@@ -615,31 +615,31 @@ function AccountTab({ p }: { p: ParentOperationalRow }) {
       {/* Password reset */}
       <section className="rounded-xl border border-[#E2E8F0] p-4 space-y-3">
         <h3 className="text-xs font-semibold text-[#64748B] uppercase tracking-wide">Password Reset</h3>
-        <p className="text-[12px] text-[#94A3B8]">
+        <p className="text-[13px] text-[#94A3B8]">
           Generate a temporary password. Share it with the parent securely — they should change it after first login.
         </p>
 
         {resetResult && (
           <div className="rounded-xl border border-[#A7F3D0] bg-[#E7F8EE] p-3 space-y-1.5">
-            <p className="text-[12px] font-semibold text-[#15803D]">Password reset successfully</p>
-            <p className="text-[11px] text-[#10B981]">Temporary password:</p>
+            <p className="text-[13px] font-semibold text-[#15803D]">Password reset successfully</p>
+            <p className="text-[12px] text-[#10B981]">Temporary password:</p>
             <div className="flex items-center gap-2">
               <p className="flex-1 font-mono text-sm font-bold text-[#0B1F3A] bg-white rounded-lg px-3 py-1.5 border border-[#A7F3D0] tracking-wider">
                 {resetResult.temp_password}
               </p>
               <button
                 onClick={() => navigator.clipboard.writeText(resetResult.temp_password)}
-                className="shrink-0 rounded-lg border border-[#A7F3D0] px-2 py-1.5 text-[11px] font-medium text-[#15803D] hover:bg-[#E7F8EE]"
+                className="shrink-0 rounded-lg border border-[#A7F3D0] px-2 py-1.5 text-[12px] font-medium text-[#15803D] hover:bg-[#E7F8EE]"
               >
                 Copy
               </button>
             </div>
-            <p className="text-[10px] text-[#10B981]">Advise parent to change this after logging in.</p>
+            <p className="text-[11px] text-[#10B981]">Advise parent to change this after logging in.</p>
           </div>
         )}
 
         {resetError && (
-          <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#DC2626]">
+          <div className="rounded-xl border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-[13px] text-[#DC2626]">
             {resetError}
           </div>
         )}
@@ -653,7 +653,7 @@ function AccountTab({ p }: { p: ParentOperationalRow }) {
           </button>
         ) : (
           <div className="space-y-2">
-            <p className="text-[12px] font-medium text-[#0B1F3A]">
+            <p className="text-[13px] font-medium text-[#0B1F3A]">
               Generate a new temporary password for <span className="font-semibold">{p.parent_name}</span>?
             </p>
             <div className="flex gap-2">

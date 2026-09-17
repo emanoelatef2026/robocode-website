@@ -38,8 +38,8 @@ export function GroupStudentsTable({
     <div className="h-full">
       <div className="space-y-2 overflow-y-auto p-3 md:hidden">
         <div className="flex items-center justify-between rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2">
-          <span className="text-[11px] font-semibold text-[#64748B]">{sorted.length} students</span>
-          <label className="flex items-center gap-2 text-[11px] font-medium text-[#64748B]">
+          <span className="text-[12px] font-semibold text-[#64748B]">{sorted.length} students</span>
+          <label className="flex items-center gap-2 text-[12px] font-medium text-[#64748B]">
             Select all
             <input
               type="checkbox"
@@ -76,7 +76,7 @@ export function GroupStudentsTable({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="truncate text-[13px] font-bold text-[#0B1F3A]">{idx + 1}. {s.student_name}</p>
-                      <p className="mt-0.5 truncate text-[10px] text-[#94A3B8]">
+                      <p className="mt-0.5 truncate text-[11px] text-[#94A3B8]">
                         {s.student_code ?? 'No student code'}
                         {s.age != null ? ` · ${s.age} years` : ''}
                         {s.attendance_pct > 0 ? <span className={`ml-1 font-semibold ${attColor}`}>· {s.attendance_pct}% attendance</span> : null}
@@ -87,7 +87,7 @@ export function GroupStudentsTable({
                 </button>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#F1F5F9] pt-2.5 text-[10px]">
+              <div className="mt-3 grid grid-cols-2 gap-2 border-t border-[#F1F5F9] pt-2.5 text-[11px]">
                 <div className="min-w-0"><p className="uppercase tracking-wide text-[#94A3B8]">Student phone</p><p className="truncate font-medium text-[#374151]">{s.phone ?? '—'}</p></div>
                 <div className="min-w-0"><p className="uppercase tracking-wide text-[#94A3B8]">Parent phone</p><p className="truncate font-medium text-[#374151]">{s.parent_phone ?? '—'}</p></div>
                 <div><p className="uppercase tracking-wide text-[#94A3B8]">Sessions</p><p className="font-semibold text-[#374151]">{sessStat} · {s.sessions_remaining ?? '—'} left</p></div>
@@ -112,18 +112,18 @@ export function GroupStudentsTable({
                 className="h-3.5 w-3.5 cursor-pointer rounded border-[#CBD5E1] accent-[#FF8A1F]"
               />
             </th>
-            <th className="w-7 px-1 py-2 text-center text-[11px] font-semibold text-[#94A3B8]">#</th>
-            <th className="px-3 py-2 text-left text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Student</th>
-            <th className="px-2 py-2 text-center text-[11px] font-semibold text-[#64748B]">Age</th>
-            <th className="px-3 py-2 text-left text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Stu. Phone</th>
-            <th className="px-3 py-2 text-left text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Par. Phone</th>
-            <th className="px-2 py-2 text-center text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Sessions</th>
-            <th className="px-2 py-2 text-center text-[11px] font-semibold text-[#64748B]">Left</th>
-            <th className="px-3 py-2 text-right text-[11px] font-semibold text-[#64748B] whitespace-nowrap">Subscription</th>
-            <th className="px-3 py-2 text-right text-[11px] font-semibold text-[#64748B]">Paid</th>
-            <th className="px-3 py-2 text-right text-[11px] font-semibold text-[#64748B]">Remaining</th>
-            <th className="px-3 py-2 text-center text-[11px] font-semibold text-[#64748B]">Risk</th>
-            <th className="px-3 py-2 text-center text-[11px] font-semibold text-[#64748B]">Joined</th>
+            <th className="w-7 px-1 py-2 text-center text-[12px] font-semibold text-[#94A3B8]">#</th>
+            <th className="px-3 py-2 text-left text-[12px] font-semibold text-[#64748B] whitespace-nowrap">Student</th>
+            <th className="px-2 py-2 text-center text-[12px] font-semibold text-[#64748B]">Age</th>
+            <th className="px-3 py-2 text-left text-[12px] font-semibold text-[#64748B] whitespace-nowrap">Stu. Phone</th>
+            <th className="px-3 py-2 text-left text-[12px] font-semibold text-[#64748B] whitespace-nowrap">Par. Phone</th>
+            <th className="px-2 py-2 text-center text-[12px] font-semibold text-[#64748B] whitespace-nowrap">Sessions</th>
+            <th className="px-2 py-2 text-center text-[12px] font-semibold text-[#64748B]">Left</th>
+            <th className="px-3 py-2 text-right text-[12px] font-semibold text-[#64748B] whitespace-nowrap">Subscription</th>
+            <th className="px-3 py-2 text-right text-[12px] font-semibold text-[#64748B]">Paid</th>
+            <th className="px-3 py-2 text-right text-[12px] font-semibold text-[#64748B]">Remaining</th>
+            <th className="px-3 py-2 text-center text-[12px] font-semibold text-[#64748B]">Risk</th>
+            <th className="px-3 py-2 text-center text-[12px] font-semibold text-[#64748B]">Joined</th>
           </tr>
         </thead>
         <tbody>
@@ -162,57 +162,57 @@ export function GroupStudentsTable({
                   />
                 </td>
 
-                <td className="w-7 px-1 py-1.5 text-center text-[11px] font-semibold text-[#94A3B8]">
+                <td className="w-7 px-1 py-1.5 text-center text-[12px] font-semibold text-[#94A3B8]">
                   {idx + 1}
                 </td>
 
                 <td className="px-3 py-1.5">
-                  <p className="text-[12px] font-semibold text-[#0B1F3A] whitespace-nowrap leading-tight">{s.student_name}</p>
+                  <p className="text-[13px] font-semibold text-[#0B1F3A] whitespace-nowrap leading-tight">{s.student_name}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {s.student_code && (
-                      <span className="font-mono text-[10px] text-[#94A3B8]">{s.student_code}</span>
+                      <span className="font-mono text-[11px] text-[#94A3B8]">{s.student_code}</span>
                     )}
                     {s.attendance_pct > 0 && (
-                      <span className={`text-[10px] font-semibold ${attColor}`}>{s.attendance_pct}%</span>
+                      <span className={`text-[11px] font-semibold ${attColor}`}>{s.attendance_pct}%</span>
                     )}
                   </div>
                 </td>
 
-                <td className="px-2 py-1.5 text-center text-[11px] text-[#64748B]">
+                <td className="px-2 py-1.5 text-center text-[12px] text-[#64748B]">
                   {s.age != null ? `${s.age}y` : '—'}
                 </td>
 
                 <td className="px-3 py-1.5">
-                  <span className="font-mono text-[11px] text-[#374151] whitespace-nowrap">{s.phone ?? '—'}</span>
+                  <span className="font-mono text-[12px] text-[#374151] whitespace-nowrap">{s.phone ?? '—'}</span>
                 </td>
 
                 <td className="px-3 py-1.5">
-                  <span className="font-mono text-[11px] text-[#374151] whitespace-nowrap">{s.parent_phone ?? '—'}</span>
+                  <span className="font-mono text-[12px] text-[#374151] whitespace-nowrap">{s.parent_phone ?? '—'}</span>
                 </td>
 
-                <td className="px-2 py-1.5 text-center text-[11px] text-[#64748B] whitespace-nowrap">
+                <td className="px-2 py-1.5 text-center text-[12px] text-[#64748B] whitespace-nowrap">
                   {sessStat}
                 </td>
 
                 <td className="px-2 py-1.5 text-center">
-                  <span className={`text-[11px] ${sessLeftColor}`}>
+                  <span className={`text-[12px] ${sessLeftColor}`}>
                     {sessLeft != null ? sessLeft : '—'}
                   </span>
                 </td>
 
                 <td className="px-3 py-1.5 text-right whitespace-nowrap">
                   {s.subscription_amount
-                    ? <span className="text-[11px] text-[#374151]">{fmtCurrency(s.subscription_amount)}</span>
-                    : <span className="text-[10px] text-[#CBD5E1]">No Package</span>
+                    ? <span className="text-[12px] text-[#374151]">{fmtCurrency(s.subscription_amount)}</span>
+                    : <span className="text-[11px] text-[#CBD5E1]">No Package</span>
                   }
                 </td>
 
-                <td className="px-3 py-1.5 text-right text-[11px] text-[#374151] whitespace-nowrap">
+                <td className="px-3 py-1.5 text-right text-[12px] text-[#374151] whitespace-nowrap">
                   {s.paid_amount > 0 ? fmtCurrency(s.paid_amount) : '—'}
                 </td>
 
                 <td className="px-3 py-1.5 text-right whitespace-nowrap">
-                  <span className={`text-[11px] ${s.remaining_balance > 0 ? 'text-[#EF4444] font-semibold' : 'text-[#94A3B8]'}`}>
+                  <span className={`text-[12px] ${s.remaining_balance > 0 ? 'text-[#EF4444] font-semibold' : 'text-[#94A3B8]'}`}>
                     {s.remaining_balance > 0 ? fmtCurrency(s.remaining_balance) : '—'}
                   </span>
                 </td>
@@ -221,7 +221,7 @@ export function GroupStudentsTable({
                   <RiskBadge level={s.risk_level} />
                 </td>
 
-                <td className="px-3 py-1.5 text-center text-[11px] text-[#94A3B8] whitespace-nowrap">
+                <td className="px-3 py-1.5 text-center text-[12px] text-[#94A3B8] whitespace-nowrap">
                   {fmtDateShort(s.joined_at)}
                 </td>
               </tr>

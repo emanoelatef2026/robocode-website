@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useTransition, useState } from 'react'
 import { useRouter }                from 'next/navigation'
 import { createOrUpdateFinancialAccount } from '@/modules/finance/actions'
@@ -68,10 +68,10 @@ export default function NewFinanceAccountForm({ branches, groups, students, succ
           placeholder="Search student…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="mb-2 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20"
+          className="mb-2 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20"
         />
         <select name="student_id" required
-          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20">
           <option value="">— Select student —</option>
           {filteredStudents.map(s => (
             <option key={s.id} value={s.id}>
@@ -90,7 +90,7 @@ export default function NewFinanceAccountForm({ branches, groups, students, succ
             required
             value={selectedBranch}
             onChange={e => setSelectedBranch(e.target.value)}
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20"
           >
             <option value="">— Select branch —</option>
             {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -101,7 +101,7 @@ export default function NewFinanceAccountForm({ branches, groups, students, succ
         <div>
           <label className="block text-sm font-medium text-[#0B1F3A] mb-1">Group</label>
           <select name="group_id"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20">
             <option value="">— No group —</option>
             {visibleGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
@@ -113,14 +113,14 @@ export default function NewFinanceAccountForm({ branches, groups, students, succ
         <div>
           <label className="block text-sm font-medium text-[#0B1F3A] mb-1">Total Amount (EGP) *</label>
           <input name="total_amount" type="number" min="0" step="0.01" required placeholder="e.g. 5000"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
         </div>
 
         {/* Discount */}
         <div>
           <label className="block text-sm font-medium text-[#0B1F3A] mb-1">Discount Amount (EGP)</label>
           <input name="discount_amount" type="number" min="0" step="0.01" placeholder="0"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
         </div>
       </div>
 
@@ -128,21 +128,21 @@ export default function NewFinanceAccountForm({ branches, groups, students, succ
       <div>
         <label className="block text-sm font-medium text-[#0B1F3A] mb-1">First Due Date</label>
         <input name="next_due_date" type="date"
-          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
       </div>
 
       {/* Notes */}
       <div>
         <label className="block text-sm font-medium text-[#0B1F3A] mb-1">Notes (optional)</label>
         <textarea name="notes" rows={2}
-          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20 resize-none" />
+          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20 resize-none" />
       </div>
 
       {err && <p className="rounded-lg bg-[#FEE2E2] px-3 py-2 text-sm text-[#EF4444]">{err}</p>}
 
       <div className="flex gap-3">
         <button type="submit" disabled={pending}
-          className="flex-1 rounded-xl bg-[#FF8A1F] py-3 text-sm font-bold text-white shadow-sm hover:bg-[#e87c18] disabled:opacity-50 transition-colors">
+          className="flex-1 rounded-xl bg-[#C2410C] py-3 text-sm font-bold text-white shadow-sm hover:bg-[#e87c18] disabled:opacity-50 transition-colors">
           {pending ? 'Creating…' : 'Create Financial Account'}
         </button>
         <button type="button" onClick={() => router.back()}

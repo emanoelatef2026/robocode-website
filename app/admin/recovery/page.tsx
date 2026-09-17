@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState } from 'react'
 import Link         from 'next/link'
 
@@ -27,14 +27,14 @@ function OpCard({ id, title, description, risk, onRun, result, running }: OpCard
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <p className="font-semibold text-[#0B1F3A]">{title}</p>
-            <span className={`text-[10px] font-semibold ${riskTextCls}`}>{riskLabel}</span>
+            <span className={`text-[11px] font-semibold ${riskTextCls}`}>{riskLabel}</span>
           </div>
-          <p className="mt-0.5 text-[12px] text-[#64748B]">{description}</p>
+          <p className="mt-0.5 text-[13px] text-[#64748B]">{description}</p>
         </div>
         <button
           onClick={() => onRun(id)}
           disabled={running}
-          className={`shrink-0 rounded-lg px-4 py-2 text-[12px] font-semibold text-white transition-colors
+          className={`shrink-0 rounded-lg px-4 py-2 text-[13px] font-semibold text-white transition-colors
             ${running ? 'cursor-not-allowed bg-[#CBD5E1]' :
               risk === 'safe' ? 'bg-[#059669] hover:bg-[#047857]' :
               risk === 'moderate' ? 'bg-[#F59E0B] hover:bg-[#D97706]' :
@@ -143,11 +143,11 @@ export default function RecoveryPage() {
         <div className="flex gap-2">
           <button
             onClick={loadSummary}
-            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+            className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]"
           >
             Check Status
           </button>
-          <Link href="/admin/system-health" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+          <Link href="/admin/system-health" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
             Health →
           </Link>
         </div>
@@ -164,9 +164,9 @@ export default function RecoveryPage() {
               <div key={item.check_name} className="flex items-center justify-between px-4 py-3">
                 <div>
                   <p className="text-[13px] font-medium text-[#0B1F3A]">{item.description}</p>
-                  <p className="text-[11px] text-[#94A3B8]">{item.check_name}</p>
+                  <p className="text-[12px] text-[#94A3B8]">{item.check_name}</p>
                 </div>
-                <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold
+                <span className={`rounded-full px-2.5 py-1 text-[12px] font-bold
                   ${item.severity === 'critical' ? 'bg-[#FEE2E2] text-[#DC2626]' :
                     item.severity === 'warning'  ? 'bg-[#FFFBEB] text-[#B45309]' :
                     'bg-[#E7F8EE] text-[#15803D]'}`}>
@@ -181,7 +181,7 @@ export default function RecoveryPage() {
       {/* ── Operations ─────────────────────────────────────────────────── */}
       <div>
         <h2 className="mb-3 text-[14px] font-semibold text-[#0B1F3A]">Recovery Operations</h2>
-        <p className="mb-4 text-[12px] text-[#94A3B8]">
+        <p className="mb-4 text-[13px] text-[#94A3B8]">
           All operations are idempotent — safe to run multiple times. They log results to the system event log.
         </p>
         <div className="space-y-3">

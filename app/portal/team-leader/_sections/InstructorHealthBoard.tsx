@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { getInstructorOpsData, type InstructorOpsRow } from '@/modules/tl-dashboard/queries'
 import { InstructorScoreBadge, ScoreBar } from '../_components/RiskBadge'
 import DashCard, { DashCardEmpty } from '../_components/DashCard'
@@ -31,14 +31,14 @@ function InstructorRow({ instr }: { instr: InstructorOpsRow }) {
       {/* Main row */}
       <div className="flex items-center gap-3 px-4 py-3">
         {/* Avatar */}
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0B1F3A] text-[12px] font-bold text-white">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0B1F3A] text-[13px] font-bold text-white">
           {instr.instructor_name.split(' ').map(w => w[0]).slice(0, 2).join('')}
         </div>
 
         {/* Name + meta */}
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-semibold text-[#0B1F3A]">{instr.instructor_name}</p>
-          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] text-[#94A3B8]">
+          <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-[#94A3B8]">
             <span>{instr.active_groups} group{instr.active_groups !== 1 ? 's' : ''}</span>
             <span>·</span>
             <span>{instr.active_students} students</span>
@@ -58,17 +58,17 @@ function InstructorRow({ instr }: { instr: InstructorOpsRow }) {
       {/* Stats row */}
       <div className="grid grid-cols-3 divide-x divide-[#F1F5F9] border-t border-[#F1F5F9] bg-[#F8FAFC]">
         <div className="px-3 py-2">
-          <p className={`text-[12px] font-bold ${attColor}`}>{instr.attendance_rate}%</p>
+          <p className={`text-[13px] font-bold ${attColor}`}>{instr.attendance_rate}%</p>
           <p className="text-[9px] text-[#94A3B8] uppercase tracking-wide">Attendance</p>
           <ScoreBar value={instr.attendance_rate} colorClass={attColor.replace('text-', 'bg-')} />
         </div>
         <div className="px-3 py-2">
-          <p className={`text-[12px] font-bold ${hwColor}`}>{instr.homework_review_pct}%</p>
+          <p className={`text-[13px] font-bold ${hwColor}`}>{instr.homework_review_pct}%</p>
           <p className="text-[9px] text-[#94A3B8] uppercase tracking-wide">HW Review</p>
           <ScoreBar value={instr.homework_review_pct} colorClass={hwColor.replace('text-', 'bg-')} />
         </div>
         <div className="px-3 py-2">
-          <p className="text-[12px] font-bold text-[#0B1F3A]">
+          <p className="text-[13px] font-bold text-[#0B1F3A]">
             {instr.risk_students > 0
               ? <span className="text-[#EF4444]">{instr.risk_students}</span>
               : <span className="text-[#10B981]">0</span>}
@@ -81,13 +81,13 @@ function InstructorRow({ instr }: { instr: InstructorOpsRow }) {
       <div className="flex items-center gap-2 border-t border-[#F1F5F9] px-4 py-2">
         <Link
           href="/portal/team-leader/instructors"
-          className="text-[11px] font-medium text-[#FF8A1F] hover:underline"
+          className="text-[12px] font-medium text-[#C2410C] hover:underline"
         >
           View profile →
         </Link>
         <span className="flex-1" />
         {instr.outstanding_amount > 0 && (
-          <span className="text-[10px] text-[#94A3B8]">
+          <span className="text-[11px] text-[#94A3B8]">
             EGP {instr.outstanding_amount.toLocaleString()} outstanding
           </span>
         )}
@@ -110,14 +110,14 @@ export default async function InstructorHealthBoard({ branchIds }: { branchIds: 
         <div className="flex items-center gap-2">
           <h2 className="text-[16px] font-bold text-[#0B1F3A]">Instructor Performance</h2>
           {atRisk > 0 && (
-            <span className="rounded-full bg-[#FEE2E2] px-2.5 py-0.5 text-[11px] font-semibold text-[#DC2626]">
+            <span className="rounded-full bg-[#FEE2E2] px-2.5 py-0.5 text-[12px] font-semibold text-[#DC2626]">
               {atRisk} need attention
             </span>
           )}
         </div>
         <Link
           href="/portal/team-leader/instructors"
-          className="text-[12px] font-medium text-[#FF8A1F] hover:underline"
+          className="text-[13px] font-medium text-[#C2410C] hover:underline"
         >
           All instructors →
         </Link>
@@ -127,7 +127,7 @@ export default async function InstructorHealthBoard({ branchIds }: { branchIds: 
         title={`${instructors.length} Instructor${instructors.length !== 1 ? 's' : ''}`}
         badge={
           healthy > 0
-            ? <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">{healthy} healthy</span>
+            ? <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-semibold text-[#15803D]">{healthy} healthy</span>
             : undefined
         }
         accent={atRisk > 0 ? 'border-[#FDE68A]' : 'border-[#E2E8F0]'}

@@ -8,6 +8,7 @@ import { TopbarActionProvider } from "@/components/shared/layout/TopbarActionCon
 import NotificationBell from "@/components/portal/shared/NotificationBell"
 import { ADMIN_SECTIONS } from "@/modules/admin/navigation"
 import type { PortalRole } from "@/components/shared/layout/roles"
+import { DesignSystemProvider } from "@/design-system/providers/DesignSystemProvider"
 
 interface Props {
   children:             React.ReactNode
@@ -20,7 +21,8 @@ interface Props {
 export default function AdminShell({ children, role, permissions, email, unreadNotifications = 0 }: Props) {
   return (
     <TopbarActionProvider>
-      <AppLayout
+      <DesignSystemProvider portal="admin">
+        <AppLayout
         renderSidebar={({ isOpen, onClose }) => (
           <AdminSidebar isOpen={isOpen} onClose={onClose} role={role} permissions={permissions} email={email} />
         )}
@@ -37,7 +39,8 @@ export default function AdminShell({ children, role, permissions, email, unreadN
         <div className="admin-responsive min-w-0 max-w-full">
           {children}
         </div>
-      </AppLayout>
+        </AppLayout>
+      </DesignSystemProvider>
     </TopbarActionProvider>
   )
 }

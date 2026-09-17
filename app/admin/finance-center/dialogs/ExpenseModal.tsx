@@ -87,7 +87,7 @@ export function ExpenseModal({
             <label className="block text-xs font-medium text-[#64748B] mb-1">Expense Type *</label>
             <select
               value={type} onChange={e => setType(e.target.value as ExpenseType)}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
             >
               {typeOptions.map(t => <option key={t} value={t}>{EXPENSE_TYPE_LABELS[t]}</option>)}
             </select>
@@ -99,7 +99,7 @@ export function ExpenseModal({
               type="number" min="1" step="0.01" required
               value={amount} onChange={e => setAmount(e.target.value)}
               placeholder="0.00"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
             />
           </div>
 
@@ -108,7 +108,7 @@ export function ExpenseModal({
             <input
               type="date" required
               value={date} onChange={e => setDate(e.target.value)}
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
             />
           </div>
 
@@ -117,7 +117,7 @@ export function ExpenseModal({
               <label className="block text-xs font-medium text-[#64748B] mb-1">Group *</label>
               <select
                 value={groupId} onChange={e => setGroupId(e.target.value)}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
               >
                 <option value="">Select group…</option>
                 {activeGroups.map(g => <option key={g.id} value={g.id}>{g.name} ({g.branch_name})</option>)}
@@ -130,7 +130,7 @@ export function ExpenseModal({
               <label className="block text-xs font-medium text-[#64748B] mb-1">Branch *</label>
               <select
                 value={branchId} onChange={e => setBranchId(e.target.value)}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
               >
                 <option value="">Select branch…</option>
                 {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -144,7 +144,7 @@ export function ExpenseModal({
           <textarea
             rows={2} value={notes} onChange={e => setNotes(e.target.value)}
             placeholder="Optional notes…"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none resize-none"
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none resize-none"
           />
         </div>
 
@@ -159,7 +159,7 @@ export function ExpenseModal({
           </button>
           <button
             type="submit" disabled={isPending}
-            className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-xs font-semibold text-white hover:bg-[#e07a1a] disabled:opacity-50"
+            className="rounded-lg bg-[#C2410C] px-4 py-2 text-xs font-semibold text-white hover:bg-[#e07a1a] disabled:opacity-50"
           >
             {isPending ? 'Saving…' : expenseId ? 'Update' : 'Save Expense'}
           </button>

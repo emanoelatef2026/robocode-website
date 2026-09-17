@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 type Variant = 'green' | 'red' | 'amber' | 'blue' | 'slate' | 'purple'
 
@@ -19,7 +19,7 @@ interface MetricPillProps {
 
 export function MetricPill({ label, variant = 'slate', className = '' }: MetricPillProps) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${CLASSES[variant]} ${className}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${CLASSES[variant]} ${className}`}>
       {label}
     </span>
   )

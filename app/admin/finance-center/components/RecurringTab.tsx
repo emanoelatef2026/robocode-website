@@ -59,7 +59,7 @@ export function RecurringTab({
         <p className="text-sm font-semibold text-[#0B1F3A]">Recurring Expenses</p>
         <button
           onClick={() => setAddOpen(true)}
-          className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-xs font-semibold text-white hover:bg-[#e07a1a]"
+          className="rounded-lg bg-[#C2410C] px-4 py-2 text-xs font-semibold text-white hover:bg-[#e07a1a]"
         >
           + Add Recurring Expense
         </button>
@@ -83,7 +83,7 @@ export function RecurringTab({
               {recurring.map(r => (
                 <tr key={r.id} className="ds-table-row">
                   <td className="px-4 py-3">
-                    <span className="rounded bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-medium text-[#64748B]">
+                    <span className="rounded bg-[#F1F5F9] px-2 py-0.5 text-[12px] font-medium text-[#64748B]">
                       {r.expense_scope}
                     </span>
                   </td>
@@ -95,19 +95,19 @@ export function RecurringTab({
                   <td className="px-4 py-3 text-[#64748B] whitespace-nowrap">{r.start_date}</td>
                   <td className="px-4 py-3 text-[#64748B] whitespace-nowrap">{r.end_date ?? 'Ongoing'}</td>
                   <td className="px-4 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${r.is_active ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#F1F5F9] text-[#94A3B8]'}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-[12px] font-semibold ${r.is_active ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#F1F5F9] text-[#94A3B8]'}`}>
                       {r.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      <button onClick={() => setEditItem(r)} className="rounded px-2 py-1 text-[11px] text-[#64748B] hover:bg-[#F1F5F9]">
+                      <button onClick={() => setEditItem(r)} className="rounded px-2 py-1 text-[12px] text-[#64748B] hover:bg-[#F1F5F9]">
                         Edit
                       </button>
                       <button
                         onClick={() => handleToggle(r.id, r.is_active)}
                         disabled={isPending}
-                        className="rounded px-2 py-1 text-[11px] text-[#64748B] hover:bg-[#F1F5F9] disabled:opacity-50"
+                        className="rounded px-2 py-1 text-[12px] text-[#64748B] hover:bg-[#F1F5F9] disabled:opacity-50"
                       >
                         {r.is_active ? 'Deactivate' : 'Activate'}
                       </button>
@@ -148,7 +148,7 @@ function DeleteRecurBtn({ id, onSuccess }: { id: string; onSuccess: () => void }
   const [confirm, setConfirm] = useState(false)
   if (!confirm) {
     return (
-      <button onClick={() => setConfirm(true)} className="rounded px-2 py-1 text-[11px] text-[#94A3B8] hover:text-[#EF4444] hover:bg-[#FEE2E2]">
+      <button onClick={() => setConfirm(true)} className="rounded px-2 py-1 text-[12px] text-[#94A3B8] hover:text-[#EF4444] hover:bg-[#FEE2E2]">
         Delete
       </button>
     )
@@ -158,11 +158,11 @@ function DeleteRecurBtn({ id, onSuccess }: { id: string; onSuccess: () => void }
       <button
         onClick={() => startTransition(async () => { await deleteRecurringExpense(id); onSuccess() })}
         disabled={isPending}
-        className="rounded px-2 py-1 text-[11px] font-semibold text-[#EF4444] bg-[#FEE2E2] hover:bg-[#FEE2E2] disabled:opacity-50"
+        className="rounded px-2 py-1 text-[12px] font-semibold text-[#EF4444] bg-[#FEE2E2] hover:bg-[#FEE2E2] disabled:opacity-50"
       >
         {isPending ? '…' : 'Confirm'}
       </button>
-      <button onClick={() => setConfirm(false)} className="rounded px-2 py-1 text-[11px] text-[#94A3B8]">Cancel</button>
+      <button onClick={() => setConfirm(false)} className="rounded px-2 py-1 text-[12px] text-[#94A3B8]">Cancel</button>
     </div>
   )
 }

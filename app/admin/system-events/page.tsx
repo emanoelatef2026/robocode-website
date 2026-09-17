@@ -1,4 +1,4 @@
-﻿import { requirePortalRole }        from '@/modules/rbac/guards'
+import { requirePortalRole }        from '@/modules/rbac/guards'
 import { getSystemEvents }           from '@/modules/observability'
 import type { EventSeverity, EventType } from '@/modules/observability/types'
 import Link                          from 'next/link'
@@ -13,7 +13,7 @@ function SeverityBadge({ sev }: { sev: string }) {
     info:     'bg-[#EFF6FF] text-[#1D4ED8]',
   }
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${cfg[sev] ?? 'bg-[#F1F5F9] text-[#475569]'}`}>
+    <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold uppercase ${cfg[sev] ?? 'bg-[#F1F5F9] text-[#475569]'}`}>
       {sev}
     </span>
   )
@@ -22,7 +22,7 @@ function SeverityBadge({ sev }: { sev: string }) {
 function TypeBadge({ type }: { type: string }) {
   const short = type.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
   return (
-    <span className="rounded-md bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-medium text-[#64748B]">
+    <span className="rounded-md bg-[#F1F5F9] px-2 py-0.5 text-[12px] font-medium text-[#64748B]">
       {short}
     </span>
   )
@@ -64,7 +64,7 @@ export default async function SystemEventsPage({ searchParams }: Props) {
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-end gap-3">
-        <Link href="/admin/system-health" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+        <Link href="/admin/system-health" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
           Health Score →
         </Link>
       </div>
@@ -72,7 +72,7 @@ export default async function SystemEventsPage({ searchParams }: Props) {
       {/* ── Filters ────────────────────────────────────────────────────── */}
       <form method="get" className="flex flex-wrap gap-2">
         <select name="sev" defaultValue={severityFilter}
-          className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+          className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
           <option value="">All Severities</option>
           {(['critical','error','warning','info'] as EventSeverity[]).map(s => (
             <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
@@ -80,13 +80,13 @@ export default async function SystemEventsPage({ searchParams }: Props) {
         </select>
 
         <select name="module" defaultValue={moduleFilter}
-          className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+          className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
           <option value="">All Modules</option>
           {allModules.map(m => <option key={m} value={m}>{m}</option>)}
         </select>
 
         <select name="type" defaultValue={typeFilter}
-          className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+          className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
           <option value="">All Types</option>
           {([
             'AUTOMATION_FAILURE','JOB_FAILURE','JOB_DEAD_LETTER','NOTIFICATION_FAILURE',
@@ -101,7 +101,7 @@ export default async function SystemEventsPage({ searchParams }: Props) {
           Unresolved only
         </label>
 
-        <button type="submit" className="rounded-xl bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18]">
+        <button type="submit" className="rounded-xl bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18]">
           Filter
         </button>
         {(severityFilter || moduleFilter || typeFilter || unresolvedOnly) && (
@@ -131,9 +131,9 @@ export default async function SystemEventsPage({ searchParams }: Props) {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <TypeBadge type={evt.type} />
-                      <span className="text-[11px] text-[#94A3B8]">{evt.module}</span>
+                      <span className="text-[12px] text-[#94A3B8]">{evt.module}</span>
                       {evt.entity_type && (
-                        <span className="text-[11px] text-[#94A3B8]">
+                        <span className="text-[12px] text-[#94A3B8]">
                           {evt.entity_type}{evt.entity_id ? ` ·${evt.entity_id.slice(0, 8)}` : ''}
                         </span>
                       )}
@@ -141,21 +141,21 @@ export default async function SystemEventsPage({ searchParams }: Props) {
                     <p className="mt-1 text-sm text-[#0B1F3A]">{evt.message}</p>
                     {Object.keys(evt.payload ?? {}).length > 0 && (
                       <details className="mt-1">
-                        <summary className="cursor-pointer text-[11px] text-[#94A3B8] hover:text-[#64748B]">Payload</summary>
-                        <pre className="mt-1 overflow-x-auto rounded-md bg-[#F8FAFC] p-2 text-[10px] text-[#64748B]">
+                        <summary className="cursor-pointer text-[12px] text-[#94A3B8] hover:text-[#64748B]">Payload</summary>
+                        <pre className="mt-1 overflow-x-auto rounded-md bg-[#F8FAFC] p-2 text-[11px] text-[#64748B]">
                           {JSON.stringify(evt.payload, null, 2)}
                         </pre>
                       </details>
                     )}
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="text-[11px] text-[#94A3B8]">
+                    <p className="text-[12px] text-[#94A3B8]">
                       {new Date(evt.created_at).toLocaleString('en-GB', {
                         day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
                       })}
                     </p>
                     {evt.resolved && (
-                      <span className="mt-1 block text-[10px] text-[#10B981]">Resolved</span>
+                      <span className="mt-1 block text-[11px] text-[#10B981]">Resolved</span>
                     )}
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, useTransition } from 'react'
 import type { StudentOperationalRow } from '@/modules/students/operational'
@@ -69,7 +69,7 @@ export default function GroupAssignModal({ student, groups, onClose, onSuccess }
                 <select
                   value={selectedGroup}
                   onChange={e => setSelectedGroup(e.target.value)}
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                 >
                   <option value="">— Select a group —</option>
                   {groups.map(g => (
@@ -91,7 +91,7 @@ export default function GroupAssignModal({ student, groups, onClose, onSuccess }
                 Cancel
               </button>
               <button type="submit" disabled={pending || groups.length === 0}
-                className="flex-1 rounded-lg bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-60">
+                className="flex-1 rounded-lg bg-[#C2410C] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-60">
                 {pending ? 'Assigning…' : 'Assign'}
               </button>
             </div>

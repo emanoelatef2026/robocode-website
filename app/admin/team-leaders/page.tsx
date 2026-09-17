@@ -1,4 +1,4 @@
-﻿import { listTeamLeaders } from '@/modules/team-leaders/queries'
+import { listTeamLeaders } from '@/modules/team-leaders/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import StatusBadge from '@/components/admin/StatusBadge'
 import EmptyState from '@/components/admin/EmptyState'
@@ -25,7 +25,7 @@ export default async function TeamLeadersPage({ searchParams }: Props) {
       <TopbarAction>
         <Link
           href="/admin/team-leaders/new"
-          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#C2410C] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -65,7 +65,7 @@ export default async function TeamLeadersPage({ searchParams }: Props) {
                     <tr key={tl.user_role_id} className="ds-table-row">
                       <td className="px-4 py-3">
                         {tl.tl_code
-                          ? <Link href={`/admin/team-leaders/${tl.user_id}`} className="font-mono text-xs font-semibold text-[#0B1F3A] hover:text-[#FF8A1F]">{tl.tl_code}</Link>
+                          ? <Link href={`/admin/team-leaders/${tl.user_id}`} className="font-mono text-xs font-semibold text-[#0B1F3A] hover:text-[#9A3412]">{tl.tl_code}</Link>
                           : <span className="text-xs text-[#94A3B8]">—</span>}
                       </td>
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">
@@ -76,7 +76,7 @@ export default async function TeamLeadersPage({ searchParams }: Props) {
                         {tl.branch_names.length > 1 ? (
                           <span title={tl.branch_names.join(', ')}>
                             {tl.branch_names[0]}
-                            <span className="ml-1 rounded-full bg-[#E2E8F0] px-1.5 py-0.5 text-[10px] font-semibold text-[#64748B]">
+                            <span className="ml-1 rounded-full bg-[#E2E8F0] px-1.5 py-0.5 text-[11px] font-semibold text-[#64748B]">
                               +{tl.branch_names.length - 1}
                             </span>
                           </span>
@@ -88,7 +88,7 @@ export default async function TeamLeadersPage({ searchParams }: Props) {
                       <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{tl.active_groups}</td>
                       <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{tl.active_students}</td>
                       <td className="px-4 py-3 text-right">
-                        <Link href={`/admin/team-leaders/${tl.user_id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">View</Link>
+                        <Link href={`/admin/team-leaders/${tl.user_id}`} className="text-xs font-medium text-[#C2410C] hover:underline">View</Link>
                       </td>
                     </tr>
                   ))}

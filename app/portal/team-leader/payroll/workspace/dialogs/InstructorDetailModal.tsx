@@ -268,7 +268,7 @@ export function InstructorDetailModal({
               <Avatar name={row.display_name} size="md" />
               <div className="min-w-0">
                 <p className="font-bold text-[#0B1F3A] text-[15px] truncate">{row.display_name}</p>
-                <p className="text-[11px] text-[#94A3B8] truncate">
+                <p className="text-[12px] text-[#94A3B8] truncate">
                   {row.branch_name} · Instructor · {dateFrom} → {dateTo}
                 </p>
               </div>
@@ -289,20 +289,20 @@ export function InstructorDetailModal({
               <button
                 key={t.id}
                 onClick={() => handleTabChange(t.id)}
-                className={`px-4 py-2.5 text-[12px] font-semibold border-b-2 whitespace-nowrap transition -mb-px flex items-center gap-1.5 ${
+                className={`px-4 py-2.5 text-[13px] font-semibold border-b-2 whitespace-nowrap transition -mb-px flex items-center gap-1.5 ${
                   tab === t.id
-                    ? "border-[#FF8A1F] text-[#FF8A1F]"
+                    ? "border-[#0E7490] text-[#C2410C]"
                     : "border-transparent text-[#64748B] hover:text-[#0B1F3A]"
                 }`}
               >
                 {t.label}
                 {t.id === "adjustments" && row.adjustments.length > 0 && (
-                  <span className="rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-bold text-[#64748B]">
+                  <span className="rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[11px] font-bold text-[#64748B]">
                     {row.adjustments.length}
                   </span>
                 )}
                 {t.id === "sessions" && (
-                  <span className="rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[10px] font-bold text-[#64748B]">
+                  <span className="rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[11px] font-bold text-[#64748B]">
                     {sessions !== null ? sessions.length : row.sessions_count}
                   </span>
                 )}
@@ -327,9 +327,9 @@ export function InstructorDetailModal({
                     { label: "Advances",    value: fmtEGP(row.advance_total),             hi: false },
                     { label: "Net Amount",  value: fmtEGP(row.net_amount),                hi: true  },
                   ].map(k => (
-                    <div key={k.label} className={`rounded-xl border px-3 py-2.5 ${k.hi ? "border-[#FF8A1F]/30 bg-[#FFF7F0]" : "border-[#E2E8F0] bg-white"}`}>
-                      <p className={`text-[15px] font-extrabold ${k.hi ? "text-[#FF8A1F]" : "text-[#0B1F3A]"}`}>{k.value}</p>
-                      <p className="text-[10px] font-medium text-[#94A3B8] mt-0.5">{k.label}</p>
+                    <div key={k.label} className={`rounded-xl border px-3 py-2.5 ${k.hi ? "border-[#0E7490]/30 bg-[#FFF7F0]" : "border-[#E2E8F0] bg-white"}`}>
+                      <p className={`text-[15px] font-extrabold ${k.hi ? "text-[#C2410C]" : "text-[#0B1F3A]"}`}>{k.value}</p>
+                      <p className="text-[11px] font-medium text-[#94A3B8] mt-0.5">{k.label}</p>
                     </div>
                   ))}
                 </div>
@@ -337,7 +337,7 @@ export function InstructorDetailModal({
                 {/* Earnings breakdown */}
                 <div className="ds-card overflow-hidden">
                   <div className="bg-[#F8FAFC] border-b border-[#E2E8F0] px-4 py-2.5">
-                    <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Earnings Breakdown</p>
+                    <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider">Earnings Breakdown</p>
                   </div>
                   <div className="px-4 py-3 space-y-2">
                     <ModalRow label="Session Earnings" value={`${row.sessions_count} sessions × ${fmtEGP(row.salary_per_session)}`} right={fmtEGP(row.session_earnings)} />
@@ -347,7 +347,7 @@ export function InstructorDetailModal({
                     {row.purchase_total > 0 && <ModalRow label="Purchases"  right={`−${fmtEGP(row.purchase_total)}`} rightCls="text-orange-700 font-semibold" />}
                     {row.other_total > 0    && <ModalRow label="Other"      right={`+${fmtEGP(row.other_total)}`}    rightCls="text-[#334155] font-semibold" />}
                     <div className="border-t border-[#E2E8F0] pt-2">
-                      <ModalRow label="Net Amount" right={fmtEGP(row.net_amount)} rightCls="text-[#FF8A1F] font-extrabold text-[14px]" />
+                      <ModalRow label="Net Amount" right={fmtEGP(row.net_amount)} rightCls="text-[#C2410C] font-extrabold text-[14px]" />
                     </div>
                   </div>
                 </div>
@@ -355,8 +355,8 @@ export function InstructorDetailModal({
                 {/* Payment info */}
                 <div className="ds-card overflow-hidden">
                   <div className="bg-[#F8FAFC] border-b border-[#E2E8F0] px-4 py-2.5 flex items-center justify-between">
-                    <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Payment Info</p>
-                    <button onClick={() => setTab("payments")} className="text-[11px] font-semibold text-[#FF8A1F] hover:text-[#e07018]">Edit →</button>
+                    <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider">Payment Info</p>
+                    <button onClick={() => setTab("payments")} className="text-[12px] font-semibold text-[#C2410C] hover:text-[#e07018]">Edit →</button>
                   </div>
                   <div className="px-4 py-3 space-y-1.5">
                     <ModalRow label="Method" right={
@@ -386,7 +386,7 @@ export function InstructorDetailModal({
                   <>
                     {/* Edit Rate inline panel */}
                     {editRateSession && (
-                      <div className="rounded-xl border border-[#FF8A1F]/40 bg-[#FFF8F2] p-4 space-y-3">
+                      <div className="rounded-xl border border-[#0E7490]/40 bg-[#FFF8F2] p-4 space-y-3">
                         <div className="flex items-center justify-between">
                           <p className="text-[13px] font-bold text-[#0B1F3A]">
                             Edit Rate — {new Date(editRateSession.scheduled_at).toLocaleDateString("en-EG", { day: "2-digit", month: "short" })} · {editRateSession.group_name}
@@ -396,51 +396,51 @@ export function InstructorDetailModal({
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="text-[11px] font-semibold text-[#64748B]">Current Rate</label>
+                            <label className="text-[12px] font-semibold text-[#64748B]">Current Rate</label>
                             <p className="mt-0.5 text-[13px] font-bold text-[#0B1F3A]">{fmtEGP(editRateSession.final_rate)}</p>
                             {editRateSession.override_rate !== null && (
-                              <p className="text-[10px] text-[#FF8A1F]">Override active</p>
+                              <p className="text-[11px] text-[#C2410C]">Override active</p>
                             )}
                             {editRateSession.override_rate === null && editRateSession.group_rate !== null && (
-                              <p className="text-[10px] text-[#64748B]">Group rate</p>
+                              <p className="text-[11px] text-[#64748B]">Group rate</p>
                             )}
                             {editRateSession.override_rate === null && editRateSession.group_rate === null && (
-                              <p className="text-[10px] text-[#94A3B8]">Instructor default</p>
+                              <p className="text-[11px] text-[#94A3B8]">Instructor default</p>
                             )}
                           </div>
                           <div>
-                            <label className="text-[11px] font-semibold text-[#0B1F3A]">New Rate (EGP)</label>
+                            <label className="text-[12px] font-semibold text-[#0B1F3A]">New Rate (EGP)</label>
                             <input type="number" min="0" step="50"
                               value={editRateValue}
                               onChange={e => setEditRateValue(e.target.value)}
                               placeholder={String(editRateSession.final_rate)}
-                              className="mt-1 w-full ds-card px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                              className="mt-1 w-full ds-card px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
                           </div>
                         </div>
                         <div>
-                          <label className="text-[11px] font-semibold text-[#0B1F3A]">Reason</label>
+                          <label className="text-[12px] font-semibold text-[#0B1F3A]">Reason</label>
                           <select value={editRateReason} onChange={e => setEditRateReason(e.target.value)}
-                            className="mt-1 w-full ds-card px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30">
+                            className="mt-1 w-full ds-card px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30">
                             {(Object.entries(OVERRIDE_REASON_LABELS) as [string, string][]).map(([k, v]) => (
                               <option key={k} value={k}>{v}</option>
                             ))}
                           </select>
                         </div>
                         <div>
-                          <label className="text-[11px] font-semibold text-[#0B1F3A]">Notes (optional)</label>
+                          <label className="text-[12px] font-semibold text-[#0B1F3A]">Notes (optional)</label>
                           <input type="text" value={editRateNotes} onChange={e => setEditRateNotes(e.target.value)}
                             placeholder="e.g. online group contract"
-                            className="mt-1 w-full ds-card px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                            className="mt-1 w-full ds-card px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
                         </div>
-                        {editRateErr && <p className="text-[11px] text-[#EF4444]">{editRateErr}</p>}
+                        {editRateErr && <p className="text-[12px] text-[#EF4444]">{editRateErr}</p>}
                         <div className="flex gap-2 pt-1">
                           <button onClick={saveEditRate} disabled={editRateBusy}
-                            className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-[12px] font-bold text-white hover:bg-[#E07718] disabled:opacity-50 transition">
+                            className="flex-1 rounded-lg bg-[#C2410C] py-2 text-[13px] font-bold text-white hover:bg-[#E07718] disabled:opacity-50 transition">
                             {editRateBusy ? "Saving…" : "Save Override"}
                           </button>
                           {editRateSession.override_id && (
                             <button onClick={() => handleRemoveOverride(editRateSession!)} disabled={editRateBusy}
-                              className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-[11px] font-semibold text-[#EF4444] hover:bg-[#FEE2E2] transition">
+                              className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-[12px] font-semibold text-[#EF4444] hover:bg-[#FEE2E2] transition">
                               Remove Override
                             </button>
                           )}
@@ -450,7 +450,7 @@ export function InstructorDetailModal({
 
                     {/* Session table – desktop */}
                     <div className="hidden md:block ds-card overflow-x-auto">
-                      <table className="w-full text-[12px] min-w-[900px]">
+                      <table className="w-full text-[13px] min-w-[900px]">
                         <thead className="ds-table-head">
                           <tr>
                             <th className="py-2.5 pl-4 pr-2 text-left font-semibold text-[#64748B] whitespace-nowrap">Date</th>
@@ -476,7 +476,7 @@ export function InstructorDetailModal({
                                   {new Date(s.scheduled_at).toLocaleDateString("en-EG", { day: "2-digit", month: "short" })}
                                 </td>
                                 <td className="py-2.5 px-2">
-                                  <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold text-[#0B1F3A]">{s.group_name}</span>
+                                  <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-semibold text-[#0B1F3A]">{s.group_name}</span>
                                 </td>
                                 <td className="py-2.5 px-2 text-[#64748B] max-w-[110px] truncate">{s.course_name}</td>
                                 <td className="py-2.5 px-2 text-[#94A3B8] max-w-[110px] truncate">
@@ -497,7 +497,7 @@ export function InstructorDetailModal({
                                 </td>
                                 <td className="py-2.5 px-2 text-right">
                                   {s.override_rate !== null ? (
-                                    <span className="font-semibold text-[#FF8A1F]">{fmtEGP(s.override_rate)}</span>
+                                    <span className="font-semibold text-[#C2410C]">{fmtEGP(s.override_rate)}</span>
                                   ) : s.group_rate !== null ? (
                                     <span className="text-[#64748B]">{fmtEGP(s.group_rate)}</span>
                                   ) : (
@@ -520,7 +520,7 @@ export function InstructorDetailModal({
                                       setEditRateNotes("")
                                       setEditRateErr("")
                                     }}
-                                    className={`rounded-lg px-2 py-1 text-[11px] font-semibold transition ${isEditing ? "bg-[#FF8A1F] text-white" : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"}`}
+                                    className={`rounded-lg px-2 py-1 text-[12px] font-semibold transition ${isEditing ? "bg-[#C2410C] text-white" : "bg-[#F1F5F9] text-[#64748B] hover:bg-[#E2E8F0]"}`}
                                     title="Edit session rate">
                                     {isEditing ? "✕" : "✎"}
                                   </button>
@@ -531,10 +531,10 @@ export function InstructorDetailModal({
                         </tbody>
                         <tfoot className="bg-[#F8FAFC] border-t border-[#E2E8F0]">
                           <tr>
-                            <td colSpan={9} className="py-2.5 pl-4 pr-2 text-[12px] font-bold text-[#0B1F3A]">
+                            <td colSpan={9} className="py-2.5 pl-4 pr-2 text-[13px] font-bold text-[#0B1F3A]">
                               Total — {sessions.length} sessions
                             </td>
-                            <td className="py-2.5 px-2 text-right text-[12px] font-extrabold text-[#FF8A1F]">
+                            <td className="py-2.5 px-2 text-right text-[13px] font-extrabold text-[#C2410C]">
                               {fmtEGP(sessions.reduce((acc, r) => acc + r.session_amount, 0))}
                             </td>
                             <td />
@@ -549,11 +549,11 @@ export function InstructorDetailModal({
                         <div key={s.schedule_id} className="ds-card p-3">
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
-                              <p className="text-[12px] font-bold text-[#0B1F3A]">
+                              <p className="text-[13px] font-bold text-[#0B1F3A]">
                                 {new Date(s.scheduled_at).toLocaleDateString("en-EG", { day: "2-digit", month: "short", year: "numeric" })}
                               </p>
-                              <p className="text-[11px] text-[#64748B] mt-0.5">{s.group_name} · {s.course_name}</p>
-                              {s.topic && <p className="text-[11px] text-[#94A3B8] mt-0.5 truncate">{s.topic}</p>}
+                              <p className="text-[12px] text-[#64748B] mt-0.5">{s.group_name} · {s.course_name}</p>
+                              {s.topic && <p className="text-[12px] text-[#94A3B8] mt-0.5 truncate">{s.topic}</p>}
                             </div>
                             <div className="flex flex-col items-end gap-1 shrink-0">
                               <span className="text-[13px] font-bold text-[#0B1F3A]">{fmtEGP(s.session_amount)}</span>
@@ -567,25 +567,25 @@ export function InstructorDetailModal({
                                   setEditRateNotes("")
                                   setEditRateErr("")
                                 }}
-                                className="rounded-lg bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold text-[#64748B] hover:bg-[#E2E8F0] transition">
+                                className="rounded-lg bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-semibold text-[#64748B] hover:bg-[#E2E8F0] transition">
                                 ✎ Rate
                               </button>
                             </div>
                           </div>
                           {/* Rate hierarchy line */}
                           <div className="mt-2 flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] text-[#94A3B8]">Base {fmtEGP(s.base_rate)}</span>
+                            <span className="text-[11px] text-[#94A3B8]">Base {fmtEGP(s.base_rate)}</span>
                             {s.group_rate !== null && (
-                              <span className="text-[10px] text-[#64748B]">→ Group {fmtEGP(s.group_rate)}</span>
+                              <span className="text-[11px] text-[#64748B]">→ Group {fmtEGP(s.group_rate)}</span>
                             )}
                             {s.override_rate !== null && (
-                              <span className="text-[10px] font-semibold text-[#FF8A1F]">→ Override {fmtEGP(s.override_rate)}</span>
+                              <span className="text-[11px] font-semibold text-[#C2410C]">→ Override {fmtEGP(s.override_rate)}</span>
                             )}
                           </div>
                           {s.students_total > 0 && (
                             <div className="mt-1.5 flex items-center gap-3">
-                              <span className="text-[11px] text-[#64748B]">{s.students_present}/{s.students_total} present</span>
-                              <span className={`text-[11px] font-semibold ${s.attendance_pct >= 75 ? "text-[#15803D]" : s.attendance_pct >= 50 ? "text-[#B45309]" : "text-[#EF4444]"}`}>
+                              <span className="text-[12px] text-[#64748B]">{s.students_present}/{s.students_total} present</span>
+                              <span className={`text-[12px] font-semibold ${s.attendance_pct >= 75 ? "text-[#15803D]" : s.attendance_pct >= 50 ? "text-[#B45309]" : "text-[#EF4444]"}`}>
                                 {s.attendance_pct}%
                               </span>
                             </div>
@@ -598,9 +598,9 @@ export function InstructorDetailModal({
                     {groupSummary.length > 1 && (
                       <div className="ds-card overflow-hidden">
                         <div className="bg-[#F8FAFC] border-b border-[#E2E8F0] px-4 py-2.5">
-                          <p className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider">Group Summary</p>
+                          <p className="text-[12px] font-bold text-[#64748B] uppercase tracking-wider">Group Summary</p>
                         </div>
-                        <table className="w-full text-[12px]">
+                        <table className="w-full text-[13px]">
                           <thead className="border-b border-[#F1F5F9]">
                             <tr>
                               <th className="py-2 pl-4 pr-2 text-left font-semibold text-[#64748B]">Group</th>
@@ -635,11 +635,11 @@ export function InstructorDetailModal({
                   <div className="ds-card p-4 space-y-3">
                     <p className="text-[13px] font-bold text-[#0B1F3A]">New Adjustment</p>
                     <div>
-                      <label className="text-[11px] font-semibold text-[#0B1F3A]">Type</label>
+                      <label className="text-[12px] font-semibold text-[#0B1F3A]">Type</label>
                       <div className="mt-1.5 grid grid-cols-3 gap-1.5">
                         {(["bonus", "penalty", "advance", "purchase", "reimbursement", "other"] as FinanceAdjType[]).map(t => (
                           <button key={t} onClick={() => setAdjType(t)}
-                            className={`rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition ${adjType === t ? "border-[#0B1F3A] bg-[#0B1F3A] text-white" : "border-[#E2E8F0] text-[#64748B] hover:border-[#0B1F3A]"}`}>
+                            className={`rounded-lg border px-2 py-1.5 text-[12px] font-semibold transition ${adjType === t ? "border-[#0B1F3A] bg-[#0B1F3A] text-white" : "border-[#E2E8F0] text-[#64748B] hover:border-[#0B1F3A]"}`}>
                             {ADJ_SIGN[t] === 1 ? "+" : "−"} {ADJ_LABELS[t]}
                           </button>
                         ))}
@@ -647,31 +647,31 @@ export function InstructorDetailModal({
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="text-[11px] font-semibold text-[#0B1F3A]">Amount (EGP)</label>
+                        <label className="text-[12px] font-semibold text-[#0B1F3A]">Amount (EGP)</label>
                         <input type="number" min="0" step="50" value={adjAmount} onChange={e => setAdjAmount(e.target.value)} placeholder="0"
-                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
                       </div>
                       <div>
-                        <label className="text-[11px] font-semibold text-[#0B1F3A]">Date</label>
+                        <label className="text-[12px] font-semibold text-[#0B1F3A]">Date</label>
                         <input type="date" value={adjDate} onChange={e => setAdjDate(e.target.value)}
-                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
                       </div>
                     </div>
                     <div>
-                      <label className="text-[11px] font-semibold text-[#0B1F3A]">Notes (optional)</label>
+                      <label className="text-[12px] font-semibold text-[#0B1F3A]">Notes (optional)</label>
                       <input value={adjNotes} onChange={e => setAdjNotes(e.target.value)} placeholder="Description…"
-                        className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                        className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
                     </div>
-                    {adjErr && <p className="text-[12px] text-[#EF4444]">{adjErr}</p>}
+                    {adjErr && <p className="text-[13px] text-[#EF4444]">{adjErr}</p>}
                     <div className="flex gap-2">
-                      <button onClick={() => { setShowAdjForm(false); setAdjErr("") }} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[12px] font-medium text-[#64748B]">Cancel</button>
-                      <button onClick={submitAdj} disabled={adjBusy} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[12px] font-semibold text-white disabled:opacity-50">
+                      <button onClick={() => { setShowAdjForm(false); setAdjErr("") }} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-medium text-[#64748B]">Cancel</button>
+                      <button onClick={submitAdj} disabled={adjBusy} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[13px] font-semibold text-white disabled:opacity-50">
                         {adjBusy ? "Saving…" : "Save Adjustment"}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <button onClick={() => setShowAdjForm(true)} className="w-full rounded-xl border border-dashed border-[#E2E8F0] bg-white py-3 text-[12px] font-semibold text-[#FF8A1F] hover:bg-[#FFF7F0] transition">
+                  <button onClick={() => setShowAdjForm(true)} className="w-full rounded-xl border border-dashed border-[#E2E8F0] bg-white py-3 text-[13px] font-semibold text-[#C2410C] hover:bg-[#FFF7F0] transition">
                     + Add Adjustment
                   </button>
                 )}
@@ -685,8 +685,8 @@ export function InstructorDetailModal({
                       <div key={a.id} className="flex items-center gap-3 ds-card px-4 py-3">
                         <AdjBadge type={a.type} amount={a.amount} />
                         <div className="flex-1 min-w-0">
-                          {a.notes && <p className="text-[12px] text-[#0B1F3A] truncate">{a.notes}</p>}
-                          <p className="text-[11px] text-[#94A3B8]">{a.adjustment_date}</p>
+                          {a.notes && <p className="text-[13px] text-[#0B1F3A] truncate">{a.notes}</p>}
+                          <p className="text-[12px] text-[#94A3B8]">{a.adjustment_date}</p>
                         </div>
                         <p className={`text-[13px] font-bold shrink-0 ${ADJ_SIGN[a.type] === 1 ? "text-[#15803D]" : "text-[#EF4444]"}`}>
                           {ADJ_SIGN[a.type] === 1 ? "+" : "−"}{fmtEGP(a.amount)}
@@ -709,14 +709,14 @@ export function InstructorDetailModal({
                 <div className="ds-card p-4 space-y-3">
                   <p className="text-[13px] font-bold text-[#0B1F3A]">Payment Configuration</p>
                   <div>
-                    <label className="text-[11px] font-semibold text-[#0B1F3A]">Session Rate (EGP)</label>
+                    <label className="text-[12px] font-semibold text-[#0B1F3A]">Session Rate (EGP)</label>
                     <input type="number" min="0" step="50" value={payRate} onChange={e => setPayRate(e.target.value)} placeholder="0"
-                      className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                      className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-[#0B1F3A]">Payment Method</label>
+                    <label className="text-[12px] font-semibold text-[#0B1F3A]">Payment Method</label>
                     <select value={payMethod} onChange={e => setPayMethod(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30">
+                      className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30">
                       {Object.entries(INSTRUCTOR_PAYMENT_METHOD_LABELS).map(([v, l]) => (
                         <option key={v} value={v}>{l}</option>
                       ))}
@@ -724,39 +724,39 @@ export function InstructorDetailModal({
                   </div>
                   {payMethod === "vodafone_cash" && (
                     <div>
-                      <label className="text-[11px] font-semibold text-[#0B1F3A]">Vodafone Cash Number <span className="text-[#EF4444]">*</span></label>
+                      <label className="text-[12px] font-semibold text-[#0B1F3A]">Vodafone Cash Number <span className="text-[#EF4444]">*</span></label>
                       <input value={payWallet} onChange={e => setPayWallet(e.target.value)} placeholder="01xxxxxxxxx"
-                        className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                        className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
                     </div>
                   )}
                   {payMethod === "instapay" && (
                     <>
                       <div>
-                        <label className="text-[11px] font-semibold text-[#0B1F3A]">Instapay Number <span className="text-[#EF4444]">*</span></label>
+                        <label className="text-[12px] font-semibold text-[#0B1F3A]">Instapay Number <span className="text-[#EF4444]">*</span></label>
                         <input value={payInstapayNo} onChange={e => setPayInstapayNo(e.target.value)} placeholder="01xxxxxxxxx"
-                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
                       </div>
                       <div>
-                        <label className="text-[11px] font-semibold text-[#0B1F3A]">Instapay Payment Link <span className="text-[#EF4444]">*</span></label>
+                        <label className="text-[12px] font-semibold text-[#0B1F3A]">Instapay Payment Link <span className="text-[#EF4444]">*</span></label>
                         <input type="url" value={payLink} onChange={e => setPayLink(e.target.value)} placeholder="https://ipn.eg/S/..."
-                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                          className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
                       </div>
                     </>
                   )}
                   {payMethod === "bank_transfer" && (
                     <div>
-                      <label className="text-[11px] font-semibold text-[#0B1F3A]">Bank Account Number <span className="text-[#EF4444]">*</span></label>
+                      <label className="text-[12px] font-semibold text-[#0B1F3A]">Bank Account Number <span className="text-[#EF4444]">*</span></label>
                       <input value={payBank} onChange={e => setPayBank(e.target.value)}
-                        className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30" />
+                        className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30" />
                     </div>
                   )}
                   <div>
-                    <label className="text-[11px] font-semibold text-[#0B1F3A]">Notes</label>
+                    <label className="text-[12px] font-semibold text-[#0B1F3A]">Notes</label>
                     <textarea rows={2} value={payNotes} onChange={e => setPayNotes(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 resize-none" />
+                      className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30 resize-none" />
                   </div>
-                  {payErr && <p className="text-[12px] text-[#EF4444]">{payErr}</p>}
-                  {payOk  && <p className="text-[12px] text-[#10B981] font-semibold">✓ Saved successfully</p>}
+                  {payErr && <p className="text-[13px] text-[#EF4444]">{payErr}</p>}
+                  {payOk  && <p className="text-[13px] text-[#10B981] font-semibold">✓ Saved successfully</p>}
                   <button onClick={submitPayment} disabled={payBusy} className="w-full rounded-lg bg-[#0B1F3A] py-2.5 text-[13px] font-semibold text-white disabled:opacity-50 hover:bg-[#1a2f4a] transition">
                     {payBusy ? "Saving…" : "Save Payment Info"}
                   </button>
@@ -764,13 +764,13 @@ export function InstructorDetailModal({
 
                 {/* Current summary */}
                 <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 space-y-2">
-                  <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider">Current Payroll Summary</p>
+                  <p className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-wider">Current Payroll Summary</p>
                   <ModalRow label="Sessions"       right={String(row.sessions_count)} />
                   <ModalRow label="Rate/session"   right={fmtEGP(row.salary_per_session)} />
                   <ModalRow label="Total Earnings" right={fmtEGP(row.session_earnings)} />
                   <ModalRow label="Adjustments"    right={`${row.adj_net >= 0 ? "+" : ""}${fmtEGP(row.adj_net)}`} rightCls={row.adj_net >= 0 ? "text-[#15803D] font-semibold" : "text-[#EF4444] font-semibold"} />
                   <div className="border-t border-[#E2E8F0] pt-2">
-                    <ModalRow label="Net Amount" right={fmtEGP(row.net_amount)} rightCls="text-[#FF8A1F] font-extrabold" />
+                    <ModalRow label="Net Amount" right={fmtEGP(row.net_amount)} rightCls="text-[#C2410C] font-extrabold" />
                   </div>
                 </div>
 
@@ -787,7 +787,7 @@ export function InstructorDetailModal({
                   <EmptyState message="No session data available for history view." />
                 ) : (
                   <div className="ds-card overflow-hidden">
-                    <table className="w-full text-[12px]">
+                    <table className="w-full text-[13px]">
                       <thead className="ds-table-head">
                         <tr>
                           <th className="py-2.5 pl-4 pr-2 text-left font-semibold text-[#64748B]">Month</th>
@@ -829,15 +829,15 @@ export function InstructorDetailModal({
               <div className="p-5 space-y-4 max-w-md">
                 <div className="ds-card p-4 space-y-3">
                   <p className="text-[13px] font-bold text-[#0B1F3A]">Notes</p>
-                  <p className="text-[11px] text-[#94A3B8]">Visible to team leaders and admins only.</p>
+                  <p className="text-[12px] text-[#94A3B8]">Visible to team leaders and admins only.</p>
                   <textarea
                     rows={6}
                     value={notesText}
                     onChange={e => setNotesText(e.target.value)}
                     placeholder="Add notes about this instructor's payroll, payment preferences, or any relevant information…"
-                    className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-[13px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 resize-none"
+                    className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-[13px] text-[#0B1F3A] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30 resize-none"
                   />
-                  {notesOk && <p className="text-[12px] text-[#10B981] font-semibold">✓ Notes saved</p>}
+                  {notesOk && <p className="text-[13px] text-[#10B981] font-semibold">✓ Notes saved</p>}
                   <button onClick={saveNotes} disabled={notesBusy} className="w-full rounded-lg bg-[#0B1F3A] py-2.5 text-[13px] font-semibold text-white disabled:opacity-50 hover:bg-[#1a2f4a] transition">
                     {notesBusy ? "Saving…" : "Save Notes"}
                   </button>

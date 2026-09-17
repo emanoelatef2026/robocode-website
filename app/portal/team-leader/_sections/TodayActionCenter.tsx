@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import {
   getSessionsStartingSoon,
   getOverdueCollections,
@@ -37,7 +37,7 @@ function SessionCard({ session }: { session: SessionStartingSoon }) {
       left={
         <>
           <p className="text-[13px] font-medium text-[#0B1F3A] leading-snug">{session.group_name}</p>
-          <p className="mt-0.5 text-[11px] text-[#64748B]">
+          <p className="mt-0.5 text-[12px] text-[#64748B]">
             {session.course_title && <span>{session.course_title} · </span>}
             {session.instructor_name ?? <span className="text-[#F59E0B]">No instructor</span>}
           </p>
@@ -48,15 +48,15 @@ function SessionCard({ session }: { session: SessionStartingSoon }) {
           <p className={`text-[13px] font-bold ${urgent ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
             {session.starts_in_min <= 0 ? 'Now' : `${session.starts_in_min}m`}
           </p>
-          <p className="text-[10px] text-[#94A3B8]">{fmtTime(session.scheduled_at)}</p>
-          <p className="text-[10px] text-[#94A3B8]">{session.student_count} students</p>
+          <p className="text-[11px] text-[#94A3B8]">{fmtTime(session.scheduled_at)}</p>
+          <p className="text-[11px] text-[#94A3B8]">{session.student_count} students</p>
         </div>
       }
       actions={
         <div className="flex flex-col items-end gap-1">
           <Link
             href={`/portal/team-leader/attendance/record?group=${session.group_id}`}
-            className="rounded-lg bg-[#0B1F3A] px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#1a3352]"
+            className="rounded-lg bg-[#0B1F3A] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#1a3352]"
           >
             Attend
           </Link>
@@ -65,7 +65,7 @@ function SessionCard({ session }: { session: SessionStartingSoon }) {
               href={`https://wa.me/${normalizeEgyptPhone(session.instructor_phone)}${waMsg ? `?text=${waMsg}` : ''}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] px-2.5 py-1 text-[10px] font-semibold text-[#15803D] hover:bg-[#E7F8EE]"
+              className="rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] px-2.5 py-1 text-[11px] font-semibold text-[#15803D] hover:bg-[#E7F8EE]"
             >
               WA
             </a>
@@ -85,11 +85,11 @@ function CollectRow({ item }: { item: OverdueCollectionItem }) {
     <DashRow
       left={
         <>
-          <Link href={`/portal/team-leader/students/${item.student_id}`} className="block text-[13px] font-medium text-[#0B1F3A] hover:text-[#FF8A1F] leading-snug">
+          <Link href={`/portal/team-leader/students/${item.student_id}`} className="block text-[13px] font-medium text-[#0B1F3A] hover:text-[#9A3412] leading-snug">
             {item.student_name}
-            {item.student_code && <span className="ml-1 font-mono text-[10px] text-[#94A3B8]">#{item.student_code}</span>}
+            {item.student_code && <span className="ml-1 font-mono text-[11px] text-[#94A3B8]">#{item.student_code}</span>}
           </Link>
-          <p className="mt-0.5 text-[11px] text-[#64748B]">
+          <p className="mt-0.5 text-[12px] text-[#64748B]">
             {item.group_name ?? 'No group'}
             {item.days_overdue > 0 && <span className={`ml-1.5 font-medium ${critical ? 'text-[#EF4444]' : 'text-[#F59E0B]'}`}>{item.days_overdue}d overdue</span>}
           </p>
@@ -127,15 +127,15 @@ function RenewalRow({ item }: { item: RenewalItem }) {
     <DashRow
       left={
         <>
-          <Link href={`/portal/team-leader/students/${item.student_id}`} className="block text-[13px] font-medium text-[#0B1F3A] hover:text-[#FF8A1F] leading-snug">
+          <Link href={`/portal/team-leader/students/${item.student_id}`} className="block text-[13px] font-medium text-[#0B1F3A] hover:text-[#9A3412] leading-snug">
             {item.student_name}
-            {item.student_code && <span className="ml-1 font-mono text-[10px] text-[#94A3B8]">#{item.student_code}</span>}
+            {item.student_code && <span className="ml-1 font-mono text-[11px] text-[#94A3B8]">#{item.student_code}</span>}
           </Link>
-          <p className="mt-0.5 text-[11px] text-[#64748B]">{item.group_name ?? 'No group'}</p>
+          <p className="mt-0.5 text-[12px] text-[#64748B]">{item.group_name ?? 'No group'}</p>
         </>
       }
       right={
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${urgencyCls}`}>
+        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${urgencyCls}`}>
           {urgencyLabel}
         </span>
       }
@@ -143,7 +143,7 @@ function RenewalRow({ item }: { item: RenewalItem }) {
         <div className="flex flex-col gap-1">
           <Link
             href={`/portal/team-leader/finance?student=${item.student_id}&mode=renew`}
-            className="rounded-lg bg-[#FF8A1F] px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#e87c18]"
+            className="rounded-lg bg-[#C2410C] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#e87c18]"
           >
             Renew
           </Link>
@@ -180,20 +180,20 @@ function AlertRow({ alert }: { alert: MissingDataAlert }) {
     <DashRow
       left={
         <>
-          <Link href={alert.href} className="block text-[13px] font-medium text-[#0B1F3A] hover:text-[#FF8A1F] leading-snug truncate max-w-[200px]">
+          <Link href={alert.href} className="block text-[13px] font-medium text-[#0B1F3A] hover:text-[#9A3412] leading-snug truncate max-w-[200px]">
             {alert.entity_name}
           </Link>
         </>
       }
       right={
-        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${SEVERITY_CLS[alert.severity]}`}>
+        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${SEVERITY_CLS[alert.severity]}`}>
           {ALERT_TYPE_LABEL[alert.type] ?? alert.type}
         </span>
       }
       actions={
         <Link
           href={alert.href}
-          className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[10px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+          className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[11px] font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]"
         >
           Fix →
         </Link>
@@ -222,7 +222,7 @@ export default async function TodayActionCenter({ branchIds }: Props) {
     return (
       <div className="rounded-2xl border border-[#A7F3D0] bg-[#E7F8EE] px-5 py-4 text-center">
         <p className="text-[15px] font-semibold text-[#15803D]">All clear today! 🎉</p>
-        <p className="mt-0.5 text-[12px] text-[#10B981]">No urgent actions required right now.</p>
+        <p className="mt-0.5 text-[13px] text-[#10B981]">No urgent actions required right now.</p>
       </div>
     )
   }
@@ -241,7 +241,7 @@ export default async function TodayActionCenter({ branchIds }: Props) {
           count={sessions.length}
           accent={sessions.length > 0 ? 'border-blue-200' : 'border-[#E2E8F0]'}
           action={
-            <Link href="/portal/team-leader/attendance/record" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
+            <Link href="/portal/team-leader/attendance/record" className="text-[12px] font-medium text-[#C2410C] hover:underline">
               Record →
             </Link>
           }
@@ -258,7 +258,7 @@ export default async function TodayActionCenter({ branchIds }: Props) {
           count={overdue.length}
           accent={overdue.length > 0 ? 'border-[#FECACA]' : 'border-[#E2E8F0]'}
           action={overdue.length > 0 ? (
-            <Link href="/portal/team-leader/finance" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
+            <Link href="/portal/team-leader/finance" className="text-[12px] font-medium text-[#C2410C] hover:underline">
               View all →
             </Link>
           ) : undefined}
@@ -279,7 +279,7 @@ export default async function TodayActionCenter({ branchIds }: Props) {
           count={renewals.length}
           accent={renewals.length > 0 ? 'border-[#FDE68A]' : 'border-[#E2E8F0]'}
           action={renewals.length > 0 ? (
-            <Link href="/portal/team-leader/students?filter=expiring" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
+            <Link href="/portal/team-leader/students?filter=expiring" className="text-[12px] font-medium text-[#C2410C] hover:underline">
               View all →
             </Link>
           ) : undefined}
@@ -303,7 +303,7 @@ export default async function TodayActionCenter({ branchIds }: Props) {
               {criticalMissing.map((a, i) => <AlertRow key={`c-${i}`} alert={a} />)}
               {warningMissing.map((a, i)  => <AlertRow key={`w-${i}`} alert={a} />)}
               {missingData.length > 10 && (
-                <p className="px-4 py-2 text-center text-[11px] text-[#94A3B8]">
+                <p className="px-4 py-2 text-center text-[12px] text-[#94A3B8]">
                   +{missingData.length - 10} more issues
                 </p>
               )}

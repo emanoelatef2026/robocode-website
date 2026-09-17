@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -29,17 +29,17 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
           <div>
             <label className="mb-1 block text-xs font-medium text-[#64748B]">Name</label>
             <input name="name" required placeholder="e.g. 2025-2026"
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-[#64748B]">Start date</label>
             <input name="start_date" type="date" required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-[#64748B]">End date</label>
             <input name="end_date" type="date" required
-              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+              className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
           </div>
         </div>
         <div className="flex items-center justify-between">
@@ -76,7 +76,7 @@ function YearRow({ year, onChanged }: { year: AcademicYearListItem; onChanged: (
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             {year.is_current && (
-              <span className="rounded-md bg-[#FF8A1F]/10 px-2 py-0.5 text-xs font-medium text-[#FF8A1F]">
+              <span className="rounded-md bg-[#C2410C]/10 px-2 py-0.5 text-xs font-medium text-[#C2410C]">
                 Current
               </span>
             )}
@@ -89,7 +89,7 @@ function YearRow({ year, onChanged }: { year: AcademicYearListItem; onChanged: (
           </div>
           <div className="flex items-center gap-3">
             <button type="button" onClick={() => setEditing(true)}
-              className="text-xs font-medium text-[#FF8A1F] hover:underline">
+              className="text-xs font-medium text-[#C2410C] hover:underline">
               Edit
             </button>
             <button type="button" onClick={handleDelete}
@@ -109,17 +109,17 @@ function YearRow({ year, onChanged }: { year: AcademicYearListItem; onChanged: (
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#64748B]">Name</label>
                 <input name="name" defaultValue={year.name} required
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#64748B]">Start date</label>
                 <input name="start_date" type="date" defaultValue={year.start_date} required
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-[#64748B]">End date</label>
                 <input name="end_date" type="date" defaultValue={year.end_date} required
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
               </div>
             </div>
             <div className="flex items-center justify-between">

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useState, useTransition } from 'react'
 import {
@@ -47,7 +47,7 @@ export default function InstructorEditForm({
   const [pwSuccess,   setPwSuccess]     = useState<string | null>(null)
   const [emailMsg,    setEmailMsg]      = useState<string | null>(null)
 
-  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
   const handleDelete = async () => {
     if (!confirm('Remove this instructor? This cannot be undone.')) return
@@ -232,7 +232,7 @@ export default function InstructorEditForm({
           <div className="mb-3 flex gap-2">
             <select
               id="assign-group-select"
-              className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F]"
+              className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#0E7490]"
               defaultValue=""
             >
               <option value="">Assign to group…</option>
@@ -249,7 +249,7 @@ export default function InstructorEditForm({
                 const sel = (document.getElementById('assign-group-select') as HTMLSelectElement)?.value
                 if (sel) handleAssign(sel)
               }}
-              className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e87c18] disabled:opacity-50"
+              className="rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e87c18] disabled:opacity-50"
             >
               Assign
             </button>
@@ -275,7 +275,7 @@ export default function InstructorEditForm({
                 <tr key={g.id} className="ds-table-row">
                   <td className="px-3 py-2 font-mono text-xs text-[#94A3B8]">{g.code ?? '—'}</td>
                   <td className="px-3 py-2 font-medium text-[#0B1F3A]">
-                    <Link href={`/admin/groups/${g.id}`} className="hover:text-[#FF8A1F]">{g.name}</Link>
+                    <Link href={`/admin/groups/${g.id}`} className="hover:text-[#9A3412]">{g.name}</Link>
                   </td>
                   <td className="px-3 py-2 text-[#64748B]">{g.branch_name}</td>
                   <td className="px-3 py-2 text-right font-medium text-[#0B1F3A]">{g.student_count}</td>
@@ -311,13 +311,13 @@ export default function InstructorEditForm({
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="New password (min 6 characters)"
-                className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+                className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
               />
               <button
                 type="button"
                 disabled={isPending}
                 onClick={handleSetPassword}
-                className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e87c18] disabled:opacity-50"
+                className="rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e87c18] disabled:opacity-50"
               >
                 Set Password
               </button>
@@ -341,7 +341,7 @@ export default function InstructorEditForm({
               type="button"
               disabled={isPending}
               onClick={handleSendReset}
-              className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#0B1F3A] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F] disabled:opacity-50"
+              className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#0B1F3A] transition hover:border-[#0E7490] hover:text-[#9A3412] disabled:opacity-50"
             >
               Send Reset Email
             </button>

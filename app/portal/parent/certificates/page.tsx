@@ -1,4 +1,4 @@
-﻿import { requirePortalRole }          from '@/modules/rbac/guards'
+import { requirePortalRole }          from '@/modules/rbac/guards'
 import { getParentChildren }          from '@/modules/parents/parent-portal-queries'
 import { getChildSessionsProgress }   from '@/modules/parents/parent-portal-queries'
 import { getChildCertificates }       from '@/modules/certificates/queries'
@@ -68,7 +68,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
 
       {/* Eligibility block */}
       <div className="ds-card p-5 space-y-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">Certificate Eligibility</p>
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">Certificate Eligibility</p>
 
         <div className="flex items-center justify-between text-sm">
           <span className="text-[#64748B]">Completed Sessions</span>
@@ -82,19 +82,19 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
         </div>
 
         <div className="flex flex-col items-start gap-2 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
-          <p className="text-[12px] text-[#64748B]">
+          <p className="text-[13px] text-[#64748B]">
             Certificates are issued after course completion.
           </p>
           {hasCerts ? (
-            <span className="rounded-full bg-[#E7F8EE] px-2.5 py-0.5 text-[12px] font-semibold text-[#15803D]">
+            <span className="rounded-full bg-[#E7F8EE] px-2.5 py-0.5 text-[13px] font-semibold text-[#15803D]">
               Certificate Issued
             </span>
           ) : isEligible ? (
-            <span className="rounded-full bg-[#EFF6FF] px-2.5 py-0.5 text-[12px] font-semibold text-[#1D4ED8]">
+            <span className="rounded-full bg-[#EFF6FF] px-2.5 py-0.5 text-[13px] font-semibold text-[#1D4ED8]">
               Eligible
             </span>
           ) : (
-            <span className="rounded-full bg-[#F3F4F6] px-2.5 py-0.5 text-[12px] font-medium text-[#6B7280]">
+            <span className="rounded-full bg-[#F3F4F6] px-2.5 py-0.5 text-[13px] font-medium text-[#6B7280]">
               Not Eligible Yet
             </span>
           )}
@@ -123,16 +123,16 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="text-[14px] font-semibold text-[#0B1F3A] leading-tight">{c.title}</h3>
                     {c.status === 'revoked' && (
-                      <span className="shrink-0 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-medium text-[#EF4444]">
+                      <span className="shrink-0 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[12px] font-medium text-[#EF4444]">
                         Revoked
                       </span>
                     )}
                   </div>
-                  <p className="mt-0.5 text-[12px] text-[#64748B]">
+                  <p className="mt-0.5 text-[13px] text-[#64748B]">
                     {TYPE_LABELS[c.certificate_type] ?? c.certificate_type}
                     {c.course_title && ` · ${c.course_title}`}
                   </p>
-                  <p className="mt-1 text-[11px] text-[#64748B]">
+                  <p className="mt-1 text-[12px] text-[#64748B]">
                     Issued {new Date(c.issued_at).toLocaleDateString('en-GB')}
                     {' · '}
                     <span className="font-mono">{c.certificate_code}</span>
@@ -146,7 +146,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                       href={`/verify/${c.certificate_code}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex min-h-11 items-center rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
+                      className="inline-flex min-h-11 items-center rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC]"
                     >
                       Verify
                     </a>
@@ -154,7 +154,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                       href={`/api/certificates/${c.certificate_code}/pdf`}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex min-h-11 items-center rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#e87c18]"
+                      className="inline-flex min-h-11 items-center rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[13px] font-medium text-white hover:bg-[#e87c18]"
                     >
                       Download PDF
                     </a>
@@ -169,7 +169,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                     href={`/verify/${c.certificate_code}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[#E2E8F0] text-center text-[12px] font-medium text-[#0B1F3A]"
+                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[#E2E8F0] text-center text-[13px] font-medium text-[#0B1F3A]"
                   >
                     Verify
                   </a>
@@ -177,7 +177,7 @@ export default async function ParentCertificatesPage({ searchParams }: Props) {
                     href={`/api/certificates/${c.certificate_code}/pdf`}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg bg-[#FF8A1F] text-center text-[12px] font-medium text-white"
+                    className="flex min-h-11 flex-1 items-center justify-center rounded-lg bg-[#FF8A1F] text-center text-[13px] font-medium text-white"
                   >
                     Download PDF
                   </a>

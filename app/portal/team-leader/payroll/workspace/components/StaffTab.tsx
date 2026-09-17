@@ -48,9 +48,9 @@ export function StaffTab({
           { label: "Paid",        value: fmtEGP(kpis.totalPaid),                hi: false },
           { label: "Remaining",   value: fmtEGP(kpis.totalRemaining),           hi: false },
         ].map(k => (
-          <div key={k.label} className={`rounded-xl border px-3 py-3 ${k.hi ? "border-[#FF8A1F]/30 bg-[#FFF7F0]" : "border-[#E2E8F0] bg-white"}`}>
-            <p className={`text-[16px] font-extrabold ${k.hi ? "text-[#FF8A1F]" : "text-[#0B1F3A]"}`}>{k.value}</p>
-            <p className="text-[10px] font-medium text-[#94A3B8] mt-0.5">{k.label}</p>
+          <div key={k.label} className={`rounded-xl border px-3 py-3 ${k.hi ? "border-[#0E7490]/30 bg-[#FFF7F0]" : "border-[#E2E8F0] bg-white"}`}>
+            <p className={`text-[16px] font-extrabold ${k.hi ? "text-[#C2410C]" : "text-[#0B1F3A]"}`}>{k.value}</p>
+            <p className="text-[11px] font-medium text-[#94A3B8] mt-0.5">{k.label}</p>
           </div>
         ))}
       </div>
@@ -62,7 +62,7 @@ export function StaffTab({
           {/* Desktop */}
           <div className="hidden md:block">
             <div className="ds-card overflow-hidden">
-              <table className="w-full text-[12px]">
+              <table className="w-full text-[13px]">
                 <thead className="ds-table-head">
                   <tr>
                     <th className="py-3 pl-4 pr-2 text-left font-semibold text-[#64748B]">Name</th>
@@ -87,21 +87,21 @@ export function StaffTab({
                           <Avatar name={row.display_name} />
                           <button
                             onClick={() => onOpenDetail(row)}
-                            className="font-semibold text-[#0B1F3A] hover:text-[#FF8A1F] transition text-left"
+                            className="font-semibold text-[#0B1F3A] hover:text-[#9A3412] transition text-left"
                           >
                             {row.display_name}
                           </button>
                         </div>
                       </td>
                       <td className="py-3 px-2">
-                        <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-semibold text-[#64748B]">
+                        <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-semibold text-[#64748B]">
                           {STAFF_ROLE_LABELS[row.role] ?? row.role}
                         </span>
                       </td>
-                      <td className="py-3 px-2 text-[11px] text-[#64748B]">
+                      <td className="py-3 px-2 text-[12px] text-[#64748B]">
                         {row.department ?? <span className="text-[#CBD5E1]">—</span>}
                       </td>
-                      <td className="py-3 px-2 text-[11px] text-[#64748B]">
+                      <td className="py-3 px-2 text-[12px] text-[#64748B]">
                         {row.works_all_branches ? "All Branches" : row.branch_name}
                       </td>
                       <td className="py-3 px-2 text-right font-medium text-[#0B1F3A]">
@@ -135,7 +135,7 @@ export function StaffTab({
                       </td>
                       <td className="py-3 px-2 text-right"><NetChip amount={row.net_amount} /></td>
                       <td className="py-3 px-2 text-center">
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${PAYMENT_STATUS_COLORS[row.payment_status]}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${PAYMENT_STATUS_COLORS[row.payment_status]}`}>
                           {PAYMENT_STATUS_LABELS[row.payment_status]}
                         </span>
                       </td>
@@ -143,17 +143,17 @@ export function StaffTab({
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => onOpenDetail(row)}
-                            className="rounded-lg border border-[#FF8A1F]/40 bg-[#FFF7F0] px-2.5 py-1 text-[11px] font-semibold text-[#FF8A1F] hover:bg-[#FFE8CC] transition"
+                            className="rounded-lg border border-[#0E7490]/40 bg-[#FFF7F0] px-2.5 py-1 text-[12px] font-semibold text-[#C2410C] hover:bg-[#FFE8CC] transition"
                           >
                             View
                           </button>
                           <button
                             onClick={() => onQuickPay(row)}
-                            className="rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] px-2.5 py-1 text-[11px] font-semibold text-[#15803D] hover:bg-[#E7F8EE] transition"
+                            className="rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] px-2.5 py-1 text-[12px] font-semibold text-[#15803D] hover:bg-[#E7F8EE] transition"
                           >
                             + Pay
                           </button>
-                          <button onClick={() => onEdit(row)} className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">Edit</button>
+                          <button onClick={() => onEdit(row)} className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[12px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">Edit</button>
                         </div>
                       </td>
                     </tr>
@@ -172,13 +172,13 @@ export function StaffTab({
                   <div className="flex-1 min-w-0">
                     <button
                       onClick={() => onOpenDetail(row)}
-                      className="font-semibold text-[#0B1F3A] hover:text-[#FF8A1F] text-[13px] transition text-left"
+                      className="font-semibold text-[#0B1F3A] hover:text-[#9A3412] text-[13px] transition text-left"
                     >
                       {row.display_name}
                     </button>
                     <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                      <span className="text-[11px] text-[#94A3B8]">{STAFF_ROLE_LABELS[row.role] ?? row.role} · {row.branch_name}</span>
-                      <span className={`rounded-full px-1.5 py-0 text-[10px] font-semibold ${PAYMENT_STATUS_COLORS[row.payment_status]}`}>
+                      <span className="text-[12px] text-[#94A3B8]">{STAFF_ROLE_LABELS[row.role] ?? row.role} · {row.branch_name}</span>
+                      <span className={`rounded-full px-1.5 py-0 text-[11px] font-semibold ${PAYMENT_STATUS_COLORS[row.payment_status]}`}>
                         {PAYMENT_STATUS_LABELS[row.payment_status]}
                       </span>
                     </div>
@@ -187,28 +187,28 @@ export function StaffTab({
                 </div>
                 <div className="mt-2.5 grid grid-cols-3 gap-2">
                   <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5">
-                    <p className="text-[12px] font-bold text-[#0B1F3A]">
+                    <p className="text-[13px] font-bold text-[#0B1F3A]">
                       {row.basic_salary > 0 ? fmtEGP(row.basic_salary) : "—"}
                     </p>
-                    <p className="text-[10px] text-[#94A3B8]">Salary</p>
+                    <p className="text-[11px] text-[#94A3B8]">Salary</p>
                   </div>
                   <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5">
-                    <p className="text-[12px] font-bold text-[#15803D]">
+                    <p className="text-[13px] font-bold text-[#15803D]">
                       {row.total_paid > 0 ? fmtEGP(row.total_paid) : "—"}
                     </p>
-                    <p className="text-[10px] text-[#94A3B8]">Paid</p>
+                    <p className="text-[11px] text-[#94A3B8]">Paid</p>
                   </div>
                   <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5">
-                    <p className={`text-[12px] font-bold ${row.remaining > 0 ? "text-[#EF4444]" : "text-[#CBD5E1]"}`}>
+                    <p className={`text-[13px] font-bold ${row.remaining > 0 ? "text-[#EF4444]" : "text-[#CBD5E1]"}`}>
                       {row.remaining > 0 ? fmtEGP(row.remaining) : "—"}
                     </p>
-                    <p className="text-[10px] text-[#94A3B8]">Remaining</p>
+                    <p className="text-[11px] text-[#94A3B8]">Remaining</p>
                   </div>
                 </div>
                 <div className="mt-2.5 flex gap-1.5">
-                  <button onClick={() => onOpenDetail(row)} className="flex-1 rounded-lg border border-[#FF8A1F]/40 bg-[#FFF7F0] py-1.5 text-[11px] font-semibold text-[#FF8A1F]">View</button>
-                  <button onClick={() => onQuickPay(row)} className="flex-1 rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] py-1.5 text-[11px] font-semibold text-[#15803D]">+ Pay</button>
-                  <button onClick={() => onEdit(row)} className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#64748B]">Edit</button>
+                  <button onClick={() => onOpenDetail(row)} className="flex-1 rounded-lg border border-[#0E7490]/40 bg-[#FFF7F0] py-1.5 text-[12px] font-semibold text-[#C2410C]">View</button>
+                  <button onClick={() => onQuickPay(row)} className="flex-1 rounded-lg border border-[#A7F3D0] bg-[#E7F8EE] py-1.5 text-[12px] font-semibold text-[#15803D]">+ Pay</button>
+                  <button onClick={() => onEdit(row)} className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[12px] font-semibold text-[#64748B]">Edit</button>
                 </div>
               </div>
             ))}

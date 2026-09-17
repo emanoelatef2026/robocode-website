@@ -81,41 +81,41 @@ function WsSessionEditForm({
   }
 
   return (
-    <div className="mt-2 rounded-xl border border-[#FF8A1F]/30 bg-orange-50/30 p-3 space-y-3">
-      <p className="text-[11px] font-semibold text-[#0B1F3A]">Edit Session</p>
+    <div className="mt-2 rounded-xl border border-[#0E7490]/30 bg-orange-50/30 p-3 space-y-3">
+      <p className="text-[12px] font-semibold text-[#0B1F3A]">Edit Session</p>
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Date &amp; Time</label>
+          <label className="block text-[11px] font-medium text-[#94A3B8] mb-1">Date &amp; Time</label>
           <input type="datetime-local" value={datetime} onChange={e => setDatetime(e.target.value)}
-            className="w-full ds-card px-2 py-1.5 text-[11px] focus:border-[#FF8A1F] focus:outline-none" />
+            className="w-full ds-card px-2 py-1.5 text-[12px] focus:border-[#0E7490] focus:outline-none" />
           {datetime !== originalISO && (
             <p className="mt-0.5 text-[9px] text-[#F59E0B]">⚠ Date change re-evaluates package eligibility</p>
           )}
         </div>
         <div>
-          <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Duration (min)</label>
+          <label className="block text-[11px] font-medium text-[#94A3B8] mb-1">Duration (min)</label>
           <input type="number" value={duration} onChange={e => setDuration(e.target.value)}
             min={15} max={240} step={15}
-            className="w-full ds-card px-2 py-1.5 text-[11px] focus:border-[#FF8A1F] focus:outline-none" />
+            className="w-full ds-card px-2 py-1.5 text-[12px] focus:border-[#0E7490] focus:outline-none" />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Topic</label>
+          <label className="block text-[11px] font-medium text-[#94A3B8] mb-1">Topic</label>
           <input type="text" value={topic} onChange={e => setTopic(e.target.value)} placeholder="e.g. CSS Selectors…"
-            className="w-full ds-card px-2 py-1.5 text-[11px] focus:border-[#FF8A1F] focus:outline-none" />
+            className="w-full ds-card px-2 py-1.5 text-[12px] focus:border-[#0E7490] focus:outline-none" />
         </div>
         <div>
-          <label className="block text-[10px] font-medium text-[#94A3B8] mb-1">Delivery</label>
+          <label className="block text-[11px] font-medium text-[#94A3B8] mb-1">Delivery</label>
           <div className="flex gap-2 mt-0.5">
             {(['online', 'offline'] as const).map(d => (
               <button key={d} type="button" onClick={() => setDelivery(d)}
-                className={`rounded-lg px-3 py-1.5 text-[10px] font-medium border transition ${
+                className={`rounded-lg px-3 py-1.5 text-[11px] font-medium border transition ${
                   delivery === d
-                    ? 'border-[#FF8A1F] bg-[#FF8A1F] text-white'
-                    : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#FF8A1F]'
+                    ? 'border-[#0E7490] bg-[#C2410C] text-white'
+                    : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#0E7490]'
                 }`}>
                 {d.charAt(0).toUpperCase() + d.slice(1)}
               </button>
@@ -126,11 +126,11 @@ function WsSessionEditForm({
 
       {students.length > 0 && (
         <div>
-          <label className="block text-[10px] font-medium text-[#94A3B8] mb-1.5">Attendance Statuses</label>
+          <label className="block text-[11px] font-medium text-[#94A3B8] mb-1.5">Attendance Statuses</label>
           <div className="space-y-1 max-h-48 overflow-y-auto">
             {students.map(s => (
               <div key={s.student_id} className="flex items-center justify-between gap-2 ds-card px-2.5 py-1.5">
-                <span className="text-[11px] font-medium text-[#0B1F3A] truncate flex-1 min-w-0">{s.student_name}</span>
+                <span className="text-[12px] font-medium text-[#0B1F3A] truncate flex-1 min-w-0">{s.student_name}</span>
                 <div className="flex gap-1 shrink-0">
                   {WS_ATT_STATUSES.map(st => (
                     <button key={st} type="button"
@@ -151,16 +151,16 @@ function WsSessionEditForm({
       )}
 
       {error && (
-        <p className="rounded-lg bg-[#FEE2E2] border border-[#FEE2E2] px-3 py-2 text-[10px] text-[#DC2626]">{error}</p>
+        <p className="rounded-lg bg-[#FEE2E2] border border-[#FEE2E2] px-3 py-2 text-[11px] text-[#DC2626]">{error}</p>
       )}
 
       <div className="flex gap-2">
         <button onClick={onCancel} disabled={saving}
-          className="flex-1 ds-card px-3 py-1.5 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition disabled:opacity-50">
+          className="flex-1 ds-card px-3 py-1.5 text-[12px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition disabled:opacity-50">
           Cancel
         </button>
         <button onClick={handleSave} disabled={saving}
-          className="flex-1 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#e87c18] transition disabled:opacity-50">
+          className="flex-1 rounded-lg bg-[#C2410C] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#e87c18] transition disabled:opacity-50">
           {saving ? 'Saving…' : 'Save & Recalculate'}
         </button>
       </div>
@@ -203,7 +203,7 @@ function WsSessionRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             {session.session_number != null && (
-              <span className="text-[10px] font-semibold text-[#94A3B8]">#{session.session_number}</span>
+              <span className="text-[11px] font-semibold text-[#94A3B8]">#{session.session_number}</span>
             )}
             <p className={`text-[13px] font-medium ${isPast ? 'text-[#0B1F3A]' : 'text-[#374151]'}`}>{fmt}</p>
             {session.delivery && (
@@ -213,36 +213,36 @@ function WsSessionRow({
             )}
           </div>
           {session.topic && (
-            <p className="mt-0.5 text-[11px] text-[#64748B] truncate">{session.topic}</p>
+            <p className="mt-0.5 text-[12px] text-[#64748B] truncate">{session.topic}</p>
           )}
           {session.status === 'completed' && (
             <div className="mt-1 flex items-center gap-2">
               {session.present_count > 0 && (
-                <span className="text-[10px] font-medium text-[#10B981]">✓ {session.present_count} present</span>
+                <span className="text-[11px] font-medium text-[#10B981]">✓ {session.present_count} present</span>
               )}
               {session.absent_count > 0 && (
-                <span className="text-[10px] font-medium text-[#EF4444]">✗ {session.absent_count} absent</span>
+                <span className="text-[11px] font-medium text-[#EF4444]">✗ {session.absent_count} absent</span>
               )}
               {session.present_count === 0 && session.absent_count === 0 && (
-                <span className="text-[10px] text-[#94A3B8]">No attendance recorded</span>
+                <span className="text-[11px] text-[#94A3B8]">No attendance recorded</span>
               )}
             </div>
           )}
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-1.5">
-          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusCls}`}>
+          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusCls}`}>
             {session.status}
           </span>
           {session.duration_minutes > 0 && (
-            <span className="text-[10px] text-[#94A3B8]">{session.duration_minutes}min</span>
+            <span className="text-[11px] text-[#94A3B8]">{session.duration_minutes}min</span>
           )}
           {session.status === 'completed' && !isConfirming && !isEditing && (
             <div className="flex gap-2">
               <button onClick={() => onEditOpen(session.id)}
-                className="text-[10px] text-[#64748B] hover:text-[#0B1F3A] transition">Edit</button>
+                className="text-[11px] text-[#64748B] hover:text-[#0B1F3A] transition">Edit</button>
               <button onClick={() => onConfirmOpen(session.id)}
-                className="text-[10px] text-[#F87171] hover:text-[#EF4444] transition">Delete</button>
+                className="text-[11px] text-[#F87171] hover:text-[#EF4444] transition">Delete</button>
             </div>
           )}
         </div>
@@ -259,13 +259,13 @@ function WsSessionRow({
 
       {isConfirming && (
         <div className="mt-2 flex items-center gap-2 rounded-lg border border-[#FEE2E2] bg-[#FEE2E2] px-3 py-2">
-          <span className="flex-1 text-[11px] text-[#DC2626]">Delete session? This reverses all package consumptions.</span>
+          <span className="flex-1 text-[12px] text-[#DC2626]">Delete session? This reverses all package consumptions.</span>
           <button onClick={onConfirmClose}
-            className="rounded border border-[#E2E8F0] bg-white px-2 py-1 text-[10px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition">
+            className="rounded border border-[#E2E8F0] bg-white px-2 py-1 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition">
             Cancel
           </button>
           <button onClick={() => onDelete(session.id)} disabled={isDeleting}
-            className="rounded bg-[#EF4444] px-2 py-1 text-[10px] font-medium text-white hover:bg-[#DC2626] transition disabled:opacity-50">
+            className="rounded bg-[#EF4444] px-2 py-1 text-[11px] font-medium text-white hover:bg-[#DC2626] transition disabled:opacity-50">
             {isDeleting ? '…' : 'Confirm'}
           </button>
         </div>
@@ -357,7 +357,7 @@ export function GroupAttendanceTab({
   return (
     <div className="p-4 space-y-4">
       {toast && (
-        <div className={`rounded-lg border px-3 py-2 text-[11px] font-medium ${
+        <div className={`rounded-lg border px-3 py-2 text-[12px] font-medium ${
           toast.type === 'success'
             ? 'bg-[#E7F8EE] border-[#A7F3D0] text-[#15803D]'
             : 'bg-[#FEE2E2] border-[#FECACA] text-[#DC2626]'
@@ -380,7 +380,7 @@ export function GroupAttendanceTab({
           { label: 'Sessions Done', value: String(completed.length),    color: 'text-[#0B1F3A]' },
         ].map(card => (
           <div key={card.label} className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
-            <p className="text-[10px] text-[#94A3B8] uppercase tracking-wide">{card.label}</p>
+            <p className="text-[11px] text-[#94A3B8] uppercase tracking-wide">{card.label}</p>
             <p className={`mt-1 text-xl font-bold ${card.color}`}>{card.value}</p>
           </div>
         ))}
@@ -388,7 +388,7 @@ export function GroupAttendanceTab({
 
       {isTL && (
         <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] text-[#94A3B8]">
+          <p className="text-[12px] text-[#94A3B8]">
             {completed.length} completed session{completed.length !== 1 ? 's' : ''}
             {past.length > 0 && <span className="ml-1 text-[#10B981]">· {past.length} recorded</span>}
           </p>
@@ -397,13 +397,13 @@ export function GroupAttendanceTab({
               onClick={handleRebuild}
               disabled={rebuilding}
               title="Recalculate package consumption for all students"
-              className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#374151] hover:bg-[#F8FAFC] transition disabled:opacity-50"
+              className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] font-medium text-[#374151] hover:bg-[#F8FAFC] transition disabled:opacity-50"
             >
               {rebuilding ? 'Rebuilding…' : 'Rebuild'}
             </button>
             <button
               onClick={() => { setEditingId(null); onOpenAddSession() }}
-              className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#e87c18] transition"
+              className="rounded-lg bg-[#C2410C] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#e87c18] transition"
             >
               + Add Session
             </button>
@@ -413,7 +413,7 @@ export function GroupAttendanceTab({
 
       {completed.length > 0 && (
         <div>
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Recorded Sessions</p>
+          <p className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-[#94A3B8]">Recorded Sessions</p>
           <div className="divide-y divide-[#F1F5F9] ds-card">
             {completed.map(s => (
               <WsSessionRow key={s.id} session={s} {...sessionRowProps} />
@@ -429,7 +429,7 @@ export function GroupAttendanceTab({
         <div className="py-10 text-center">
           <p className="text-sm text-[#94A3B8] mb-3">No sessions recorded yet.</p>
           <button onClick={onOpenAddSession}
-            className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition">
+            className="rounded-lg bg-[#C2410C] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition">
             + Add First Session
           </button>
         </div>

@@ -59,13 +59,13 @@ export function AdjustmentModal({ target, onClose, onSuccess }: Props) {
         <Modal onClose={onClose} title={`Adjustment — ${target.name}`}>
           <div className="space-y-3">
             <div>
-              <label className="text-[12px] font-semibold text-[#0B1F3A]">Type</label>
+              <label className="text-[13px] font-semibold text-[#0B1F3A]">Type</label>
               <div className="mt-1.5 grid grid-cols-3 gap-1.5">
                 {ADJ_TYPES.map(t => (
                   <button
                     key={t}
                     onClick={() => setAdjType(t)}
-                    className={`rounded-lg border px-2 py-1.5 text-[11px] font-semibold transition ${
+                    className={`rounded-lg border px-2 py-1.5 text-[12px] font-semibold transition ${
                       adjType === t
                         ? "border-[#0B1F3A] bg-[#0B1F3A] text-white"
                         : "border-[#E2E8F0] text-[#64748B] hover:border-[#0B1F3A]"
@@ -75,39 +75,39 @@ export function AdjustmentModal({ target, onClose, onSuccess }: Props) {
                   </button>
                 ))}
               </div>
-              <p className="mt-1.5 text-[11px] text-[#94A3B8]">
+              <p className="mt-1.5 text-[12px] text-[#94A3B8]">
                 {ADJ_SIGN[adjType] === 1 ? "Adds to" : "Deducts from"} net amount
               </p>
             </div>
             <div>
-              <label className="text-[12px] font-semibold text-[#0B1F3A]">Amount (EGP)</label>
+              <label className="text-[13px] font-semibold text-[#0B1F3A]">Amount (EGP)</label>
               <input
                 type="number" min="0" step="50"
                 value={adjAmount}
                 onChange={e => setAdjAmount(e.target.value)}
                 placeholder="0"
-                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
               />
             </div>
             <div>
-              <label className="text-[12px] font-semibold text-[#0B1F3A]">Date</label>
+              <label className="text-[13px] font-semibold text-[#0B1F3A]">Date</label>
               <input
                 type="date"
                 value={adjDate}
                 onChange={e => setAdjDate(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30"
+                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30"
               />
             </div>
             <div>
-              <label className="text-[12px] font-semibold text-[#0B1F3A]">Notes (optional)</label>
+              <label className="text-[13px] font-semibold text-[#0B1F3A]">Notes (optional)</label>
               <textarea
                 rows={2}
                 value={adjNotes}
                 onChange={e => setAdjNotes(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/30 resize-none"
+                className="mt-1 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/30 resize-none"
               />
             </div>
-            {adjErr && <p className="text-[12px] text-[#EF4444]">{adjErr}</p>}
+            {adjErr && <p className="text-[13px] text-[#EF4444]">{adjErr}</p>}
             <div className="flex gap-2 pt-1">
               <button onClick={onClose} className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-medium text-[#64748B] hover:bg-[#F8FAFC]">Cancel</button>
               <button onClick={submit} disabled={adjBusy} className="flex-1 rounded-lg bg-[#0B1F3A] py-2 text-[13px] font-semibold text-white hover:bg-[#1a2f4a] disabled:opacity-50">

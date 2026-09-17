@@ -36,7 +36,7 @@ export default function NewMakeupForm({ branchId, instructorId }: Props) {
       <input type="hidden" name="instructor_id" value={instructorId} />
 
       <div>
-        <label className="block text-[12px] font-semibold text-[#0B1F3A] mb-1">Date &amp; Time</label>
+        <label className="block text-[13px] font-semibold text-[#0B1F3A] mb-1">Date &amp; Time</label>
         <input
           type="datetime-local"
           name="scheduled_at"
@@ -46,7 +46,7 @@ export default function NewMakeupForm({ branchId, instructorId }: Props) {
       </div>
 
       <div>
-        <label className="block text-[12px] font-semibold text-[#0B1F3A] mb-1">Duration (minutes)</label>
+        <label className="block text-[13px] font-semibold text-[#0B1F3A] mb-1">Duration (minutes)</label>
         <input
           type="number"
           name="duration_minutes"
@@ -58,7 +58,7 @@ export default function NewMakeupForm({ branchId, instructorId }: Props) {
       </div>
 
       <div>
-        <label className="block text-[12px] font-semibold text-[#0B1F3A] mb-1">Notes (optional)</label>
+        <label className="block text-[13px] font-semibold text-[#0B1F3A] mb-1">Notes (optional)</label>
         <textarea
           name="notes"
           rows={3}

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
@@ -65,7 +65,7 @@ export default function TLCoursesListClient({
       <button
         type="button"
         onClick={openCreate}
-        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+        className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#C2410C] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
           <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -87,18 +87,18 @@ export default function TLCoursesListClient({
               name="q"
               defaultValue={search}
               placeholder="Search courses…"
-              className="flex-1 min-w-0 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-[13px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+              className="flex-1 min-w-0 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1.5 text-[13px] text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
             />
             <button
               type="submit"
-              className="shrink-0 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white hover:bg-[#e87c18]"
+              className="shrink-0 rounded-lg bg-[#C2410C] px-3 py-1.5 text-[13px] font-medium text-white hover:bg-[#e87c18]"
             >
               Search
             </button>
             {search && (
               <Link
                 href="/portal/team-leader/courses"
-                className="shrink-0 rounded-lg px-2 py-1.5 text-[12px] text-[#94A3B8] hover:text-[#64748B]"
+                className="shrink-0 rounded-lg px-2 py-1.5 text-[13px] text-[#94A3B8] hover:text-[#64748B]"
               >
                 Clear
               </Link>
@@ -126,21 +126,21 @@ export default function TLCoursesListClient({
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[14px] font-semibold text-[#0B1F3A]">{course.title}</p>
-                        <p className="text-[11px] text-[#64748B] capitalize">{course.level ?? '—'}</p>
+                        <p className="text-[12px] text-[#64748B] capitalize">{course.level ?? '—'}</p>
                       </div>
                       <div className="flex flex-col items-end gap-1">
                         {hCfg && health && (
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${hCfg.color} ${hCfg.text}`}>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${hCfg.color} ${hCfg.text}`}>
                             {health}
                           </span>
                         )}
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${course.is_published ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#F1F5F9] text-[#64748B]'}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${course.is_published ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#F1F5F9] text-[#64748B]'}`}>
                           {course.is_published ? 'Published' : 'Draft'}
                         </span>
                       </div>
                     </div>
                     {m && (
-                      <div className="mt-2 grid grid-cols-3 gap-1.5 text-[11px]">
+                      <div className="mt-2 grid grid-cols-3 gap-1.5 text-[12px]">
                         <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
                           <p className="font-bold text-[#0B1F3A]">{m.active}</p>
                           <p className="text-[#94A3B8]">Active</p>
@@ -160,7 +160,7 @@ export default function TLCoursesListClient({
                     <button
                       type="button"
                       onClick={() => setEditCourseId(course.id)}
-                      className="mt-2 rounded-lg bg-[#FF8A1F]/10 px-3 py-1 text-[11px] font-semibold text-[#FF8A1F]"
+                      className="mt-2 rounded-lg bg-[#C2410C]/10 px-3 py-1 text-[12px] font-semibold text-[#C2410C]"
                     >
                       Edit →
                     </button>
@@ -193,7 +193,7 @@ export default function TLCoursesListClient({
                       <tr key={course.id} className="ds-table-row">
                         <td className="px-4 py-3">
                           <p className="font-medium text-[#0B1F3A]">{course.title}</p>
-                          <p className="text-[11px] text-[#94A3B8] capitalize">{course.level ?? '—'} · {course.scope}</p>
+                          <p className="text-[12px] text-[#94A3B8] capitalize">{course.level ?? '—'} · {course.scope}</p>
                         </td>
                         <td className="px-4 py-3 text-center font-semibold text-[#0B1F3A]">
                           {m ? m.active : <span className="text-[#94A3B8]">—</span>}
@@ -217,13 +217,13 @@ export default function TLCoursesListClient({
                         </td>
                         <td className="px-4 py-3 text-center">
                           {hCfg && health ? (
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${hCfg.color} ${hCfg.text}`}>
+                            <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${hCfg.color} ${hCfg.text}`}>
                               {health}
                             </span>
                           ) : <span className="text-[#94A3B8]">—</span>}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${course.is_published ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#F1F5F9] text-[#64748B]'}`}>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${course.is_published ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#F1F5F9] text-[#64748B]'}`}>
                             {course.is_published ? 'Published' : 'Draft'}
                           </span>
                         </td>
@@ -231,7 +231,7 @@ export default function TLCoursesListClient({
                           <button
                             type="button"
                             onClick={() => setEditCourseId(course.id)}
-                            className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                            className="text-xs font-medium text-[#C2410C] hover:underline"
                           >
                             Edit
                           </button>

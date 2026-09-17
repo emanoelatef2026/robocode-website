@@ -59,10 +59,10 @@ export function NotesTab({ instructorId, notes, onRefresh }: {
               key={c.key}
               type="button"
               onClick={() => setCategory(c.key)}
-              className={`rounded-full px-2.5 py-1 text-[11px] font-medium capitalize transition border ${
+              className={`rounded-full px-2.5 py-1 text-[12px] font-medium capitalize transition border ${
                 category === c.key
-                  ? 'bg-[#FF8A1F] border-[#FF8A1F] text-white'
-                  : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#FF8A1F]'
+                  ? 'bg-[#C2410C] border-[#0E7490] text-white'
+                  : 'bg-white border-[#E2E8F0] text-[#64748B] hover:border-[#0E7490]'
               }`}
             >
               {c.label}
@@ -74,13 +74,13 @@ export function NotesTab({ instructorId, notes, onRefresh }: {
           onChange={e => setContent(e.target.value)}
           rows={3}
           placeholder="Write a note…"
-          className="w-full ds-card px-3 py-2 text-[12px] outline-none focus:border-[#FF8A1F] resize-none"
+          className="w-full ds-card px-3 py-2 text-[13px] outline-none focus:border-[#0E7490] resize-none"
         />
-        {error && <p className="text-[11px] text-[#EF4444]">{error}</p>}
+        {error && <p className="text-[12px] text-[#EF4444]">{error}</p>}
         <button
           onClick={handleAdd}
           disabled={isPending || !content.trim()}
-          className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-[12px] font-semibold text-white hover:bg-[#e87c18] disabled:opacity-50 transition"
+          className="rounded-lg bg-[#C2410C] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#e87c18] disabled:opacity-50 transition"
         >
           {isPending ? 'Saving…' : 'Add Note'}
         </button>
@@ -97,11 +97,11 @@ export function NotesTab({ instructorId, notes, onRefresh }: {
                   <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${catCls(n.category)}`}>
                     {NOTE_CATEGORIES.find(c => c.key === n.category)?.label ?? n.category}
                   </span>
-                  <span className="text-[10px] text-[#94A3B8]">{n.author_name ?? 'Admin'} · {fmtDate(n.created_at)}</span>
+                  <span className="text-[11px] text-[#94A3B8]">{n.author_name ?? 'Admin'} · {fmtDate(n.created_at)}</span>
                 </div>
                 <button
                   onClick={() => handleDelete(n.id)}
-                  className="text-[11px] text-[#F87171] hover:text-[#EF4444] shrink-0"
+                  className="text-[12px] text-[#F87171] hover:text-[#EF4444] shrink-0"
                 >
                   Delete
                 </button>

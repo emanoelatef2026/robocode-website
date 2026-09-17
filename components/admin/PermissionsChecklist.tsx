@@ -31,7 +31,7 @@ export default function PermissionsChecklist({ defaultPermissions }: Props) {
           <button
             type="button"
             onClick={selectAll}
-            className="text-xs text-[#FF8A1F] hover:underline"
+            className="text-xs text-[#C2410C] hover:underline"
           >
             Select all
           </button>

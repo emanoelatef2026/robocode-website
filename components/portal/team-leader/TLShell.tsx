@@ -7,6 +7,7 @@ import TopHeader from "@/components/shared/layout/TopHeader"
 import { TopbarActionProvider } from "@/components/shared/layout/TopbarActionContext"
 import NotificationBell from "@/components/portal/shared/NotificationBell"
 import { TL_SECTIONS } from "@/modules/team-leader/navigation"
+import { DesignSystemProvider } from "@/design-system/providers/DesignSystemProvider"
 
 interface Props {
   children:             React.ReactNode
@@ -17,7 +18,8 @@ interface Props {
 export default function TLShell({ children, email, unreadNotifications = 0 }: Props) {
   return (
     <TopbarActionProvider>
-      <AppLayout
+      <DesignSystemProvider portal="teamLeader">
+        <AppLayout
         renderSidebar={({ isOpen, onClose }) => (
           <TLSidebar isOpen={isOpen} onClose={onClose} email={email} />
         )}
@@ -32,7 +34,8 @@ export default function TLShell({ children, email, unreadNotifications = 0 }: Pr
         bottomNav={<TLBottomNav />}
       >
         {children}
-      </AppLayout>
+        </AppLayout>
+      </DesignSystemProvider>
     </TopbarActionProvider>
   )
 }

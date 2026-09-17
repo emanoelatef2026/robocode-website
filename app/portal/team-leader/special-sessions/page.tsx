@@ -31,7 +31,7 @@ export default async function TLSpecialSessionsPage() {
       ) : (
         <div className="overflow-hidden ds-card">
           <div className="border-b border-[#E2E8F0] px-4 py-2.5">
-            <p className="text-[12px] font-semibold text-[#0B1F3A]">{sessions.length} session{sessions.length !== 1 ? 's' : ''}</p>
+            <p className="text-[13px] font-semibold text-[#0B1F3A]">{sessions.length} session{sessions.length !== 1 ? 's' : ''}</p>
           </div>
 
           <div className="divide-y divide-[#F1F5F9]">
@@ -48,7 +48,7 @@ export default async function TLSpecialSessionsPage() {
                   className="flex items-center justify-between gap-3 px-4 py-3 transition hover:bg-[#F8FAFC]"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${color}`}>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${color}`}>
                       {label}
                     </span>
                     <div className="min-w-0">
@@ -57,7 +57,7 @@ export default async function TLSpecialSessionsPage() {
                         {' · '}
                         {new Date(s.scheduled_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                       </p>
-                      <p className="text-[11px] text-[#64748B] truncate">
+                      <p className="text-[12px] text-[#64748B] truncate">
                         {s.instructor_name ?? 'Unassigned'} · {s.branch_name} · {s.participant_count} participants
                       </p>
                     </div>

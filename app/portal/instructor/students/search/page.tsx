@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId, searchStudentsForInstructor } from '@/modules/instructor-portal/queries'
 import Link from 'next/link'
 
@@ -44,11 +44,11 @@ export default async function StudentSearchPage({ searchParams }: Props) {
           defaultValue={query}
           placeholder="Search by name or email…"
           autoFocus
-          className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/15"
+          className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#C2410C] focus:outline-none focus:ring-2 focus:ring-[#0E7490]/15"
         />
         <button
           type="submit"
-          className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e07818] transition"
+          className="rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#9A3412] transition"
         >
           Search
         </button>
@@ -88,7 +88,7 @@ export default async function StudentSearchPage({ searchParams }: Props) {
                   </div>
                   <div className="shrink-0 text-right">
                     <p className="text-xs text-[#64748B]">{s.group_name}</p>
-                    <p className="text-xs text-[#FF8A1F]">View profile →</p>
+                    <p className="text-xs text-[#C2410C]">View profile →</p>
                   </div>
                 </Link>
               )

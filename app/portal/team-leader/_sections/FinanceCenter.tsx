@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { getFinanceDailyData, getOverdueCollections } from '@/modules/tl-dashboard/dashboard-v2-queries'
 import DashCard, { DashCardEmpty, DashRow } from '../_components/DashCard'
 import WaCallButtons from '../_components/WaCallButtons'
@@ -17,9 +17,9 @@ function FinKPI({ label, value, sub, color = 'text-[#0B1F3A]', alert = false }: 
 }) {
   return (
     <div className={`rounded-2xl border bg-white p-4 ${alert ? 'border-[#FECACA]' : 'border-[#E2E8F0]'}`}>
-      <p className={`text-[11px] font-semibold uppercase tracking-wide ${alert ? 'text-[#EF4444]' : 'text-[#94A3B8]'}`}>{label}</p>
+      <p className={`text-[12px] font-semibold uppercase tracking-wide ${alert ? 'text-[#EF4444]' : 'text-[#94A3B8]'}`}>{label}</p>
       <p className={`mt-1.5 text-[20px] font-bold leading-none ${color}`}>{value}</p>
-      {sub && <p className="mt-1 text-[10px] text-[#94A3B8]">{sub}</p>}
+      {sub && <p className="mt-1 text-[11px] text-[#94A3B8]">{sub}</p>}
     </div>
   )
 }
@@ -32,10 +32,10 @@ function CollectionRateGauge({ rate }: { rate: number }) {
 
   return (
     <div className={`rounded-2xl border px-5 py-4 ${bg}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Collection Rate</p>
+      <p className="text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Collection Rate</p>
       <div className="mt-2 flex items-end justify-between">
         <p className="text-[28px] font-extrabold" style={{ color }}>{rate}%</p>
-        <p className="pb-1 text-[11px] text-[#64748B]">this month</p>
+        <p className="pb-1 text-[12px] text-[#64748B]">this month</p>
       </div>
       {/* Bar */}
       <div className="mt-2 h-2 w-full rounded-full bg-white/60">
@@ -59,12 +59,12 @@ export default async function FinanceCenter({ branchIds }: { branchIds: string[]
         <div className="flex items-center gap-2">
           <h2 className="text-[16px] font-bold text-[#0B1F3A]">Finance Command Center</h2>
           {fin.overdue_count > 0 && (
-            <span className="rounded-full bg-[#FEE2E2] px-2.5 py-0.5 text-[11px] font-semibold text-[#DC2626]">
+            <span className="rounded-full bg-[#FEE2E2] px-2.5 py-0.5 text-[12px] font-semibold text-[#DC2626]">
               {fin.overdue_count} overdue
             </span>
           )}
         </div>
-        <Link href="/portal/team-leader/finance" className="text-[12px] font-medium text-[#FF8A1F] hover:underline">
+        <Link href="/portal/team-leader/finance" className="text-[13px] font-medium text-[#C2410C] hover:underline">
           Open Finance →
         </Link>
       </div>
@@ -111,7 +111,7 @@ export default async function FinanceCenter({ branchIds }: { branchIds: string[]
             count={fin.overdue_count}
             accent="border-[#FECACA]"
             action={
-              <Link href="/portal/team-leader/finance?filter=overdue" className="text-[11px] font-medium text-[#FF8A1F] hover:underline">
+              <Link href="/portal/team-leader/finance?filter=overdue" className="text-[12px] font-medium text-[#C2410C] hover:underline">
                 View all →
               </Link>
             }
@@ -123,14 +123,14 @@ export default async function FinanceCenter({ branchIds }: { branchIds: string[]
                   <>
                     <Link
                       href={`/portal/team-leader/students/${item.student_id}`}
-                      className="block text-[13px] font-medium text-[#0B1F3A] hover:text-[#FF8A1F] leading-snug"
+                      className="block text-[13px] font-medium text-[#0B1F3A] hover:text-[#9A3412] leading-snug"
                     >
                       {item.student_name}
                       {item.student_code && (
-                        <span className="ml-1 font-mono text-[10px] text-[#94A3B8]">#{item.student_code}</span>
+                        <span className="ml-1 font-mono text-[11px] text-[#94A3B8]">#{item.student_code}</span>
                       )}
                     </Link>
-                    <p className="mt-0.5 text-[11px] text-[#64748B]">
+                    <p className="mt-0.5 text-[12px] text-[#64748B]">
                       {item.group_name ?? 'No group'}
                       <span className="ml-1.5 font-medium text-[#EF4444]">{item.days_overdue}d overdue</span>
                     </p>
@@ -143,7 +143,7 @@ export default async function FinanceCenter({ branchIds }: { branchIds: string[]
                   <>
                     <Link
                       href={`/portal/team-leader/finance?student=${item.student_id}&mode=collect`}
-                      className="rounded-lg bg-[#FF8A1F] px-2.5 py-1 text-[10px] font-semibold text-white hover:bg-[#e87c18]"
+                      className="rounded-lg bg-[#C2410C] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#e87c18]"
                     >
                       Collect
                     </Link>
@@ -165,7 +165,7 @@ export default async function FinanceCenter({ branchIds }: { branchIds: string[]
       {topOverdue.length === 0 && collectionOk && (
         <div className="mt-4 rounded-2xl border border-[#A7F3D0] bg-[#E7F8EE] px-5 py-4 text-center">
           <p className="text-[14px] font-semibold text-[#15803D]">Finance looking healthy! 💚</p>
-          <p className="mt-0.5 text-[12px] text-[#10B981]">Collection rate {fin.collection_rate}% · No overdue accounts.</p>
+          <p className="mt-0.5 text-[13px] text-[#10B981]">Collection rate {fin.collection_rate}% · No overdue accounts.</p>
         </div>
       )}
     </section>

@@ -135,7 +135,7 @@ export default async function TLCalendarPage({ searchParams }: Props) {
           <Link
             key={f.key}
             href={`${filterBase}&filter=${f.key}`}
-            className={`rounded-full border px-3 py-1 text-[11px] font-semibold transition ${
+            className={`rounded-full border px-3 py-1 text-[12px] font-semibold transition ${
               filter === f.key
                 ? 'border-[#0B1F3A] bg-[#0B1F3A] text-white'
                 : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'
@@ -151,7 +151,7 @@ export default async function TLCalendarPage({ searchParams }: Props) {
         {/* Day headers */}
         <div className="grid grid-cols-7 border-b border-[#E2E8F0]">
           {DAY_LABELS.map(d => (
-            <div key={d} className="py-2 text-center text-[10px] font-bold uppercase tracking-widest text-[#94A3B8]">
+            <div key={d} className="py-2 text-center text-[11px] font-bold uppercase tracking-widest text-[#94A3B8]">
               {d}
             </div>
           ))}
@@ -173,7 +173,7 @@ export default async function TLCalendarPage({ searchParams }: Props) {
 
             return (
               <div key={day} className={`min-h-[80px] p-1 ${isToday ? 'bg-blue-50' : ''}`}>
-                <p className={`text-[11px] font-semibold mb-1 ${isToday ? 'text-[#3B82F6]' : 'text-[#64748B]'}`}>
+                <p className={`text-[12px] font-semibold mb-1 ${isToday ? 'text-[#3B82F6]' : 'text-[#64748B]'}`}>
                   {day}
                 </p>
                 <div className="space-y-0.5">

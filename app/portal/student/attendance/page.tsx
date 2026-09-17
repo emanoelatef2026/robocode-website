@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getStudentEnrollment,
   getStudentAttendanceHistory,
@@ -55,7 +55,7 @@ export default async function StudentAttendancePage() {
         ].map(({ label, value, color }) => (
           <div key={label} className="ds-card p-3 text-center">
             <p className={`text-xl font-bold leading-none ${color}`}>{value}</p>
-            <p className="mt-1 text-[10px] text-[#64748B]">{label}</p>
+            <p className="mt-1 text-[11px] text-[#64748B]">{label}</p>
           </div>
         ))}
       </div>
@@ -88,7 +88,7 @@ export default async function StudentAttendancePage() {
           </div>
 
           {/* Table header — desktop only */}
-          <div className="hidden grid-cols-[64px_110px_1fr_90px] gap-3 border-b border-[#F1F5F9] px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#64748B] sm:grid">
+          <div className="hidden grid-cols-[64px_110px_1fr_90px] gap-3 border-b border-[#F1F5F9] px-4 py-2 text-[12px] font-semibold uppercase tracking-wide text-[#64748B] sm:grid">
             <span>#</span>
             <span>Date</span>
             <span>Topic</span>
@@ -111,12 +111,12 @@ export default async function StudentAttendancePage() {
                     <p className="truncate text-sm text-[#0B1F3A]">
                       {r.topic ?? <span className="italic text-[#64748B]">No topic</span>}
                     </p>
-                    <p className="text-[10px] text-[#64748B] sm:hidden">
+                    <p className="text-[11px] text-[#64748B] sm:hidden">
                       {new Date(r.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   </div>
                   {cfg ? (
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[12px] font-medium ${cfg.cls}`}>
                       {cfg.label}
                     </span>
                   ) : (

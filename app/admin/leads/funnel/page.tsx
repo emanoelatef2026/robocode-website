@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Lead → Student Conversion Funnel
  *
  * Visualises the complete admissions pipeline from first contact to active student.
@@ -169,7 +169,7 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-start justify-between">
         <div>
-          <Link href="/admin/leads" className="text-xs text-[#94A3B8] hover:text-[#FF8A1F]">← Leads</Link>
+          <Link href="/admin/leads" className="text-xs text-[#94A3B8] hover:text-[#9A3412]">← Leads</Link>
         </div>
         <div className="flex items-center gap-2">
           {isSuperAdmin && (
@@ -218,7 +218,7 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
                     <div className="flex items-center gap-3">
                       <span className="text-xs font-bold text-[#0B1F3A]">{stage.count}</span>
                       {stage.dropOffRate !== null && stage.dropOffRate > 0 && (
-                        <span className="text-[11px] text-[#EF4444]">−{stage.dropOffRate}% drop</span>
+                        <span className="text-[12px] text-[#EF4444]">−{stage.dropOffRate}% drop</span>
                       )}
                     </div>
                   </div>
@@ -228,7 +228,7 @@ export default async function LeadFunnelPage({ searchParams }: Props) {
                       style={{ width: `${widthPct}%`, minWidth: stage.count > 0 ? '24px' : '0' }}
                     >
                       {stage.count > 0 && (
-                        <span className="text-[10px] font-bold text-white truncate">
+                        <span className="text-[11px] font-bold text-white truncate">
                           {widthPct}%
                         </span>
                       )}

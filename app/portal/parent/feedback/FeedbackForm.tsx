@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useTransition } from 'react'
 import { useRouter }               from 'next/navigation'
@@ -142,14 +142,14 @@ export default function FeedbackForm({ studentId, studentName, sessionMilestone,
           ))}
         </div>
         {rating > 0 && (
-          <p className="mt-2 text-[12px] text-[#64748B]">{rating} / 5</p>
+          <p className="mt-2 text-[13px] text-[#64748B]">{rating} / 5</p>
         )}
       </div>
 
       {/* Notes */}
       <div className="ds-card p-5">
         <p className="mb-1 text-sm font-semibold text-[#0B1F3A]">
-          Notes or Suggestions <span className="text-[12px] font-normal text-[#64748B]">(optional)</span>
+          Notes or Suggestions <span className="text-[13px] font-normal text-[#64748B]">(optional)</span>
         </p>
         <p className="mb-3 text-[13px] text-[#64748B]" dir="rtl">ملاحظات أو اقتراحات</p>
         <textarea

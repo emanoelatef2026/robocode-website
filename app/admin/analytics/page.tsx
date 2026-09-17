@@ -1,4 +1,4 @@
-﻿import { createServiceClient }     from '@/lib/supabase/service'
+import { createServiceClient }     from '@/lib/supabase/service'
 import { requireAuth }             from '@/modules/rbac/guards'
 import { redirect }                from 'next/navigation'
 import {
@@ -353,7 +353,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
             <div className="flex items-center gap-0.5 ds-card px-1">
               <Link
                 href={filterHref({ semester: undefined })}
-                className={`rounded px-2 py-1 text-xs ${!semesterId ? 'font-semibold text-[#FF8A1F]' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
+                className={`rounded px-2 py-1 text-xs ${!semesterId ? 'font-semibold text-[#C2410C]' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
               >
                 All
               </Link>
@@ -361,7 +361,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                 <Link
                   key={s.id}
                   href={filterHref({ semester: s.id })}
-                  className={`rounded px-2 py-1 text-xs ${semesterId === s.id ? 'font-semibold text-[#FF8A1F]' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
+                  className={`rounded px-2 py-1 text-xs ${semesterId === s.id ? 'font-semibold text-[#C2410C]' : 'text-[#64748B] hover:text-[#0B1F3A]'}`}
                 >
                   {s.name}
                 </Link>
@@ -384,7 +384,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
               <div className={`mb-2 h-1.5 w-7 rounded-full ${stat.color} opacity-80`} />
               <p className="text-2xl font-bold text-[#0B1F3A]">{stat.value}</p>
               <p className="mt-0.5 text-xs text-[#64748B]">{stat.label}</p>
-              {(stat as any).sub && <p className="mt-1 text-[11px] text-[#94A3B8]">{(stat as any).sub}</p>}
+              {(stat as any).sub && <p className="mt-1 text-[12px] text-[#94A3B8]">{(stat as any).sub}</p>}
             </div>
           ))}
         </div>
@@ -399,7 +399,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
             className={[
               'px-4 py-2.5 text-sm font-medium transition border-b-2 -mb-px',
               tab === t.id
-                ? 'border-[#FF8A1F] text-[#FF8A1F]'
+                ? 'border-[#0E7490] text-[#C2410C]'
                 : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]',
             ].join(' ')}
           >
@@ -439,7 +439,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                     <tr key={`${s.student_id}::${s.semester_id}`} className="ds-table-row">
                       <td className="px-4 py-2.5">
                         <div className="font-medium text-[#0B1F3A]">{s.student_name}</div>
-                        <div className="text-[11px] text-[#94A3B8]">{s.student_email}</div>
+                        <div className="text-[12px] text-[#94A3B8]">{s.student_email}</div>
                       </td>
                       <td className="px-4 py-2.5 text-[#64748B]">{s.semester_name}</td>
                       <td className="px-4 py-2.5">{scorePill(s.avg_attendance)}</td>
@@ -471,8 +471,8 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
               <p className="text-xs text-[#94A3B8]">completion &lt; 70% or attendance &lt; 75% — {atRiskResult.total} found</p>
             </div>
             <div className="flex items-center gap-0.5 ds-card px-1">
-              <Link href={filterHref({ sort: 'completion', page: '1' })} className={`rounded px-2 py-1 text-xs ${sort === 'completion' ? 'font-semibold text-[#FF8A1F]' : 'text-[#64748B]'}`}>Completion</Link>
-              <Link href={filterHref({ sort: 'attendance', page: '1' })} className={`rounded px-2 py-1 text-xs ${sort === 'attendance' ? 'font-semibold text-[#FF8A1F]' : 'text-[#64748B]'}`}>Attendance</Link>
+              <Link href={filterHref({ sort: 'completion', page: '1' })} className={`rounded px-2 py-1 text-xs ${sort === 'completion' ? 'font-semibold text-[#C2410C]' : 'text-[#64748B]'}`}>Completion</Link>
+              <Link href={filterHref({ sort: 'attendance', page: '1' })} className={`rounded px-2 py-1 text-xs ${sort === 'attendance' ? 'font-semibold text-[#C2410C]' : 'text-[#64748B]'}`}>Attendance</Link>
             </div>
           </div>
 
@@ -499,7 +499,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                     <tr key={`${s.student_id}-${s.course_id}`} className="ds-table-row">
                       <td className="px-4 py-2.5">
                         <div className="font-medium text-[#0B1F3A]">{s.student_name}</div>
-                        <div className="text-[11px] text-[#94A3B8]">{s.student_email}</div>
+                        <div className="text-[12px] text-[#94A3B8]">{s.student_email}</div>
                       </td>
                       <td className="px-4 py-2.5 text-[#64748B]">{s.group_name}</td>
                       <td className="px-4 py-2.5 text-[#64748B]">{s.course_title}</td>
@@ -508,7 +508,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                       <td className="px-4 py-2.5">{scorePill(s.assignment_score)}</td>
                       <td className="px-4 py-2.5">
                         {s.risk_reasons.map(r => (
-                          <span key={r} className="mr-1 inline-block rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-medium text-[#EF4444]">
+                          <span key={r} className="mr-1 inline-block rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-medium text-[#EF4444]">
                             {r === 'low_completion' ? 'Low Overall' : 'Low Attendance'}
                           </span>
                         ))}
@@ -550,7 +550,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                     <tr key={s.student_id} className="ds-table-row">
                       <td className="px-4 py-2.5">
                         <div className="font-medium text-[#0B1F3A]">{s.student_name}</div>
-                        <div className="text-[11px] text-[#94A3B8]">{s.student_email}</div>
+                        <div className="text-[12px] text-[#94A3B8]">{s.student_email}</div>
                       </td>
                       <td className="px-4 py-2.5">
                         <span className="inline-block rounded-full bg-[#FFFBEB] px-2 py-0.5 text-xs font-semibold text-[#B45309]">{s.missing_count}</span>
@@ -594,7 +594,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                   return (
                     <tr key={b.id} className="ds-table-row">
                       <td className="px-4 py-3 font-medium text-[#0B1F3A]">
-                        <Link href={`/admin/branches/${b.id}`} className="hover:text-[#FF8A1F]">{b.name}</Link>
+                        <Link href={`/admin/branches/${b.id}`} className="hover:text-[#9A3412]">{b.name}</Link>
                       </td>
                       <td className="px-4 py-3 text-right font-bold text-[#0B1F3A]">{b.students}</td>
                       <td className="px-4 py-3 text-right text-[#64748B]">{b.groups}</td>
@@ -602,7 +602,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                       <td className="px-4 py-3 min-w-[120px]">
                         <div className="h-2 w-full rounded-full bg-[#F1F5F9]">
                           <div
-                            className="h-2 rounded-full bg-[#FF8A1F] opacity-70"
+                            className="h-2 rounded-full bg-[#C2410C] opacity-70"
                             style={{ width: `${pct}%` }}
                           />
                         </div>
@@ -651,7 +651,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                       <td className="px-4 py-2.5">{scorePill(g.avg_attendance)}</td>
                       <td className="px-4 py-2.5">{scorePill(g.avg_assignment)}</td>
                       <td className="px-4 py-2.5 text-right">
-                        <Link href={`/admin/groups/${g.group_id}`} className="text-xs text-[#FF8A1F] hover:underline">View</Link>
+                        <Link href={`/admin/groups/${g.group_id}`} className="text-xs text-[#C2410C] hover:underline">View</Link>
                       </td>
                     </tr>
                   ))}
@@ -695,7 +695,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                       <td className="px-4 py-2.5">{scorePill(c.avg_attendance)}</td>
                       <td className="px-4 py-2.5">{scorePill(c.avg_assignment)}</td>
                       <td className="px-4 py-2.5 text-right">
-                        <Link href={`/admin/courses/${c.course_id}`} className="text-xs text-[#FF8A1F] hover:underline">View</Link>
+                        <Link href={`/admin/courses/${c.course_id}`} className="text-xs text-[#C2410C] hover:underline">View</Link>
                       </td>
                     </tr>
                   ))}
@@ -771,7 +771,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                     <div key={source} className="flex items-center gap-3">
                       <span className="w-32 text-xs capitalize text-[#64748B]">{source.replace(/_/g, ' ')}</span>
                       <div className="flex-1 rounded-full bg-[#F1F5F9] h-2">
-                        <div className="h-2 rounded-full bg-[#FF8A1F] opacity-70" style={{ width: `${pct}%` }} />
+                        <div className="h-2 rounded-full bg-[#C2410C] opacity-70" style={{ width: `${pct}%` }} />
                       </div>
                       <span className="w-10 text-right text-xs font-medium text-[#0B1F3A]">{count}</span>
                     </div>
@@ -829,10 +829,10 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                       <td className="px-4 py-2.5 text-[#64748B]">{i.branch}</td>
                       <td className="px-4 py-2.5 text-right">
                         <span className={`font-bold ${i.sessions > 0 ? 'text-[#0B1F3A]' : 'text-[#94A3B8]'}`}>{i.sessions}</span>
-                        {i.sessions === 0 && <span className="ml-1 text-[10px] text-[#F59E0B]">No sessions</span>}
+                        {i.sessions === 0 && <span className="ml-1 text-[11px] text-[#F59E0B]">No sessions</span>}
                       </td>
                       <td className="px-4 py-2.5 text-right">
-                        <Link href={`/admin/instructors/${i.id}`} className="text-xs text-[#FF8A1F] hover:underline">Profile</Link>
+                        <Link href={`/admin/instructors/${i.id}`} className="text-xs text-[#C2410C] hover:underline">Profile</Link>
                       </td>
                     </tr>
                   ))}
@@ -848,7 +848,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
         <section className="space-y-5">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-[#0B1F3A]">Finance & Collections Analytics</h2>
-            <Link href="/admin/finance" className="text-xs font-medium text-[#FF8A1F] hover:underline">
+            <Link href="/admin/finance" className="text-xs font-medium text-[#C2410C] hover:underline">
               Open Finance Center →
             </Link>
           </div>
@@ -894,7 +894,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
                   {(branchFinance as any[]).map((b: any) => (
                     <tr key={b.branch_id} className="ds-table-row">
                       <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">
-                        <Link href={`/admin/branches/${b.branch_id}`} className="hover:text-[#FF8A1F]">
+                        <Link href={`/admin/branches/${b.branch_id}`} className="hover:text-[#9A3412]">
                           {b.branch_name}
                         </Link>
                       </td>
@@ -960,7 +960,7 @@ export default async function AdminAnalyticsPage({ searchParams }: Props) {
               <div key={label} className="ds-card p-4">
                 <p className="text-2xl font-bold text-[#0B1F3A]">{value}</p>
                 <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
-                <p className="mt-1 text-[11px] text-[#94A3B8]">{note}</p>
+                <p className="mt-1 text-[12px] text-[#94A3B8]">{note}</p>
               </div>
             ))}
           </div>

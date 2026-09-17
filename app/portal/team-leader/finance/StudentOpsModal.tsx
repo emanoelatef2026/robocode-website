@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, useCallback, useTransition } from 'react'
 import type { StudentOperationsRow, StudentOpsDetail, PaymentMethod } from '@/modules/finance/types'
@@ -181,7 +181,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
               onClick={() => setActiveTab(t.key)}
               className={`shrink-0 rounded-t-lg px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === t.key
-                  ? 'border-b-2 border-[#FF8A1F] bg-white text-[#0B1F3A]'
+                  ? 'border-b-2 border-[#0E7490] bg-white text-[#0B1F3A]'
                   : 'text-[#64748B] hover:text-[#0B1F3A]'
               }`}
             >
@@ -239,7 +239,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                     <Row label="Instructor"  value={student.instructor_name ?? '—'} />
                     {student.enrollment_id && (
                       <Row label="Enrollment" value={
-                        <span className="rounded-full bg-[#EFF6FF] px-1.5 py-0.5 text-[10px] font-medium text-[#2563EB]">
+                        <span className="rounded-full bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-medium text-[#2563EB]">
                           Enrolled ✓
                         </span>
                       } />
@@ -310,7 +310,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
           {/* ── Loading / error state (other tabs) ────────────────────────── */}
           {activeTab !== 'overview' && loading && (
             <div className="flex items-center justify-center py-16">
-              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
+              <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#0E7490] border-t-transparent" />
             </div>
           )}
           {activeTab !== 'overview' && error && (
@@ -325,7 +325,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
               {student.account_id && !showPayForm && (
                 <button
                   onClick={() => setShowPayForm(true)}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#FF8A1F] bg-orange-50 py-3 text-sm font-medium text-[#FF8A1F] hover:bg-orange-100"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl border border-dashed border-[#0E7490] bg-orange-50 py-3 text-sm font-medium text-[#C2410C] hover:bg-orange-100"
                 >
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                     <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -340,22 +340,22 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                   <h4 className="text-sm font-semibold text-[#0B1F3A]">Record Payment</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] text-[#94A3B8] mb-1">Amount (EGP)</label>
+                      <label className="block text-[12px] text-[#94A3B8] mb-1">Amount (EGP)</label>
                       <input
                         type="number" min="1"
                         value={payAmount}
                         onChange={e => setPayAmount(e.target.value)}
                         placeholder="e.g. 500"
                         autoFocus
-                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-[#94A3B8] mb-1">Method</label>
+                      <label className="block text-[12px] text-[#94A3B8] mb-1">Method</label>
                       <select
                         value={payMethod}
                         onChange={e => setPayMethod(e.target.value as PaymentMethod)}
-                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                       >
                         {Object.entries(PAYMENT_METHOD_LABELS).map(([k, v]) => (
                           <option key={k} value={k}>{v}</option>
@@ -363,21 +363,21 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[11px] text-[#94A3B8] mb-1">Payment Date</label>
+                      <label className="block text-[12px] text-[#94A3B8] mb-1">Payment Date</label>
                       <input
                         type="date"
                         value={payDate}
                         onChange={e => setPayDate(e.target.value)}
-                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-[#94A3B8] mb-1">Reference (optional)</label>
+                      <label className="block text-[12px] text-[#94A3B8] mb-1">Reference (optional)</label>
                       <input
                         value={payRef}
                         onChange={e => setPayRef(e.target.value)}
                         placeholder="e.g. Instapay ref"
-                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                        className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                       />
                     </div>
                   </div>
@@ -385,7 +385,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                     value={payNotes}
                     onChange={e => setPayNotes(e.target.value)}
                     placeholder="Notes (optional)"
-                    className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                    className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                   />
                   {payError && <p className="text-xs text-[#EF4444]">{payError}</p>}
                   <div className="flex gap-2">
@@ -398,7 +398,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                     <button
                       onClick={handleAddPayment}
                       disabled={isPending}
-                      className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40 flex items-center justify-center gap-2"
+                      className="flex-1 rounded-lg bg-[#C2410C] py-2 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-40 flex items-center justify-center gap-2"
                     >
                       {isPending ? <><div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />Saving…</> : 'Save Payment'}
                     </button>
@@ -429,8 +429,8 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                           {p.reference_number && <span className="ml-2">Ref: {p.reference_number}</span>}
                         </p>
                         {p.notes && <p className="mt-1 text-xs text-[#94A3B8]">{p.notes}</p>}
-                        {p.created_by_name && <p className="mt-0.5 text-[11px] text-[#94A3B8]">Recorded by {p.created_by_name}</p>}
-                        <p className="mt-0.5 text-[11px] text-[#94A3B8]">Remaining after: EGP {fmt(student.net_amount - runningPaid)}</p>
+                        {p.created_by_name && <p className="mt-0.5 text-[12px] text-[#94A3B8]">Recorded by {p.created_by_name}</p>}
+                        <p className="mt-0.5 text-[12px] text-[#94A3B8]">Remaining after: EGP {fmt(student.net_amount - runningPaid)}</p>
                       </div>
                     </div>
                   )
@@ -464,7 +464,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                             <td className="px-4 py-2.5 text-xs text-[#64748B]">{fmtDate(sess.scheduled_at)}</td>
                             <td className="px-4 py-2.5 text-xs text-[#0B1F3A]">{sess.topic ?? <span className="text-[#94A3B8]">—</span>}</td>
                             <td className="px-4 py-2.5">
-                              <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                              <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${
                                 sess.session_status === 'completed' ? 'bg-[#E7F8EE] text-[#15803D]' :
                                 sess.session_status === 'scheduled' ? 'bg-[#EFF6FF] text-[#1D4ED8]' :
                                 'bg-[#F8FAFC] text-[#475569]'
@@ -473,10 +473,10 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                               </span>
                             </td>
                             <td className="px-4 py-2.5">
-                              <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${attColor}`}>
+                              <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${attColor}`}>
                                 {attStatus ?? 'No record'}
                               </span>
-                              {sess.late_minutes && <span className="ml-1 text-[10px] text-[#94A3B8]">{sess.late_minutes}m late</span>}
+                              {sess.late_minutes && <span className="ml-1 text-[11px] text-[#94A3B8]">{sess.late_minutes}m late</span>}
                             </td>
                           </tr>
                         )
@@ -505,7 +505,7 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                       <div key={inst.id} className={`rounded-xl border p-4 ${isLate ? 'border-[#FECACA] bg-[#FEE2E2]/30' : 'border-[#E2E8F0]'}`}>
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs font-medium text-[#64748B]">Installment #{inst.installment_number}</span>
-                          <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>
+                          <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>
                             {inst.status}
                           </span>
                         </div>
@@ -560,11 +560,11 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                       <div key={p.id} className={`rounded-xl border p-3 ${p.status === 'BROKEN' ? 'border-[#FECACA] bg-[#FEE2E2]' : p.status === 'FULFILLED' ? 'border-[#A7F3D0] bg-[#E7F8EE]' : 'border-[#FDE68A] bg-[#FFFBEB]'}`}>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-[#0B1F3A]">💰 Payment Promise — EGP {fmt(p.promised_amount)}</span>
-                          <span className={`text-[10px] font-medium ${p.status === 'BROKEN' ? 'text-[#EF4444]' : p.status === 'FULFILLED' ? 'text-[#15803D]' : 'text-[#B45309]'}`}>{p.status}</span>
+                          <span className={`text-[11px] font-medium ${p.status === 'BROKEN' ? 'text-[#EF4444]' : p.status === 'FULFILLED' ? 'text-[#15803D]' : 'text-[#B45309]'}`}>{p.status}</span>
                         </div>
                         <p className="text-xs text-[#64748B]">By {fmtDate(p.promised_date)}</p>
                         {p.notes && <p className="mt-1 text-xs text-[#94A3B8]">{p.notes}</p>}
-                        <p className="mt-0.5 text-[11px] text-[#94A3B8]">{fmtDate(p.created_at)}{p.created_by_name && ` · ${p.created_by_name}`}</p>
+                        <p className="mt-0.5 text-[12px] text-[#94A3B8]">{fmtDate(p.created_at)}{p.created_by_name && ` · ${p.created_by_name}`}</p>
                       </div>
                     ))}
 
@@ -574,10 +574,10 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                         <div className="flex items-center gap-2">
                           <span>{ACTIVITY_ICONS[a.activity_type] ?? '📋'}</span>
                           <span className="text-xs font-medium text-[#0B1F3A]">{ACTIVITY_TYPE_LABELS[a.activity_type] ?? a.activity_type}</span>
-                          <span className="ml-auto text-[11px] text-[#94A3B8]">{fmtDate(a.created_at)}</span>
+                          <span className="ml-auto text-[12px] text-[#94A3B8]">{fmtDate(a.created_at)}</span>
                         </div>
                         {a.notes && <p className="mt-1 text-xs text-[#64748B]">{a.notes}</p>}
-                        {a.created_by_name && <p className="mt-0.5 text-[11px] text-[#94A3B8]">{a.created_by_name}</p>}
+                        {a.created_by_name && <p className="mt-0.5 text-[12px] text-[#94A3B8]">{a.created_by_name}</p>}
                       </div>
                     ))}
 
@@ -586,10 +586,10 @@ export default function StudentOpsModal({ student, onClose }: Props) {
                       <div key={n.id} className={`rounded-xl border p-3 ${n.is_internal ? 'border-slate-200 bg-[#F8FAFC]' : 'border-[#E2E8F0]'}`}>
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-xs font-medium text-[#0B1F3A]">📝 Note{n.is_internal ? ' (internal)' : ''}</span>
-                          <span className="ml-auto text-[11px] text-[#94A3B8]">{fmtDate(n.created_at)}</span>
+                          <span className="ml-auto text-[12px] text-[#94A3B8]">{fmtDate(n.created_at)}</span>
                         </div>
                         <p className="text-xs text-[#64748B]">{n.note_text}</p>
-                        {n.created_by_name && <p className="mt-0.5 text-[11px] text-[#94A3B8]">{n.created_by_name}</p>}
+                        {n.created_by_name && <p className="mt-0.5 text-[12px] text-[#94A3B8]">{n.created_by_name}</p>}
                       </div>
                     ))}
                   </div>
@@ -615,7 +615,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 function Kpi({ label, value, color = 'text-[#0B1F3A]' }: { label: string; value: React.ReactNode; color?: string }) {
   return (
     <div className="rounded-lg bg-[#F8FAFC] p-2.5">
-      <p className="text-[11px] text-[#64748B]">{label}</p>
+      <p className="text-[12px] text-[#64748B]">{label}</p>
       <div className={`mt-0.5 text-sm font-bold ${color}`}>{value}</div>
     </div>
   )

@@ -43,9 +43,9 @@ export function InstructorsTab({
           { label: "Bonuses",      value: fmtEGP(totalBonus),        hi: false },
           { label: "Net Payroll",  value: fmtEGP(totalNet),          hi: true  },
         ].map(k => (
-          <div key={k.label} className={`rounded-xl border px-3 py-3 ${k.hi ? "border-[#FF8A1F]/30 bg-[#FFF7F0]" : "border-[#E2E8F0] bg-white"}`}>
-            <p className={`text-[16px] font-extrabold ${k.hi ? "text-[#FF8A1F]" : "text-[#0B1F3A]"}`}>{k.value}</p>
-            <p className="text-[10px] font-medium text-[#94A3B8] mt-0.5">{k.label}</p>
+          <div key={k.label} className={`rounded-xl border px-3 py-3 ${k.hi ? "border-[#0E7490]/30 bg-[#FFF7F0]" : "border-[#E2E8F0] bg-white"}`}>
+            <p className={`text-[16px] font-extrabold ${k.hi ? "text-[#C2410C]" : "text-[#0B1F3A]"}`}>{k.value}</p>
+            <p className="text-[11px] font-medium text-[#94A3B8] mt-0.5">{k.label}</p>
           </div>
         ))}
       </div>
@@ -57,7 +57,7 @@ export function InstructorsTab({
           {/* Desktop table */}
           <div className="hidden md:block">
             <div className="ds-card overflow-hidden">
-              <table className="w-full text-[12px]">
+              <table className="w-full text-[13px]">
                 <thead className="ds-table-head">
                   <tr>
                     <th className="py-3 pl-4 pr-2 text-left font-semibold text-[#64748B]">Instructor</th>
@@ -79,11 +79,11 @@ export function InstructorsTab({
                           <div>
                             <button
                               onClick={() => onOpenDrawer(row)}
-                              className="font-semibold text-[#0B1F3A] hover:text-[#FF8A1F] transition text-left"
+                              className="font-semibold text-[#0B1F3A] hover:text-[#9A3412] transition text-left"
                             >
                               {row.display_name}
                             </button>
-                            <p className="text-[10px] text-[#94A3B8]">{row.branch_name} · {row.group_count} groups</p>
+                            <p className="text-[11px] text-[#94A3B8]">{row.branch_name} · {row.group_count} groups</p>
                           </div>
                         </div>
                       </td>
@@ -100,7 +100,7 @@ export function InstructorsTab({
                         )}
                       </td>
                       <td className="py-3 px-2 text-right"><NetChip amount={row.net_amount} /></td>
-                      <td className="py-3 px-2 text-right text-[11px] text-[#64748B]">
+                      <td className="py-3 px-2 text-right text-[12px] text-[#64748B]">
                         {row.payment_method
                           ? INSTRUCTOR_PAYMENT_METHOD_LABELS[row.payment_method as keyof typeof INSTRUCTOR_PAYMENT_METHOD_LABELS] ?? row.payment_method
                           : <span className="text-[#CBD5E1]">Not set</span>
@@ -110,19 +110,19 @@ export function InstructorsTab({
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => onOpenDetail(row)}
-                            className="rounded-lg border border-[#FF8A1F]/40 bg-[#FFF7F0] px-2.5 py-1 text-[11px] font-semibold text-[#FF8A1F] hover:bg-[#FFE8CC] transition"
+                            className="rounded-lg border border-[#0E7490]/40 bg-[#FFF7F0] px-2.5 py-1 text-[12px] font-semibold text-[#C2410C] hover:bg-[#FFE8CC] transition"
                           >
                             View
                           </button>
                           <button
                             onClick={() => onAdjust(row)}
-                            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[11px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC] transition"
+                            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[12px] font-medium text-[#0B1F3A] hover:bg-[#F8FAFC] transition"
                           >
                             + Adj
                           </button>
                           <button
                             onClick={() => onPayInfo(row)}
-                            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[11px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition"
+                            className="rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[12px] font-medium text-[#64748B] hover:bg-[#F8FAFC] transition"
                           >
                             Edit
                           </button>
@@ -144,11 +144,11 @@ export function InstructorsTab({
                   <div className="flex-1 min-w-0">
                     <button
                       onClick={() => onOpenDrawer(row)}
-                      className="font-semibold text-[#0B1F3A] hover:text-[#FF8A1F] text-[13px] transition text-left"
+                      className="font-semibold text-[#0B1F3A] hover:text-[#9A3412] text-[13px] transition text-left"
                     >
                       {row.display_name}
                     </button>
-                    <p className="text-[11px] text-[#94A3B8]">{row.branch_name} · {row.group_count} groups</p>
+                    <p className="text-[12px] text-[#94A3B8]">{row.branch_name} · {row.group_count} groups</p>
                   </div>
                   <NetChip amount={row.net_amount} />
                 </div>
@@ -159,8 +159,8 @@ export function InstructorsTab({
                     { l: "Earnings", v: fmtEGP(row.session_earnings) },
                   ].map(c => (
                     <div key={c.l} className="rounded-lg bg-[#F8FAFC] px-2 py-1.5">
-                      <p className="text-[12px] font-bold text-[#0B1F3A]">{c.v}</p>
-                      <p className="text-[10px] text-[#94A3B8]">{c.l}</p>
+                      <p className="text-[13px] font-bold text-[#0B1F3A]">{c.v}</p>
+                      <p className="text-[11px] text-[#94A3B8]">{c.l}</p>
                     </div>
                   ))}
                 </div>
@@ -172,9 +172,9 @@ export function InstructorsTab({
                   </div>
                 )}
                 <div className="mt-2.5 flex gap-1.5">
-                  <button onClick={() => onOpenDetail(row)} className="flex-1 rounded-lg border border-[#FF8A1F]/40 bg-[#FFF7F0] py-1.5 text-[11px] font-semibold text-[#FF8A1F]">View</button>
-                  <button onClick={() => onAdjust(row)} className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#0B1F3A]">+ Adj</button>
-                  <button onClick={() => onPayInfo(row)} className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#64748B]">Edit</button>
+                  <button onClick={() => onOpenDetail(row)} className="flex-1 rounded-lg border border-[#0E7490]/40 bg-[#FFF7F0] py-1.5 text-[12px] font-semibold text-[#C2410C]">View</button>
+                  <button onClick={() => onAdjust(row)} className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[12px] font-semibold text-[#0B1F3A]">+ Adj</button>
+                  <button onClick={() => onPayInfo(row)} className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-[12px] font-semibold text-[#64748B]">Edit</button>
                 </div>
               </div>
             ))}

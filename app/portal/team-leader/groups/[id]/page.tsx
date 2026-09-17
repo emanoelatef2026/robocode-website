@@ -1,4 +1,4 @@
-﻿import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { getGroupDetail } from '@/modules/schedule/queries'
 import { listStudents } from '@/modules/students/queries'
 import { listCourses } from '@/modules/courses/queries'
@@ -23,7 +23,7 @@ function AssignmentStatusPill({ status }: { status: string }) {
     completed: 'bg-[#EFF6FF] text-[#2563EB]',
   }
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${map[status] ?? 'bg-[#F1F5F9] text-[#64748B]'}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${map[status] ?? 'bg-[#F1F5F9] text-[#64748B]'}`}>
       {status}
     </span>
   )
@@ -99,7 +99,7 @@ async function AssignmentHistory({ groupId }: { groupId: string }) {
             </div>
             <div className="flex shrink-0 flex-col items-end gap-1">
               <AssignmentStatusPill status={row.status} />
-              <p className="text-[10px] text-[#94A3B8]">
+              <p className="text-[11px] text-[#94A3B8]">
                 {fmtDate(row.started_at)}
                 {row.ended_at ? ` → ${fmtDate(row.ended_at)}` : row.status === 'active' ? ' → now' : ''}
                 {duration(row.started_at, row.ended_at) ? ` · ${duration(row.started_at, row.ended_at)}` : ''}
@@ -158,7 +158,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
           </Link>
           <Link
             href={`/portal/team-leader/groups/${id}/edit`}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]"
           >
             Edit Group
           </Link>
@@ -238,7 +238,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-medium text-[#0B1F3A]">{name}</p>
-                          <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                          <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-medium ${
                             s.enrollment_type === 'secondary'
                               ? 'bg-purple-50 text-purple-700'
                               : 'bg-[#EFF6FF] text-[#1D4ED8]'
@@ -251,7 +251,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
                       <div className="flex items-center gap-3">
                         <Link
                           href={`/portal/team-leader/students/${s.id}`}
-                          className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                          className="text-xs font-medium text-[#C2410C] hover:underline"
                         >
                           View
                         </Link>
@@ -279,7 +279,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
               {group.group_course_id && (
                 <Link
                   href={`/portal/team-leader/groups/${id}/sessions/new`}
-                  className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                  className="text-xs font-medium text-[#C2410C] hover:underline"
                 >
                   + New Session
                 </Link>
@@ -292,7 +292,7 @@ export default async function TLGroupDetailPage({ params }: Props) {
             ) : upcomingSessions.length === 0 ? (
               <div className="px-5 py-8 text-center text-sm text-[#64748B]">
                 No upcoming sessions.{' '}
-                <Link href={`/portal/team-leader/groups/${id}/sessions/new`} className="text-[#FF8A1F] hover:underline">
+                <Link href={`/portal/team-leader/groups/${id}/sessions/new`} className="text-[#C2410C] hover:underline">
                   Schedule one.
                 </Link>
               </div>

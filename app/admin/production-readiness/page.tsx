@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Production Readiness Audit
  *
  * Comprehensive PASS / WARNING / FAIL checklist for the academy system.
@@ -321,7 +321,7 @@ export default async function ProductionReadinessPage() {
     <div className="max-w-4xl space-y-6">
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-end gap-3">
-          <Link href="/admin/recovery" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+          <Link href="/admin/recovery" className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
             Recovery →
           </Link>
           <div className="text-right">
@@ -356,7 +356,7 @@ export default async function ProductionReadinessPage() {
         ].map(k => (
           <div key={k.label} className="ds-card p-4">
             <p className={`text-2xl font-bold ${k.cls}`}>{k.value}</p>
-            <p className="text-[11px] text-[#64748B]">{k.label}</p>
+            <p className="text-[12px] text-[#64748B]">{k.label}</p>
           </div>
         ))}
       </div>
@@ -404,7 +404,7 @@ export default async function ProductionReadinessPage() {
                   <td className="px-4 py-3 text-xs text-[#F59E0B] max-w-48">
                     {c.fix && (
                       c.href
-                        ? <Link href={c.href} className="underline hover:text-[#FF8A1F]">{c.fix}</Link>
+                        ? <Link href={c.href} className="underline hover:text-[#9A3412]">{c.fix}</Link>
                         : c.fix
                     )}
                   </td>
@@ -430,14 +430,14 @@ export default async function ProductionReadinessPage() {
           <div className="border-b border-[#E2E8F0] px-5 py-3 bg-[#FFFBEB]">
             <div className="flex items-center justify-between">
               <p className="text-[13px] font-semibold text-[#92400E]">Recovery Needed</p>
-              <Link href="/admin/recovery" className="text-[11px] text-[#B45309] hover:underline">Fix Now →</Link>
+              <Link href="/admin/recovery" className="text-[12px] text-[#B45309] hover:underline">Fix Now →</Link>
             </div>
           </div>
           <div className="divide-y divide-[#F1F5F9]">
             {recoverySummary.filter(r => r.count > 0).map(item => (
               <div key={item.check_name} className="flex items-center justify-between px-5 py-3">
                 <p className="text-[13px] text-[#0B1F3A]">{item.description}</p>
-                <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold
+                <span className={`rounded-full px-2.5 py-0.5 text-[12px] font-bold
                   ${item.severity === 'critical' ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
                   {item.count}
                 </span>
@@ -458,7 +458,7 @@ export default async function ProductionReadinessPage() {
               <thead className="ds-table-head">
                 <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                   {['Branch', 'Students', 'Instructors', 'Capacity', 'Utilization', 'Open Tasks'].map(h => (
-                    <th key={h} className="px-4 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">{h}</th>
+                    <th key={h} className="px-4 py-2 text-left text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -480,7 +480,7 @@ export default async function ProductionReadinessPage() {
                       </td>
                       <td className="px-4 py-3">
                         {Number(b.open_tasks) > 0 ? (
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold
                             ${Number(b.critical_tasks) > 0 ? 'bg-[#FEE2E2] text-[#DC2626]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
                             {b.open_tasks}
                           </span>
@@ -531,14 +531,14 @@ export default async function ProductionReadinessPage() {
                 <p className="text-[13px] font-medium text-[#0B1F3A]">{item.title}</p>
                 <span className={`text-[18px] ${item.statusCls}`}>{item.status}</span>
               </div>
-              <p className="mt-1 text-[12px] text-[#64748B]">{item.detail}</p>
+              <p className="mt-1 text-[13px] text-[#64748B]">{item.detail}</p>
             </div>
           ))}
         </div>
 
         <div className="rounded-lg border border-blue-200 bg-[#EFF6FF] p-4">
           <p className="text-[13px] font-semibold text-blue-800">Recommended Infra Upgrades</p>
-          <ul className="mt-2 space-y-1 text-[12px] text-[#1D4ED8]">
+          <ul className="mt-2 space-y-1 text-[13px] text-[#1D4ED8]">
             <li>• <strong>pg_cron</strong> for materialized view refresh (currently manual via background jobs)</li>
             <li>• <strong>Supabase Edge Functions</strong> for background job processing (replaces Next.js API routes)</li>
             <li>• <strong>Connection pooling</strong> (PgBouncer) once student count exceeds 10,000</li>
@@ -548,7 +548,7 @@ export default async function ProductionReadinessPage() {
           </ul>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 text-center text-[11px]">
+        <div className="grid grid-cols-3 gap-3 text-center text-[12px]">
           {[
             { label: 'Estimated Student Ceiling', value: '~15,000', detail: 'Before DB read replicas needed' },
             { label: 'Branch Ceiling',             value: '~50',     detail: 'With current architecture' },

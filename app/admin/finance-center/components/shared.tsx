@@ -32,7 +32,7 @@ export function ProfitBadge({ value, size = 'sm' }: { value: number; size?: 'sm'
 
 export function RateBadge({ rate }: { rate: number }) {
   const cls = rate >= 80 ? 'bg-[#E7F8EE] text-[#15803D]' : rate >= 50 ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#FEE2E2] text-[#EF4444]'
-  return <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${cls}`}>{rate}%</span>
+  return <span className={`rounded-full px-2 py-0.5 text-[12px] font-semibold ${cls}`}>{rate}%</span>
 }
 
 // ── Excel export helpers ───────────────────────────────────────────────────────
@@ -175,7 +175,7 @@ export function DeleteBtn({ id, onSuccess }: { id: string; onSuccess: () => void
   const [confirm, setConfirm] = useState(false)
   if (!confirm) {
     return (
-      <button onClick={() => setConfirm(true)} className="rounded px-2 py-1 text-[11px] text-[#94A3B8] hover:text-[#EF4444] hover:bg-[#FEE2E2]">
+      <button onClick={() => setConfirm(true)} className="rounded px-2 py-1 text-[12px] text-[#94A3B8] hover:text-[#EF4444] hover:bg-[#FEE2E2]">
         Delete
       </button>
     )
@@ -185,11 +185,11 @@ export function DeleteBtn({ id, onSuccess }: { id: string; onSuccess: () => void
       <button
         onClick={() => startTransition(async () => { await deleteExpense(id); onSuccess() })}
         disabled={isPending}
-        className="rounded px-2 py-1 text-[11px] font-semibold text-[#EF4444] bg-[#FEE2E2] hover:bg-[#FEE2E2] disabled:opacity-50"
+        className="rounded px-2 py-1 text-[12px] font-semibold text-[#EF4444] bg-[#FEE2E2] hover:bg-[#FEE2E2] disabled:opacity-50"
       >
         {isPending ? '…' : 'Confirm'}
       </button>
-      <button onClick={() => setConfirm(false)} className="rounded px-2 py-1 text-[11px] text-[#94A3B8]">Cancel</button>
+      <button onClick={() => setConfirm(false)} className="rounded px-2 py-1 text-[12px] text-[#94A3B8]">Cancel</button>
     </div>
   )
 }

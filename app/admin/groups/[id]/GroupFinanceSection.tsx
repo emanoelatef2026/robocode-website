@@ -1,4 +1,4 @@
-﻿import { getGroupFinanceSummary } from '@/modules/finance/queries'
+import { getGroupFinanceSummary } from '@/modules/finance/queries'
 import { getGroupPnLRows }        from '@/modules/finance/queries'
 import { STATUS_COLORS, STATUS_LABELS, PRIORITY_COLORS } from '@/modules/finance/types'
 import Link from 'next/link'
@@ -35,7 +35,7 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
         </div>
         <div className="px-5 py-8 text-center">
           <p className="text-sm text-[#94A3B8]">No financial accounts found for students in this group.</p>
-          <Link href="/admin/finance/new" className="mt-3 inline-block text-xs font-medium text-[#FF8A1F] hover:underline">
+          <Link href="/admin/finance/new" className="mt-3 inline-block text-xs font-medium text-[#C2410C] hover:underline">
             Add accounts in Finance Center →
           </Link>
         </div>
@@ -48,10 +48,10 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
       <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3">
         <p className="text-sm font-semibold text-[#0B1F3A]">Group Finance & P&L</p>
         <div className="flex items-center gap-2">
-          <Link href="/admin/finance-center?tab=groups" className="text-xs font-medium text-[#94A3B8] hover:text-[#FF8A1F]">
+          <Link href="/admin/finance-center?tab=groups" className="text-xs font-medium text-[#94A3B8] hover:text-[#9A3412]">
             Add Expense →
           </Link>
-          <Link href="/admin/finance" className="text-xs font-medium text-[#FF8A1F] hover:underline">
+          <Link href="/admin/finance" className="text-xs font-medium text-[#C2410C] hover:underline">
             Finance Center →
           </Link>
         </div>
@@ -66,7 +66,7 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
           { l: 'Collection Rate',  v: `${collection_rate}%`,           c: collection_rate >= 80 ? 'text-[#10B981] font-bold' : collection_rate >= 50 ? 'text-[#F59E0B] font-bold' : 'text-[#EF4444] font-bold' },
         ].map(({ l, v, c }) => (
           <div key={l} className="bg-white px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">{l}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">{l}</p>
             <p className={`mt-0.5 text-sm ${c}`}>{v}</p>
           </div>
         ))}
@@ -77,48 +77,48 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
         <>
           <div className="border-b border-[#E2E8F0] px-5 py-3 flex items-center justify-between">
             <p className="text-[10.5px] font-semibold uppercase tracking-[0.14em] text-[#94A3B8]">Profit & Loss</p>
-            <span className={`text-[11px] font-semibold rounded-full px-2 py-0.5 ${pnl.robocode_share_percent < 100 ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#F1F5F9] text-[#64748B]'}`}>
+            <span className={`text-[12px] font-semibold rounded-full px-2 py-0.5 ${pnl.robocode_share_percent < 100 ? 'bg-[#FFFBEB] text-[#B45309]' : 'bg-[#F1F5F9] text-[#64748B]'}`}>
               Share: {pnl.robocode_share_percent}%
             </span>
           </div>
           {/* Net Revenue */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-[#E2E8F0] border-b border-[#E2E8F0]">
             <div className="bg-white px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Net Expected</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Net Expected</p>
               <p className="mt-0.5 text-sm font-bold text-[#15803D]">EGP {fmt(pnl.net_expected_revenue)}</p>
             </div>
             <div className="bg-white px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Net Collected</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Net Collected</p>
               <p className="mt-0.5 text-sm font-bold text-[#15803D]">EGP {fmt(pnl.net_collected_revenue)}</p>
             </div>
             <div className="bg-white px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Future Liability</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Future Liability</p>
               <p className="mt-0.5 text-sm font-bold text-rose-600">EGP {fmt(pnl.future_liability)}</p>
             </div>
             <div className="bg-white px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Manual Expenses</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Manual Expenses</p>
               <p className="mt-0.5 text-sm font-bold text-indigo-700">EGP {fmt(pnl.manual_expenses)}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-px bg-[#E2E8F0] border-b border-[#E2E8F0]">
             <div className="bg-white px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Instructor Earned</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Instructor Earned</p>
               <p className="mt-0.5 text-sm font-bold text-violet-700">EGP {fmt(pnl.instructor_earned)}</p>
             </div>
             <div className="bg-white px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Other Expenses</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Other Expenses</p>
               <p className="mt-0.5 text-sm font-bold text-indigo-700">EGP {fmt(pnl.other_expenses)}</p>
             </div>
             <div className="bg-white px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Total Expenses</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Total Expenses</p>
               <p className="mt-0.5 text-sm font-bold text-[#EF4444]">EGP {fmt(pnl.total_expenses)}</p>
             </div>
             <div className="bg-white px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Expected Profit</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Expected Profit</p>
               <PnLValue value={pnl.expected_profit} />
             </div>
             <div className="bg-white px-4 py-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Actual Profit</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Actual Profit</p>
               <PnLValue value={pnl.actual_profit} />
             </div>
           </div>
@@ -136,7 +136,7 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
           </div>
           <span className="text-xs text-[#64748B]">{collection_rate}% collected</span>
           {overdue_count > 0 && (
-            <span className="ml-2 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#EF4444]">
+            <span className="ml-2 rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-semibold text-[#EF4444]">
               {overdue_count} overdue
             </span>
           )}
@@ -161,7 +161,7 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
               {student_accounts.map(sa => (
                 <tr key={sa.student_id} className="ds-table-row">
                   <td className="px-4 py-2.5">
-                    <Link href={`/admin/students/${sa.student_id}?tab=finance`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">
+                    <Link href={`/admin/students/${sa.student_id}?tab=finance`} className="font-medium text-[#0B1F3A] hover:text-[#9A3412]">
                       {sa.student_name}
                     </Link>
                   </td>
@@ -173,12 +173,12 @@ export default async function GroupFinanceSection({ groupId }: { groupId: string
                     </span>
                   </td>
                   <td className="px-4 py-2.5">
-                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[sa.status]}`}>
+                    <span className={`inline-flex rounded-full border px-2 py-0.5 text-[12px] font-medium ${STATUS_COLORS[sa.status]}`}>
                       {STATUS_LABELS[sa.status]}
                     </span>
                   </td>
                   <td className="px-4 py-2.5">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${PRIORITY_COLORS[sa.priority]}`}>
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[12px] font-semibold ${PRIORITY_COLORS[sa.priority]}`}>
                       {sa.priority}
                     </span>
                   </td>

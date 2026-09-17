@@ -183,9 +183,9 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                   <div>
                     <p className="font-semibold text-[#0B1F3A]">{c.course_name ?? 'Course'}</p>
                     <p className="text-xs text-[#64748B]">{[c.group_name, c.instructor_name].filter(Boolean).join(' · ')}</p>
-                    {c.contract_code && <p className="font-mono text-[10px] text-[#64748B]">{c.contract_code}</p>}
+                    {c.contract_code && <p className="font-mono text-[11px] text-[#64748B]">{c.contract_code}</p>}
                   </div>
-                  <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D] shrink-0">Active</span>
+                  <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-semibold text-[#15803D] shrink-0">Active</span>
                 </div>
 
                 <div className="mt-3 grid grid-cols-1 gap-2 text-center text-xs min-[420px]:grid-cols-3">
@@ -194,7 +194,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                       {c.enrolled_sessions > 0 ? `${c.remaining_sessions}` : '∞'}
                     </p>
                     <p className="text-[#64748B]">Sessions Left</p>
-                    {c.enrolled_sessions > 0 && <p className="text-[10px] text-[#CBD5E1]">{c.consumed_sessions}/{c.enrolled_sessions} used</p>}
+                    {c.enrolled_sessions > 0 && <p className="text-[11px] text-[#CBD5E1]">{c.consumed_sessions}/{c.enrolled_sessions} used</p>}
                   </div>
                   <div className="rounded-lg bg-[#F8FAFC] p-2">
                     <p className={`font-bold text-sm ${c.remaining_amount > 0 ? 'text-[#F59E0B]' : 'text-[#10B981]'}`}>
@@ -230,9 +230,9 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
                     <div key={c.enrollment_id} className="px-4 py-3 flex items-center justify-between gap-2">
                       <div>
                         <p className="text-sm font-medium text-[#0B1F3A]">{c.course_name ?? '—'}</p>
-                        <p className="text-[11px] text-[#64748B]">{fmtDate(c.start_date)} → {fmtDate(c.end_date)}</p>
+                        <p className="text-[12px] text-[#64748B]">{fmtDate(c.start_date)} → {fmtDate(c.end_date)}</p>
                       </div>
-                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold
+                      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold
                         ${c.status === 'COMPLETED' ? 'bg-[#F1F5F9] text-[#475569]' : 'bg-[#FFFBEB] text-[#B45309]'}`}>
                         {c.status}
                       </span>

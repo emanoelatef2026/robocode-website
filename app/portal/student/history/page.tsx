@@ -65,7 +65,7 @@ export default async function StudentSessionsPage() {
               {emoji}
             </div>
             <div>
-              <p className="text-[10.5px] font-semibold text-[#64748B]">{label}</p>
+              <p className="text-[11px] font-semibold text-[#64748B]">{label}</p>
               <p className={`text-xl font-bold leading-tight ${valueFg}`}>{value}</p>
             </div>
           </div>
@@ -81,7 +81,7 @@ export default async function StudentSessionsPage() {
         <div className="ds-card overflow-hidden">
           <div className="border-b border-[#F1F5F9] px-5 py-3.5">
             <p className="text-sm font-semibold text-[#0B1F3A]">Session History</p>
-            <p className="mt-0.5 text-[11px] text-[#64748B]">{records.length} session{records.length !== 1 ? 's' : ''} total</p>
+            <p className="mt-0.5 text-[12px] text-[#64748B]">{records.length} session{records.length !== 1 ? 's' : ''} total</p>
           </div>
 
           <div className="divide-y divide-[#F1F5F9]">
@@ -102,14 +102,14 @@ export default async function StudentSessionsPage() {
                     <p className="truncate text-[12.5px] font-semibold text-[#0B1F3A]">
                       {r.topic ?? <span className="italic text-[#64748B]">Session #{r.session_num}</span>}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-[#64748B]">
+                    <p className="mt-0.5 text-[12px] text-[#64748B]">
                       #{r.session_num} · {formatDateWithWeekday(r.date)}
                     </p>
                   </div>
 
                   {/* Status badge */}
                   {cfg && (
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${cfg.cls}`}>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[12px] font-medium ${cfg.cls}`}>
                       {cfg.label}
                     </span>
                   )}

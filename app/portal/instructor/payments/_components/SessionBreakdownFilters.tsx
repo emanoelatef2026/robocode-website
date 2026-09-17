@@ -23,7 +23,7 @@ export default function SessionBreakdownFilters({ filters }: { filters: SessionE
             <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.553.894l-4 2A1 1 0 017 17v-6.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
           </svg>
           Filters
-          {hasActive && <span className="inline-flex h-2 w-2 rounded-full bg-[#FF8A1F]" />}
+          {hasActive && <span className="inline-flex h-2 w-2 rounded-full bg-[#C2410C]" />}
         </span>
         <svg
           viewBox="0 0 20 20"
@@ -39,11 +39,11 @@ export default function SessionBreakdownFilters({ filters }: { filters: SessionE
           <input type="hidden" name="tab" value="overview" />
           <div className="grid grid-cols-2 gap-2 md:grid-cols-6 md:gap-3">
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Month</label>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Month</label>
               <select
                 name="month"
                 defaultValue={filters.month ?? ""}
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
               >
                 <option value="">All</option>
                 {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
@@ -51,11 +51,11 @@ export default function SessionBreakdownFilters({ filters }: { filters: SessionE
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Year</label>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Year</label>
               <select
                 name="year"
                 defaultValue={filters.year ?? ""}
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
               >
                 <option value="">All</option>
                 {years.map(y => <option key={y} value={y}>{y}</option>)}
@@ -63,27 +63,27 @@ export default function SessionBreakdownFilters({ filters }: { filters: SessionE
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">From</label>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">From</label>
               <input
                 type="date" name="from" defaultValue={filters.from ?? ""}
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">To</label>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">To</label>
               <input
                 type="date" name="to" defaultValue={filters.to ?? ""}
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Status</label>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Status</label>
               <select
                 name="status"
                 defaultValue={filters.status ?? ""}
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
               >
                 <option value="">All</option>
                 <option value="completed">Completed</option>
@@ -94,11 +94,11 @@ export default function SessionBreakdownFilters({ filters }: { filters: SessionE
             </div>
 
             <div>
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Session Type</label>
+              <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Session Type</label>
               <select
                 name="sessionType"
                 defaultValue={filters.sessionType ?? ""}
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[12px] text-[#374151] outline-none focus:border-[#FF8A1F] focus:bg-white transition"
+                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2.5 py-1.5 text-[13px] text-[#374151] outline-none focus:border-[#C2410C] focus:bg-white transition"
               >
                 <option value="">All</option>
                 <option value="primary">Primary</option>
@@ -111,14 +111,14 @@ export default function SessionBreakdownFilters({ filters }: { filters: SessionE
           <div className="mt-2.5 flex items-center gap-2">
             <button
               type="submit"
-              className="rounded-lg bg-[#FF8A1F] px-3.5 py-1.5 text-[12px] font-semibold text-white hover:bg-[#e07818] active:scale-[0.98] transition"
+              className="rounded-lg bg-[#C2410C] px-3.5 py-1.5 text-[13px] font-semibold text-white hover:bg-[#9A3412] active:scale-[0.98] transition"
             >
               Apply
             </button>
             {hasActive && (
               <Link
                 href="/portal/instructor/payments?tab=overview"
-                className="rounded-lg border border-[#E2E8F0] px-3.5 py-1.5 text-[12px] font-medium text-[#64748B] hover:border-[#CBD5E1] transition"
+                className="rounded-lg border border-[#E2E8F0] px-3.5 py-1.5 text-[13px] font-medium text-[#64748B] hover:border-[#CBD5E1] transition"
               >
                 Clear
               </Link>

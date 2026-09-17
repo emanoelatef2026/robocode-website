@@ -48,7 +48,7 @@ export default async function AdminParentsPage() {
         <div className="px-4 pt-4 sm:px-6">
           <Link
             href="/admin/parents/duplicates"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#64748B] hover:text-[#FF8A1F] hover:underline"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-[#64748B] hover:text-[#9A3412] hover:underline"
           >
             Check for duplicate parent accounts →
           </Link>

@@ -26,7 +26,7 @@ export default async function AdminStaffPage() {
         title="Staff"
         description="All non-instructor staff members across branches"
         action={
-          <Link href="/admin/payroll" className="ds-btn-ghost text-[12px]">
+          <Link href="/admin/payroll" className="ds-btn-ghost text-[13px]">
             View Payroll →
           </Link>
         }

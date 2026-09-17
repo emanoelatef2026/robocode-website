@@ -59,7 +59,7 @@ export default function IssueCertificateModal({
   }
 
   const defaultTriggerClass =
-    'inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]'
+    'inline-flex items-center gap-2 rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-[#e87c18]'
 
   return (
     <>

@@ -1,4 +1,4 @@
-﻿import { requirePortalRole }          from '@/modules/rbac/guards'
+import { requirePortalRole }          from '@/modules/rbac/guards'
 import { getParentFeedbackAnalytics } from '@/modules/parent-feedback/queries'
 
 function MetricCard({
@@ -19,17 +19,17 @@ function MetricCard({
 
   return (
     <div className="min-w-0 ds-card px-2 py-1.5 md:p-5">
-      <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">{label}</p>
+      <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[11px]">{label}</p>
       <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-3xl ${color}`}>
         {unit === '★' ? (
           <span className="flex items-center gap-1">
-            {value.toFixed(1)} <span className="text-[#FF8A1F]">★</span>
+            {value.toFixed(1)} <span className="text-[#C2410C]">★</span>
           </span>
         ) : (
           `${Math.round(value)}${unit}`
         )}
       </p>
-      {description && <p className="mt-0.5 truncate text-[8px] text-[#94A3B8] leading-tight md:text-[11px]">{description}</p>}
+      {description && <p className="mt-0.5 truncate text-[8px] text-[#94A3B8] leading-tight md:text-[12px]">{description}</p>}
       {pct != null && (
         <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[#F1F5F9]">
           <div className={`h-full rounded-full ${barClr}`} style={{ width: `${Math.min(100, pct)}%` }} />
@@ -43,7 +43,7 @@ function StarDisplay({ rating }: { rating: number }) {
   return (
     <span className="inline-flex gap-0.5">
       {[1,2,3,4,5].map(s => (
-        <span key={s} className={s <= rating ? 'text-[#FF8A1F]' : 'text-[#E2E8F0]'}>★</span>
+        <span key={s} className={s <= rating ? 'text-[#C2410C]' : 'text-[#E2E8F0]'}>★</span>
       ))}
     </span>
   )
@@ -71,7 +71,7 @@ export default async function ParentSatisfactionPage() {
               value={aggregate.avg_rating}
               unit="★"
               description="Average across all submissions"
-              color="text-[#FF8A1F]"
+              color="text-[#C2410C]"
             />
             <MetricCard
               label="Would Recommend"
@@ -95,7 +95,7 @@ export default async function ParentSatisfactionPage() {
               description="Child is excited to come to class"
             />
             <div className="ds-card p-5 flex flex-col justify-center items-center">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Total Responses</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Total Responses</p>
               <p className="mt-2 text-4xl font-bold text-[#0B1F3A]">{aggregate.total_responses}</p>
             </div>
           </div>
@@ -109,14 +109,14 @@ export default async function ParentSatisfactionPage() {
               <table className="w-full text-[13px]">
                 <thead className="ds-table-head">
                   <tr className="border-b border-[#F1F5F9] text-left">
-                    <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student</th>
-                    <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Milestone</th>
-                    <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Rating</th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Skills</th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Excited</th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Comm.</th>
-                    <th className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Recommend</th>
-                    <th className="hidden px-5 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8] md:table-cell">Date</th>
+                    <th className="px-5 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student</th>
+                    <th className="px-5 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Milestone</th>
+                    <th className="px-5 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Rating</th>
+                    <th className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Skills</th>
+                    <th className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Excited</th>
+                    <th className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Comm.</th>
+                    <th className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Recommend</th>
+                    <th className="hidden px-5 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8] md:table-cell">Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F8FAFC]">
@@ -124,7 +124,7 @@ export default async function ParentSatisfactionPage() {
                     <tr key={r.id} className="hover:bg-[#F8FAFC]">
                       <td className="px-5 py-3">
                         <p className="font-medium text-[#0B1F3A]">{r.student_name}</p>
-                        {r.branch_name && <p className="text-[11px] text-[#94A3B8]">{r.branch_name}</p>}
+                        {r.branch_name && <p className="text-[12px] text-[#94A3B8]">{r.branch_name}</p>}
                       </td>
                       <td className="px-5 py-3 text-[#64748B]">
                         After {r.session_milestone} sessions
@@ -168,7 +168,7 @@ export default async function ParentSatisfactionPage() {
                 <div className="space-y-2">
                   {rows.filter(r => r.notes).map(r => (
                     <div key={`note-${r.id}`} className="rounded-lg border border-[#F1F5F9] bg-[#F8FAFC] px-3 py-2.5">
-                      <p className="text-[12px] font-medium text-[#64748B]">
+                      <p className="text-[13px] font-medium text-[#64748B]">
                         {r.student_name} · After {r.session_milestone} sessions
                       </p>
                       <p className="mt-1 text-[13px] text-[#0B1F3A] italic">&ldquo;{r.notes}&rdquo;</p>

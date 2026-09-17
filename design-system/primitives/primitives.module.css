@@ -70,7 +70,7 @@
   outline-offset: var(--rc-space-0-5);
 }
 :global(.rc-focus-ring:focus-visible) {
-  outline-color: var(--rc-color-brand-accent, #ff8a1f);
+  outline-color: var(--rc-color-brand-secondary-strong, #0e7490);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -129,19 +129,19 @@
 }
 
 .btnPrimary {
-  background-color: var(--rc-color-brand-accent, #ff8a1f);
-  color: var(--rc-color-text-on-brand, #ffffff);
-}
-.btnPrimary:hover:not(:disabled) {
-  background-color: var(--rc-color-brand-accent-soft, #ffb15a);
-}
-
-.btnSecondary {
   background-color: var(--rc-color-brand-primary, #0b1f3a);
   color: var(--rc-color-text-on-brand, #ffffff);
 }
-.btnSecondary:hover:not(:disabled) {
+.btnPrimary:hover:not(:disabled) {
   background-color: var(--rc-color-brand-primary-hover, #163560);
+}
+
+.btnSecondary {
+  background-color: var(--rc-color-brand-accent-strong, #c2410c);
+  color: var(--rc-color-text-on-brand, #ffffff);
+}
+.btnSecondary:hover:not(:disabled) {
+  background-color: var(--rc-color-brand-accent-strong-hover, #9a3412);
 }
 
 .btnOutline {
@@ -248,7 +248,7 @@
 }
 .field:focus {
   outline: none;
-  border-color: var(--rc-color-brand-accent, #ff8a1f);
+  border-color: var(--rc-color-brand-secondary-strong, #0e7490);
 }
 .field:disabled {
   cursor: not-allowed;
@@ -464,7 +464,7 @@
 }
 .choiceInput:focus-visible ~ .checkboxBox,
 .choiceInput:focus-visible ~ .radioDot {
-  outline: var(--rc-space-0-5) solid var(--rc-color-brand-accent, #ff8a1f);
+  outline: var(--rc-space-0-5) solid var(--rc-color-brand-secondary-strong, #0e7490);
   outline-offset: var(--rc-space-0-5);
 }
 .choiceInput:disabled ~ .checkboxBox,
@@ -541,8 +541,8 @@
   transition: transform var(--rc-motion-fast) var(--rc-ease-standard);
 }
 .choiceInput:checked ~ .switchTrack {
-  background-color: var(--rc-color-brand-accent, #ff8a1f);
-  border-color: var(--rc-color-brand-accent, #ff8a1f);
+  background-color: var(--rc-color-brand-accent-strong, #c2410c);
+  border-color: var(--rc-color-brand-accent-strong, #c2410c);
 }
 .choiceInput:checked ~ .switchTrack .switchThumb {
   transform: translateX(calc(100% * var(--rc-switch-dir, 1)));
@@ -551,7 +551,7 @@
   --rc-switch-dir: -1;
 }
 .choiceInput:focus-visible ~ .switchTrack {
-  outline: var(--rc-space-0-5) solid var(--rc-color-brand-accent, #ff8a1f);
+  outline: var(--rc-space-0-5) solid var(--rc-color-brand-secondary-strong, #0e7490);
   outline-offset: var(--rc-space-0-5);
 }
 .choiceInput:disabled ~ .switchTrack {
@@ -948,7 +948,7 @@
 .progressFill {
   block-size: 100%;
   border-radius: var(--rc-radius-chip, 9999px);
-  background-color: var(--rc-color-brand-accent, #ff8a1f);
+  background-color: var(--rc-color-brand-accent-strong, #c2410c);
   transition: inline-size var(--rc-motion-base) var(--rc-ease-standard);
 }
 .progressIndeterminate {

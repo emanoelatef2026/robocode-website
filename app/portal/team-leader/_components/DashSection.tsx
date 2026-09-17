@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
@@ -18,7 +18,7 @@ export default function DashSection({
   label,
   icon,
   badge,
-  badgeColor = 'bg-[#FF8A1F]/10 text-[#FF8A1F]',
+  badgeColor = 'bg-[#C2410C]/10 text-[#C2410C]',
   defaultOpen = true,
   children,
 }: Props) {
@@ -34,7 +34,7 @@ export default function DashSection({
           {icon && <span className="text-base leading-none">{icon}</span>}
           <span className="text-[14px] font-bold text-[#0B1F3A]">{label}</span>
           {badge != null && badge > 0 && (
-            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${badgeColor}`}>
+            <span className={`rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${badgeColor}`}>
               {badge}
             </span>
           )}

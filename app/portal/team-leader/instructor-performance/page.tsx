@@ -1,4 +1,4 @@
-﻿import { requirePortalRole }          from '@/modules/rbac/guards'
+import { requirePortalRole }          from '@/modules/rbac/guards'
 import { getInstructorOpsData }        from '@/modules/tl-dashboard/queries'
 import type { InstructorOpsRow }       from '@/modules/tl-dashboard/queries'
 import Link                            from 'next/link'
@@ -14,7 +14,7 @@ function HealthScore({ score }: { score: number }) {
     score >= 55 ? 'bg-[#FFFBEB] text-[#B45309]' :
     'bg-[#FEE2E2] text-[#DC2626]'
   return (
-    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${cls}`}>
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${cls}`}>
       {score}
     </span>
   )
@@ -27,7 +27,7 @@ function PctBar({ value, warn = 60, good = 80 }: { value: number; warn?: number;
       <div className="h-1.5 w-20 overflow-hidden rounded-full bg-[#F1F5F9]">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, value)}%` }} />
       </div>
-      <span className="w-9 text-right text-[12px] font-medium text-[#0B1F3A]">{value}%</span>
+      <span className="w-9 text-right text-[13px] font-medium text-[#0B1F3A]">{value}%</span>
     </div>
   )
 }
@@ -58,7 +58,7 @@ export default async function InstructorOperationsPage() {
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center justify-end gap-3">
-        <Link href="/portal/team-leader/instructors" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+        <Link href="/portal/team-leader/instructors" className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
           Manage →
         </Link>
       </div>
@@ -67,7 +67,7 @@ export default async function InstructorOperationsPage() {
       {instructors.length > 0 && (
         <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-5">
           {[
-            { label: 'Avg Rating',       value: avgRating != null ? `${avgRating}★` : '—',       cls: 'text-[#FF8A1F]' },
+            { label: 'Avg Rating',       value: avgRating != null ? `${avgRating}★` : '—',       cls: 'text-[#C2410C]' },
             { label: 'Active Students',  value: String(totalStudents),                             cls: 'text-[#0B1F3A]' },
             { label: 'Revenue Managed',  value: `EGP ${fmt(totalRevenue)}`,                        cls: 'text-[#10B981]' },
             { label: 'At-Risk Students', value: String(totalRisk),                                 cls: totalRisk > 0 ? 'text-[#EF4444]' : 'text-[#10B981]' },
@@ -75,7 +75,7 @@ export default async function InstructorOperationsPage() {
           ].map(k => (
             <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-4">
               <p className={`truncate text-[13px] font-bold leading-none md:text-2xl ${k.cls}`}>{k.value}</p>
-              <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[11px]">{k.label}</p>
+              <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
             </div>
           ))}
         </div>
@@ -85,7 +85,7 @@ export default async function InstructorOperationsPage() {
       {instructors.length === 0 ? (
         <div className="ds-card px-6 py-16 text-center">
           <p className="text-sm text-[#94A3B8]">No active instructors found for your branch.</p>
-          <Link href="/portal/team-leader/instructors/new" className="mt-3 inline-block text-sm text-[#FF8A1F] hover:underline">
+          <Link href="/portal/team-leader/instructors/new" className="mt-3 inline-block text-sm text-[#C2410C] hover:underline">
             Add first instructor →
           </Link>
         </div>
@@ -95,14 +95,14 @@ export default async function InstructorOperationsPage() {
           <div className="hidden overflow-hidden ds-card md:block">
             <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-3.5">
               <p className="text-[13px] font-semibold text-[#0B1F3A]">Instructor Leaderboard</p>
-              <p className="text-[11px] text-[#94A3B8]">Ranked by health score</p>
+              <p className="text-[12px] text-[#94A3B8]">Ranked by health score</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-[13px]">
                 <thead className="ds-table-head">
                   <tr className="border-b border-[#F1F5F9] bg-[#F8FAFC] text-left">
                     {['#', 'Instructor', 'Health', 'Students', 'Rating', 'Revenue', 'Retention', 'At-Risk', 'Attendance', 'HW Review'].map(h => (
-                      <th key={h} className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">{h}</th>
+                      <th key={h} className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -111,17 +111,17 @@ export default async function InstructorOperationsPage() {
                     <tr key={instr.instructor_id} className="border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC]">
                       <td className="px-4 py-3">
                         <span className={[
-                          'flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold',
-                          idx === 0 ? 'bg-[#FF8A1F] text-white' : idx === 1 ? 'bg-[#94A3B8] text-white' : idx === 2 ? 'bg-[#B45309] text-white' : 'bg-[#F1F5F9] text-[#64748B]',
+                          'flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-bold',
+                          idx === 0 ? 'bg-[#C2410C] text-white' : idx === 1 ? 'bg-[#94A3B8] text-white' : idx === 2 ? 'bg-[#B45309] text-white' : 'bg-[#F1F5F9] text-[#64748B]',
                         ].join(' ')}>
                           {idx + 1}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <Link href={`/portal/team-leader/instructors`} className="font-medium text-[#0B1F3A] hover:text-[#FF8A1F]">
+                        <Link href={`/portal/team-leader/instructors`} className="font-medium text-[#0B1F3A] hover:text-[#9A3412]">
                           {instr.instructor_name}
                         </Link>
-                        <p className="text-[11px] text-[#94A3B8]">{instr.active_groups} group{instr.active_groups !== 1 ? 's' : ''}</p>
+                        <p className="text-[12px] text-[#94A3B8]">{instr.active_groups} group{instr.active_groups !== 1 ? 's' : ''}</p>
                       </td>
                       <td className="px-4 py-3">
                         <HealthScore score={instr.health_score} />
@@ -129,7 +129,7 @@ export default async function InstructorOperationsPage() {
                       <td className="px-4 py-3 text-center font-medium text-[#0B1F3A]">
                         {instr.active_students}
                         {instr.critical_students > 0 && (
-                          <span className="ml-1 text-[10px] text-[#EF4444]">({instr.critical_students} crit)</span>
+                          <span className="ml-1 text-[11px] text-[#EF4444]">({instr.critical_students} crit)</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -138,7 +138,7 @@ export default async function InstructorOperationsPage() {
                       <td className="px-4 py-3 font-medium text-[#10B981]">
                         EGP {fmt(instr.revenue_managed)}
                         {instr.outstanding_amount > 0 && (
-                          <p className="text-[11px] font-normal text-[#F59E0B]">{fmt(instr.outstanding_amount)} due</p>
+                          <p className="text-[12px] font-normal text-[#F59E0B]">{fmt(instr.outstanding_amount)} due</p>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -150,11 +150,11 @@ export default async function InstructorOperationsPage() {
                       </td>
                       <td className="px-4 py-3">
                         {instr.risk_students > 0 ? (
-                          <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[10px] font-semibold text-[#EF4444]">
+                          <span className="rounded-full bg-[#FEE2E2] px-2 py-0.5 text-[11px] font-semibold text-[#EF4444]">
                             {instr.risk_students}
                           </span>
                         ) : (
-                          <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#10B981]">0</span>
+                          <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-semibold text-[#10B981]">0</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -177,16 +177,16 @@ export default async function InstructorOperationsPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="font-semibold text-[#0B1F3A]">
-                      <span className="mr-1.5 text-[11px] font-bold text-[#94A3B8]">#{idx + 1}</span>
+                      <span className="mr-1.5 text-[12px] font-bold text-[#94A3B8]">#{idx + 1}</span>
                       {instr.instructor_name}
                     </p>
-                    <p className="text-[12px] text-[#64748B]">{instr.active_groups} groups · {instr.active_students} students</p>
+                    <p className="text-[13px] text-[#64748B]">{instr.active_groups} groups · {instr.active_students} students</p>
                   </div>
                   <HealthScore score={instr.health_score} />
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px]">
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[12px]">
                   <div className="rounded-lg bg-[#F8FAFC] p-2">
-                    <p className="font-bold text-[#FF8A1F]">{instr.avg_student_rating?.toFixed(1) ?? '—'}★</p>
+                    <p className="font-bold text-[#C2410C]">{instr.avg_student_rating?.toFixed(1) ?? '—'}★</p>
                     <p className="text-[#94A3B8]">Rating</p>
                   </div>
                   <div className="rounded-lg bg-[#F8FAFC] p-2">
@@ -199,11 +199,11 @@ export default async function InstructorOperationsPage() {
                   </div>
                 </div>
                 <div className="mt-3 space-y-1.5">
-                  <div className="flex items-center justify-between text-[12px]">
+                  <div className="flex items-center justify-between text-[13px]">
                     <span className="text-[#64748B]">Attendance</span>
                     <PctBar value={instr.attendance_rate} />
                   </div>
-                  <div className="flex items-center justify-between text-[12px]">
+                  <div className="flex items-center justify-between text-[13px]">
                     <span className="text-[#64748B]">HW Review</span>
                     <PctBar value={instr.homework_review_pct} />
                   </div>

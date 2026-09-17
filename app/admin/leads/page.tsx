@@ -1,4 +1,4 @@
-﻿import { createServiceClient }      from '@/lib/supabase/service'
+import { createServiceClient }      from '@/lib/supabase/service'
 import { requireAuth }              from '@/modules/rbac/guards'
 import { listLeads, getLeadKPIs }   from '@/modules/leads/queries'
 import { listBranches }             from '@/modules/branches/queries'
@@ -17,7 +17,7 @@ const STATUS_META: Record<LeadStatus, { label: string; color: string }> = {
   CONTACTED:     { label: 'Contacted',     color: 'bg-[#E0F2FE] text-[#0369A1]' },
   INTERESTED:    { label: 'Interested',    color: 'bg-[#F3E8FF] text-[#6B21A8]' },
   TRIAL_BOOKED:  { label: 'Trial Booked',  color: 'bg-[#FFFBEB] text-[#B45309]' },
-  TRIAL_ATTENDED:{ label: 'Trial Attended',color: 'bg-[#FFF1E2] text-[#FF8A1F]' },
+  TRIAL_ATTENDED:{ label: 'Trial Attended',color: 'bg-[#FFF1E2] text-[#C2410C]' },
   FOLLOW_UP:     { label: 'Follow-up',     color: 'bg-[#F3E8FF] text-[#6B21A8]' },
   CONVERTED:     { label: 'Converted',     color: 'bg-[#E7F8EE] text-[#15803D]' },
   LOST:          { label: 'Lost',          color: 'bg-[#FEF2F2] text-[#B91C1C]' },
@@ -87,7 +87,7 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
       <TopbarAction>
         <Link
           href="/admin/leads/new"
-          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
+          className="inline-flex h-9 shrink-0 items-center gap-2 rounded-lg bg-[#C2410C] px-4 text-[13px] font-semibold text-white transition hover:bg-[#e87c18] active:scale-95"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
             <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -98,7 +98,7 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
       <div className="mb-6 flex justify-end">
         <Link
           href="/admin/leads/funnel"
-          className="inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+          className="inline-flex items-center gap-2 rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] transition hover:border-[#0E7490] hover:text-[#9A3412]"
         >
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
             <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11 4a1 1 0 10-2 0v4a1 1 0 102 0V7zm-3 1a1 1 0 10-2 0v3a1 1 0 102 0V8zM8 9a1 1 0 00-2 0v2a1 1 0 102 0V9z" clipRule="evenodd" />
@@ -130,7 +130,7 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
                   className={`w-full rounded-t-md ${stage.color} opacity-80`}
                   style={{ height: `${heightPct * 0.6}px`, minHeight: '6px' }}
                 />
-                <span className="text-[10px] text-[#64748B]">{stage.label}</span>
+                <span className="text-[11px] text-[#64748B]">{stage.label}</span>
                 {i < funnelStages.length - 1 && funnelStages[i].count > 0 && (
                   <span className="hidden text-[9px] text-[#94A3B8] sm:block">
                     {Math.round((funnelStages[i + 1].count / funnelStages[i].count) * 100)}%
@@ -189,33 +189,33 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
                       <div className="min-w-0 flex-1">
                         <Link href={`/admin/leads/${lead.id}`} className="block text-[15px] font-semibold text-[#0B1F3A] leading-tight">
                           {lead.child_name}
-                          {lead.age && <span className="ml-1 text-[12px] font-normal text-[#94A3B8]">({lead.age}y)</span>}
+                          {lead.age && <span className="ml-1 text-[13px] font-normal text-[#94A3B8]">({lead.age}y)</span>}
                         </Link>
                         {lead.parent_name && (
-                          <p className="mt-0.5 text-[12px] text-[#64748B]">{lead.parent_name}</p>
+                          <p className="mt-0.5 text-[13px] text-[#64748B]">{lead.parent_name}</p>
                         )}
                       </div>
                       <div className="flex shrink-0 items-center gap-1.5">
-                        <span className={`text-[11px] font-semibold ${isOld ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
+                        <span className={`text-[12px] font-semibold ${isOld ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
                           {lead.days_in_stage}d{isOld && ' ⚠'}
                         </span>
-                        <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${meta.color}`}>
+                        <span className={`inline-block rounded-full px-2 py-0.5 text-[12px] font-medium ${meta.color}`}>
                           {meta.label}
                         </span>
                       </div>
                     </div>
-                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748B]">
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#64748B]">
                       {lead.phone && <a href={`tel:${lead.phone}`} className="font-medium text-[#0B1F3A]">{lead.phone}</a>}
                       <span className="capitalize">{lead.source.replace(/_/g, ' ')}</span>
                       {lead.branch_name && <span>{lead.branch_name}</span>}
                       <span>{lead.assigned_name ?? 'Unassigned'}</span>
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-2">
-                      <span className="text-[11px] text-[#94A3B8]">
+                      <span className="text-[12px] text-[#94A3B8]">
                         {new Date(lead.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                         {hasFU && <span className="ml-1 text-[#EF4444]">● overdue</span>}
                       </span>
-                      <Link href={`/admin/leads/${lead.id}`} className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center">
+                      <Link href={`/admin/leads/${lead.id}`} className="rounded-lg bg-[#C2410C]/10 px-3 py-1.5 text-[13px] font-semibold text-[#C2410C] min-h-9 flex items-center">
                         View →
                       </Link>
                     </div>
@@ -250,13 +250,13 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
                     return (
                       <tr key={lead.id} className="ds-table-row">
                         <td>
-                          <Link href={`/admin/leads/${lead.id}`} className="font-semibold text-[#0B1F3A] hover:text-[#FF8A1F] transition-colors">
+                          <Link href={`/admin/leads/${lead.id}`} className="font-semibold text-[#0B1F3A] hover:text-[#9A3412] transition-colors">
                             {lead.child_name}
                           </Link>
-                          {lead.age && <span className="ml-1 text-[11px] text-[#94A3B8]">({lead.age}y)</span>}
+                          {lead.age && <span className="ml-1 text-[12px] text-[#94A3B8]">({lead.age}y)</span>}
                         </td>
                         <td className="text-[#64748B]">{lead.parent_name ?? '—'}</td>
-                        <td className="text-[#64748B] font-mono text-[12px]">{lead.phone ?? '—'}</td>
+                        <td className="text-[#64748B] font-mono text-[13px]">{lead.phone ?? '—'}</td>
                         <td className="text-[#64748B]">{lead.branch_name ?? '—'}</td>
                         <td className="text-[#64748B] capitalize">{lead.source.replace(/_/g, ' ')}</td>
                         <td>
@@ -266,16 +266,16 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
                         </td>
                         <td className="text-[#64748B]">{lead.assigned_name ?? <span className="text-[#94A3B8]">Unassigned</span>}</td>
                         <td>
-                          <span className={`text-[12px] font-semibold ${isOld ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
+                          <span className={`text-[13px] font-semibold ${isOld ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
                             {lead.days_in_stage}d{isOld && ' ⚠'}
                           </span>
                         </td>
-                        <td className="text-[12px] text-[#94A3B8]">
+                        <td className="text-[13px] text-[#94A3B8]">
                           {new Date(lead.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                           {hasFU && <span className="ml-1 text-[#EF4444]">●</span>}
                         </td>
                         <td className="text-end">
-                          <Link href={`/admin/leads/${lead.id}`} className="text-[12px] font-semibold text-[#FF8A1F] hover:text-[#e87c18] transition-colors">
+                          <Link href={`/admin/leads/${lead.id}`} className="text-[13px] font-semibold text-[#C2410C] hover:text-[#e87c18] transition-colors">
                             View →
                           </Link>
                         </td>
@@ -296,7 +296,7 @@ export default async function AdminLeadsPage({ searchParams }: Props) {
       </div>
 
       {/* Legend */}
-      <div className="mt-3 flex items-center gap-4 text-[11px] text-[#94A3B8]">
+      <div className="mt-3 flex items-center gap-4 text-[12px] text-[#94A3B8]">
         <span><span className="text-[#EF4444]">⚠</span> Stage &gt;7 days</span>
         <span><span className="text-[#EF4444]">●</span> Follow-up overdue</span>
       </div>

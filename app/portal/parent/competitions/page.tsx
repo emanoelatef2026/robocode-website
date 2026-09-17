@@ -59,21 +59,21 @@ export default async function ParentCompetitionsPage({ searchParams }: Props) {
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <p className="text-[13.5px] font-bold text-[#0B1F3A]">{c.competition_name}</p>
-                  <p className="mt-0.5 text-[11px] text-[#64748B]">
+                  <p className="mt-0.5 text-[12px] text-[#64748B]">
                     {[c.season, c.year].filter(Boolean).join(' ')}
                     {c.role ? ` · ${c.role}` : ''}
                     {c.team_name ? ` · ${c.team_name}` : ''}
                   </p>
                 </div>
                 {(c.rank || c.award) && (
-                  <span className="shrink-0 rounded-full bg-[#FFFBEB] px-2.5 py-1 text-[10.5px] font-bold text-[#B45309]">
+                  <span className="shrink-0 rounded-full bg-[#FFFBEB] px-2.5 py-1 text-[11px] font-bold text-[#B45309]">
                     🎖️ {[c.award, c.rank].filter(Boolean).join(' · ')}
                   </span>
                 )}
               </div>
 
               {c.notes && (
-                <p className="mt-2.5 rounded-xl bg-[#F8FAFC] px-3 py-2 text-[11.5px] leading-relaxed text-[#475569]">
+                <p className="mt-2.5 rounded-xl bg-[#F8FAFC] px-3 py-2 text-[12px] leading-relaxed text-[#475569]">
                   {c.notes}
                 </p>
               )}
@@ -82,7 +82,7 @@ export default async function ParentCompetitionsPage({ searchParams }: Props) {
                 {c.certificate_id && (
                   <Link
                     href={`/portal/parent/certificates${childParam}`}
-                    className="inline-flex min-h-11 items-center rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+                    className="inline-flex min-h-11 items-center rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
                   >
                     View Certificate
                   </Link>
@@ -90,7 +90,7 @@ export default async function ParentCompetitionsPage({ searchParams }: Props) {
                 {c.project_id && (
                   <Link
                     href={`/portal/parent/portfolio${childParam}`}
-                    className="inline-flex min-h-11 items-center rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[11px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+                    className="inline-flex min-h-11 items-center rounded-full border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-semibold text-[#475569] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
                   >
                     View Project
                   </Link>

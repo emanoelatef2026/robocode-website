@@ -1,4 +1,4 @@
-﻿import { notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { requirePermission } from '@/modules/rbac/guards'
 import { getStudentPortfolioDetail } from '@/modules/portfolio/queries'
 import { archiveProject, deleteAchievement, deleteBadge } from '@/modules/portfolio/actions'
@@ -42,7 +42,7 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
             </Link>
             <Link
               href={`/admin/portfolio/${studentId}/projects/new`}
-              className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18]"
+              className="rounded-lg bg-[#C2410C] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18]"
             >
               + Add Project
             </Link>
@@ -77,7 +77,7 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
                         {p.final_score != null ? p.final_score : '—'}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        {p.is_featured ? <span className="text-[#FF8A1F]">★</span> : <span className="text-[#CBD5E1]">☆</span>}
+                        {p.is_featured ? <span className="text-[#C2410C]">★</span> : <span className="text-[#CBD5E1]">☆</span>}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <StatusBadge status={p.is_public ? 'active' : 'inactive'} />
@@ -88,7 +88,7 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/admin/portfolio/${studentId}/projects/${p.id}/edit`}
-                          className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                          className="text-xs font-medium text-[#C2410C] hover:underline"
                         >
                           Edit
                         </Link>
@@ -108,7 +108,7 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
           <h2 className="text-base font-semibold text-[#0B1F3A]">Achievements</h2>
           <Link
             href={`/admin/portfolio/${studentId}/achievements/new`}
-            className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18]"
+            className="rounded-lg bg-[#C2410C] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18]"
           >
             + Add Achievement
           </Link>
@@ -139,7 +139,7 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/admin/portfolio/${studentId}/achievements/${a.id}/edit`}
-                          className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                          className="text-xs font-medium text-[#C2410C] hover:underline"
                         >
                           Edit
                         </Link>
@@ -159,7 +159,7 @@ export default async function StudentPortfolioDetailPage({ params }: Props) {
           <h2 className="text-base font-semibold text-[#0B1F3A]">Badges</h2>
           <Link
             href={`/admin/portfolio/${studentId}/badges/new`}
-            className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18]"
+            className="rounded-lg bg-[#C2410C] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#e87c18]"
           >
             + Award Badge
           </Link>

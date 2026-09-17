@@ -215,7 +215,7 @@ export function GroupWorkspace({
 
       {/* Phase 1: Archived read-only banner */}
       {group.status === 'archived' && (
-        <div className="flex items-center gap-2 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 text-[12px] text-[#64748B] shrink-0">
+        <div className="flex items-center gap-2 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2 text-[13px] text-[#64748B] shrink-0">
           <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0 text-[#94A3B8]">
             <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
           </svg>
@@ -224,16 +224,16 @@ export function GroupWorkspace({
       )}
 
       {/* Tab bar */}
-      <div className="grid grid-cols-4 border-b border-[#E2E8F0] shrink-0 bg-white md:flex">
+      <div className="grid grid-cols-4 shrink-0 border-b border-[#D7E0EA] bg-white md:flex">
         {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             className={[
-              'min-w-0 border-b-2 px-1 py-2.5 text-[10px] font-medium leading-tight transition text-center md:flex-none md:px-4 md:text-[12px] md:whitespace-nowrap',
+              'min-h-10 min-w-0 border-b-2 px-1 py-2.5 text-[13px] font-medium leading-tight transition-colors text-center md:flex-none md:px-4 md:text-[13px] md:whitespace-nowrap',
               tab === t.key
-                ? 'border-[#FF8A1F] text-[#FF8A1F]'
-                : 'border-transparent text-[#64748B] hover:text-[#374151]',
+                ? 'border-[#C2410C] text-[#0B1F3A] font-semibold'
+                : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]',
             ].join(' ')}
           >
             {t.label(group.student_count)}
@@ -244,7 +244,7 @@ export function GroupWorkspace({
       {/* Students toolbar */}
       {tab === 'students' && (
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#E2E8F0] bg-white px-4 py-2 flex-wrap">
-          <span className="text-[12px] text-[#64748B]">
+          <span className="text-[13px] text-[#64748B]">
             {loading ? '' : `${students.length} students`}
           </span>
           <div className="flex items-center gap-2 flex-wrap">
@@ -373,25 +373,25 @@ export function GroupWorkspace({
               Permanently remove <strong>{group.name}</strong>?
             </p>
             <div className="mb-4 space-y-2 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
-              <div className="flex items-center justify-between text-[12px]">
+              <div className="flex items-center justify-between text-[13px]">
                 <span className="text-[#64748B]">Active students</span>
                 <span className="font-semibold text-[#0B1F3A]">{group.student_count}</span>
               </div>
-              <div className="flex items-center justify-between text-[12px]">
+              <div className="flex items-center justify-between text-[13px]">
                 <span className="text-[#64748B]">Sessions completed</span>
                 <span className="font-semibold text-[#0B1F3A]">{sessionsCompleted}</span>
               </div>
               {students.some(s => s.paid_amount > 0) && (
-                <p className="mt-1 rounded-lg bg-[#FFFBEB] px-2 py-1.5 text-[11px] text-[#B45309]">
+                <p className="mt-1 rounded-lg bg-[#FFFBEB] px-2 py-1.5 text-[12px] text-[#B45309]">
                   This group has financial records. Payment history will be preserved.
                 </p>
               )}
             </div>
-            <p className="mb-5 text-[11px] text-[#94A3B8]">
+            <p className="mb-5 text-[12px] text-[#94A3B8]">
               The group will be archived. Student payment and attendance history are never deleted.
             </p>
             {deleteError && (
-              <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{deleteError}</p>
+              <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[13px] text-[#EF4444]">{deleteError}</p>
             )}
             <div className="flex gap-2">
               <button
@@ -419,7 +419,7 @@ export function GroupWorkspace({
             {archiveDialog.blockers.length > 0 ? (
               <div className="mb-4 space-y-1.5 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">
                 {archiveDialog.blockers.map((b, i) => (
-                  <p key={i} className="text-[12px] text-[#B91C1C]">{b}</p>
+                  <p key={i} className="text-[13px] text-[#B91C1C]">{b}</p>
                 ))}
               </div>
             ) : (
@@ -432,7 +432,7 @@ export function GroupWorkspace({
                 {archiveDialog.warnings.length > 0 && (
                   <div className="mb-4 space-y-1.5 rounded-xl border border-[#FED7AA] bg-[#FFFBEB] p-3">
                     {archiveDialog.warnings.map((w, i) => (
-                      <p key={i} className="text-[12px] text-[#B45309]">⚠ {w}</p>
+                      <p key={i} className="text-[13px] text-[#B45309]">⚠ {w}</p>
                     ))}
                   </div>
                 )}
@@ -441,12 +441,12 @@ export function GroupWorkspace({
                   onChange={e => setArchiveReason(e.target.value)}
                   placeholder="Reason (optional)"
                   rows={2}
-                  className="mb-3 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] outline-none focus:border-[#FF8A1F]"
+                  className="mb-3 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]"
                 />
               </>
             )}
             {archiveError && (
-              <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{archiveError}</p>
+              <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[13px] text-[#EF4444]">{archiveError}</p>
             )}
             <div className="flex gap-2">
               <button
@@ -483,10 +483,10 @@ export function GroupWorkspace({
               onChange={e => setRecoverReason(e.target.value)}
               placeholder="Reason (optional)"
               rows={2}
-              className="mb-3 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[12px] outline-none focus:border-[#FF8A1F]"
+              className="mb-3 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]"
             />
             {recoverError && (
-              <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{recoverError}</p>
+              <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[13px] text-[#EF4444]">{recoverError}</p>
             )}
             <div className="flex gap-2">
               <button

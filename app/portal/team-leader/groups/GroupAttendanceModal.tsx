@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useTransition, useEffect, useRef } from 'react'
 import { recordAttendanceSession } from '@/modules/attendance/actions'
@@ -64,43 +64,43 @@ function ConsumptionReasonLabel({ r }: { r: StudentConsumptionResult }) {
   switch (r.reason) {
     case 'eligible':
       return (
-        <span className="text-[10px] text-[#15803D] font-medium">
+        <span className="text-[11px] text-[#15803D] font-medium">
           1 session consumed · {r.sessions_remaining ?? 0} remaining
         </span>
       )
     case 'overdraft_allowed':
       return (
-        <span className="text-[10px] text-[#B45309] font-medium">
+        <span className="text-[11px] text-[#B45309] font-medium">
           1 session (overdraft) · {r.sessions_remaining ?? 0} remaining
         </span>
       )
     case 'no_slot_status':
       return (
-        <span className="text-[10px] text-[#94A3B8]">
+        <span className="text-[11px] text-[#94A3B8]">
           Not slot-consuming — no session deducted
         </span>
       )
     case 'no_contract':
       return (
-        <span className="text-[10px] text-[#6B7280]">
+        <span className="text-[11px] text-[#6B7280]">
           No active contract — attendance recorded only
         </span>
       )
     case 'pre_enrollment':
       return (
-        <span className="text-[10px] text-[#2563EB]">
+        <span className="text-[11px] text-[#2563EB]">
           Pre-contract session — eligible from {r.enrollment_start_date ? fmtDate(r.enrollment_start_date) : '—'}
         </span>
       )
     case 'exhausted':
       return (
-        <span className="text-[10px] text-orange-600">
+        <span className="text-[11px] text-orange-600">
           Package exhausted — no session deducted
         </span>
       )
     case 'open_ended':
       return (
-        <span className="text-[10px] text-[#94A3B8]">
+        <span className="text-[11px] text-[#94A3B8]">
           Open-ended group — sessions not tracked
         </span>
       )
@@ -211,7 +211,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
           <div className="flex items-start justify-between border-b border-[#E2E8F0] px-5 py-4 shrink-0">
             <div>
               <h3 className="text-[15px] font-bold text-[#0B1F3A]">Session Saved</h3>
-              <p className="mt-0.5 text-[12px] text-[#64748B]">
+              <p className="mt-0.5 text-[13px] text-[#64748B]">
                 {group.name}
                 {topic ? ` — ${topic}` : ''}
               </p>
@@ -228,17 +228,17 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
 
           {/* Summary strip */}
           <div className="shrink-0 border-b border-green-100 bg-[#E7F8EE] px-5 py-2.5 flex flex-wrap gap-x-4 gap-y-1">
-            <span className="text-[12px] text-[#15803D] font-semibold">
+            <span className="text-[13px] text-[#15803D] font-semibold">
               {consumedCount} session{consumedCount !== 1 ? 's' : ''} consumed
             </span>
             {noContractCount > 0 && (
-              <span className="text-[12px] text-[#6B7280]">{noContractCount} no contract</span>
+              <span className="text-[13px] text-[#6B7280]">{noContractCount} no contract</span>
             )}
             {preEnrollCount > 0 && (
-              <span className="text-[12px] text-[#2563EB]">{preEnrollCount} pre-contract</span>
+              <span className="text-[13px] text-[#2563EB]">{preEnrollCount} pre-contract</span>
             )}
             {exhaustedCount > 0 && (
-              <span className="text-[12px] text-orange-600">{exhaustedCount} exhausted</span>
+              <span className="text-[13px] text-orange-600">{exhaustedCount} exhausted</span>
             )}
           </div>
 
@@ -277,7 +277,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
           <div className="shrink-0 border-t border-[#E2E8F0] px-5 py-4">
             <button
               onClick={handleDone}
-              className="w-full rounded-lg bg-[#FF8A1F] py-2.5 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition"
+              className="w-full rounded-lg bg-[#C2410C] py-2.5 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition"
             >
               Done
             </button>
@@ -300,19 +300,19 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
         <div className="flex items-start justify-between border-b border-[#E2E8F0] px-5 py-4 shrink-0">
           <div>
             <h3 className="text-[15px] font-bold text-[#0B1F3A]">Record Session</h3>
-            <p className="mt-0.5 text-[12px] text-[#64748B]">{group.name}</p>
+            <p className="mt-0.5 text-[13px] text-[#64748B]">{group.name}</p>
             <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5">
               {group.course_name && (
-                <span className="text-[11px] text-[#94A3B8]">
+                <span className="text-[12px] text-[#94A3B8]">
                   Course: <span className="font-medium text-[#374151]">{group.course_name}</span>
                 </span>
               )}
               {group.lead_instructor_name && (
-                <span className="text-[11px] text-[#94A3B8]">
+                <span className="text-[12px] text-[#94A3B8]">
                   Instructor: <span className="font-medium text-[#374151]">{group.lead_instructor_name}</span>
                 </span>
               )}
-              <span className="text-[11px] text-[#94A3B8]">
+              <span className="text-[12px] text-[#94A3B8]">
                 Branch: <span className="font-medium text-[#374151]">{group.branch_name}</span>
               </span>
             </div>
@@ -329,7 +329,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
 
         {/* Warning banner */}
         <div className="shrink-0 border-b border-amber-100 bg-[#FFFBEB] px-5 py-2.5">
-          <p className="text-[11px] text-[#B45309]">
+          <p className="text-[12px] text-[#B45309]">
             Attendance is permanent academic history. Record accurately — edits require admin intervention.
           </p>
         </div>
@@ -341,7 +341,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
             {/* Row 1: date / duration / delivery */}
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#374151]">
+                <label className="mb-1 block text-[12px] font-medium text-[#374151]">
                   Session Date & Time
                 </label>
                 <input
@@ -349,11 +349,11 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
                   value={sessionDate}
                   onChange={e => setSessionDate(e.target.value)}
                   required
-                  className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none focus:ring-1 focus:ring-[#FF8A1F]"
+                  className="w-full ds-card px-2.5 py-1.5 text-[13px] text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none focus:ring-1 focus:ring-[#0E7490]"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#374151]">
+                <label className="mb-1 block text-[12px] font-medium text-[#374151]">
                   Duration (min)
                 </label>
                 <input
@@ -363,17 +363,17 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
                   max={360}
                   defaultValue={group.duration_minutes ?? 60}
                   required
-                  className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none focus:ring-1 focus:ring-[#FF8A1F]"
+                  className="w-full ds-card px-2.5 py-1.5 text-[13px] text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none focus:ring-1 focus:ring-[#0E7490]"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-[11px] font-medium text-[#374151]">
+                <label className="mb-1 block text-[12px] font-medium text-[#374151]">
                   Delivery
                 </label>
                 <select
                   ref={deliveryRef}
                   defaultValue="offline"
-                  className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none focus:ring-1 focus:ring-[#FF8A1F]"
+                  className="w-full ds-card px-2.5 py-1.5 text-[13px] text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none focus:ring-1 focus:ring-[#0E7490]"
                 >
                   <option value="offline">In-Person</option>
                   <option value="online">Online</option>
@@ -384,7 +384,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
 
             {/* Row 2: Topic — required, full width */}
             <div>
-              <label className="mb-1 block text-[11px] font-medium text-[#374151]">
+              <label className="mb-1 block text-[12px] font-medium text-[#374151]">
                 Session Topic <span className="text-[#EF4444]">*</span>
               </label>
               <input
@@ -394,7 +394,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
                 placeholder="e.g. Introduction to loops, Algebra chapter 3, Variables and data types…"
                 required
                 maxLength={200}
-                className="w-full ds-card px-2.5 py-1.5 text-[12px] text-[#0B1F3A] placeholder-[#CBD5E1] focus:border-[#FF8A1F] focus:outline-none focus:ring-1 focus:ring-[#FF8A1F]"
+                className="w-full ds-card px-2.5 py-1.5 text-[13px] text-[#0B1F3A] placeholder-[#CBD5E1] focus:border-[#0E7490] focus:outline-none focus:ring-1 focus:ring-[#0E7490]"
               />
             </div>
           </div>
@@ -404,21 +404,21 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
 
             {/* Bulk actions bar */}
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E2E8F0] bg-[#F8FAFC] px-5 py-2 shrink-0">
-              <span className="text-[11px] text-[#64748B]">
+              <span className="text-[12px] text-[#64748B]">
                 {students.length} students — {presentCount} present · {absentCount} absent
               </span>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => setAllStatus('present')}
-                  className="rounded-md border border-[#A7F3D0] bg-[#E7F8EE] px-2.5 py-1 text-[11px] font-medium text-[#15803D] hover:bg-[#E7F8EE] transition"
+                  className="rounded-md border border-[#A7F3D0] bg-[#E7F8EE] px-2.5 py-1 text-[12px] font-medium text-[#15803D] hover:bg-[#E7F8EE] transition"
                 >
                   All Present
                 </button>
                 <button
                   type="button"
                   onClick={() => setAllStatus('absent')}
-                  className="rounded-md border border-[#FECACA] bg-[#FEE2E2] px-2.5 py-1 text-[11px] font-medium text-[#DC2626] hover:bg-[#FEE2E2] transition"
+                  className="rounded-md border border-[#FECACA] bg-[#FEE2E2] px-2.5 py-1 text-[12px] font-medium text-[#DC2626] hover:bg-[#FEE2E2] transition"
                 >
                   All Absent
                 </button>
@@ -445,27 +445,27 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
                         </span>
                         <div className="flex flex-wrap gap-1">
                           {ind.noContract && (
-                            <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-[#F3F4F6] text-[#6B7280] border border-[#E2E8F0]">
+                            <span className="rounded px-1.5 py-0.5 text-[11px] font-medium bg-[#F3F4F6] text-[#6B7280] border border-[#E2E8F0]">
                               No Contract
                             </span>
                           )}
                           {ind.preEnrollment && ind.eligibleFrom && (
-                            <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-[#EFF6FF] text-[#2563EB] border border-blue-200">
+                            <span className="rounded px-1.5 py-0.5 text-[11px] font-medium bg-[#EFF6FF] text-[#2563EB] border border-blue-200">
                               Eligible from {fmtDate(ind.eligibleFrom)}
                             </span>
                           )}
                           {ind.exhausted && (
-                            <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 border border-orange-200">
+                            <span className="rounded px-1.5 py-0.5 text-[11px] font-medium bg-orange-100 text-orange-700 border border-orange-200">
                               Exhausted
                             </span>
                           )}
                           {ind.unpaid && (
-                            <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-[#FEE2E2] text-[#EF4444] border border-[#FECACA]">
+                            <span className="rounded px-1.5 py-0.5 text-[11px] font-medium bg-[#FEE2E2] text-[#EF4444] border border-[#FECACA]">
                               Unpaid
                             </span>
                           )}
                           {!ind.noContract && !ind.preEnrollment && !ind.exhausted && ind.sessionsLeft !== null && ind.sessionsLeft > 0 && (
-                            <span className="rounded px-1.5 py-0.5 text-[10px] text-[#94A3B8]">
+                            <span className="rounded px-1.5 py-0.5 text-[11px] text-[#94A3B8]">
                               {ind.sessionsLeft} left
                             </span>
                           )}
@@ -481,7 +481,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
                             onClick={() => setOneStatus(s.student_id, status)}
                             title={STATUS_LABELS[status]}
                             className={[
-                              'rounded-md border px-2 py-1 text-[10px] font-semibold transition',
+                              'rounded-md border px-2 py-1 text-[11px] font-semibold transition',
                               currentStatus === status
                                 ? `${STATUS_STYLES[status]} ring-1`
                                 : 'border-[#E2E8F0] bg-white text-[#94A3B8] hover:bg-[#F8FAFC]',
@@ -501,7 +501,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
           {/* Footer */}
           <div className="shrink-0 border-t border-[#E2E8F0] px-5 py-4">
             {error && (
-              <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#EF4444]">{error}</p>
+              <p className="mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-[13px] text-[#EF4444]">{error}</p>
             )}
             <div className="flex gap-2">
               <button
@@ -514,7 +514,7 @@ export default function GroupAttendanceModal({ group, students, isOpen, onClose,
               <button
                 type="submit"
                 disabled={isPending || students.length === 0 || !topic.trim()}
-                className="flex-1 rounded-lg bg-[#FF8A1F] py-2.5 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition disabled:opacity-50"
+                className="flex-1 rounded-lg bg-[#C2410C] py-2.5 text-[13px] font-semibold text-white hover:bg-[#e87c18] transition disabled:opacity-50"
               >
                 {isPending ? 'Saving…' : `Save Attendance (${students.length})`}
               </button>

@@ -22,10 +22,10 @@ interface Props {
 
 function StatChip({ icon, value, label }: { icon: string; value: string | number; label: string }) {
   return (
-    <div className="flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-[5px]">
+    <div className="flex items-center gap-1 rounded-full border border-white/8 bg-white/10 px-2.5 py-[5px]">
       <span className="text-[14px]">{icon}</span>
-      <span className="text-[11px] font-bold text-white">{value}</span>
-      <span className="text-[9px] text-white/50">{label}</span>
+      <span className="text-[12px] font-bold text-white">{value}</span>
+      <span className="text-[11px] text-white/55">{label}</span>
     </div>
   )
 }
@@ -40,7 +40,7 @@ export default function InstructorHero({
 
   return (
     <div className="relative overflow-hidden rounded-2xl" style={{ background: 'linear-gradient(135deg, #0B1F3A 0%, #16304F 60%, #1E3A5F 100%)' }}>
-      <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#FF8A1F]/10" />
+      <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[#C2410C]/10" />
       <div className="pointer-events-none absolute -bottom-10 -left-6 h-28 w-28 rounded-full bg-[#FFD166]/5" />
 
       <div className="relative px-4 pb-4 pt-4">
@@ -54,10 +54,10 @@ export default function InstructorHero({
               {initials}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-[18px] font-extrabold leading-tight text-white">
+              <p className="truncate text-[20px] font-bold leading-tight tracking-[-0.02em] text-white">
                 {greeting}, {firstName}
               </p>
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[10.5px] text-white/45">
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] text-white/55">
                 {branchName && <span>{branchName}</span>}
                 <span>
                   {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -66,10 +66,10 @@ export default function InstructorHero({
             </div>
           </div>
           {ratingAvg != null && (
-            <div className="flex shrink-0 items-center gap-1 rounded-full bg-white/10 px-2.5 py-1">
+            <div className="flex shrink-0 items-center gap-1 rounded-full border border-white/8 bg-white/10 px-2.5 py-1">
               <span className="text-[13px]">⭐</span>
               <span className="text-[13px] font-bold text-white">{ratingAvg.toFixed(1)}</span>
-              {ratingCount != null && <span className="text-[9px] text-white/50">({ratingCount})</span>}
+              {ratingCount != null && <span className="text-[11px] text-white/55">({ratingCount})</span>}
             </div>
           )}
         </div>
@@ -85,12 +85,12 @@ export default function InstructorHero({
 
         {/* Quick-start CTA — the single most prominent action on the page */}
         {quickStart && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white/10 px-4 py-3">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/10 px-4 py-3">
             <div className="min-w-0">
               <p className="text-[12.5px] font-semibold text-white">
                 {quickStart.status === 'ongoing' ? 'Session in progress' : 'Next class ready'}
               </p>
-              <p className="mt-0.5 truncate text-[11px] text-white/60">
+              <p className="mt-0.5 truncate text-[12px] text-white/65">
                 {quickStart.group_name}{quickStart.course_title ? ` — ${quickStart.course_title}` : ''}
               </p>
             </div>
@@ -100,7 +100,7 @@ export default function InstructorHero({
                   ? `/portal/instructor/groups/${quickStart.group_id}/sessions/${quickStart.id}`
                   : `/portal/instructor/special-sessions/${quickStart.id}`
               }
-              className="shrink-0 rounded-lg bg-[#10B981] px-4 py-1.5 text-[12.5px] font-semibold text-white transition hover:bg-emerald-600"
+              className="shrink-0 rounded-[10px] bg-[#0E7490] px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-[#155E75]"
             >
               {quickStart.status === 'ongoing' ? 'Continue Session' : 'Start Session'}
             </Link>

@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState } from 'react'
 import { updateGroup, deleteGroup } from '@/modules/groups/actions'
@@ -23,7 +23,7 @@ export default function GroupDetailView({ group }: Props) {
     window.location.href = '/admin/groups'
   }
 
-  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15'
+  const cls = 'w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15'
 
   return (
     <div className="space-y-5">
@@ -135,7 +135,7 @@ export default function GroupDetailView({ group }: Props) {
       <div className="ds-card p-4">
         <Link
           href={`/admin/groups/${group.id}/edit`}
-          className="text-sm font-medium text-[#FF8A1F] hover:underline"
+          className="text-sm font-medium text-[#C2410C] hover:underline"
         >
           Full edit view →
         </Link>

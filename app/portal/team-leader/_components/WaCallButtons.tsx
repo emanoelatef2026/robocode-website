@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { buildWhatsAppUrl, buildTelUrl, normalizeEgyptPhone } from '@/lib/phone'
 
@@ -25,8 +25,8 @@ export default function WaCallButtons({ parentPhone, studentPhone, studentName, 
   const telUrl = telPhone ? `tel:+${telPhone}` : null
   const stuTelUrl = stuTel && stuTel !== telPhone ? `tel:+${stuTel}` : null
 
-  const btnSm  = 'flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-semibold transition'
-  const btnMd  = 'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-semibold transition'
+  const btnSm  = 'flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold transition'
+  const btnMd  = 'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold transition'
   const cls    = size === 'md' ? btnMd : btnSm
 
   return (

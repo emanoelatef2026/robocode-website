@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import { listStudentAssignments } from '@/modules/assignments/submissions/queries'
 import Link from 'next/link'
 
@@ -14,7 +14,7 @@ function statusBadge(status: string | null) {
   }
   const s = map[status] ?? { label: status, cls: 'bg-[#F3F4F6] text-[#4B5563]' }
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${s.cls}`}>
+    <span className={`inline-block rounded-full px-2 py-0.5 text-[12px] font-medium ${s.cls}`}>
       {s.label}
     </span>
   )
@@ -26,7 +26,7 @@ function dueBadge(dueAt: string | null, hasSubmission: boolean) {
   const now = new Date()
   const overdue = !hasSubmission && due < now
   return (
-    <span className={`text-[11px] ${overdue ? 'font-semibold text-[#EF4444]' : 'text-[#64748B]'}`}>
+    <span className={`text-[12px] ${overdue ? 'font-semibold text-[#EF4444]' : 'text-[#64748B]'}`}>
       {overdue ? 'Overdue · ' : ''}Due {due.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
     </span>
   )
@@ -51,7 +51,7 @@ export default async function StudentAssignmentsPage() {
 
       {pending.length > 0 && (
         <section>
-          <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
+          <h2 className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">
             To Do ({pending.length})
           </h2>
           <div className="space-y-2">
@@ -63,14 +63,14 @@ export default async function StudentAssignmentsPage() {
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-[#0B1F3A]">{a.title}</p>
-                  <p className="mt-0.5 text-[11px] text-[#64748B]">
+                  <p className="mt-0.5 text-[12px] text-[#64748B]">
                     {a.course_title && <span>{a.course_title} · </span>}
                     {a.type}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   {dueBadge(a.due_at, false)}
-                  <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] text-[#64748B]">
+                  <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[12px] text-[#64748B]">
                     {a.max_score} pts
                   </span>
                 </div>
@@ -82,7 +82,7 @@ export default async function StudentAssignmentsPage() {
 
       {submitted.length > 0 && (
         <section>
-          <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">
+          <h2 className="mb-2 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">
             Submitted ({submitted.length})
           </h2>
           <div className="space-y-2">
@@ -94,7 +94,7 @@ export default async function StudentAssignmentsPage() {
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-[#0B1F3A]">{a.title}</p>
-                  <p className="mt-0.5 text-[11px] text-[#64748B]">
+                  <p className="mt-0.5 text-[12px] text-[#64748B]">
                     {a.course_title && <span>{a.course_title} · </span>}
                     {a.type}
                   </p>
@@ -107,7 +107,7 @@ export default async function StudentAssignmentsPage() {
                     </span>
                   )}
                   {a.is_late && (
-                    <span className="text-[11px] text-orange-500">Late</span>
+                    <span className="text-[12px] text-orange-500">Late</span>
                   )}
                 </div>
               </Link>

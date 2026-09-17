@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import type { ReactNode } from 'react'
 
@@ -22,15 +22,15 @@ const ACCENT_CLASSES: Record<NonNullable<StatCardProps['accent']>, string> = {
 export function StatCard({ label, value, sub, icon, accent, className = '' }: StatCardProps) {
   const valueClass = accent ? ACCENT_CLASSES[accent] : 'text-[#1E293B]'
   return (
-    <div className={`flex flex-col gap-1 ds-card p-4 shadow-sm ${className}`}>
+    <div className={`flex flex-col gap-2 rounded-xl border border-[#D7E0EA] bg-white p-4 ${className}`}>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-[#64748B]">{label}</span>
+        <span className="text-[13px] font-normal leading-none text-[#64748B]">{label}</span>
         {icon && <span className="text-[#94A3B8]">{icon}</span>}
       </div>
-      <span className={`text-2xl font-bold tabular-nums ${valueClass}`}>
+      <span className={`text-[26px] font-bold leading-none tracking-[-0.03em] tabular-nums ${valueClass}`}>
         {value ?? '—'}
       </span>
-      {sub && <span className="text-[10px] text-[#94A3B8]">{sub}</span>}
+      {sub && <span className="text-[13px] font-normal text-[#64748B]">{sub}</span>}
     </div>
   )
 }

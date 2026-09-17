@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -79,7 +79,7 @@ export default function TemplatesModal({ templates }: Props) {
                 <button
                   type="button"
                   onClick={() => setFormModal({ mode: 'new' })}
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#e87c18]"
                 >
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                     <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -110,7 +110,7 @@ export default function TemplatesModal({ templates }: Props) {
                   placeholder="Search templates…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-lg border border-[#E2E8F0] py-2 pl-9 pr-3 text-sm text-[#0B1F3A] outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+                  className="w-full rounded-lg border border-[#E2E8F0] py-2 pl-9 pr-3 text-sm text-[#0B1F3A] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
                 />
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function TemplatesModal({ templates }: Props) {
                             <button
                               type="button"
                               onClick={() => setFormModal({ mode: 'edit', templateId: t.id })}
-                              className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                              className="text-xs font-medium text-[#C2410C] hover:underline"
                             >
                               Edit
                             </button>

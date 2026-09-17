@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 
 interface Props {
   label:     string;
@@ -27,25 +27,23 @@ export default function KpiCard({
 
   const card = (
     <div className={[
-      "rounded-[10px] border p-[10px_11px] transition-shadow duration-150",
+      "rounded-xl border border-[#D7E0EA] bg-white p-4 transition-[border-color,box-shadow] duration-150",
       href ? "cursor-pointer hover:shadow-[0_4px_16px_rgba(11,31,58,.10)]" : "",
-      isAlert
-        ? "border-[#FECACA] bg-[#FEF2F2]"
-        : "border-[#e7ebf1] bg-white",
+      isAlert ? "border-[#FECACA]" : "",
     ].join(" ")}>
 
       {/* label */}
-      <p className="text-[9.5px] font-semibold text-[#64748B] mb-[5px] truncate">{label}</p>
+      <p className="mb-2 truncate text-[13px] font-normal leading-none text-[#64748B]">{label}</p>
 
       {/* value */}
       <p className={[
-        "font-orbitron text-[19px] font-bold leading-none",
+        "text-[26px] font-bold leading-none tracking-[-0.03em] tabular-nums",
         isAlert ? "text-[#DC2626]" : "text-[#0B1F3A]",
       ].join(" ")}>
         {value}
       </p>
 
-      {sub && <p className="mt-1 text-[10px] text-[#94A3B8]">{sub}</p>}
+      {sub && <p className="mt-2 text-[13px] font-normal text-[#64748B]">{sub}</p>}
 
       {/* sparkline + delta row */}
       {(bars || delta !== undefined) && (

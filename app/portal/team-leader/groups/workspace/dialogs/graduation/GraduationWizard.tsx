@@ -38,7 +38,7 @@ const DECISION_COLORS: Record<GraduationDecision, string> = {
 
 function Spinner({ className = 'h-5 w-5' }: { className?: string }) {
   return (
-    <svg className={`${className} animate-spin text-[#FF8A1F]`} viewBox="0 0 24 24" fill="none">
+    <svg className={`${className} animate-spin text-[#C2410C]`} viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
     </svg>
@@ -346,7 +346,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                 {staleNotice.graduated_to_group_id && (
                   <button
                     onClick={() => { onSuccess(staleNotice.graduated_to_group_id as string); onClose() }}
-                    className="rounded-lg bg-[#FF8A1F] px-5 py-2 text-sm font-semibold text-white hover:bg-[#e87c18] transition"
+                    className="rounded-lg bg-[#C2410C] px-5 py-2 text-sm font-semibold text-white hover:bg-[#e87c18] transition"
                   >
                     View New Cohort →
                   </button>
@@ -358,7 +358,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
           {!checkingDraft && !staleNotice && (
             <>
               {resumed && (
-                <div className="flex items-center gap-2 rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-2.5 text-[12px] text-[#1D4ED8]">
+                <div className="flex items-center gap-2 rounded-xl border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-2.5 text-[13px] text-[#1D4ED8]">
                   <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                   </svg>
@@ -369,14 +369,14 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                 </div>
               )}
               {otherDrafts.length > 0 && (
-                <div className="rounded-xl border border-[#FED7AA] bg-[#FFFBEB] px-4 py-2.5 text-[12px] text-[#B45309]">
+                <div className="rounded-xl border border-[#FED7AA] bg-[#FFFBEB] px-4 py-2.5 text-[13px] text-[#B45309]">
                   {otherDrafts.map((o, i) => (
                     <div key={i}>⚠ {o.updated_by_name} also has a graduation draft in progress for this cohort (last edited {new Date(o.updated_at).toLocaleString()}).</div>
                   ))}
                 </div>
               )}
               {saveError && (
-                <div className="rounded-xl bg-[#FEE2E2] px-4 py-2 text-[12px] text-[#DC2626]">Draft save failed: {saveError}</div>
+                <div className="rounded-xl bg-[#FEE2E2] px-4 py-2 text-[13px] text-[#DC2626]">Draft save failed: {saveError}</div>
               )}
 
               {/* ═══ STEP 1 — Cohort Summary ═══ */}
@@ -422,7 +422,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                     <button
                       onClick={() => goTo(2)}
                       disabled={summaryLoading || !summary || summary.already_graduated}
-                      className="rounded-lg bg-[#FF8A1F] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
+                      className="rounded-lg bg-[#C2410C] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
                     >Next →</button>
                   </div>
                 </>
@@ -436,7 +436,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                     <>
                       {validation.blockers.length > 0 && (
                         <div className="space-y-1.5 rounded-xl border border-[#FECACA] bg-[#FEF2F2] p-3">
-                          {validation.blockers.map((b, i) => <p key={i} className="text-[12px] font-medium text-[#B91C1C]">✕ {b}</p>)}
+                          {validation.blockers.map((b, i) => <p key={i} className="text-[13px] font-medium text-[#B91C1C]">✕ {b}</p>)}
                         </div>
                       )}
                       {validation.warnings.length === 0 && validation.blockers.length === 0 && (
@@ -446,8 +446,8 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                       )}
                       {validation.warnings.map((w, i) => (
                         <div key={i} className="rounded-xl border border-[#FED7AA] bg-[#FFFBEB] p-3">
-                          <p className="text-[12px] font-semibold text-[#B45309]">⚠ {w.message}</p>
-                          <p className="mt-0.5 text-[11px] text-[#92400E]">{w.recommendation}</p>
+                          <p className="text-[13px] font-semibold text-[#B45309]">⚠ {w.message}</p>
+                          <p className="mt-0.5 text-[12px] text-[#92400E]">{w.recommendation}</p>
                         </div>
                       ))}
                     </>
@@ -457,7 +457,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                     <button
                       onClick={() => goTo(3)}
                       disabled={validationLoading || !validation || validation.blockers.length > 0}
-                      className="rounded-lg bg-[#FF8A1F] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
+                      className="rounded-lg bg-[#C2410C] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
                     >Next →</button>
                   </div>
                 </>
@@ -474,12 +474,12 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                           value={search}
                           onChange={e => setSearch(e.target.value)}
                           placeholder="Search students…"
-                          className="flex-1 min-w-[160px] rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] outline-none focus:border-[#FF8A1F]"
+                          className="flex-1 min-w-[160px] rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] outline-none focus:border-[#0E7490]"
                         />
                         <select
                           value={filterDecision}
                           onChange={e => setFilterDecision(e.target.value as WizardDecision | 'all')}
-                          className="rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-[12px] outline-none"
+                          className="rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-[13px] outline-none"
                         >
                           <option value="all">All decisions</option>
                           <option value="undecided">No Decision</option>
@@ -487,21 +487,21 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                             <option key={d} value={d}>{DECISION_LABELS[d]}</option>
                           ))}
                         </select>
-                        <button onClick={toggleSelectAll} className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[12px] font-medium text-[#374151] hover:bg-[#F8FAFC]">
+                        <button onClick={toggleSelectAll} className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-[13px] font-medium text-[#374151] hover:bg-[#F8FAFC]">
                           {filteredStudents.every(s => selectedIds.has(s.student_id)) && filteredStudents.length ? 'Select None' : 'Select All'}
                         </button>
                       </div>
 
                       {selectedIds.size > 0 && (
                         <div className="flex flex-wrap items-center gap-2 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] px-3 py-2">
-                          <span className="text-[12px] text-[#64748B]">{selectedIds.size} selected</span>
-                          <button onClick={() => bulkApply('recommended')} className="rounded-lg bg-[#EFF6FF] px-2.5 py-1 text-[11px] font-semibold text-[#1D4ED8] hover:bg-[#DBEAFE]">Apply Recommended to Selected</button>
+                          <span className="text-[13px] text-[#64748B]">{selectedIds.size} selected</span>
+                          <button onClick={() => bulkApply('recommended')} className="rounded-lg bg-[#EFF6FF] px-2.5 py-1 text-[12px] font-semibold text-[#1D4ED8] hover:bg-[#DBEAFE]">Apply Recommended to Selected</button>
                           {(Object.keys(DECISION_LABELS) as GraduationDecision[]).map(d => (
-                            <button key={d} onClick={() => bulkApply(d)} className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold ${DECISION_COLORS[d]}`}>
+                            <button key={d} onClick={() => bulkApply(d)} className={`rounded-lg px-2.5 py-1 text-[12px] font-semibold ${DECISION_COLORS[d]}`}>
                               Set: {DECISION_LABELS[d]}
                             </button>
                           ))}
-                          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-[11px] text-[#94A3B8] hover:text-[#374151]">Clear</button>
+                          <button onClick={() => setSelectedIds(new Set())} className="ml-auto text-[12px] text-[#94A3B8] hover:text-[#374151]">Clear</button>
                         </div>
                       )}
 
@@ -510,12 +510,12 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                           <thead className="sticky top-0 bg-[#F8FAFC]">
                             <tr className="border-b border-[#E2E8F0]">
                               <th className="w-8 px-3 py-2" />
-                              <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student</th>
-                              <th className="px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Att. %</th>
-                              <th className="px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Cert.</th>
-                              <th className="px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Balance</th>
-                              <th className="px-3 py-2 text-center text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Recommended</th>
-                              <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Decision</th>
+                              <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student</th>
+                              <th className="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Att. %</th>
+                              <th className="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Cert.</th>
+                              <th className="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Balance</th>
+                              <th className="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Recommended</th>
+                              <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Decision</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-[#F1F5F9]">
@@ -535,13 +535,13 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                                   <td className="px-3 py-2 text-center">{s.has_certificate ? '✓' : '—'}</td>
                                   <td className="px-3 py-2 text-center text-[#64748B]">{s.outstanding_balance > 0 ? s.outstanding_balance.toFixed(0) : '—'}</td>
                                   <td className="px-3 py-2 text-center">
-                                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${DECISION_COLORS[s.recommended_decision]}`}>{DECISION_LABELS[s.recommended_decision]}</span>
+                                    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${DECISION_COLORS[s.recommended_decision]}`}>{DECISION_LABELS[s.recommended_decision]}</span>
                                   </td>
                                   <td className="px-3 py-2">
                                     <select
                                       value={dec}
                                       onChange={e => setDecisionFor(s.student_id, e.target.value as WizardDecision)}
-                                      className={`rounded-lg border px-2 py-1 text-[11px] font-semibold outline-none ${dec === 'undecided' ? 'border-[#FCA5A5] bg-[#FEF2F2] text-[#B91C1C]' : 'border-[#E2E8F0]'}`}
+                                      className={`rounded-lg border px-2 py-1 text-[12px] font-semibold outline-none ${dec === 'undecided' ? 'border-[#FCA5A5] bg-[#FEF2F2] text-[#B91C1C]' : 'border-[#E2E8F0]'}`}
                                     >
                                       <option value="undecided">No Decision</option>
                                       {(Object.keys(DECISION_LABELS) as GraduationDecision[]).map(d => (
@@ -552,7 +552,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                                       <select
                                         value={transferTargets[s.student_id] ?? ''}
                                         onChange={e => setTransferTargets(prev => ({ ...prev, [s.student_id]: e.target.value }))}
-                                        className="mt-1 block rounded-lg border border-[#E2E8F0] px-2 py-1 text-[11px] outline-none"
+                                        className="mt-1 block rounded-lg border border-[#E2E8F0] px-2 py-1 text-[12px] outline-none"
                                       >
                                         <option value="">— choose target group —</option>
                                         {transferOptions.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
@@ -566,7 +566,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                         </table>
                       </div>
                       {!everyoneDecided && (
-                        <p className="text-[11px] text-[#B91C1C]">Every student must have an explicit decision before continuing.</p>
+                        <p className="text-[12px] text-[#B91C1C]">Every student must have an explicit decision before continuing.</p>
                       )}
                     </>
                   )}
@@ -580,7 +580,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                     <button
                       onClick={() => goTo(4)}
                       disabled={studentsLoading || !everyoneDecided}
-                      className="rounded-lg bg-[#FF8A1F] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
+                      className="rounded-lg bg-[#C2410C] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
                     >Next →</button>
                   </div>
                 </>
@@ -592,43 +592,43 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                   {draftLoading && <div className="flex justify-center py-10"><Spinner /></div>}
                   {draft && (
                     <div className="space-y-3">
-                      <div className="rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] px-4 py-2.5 text-[12px] text-[#1D4ED8]">
+                      <div className="rounded-xl bg-[#EFF6FF] border border-[#BFDBFE] px-4 py-2.5 text-[13px] text-[#1D4ED8]">
                         This cohort will be created as <strong>Draft</strong> — course, instructor, and schedule are configured in a guided step right after you commit.
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <label className="block">
-                          <span className="mb-1 block text-[12px] font-medium text-[#0B1F3A]">Name</span>
-                          <input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F]" />
+                          <span className="mb-1 block text-[13px] font-medium text-[#0B1F3A]">Name</span>
+                          <input value={draft.name} onChange={e => setDraft({ ...draft, name: e.target.value })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]" />
                         </label>
                         <label className="block">
-                          <span className="mb-1 block text-[12px] font-medium text-[#0B1F3A]">Semester</span>
+                          <span className="mb-1 block text-[13px] font-medium text-[#0B1F3A]">Semester</span>
                           <select value={draft.semester_id ?? ''} onChange={e => setDraft({ ...draft, semester_id: e.target.value || null })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none">
                             <option value="">— none —</option>
                             {semesterOptions.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                           </select>
                         </label>
                         <label className="block">
-                          <span className="mb-1 block text-[12px] font-medium text-[#0B1F3A]">Day of week</span>
-                          <input value={draft.day_of_week ?? ''} onChange={e => setDraft({ ...draft, day_of_week: e.target.value || null })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F]" />
+                          <span className="mb-1 block text-[13px] font-medium text-[#0B1F3A]">Day of week</span>
+                          <input value={draft.day_of_week ?? ''} onChange={e => setDraft({ ...draft, day_of_week: e.target.value || null })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]" />
                         </label>
                         <label className="block">
-                          <span className="mb-1 block text-[12px] font-medium text-[#0B1F3A]">Time</span>
-                          <input value={draft.time ?? ''} onChange={e => setDraft({ ...draft, time: e.target.value || null })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F]" />
+                          <span className="mb-1 block text-[13px] font-medium text-[#0B1F3A]">Time</span>
+                          <input value={draft.time ?? ''} onChange={e => setDraft({ ...draft, time: e.target.value || null })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]" />
                         </label>
                         <label className="block">
-                          <span className="mb-1 block text-[12px] font-medium text-[#0B1F3A]">Start date</span>
-                          <input type="date" value={draft.start_date ?? ''} onChange={e => setDraft({ ...draft, start_date: e.target.value || null })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F]" />
+                          <span className="mb-1 block text-[13px] font-medium text-[#0B1F3A]">Start date</span>
+                          <input type="date" value={draft.start_date ?? ''} onChange={e => setDraft({ ...draft, start_date: e.target.value || null })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]" />
                         </label>
                         <label className="block">
-                          <span className="mb-1 block text-[12px] font-medium text-[#0B1F3A]">Capacity</span>
-                          <input type="number" value={draft.capacity ?? ''} onChange={e => setDraft({ ...draft, capacity: e.target.value ? Number(e.target.value) : null })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F]" />
+                          <span className="mb-1 block text-[13px] font-medium text-[#0B1F3A]">Capacity</span>
+                          <input type="number" value={draft.capacity ?? ''} onChange={e => setDraft({ ...draft, capacity: e.target.value ? Number(e.target.value) : null })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]" />
                         </label>
                         <label className="block col-span-2">
-                          <span className="mb-1 block text-[12px] font-medium text-[#0B1F3A]">Room (reference only — set per-session when scheduling)</span>
-                          <input value={draft.room ?? ''} onChange={e => setDraft({ ...draft, room: e.target.value || null })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#FF8A1F]" />
+                          <span className="mb-1 block text-[13px] font-medium text-[#0B1F3A]">Room (reference only — set per-session when scheduling)</span>
+                          <input value={draft.room ?? ''} onChange={e => setDraft({ ...draft, room: e.target.value || null })} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]" />
                         </label>
                       </div>
-                      <p className="text-[11px] text-[#94A3B8]">
+                      <p className="text-[12px] text-[#94A3B8]">
                         Series, course, and instructor selections shown here are carried forward to the guided setup step after graduation is committed.
                       </p>
                     </div>
@@ -638,7 +638,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                     <button
                       onClick={() => goTo(5)}
                       disabled={draftLoading || !draft || !draft.name.trim()}
-                      className="rounded-lg bg-[#FF8A1F] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
+                      className="rounded-lg bg-[#C2410C] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
                     >Next →</button>
                   </div>
                 </>
@@ -658,20 +658,20 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                         ].map(([label, n]) => (
                           <div key={label as string} className="rounded-xl border border-[#E2E8F0] px-3 py-2.5">
                             <p className="text-lg font-bold text-[#0B1F3A]">{n as number}</p>
-                            <p className="text-[10px] uppercase tracking-wide text-[#94A3B8]">{label}</p>
+                            <p className="text-[11px] uppercase tracking-wide text-[#94A3B8]">{label}</p>
                           </div>
                         ))}
                       </div>
                       <div className="rounded-xl border border-[#E2E8F0] divide-y divide-[#F1F5F9]">
-                        <div className="px-4 py-2 text-[12px] font-semibold text-[#0B1F3A] bg-[#F8FAFC]">New Cohort</div>
-                        <div className="flex justify-between px-4 py-2 text-[12px]"><span className="text-[#64748B]">Name</span><span className="font-medium text-[#0B1F3A]">{preview.new_cohort.name}</span></div>
-                        <div className="flex justify-between px-4 py-2 text-[12px]"><span className="text-[#64748B]">Branch</span><span className="font-medium text-[#0B1F3A]">{preview.new_cohort.branch_name ?? '—'}</span></div>
-                        <div className="flex justify-between px-4 py-2 text-[12px]"><span className="text-[#64748B]">Schedule</span><span className="font-medium text-[#0B1F3A]">{[preview.new_cohort.day_of_week, preview.new_cohort.time].filter(Boolean).join(' · ') || '—'}</span></div>
+                        <div className="px-4 py-2 text-[13px] font-semibold text-[#0B1F3A] bg-[#F8FAFC]">New Cohort</div>
+                        <div className="flex justify-between px-4 py-2 text-[13px]"><span className="text-[#64748B]">Name</span><span className="font-medium text-[#0B1F3A]">{preview.new_cohort.name}</span></div>
+                        <div className="flex justify-between px-4 py-2 text-[13px]"><span className="text-[#64748B]">Branch</span><span className="font-medium text-[#0B1F3A]">{preview.new_cohort.branch_name ?? '—'}</span></div>
+                        <div className="flex justify-between px-4 py-2 text-[13px]"><span className="text-[#64748B]">Schedule</span><span className="font-medium text-[#0B1F3A]">{[preview.new_cohort.day_of_week, preview.new_cohort.time].filter(Boolean).join(' · ') || '—'}</span></div>
                       </div>
                       <div className="rounded-xl border border-[#E2E8F0] divide-y divide-[#F1F5F9]">
-                        <div className="px-4 py-2 text-[12px] font-semibold text-[#0B1F3A] bg-[#F8FAFC]">Historical Cohort (unchanged)</div>
-                        <div className="flex justify-between px-4 py-2 text-[12px]"><span className="text-[#64748B]">Name</span><span className="font-medium text-[#0B1F3A]">{preview.historical_cohort.name}</span></div>
-                        <div className="flex justify-between px-4 py-2 text-[12px]"><span className="text-[#64748B]">Students</span><span className="font-medium text-[#0B1F3A]">{preview.historical_cohort.student_count}</span></div>
+                        <div className="px-4 py-2 text-[13px] font-semibold text-[#0B1F3A] bg-[#F8FAFC]">Historical Cohort (unchanged)</div>
+                        <div className="flex justify-between px-4 py-2 text-[13px]"><span className="text-[#64748B]">Name</span><span className="font-medium text-[#0B1F3A]">{preview.historical_cohort.name}</span></div>
+                        <div className="flex justify-between px-4 py-2 text-[13px]"><span className="text-[#64748B]">Students</span><span className="font-medium text-[#0B1F3A]">{preview.historical_cohort.student_count}</span></div>
                       </div>
                     </div>
                   )}
@@ -680,7 +680,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                     <button
                       onClick={() => goTo(6)}
                       disabled={previewLoading || !preview}
-                      className="rounded-lg bg-[#FF8A1F] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
+                      className="rounded-lg bg-[#C2410C] px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18] disabled:opacity-40"
                     >Next →</button>
                   </div>
                 </>
@@ -690,7 +690,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
               {step === 6 && preview && (
                 <>
                   <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
-                    <p className="text-[12px] font-semibold text-[#0B1F3A]">Decision counts</p>
+                    <p className="text-[13px] font-semibold text-[#0B1F3A]">Decision counts</p>
                     <p className="mt-1 text-[13px] text-[#374151]">
                       {decisionCountsSummary({
                         continue: preview.continuing.length, graduate: preview.graduating.length, hold: preview.held.length,
@@ -700,14 +700,14 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                   </div>
 
                   <div className="rounded-xl border border-[#E2E8F0] px-4 py-3">
-                    <p className="text-[12px] font-semibold text-[#0B1F3A]">New cohort</p>
+                    <p className="text-[13px] font-semibold text-[#0B1F3A]">New cohort</p>
                     <p className="mt-1 text-[13px] text-[#374151]">{preview.new_cohort.name} — {preview.new_cohort.branch_name} — will be created as Draft</p>
                   </div>
 
                   <div className="max-h-[30vh] overflow-y-auto rounded-xl border border-[#E2E8F0]">
-                    <table className="w-full text-[12px]">
+                    <table className="w-full text-[13px]">
                       <thead className="sticky top-0 bg-[#F8FAFC]">
-                        <tr><th className="px-3 py-2 text-left text-[10px] font-semibold uppercase text-[#94A3B8]">Student</th><th className="px-3 py-2 text-left text-[10px] font-semibold uppercase text-[#94A3B8]">Decision</th></tr>
+                        <tr><th className="px-3 py-2 text-left text-[11px] font-semibold uppercase text-[#94A3B8]">Student</th><th className="px-3 py-2 text-left text-[11px] font-semibold uppercase text-[#94A3B8]">Decision</th></tr>
                       </thead>
                       <tbody className="divide-y divide-[#F1F5F9]">
                         {students.map(s => {
@@ -715,7 +715,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                           return (
                             <tr key={s.student_id}>
                               <td className="px-3 py-1.5 font-medium text-[#0B1F3A]">{s.student_name}</td>
-                              <td className="px-3 py-1.5"><span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${DECISION_COLORS[d]}`}>{DECISION_LABELS[d]}</span></td>
+                              <td className="px-3 py-1.5"><span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${DECISION_COLORS[d]}`}>{DECISION_LABELS[d]}</span></td>
                             </tr>
                           )
                         })}
@@ -724,8 +724,8 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                   </div>
 
                   <div className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3">
-                    <p className="text-[12px] font-bold text-[#B91C1C]">This action cannot be undone.</p>
-                    <p className="mt-1 text-[11px] text-[#B91C1C]">
+                    <p className="text-[13px] font-bold text-[#B91C1C]">This action cannot be undone.</p>
+                    <p className="mt-1 text-[12px] text-[#B91C1C]">
                       The current cohort&apos;s history is preserved permanently, but a cohort can only be graduated once.
                       Double-check the decisions above before confirming.
                     </p>
@@ -733,10 +733,10 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
 
                   <label className="flex items-start gap-2.5 rounded-xl border border-[#E2E8F0] p-3">
                     <input type="checkbox" checked={confirmChecked} onChange={e => setConfirmChecked(e.target.checked)} className="mt-0.5 accent-[#FF8A1F]" />
-                    <span className="text-[12px] text-[#374151]">I have reviewed the above and confirm this graduation.</span>
+                    <span className="text-[13px] text-[#374151]">I have reviewed the above and confirm this graduation.</span>
                   </label>
 
-                  {commitError && <div className="rounded-xl bg-[#FEE2E2] px-4 py-2.5 text-[12px] text-[#DC2626]">{commitError}</div>}
+                  {commitError && <div className="rounded-xl bg-[#FEE2E2] px-4 py-2.5 text-[13px] text-[#DC2626]">{commitError}</div>}
 
                   <div className="flex items-center justify-between pt-2">
                     <button onClick={() => setStep(5)} disabled={submitting} className="text-sm text-[#64748B] hover:text-[#0B1F3A] disabled:opacity-40">← Back</button>
@@ -772,13 +772,13 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                   </div>
 
                   <div className="mx-auto max-w-sm rounded-xl border border-[#FED7AA] bg-[#FFFBEB] p-4 text-left">
-                    <p className="text-[12px] font-bold text-[#B45309]">⚠ Draft – Setup Required</p>
-                    <p className="mt-1 text-[11px] text-[#92400E]">
+                    <p className="text-[13px] font-bold text-[#B45309]">⚠ Draft – Setup Required</p>
+                    <p className="mt-1 text-[12px] text-[#92400E]">
                       Course, instructor, and schedule were not configured automatically. Open the new cohort and
                       use Edit Group to apply the settings you chose in Step 4{draft?.course_id || draft?.instructor_id ? ':' : '.'}
                     </p>
                     {draft && (draft.course_id || draft.instructor_id || draft.room) && (
-                      <ul className="mt-2 space-y-0.5 text-[11px] text-[#92400E]">
+                      <ul className="mt-2 space-y-0.5 text-[12px] text-[#92400E]">
                         {draft.instructor_id && <li>• Instructor selected in Step 4</li>}
                         {draft.course_id && <li>• Course selected in Step 4</li>}
                         {draft.room && <li>• Room: {draft.room}</li>}
@@ -788,7 +788,7 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                   </div>
 
                   <div className="flex items-center justify-center gap-3">
-                    <button onClick={() => { onSuccess(result.new_group_id); onClose() }} className="rounded-lg bg-[#FF8A1F] px-6 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18]">
+                    <button onClick={() => { onSuccess(result.new_group_id); onClose() }} className="rounded-lg bg-[#C2410C] px-6 py-2 text-sm font-semibold text-white transition hover:bg-[#e87c18]">
                       Open New Cohort →
                     </button>
                   </div>

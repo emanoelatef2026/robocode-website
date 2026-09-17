@@ -28,7 +28,7 @@ export function RiskBadge({ level }: { level: 'HIGH' | 'MEDIUM' | 'LOW' }) {
             : level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]'
                                  : 'bg-[#E7F8EE] text-[#15803D]'
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${cls}`}>
+    <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${cls}`}>
       {level}
     </span>
   )

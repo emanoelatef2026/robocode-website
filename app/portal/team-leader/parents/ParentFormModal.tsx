@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -242,9 +242,9 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                     >
                       <span>
                         <span className="block text-xs font-medium text-[#0B1F3A]">{c.name}</span>
-                        <span className="block text-[11px] text-[#94A3B8]">{c.email} · {c.childCount} child{c.childCount === 1 ? '' : 'ren'} linked</span>
+                        <span className="block text-[12px] text-[#94A3B8]">{c.email} · {c.childCount} child{c.childCount === 1 ? '' : 'ren'} linked</span>
                       </span>
-                      <span className="text-[11px] font-semibold text-[#F59E0B]">Link</span>
+                      <span className="text-[12px] font-semibold text-[#F59E0B]">Link</span>
                     </button>
                   ))}
                 </div>
@@ -252,7 +252,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                   type="button"
                   onClick={() => resubmitWith({ force_new_parent: true })}
                   disabled={isPending}
-                  className="text-[11px] font-medium text-[#64748B] hover:underline disabled:opacity-50"
+                  className="text-[12px] font-medium text-[#64748B] hover:underline disabled:opacity-50"
                 >
                   None of these — create a separate new account
                 </button>
@@ -275,7 +275,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                   onChange={e => setName(e.target.value)}
                   placeholder="e.g. Ahmed Mohamed"
                   required
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#0E7490] focus:outline-none"
                 />
               </div>
 
@@ -285,7 +285,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                 <select
                   value={relation}
                   onChange={e => setRelation(e.target.value)}
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none"
                 >
                   {RELATIONS.map(r => (
                     <option key={r.value} value={r.value}>{r.label}</option>
@@ -304,21 +304,21 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                   placeholder="01xxxxxxxxx"
                   type="tel"
                   required
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#0E7490] focus:outline-none"
                 />
               </div>
 
               {/* Phone 2 */}
               <div>
                 <label className="block text-xs font-medium text-[#374151] mb-1">
-                  Phone 2 <span className="text-[#94A3B8] text-[10px]">(optional)</span>
+                  Phone 2 <span className="text-[#94A3B8] text-[11px]">(optional)</span>
                 </label>
                 <input
                   value={phone2}
                   onChange={e => setPhone2(e.target.value)}
                   placeholder="Secondary phone"
                   type="tel"
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#0E7490] focus:outline-none"
                 />
               </div>
 
@@ -342,14 +342,14 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
               {/* Notes */}
               <div>
                 <label className="block text-xs font-medium text-[#374151] mb-1">
-                  Notes <span className="text-[#94A3B8] text-[10px]">(optional)</span>
+                  Notes <span className="text-[#94A3B8] text-[11px]">(optional)</span>
                 </label>
                 <textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
                   rows={2}
                   placeholder="Any notes about this parent..."
-                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none resize-none"
+                  className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#0E7490] focus:outline-none resize-none"
                 />
               </div>
             </section>
@@ -371,7 +371,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                       <div>
                         <p className="text-sm font-medium text-[#0B1F3A]">{c.student_name}</p>
                         {c.student_code && (
-                          <p className="text-[11px] text-[#94A3B8]">{c.student_code}</p>
+                          <p className="text-[12px] text-[#94A3B8]">{c.student_code}</p>
                         )}
                       </div>
                       <button
@@ -410,23 +410,23 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                       <label
                         key={s.student_id}
                         className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors ${
-                          checked ? 'bg-[#FF8A1F]/5' : 'hover:bg-[#F8FAFC]'
+                          checked ? 'bg-[#C2410C]/5' : 'hover:bg-[#F8FAFC]'
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={checked}
                           onChange={() => toggleStudentSelect(s.student_id)}
-                          className="h-4 w-4 rounded border-[#CBD5E1] text-[#FF8A1F] focus:ring-[#FF8A1F]"
+                          className="h-4 w-4 rounded border-[#CBD5E1] text-[#C2410C] focus:ring-[#0E7490]"
                         />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium text-[#0B1F3A] truncate">{s.student_name}</p>
-                          <p className="text-[11px] text-[#94A3B8] truncate">
+                          <p className="text-[12px] text-[#94A3B8] truncate">
                             {[s.student_code, s.group_name, s.branch_name].filter(Boolean).join(' · ')}
                           </p>
                         </div>
                         {s.age !== null && (
-                          <span className="shrink-0 text-[11px] text-[#94A3B8]">Age {s.age}</span>
+                          <span className="shrink-0 text-[12px] text-[#94A3B8]">Age {s.age}</span>
                         )}
                       </label>
                     )
@@ -434,8 +434,8 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                 </div>
 
                 {selectedStudentIds.length > 0 && (
-                  <div className="px-3 py-2 bg-[#FF8A1F]/5 border-t border-[#E2E8F0]">
-                    <p className="text-xs font-medium text-[#FF8A1F]">
+                  <div className="px-3 py-2 bg-[#C2410C]/5 border-t border-[#E2E8F0]">
+                    <p className="text-xs font-medium text-[#C2410C]">
                       {selectedStudentIds.length} student{selectedStudentIds.length > 1 ? 's' : ''} selected
                       {isEdit ? ' to add' : ''}
                     </p>
@@ -444,7 +444,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
               </div>
 
               {!isEdit && selectedStudentIds.length === 0 && (
-                <p className="text-[11px] text-[#94A3B8]">Select at least one student to link this parent to.</p>
+                <p className="text-[12px] text-[#94A3B8]">Select at least one student to link this parent to.</p>
               )}
             </section>
 
@@ -473,7 +473,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                   <h3 className="text-xs font-semibold text-[#64748B] uppercase tracking-wide">
                     Portal Access
                   </h3>
-                  <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-semibold text-[#15803D]">
+                  <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-semibold text-[#15803D]">
                     Active
                   </span>
                 </div>
@@ -509,7 +509,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                       <button
                         type="button"
                         onClick={() => setPassword(generatePasswordSuggestion())}
-                        className="text-[11px] font-semibold text-[#FF8A1F] hover:underline"
+                        className="text-[12px] font-semibold text-[#C2410C] hover:underline"
                       >
                         Generate
                       </button>
@@ -520,7 +520,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
                       placeholder={hasPortal ? 'Leave blank to keep current password' : 'Min. 6 characters'}
                       type="text"
                       autoComplete="new-password"
-                      className="w-full ds-card px-3 py-2.5 text-sm font-mono text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
+                      className="w-full ds-card px-3 py-2.5 text-sm font-mono text-[#0B1F3A] placeholder-[#94A3B8] focus:border-[#0E7490] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -542,7 +542,7 @@ export default function ParentFormModal({ mode, parent: p, studentOptions, onClo
               type="submit"
               form="parent-form"
               disabled={isPending || (!isEdit && selectedStudentIds.length === 0) || !name.trim()}
-              className="flex-1 rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 rounded-xl bg-[#C2410C] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPending
                 ? (isEdit ? 'Saving…' : 'Adding…')

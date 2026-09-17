@@ -48,7 +48,7 @@ function NoteForm({ studentId, studentName, groupId, scheduleId, onClose }: Prop
 
       {/* Category */}
       <div>
-        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+        <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">
           Category
         </label>
         <div className="flex flex-wrap gap-1.5">
@@ -59,7 +59,7 @@ function NoteForm({ studentId, studentName, groupId, scheduleId, onClose }: Prop
               onClick={() => setCategory(c.value)}
               className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
                 category === c.value
-                  ? 'border-[#FF8A1F] bg-[#FFF1E2] text-[#FF8A1F]'
+                  ? 'border-[#C2410C] bg-[#FFF7ED] text-[#C2410C]'
                   : 'border-[#E2E8F0] bg-white text-[#64748B] hover:border-[#94A3B8]'
               }`}
             >
@@ -71,7 +71,7 @@ function NoteForm({ studentId, studentName, groupId, scheduleId, onClose }: Prop
 
       {/* Severity */}
       <div>
-        <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+        <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">
           Severity
         </label>
         <div className="flex gap-1.5">
@@ -96,7 +96,7 @@ function NoteForm({ studentId, studentName, groupId, scheduleId, onClose }: Prop
         required
         rows={3}
         placeholder={`Note about ${studentName}…`}
-        className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+        className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#C2410C] focus:outline-none"
       />
 
       {/* Private + submit */}
@@ -111,7 +111,7 @@ function NoteForm({ studentId, studentName, groupId, scheduleId, onClose }: Prop
             Cancel
           </button>
           <button type="submit" disabled={pending}
-            className="rounded-lg bg-[#FF8A1F] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#e07818] disabled:opacity-60 transition">
+            className="rounded-lg bg-[#C2410C] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#9A3412] disabled:opacity-60 transition">
             {pending ? 'Saving…' : 'Add Note'}
           </button>
         </div>
@@ -133,7 +133,7 @@ export default function StudentNoteModal({ studentId, studentName, groupId, sche
         aria-label={`Add note for ${studentName}`}
         title="Add student note"
         onClick={() => setOpen(true)}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-[#94A3B8] transition hover:text-[#FF8A1F]"
+        className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-[#94A3B8] transition hover:text-[#9A3412]"
       >
         <span className="text-[15px]">📝</span>
       </button>
@@ -141,10 +141,10 @@ export default function StudentNoteModal({ studentId, studentName, groupId, sche
       {open && (
         <div
           ref={backdropRef}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          className="ds-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
           onMouseDown={(e) => { if (e.target === backdropRef.current) close() }}
         >
-          <div className="w-full max-w-sm rounded-xl border border-[#E2E8F0] bg-white p-5 shadow-xl">
+          <div className="ds-modal-panel w-full max-w-sm p-5">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-semibold text-[#0B1F3A]">Add Note</h3>

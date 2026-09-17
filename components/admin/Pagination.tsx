@@ -50,7 +50,7 @@ export default function Pagination({ page, totalPages, total, perPage }: Props) 
                 className={[
                   "flex h-9 w-9 items-center justify-center rounded-md border text-xs font-medium transition",
                   p === page
-                    ? "border-[#FF8A1F] bg-[#FF8A1F] text-white"
+                    ? "border-[#0E7490] bg-[#C2410C] text-white"
                     : "border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1] hover:text-[#0B1F3A]",
                 ].join(" ")}
               >

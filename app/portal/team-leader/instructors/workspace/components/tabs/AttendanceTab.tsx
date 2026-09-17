@@ -19,7 +19,7 @@ export function AttendanceTab({ stats, groups }: {
       <div>
         <SectionLabel>Submission Compliance</SectionLabel>
         <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-          <div className="flex justify-between text-[12px] mb-2">
+          <div className="flex justify-between text-[13px] mb-2">
             <span className="text-[#64748B]">{stats.sessions_with_attendance} sessions with attendance</span>
             <span className={`font-bold ${attColor(stats.compliance_rate)}`}>{stats.compliance_rate}%</span>
           </div>
@@ -29,7 +29,7 @@ export function AttendanceTab({ stats, groups }: {
               style={{ width: `${stats.compliance_rate}%` }}
             />
           </div>
-          <div className="mt-1.5 flex justify-between text-[10px] text-[#94A3B8]">
+          <div className="mt-1.5 flex justify-between text-[11px] text-[#94A3B8]">
             <span>{stats.sessions_with_attendance} submitted</span>
             <span>{stats.sessions_missing_attendance} missing</span>
           </div>
@@ -45,7 +45,7 @@ export function AttendanceTab({ stats, groups }: {
                 <div className="flex items-center justify-between mb-1.5">
                   <div>
                     <p className="text-[13px] font-semibold text-[#0B1F3A]">{g.name}</p>
-                    <p className="text-[10px] text-[#94A3B8]">{g.sessions_done} sessions · {g.student_count} students · {g.branch_name}</p>
+                    <p className="text-[11px] text-[#94A3B8]">{g.sessions_done} sessions · {g.student_count} students · {g.branch_name}</p>
                   </div>
                   <span className={`text-[18px] font-bold ${attColor(g.attendance_rate)}`}>{g.attendance_rate}%</span>
                 </div>

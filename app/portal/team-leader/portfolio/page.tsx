@@ -1,4 +1,4 @@
-﻿import { requirePermission } from '@/modules/rbac/guards'
+import { requirePermission } from '@/modules/rbac/guards'
 import { listAllProjectsForTL } from '@/modules/portfolio/queries'
 import { PROJECT_STATUS_CONFIG, BADGE_EMOJIS } from '@/modules/portfolio/types'
 import { getPortfolioStatusCounts } from '@/modules/tl-dashboard/queries'
@@ -40,14 +40,14 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
           { key: 'pending_review',    label: 'Pending Review',    color: 'text-[#F59E0B]'  },
           { key: 'approved',          label: 'Approved',          color: 'text-[#10B981]'  },
           { key: 'needs_improvement', label: 'Needs Improvement', color: 'text-[#EF4444]'    },
-          { key: 'featured',          label: 'Featured',          color: 'text-[#FF8A1F]'  },
+          { key: 'featured',          label: 'Featured',          color: 'text-[#C2410C]'  },
         ].map(({ key, label, color }) => (
           <Link
             key={key}
             href={`/portal/team-leader/portfolio?tab=${key}`}
-            className={`min-w-0 rounded-xl border bg-white px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1] ${tab === key ? 'border-[#FF8A1F]' : 'border-[#E2E8F0]'}`}
+            className={`min-w-0 rounded-xl border bg-white px-2 py-1.5 md:p-4 transition hover:border-[#CBD5E1] ${tab === key ? 'border-[#0E7490]' : 'border-[#E2E8F0]'}`}
           >
-            <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[10px]">{label}</p>
+            <p className="truncate text-[8px] font-semibold uppercase tracking-wide text-[#94A3B8] md:text-[11px]">{label}</p>
             <p className={`mt-0.5 truncate text-[13px] font-bold leading-none md:text-2xl ${color}`}>{counts[key] ?? 0}</p>
           </Link>
         ))}
@@ -62,7 +62,7 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
             className={[
               'flex-1 rounded-lg px-3 py-2 text-center text-sm font-medium transition',
               tab === t.key
-                ? 'bg-[#FF8A1F] text-white'
+                ? 'bg-[#C2410C] text-white'
                 : 'text-[#64748B] hover:bg-[#F8FAFC]',
             ].join(' ')}
           >
@@ -107,7 +107,7 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
                         {p.is_featured && (
                           <span className="text-sm" title="Featured">⭐</span>
                         )}
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusCfg.cls}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
                           {statusCfg.label}
                         </span>
                       </div>
@@ -124,7 +124,7 @@ export default async function TLPortfolioPage({ searchParams }: Props) {
                         </span>
                       )}
                       {p.final_score != null && (
-                        <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-medium text-[#15803D]">
+                        <span className="rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-medium text-[#15803D]">
                           Score: {p.final_score}
                         </span>
                       )}

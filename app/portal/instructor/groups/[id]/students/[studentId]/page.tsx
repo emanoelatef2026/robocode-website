@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import {
   getInstructorByUserId,
   getStudentProfileForInstructor,
@@ -22,7 +22,7 @@ interface Props { params: Promise<{ id: string; studentId: string }> }
 const SUB_META: Record<string, { label: string; cls: string }> = {
   not_submitted: { label: 'Not submitted', cls: 'bg-[#F1F5F9] text-[#64748B]'         },
   submitted:     { label: 'Submitted',     cls: 'bg-[#FFFBEB] text-[#B45309]'          },
-  resubmitted:   { label: 'Resubmitted',   cls: 'bg-purple-100 text-purple-700'        },
+  resubmitted:   { label: 'Resubmitted',   cls: 'bg-[#E0F7FA] text-[#0E7490]'        },
   graded:        { label: 'Graded',        cls: 'bg-[#E7F8EE] text-[#15803D]'          },
   returned:      { label: 'Returned',      cls: 'bg-[#EFF6FF] text-[#1D4ED8]'            },
 }
@@ -107,7 +107,7 @@ export default async function StudentProfilePage({ params }: Props) {
               ].map(({ label, value, color, bg }) => (
                 <div key={label} className={`rounded-lg ${bg} px-2 py-2.5 text-center`}>
                   <p className={`text-lg font-bold leading-none ${color}`}>{value}</p>
-                  <p className="mt-1 text-[10px] text-[#94A3B8]">{label}</p>
+                  <p className="mt-1 text-[11px] text-[#94A3B8]">{label}</p>
                 </div>
               ))}
             </div>
@@ -147,12 +147,12 @@ export default async function StudentProfilePage({ params }: Props) {
                 <div className="absolute -left-4.5 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#94A3B8]" />
                 <div className="flex items-center gap-1.5">
                   <p className="text-xs font-medium text-[#0B1F3A]">{TIMELINE_EVENT_LABELS[t.event_type]}</p>
-                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${TIMELINE_SEVERITY_COLORS[t.severity]}`}>
+                  <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${TIMELINE_SEVERITY_COLORS[t.severity]}`}>
                     {t.severity}
                   </span>
                 </div>
                 {t.notes && <p className="mt-0.5 text-xs text-[#64748B]">{t.notes}</p>}
-                <p className="mt-0.5 text-[10px] text-[#94A3B8]">
+                <p className="mt-0.5 text-[11px] text-[#94A3B8]">
                   {new Date(t.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   {t.created_by_name ? ` · ${t.created_by_name}` : ''}
                 </p>
@@ -198,7 +198,7 @@ export default async function StudentProfilePage({ params }: Props) {
 
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-[#0B1F3A]">{a.title}</p>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11px] text-[#94A3B8]">
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[12px] text-[#94A3B8]">
                       {due && <span>Due {due}</span>}
                       {a.is_late && (
                         <>
@@ -220,7 +220,7 @@ export default async function StudentProfilePage({ params }: Props) {
                   </div>
 
                   <div className="shrink-0 text-right">
-                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${meta.cls}`}>
+                    <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${meta.cls}`}>
                       {meta.label}
                     </span>
                     {a.score !== null && (
@@ -238,7 +238,7 @@ export default async function StudentProfilePage({ params }: Props) {
       <div className="ds-card px-4 py-3.5">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-semibold text-[#0B1F3A]">Notes</p>
-          <span className="rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[10px] font-medium text-[#FF8A1F]">
+          <span className="rounded-full bg-[#FFF7ED] px-2 py-0.5 text-[11px] font-medium text-[#C2410C]">
             Instructor only
           </span>
         </div>
@@ -257,10 +257,10 @@ export default async function StudentProfilePage({ params }: Props) {
               }`}>
                 {/* Timeline dot */}
                 <div className={`absolute -left-4.5 top-3.5 h-2.5 w-2.5 rounded-full border-2 border-white ${
-                  isPinned ? 'bg-[#EF4444]' : 'bg-[#FF8A1F]'
+                  isPinned ? 'bg-[#EF4444]' : 'bg-[#C2410C]'
                 }`} />
                 {isPinned && (
-                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-[#DC2626]">📌 Important Note</p>
+                  <p className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-[#DC2626]">📌 Important Note</p>
                 )}
 
                 <div className="flex items-start justify-between gap-2">
@@ -270,7 +270,7 @@ export default async function StudentProfilePage({ params }: Props) {
                   )}
                 </div>
 
-                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[10px] text-[#94A3B8]">
+                <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] text-[#94A3B8]">
                   <span className="font-medium text-[#64748B]">{n.author_name}</span>
                   <span>·</span>
                   <span>
@@ -287,7 +287,7 @@ export default async function StudentProfilePage({ params }: Props) {
                   {(n.visibility === 'PRIVATE_INSTRUCTOR' || n.visibility === 'PRIVATE_TEAM_LEADER') && (
                     <>
                       <span>·</span>
-                      <span className="text-[#FF8A1F]">private</span>
+                      <span className="text-[#C2410C]">private</span>
                     </>
                   )}
                 </div>
@@ -320,7 +320,7 @@ export default async function StudentProfilePage({ params }: Props) {
                   </div>
                 </div>
                 {e.feedback && <p className="mt-1 text-xs text-[#64748B]">{e.feedback}</p>}
-                <p className="mt-1 text-[10px] text-[#94A3B8]">
+                <p className="mt-1 text-[11px] text-[#94A3B8]">
                   {new Date(e.evaluated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
               </div>
@@ -333,7 +333,7 @@ export default async function StudentProfilePage({ params }: Props) {
       <div className="ds-card px-4 py-3.5">
         <div className="mb-3 flex items-center justify-between">
           <p className="text-sm font-semibold text-[#0B1F3A]">Competitions</p>
-          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[10px] font-medium text-[#64748B]">
+          <span className="rounded-full bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-medium text-[#64748B]">
             Logged by team leader
           </span>
         </div>
@@ -375,7 +375,7 @@ export default async function StudentProfilePage({ params }: Props) {
                     {c.certificate_code} · {new Date(c.issued_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[10px] font-medium capitalize text-[#15803D]">
+                <span className="shrink-0 rounded-full bg-[#E7F8EE] px-2 py-0.5 text-[11px] font-medium capitalize text-[#15803D]">
                   {c.status}
                 </span>
               </div>
@@ -390,7 +390,7 @@ export default async function StudentProfilePage({ params }: Props) {
           <p className="text-sm font-semibold text-[#0B1F3A]">Portfolio &amp; Achievements</p>
           <Link
             href={`/portal/instructor/portfolio?tab=pending_review`}
-            className="text-xs font-medium text-[#FF8A1F] hover:underline"
+            className="text-xs font-medium text-[#C2410C] hover:underline"
           >
             Review projects →
           </Link>
@@ -402,7 +402,7 @@ export default async function StudentProfilePage({ params }: Props) {
           <div className="space-y-4">
             {portfolioProjects.length > 0 && (
               <div>
-                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+                <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">
                   Projects ({portfolioProjects.length})
                 </p>
                 <div className="divide-y divide-[#F1F5F9]">
@@ -413,7 +413,7 @@ export default async function StudentProfilePage({ params }: Props) {
                     return (
                       <div key={p.id} className="flex items-center justify-between gap-2 py-2">
                         <p className="min-w-0 flex-1 truncate text-sm text-[#0B1F3A]">{p.title}</p>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${statusCfg.cls}`}>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusCfg.cls}`}>
                           {statusCfg.label}
                         </span>
                       </div>
@@ -425,7 +425,7 @@ export default async function StudentProfilePage({ params }: Props) {
 
             {(portfolio?.badges.length ?? 0) > 0 && (
               <div>
-                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Badges</p>
+                <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Badges</p>
                 <div className="flex flex-wrap gap-1.5">
                   {portfolio!.badges.map((b) => (
                     <span key={b.id} className="rounded-full bg-[#FFFBEB] px-2.5 py-1 text-xs font-medium text-[#B45309]">
@@ -438,13 +438,13 @@ export default async function StudentProfilePage({ params }: Props) {
 
             {(portfolio?.achievements.length ?? 0) > 0 && (
               <div>
-                <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Achievements</p>
+                <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">Achievements</p>
                 <div className="divide-y divide-[#F1F5F9]">
                   {portfolio!.achievements.map((a) => (
                     <div key={a.id} className="py-2">
                       <p className="text-sm font-medium text-[#0B1F3A]">{a.title}</p>
                       {a.description && <p className="text-xs text-[#64748B]">{a.description}</p>}
-                      <p className="mt-0.5 text-[10px] text-[#94A3B8]">
+                      <p className="mt-0.5 text-[11px] text-[#94A3B8]">
                         {new Date(a.date_awarded).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                     </div>

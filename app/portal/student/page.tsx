@@ -33,10 +33,10 @@ function LeaderboardCTA({ rank, total }: { rank: number; total: number }) {
         <span className="text-2xl">{medal}</span>
         <div>
           <p className="text-[12.5px] font-bold text-white">Group Leaderboard</p>
-          <p className="text-[10px] text-white/50">You are #{rank} of {total} students</p>
+          <p className="text-[11px] text-white/50">You are #{rank} of {total} students</p>
         </div>
       </div>
-      <span className="rounded-full bg-[#FF8A1F] px-2.5 py-1 text-[10px] font-bold text-white">View →</span>
+      <span className="rounded-full bg-[#FF8A1F] px-2.5 py-1 text-[11px] font-bold text-white">View →</span>
     </Link>
   )
 }
@@ -53,7 +53,7 @@ function QuickActionsRow() {
   ]
   return (
     <section>
-      <h2 className="mb-2 px-0.5 text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+      <h2 className="mb-2 px-0.5 text-[12px] font-bold uppercase tracking-wider text-[#64748B]">
         Quick Actions
       </h2>
       <div className="flex flex-wrap gap-2">
@@ -61,7 +61,7 @@ function QuickActionsRow() {
           <Link
             key={a.href}
             href={a.href}
-            className="flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-white px-3.5 py-2 text-[12px] font-semibold text-[#0B1F3A] transition hover:border-[#FF8A1F] active:scale-[0.97]"
+            className="flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-white px-3.5 py-2 text-[13px] font-semibold text-[#0B1F3A] transition hover:border-[#FF8A1F] active:scale-[0.97]"
           >
             <span>{a.icon}</span>{a.label}
           </Link>
@@ -126,7 +126,7 @@ function MissionsCard({ actions }: { actions: Array<{ label: string; href: strin
 
   return (
     <section>
-      <h2 className="mb-2 px-0.5 text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+      <h2 className="mb-2 px-0.5 text-[12px] font-bold uppercase tracking-wider text-[#64748B]">
         🎯 Your Missions
       </h2>
       <div className="space-y-2">
@@ -142,7 +142,7 @@ function MissionsCard({ actions }: { actions: Array<{ label: string; href: strin
                 {c.icon}
               </div>
               <p className="flex-1 text-[12.5px] font-medium text-[#0B1F3A]">{action.label}</p>
-              <span className="shrink-0 text-[11px] font-bold text-[#FF8A1F]">→</span>
+              <span className="shrink-0 text-[12px] font-bold text-[#FF8A1F]">→</span>
             </Link>
           )
         })}
@@ -205,7 +205,7 @@ function FeedbackCard({ items }: { items: RecentFeedbackItem[] }) {
                 )}
               </div>
               <p className="mt-1 text-xs text-[#64748B]">{item.public_feedback}</p>
-              <p className="mt-1 text-[10px] text-[#64748B]">
+              <p className="mt-1 text-[11px] text-[#64748B]">
                 {new Date(item.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
             </div>
@@ -282,12 +282,12 @@ export default async function StudentDashboardPage() {
             <p className="text-[18px] font-extrabold text-white">
               Hey, {data.student_name?.split(' ')[0] ?? 'Student'}! 👋
             </p>
-            <p className="mt-1 text-[12px] text-white/50">
+            <p className="mt-1 text-[13px] text-white/50">
               Your dashboard is ready — ask your admin to enroll you in a group to get started!
             </p>
             <Link
               href="/portal/student/assignments"
-              className="mt-3 inline-block rounded-full bg-[#FF8A1F] px-3 py-1.5 text-[11px] font-bold text-white"
+              className="mt-3 inline-block rounded-full bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-bold text-white"
             >
               View assignments →
             </Link>
@@ -319,7 +319,7 @@ export default async function StudentDashboardPage() {
         <>
           {/* ── Section 2: Current Learning ───────────────────────────────────── */}
           <section>
-            <h2 className="mb-2 px-0.5 text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+            <h2 className="mb-2 px-0.5 text-[12px] font-bold uppercase tracking-wider text-[#64748B]">
               Current Learning
             </h2>
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -329,7 +329,7 @@ export default async function StudentDashboardPage() {
 
           {/* ── Section 9: Quick Statistics ───────────────────────────────────── */}
           <section>
-            <h2 className="mb-2 px-0.5 text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+            <h2 className="mb-2 px-0.5 text-[12px] font-bold uppercase tracking-wider text-[#64748B]">
               Quick Statistics
             </h2>
             <QuickStatsGrid stats={quickStats} />
@@ -345,7 +345,7 @@ export default async function StudentDashboardPage() {
 
           {/* ── Sections 3–8 previews: Journey / Achievements / Evaluations / Competitions / Notes / Certificates ── */}
           <section>
-            <h2 className="mb-2 px-0.5 text-[11px] font-bold uppercase tracking-wider text-[#64748B]">
+            <h2 className="mb-2 px-0.5 text-[12px] font-bold uppercase tracking-wider text-[#64748B]">
               Your Progress
             </h2>
             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">

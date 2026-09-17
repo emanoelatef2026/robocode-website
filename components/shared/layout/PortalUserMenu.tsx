@@ -82,7 +82,7 @@ export function PortalUserMenu({
           className="flex w-full items-center justify-center rounded-lg p-2"
         >
           <div
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
             style={{ background: "linear-gradient(135deg,#FF8A1F,#0B1F3A)" }}
           >
             {initials}
@@ -92,7 +92,7 @@ export function PortalUserMenu({
         {mounted && showFlyout && !open && createPortal(
           <div
             style={{ position: "fixed", left: "64px", top: `${flyoutY}px`, transform: "translateY(-50%)", zIndex: 9999, pointerEvents: "none" }}
-            className="whitespace-nowrap rounded-lg border border-white/10 bg-[#0B1F3A] px-2.5 py-1.5 text-[12px] font-medium text-white shadow-xl"
+            className="whitespace-nowrap rounded-lg border border-white/10 bg-[#0B1F3A] px-2.5 py-1.5 text-[13px] font-medium text-white shadow-xl"
           >
             My Account
             <div className="absolute right-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-r-[#0B1F3A]" />
@@ -124,7 +124,7 @@ export function PortalUserMenu({
     <div className="shrink-0 border-t border-white/8 px-3 pb-[18px] pt-3">
       <div className="flex items-center gap-[9px] px-1 py-1">
         <div
-          className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white"
+          className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full text-[12px] font-bold text-white"
           style={{ background: "linear-gradient(135deg,#FF8A1F,#0B1F3A)" }}
         >
           {initials}

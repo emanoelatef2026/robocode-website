@@ -1,4 +1,4 @@
-﻿import { requirePortalRole } from '@/modules/rbac/guards'
+import { requirePortalRole } from '@/modules/rbac/guards'
 import { getOwnPortfolioDetail } from '@/modules/portfolio/queries'
 import { BADGE_EMOJIS } from '@/modules/portfolio/types'
 import ToggleUploadPanel from './ToggleUploadPanel'
@@ -45,7 +45,7 @@ export default async function StudentPortfolioPage() {
         ].map(({ label, value, color }) => (
           <div key={label} className="ds-card p-3 text-center">
             <p className={`text-xl font-bold leading-none ${color}`}>{value}</p>
-            <p className="mt-1 text-[10px] text-[#64748B]">{label}</p>
+            <p className="mt-1 text-[11px] text-[#64748B]">{label}</p>
           </div>
         ))}
       </div>
@@ -53,7 +53,7 @@ export default async function StudentPortfolioPage() {
       {/* Badges */}
       {badges.length > 0 && (
         <div className="ds-card p-3.5">
-          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-[#64748B]">My Badges</p>
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#64748B]">My Badges</p>
           <div className="flex flex-wrap gap-2">
             {badges.map((b) => (
               <div key={b.id} className="flex items-center gap-1.5 rounded-full border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-1 text-xs font-medium text-[#0B1F3A]">

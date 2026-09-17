@@ -1,4 +1,4 @@
-﻿import { listStudentPortfolioSummaries } from '@/modules/portfolio/queries'
+import { listStudentPortfolioSummaries } from '@/modules/portfolio/queries'
 import { requirePermission } from '@/modules/rbac/guards'
 import EmptyState from '@/components/admin/EmptyState'
 import SearchInput from '@/components/admin/SearchInput'
@@ -57,7 +57,7 @@ export default async function PortfolioListPage({ searchParams }: Props) {
                     <td className="px-4 py-3 text-right">
                       <Link
                         href={`/admin/portfolio/${s.student_id}`}
-                        className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                        className="text-xs font-medium text-[#C2410C] hover:underline"
                       >
                         Manage
                       </Link>

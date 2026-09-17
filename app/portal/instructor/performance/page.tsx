@@ -20,7 +20,7 @@ function StatTile({ label, value, tone = 'neutral' }: { label: string; value: st
   return (
     <div className="ds-card px-4 py-3.5 text-center">
       <p className={`text-xl font-bold leading-none ${color}`}>{value}</p>
-      <p className="mt-1.5 text-[11px] text-[#94A3B8]">{label}</p>
+      <p className="mt-1.5 text-[12px] text-[#94A3B8]">{label}</p>
     </div>
   )
 }
@@ -136,7 +136,7 @@ export default async function PerformanceCenterPage() {
                 >
                   <span className="w-4 shrink-0 text-xs font-bold text-[#94A3B8]">#{i + 1}</span>
                   <p className="min-w-0 flex-1 truncate text-sm font-medium text-[#0B1F3A]">{s.student_name}</p>
-                  <span className="shrink-0 text-xs font-semibold text-[#FF8A1F]">{s.total_xp.toLocaleString()} XP</span>
+                  <span className="shrink-0 text-xs font-semibold text-[#C2410C]">{s.total_xp.toLocaleString()} XP</span>
                 </Link>
               ))}
             </div>
@@ -151,7 +151,7 @@ export default async function PerformanceCenterPage() {
             <h2 className="text-sm font-semibold text-[#0B1F3A]">
               Never Evaluated <span className="text-[#94A3B8] font-normal">({missingEvaluations.length})</span>
             </h2>
-            <Link href="/portal/instructor/review" className="text-xs font-medium text-[#FF8A1F] hover:underline">Review Center →</Link>
+            <Link href="/portal/instructor/review" className="text-xs font-medium text-[#C2410C] hover:underline">Review Center →</Link>
           </div>
           {missingEvaluations.length === 0 ? (
             <div className="ds-card px-4 py-3 text-sm text-[#94A3B8]">Every student has at least one evaluation on record.</div>
@@ -205,9 +205,9 @@ export default async function PerformanceCenterPage() {
                   const pct = Math.round((p.count / totalPortfolioItems) * 100)
                   return (
                     <div key={p.status} className="flex items-center gap-3">
-                      <span className={`w-28 shrink-0 rounded-full px-2 py-0.5 text-center text-[10px] font-medium ${cfg.cls}`}>{cfg.label}</span>
+                      <span className={`w-28 shrink-0 rounded-full px-2 py-0.5 text-center text-[11px] font-medium ${cfg.cls}`}>{cfg.label}</span>
                       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#F1F5F9]">
-                        <div className="h-full rounded-full bg-[#FF8A1F]" style={{ width: `${pct}%` }} />
+                        <div className="h-full rounded-full bg-[#C2410C]" style={{ width: `${pct}%` }} />
                       </div>
                       <span className="w-8 shrink-0 text-right text-xs text-[#64748B]">{p.count}</span>
                     </div>

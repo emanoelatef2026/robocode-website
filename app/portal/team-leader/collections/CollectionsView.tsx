@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
@@ -75,7 +75,7 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
         <div className="min-w-0">
           <button
             onClick={onOpen}
-            className="text-left font-semibold text-[#0B1F3A] hover:text-[#FF8A1F] text-sm"
+            className="text-left font-semibold text-[#0B1F3A] hover:text-[#9A3412] text-sm"
           >
             {row.student_name}
           </button>
@@ -85,11 +85,11 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
-          <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${RISK_LEVEL_CLASSES[row.risk_level]}`}>
+          <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${RISK_LEVEL_CLASSES[row.risk_level]}`}>
             {row.risk_level}
           </span>
           {row.financial_status && row.financial_status !== 'CURRENT' && (
-            <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[row.financial_status as keyof typeof STATUS_COLORS] ?? ''}`}>
+            <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[row.financial_status as keyof typeof STATUS_COLORS] ?? ''}`}>
               {STATUS_LABELS[row.financial_status as keyof typeof STATUS_LABELS] ?? row.financial_status}
             </span>
           )}
@@ -128,7 +128,7 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
       {row.risk_flags.filter(f => f !== 'session_milestone').length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1">
           {row.risk_flags.filter(f => f !== 'session_milestone').map(f => (
-            <span key={f} className="rounded bg-[#FEE2E2] px-1.5 py-0.5 text-[10px] font-medium text-[#EF4444]">
+            <span key={f} className="rounded bg-[#FEE2E2] px-1.5 py-0.5 text-[11px] font-medium text-[#EF4444]">
               {RISK_FLAG_LABELS[f] ?? f}
             </span>
           ))}
@@ -147,7 +147,7 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
                 key={amt}
                 onClick={() => handleQuick(amt)}
                 disabled={!!paying || isPending}
-                className="rounded-lg bg-[#0B1F3A] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#1a3356] disabled:opacity-40 flex items-center gap-1"
+                className="rounded-lg bg-[#0B1F3A] px-2.5 py-1 text-[12px] font-semibold text-white hover:bg-[#1a3356] disabled:opacity-40 flex items-center gap-1"
               >
                 {paying === amt ? <span className="h-2.5 w-2.5 animate-spin rounded-full border border-white border-t-transparent" /> : null}
                 +{fmt(amt)}
@@ -156,7 +156,7 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
             <button
               onClick={() => handleQuick('full')}
               disabled={!!paying || isPending}
-              className="rounded-lg bg-[#059669] px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-[#047857] disabled:opacity-40 flex items-center gap-1"
+              className="rounded-lg bg-[#059669] px-2.5 py-1 text-[12px] font-semibold text-white hover:bg-[#047857] disabled:opacity-40 flex items-center gap-1"
             >
               {paying === 'full' ? <span className="h-2.5 w-2.5 animate-spin rounded-full border border-white border-t-transparent" /> : null}
               Full ({fmt(remaining)})
@@ -170,13 +170,13 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
             <a
               href={buildWhatsAppUrl(parentPhone, null) ?? '#'}
               target="_blank" rel="noopener noreferrer"
-              className="rounded-lg bg-[#E7F8EE] px-2.5 py-1 text-[11px] font-medium text-[#15803D] hover:bg-[#E7F8EE]"
+              className="rounded-lg bg-[#E7F8EE] px-2.5 py-1 text-[12px] font-medium text-[#15803D] hover:bg-[#E7F8EE]"
             >
               WhatsApp
             </a>
             <a
               href={`tel:${parentPhone}`}
-              className="rounded-lg bg-[#EFF6FF] px-2.5 py-1 text-[11px] font-medium text-[#1D4ED8] hover:bg-[#EFF6FF]"
+              className="rounded-lg bg-[#EFF6FF] px-2.5 py-1 text-[12px] font-medium text-[#1D4ED8] hover:bg-[#EFF6FF]"
             >
               Call
             </a>
@@ -185,7 +185,7 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
 
         <button
           onClick={onOpen}
-          className="ml-auto rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[11px] font-medium text-[#64748B] hover:border-[#CBD5E1]"
+          className="ml-auto rounded-lg border border-[#E2E8F0] px-2.5 py-1 text-[12px] font-medium text-[#64748B] hover:border-[#CBD5E1]"
         >
           Detail →
         </button>
@@ -215,7 +215,7 @@ export default function CollectionsView({ sections, branchIds, stats }: Props) {
           <div key={k.label} className="ds-card p-3">
             <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
             <p className="text-sm font-bold text-[#0B1F3A]">{k.value}</p>
-            <p className="text-[11px] text-[#64748B]">{k.label}</p>
+            <p className="text-[12px] text-[#64748B]">{k.label}</p>
           </div>
         ))}
       </div>
@@ -234,7 +234,7 @@ export default function CollectionsView({ sections, branchIds, stats }: Props) {
           >
             <span className={`h-2 w-2 rounded-full ${s.color}`} />
             {s.label}
-            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+            <span className={`rounded-full px-1.5 py-0.5 text-[11px] font-bold ${
               activeSection === s.id ? 'bg-white/20 text-white' : 'bg-[#F1F5F9] text-[#64748B]'
             }`}>
               {s.rows.length}

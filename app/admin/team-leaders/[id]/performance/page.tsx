@@ -1,4 +1,4 @@
-﻿import { createServiceClient }          from '@/lib/supabase/service'
+import { createServiceClient }          from '@/lib/supabase/service'
 import { requirePermission }            from '@/modules/rbac/guards'
 import { getTeamLeader }                from '@/modules/team-leaders/queries'
 import { notFound }                     from 'next/navigation'
@@ -141,7 +141,7 @@ function KPI({
     <div className={`rounded-xl border p-4 ${alert && value !== 0 ? 'border-[#FECACA] bg-[#FEE2E2]' : 'border-[#E2E8F0] bg-white'}`}>
       <p className={`text-2xl font-bold ${alert && value !== 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>{value}</p>
       <p className="mt-0.5 text-xs text-[#64748B]">{label}</p>
-      {sub && <p className="mt-1 text-[11px] text-[#94A3B8]">{sub}</p>}
+      {sub && <p className="mt-1 text-[12px] text-[#94A3B8]">{sub}</p>}
     </div>
   )
 }
@@ -226,11 +226,11 @@ export default async function TLPerformancePage({ params }: Props) {
       {/* ── Quick links ────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-2">
         {tl.branch_ids.map(bid => (
-          <Link key={bid} href={`/admin/branches/${bid}/performance`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+          <Link key={bid} href={`/admin/branches/${bid}/performance`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
             Branch Performance →
           </Link>
         ))}
-        <Link href={`/admin/leads?assigned=${tl.user_id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]">
+        <Link href={`/admin/leads?assigned=${tl.user_id}`} className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-xs font-medium text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]">
           My Leads →
         </Link>
       </div>

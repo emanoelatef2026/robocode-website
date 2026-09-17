@@ -58,7 +58,7 @@ export function GroupDetailModal({
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(categoryMap).sort((a,b) => b[1]-a[1]).map(([type, amt]) => (
                 <div key={type} className="rounded-lg border border-[#E2E8F0] px-3 py-2">
-                  <p className="text-[11px] text-[#94A3B8]">{EXPENSE_TYPE_LABELS[type as ExpenseType] ?? type}</p>
+                  <p className="text-[12px] text-[#94A3B8]">{EXPENSE_TYPE_LABELS[type as ExpenseType] ?? type}</p>
                   <p className="text-sm font-bold text-[#EF4444]">{fmt(amt)}</p>
                 </div>
               ))}
@@ -72,7 +72,7 @@ export function GroupDetailModal({
             <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#94A3B8]">Recurring Expenses</p>
             <button
               onClick={() => setAddRecurOpen(true)}
-              className="text-[11px] font-semibold text-[#FF8A1F] hover:underline"
+              className="text-[12px] font-semibold text-[#C2410C] hover:underline"
             >
               + Add Recurring
             </button>
@@ -85,7 +85,7 @@ export function GroupDetailModal({
                 <div key={r.id} className="flex items-center justify-between rounded-lg border border-[#E2E8F0] px-3 py-2">
                   <div>
                     <p className="text-xs font-medium text-[#0B1F3A]">{EXPENSE_TYPE_LABELS[r.expense_type]} · {fmt(r.amount)}/mo</p>
-                    <p className="text-[11px] text-[#94A3B8]">
+                    <p className="text-[12px] text-[#94A3B8]">
                       From {r.start_date}{r.end_date ? ` to ${r.end_date}` : ''} · {r.is_active ? 'Active' : 'Inactive'}
                     </p>
                   </div>
@@ -103,7 +103,7 @@ export function GroupDetailModal({
             </p>
             <button
               onClick={() => setAddOpen(true)}
-              className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-[#e07a1a]"
+              className="rounded-lg bg-[#C2410C] px-3 py-1.5 text-[12px] font-semibold text-white hover:bg-[#e07a1a]"
             >
               + Add Expense
             </button>
@@ -129,7 +129,7 @@ export function GroupDetailModal({
                         {new Date(e.expense_date).toLocaleDateString('en-EG', { day: 'numeric', month: 'short', year: 'numeric' })}
                       </td>
                       <td className="px-3 py-2">
-                        <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[11px] font-medium text-[#64748B]">
+                        <span className="rounded bg-[#F1F5F9] px-1.5 py-0.5 text-[12px] font-medium text-[#64748B]">
                           {EXPENSE_TYPE_LABELS[e.expense_type]}
                         </span>
                       </td>

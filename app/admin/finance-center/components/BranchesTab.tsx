@@ -43,12 +43,12 @@ export function BranchesTab({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#0B1F3A]">{b.branch_name}</p>
-                <p className="text-[11px] text-[#94A3B8]">{b.student_count} students · {b.group_count} groups</p>
+                <p className="text-[12px] text-[#94A3B8]">{b.student_count} students · {b.group_count} groups</p>
               </div>
               <RateBadge rate={b.collection_rate} />
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
+            <div className="grid grid-cols-2 gap-2 text-[12px]">
               <div><p className="text-[#94A3B8]">Net Expected</p><p className="font-semibold text-[#94A3B8]">{fmt(b.net_expected_revenue)}</p></div>
               <div><p className="text-[#94A3B8]">Net Collected</p><p className="font-semibold text-[#15803D]">{fmt(b.net_collected_revenue)}</p></div>
               <div><p className="text-[#94A3B8]">Outstanding</p><p className="font-semibold text-[#F59E0B]">{fmt(b.outstanding)}</p></div>
@@ -56,7 +56,7 @@ export function BranchesTab({
             </div>
 
             {b.total_expenses > 0 && (
-              <div className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[11px] space-y-1">
+              <div className="rounded-lg bg-[#F8FAFC] px-3 py-2 text-[12px] space-y-1">
                 {b.final_instructor_cost > 0 && (
                   <div className="flex justify-between">
                     <span className="text-[#64748B]">Instr. Earned</span>
@@ -84,7 +84,7 @@ export function BranchesTab({
               </div>
             )}
 
-            <div className="border-t border-[#E2E8F0] pt-3 grid grid-cols-2 gap-2 text-[11px]">
+            <div className="border-t border-[#E2E8F0] pt-3 grid grid-cols-2 gap-2 text-[12px]">
               <div>
                 <p className="text-[#94A3B8]">Expected Profit</p>
                 <ProfitBadge value={b.expected_profit} size="xs" />
@@ -104,7 +104,7 @@ export function BranchesTab({
 
             <button
               onClick={() => setAddBranch(b.branch_id)}
-              className="w-full rounded-lg border border-[#E2E8F0] py-1.5 text-[11px] font-semibold text-[#64748B] hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+              className="w-full rounded-lg border border-[#E2E8F0] py-1.5 text-[12px] font-semibold text-[#64748B] hover:border-[#0E7490] hover:text-[#9A3412]"
             >
               + Add Branch Expense
             </button>
@@ -142,7 +142,7 @@ export function BranchesTab({
                   </td>
                   <td className="px-4 py-3 text-[#64748B]">{e.branch_name ?? '—'}</td>
                   <td className="px-4 py-3">
-                    <span className="rounded bg-[#F1F5F9] px-2 py-0.5 text-[11px] font-medium text-[#64748B]">
+                    <span className="rounded bg-[#F1F5F9] px-2 py-0.5 text-[12px] font-medium text-[#64748B]">
                       {EXPENSE_TYPE_LABELS[e.expense_type]}
                     </span>
                   </td>

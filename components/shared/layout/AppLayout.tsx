@@ -30,7 +30,7 @@ export function AppLayout({ renderSidebar, renderHeader, bottomNav, fab, childre
   const close = () => setSidebarOpen(false)
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-[#F8FAFC]">
+    <div className="lms-shell flex h-dvh overflow-hidden bg-[var(--bg)]">
       {/* App-shell scroll model: the shell is exactly one (dynamic) viewport tall
           and only <main> scrolls — so the sidebar and header stay put on desktop
           instead of scrolling away with the page. `h-dvh` (not `h-screen`) tracks
@@ -52,7 +52,7 @@ export function AppLayout({ renderSidebar, renderHeader, bottomNav, fab, childre
         <div className="sticky top-0 z-(--z-header)">
           {renderHeader({ onMenuClick: () => setSidebarOpen(true) })}
         </div>
-        <main className="pb-bottom-nav scroll-smooth-mobile min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pt-4 md:px-7 md:pb-7 md:pt-6">
+        <main className="pb-bottom-nav scroll-smooth-mobile min-w-0 min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-4 pt-4 md:px-7 md:pb-7 md:pt-6">
           {children}
         </main>
       </div>

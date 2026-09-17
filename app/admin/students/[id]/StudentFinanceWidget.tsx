@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState, useTransition, useCallback } from 'react'
 import { fetchStudentFinanceDetail } from '@/modules/finance/actions'
 import { addPayment, addFinanceNote, recordActivity, addInstallment, addPaymentPromise, markPromiseFulfilled, updateAccountDiscount } from '@/modules/finance/actions'
@@ -56,7 +56,7 @@ export default function StudentFinanceWidget({ accountId, studentId, branchId }:
         <p className="mt-1 text-xs text-[#94A3B8]">Create a financial account to start tracking payments.</p>
         <Link
           href={`/admin/finance/new?student=${studentId}`}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18]"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#e87c18]"
         >
           Create Account
         </Link>
@@ -69,7 +69,7 @@ export default function StudentFinanceWidget({ accountId, studentId, branchId }:
       <div className="ds-card p-6 text-center">
         <button
           onClick={load}
-          className="rounded-xl bg-[#FF8A1F] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#e87c18]"
+          className="rounded-xl bg-[#C2410C] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#e87c18]"
         >
           Load Finance Data
         </button>
@@ -80,7 +80,7 @@ export default function StudentFinanceWidget({ accountId, studentId, branchId }:
   if (loading && !detail) {
     return (
       <div className="flex items-center justify-center ds-card py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0E7490] border-t-transparent" />
       </div>
     )
   }
@@ -106,7 +106,7 @@ export default function StudentFinanceWidget({ accountId, studentId, branchId }:
       {/* Finance header bar */}
       <div className="flex items-center justify-between border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
         <div className="flex items-center gap-3">
-          <span className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[account.status]}`}>
+          <span className={`inline-flex rounded-full border px-2 py-0.5 text-[12px] font-semibold ${STATUS_COLORS[account.status]}`}>
             {STATUS_LABELS[account.status]}
           </span>
           <span className="text-sm font-bold text-[#EF4444]">
@@ -119,13 +119,13 @@ export default function StudentFinanceWidget({ accountId, studentId, branchId }:
         <div className="flex items-center gap-2">
           <div className="hidden sm:flex items-center gap-2">
             <div className="h-2 w-20 overflow-hidden rounded-full bg-[#F1F5F9]">
-              <div className="h-full rounded-full bg-[#FF8A1F]" style={{ width: `${pct}%` }} />
+              <div className="h-full rounded-full bg-[#C2410C]" style={{ width: `${pct}%` }} />
             </div>
             <span className="text-xs text-[#64748B]">{pct}%</span>
           </div>
           <Link
             href={`/admin/finance?q=${encodeURIComponent(student.name)}`}
-            className="text-xs font-medium text-[#FF8A1F] hover:underline"
+            className="text-xs font-medium text-[#C2410C] hover:underline"
           >
             Full View →
           </Link>
@@ -141,7 +141,7 @@ export default function StudentFinanceWidget({ accountId, studentId, branchId }:
             className={[
               'whitespace-nowrap px-3 py-2.5 text-[13px] font-medium border-b-2 transition-colors shrink-0',
               tab === t.id
-                ? 'border-[#FF8A1F] text-[#FF8A1F]'
+                ? 'border-[#0E7490] text-[#C2410C]'
                 : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]',
             ].join(' ')}
           >
@@ -183,7 +183,7 @@ function SummaryTab({ detail }: { detail: StudentFinanceDetail }) {
           { l: 'Next Due',  v: dateFmt(account.next_due_date),         c: 'text-[#0B1F3A]' },
         ].map(({ l, v, c }) => (
           <div key={l} className="bg-white px-4 py-3">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">{l}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">{l}</p>
             <p className={`mt-0.5 text-sm ${c}`}>{v}</p>
           </div>
         ))}
@@ -197,9 +197,9 @@ function SummaryTab({ detail }: { detail: StudentFinanceDetail }) {
               <div key={p.id} className="flex items-center justify-between rounded-lg bg-[#F8FAFC] px-3 py-2.5">
                 <div>
                   <p className="text-sm font-semibold text-[#10B981]">EGP {fmt(p.amount)}</p>
-                  <p className="text-[11px] text-[#94A3B8]">{PAYMENT_METHOD_LABELS[p.payment_method]} · {dateFmt(p.payment_date)}</p>
+                  <p className="text-[12px] text-[#94A3B8]">{PAYMENT_METHOD_LABELS[p.payment_method]} · {dateFmt(p.payment_date)}</p>
                 </div>
-                {p.reference_number && <p className="text-[11px] text-[#64748B]">#{p.reference_number}</p>}
+                {p.reference_number && <p className="text-[12px] text-[#64748B]">#{p.reference_number}</p>}
               </div>
             ))}
           </div>
@@ -243,11 +243,11 @@ function InstallmentsTab({ detail, accountId, onRefresh }: { detail: StudentFina
             <div key={inst.id} className="flex items-center justify-between rounded-lg border border-[#E2E8F0] px-4 py-3">
               <div>
                 <p className="text-sm font-semibold text-[#0B1F3A]">#{inst.installment_number} — EGP {fmt(inst.amount)}</p>
-                <p className="text-[11px] text-[#64748B]">Due: {dateFmt(inst.due_date)}</p>
+                <p className="text-[12px] text-[#64748B]">Due: {dateFmt(inst.due_date)}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm font-medium text-[#10B981]">Paid: EGP {fmt(inst.paid_amount)}</p>
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>{inst.status}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${INSTALLMENT_STATUS_COLORS[inst.status]}`}>{inst.status}</span>
               </div>
             </div>
           ))}
@@ -257,16 +257,16 @@ function InstallmentsTab({ detail, accountId, onRefresh }: { detail: StudentFina
         <form onSubmit={handleAdd} className="space-y-3 rounded-xl border border-[#E2E8F0] p-3">
           <div className="grid grid-cols-2 gap-2">
             <input name="amount" type="number" min="1" step="0.01" required placeholder="Amount *"
-              className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+              className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
             <input name="due_date" type="date" required
-              className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+              className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
           </div>
           <input name="notes" placeholder="Notes (optional)"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
           {err && <p className="text-xs text-[#EF4444]">{err}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={pending}
-              className="flex-1 rounded-lg bg-[#FF8A1F] py-2 text-sm font-semibold text-white disabled:opacity-50">
+              className="flex-1 rounded-lg bg-[#C2410C] py-2 text-sm font-semibold text-white disabled:opacity-50">
               {pending ? '…' : 'Add'}
             </button>
             <button type="button" onClick={() => setShowAdd(false)}
@@ -275,7 +275,7 @@ function InstallmentsTab({ detail, accountId, onRefresh }: { detail: StudentFina
         </form>
       ) : (
         <button onClick={() => setShowAdd(true)}
-          className="w-full rounded-xl border-2 border-dashed border-[#E2E8F0] py-2.5 text-sm text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F]">
+          className="w-full rounded-xl border-2 border-dashed border-[#E2E8F0] py-2.5 text-sm text-[#64748B] hover:border-[#0E7490]/40 hover:text-[#9A3412]">
           + Add Installment
         </button>
       )}
@@ -320,23 +320,23 @@ function PaymentTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDe
           <label className="mb-1 block text-xs font-medium text-[#64748B]">Amount *</label>
           <input name="amount" type="number" min="0.01" step="0.01" required
             defaultValue={detail.account.remaining_amount > 0 ? detail.account.remaining_amount : undefined}
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-[#64748B]">Date *</label>
           <input name="payment_date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)}
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
         </div>
       </div>
       <select name="payment_method" required
-        className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+        className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20">
         {(Object.entries(PAYMENT_METHOD_LABELS) as [PaymentMethod, string][]).map(([v, l]) => (
           <option key={v} value={v}>{l}</option>
         ))}
       </select>
       {pendingInsts.length > 0 && (
         <select name="installment_id"
-          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20">
           <option value="">— General payment —</option>
           {pendingInsts.map(i => (
             <option key={i.id} value={i.id}>#{i.installment_number} · EGP {fmt(i.amount)} · {dateFmt(i.due_date)}</option>
@@ -344,11 +344,11 @@ function PaymentTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDe
         </select>
       )}
       <input name="reference_number" placeholder="Reference # (optional)"
-        className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+        className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
       {err && <p className="text-xs text-[#EF4444]">{err}</p>}
       {ok  && <p className="text-xs text-[#10B981]">Payment recorded.</p>}
       <button type="submit" disabled={pending}
-        className="w-full rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-bold text-white disabled:opacity-50">
+        className="w-full rounded-xl bg-[#C2410C] py-2.5 text-sm font-bold text-white disabled:opacity-50">
         {pending ? 'Recording…' : 'Record Payment'}
       </button>
     </form>
@@ -406,7 +406,7 @@ function PromisesTab({ detail, accountId, studentId, onRefresh }: { detail: Stud
   return (
     <div className="space-y-3">
       {promises === null ? (
-        <div className="py-4 text-center"><div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" /></div>
+        <div className="py-4 text-center"><div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-[#0E7490] border-t-transparent" /></div>
       ) : promises.length === 0 ? (
         <p className="py-4 text-center text-sm text-[#94A3B8]">No promises recorded.</p>
       ) : (
@@ -415,14 +415,14 @@ function PromisesTab({ detail, accountId, studentId, onRefresh }: { detail: Stud
             <div key={p.id} className="flex items-start justify-between rounded-lg border border-[#E2E8F0] px-4 py-3">
               <div>
                 <p className="text-sm font-semibold text-[#0B1F3A]">EGP {fmt(p.promised_amount)}</p>
-                <p className="text-[11px] text-[#64748B]">By {dateFmt(p.promised_date)}</p>
-                {p.notes && <p className="text-[11px] text-[#94A3B8]">{p.notes}</p>}
+                <p className="text-[12px] text-[#64748B]">By {dateFmt(p.promised_date)}</p>
+                {p.notes && <p className="text-[12px] text-[#94A3B8]">{p.notes}</p>}
               </div>
               <div className="flex items-center gap-2">
-                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColors[p.status] ?? ''}`}>{p.status}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${statusColors[p.status] ?? ''}`}>{p.status}</span>
                 {p.status === 'ACTIVE' && (
                   <button onClick={() => fulfill(p.id)} disabled={pending}
-                    className="text-[11px] text-[#10B981] hover:underline disabled:opacity-50">Mark Fulfilled</button>
+                    className="text-[12px] text-[#10B981] hover:underline disabled:opacity-50">Mark Fulfilled</button>
                 )}
               </div>
             </div>
@@ -435,12 +435,12 @@ function PromisesTab({ detail, accountId, studentId, onRefresh }: { detail: Stud
           <p className="text-xs font-semibold text-[#0B1F3A]">Add Promise to Pay</p>
           <div className="grid grid-cols-2 gap-2">
             <input name="promised_amount" type="number" min="1" step="0.01" required placeholder="Amount *"
-              className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+              className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
             <input name="promised_date" type="date" required
-              className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+              className="rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
           </div>
           <input name="notes" placeholder="Notes (optional)"
-            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+            className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
           {err && <p className="text-xs text-[#EF4444]">{err}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={pending}
@@ -453,7 +453,7 @@ function PromisesTab({ detail, accountId, studentId, onRefresh }: { detail: Stud
         </form>
       ) : (
         <button onClick={() => setShowAdd(true)}
-          className="w-full rounded-xl border-2 border-dashed border-[#E2E8F0] py-2.5 text-sm text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F]">
+          className="w-full rounded-xl border-2 border-dashed border-[#E2E8F0] py-2.5 text-sm text-[#64748B] hover:border-[#0E7490]/40 hover:text-[#9A3412]">
           + Record Promise to Pay
         </button>
       )}
@@ -486,13 +486,13 @@ function NotesTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDeta
     <div className="space-y-3">
       <form onSubmit={handleSubmit} className="space-y-2">
         <textarea name="note_text" rows={2} required placeholder="Add finance note…"
-          className="w-full rounded-xl border border-[#E2E8F0] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20 resize-none" />
+          className="w-full rounded-xl border border-[#E2E8F0] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20 resize-none" />
         <div className="flex items-center justify-between">
           <label className="flex items-center gap-2 text-xs text-[#64748B]">
             <input name="is_internal" type="checkbox" className="rounded" /> Internal
           </label>
           <button type="submit" disabled={pending}
-            className="rounded-lg bg-[#FF8A1F] px-4 py-1.5 text-sm font-semibold text-white disabled:opacity-50">
+            className="rounded-lg bg-[#C2410C] px-4 py-1.5 text-sm font-semibold text-white disabled:opacity-50">
             {pending ? '…' : 'Add'}
           </button>
         </div>
@@ -506,9 +506,9 @@ function NotesTab({ detail, accountId, onRefresh }: { detail: StudentFinanceDeta
             <div key={n.id} className="rounded-xl bg-[#F8FAFC] p-3">
               <div className="flex items-start gap-2">
                 <p className="flex-1 text-sm text-[#0B1F3A]">{n.note_text}</p>
-                {n.is_internal && <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">Internal</span>}
+                {n.is_internal && <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#B45309]">Internal</span>}
               </div>
-              <p className="mt-1 text-[11px] text-[#94A3B8]">{n.created_by_name ?? 'Staff'} · {dateFmt(n.created_at)}</p>
+              <p className="mt-1 text-[12px] text-[#94A3B8]">{n.created_by_name ?? 'Staff'} · {dateFmt(n.created_at)}</p>
             </div>
           ))}
         </div>
@@ -546,7 +546,7 @@ function ActivitiesTab({ detail, accountId, onRefresh }: { detail: StudentFinanc
     <div className="space-y-3">
       <form onSubmit={handleSubmit} className="flex gap-2">
         <select name="activity_type" required
-          className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20">
+          className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20">
           {(Object.entries(ACTIVITY_TYPE_LABELS) as [ActivityType, string][]).map(([v, l]) => (
             <option key={v} value={v}>{l}</option>
           ))}
@@ -566,9 +566,9 @@ function ActivitiesTab({ detail, accountId, onRefresh }: { detail: StudentFinanc
               <span className="text-base">{ACT_ICONS[act.activity_type] ?? '•'}</span>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium text-[#0B1F3A]">{ACTIVITY_TYPE_LABELS[act.activity_type]}</p>
-                {act.notes && <p className="truncate text-[11px] text-[#64748B]">{act.notes}</p>}
+                {act.notes && <p className="truncate text-[12px] text-[#64748B]">{act.notes}</p>}
               </div>
-              <p className="shrink-0 text-[11px] text-[#94A3B8]">{dateFmt(act.created_at)}</p>
+              <p className="shrink-0 text-[12px] text-[#94A3B8]">{dateFmt(act.created_at)}</p>
             </div>
           ))}
         </div>
@@ -613,12 +613,12 @@ function DiscountTab({ detail, accountId, onRefresh }: { detail: StudentFinanceD
         <label className="mb-1 block text-xs font-medium text-[#64748B]">New Discount Amount (EGP)</label>
         <input name="discount_amount" type="number" min="0" max={account.total_amount} step="0.01"
           defaultValue={account.discount_amount}
-          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8A1F]/20" />
+          className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0E7490]/20" />
       </div>
       {err && <p className="text-xs text-[#EF4444]">{err}</p>}
       {ok  && <p className="text-xs text-[#10B981]">Discount updated.</p>}
       <button type="submit" disabled={pending}
-        className="w-full rounded-xl bg-[#FF8A1F] py-2.5 text-sm font-bold text-white disabled:opacity-50">
+        className="w-full rounded-xl bg-[#C2410C] py-2.5 text-sm font-bold text-white disabled:opacity-50">
         {pending ? 'Updating…' : 'Update Discount'}
       </button>
     </form>
@@ -656,7 +656,7 @@ function QuickActionsBar({ detail, accountId, setTab, onRefresh }: {
     <div className="border-t border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3">
       <div className="flex flex-wrap gap-2">
         <button onClick={() => setTab('payment')}
-          className="rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#e87c18]">
+          className="rounded-lg bg-[#C2410C] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#e87c18]">
           + Payment
         </button>
         {waLink && (
@@ -672,15 +672,15 @@ function QuickActionsBar({ detail, accountId, setTab, onRefresh }: {
           </a>
         )}
         <button onClick={() => setTab('promises')}
-          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F]">
+          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#0E7490]/40 hover:text-[#9A3412]">
           Promise
         </button>
         <button disabled={pending} onClick={() => logAct('PAYMENT_REMINDER')}
-          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F] disabled:opacity-50">
+          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#0E7490]/40 hover:text-[#9A3412] disabled:opacity-50">
           {pending ? '…' : 'Log Reminder'}
         </button>
         <button onClick={() => setTab('discount')}
-          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#FF8A1F]/40 hover:text-[#FF8A1F]">
+          className="ds-card px-3 py-1.5 text-xs font-medium text-[#64748B] hover:border-[#0E7490]/40 hover:text-[#9A3412]">
           Discount
         </button>
       </div>

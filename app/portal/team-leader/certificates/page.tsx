@@ -1,4 +1,4 @@
-﻿import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { listCertificates, listActiveTemplates } from '@/modules/certificates/queries'
 import { listCourses }                           from '@/modules/courses/queries'
 import { listSemesters }                         from '@/modules/semesters/queries'
@@ -67,7 +67,7 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
           students={students}
           semesters={semestersResult.data.map(s => ({ id: s.id, name: s.name }))}
           courses={coursesResult.data.map(c => ({ id: c.id, title: c.title }))}
-          triggerClassName="inline-flex items-center gap-1.5 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-[12px] font-medium text-white transition hover:bg-[#e87c18]"
+          triggerClassName="inline-flex items-center gap-1.5 rounded-lg bg-[#C2410C] px-3 py-1.5 text-[13px] font-medium text-white transition hover:bg-[#e87c18]"
           successRedirect="/portal/team-leader/certificates"
         />
       </div>
@@ -113,13 +113,13 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <p className="text-[14px] font-semibold text-[#0B1F3A] leading-tight truncate">{c.title}</p>
-                      <p className="mt-0.5 text-[12px] font-medium text-[#0B1F3A]">{c.recipient_name}</p>
-                      {c.student_email && <p className="text-[11px] text-[#94A3B8] truncate">{c.student_email}</p>}
+                      <p className="mt-0.5 text-[13px] font-medium text-[#0B1F3A]">{c.recipient_name}</p>
+                      {c.student_email && <p className="text-[12px] text-[#94A3B8] truncate">{c.student_email}</p>}
                     </div>
                     <StatusBadge status={c.status === 'active' ? 'active' : 'inactive'} />
                   </div>
                   <div className="mt-2 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 text-[11px] text-[#64748B]">
+                    <div className="flex items-center gap-2 text-[12px] text-[#64748B]">
                       <span className="font-mono bg-[#F8FAFC] px-1.5 py-0.5 rounded">{c.certificate_code}</span>
                       <span>{TYPE_LABELS[c.certificate_type] ?? c.certificate_type}</span>
                       <span>{new Date(c.issued_at).toLocaleDateString('en-GB')}</span>
@@ -129,13 +129,13 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
                         href={`/api/certificates/${c.certificate_code}/pdf`}
                         target="_blank"
                         rel="noreferrer"
-                        className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[11px] font-medium text-[#64748B]"
+                        className="rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-[12px] font-medium text-[#64748B]"
                       >
                         PDF
                       </a>
                       <Link
                         href={`/portal/team-leader/certificates/${c.id}`}
-                        className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F]"
+                        className="rounded-lg bg-[#C2410C]/10 px-3 py-1.5 text-[13px] font-semibold text-[#C2410C]"
                       >
                         View →
                       </Link>
@@ -185,7 +185,7 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
                           >
                             PDF
                           </a>
-                          <Link href={`/portal/team-leader/certificates/${c.id}`} className="text-xs font-medium text-[#FF8A1F] hover:underline">
+                          <Link href={`/portal/team-leader/certificates/${c.id}`} className="text-xs font-medium text-[#C2410C] hover:underline">
                             View
                           </Link>
                         </div>

@@ -37,14 +37,14 @@ export function OperationalTable<T>({
     return empty ? <>{empty}</> : null
   }
   return (
-    <div className={`overflow-x-auto rounded-xl border border-[#E2E8F0] ${className}`}>
-      <table className="min-w-full text-xs">
+    <div className={`overflow-x-auto rounded-xl border border-[#D7E0EA] bg-white ${className}`}>
+      <table className="min-w-full text-[13px]">
         <thead className="ds-table-head">
           <tr>
             {columns.map(col => (
               <th
                 key={col.key}
-                className={`border-b border-[#E2E8F0] px-4 py-2.5 font-semibold text-[#64748B] ${ALIGN[col.align ?? 'left']} ${col.className ?? ''}`}
+                className={`border-b border-[#D7E0EA] px-4 py-3 ${ALIGN[col.align ?? 'left']} ${col.className ?? ''}`}
               >
                 {col.header}
               </th>
@@ -56,12 +56,12 @@ export function OperationalTable<T>({
             <tr
               key={keyFn(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
-              className={`border-b border-[#F1F5F9] last:border-0 ${onRowClick ? 'cursor-pointer hover:bg-[#F8FAFC]' : ''}`}
+              className={`border-b border-[#EDF1F5] last:border-0 ${onRowClick ? 'cursor-pointer transition-colors hover:bg-[#F8FAFC]' : ''}`}
             >
               {columns.map(col => (
                 <td
                   key={col.key}
-                  className={`px-4 py-2.5 text-[#374151] ${ALIGN[col.align ?? 'left']} ${col.className ?? ''}`}
+                  className={`px-4 py-3 text-[#334155] ${ALIGN[col.align ?? 'left']} ${col.className ?? ''}`}
                 >
                   {col.cell(row)}
                 </td>

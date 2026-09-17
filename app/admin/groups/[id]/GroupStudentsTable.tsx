@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useTransition, useActionState, useMemo } from 'react'
 import {
@@ -24,7 +24,7 @@ function TypeBadge({ type }: { type: 'primary' | 'secondary' }) {
   return (
     <span
       className={[
-        'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium capitalize',
+        'inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-medium capitalize',
         type === 'primary'
           ? 'bg-[#EFF6FF] text-[#1D4ED8]'
           : 'bg-purple-50 text-purple-700',
@@ -177,7 +177,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
             placeholder="Search by name, code, phone…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-48 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+            className="w-48 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
           />
           <select
             value={filterType}
@@ -206,7 +206,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                 <select
                   name="student_id"
                   required
-                  className="w-44 rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F]"
+                  className="w-44 rounded-lg border border-[#E2E8F0] px-2.5 py-1.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490]"
                 >
                   <option value="">Add student…</option>
                   {availableStudents.slice(0, 100).map((s) => (
@@ -231,7 +231,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
             {availableStudents.length > 0 && (
               <button
                 onClick={() => { setShowBulk(true); setSelected(new Set()); setBulkSearch('') }}
-                className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm font-medium text-[#0B1F3A] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+                className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm font-medium text-[#0B1F3A] transition hover:border-[#0E7490] hover:text-[#9A3412]"
               >
                 Bulk Add
               </button>
@@ -279,7 +279,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                 {filtered.map((e, idx) => (
                   <tr key={e.id} className="ds-table-row">
                     <td className="px-3 py-2.5 text-center">
-                      <span className="text-[11px] font-semibold text-[#94A3B8]">{idx + 1}</span>
+                      <span className="text-[12px] font-semibold text-[#94A3B8]">{idx + 1}</span>
                     </td>
                     <td className="px-4 py-2.5">
                       <span className="font-mono text-xs text-[#64748B]">{e.student_code ?? '—'}</span>
@@ -290,12 +290,12 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                           ? `${e.first_name} ${e.last_name}`
                           : e.student_email}
                       </p>
-                      <p className="text-[11px] text-[#94A3B8]">{e.student_email}</p>
+                      <p className="text-[12px] text-[#94A3B8]">{e.student_email}</p>
                     </td>
                     <td className="px-4 py-2.5 text-[#64748B]">{e.phone ?? '—'}</td>
                     <td className="px-4 py-2.5 text-[#64748B]">
                       {e.parent_phone_1 ?? '—'}
-                      {e.parent_phone_2 && <span className="block text-[11px] text-[#94A3B8]">{e.parent_phone_2}</span>}
+                      {e.parent_phone_2 && <span className="block text-[12px] text-[#94A3B8]">{e.parent_phone_2}</span>}
                     </td>
                     <td className="px-4 py-2.5">
                       {e.status === 'active' ? (
@@ -306,7 +306,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                           title={`Switch to ${e.enrollment_type === 'primary' ? 'secondary' : 'primary'}`}
                         >
                           <TypeBadge type={e.enrollment_type} />
-                          <span className="hidden text-[10px] text-[#94A3B8] group-hover:inline">↻</span>
+                          <span className="hidden text-[11px] text-[#94A3B8] group-hover:inline">↻</span>
                         </button>
                       ) : (
                         <TypeBadge type={e.enrollment_type} />
@@ -318,7 +318,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                     <td className="px-4 py-2.5 text-[#64748B]">
                       {new Date(e.joined_at).toLocaleDateString('en-GB')}
                       {e.left_at && (
-                        <span className="block text-[11px] text-[#94A3B8]">
+                        <span className="block text-[12px] text-[#94A3B8]">
                           Left {new Date(e.left_at).toLocaleDateString('en-GB')}
                         </span>
                       )}
@@ -381,7 +381,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                 placeholder="Search by name, code, email…"
                 value={bulkSearch}
                 onChange={(e) => setBulkSearch(e.target.value)}
-                className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm outline-none focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15"
+                className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
               />
               <select
                 value={bulkType}
@@ -405,7 +405,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                       type="checkbox"
                       checked={selected.size === filteredAvailable.length && filteredAvailable.length > 0}
                       onChange={toggleAll}
-                      className="rounded border-[#CBD5E1] text-[#FF8A1F] focus:ring-[#FF8A1F]"
+                      className="rounded border-[#CBD5E1] text-[#C2410C] focus:ring-[#0E7490]"
                     />
                     <span className="text-xs font-medium text-[#64748B]">Select all ({filteredAvailable.length})</span>
                   </label>
@@ -419,7 +419,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                         type="checkbox"
                         checked={selected.has(s.id)}
                         onChange={() => toggleSelected(s.id)}
-                        className="rounded border-[#CBD5E1] text-[#FF8A1F] focus:ring-[#FF8A1F]"
+                        className="rounded border-[#CBD5E1] text-[#C2410C] focus:ring-[#0E7490]"
                       />
                       <div className="flex-1 min-w-0">
                         <p className="truncate text-sm font-medium text-[#0B1F3A]">
@@ -428,7 +428,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                             <span className="ml-2 font-mono text-xs text-[#94A3B8]">{s.student_code}</span>
                           )}
                         </p>
-                        <p className="truncate text-[11px] text-[#94A3B8]">{s.phone ?? s.user_email}</p>
+                        <p className="truncate text-[12px] text-[#94A3B8]">{s.phone ?? s.user_email}</p>
                       </div>
                     </label>
                   ))}
@@ -476,7 +476,7 @@ export default function GroupStudentsTable({ group, enrollments: initial, availa
                     <button
                       type="button"
                       disabled
-                      className="rounded-lg bg-[#FF8A1F] px-4 py-1.5 text-sm font-medium text-white opacity-40 cursor-not-allowed"
+                      className="rounded-lg bg-[#C2410C] px-4 py-1.5 text-sm font-medium text-white opacity-40 cursor-not-allowed"
                     >
                       Enroll students
                     </button>

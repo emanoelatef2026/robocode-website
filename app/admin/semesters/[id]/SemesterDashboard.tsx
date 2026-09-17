@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState } from 'react'
 import {
@@ -114,12 +114,12 @@ export default function SemesterDashboard({
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Name</label>
               <input name="name" defaultValue={semester.name} required
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Slug</label>
               <input name="slug" defaultValue={semester.slug} required
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
             </div>
           </div>
 
@@ -127,7 +127,7 @@ export default function SemesterDashboard({
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Status</label>
               <select name="status" defaultValue={semester.status}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15">
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15">
                 <option value="planned">Planned</option>
                 <option value="active">Active</option>
                 <option value="completed">Completed</option>
@@ -137,12 +137,12 @@ export default function SemesterDashboard({
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Start date</label>
               <input name="start_date" type="date" defaultValue={semester.start_date} required
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">End date</label>
               <input name="end_date" type="date" defaultValue={semester.end_date} required
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
             </div>
           </div>
 
@@ -151,19 +151,19 @@ export default function SemesterDashboard({
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Enrollment opens</label>
               <input name="enrollment_open_at" type="datetime-local"
                 defaultValue={semester.enrollment_open_at ? semester.enrollment_open_at.slice(0, 16) : ''}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Enrollment closes</label>
               <input name="enrollment_close_at" type="datetime-local"
                 defaultValue={semester.enrollment_close_at ? semester.enrollment_close_at.slice(0, 16) : ''}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Max capacity</label>
               <input name="max_capacity" type="number" min={1} defaultValue={semester.max_capacity ?? ''}
                 placeholder="Unlimited"
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
             </div>
           </div>
 
@@ -171,7 +171,7 @@ export default function SemesterDashboard({
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Billing cycle</label>
               <select name="billing_cycle" defaultValue={semester.billing_cycle ?? ''}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15">
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15">
                 <option value="">None</option>
                 <option value="per_semester">Per semester</option>
                 <option value="monthly">Monthly</option>
@@ -182,7 +182,7 @@ export default function SemesterDashboard({
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Notes</label>
               <input name="notes" defaultValue={semester.notes ?? ''}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15" />
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
             </div>
           </div>
 
@@ -206,7 +206,7 @@ export default function SemesterDashboard({
           <form action={enrollAction} className="mb-4 flex gap-2">
             <input type="hidden" name="semester_id" value={semester.id} />
             <select name="student_id" required
-              className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15">
+              className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15">
               <option value="">Enroll a student…</option>
               {availStudents.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -283,7 +283,7 @@ export default function SemesterDashboard({
           <form action={courseAction} className="mb-4 flex gap-2">
             <input type="hidden" name="semester_id" value={semester.id} />
             <select name="course_id" required
-              className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#FF8A1F] focus:ring-2 focus:ring-[#FF8A1F]/15">
+              className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15">
               <option value="">Add a course…</option>
               {availCourses.map((c) => (
                 <option key={c.id} value={c.id}>{c.title}{c.code ? ` (${c.code})` : ''}</option>

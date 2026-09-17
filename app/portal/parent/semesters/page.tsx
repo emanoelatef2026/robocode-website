@@ -1,4 +1,4 @@
-﻿import { requirePortalRole }          from '@/modules/rbac/guards'
+import { requirePortalRole }          from '@/modules/rbac/guards'
 import { getParentChildren }          from '@/modules/parents/parent-portal-queries'
 import { getChildHistoryTimeline }    from '@/modules/parents/parent-portal-queries'
 import type { TimelineEvent }         from '@/modules/parents/parent-portal-queries'
@@ -86,7 +86,7 @@ export default async function ParentHistoryPage({ searchParams }: Props) {
               <div className="mb-4 flex items-center gap-3">
                 <span className="text-[13px] font-semibold text-[#0B1F3A]">{key}</span>
                 <div className="flex-1 border-t border-[#E2E8F0]" />
-                <span className="text-[11px] text-[#64748B]">{events.length} events</span>
+                <span className="text-[12px] text-[#64748B]">{events.length} events</span>
               </div>
 
               {/* Events */}
@@ -107,12 +107,12 @@ export default async function ParentHistoryPage({ searchParams }: Props) {
                             <span className="text-[13px]">{cfg.icon}</span>
                             <span className="text-[13px] font-medium text-[#0B1F3A]">{ev.title}</span>
                           </div>
-                          <span className="shrink-0 text-[11px] text-[#64748B]">
+                          <span className="shrink-0 text-[12px] text-[#64748B]">
                             {new Date(ev.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                           </span>
                         </div>
                         {ev.subtitle && (
-                          <p className="mt-0.5 text-[12px] text-[#64748B]">{ev.subtitle}</p>
+                          <p className="mt-0.5 text-[13px] text-[#64748B]">{ev.subtitle}</p>
                         )}
                       </div>
                     </div>

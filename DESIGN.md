@@ -9,6 +9,11 @@ delivered with energy* — navy conveys credibility and structure, orange
 carries the energy of building/competing, and Orbitron headings signal "tech/
 robotics" without tipping into gimmicky sci-fi.
 
+**Control language:** The shared Admin and Team Leader rules for search,
+filters, menus, supporting text, and interaction states live in
+[`docs/design/lms-control-language.md`](docs/design/lms-control-language.md).
+Use that specification before introducing a new control treatment.
+
 ---
 
 ## 1. Two sub-systems, one palette

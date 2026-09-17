@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react'
 import { createStudentModal, updateStudentModal, deleteStudentAction } from '@/modules/students/modal-actions'
@@ -442,7 +442,7 @@ export default function StudentFormModal({
                   // Drop picked groups that no longer match the chosen branch
                   if (v) setGroupLinks(prev => prev.filter(g => g.branch_id === v))
                 }}
-                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#FF8A1F] focus:outline-none">
+                className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] focus:border-[#0E7490] focus:outline-none">
                 <option value="">— Select branch —</option>
                 {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
@@ -463,7 +463,7 @@ export default function StudentFormModal({
                   name="first_name"
                   required
                   defaultValue={student?.first_name ?? ''}
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#0E7490] focus:outline-none"
                 />
               </div>
               <div>
@@ -474,7 +474,7 @@ export default function StudentFormModal({
                   name="last_name"
                   required
                   defaultValue={student?.last_name ?? ''}
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#0E7490] focus:outline-none"
                 />
               </div>
             </div>
@@ -496,10 +496,10 @@ export default function StudentFormModal({
                   onChange={e => onAgeChange(e.target.value)}
                   placeholder="e.g. 10"
                   className={`w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none
-                    ${ageErr ? 'border-[#F87171] bg-[#FEE2E2]' : 'border-[#E2E8F0] focus:border-[#FF8A1F]'}`}
+                    ${ageErr ? 'border-[#F87171] bg-[#FEE2E2]' : 'border-[#E2E8F0] focus:border-[#0E7490]'}`}
                 />
-                {ageErr && <p className="mt-0.5 text-[11px] text-[#EF4444]">{ageErr}</p>}
-                {ageWarn && !ageErr && <p className="mt-0.5 text-[11px] text-[#F59E0B]">{ageWarn}</p>}
+                {ageErr && <p className="mt-0.5 text-[12px] text-[#EF4444]">{ageErr}</p>}
+                {ageWarn && !ageErr && <p className="mt-0.5 text-[12px] text-[#F59E0B]">{ageWarn}</p>}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
@@ -510,7 +510,7 @@ export default function StudentFormModal({
                   required
                   defaultValue={student?.student_phone ?? ''}
                   placeholder="01XXXXXXXXX"
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#0E7490] focus:outline-none"
                 />
               </div>
             </div>
@@ -519,25 +519,25 @@ export default function StudentFormModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                  Date of birth <span className="text-[11px] text-[#94A3B8]">(optional)</span>
+                  Date of birth <span className="text-[12px] text-[#94A3B8]">(optional)</span>
                 </label>
                 <input
                   name="date_of_birth"
                   type="date"
                   value={dobVal}
                   onChange={e => onDobChange(e.target.value)}
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#0E7490] focus:outline-none"
                 />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                  Grade <span className="text-[11px] text-[#94A3B8]">(optional)</span>
+                  Grade <span className="text-[12px] text-[#94A3B8]">(optional)</span>
                 </label>
                 <input
                   name="school_grade"
                   defaultValue={student?.school_grade ?? ''}
                   placeholder="e.g. Grade 5"
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#0E7490] focus:outline-none"
                 />
               </div>
             </div>
@@ -554,7 +554,7 @@ export default function StudentFormModal({
                   required
                   autoComplete="new-password"
                   placeholder="Min 6 characters"
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#0E7490] focus:outline-none"
                 />
               </div>
             )}
@@ -566,7 +566,7 @@ export default function StudentFormModal({
                 <select
                   name="status"
                   defaultValue={student?.student_status ?? 'active'}
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#0E7490] focus:outline-none"
                 >
                   {STATUSES.map(s => <option key={s} value={s} className="capitalize">{s}</option>)}
                 </select>
@@ -581,7 +581,7 @@ export default function StudentFormModal({
                   name="enrollment_date"
                   type="date"
                   defaultValue={new Date().toISOString().split('T')[0]}
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#0E7490] focus:outline-none"
                 />
               </div>
             )}
@@ -595,7 +595,7 @@ export default function StudentFormModal({
                   value={student.student_code}
                   className="w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5 text-sm text-[#94A3B8] font-mono cursor-not-allowed"
                 />
-                <p className="mt-0.5 text-[11px] text-[#94A3B8]">Student code cannot be changed.</p>
+                <p className="mt-0.5 text-[12px] text-[#94A3B8]">Student code cannot be changed.</p>
               </div>
             )}
 
@@ -606,7 +606,7 @@ export default function StudentFormModal({
                 name="notes"
                 rows={2}
                 defaultValue={student?.notes ?? ''}
-                className="w-full resize-none rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                className="w-full resize-none rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#0E7490] focus:outline-none"
               />
             </div>
           </fieldset>
@@ -626,7 +626,7 @@ export default function StudentFormModal({
                 </div>
                 <div>
                   <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                    New Password <span className="text-[11px] text-[#94A3B8]">(optional)</span>
+                    New Password <span className="text-[12px] text-[#94A3B8]">(optional)</span>
                   </label>
                   <input
                     ref={newPasswordRef}
@@ -635,9 +635,9 @@ export default function StudentFormModal({
                     placeholder="Leave blank to keep current"
                     autoComplete="new-password"
                     className={`w-full rounded-lg border px-3 py-2.5 text-sm focus:outline-none
-                      ${pwErr ? 'border-[#F87171] bg-[#FEE2E2]' : 'border-[#E2E8F0] focus:border-[#FF8A1F]'}`}
+                      ${pwErr ? 'border-[#F87171] bg-[#FEE2E2]' : 'border-[#E2E8F0] focus:border-[#0E7490]'}`}
                   />
-                  {pwErr && <p className="mt-0.5 text-[11px] text-[#EF4444]">{pwErr}</p>}
+                  {pwErr && <p className="mt-0.5 text-[12px] text-[#EF4444]">{pwErr}</p>}
                 </div>
               </div>
             </fieldset>
@@ -652,7 +652,7 @@ export default function StudentFormModal({
               <button
                 type="button"
                 onClick={addContact}
-                className="flex items-center gap-1 rounded-lg bg-[#FF8A1F]/10 px-2.5 py-1 text-xs font-semibold text-[#FF8A1F] hover:bg-[#FF8A1F]/20"
+                className="flex items-center gap-1 rounded-lg bg-[#C2410C]/10 px-2.5 py-1 text-xs font-semibold text-[#C2410C] hover:bg-[#C2410C]/20"
               >
                 <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -710,7 +710,7 @@ export default function StudentFormModal({
                       value={c.name}
                       onChange={e => updateContact(c._key, 'name', e.target.value)}
                       placeholder="Contact name"
-                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
                     />
                   </div>
                   <div>
@@ -718,7 +718,7 @@ export default function StudentFormModal({
                     <select
                       value={c.relation}
                       onChange={e => updateContact(c._key, 'relation', e.target.value)}
-                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
                     >
                       {RELATIONS.map(r => (
                         <option key={r} value={r} className="capitalize">{r}</option>
@@ -737,7 +737,7 @@ export default function StudentFormModal({
                       value={c.phone1}
                       onChange={e => updateContact(c._key, 'phone1', e.target.value)}
                       placeholder="01XXXXXXXXX"
-                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
                     />
                   </div>
                   <div>
@@ -746,7 +746,7 @@ export default function StudentFormModal({
                       value={c.phone2}
                       onChange={e => updateContact(c._key, 'phone2', e.target.value)}
                       placeholder="Optional"
-                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -764,7 +764,7 @@ export default function StudentFormModal({
 
                 {/* Portal access — set a password to create a login (email is generated automatically) */}
                 <div className="mt-1 rounded-lg border border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-2.5 space-y-2">
-                  <p className="text-[10px] font-semibold text-[#94A3B8] uppercase tracking-wide">
+                  <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">
                     Portal Access (optional)
                   </p>
                   <div>
@@ -774,7 +774,7 @@ export default function StudentFormModal({
                       onChange={e => updateContact(c._key, 'password', e.target.value)}
                       placeholder="Min 6 chars — leave blank for no portal login"
                       type="password"
-                      className="w-full ds-card px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                      className="w-full ds-card px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -814,25 +814,25 @@ export default function StudentFormModal({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <p className="text-[13px] font-semibold text-[#0B1F3A]">{g.group_name}</p>
                             {isFull && (
-                              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">FULL</span>
+                              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#B45309]">FULL</span>
                             )}
                           </div>
-                          <p className="text-[11px] text-[#64748B]">
+                          <p className="text-[12px] text-[#64748B]">
                             {g.course_name ?? '—'}{g.instructor_name ? ` · ${g.instructor_name}` : ''}
                           </p>
-                          {sessionStr && <p className="text-[11px] text-[#64748B]">{sessionStr}</p>}
+                          {sessionStr && <p className="text-[12px] text-[#64748B]">{sessionStr}</p>}
                           {!originalGroupIds.has(g.group_id) && (
                             <select
                               value={contractChoices[g.group_id] ?? 'new'}
                               onChange={e => setContractChoices(prev => ({ ...prev, [g.group_id]: e.target.value as 'continue' | 'new' }))}
-                              className="mt-1 rounded-md border border-[#E2E8F0] bg-white px-2 py-1 text-[11px] text-[#374151] outline-none focus:border-[#FF8A1F]"
+                              className="mt-1 rounded-md border border-[#E2E8F0] bg-white px-2 py-1 text-[12px] text-[#374151] outline-none focus:border-[#0E7490]"
                               aria-label={`Contract mode for ${g.group_name}`}
                             >
                               <option value="new">Start new contract</option>
                               <option value="continue">Continue existing contract</option>
                             </select>
                           )}
-                          <p className="text-[11px] text-[#94A3B8]">
+                          <p className="text-[12px] text-[#94A3B8]">
                             {g.student_count}{g.capacity != null ? `/${g.capacity}` : ''} students
                             {' · '}{g.status}
                             {' · '}{g.branch_name}
@@ -855,7 +855,7 @@ export default function StudentFormModal({
               )}
 
               {sameCourseWarning && (
-                <p className="text-[11px] text-[#F59E0B]">
+                <p className="text-[12px] text-[#F59E0B]">
                   Warning: multiple selected groups share the same course.
                 </p>
               )}
@@ -868,13 +868,13 @@ export default function StudentFormModal({
                     onChange={e => setGroupPickerQ(e.target.value)}
                     onFocus={() => setShowGroupPicker(true)}
                     placeholder="Search groups…"
-                    className="min-w-40 flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#FF8A1F] focus:outline-none"
+                    className="min-w-40 flex-1 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
                   />
                   {branches.length > 1 && !selectedBranchId && (
                     <select
                       value={groupPickerBranch}
                       onChange={e => setGroupPickerBranch(e.target.value)}
-                      className="rounded-lg border border-[#E2E8F0] px-2 py-2 text-xs text-[#64748B] focus:border-[#FF8A1F] focus:outline-none"
+                      className="rounded-lg border border-[#E2E8F0] px-2 py-2 text-xs text-[#64748B] focus:border-[#0E7490] focus:outline-none"
                     >
                       <option value="">All Branches</option>
                       {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -883,7 +883,7 @@ export default function StudentFormModal({
                   <select
                     value={groupPickerStatus}
                     onChange={e => setGroupPickerStatus(e.target.value)}
-                    className="rounded-lg border border-[#E2E8F0] px-2 py-2 text-xs text-[#64748B] focus:border-[#FF8A1F] focus:outline-none"
+                    className="rounded-lg border border-[#E2E8F0] px-2 py-2 text-xs text-[#64748B] focus:border-[#0E7490] focus:outline-none"
                   >
                     <option value="">Forming + Active</option>
                     <option value="forming">Forming</option>
@@ -910,14 +910,14 @@ export default function StudentFormModal({
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <p className="text-[13px] font-semibold text-[#0B1F3A]">{g.group_name}</p>
                             {isFull && (
-                              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[10px] font-semibold text-[#B45309]">FULL</span>
+                              <span className="rounded-full bg-[#FFFBEB] px-2 py-0.5 text-[11px] font-semibold text-[#B45309]">FULL</span>
                             )}
                           </div>
-                          <p className="text-[11px] text-[#64748B]">
+                          <p className="text-[12px] text-[#64748B]">
                             {g.course_name ?? '—'}{g.instructor_name ? ` · ${g.instructor_name}` : ''}
                           </p>
-                          {sessionStr && <p className="text-[11px] text-[#64748B]">{sessionStr}</p>}
-                          <p className="text-[11px] text-[#94A3B8]">
+                          {sessionStr && <p className="text-[12px] text-[#64748B]">{sessionStr}</p>}
+                          <p className="text-[12px] text-[#94A3B8]">
                             {g.student_count}{g.capacity != null ? `/${g.capacity}` : ''} students
                             {' · '}{g.status}
                             {' · '}{g.branch_name}
@@ -993,7 +993,7 @@ export default function StudentFormModal({
               <button
                 type="submit"
                 disabled={isPending || !!ageErr}
-                className="rounded-lg bg-[#FF8A1F] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-60"
+                className="rounded-lg bg-[#C2410C] px-5 py-2.5 text-sm font-medium text-white hover:bg-[#e87c18] disabled:opacity-60"
               >
                 {isPending
                   ? (isEdit ? 'Saving…' : 'Enrolling…')

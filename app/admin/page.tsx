@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Super Admin — Academy Command Center
  *
  * Answers: "How is the academy performing today?"
@@ -280,7 +280,7 @@ export default async function AdminDashboard() {
       {/* ── PAGE INTRO ──────────────────────────────────────────────── */}
       <section className="mb-6 rounded-2xl border border-[#DCE5F0] bg-white px-5 py-5 shadow-[0_2px_10px_rgba(11,31,58,.04)] md:flex md:items-center md:justify-between md:gap-6 md:px-6">
         <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#FF8A1F]">Academy command center</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#C2410C]">Academy command center</p>
           <h2 className="mt-1 text-xl font-extrabold tracking-tight text-[#0B1F3A] md:text-2xl">Operations overview</h2>
           <p className="mt-1 max-w-2xl text-[13px] leading-5 text-[#64748B]">
             Monitor today&apos;s activity, spot operational gaps, and jump directly to the next action.
@@ -289,13 +289,13 @@ export default async function AdminDashboard() {
         <div className="mt-4 flex shrink-0 flex-wrap gap-2 md:mt-0">
           <Link
             href="/admin/system-health"
-            className="inline-flex min-h-9 items-center justify-center rounded-[10px] bg-[#0B1F3A] px-3.5 text-[12px] font-bold text-white transition hover:bg-[#16365F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2"
+            className="inline-flex min-h-9 items-center justify-center rounded-[10px] bg-[#0B1F3A] px-3.5 text-[13px] font-bold text-white transition hover:bg-[#16365F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7490] focus-visible:ring-offset-2"
           >
             System health
           </Link>
           <Link
             href="/admin/analytics"
-            className="inline-flex min-h-9 items-center justify-center rounded-[10px] border border-[#DCE5F0] bg-white px-3.5 text-[12px] font-bold text-[#475569] transition hover:border-[#94A3B8] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2"
+            className="inline-flex min-h-9 items-center justify-center rounded-[10px] border border-[#DCE5F0] bg-white px-3.5 text-[13px] font-bold text-[#475569] transition hover:border-[#94A3B8] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7490] focus-visible:ring-offset-2"
           >
             View analytics
           </Link>
@@ -309,7 +309,7 @@ export default async function AdminDashboard() {
           <span className="flex-1 text-[13px] font-medium text-[#991B1B]">
             {totalAlerts} item{totalAlerts !== 1 ? 's' : ''} need your attention
           </span>
-          <Link href="/admin/system-health" className="shrink-0 rounded-md px-2 py-1 text-[12px] font-bold text-[#991B1B] underline decoration-[#FCA5A5] underline-offset-2 hover:bg-white/60 hover:text-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#991B1B]">
+          <Link href="/admin/system-health" className="shrink-0 rounded-md px-2 py-1 text-[13px] font-bold text-[#991B1B] underline decoration-[#FCA5A5] underline-offset-2 hover:bg-white/60 hover:text-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#991B1B]">
             View all →
           </Link>
         </div>
@@ -446,9 +446,9 @@ export default async function AdminDashboard() {
                   </svg>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">Top Branch</p>
-                  <p className="font-semibold text-[#0B1F3A] group-hover:text-[#FF8A1F] transition-colors">{d.topBranch.name}</p>
-                  <p className="text-[11px] text-[#64748B]">{d.topBranch.students} active students</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">Top Branch</p>
+                  <p className="font-semibold text-[#0B1F3A] group-hover:text-[#9A3412] transition-colors">{d.topBranch.name}</p>
+                  <p className="text-[12px] text-[#64748B]">{d.topBranch.students} active students</p>
                 </div>
               </Link>
             )}
@@ -463,9 +463,9 @@ export default async function AdminDashboard() {
                   </svg>
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">Most Active Instructor</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#94A3B8]">Most Active Instructor</p>
                   <p className="font-semibold text-[#0B1F3A] group-hover:text-[#6366F1] transition-colors">{d.topInstructor.name}</p>
-                  <p className="text-[11px] text-[#64748B]">{d.topInstructor.sessions} sessions recorded this month</p>
+                  <p className="text-[12px] text-[#64748B]">{d.topInstructor.sessions} sessions recorded this month</p>
                 </div>
               </Link>
             )}
@@ -513,40 +513,40 @@ export default async function AdminDashboard() {
         <div className="flex flex-wrap gap-2" aria-label="Common admin actions">
           {isSuperAdmin && (
             <Link href="/admin/branches/new"
-              className="rounded-[10px] border border-[#FF8A1F] bg-[#FFF7ED] px-3 py-2 text-[12px] font-bold text-[#C2410C] transition hover:bg-[#FFEDD5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2">
+              className="rounded-[10px] border border-[#0E7490] bg-[#FFF7ED] px-3 py-2 text-[13px] font-bold text-[#C2410C] transition hover:bg-[#FFEDD5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7490] focus-visible:ring-offset-2">
               + Branch
             </Link>
           )}
           {user.permissions.includes('manage_groups') && (
             <Link href="/admin/groups/new"
-              className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2">
+              className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7490] focus-visible:ring-offset-2">
               + Group
             </Link>
           )}
           {user.permissions.includes('manage_instructors') && (
             <Link href="/admin/instructors/new"
-              className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2">
+              className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7490] focus-visible:ring-offset-2">
               + Instructor
             </Link>
           )}
           {user.permissions.includes('manage_students') && (
             <Link href="/admin/students/new"
-              className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2">
+              className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7490] focus-visible:ring-offset-2">
               + Student
             </Link>
           )}
           <Link href="/admin/leads"
-            className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2">
+            className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7490] focus-visible:ring-offset-2">
               View Leads
             </Link>
           {user.permissions.includes('manage_financials') && (
             <>
               <Link href="/admin/finance"
-                className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2">
+                className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7490] focus-visible:ring-offset-2">
                 Finance Center
               </Link>
               <Link href="/admin/finance/queue"
-                className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2">
+                className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7490] focus-visible:ring-offset-2">
                 Collections Queue
               </Link>
             </>
@@ -554,11 +554,11 @@ export default async function AdminDashboard() {
           {isSuperAdmin && (
             <>
               <Link href="/admin/system-health"
-                className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2">
+                className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7490] focus-visible:ring-offset-2">
                 System Health
               </Link>
               <Link href="/admin/analytics"
-                className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF8A1F] focus-visible:ring-offset-2">
+                className="rounded-[10px] border border-[#E2E8F0] bg-white px-3 py-2 text-[13px] font-semibold text-[#475569] transition hover:border-[#0B1F3A] hover:text-[#0B1F3A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0E7490] focus-visible:ring-offset-2">
                 Analytics
               </Link>
             </>

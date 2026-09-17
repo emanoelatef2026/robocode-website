@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
@@ -33,13 +33,14 @@ function HitRow({
   const url = hitUrl(hit, portalBase)
   return (
     <button
-      className={`w-full flex items-start gap-3 px-4 py-2.5 text-left transition-colors ${active ? 'bg-[#FFF4E8]' : 'hover:bg-[#F8FAFC]'}`}
+      data-active={active}
+      className="ds-menu-item w-full flex items-start gap-3 px-4 py-2.5 text-left"
       onMouseDown={e => { e.preventDefault(); onSelect(url) }}
     >
-      <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold
-        ${hit.type === 'student'    ? 'bg-orange-100 text-[#FF8A1F]' :
+      <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[12px] font-bold
+        ${hit.type === 'student'    ? 'bg-orange-100 text-[#C2410C]' :
           hit.type === 'instructor' ? 'bg-[#EFF6FF] text-[#2563EB]'    :
-          hit.type === 'course'     ? 'bg-purple-100 text-purple-600' :
+          hit.type === 'course'     ? 'bg-[#E6F6FB] text-[#0E7490]' :
           'bg-[#F1F5F9] text-[#475569]'}`}
       >
         {hit.type === 'student'    ? 'S' :
@@ -49,18 +50,18 @@ function HitRow({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <p className="truncate text-sm font-medium text-[#0B1F3A]">{hit.name}</p>
-          {hit.student_code && <span className="shrink-0 font-mono text-[10px] text-[#94A3B8]">#{hit.student_code}</span>}
+          {hit.student_code && <span className="shrink-0 font-mono text-[11px] text-[#94A3B8]">#{hit.student_code}</span>}
           {hit.quick_action && (
-            <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+            <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${
               hit.quick_action.includes('Blocked') ? 'bg-[#FEE2E2] text-[#DC2626]' :
               hit.quick_action.includes('Collect') ? 'bg-[#FFFBEB] text-[#B45309]' :
-              'bg-orange-100 text-orange-700'
+              'bg-[#FFF4E8] text-[#9A3412]'
             }`}>
               {hit.quick_action}
             </span>
           )}
         </div>
-        <p className="truncate text-[11px] text-[#94A3B8]">
+        <p className="truncate text-[12px] text-[#94A3B8]">
           {hit.type === 'student' && [hit.branch_name, hit.parent_name, hit.phone].filter(Boolean).join(' · ')}
           {hit.type !== 'student' && hit.subtitle}
           {hit.next_due_date && ` · Due ${new Date(hit.next_due_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
@@ -175,11 +176,11 @@ export default function GlobalSearchInput({
           onFocus={() => { if (results) setOpen(true) }}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] py-2.5 pl-10 pr-9 text-sm text-[#0B1F3A] placeholder:text-[#94A3B8] focus:border-[#FF8A1F] focus:outline-none"
+          className="ds-input ds-search-field w-full py-2.5 pl-10 pr-9 text-sm text-[#0B1F3A] placeholder:text-[#94A3B8]"
         />
         {loading && (
           <span className="absolute right-3 top-1/2 -translate-y-1/2">
-            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
+            <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#0E7490] border-t-transparent" />
           </span>
         )}
         {query && !loading && (
@@ -196,10 +197,10 @@ export default function GlobalSearchInput({
 
       {/* Dropdown */}
       {open && allHits.length > 0 && (
-        <div className="absolute left-0 top-full z-50 mt-1.5 w-full min-w-85 overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-lg">
+        <div className="ds-menu absolute left-0 top-full z-50 mt-2 w-full min-w-85">
           {results?.students && results.students.length > 0 && (
             <div>
-              <p className="px-4 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Students</p>
+              <p className="ds-menu-heading px-4 pt-3 pb-1">Students</p>
               {results.students.map((hit, i) => (
                 <HitRow key={hit.id} hit={hit} active={cursor === i} portalBase={portalBase} onSelect={() => handleSelect(hit)} />
               ))}
@@ -207,7 +208,7 @@ export default function GlobalSearchInput({
           )}
           {results?.instructors && results.instructors.length > 0 && (
             <div className="border-t border-[#F1F5F9]">
-              <p className="px-4 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Instructors</p>
+              <p className="ds-menu-heading px-4 pt-3 pb-1">Instructors</p>
               {results.instructors.map((hit, i) => (
                 <HitRow key={hit.id} hit={hit} active={cursor === results.students.length + i} portalBase={portalBase} onSelect={() => handleSelect(hit)} />
               ))}
@@ -215,7 +216,7 @@ export default function GlobalSearchInput({
           )}
           {results?.courses && results.courses.length > 0 && (
             <div className="border-t border-[#F1F5F9]">
-              <p className="px-4 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Courses</p>
+              <p className="ds-menu-heading px-4 pt-3 pb-1">Courses</p>
               {results.courses.map((hit, i) => (
                 <HitRow key={hit.id} hit={hit} active={cursor === results.students.length + results.instructors.length + i} portalBase={portalBase} onSelect={() => handleSelect(hit)} />
               ))}
@@ -223,20 +224,20 @@ export default function GlobalSearchInput({
           )}
           {results?.groups && results.groups.length > 0 && (
             <div className="border-t border-[#F1F5F9]">
-              <p className="px-4 pt-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wide text-[#94A3B8]">Groups</p>
+              <p className="ds-menu-heading px-4 pt-3 pb-1">Groups</p>
               {results.groups.map((hit, i) => (
                 <HitRow key={hit.id} hit={hit} active={cursor === results.students.length + results.instructors.length + results.courses.length + i} portalBase={portalBase} onSelect={() => handleSelect(hit)} />
               ))}
             </div>
           )}
-          <div className="border-t border-[#F1F5F9] px-4 py-2 text-center text-[10px] text-[#94A3B8]">
+          <div className="border-t border-[#F1F5F9] px-4 py-2 text-center text-[11px] text-[#94A3B8]">
             ↑↓ navigate · Enter to open · Esc to close
           </div>
         </div>
       )}
 
       {open && query.length >= 2 && !loading && allHits.length === 0 && (
-        <div className="absolute left-0 top-full z-50 mt-1.5 w-full rounded-xl border border-[#E2E8F0] bg-white p-4 shadow-lg text-center">
+        <div className="ds-menu absolute left-0 top-full z-50 mt-2 w-full p-4 text-center">
           <p className="text-sm text-[#94A3B8]">No results for &ldquo;{query}&rdquo;</p>
         </div>
       )}

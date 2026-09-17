@@ -1,4 +1,4 @@
-﻿import { getTeamLeader }              from '@/modules/team-leaders/queries'
+import { getTeamLeader }              from '@/modules/team-leaders/queries'
 import { getTeamLeaderResponsibilities, listTeamLeaders } from '@/modules/team-leaders/queries'
 import { requirePermission }            from '@/modules/rbac/guards'
 import { notFound }                     from 'next/navigation'
@@ -67,15 +67,15 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
           <div className="mb-4 grid grid-cols-3 gap-3">
             <div className="rounded-lg bg-[#F8FAFC] p-3 text-center">
               <p className="text-xl font-bold text-[#0B1F3A]">{responsibilities.leadCount}</p>
-              <p className="text-[11px] text-[#64748B]">Active Leads</p>
+              <p className="text-[12px] text-[#64748B]">Active Leads</p>
             </div>
             <div className="rounded-lg bg-[#F8FAFC] p-3 text-center">
               <p className="text-xl font-bold text-[#0B1F3A]">{responsibilities.groupCount}</p>
-              <p className="text-[11px] text-[#64748B]">Groups in Branch</p>
+              <p className="text-[12px] text-[#64748B]">Groups in Branch</p>
             </div>
             <div className="rounded-lg bg-[#F8FAFC] p-3 text-center">
               <p className="text-xl font-bold text-[#0B1F3A]">{responsibilities.studentCount}</p>
-              <p className="text-[11px] text-[#64748B]">Students in Branch</p>
+              <p className="text-[12px] text-[#64748B]">Students in Branch</p>
             </div>
           </div>
         )}
@@ -91,7 +91,7 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
         <div className="mt-4 flex items-center gap-2 border-t border-[#E2E8F0] pt-3">
           <Link
             href={`/admin/team-leaders/${tl.user_id}/performance`}
-            className="rounded-lg bg-[#FF8A1F] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e87c18]"
+            className="rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#e87c18]"
           >
             View Performance
           </Link>
@@ -177,7 +177,7 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
                   <td className="px-4 py-3 text-[#64748B]">{ins.email}</td>
                   <td className="px-4 py-3"><StatusBadge status={ins.status} /></td>
                   <td className="px-4 py-3 text-right">
-                    <Link href={`/admin/instructors/${ins.id}`} className="text-xs text-[#FF8A1F] hover:underline">View</Link>
+                    <Link href={`/admin/instructors/${ins.id}`} className="text-xs text-[#C2410C] hover:underline">View</Link>
                   </td>
                 </tr>
               ))}
@@ -208,7 +208,7 @@ export default async function TeamLeaderDetailPage({ params }: Props) {
                   <td className="px-4 py-3 capitalize text-[#64748B]">{g.type}</td>
                   <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">{g.student_count}</td>
                   <td className="px-4 py-3 text-right">
-                    <Link href={`/admin/groups/${g.id}`} className="text-xs text-[#FF8A1F] hover:underline">View</Link>
+                    <Link href={`/admin/groups/${g.id}`} className="text-xs text-[#C2410C] hover:underline">View</Link>
                   </td>
                 </tr>
               ))}

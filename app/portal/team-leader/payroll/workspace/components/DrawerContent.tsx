@@ -37,7 +37,7 @@ export function DrawerContent({
           <Avatar name={row.display_name} size="md" />
           <div>
             <p className="font-bold text-[#0B1F3A] text-[15px]">{row.display_name}</p>
-            <p className="text-[11px] text-[#94A3B8]">
+            <p className="text-[12px] text-[#94A3B8]">
               {isInstructor
                 ? `${(row as InstructorFinanceRow).branch_name} · Instructor`
                 : `${(row as StaffFinanceRow).branch_name} · ${STAFF_ROLE_LABELS[(row as StaffFinanceRow).role] ?? (row as StaffFinanceRow).role}`
@@ -56,7 +56,7 @@ export function DrawerContent({
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
         {/* Earnings breakdown */}
         <div>
-          <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2.5">Earnings Breakdown</p>
+          <p className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2.5">Earnings Breakdown</p>
           <div className="space-y-1.5">
             {isInstructor && (
               <>
@@ -82,7 +82,7 @@ export function DrawerContent({
 
         {/* Payment info */}
         <div>
-          <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2.5">Payment Info</p>
+          <p className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2.5">Payment Info</p>
           <div className="space-y-1.5">
             {isInstructor ? (
               <>
@@ -102,12 +102,12 @@ export function DrawerContent({
                 )}
                 {(row as InstructorFinanceRow).payment_link && (
                   <div className="flex items-center justify-between">
-                    <span className="text-[12px] text-[#64748B]">Instapay Link</span>
+                    <span className="text-[13px] text-[#64748B]">Instapay Link</span>
                     <a
                       href={(row as InstructorFinanceRow).payment_link!}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="truncate text-[12px] text-[#FF8A1F] hover:underline max-w-[160px]"
+                      className="truncate text-[13px] text-[#C2410C] hover:underline max-w-[160px]"
                       title={(row as InstructorFinanceRow).payment_link!}
                     >
                       {(row as InstructorFinanceRow).payment_link}
@@ -135,7 +135,7 @@ export function DrawerContent({
         {/* Adjustments list */}
         <div>
           <div className="flex items-center justify-between mb-2.5">
-            <p className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider">
+            <p className="text-[12px] font-bold text-[#94A3B8] uppercase tracking-wider">
               Adjustments ({adjList.length})
             </p>
             <button
@@ -145,23 +145,23 @@ export function DrawerContent({
                   : (row as StaffFinanceRow).profile_id
                 onAdjust(drawer.kind, id, row.branch_id, row.display_name)
               }}
-              className="text-[11px] font-semibold text-[#FF8A1F] hover:text-[#e07018] transition"
+              className="text-[12px] font-semibold text-[#C2410C] hover:text-[#e07018] transition"
             >
               + Add
             </button>
           </div>
           {adjList.length === 0 ? (
-            <p className="text-[12px] text-[#94A3B8] italic">No adjustments in this period.</p>
+            <p className="text-[13px] text-[#94A3B8] italic">No adjustments in this period.</p>
           ) : (
             <div className="space-y-1.5">
               {adjList.map(a => (
                 <div key={a.id} className="flex items-center justify-between rounded-lg border border-[#E2E8F0] px-3 py-2">
                   <div className="flex items-center gap-2">
                     <AdjBadge type={a.type} amount={a.amount} />
-                    {a.notes && <p className="text-[11px] text-[#64748B]">{a.notes}</p>}
+                    {a.notes && <p className="text-[12px] text-[#64748B]">{a.notes}</p>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <p className="text-[10px] text-[#94A3B8]">{a.adjustment_date}</p>
+                    <p className="text-[11px] text-[#94A3B8]">{a.adjustment_date}</p>
                     <button
                       onClick={() => onRemoveAdj(a.id)}
                       className="text-[#CBD5E1] hover:text-[#F87171] transition"
@@ -184,7 +184,7 @@ export function DrawerContent({
         {isInstructor && (
           <button
             onClick={() => onPayInfo(row as InstructorFinanceRow)}
-            className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[12px] font-semibold text-[#0B1F3A] hover:bg-[#F8FAFC] transition"
+            className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-semibold text-[#0B1F3A] hover:bg-[#F8FAFC] transition"
           >
             Edit Payment Info
           </button>
@@ -192,7 +192,7 @@ export function DrawerContent({
         {!isInstructor && (
           <button
             onClick={() => onEditStaff(row as StaffFinanceRow)}
-            className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[12px] font-semibold text-[#0B1F3A] hover:bg-[#F8FAFC] transition"
+            className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] font-semibold text-[#0B1F3A] hover:bg-[#F8FAFC] transition"
           >
             Edit Profile
           </button>

@@ -15,7 +15,7 @@ interface Props {
 
 function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${LEAD_STATUS_COLORS[status as keyof typeof LEAD_STATUS_COLORS] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[12px] font-semibold ${LEAD_STATUS_COLORS[status as keyof typeof LEAD_STATUS_COLORS] ?? 'bg-[#F1F5F9] text-[#334155]'}`}>
       {status.replace(/_/g, ' ')}
     </span>
   )
@@ -30,7 +30,7 @@ function DaysBadge({ days, status }: { days: number; status: string }) {
       ? 'bg-[#F8FAFC] text-[#64748B]'
       : 'text-[#94A3B8]'
   return (
-    <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] ${cls}`}>
+    <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[12px] ${cls}`}>
       {days}d
     </span>
   )
@@ -69,12 +69,12 @@ export default function LeadsTableClient({ leads, instructors, branches, basePat
       {/* Bulk action bar */}
       {selected.size > 0 && (
         <div className="mb-2 flex items-center gap-3 rounded-xl border border-purple-200 bg-purple-50 px-4 py-2.5">
-          <span className="text-[12px] font-semibold text-purple-700">
+          <span className="text-[13px] font-semibold text-purple-700">
             {selected.size} lead{selected.size !== 1 ? 's' : ''} selected
           </span>
           <button
             onClick={() => setModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-[12px] font-semibold text-white transition hover:bg-purple-700"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-3 py-1.5 text-[13px] font-semibold text-white transition hover:bg-purple-700"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
               <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm-2 8a1 1 0 011-1h8a1 1 0 110 2H5a1 1 0 01-1-1zm0 4a1 1 0 011-1h4a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" />
@@ -83,7 +83,7 @@ export default function LeadsTableClient({ leads, instructors, branches, basePat
           </button>
           <button
             onClick={() => setSelected(new Set())}
-            className="ml-auto text-[11px] text-purple-500 hover:text-purple-700"
+            className="ml-auto text-[12px] text-purple-500 hover:text-purple-700"
           >
             Clear
           </button>
@@ -119,7 +119,7 @@ export default function LeadsTableClient({ leads, instructors, branches, basePat
                         {lead.child_name}
                       </Link>
                       {lead.parent_name && (
-                        <p className="mt-0.5 text-[12px] text-[#64748B]">{lead.parent_name}</p>
+                        <p className="mt-0.5 text-[13px] text-[#64748B]">{lead.parent_name}</p>
                       )}
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
@@ -128,7 +128,7 @@ export default function LeadsTableClient({ leads, instructors, branches, basePat
                     </div>
                   </div>
 
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#64748B]">
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#64748B]">
                     {lead.phone && <a href={`tel:${lead.phone}`} className="font-medium text-[#0B1F3A]">{lead.phone}</a>}
                     <span>{LEAD_SOURCE_LABELS[lead.source] ?? lead.source}</span>
                     {lead.assigned_name && <span>{lead.assigned_name}</span>}
@@ -136,25 +136,25 @@ export default function LeadsTableClient({ leads, instructors, branches, basePat
 
                   <div className="mt-2 flex items-center gap-2">
                     {followUpDate ? (
-                      <span className={`text-[11px] font-medium ${followUpOverdue ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
+                      <span className={`text-[12px] font-medium ${followUpOverdue ? 'text-[#EF4444]' : 'text-[#64748B]'}`}>
                         Follow-up: {followUpDate.toLocaleDateString('en-GB')}
                         {followUpOverdue && ' ⚠'}
                       </span>
                     ) : (
-                      <span className="text-[11px] text-[#94A3B8]">No follow-up</span>
+                      <span className="text-[12px] text-[#94A3B8]">No follow-up</span>
                     )}
                     <div className="ml-auto flex gap-2">
                       {!['CONVERTED', 'LOST'].includes(lead.status) && (
                         <Link
                           href={`${basePath}/${lead.id}?tab=trial`}
-                          className="rounded-lg bg-purple-100 px-2.5 py-1.5 text-[11px] font-semibold text-purple-700 hover:bg-purple-200 transition"
+                          className="rounded-lg bg-purple-100 px-2.5 py-1.5 text-[12px] font-semibold text-purple-700 hover:bg-purple-200 transition"
                         >
                           Trial
                         </Link>
                       )}
                       <Link
                         href={`${basePath}/${lead.id}`}
-                        className="rounded-lg bg-[#FF8A1F]/10 px-3 py-1.5 text-[12px] font-semibold text-[#FF8A1F] min-h-9 flex items-center"
+                        className="rounded-lg bg-[#C2410C]/10 px-3 py-1.5 text-[13px] font-semibold text-[#C2410C] min-h-9 flex items-center"
                       >
                         Manage →
                       </Link>
@@ -213,14 +213,14 @@ export default function LeadsTableClient({ leads, instructors, branches, basePat
                   <td className="px-4 py-3 font-medium text-[#0B1F3A]">
                     {lead.child_name}
                     {lead.parent_name && (
-                      <p className="text-[11px] font-normal text-[#94A3B8]">{lead.parent_name}</p>
+                      <p className="text-[12px] font-normal text-[#94A3B8]">{lead.parent_name}</p>
                     )}
                   </td>
                   <td className="px-4 py-3 text-[#64748B]">{lead.phone ?? '—'}</td>
                   <td className="px-4 py-3">
                     {lead.assigned_name
                       ? <span className="text-sm text-[#0B1F3A]">{lead.assigned_name}</span>
-                      : <span className="text-[11px] text-[#94A3B8]">Unassigned</span>
+                      : <span className="text-[12px] text-[#94A3B8]">Unassigned</span>
                     }
                   </td>
                   <td className="px-4 py-3"><StatusBadge status={lead.status} /></td>
@@ -244,14 +244,14 @@ export default function LeadsTableClient({ leads, instructors, branches, basePat
                       {!['CONVERTED', 'LOST'].includes(lead.status) && (
                         <Link
                           href={`${basePath}/${lead.id}?tab=trial`}
-                          className="rounded px-2 py-1 text-[11px] font-semibold text-purple-600 hover:bg-purple-50 transition"
+                          className="rounded px-2 py-1 text-[12px] font-semibold text-purple-600 hover:bg-purple-50 transition"
                         >
                           Trial
                         </Link>
                       )}
                       <Link
                         href={`${basePath}/${lead.id}`}
-                        className="text-xs font-medium text-[#FF8A1F] hover:underline"
+                        className="text-xs font-medium text-[#C2410C] hover:underline"
                       >
                         Manage
                       </Link>

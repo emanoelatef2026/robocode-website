@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useEffect, useState, useCallback, useTransition, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -458,20 +458,20 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-base font-bold text-[#0B1F3A]">{student.student_name}</h2>
                 {student.student_code && (
-                  <span className="rounded bg-[#F1F5F9] px-1.5 py-px font-mono text-[10px] text-[#64748B]">
+                  <span className="rounded bg-[#F1F5F9] px-1.5 py-px font-mono text-[11px] text-[#64748B]">
                     #{student.student_code}
                   </span>
                 )}
-                <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${RISK_LEVEL_CLASSES[student.risk_level]}`}>
+                <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${RISK_LEVEL_CLASSES[student.risk_level]}`}>
                   {student.risk_level}
                 </span>
                 {student.financial_status && student.financial_status !== 'CURRENT' && (
-                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${STATUS_COLORS[student.financial_status as keyof typeof STATUS_COLORS] ?? ''}`}>
+                  <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${STATUS_COLORS[student.financial_status as keyof typeof STATUS_COLORS] ?? ''}`}>
                     {STATUS_LABELS[student.financial_status as keyof typeof STATUS_LABELS] ?? student.financial_status}
                   </span>
                 )}
                 {student.enrolled_sessions > 0 && exhaustion !== 'HEALTHY' && (
-                  <span className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${SESSION_EXHAUSTION_COLORS[exhaustion]}`}>
+                  <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${SESSION_EXHAUSTION_COLORS[exhaustion]}`}>
                     {SESSION_EXHAUSTION_LABELS[exhaustion]}
                   </span>
                 )}
@@ -486,7 +486,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
               </p>
 
               {/* Phones */}
-              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-[#64748B]">
+              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[12px] text-[#64748B]">
                 {student.student_phone && (
                   <span>Student: <span className="font-medium text-[#0B1F3A]">{student.student_phone}</span></span>
                 )}
@@ -505,7 +505,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
               {student.risk_flags.filter(f => f !== 'session_milestone').length > 0 && (
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {student.risk_flags.filter(f => f !== 'session_milestone').slice(0, 4).map(f => (
-                    <span key={f} className="rounded-full bg-[#FEE2E2] px-1.5 py-0.5 text-[10px] font-medium text-[#EF4444]">
+                    <span key={f} className="rounded-full bg-[#FEE2E2] px-1.5 py-0.5 text-[11px] font-medium text-[#EF4444]">
                       {RISK_FLAG_LABELS[f] ?? f}
                     </span>
                   ))}
@@ -537,7 +537,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
               <button
                 onClick={() => setShowAddPayment(true)}
                 title="Add Payment"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#FF8A1F] text-white hover:bg-[#e87c18]"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-[#C2410C] text-white hover:bg-[#e87c18]"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -555,14 +555,14 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
         {/* ── PACKAGES OVERVIEW (only when student has multiple active contracts) ── */}
         {detail?.all_enrollments && detail.all_enrollments.length > 1 && (
           <div className="shrink-0 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2.5">
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#94A3B8]">Active Contracts</p>
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Active Contracts</p>
             <div className="flex flex-wrap gap-1.5">
               {detail.all_enrollments.map(pkg => {
                 const isCurrent = pkg.enrollment_id === student.enrollment_id
                 const finCls =
                   pkg.financial_status === 'BLOCKED' ? 'border-[#FCA5A5] bg-[#FEE2E2] text-[#DC2626]' :
                   pkg.financial_status === 'OVERDUE'  ? 'border-amber-300 bg-[#FFFBEB] text-[#B45309]' :
-                  isCurrent ? 'border-[#FF8A1F]/40 bg-orange-50 text-[#FF8A1F]' :
+                  isCurrent ? 'border-[#0E7490]/40 bg-orange-50 text-[#C2410C]' :
                   'border-[#E2E8F0] bg-white text-[#0B1F3A]'
                 return (
                   <div key={pkg.enrollment_id} className={`rounded-lg border px-2.5 py-1.5 text-xs ${finCls}`}>
@@ -570,7 +570,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                       {pkg.course_name ?? pkg.group_name ?? 'Contract'}
                       {isCurrent && <span className="ml-1 text-[9px] opacity-70">●</span>}
                     </p>
-                    <p className="text-[10px] opacity-70">
+                    <p className="text-[11px] opacity-70">
                       {pkg.remaining_sessions > 0 ? `${pkg.remaining_sessions} sess. left` : 'Exhausted'}
                     </p>
                   </div>
@@ -585,18 +585,18 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
           <div className="grid grid-cols-3 gap-2">
             {/* Paid */}
             <div className="ds-card px-2.5 py-2">
-              <p className="text-[10px] text-[#94A3B8]">Paid</p>
+              <p className="text-[11px] text-[#94A3B8]">Paid</p>
               <p className="text-xs font-bold text-[#15803D]">EGP {fmt(paidAmt)}</p>
-              {netAmt > 0 && <p className="text-[10px] text-[#94A3B8]">of {fmt(netAmt)}</p>}
+              {netAmt > 0 && <p className="text-[11px] text-[#94A3B8]">of {fmt(netAmt)}</p>}
             </div>
             {/* Remaining */}
             <div className={`rounded-lg border px-2.5 py-2 ${remainingAmt > 0 ? 'border-[#FECACA] bg-[#FEE2E2]' : 'border-[#A7F3D0] bg-[#E7F8EE]'}`}>
-              <p className="text-[10px] text-[#94A3B8]">Remaining</p>
+              <p className="text-[11px] text-[#94A3B8]">Remaining</p>
               <p className={`text-xs font-bold ${remainingAmt > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
                 {remainingAmt > 0 ? `EGP ${fmt(remainingAmt)}` : 'Paid ✓'}
               </p>
               {student.days_overdue > 0 && (
-                <p className="text-[10px] font-medium text-[#EF4444]">{student.days_overdue}d overdue</p>
+                <p className="text-[11px] font-medium text-[#EF4444]">{student.days_overdue}d overdue</p>
               )}
             </div>
             {/* Sessions */}
@@ -606,7 +606,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
               exhaustion === 'WARNING'   ? 'border-[#FDE68A] bg-[#FFFBEB]' :
               'border-[#E2E8F0] bg-white'
             }`}>
-              <p className="text-[10px] text-[#94A3B8]">Sessions</p>
+              <p className="text-[11px] text-[#94A3B8]">Sessions</p>
               {student.enrolled_sessions > 0 ? (
                 <>
                   <p className={`text-xs font-bold ${
@@ -616,7 +616,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                   }`}>
                     {student.remaining_sessions <= 0 ? 'Exhausted' : `${student.remaining_sessions} left`}
                   </p>
-                  <p className="text-[10px] text-[#94A3B8]">{student.consumed_sessions}/{student.enrolled_sessions}</p>
+                  <p className="text-[11px] text-[#94A3B8]">{student.consumed_sessions}/{student.enrolled_sessions}</p>
                 </>
               ) : (
                 <p className="text-xs font-medium text-[#F59E0B]">No pkg</p>
@@ -624,7 +624,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
             </div>
             {/* Attendance */}
             <div className="ds-card px-2.5 py-2">
-              <p className="text-[10px] text-[#94A3B8]">Attendance</p>
+              <p className="text-[11px] text-[#94A3B8]">Attendance</p>
               <p className={`text-xs font-bold ${
                 student.attendance_pct >= 80 ? 'text-[#10B981]' :
                 student.attendance_pct >= 60 ? 'text-[#F59E0B]' :
@@ -633,31 +633,31 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                 {student.total_sessions > 0 ? `${student.attendance_pct}%` : '—'}
               </p>
               {student.total_sessions > 0 && (
-                <p className="text-[10px] text-[#94A3B8]">{student.sessions_attended}/{student.total_sessions}</p>
+                <p className="text-[11px] text-[#94A3B8]">{student.sessions_attended}/{student.total_sessions}</p>
               )}
             </div>
             {/* Last payment (from detail, fallback to static) */}
             <div className="ds-card px-2.5 py-2">
-              <p className="text-[10px] text-[#94A3B8]">Last Payment</p>
+              <p className="text-[11px] text-[#94A3B8]">Last Payment</p>
               <p className="text-xs font-bold text-[#0B1F3A]">
                 {detail?.payments.filter(p => p.amount > 0)[0]
                   ? fmtDateShort(detail.payments.filter(p => p.amount > 0)[0].payment_date)
                   : '—'}
               </p>
               {detail?.payments.filter(p => p.amount > 0)[0] && (
-                <p className="text-[10px] text-[#10B981]">
+                <p className="text-[11px] text-[#10B981]">
                   EGP {fmt(detail.payments.filter(p => p.amount > 0)[0].amount)}
                 </p>
               )}
             </div>
             {/* Next due */}
             <div className={`rounded-lg border px-2.5 py-2 ${student.days_overdue > 0 ? 'border-[#FECACA] bg-[#FEE2E2]' : 'border-[#E2E8F0] bg-white'}`}>
-              <p className="text-[10px] text-[#94A3B8]">Next Due</p>
+              <p className="text-[11px] text-[#94A3B8]">Next Due</p>
               <p className={`text-xs font-bold ${student.days_overdue > 0 ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
                 {student.next_due_date ? fmtDateShort(student.next_due_date) : '—'}
               </p>
               {student.days_overdue > 0 && (
-                <p className="text-[10px] font-medium text-[#EF4444]">{student.days_overdue}d late</p>
+                <p className="text-[11px] font-medium text-[#EF4444]">{student.days_overdue}d late</p>
               )}
             </div>
           </div>
@@ -685,7 +685,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                 Paid Full ({fmt(remainingAmt)})
               </button>
               <button onClick={() => { setShowPayForm(o => !o) }}
-                className="rounded-lg border border-[#FF8A1F]/40 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-[#FF8A1F] hover:bg-orange-100">
+                className="rounded-lg border border-[#0E7490]/40 bg-orange-50 px-3 py-1.5 text-xs font-semibold text-[#C2410C] hover:bg-orange-100">
                 + Add Payment
               </button>
             </div>
@@ -693,15 +693,15 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
             {/* Collection actions */}
             <div className="flex flex-wrap gap-1.5">
               <button onClick={() => handleLogActivity('PAYMENT_REMINDER')} disabled={isPending}
-                className="rounded-lg bg-[#F8FAFC] px-2.5 py-1 text-[11px] font-medium text-[#475569] hover:bg-[#F1F5F9]">
+                className="rounded-lg bg-[#F8FAFC] px-2.5 py-1 text-[12px] font-medium text-[#475569] hover:bg-[#F1F5F9]">
                 Reminder
               </button>
               <button onClick={() => setPromiseOpen(o => !o)}
-                className="rounded-lg bg-[#FFFBEB] px-2.5 py-1 text-[11px] font-medium text-[#B45309] hover:bg-[#FFFBEB]">
+                className="rounded-lg bg-[#FFFBEB] px-2.5 py-1 text-[12px] font-medium text-[#B45309] hover:bg-[#FFFBEB]">
                 Promise
               </button>
               <button onClick={() => setNoteOpen(o => !o)}
-                className="rounded-lg bg-[#F8FAFC] px-2.5 py-1 text-[11px] font-medium text-[#475569] hover:bg-[#F1F5F9]">
+                className="rounded-lg bg-[#F8FAFC] px-2.5 py-1 text-[12px] font-medium text-[#475569] hover:bg-[#F1F5F9]">
                 Note
               </button>
             </div>
@@ -712,7 +712,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                 <input autoFocus value={noteText} onChange={e => setNoteText(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleAddNote()}
                   placeholder="Write a note…"
-                  className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                  className="flex-1 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
                 <button onClick={handleAddNote} disabled={isPending}
                   className="rounded-lg bg-[#334155] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40">Save</button>
                 <button onClick={() => setNoteOpen(false)} className="text-xs text-[#94A3B8]">✕</button>
@@ -723,9 +723,9 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
             {promiseOpen && (
               <div className="flex flex-wrap gap-2">
                 <input type="number" min="1" value={promiseAmt} onChange={e => setPromiseAmt(e.target.value)}
-                  placeholder="Amount…" className="w-28 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                  placeholder="Amount…" className="w-28 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
                 <input type="date" value={promiseDate} onChange={e => setPromiseDate(e.target.value)}
-                  className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                  className="rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
                 <button onClick={handleAddPromise} disabled={isPending}
                   className="rounded-lg bg-[#D97706] px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40">Save</button>
                 <button onClick={() => setPromiseOpen(false)} className="text-xs text-[#94A3B8]">✕</button>
@@ -738,34 +738,34 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                 <p className="text-xs font-semibold text-[#0B1F3A]">Record payment</p>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[10px] text-[#94A3B8] mb-1">Amount (EGP)</label>
+                    <label className="block text-[11px] text-[#94A3B8] mb-1">Amount (EGP)</label>
                     <input type="number" min="1" autoFocus value={payAmt} onChange={e => setPayAmt(e.target.value)}
-                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-[#94A3B8] mb-1">Method</label>
+                    <label className="block text-[11px] text-[#94A3B8] mb-1">Method</label>
                     <select value={payMethod} onChange={e => setPayMethod(e.target.value as PaymentMethod)}
-                      className="w-full rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none">
+                      className="w-full rounded-lg border border-[#E2E8F0] px-2 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none">
                       {Object.entries(PAYMENT_METHOD_LABELS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[10px] text-[#94A3B8] mb-1">Date</label>
+                    <label className="block text-[11px] text-[#94A3B8] mb-1">Date</label>
                     <input type="date" value={payDate} onChange={e => setPayDate(e.target.value)}
-                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
                   </div>
                   <div>
-                    <label className="block text-[10px] text-[#94A3B8] mb-1">Reference</label>
+                    <label className="block text-[11px] text-[#94A3B8] mb-1">Reference</label>
                     <input value={payRef} onChange={e => setPayRef(e.target.value)} placeholder="Instapay / VF ref"
-                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                      className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
                   </div>
                 </div>
                 <input value={payNotes} onChange={e => setPayNotes(e.target.value)} placeholder="Notes (optional)"
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#FF8A1F] focus:outline-none" />
+                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
 
                 {/* Live payment preview */}
                 {payAmtNum > 0 && (
-                  <div className="rounded-lg bg-[#EFF6FF] border border-blue-100 px-3 py-2 text-[11px]">
+                  <div className="rounded-lg bg-[#EFF6FF] border border-blue-100 px-3 py-2 text-[12px]">
                     <p className="font-semibold text-blue-800 mb-1">After this payment:</p>
                     <div className="flex justify-between">
                       <span className="text-[#64748B]">Paid:</span>
@@ -782,10 +782,10 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
 
                 {/* Receipt upload */}
                 <div>
-                  <label className="block text-[10px] text-[#94A3B8] mb-1">Receipt (auto-compressed ≤50 KB)</label>
+                  <label className="block text-[11px] text-[#94A3B8] mb-1">Receipt (auto-compressed ≤50 KB)</label>
                   <div className="flex items-center gap-2">
                     <button type="button" onClick={() => fileRef.current?.click()}
-                      className="rounded-lg border border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-3 py-1.5 text-xs text-[#64748B] hover:border-[#FF8A1F]">
+                      className="rounded-lg border border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-3 py-1.5 text-xs text-[#64748B] hover:border-[#0E7490]">
                       {compressing ? 'Compressing…' : receiptFile ? `✓ ${receiptFile.name}` : 'Choose image'}
                     </button>
                     {receiptPrev && <img src={receiptPrev} alt="Preview" className="h-10 w-10 rounded object-cover border border-[#E2E8F0]" />}
@@ -800,7 +800,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                   <button onClick={() => { setShowPayForm(false); setPayErr(null); setPayAmt('') }}
                     className="flex-1 rounded-lg border border-[#E2E8F0] py-1.5 text-xs text-[#64748B]">Cancel</button>
                   <button onClick={handlePayFormSubmit} disabled={isPending || uploading}
-                    className="flex-1 rounded-lg bg-[#FF8A1F] py-1.5 text-xs font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-1">
+                    className="flex-1 rounded-lg bg-[#C2410C] py-1.5 text-xs font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-1">
                     {(isPending || uploading) && <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />}
                     {uploading ? 'Uploading…' : 'Save Payment'}
                   </button>
@@ -814,7 +814,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
               <p className="text-xs font-medium text-[#B45309]">No financial package yet.</p>
               <button
                 onClick={() => setShowAddPayment(true)}
-                className="inline-flex items-center gap-1 rounded-lg bg-[#FF8A1F] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#e87c18]"
+                className="inline-flex items-center gap-1 rounded-lg bg-[#C2410C] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#e87c18]"
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -830,7 +830,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
           {(['ledger','timeline','attendance'] as DrawerTab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`py-2.5 px-4 text-xs font-medium capitalize border-b-2 transition-colors ${
-                tab === t ? 'border-[#FF8A1F] text-[#0B1F3A]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'
+                tab === t ? 'border-[#0E7490] text-[#0B1F3A]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'
               }`}>
               {t}
             </button>
@@ -855,7 +855,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
               {/* Installments */}
               {detail.installments.length > 0 && (
                 <section>
-                  <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Installment Plan</h3>
+                  <h3 className="mb-2 text-[12px] font-semibold uppercase tracking-wider text-[#94A3B8]">Installment Plan</h3>
                   <div className="space-y-1.5">
                     {detail.installments.map(inst => {
                       const today    = new Date().toISOString().slice(0, 10)
@@ -882,7 +882,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                             </span>
                             {/* Secondary: remaining if partially paid */}
                             {!isPaid && inst.paid_amount > 0 && (
-                              <span className="text-[10px] text-[#F59E0B]">
+                              <span className="text-[11px] text-[#F59E0B]">
                                 EGP {fmt(leftOver)} left
                               </span>
                             )}
@@ -900,10 +900,10 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
               {/* Payment ledger — compact cards */}
               <section>
                 <div className="mb-2 flex items-center justify-between">
-                  <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">
+                  <h3 className="text-[12px] font-semibold uppercase tracking-wider text-[#94A3B8]">
                     Payment Ledger
                   </h3>
-                  <span className="text-[10px] text-[#94A3B8]">
+                  <span className="text-[11px] text-[#94A3B8]">
                     {posPayments.length} payment{posPayments.length !== 1 ? 's' : ''}
                     {negPayments.length > 0 && ` · ${negPayments.length} reversal${negPayments.length > 1 ? 's' : ''}`}
                   </span>
@@ -926,27 +926,27 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                 <span className="text-sm font-bold text-[#15803D]">EGP {fmt(p.amount)}</span>
-                                <span className="rounded bg-[#F1F5F9] px-1.5 py-px text-[10px] text-[#64748B]">
+                                <span className="rounded bg-[#F1F5F9] px-1.5 py-px text-[11px] text-[#64748B]">
                                   {PAYMENT_METHOD_LABELS[p.payment_method] ?? p.payment_method}
                                 </span>
-                                <span className="text-[11px] text-[#94A3B8]">{fmtDateShort(p.payment_date)}</span>
+                                <span className="text-[12px] text-[#94A3B8]">{fmtDateShort(p.payment_date)}</span>
                                 {p.created_by_name && (
-                                  <span className="text-[10px] text-[#CBD5E1]">by {p.created_by_name}</span>
+                                  <span className="text-[11px] text-[#CBD5E1]">by {p.created_by_name}</span>
                                 )}
                               </div>
                               {p.reference_number && (
-                                <p className="mt-0.5 text-[11px] text-[#94A3B8]">Ref: {p.reference_number}</p>
+                                <p className="mt-0.5 text-[12px] text-[#94A3B8]">Ref: {p.reference_number}</p>
                               )}
                               {p.notes && (
-                                <p className="mt-0.5 text-[11px] text-[#64748B]">{p.notes}</p>
+                                <p className="mt-0.5 text-[12px] text-[#64748B]">{p.notes}</p>
                               )}
                               <div className="mt-1 flex items-center gap-2">
-                                <span className={`text-[10px] font-medium ${bal && bal.remainingAfter > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
+                                <span className={`text-[11px] font-medium ${bal && bal.remainingAfter > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
                                   Remaining after: EGP {fmt(bal?.remainingAfter ?? 0)}
                                 </span>
                                 {p.receipt_url && (
                                   <a href={p.receipt_url} target="_blank" rel="noopener noreferrer"
-                                    className="text-[10px] text-[#2563EB] hover:underline">
+                                    className="text-[11px] text-[#2563EB] hover:underline">
                                     receipt ↗
                                   </a>
                                 )}
@@ -956,28 +956,28 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                               {reversing === p.id ? (
                                 <div className="flex flex-col gap-1.5 w-44">
                                   <select value={reversalType} onChange={e => setReversalType(e.target.value as any)}
-                                    className="w-full rounded border border-[#E2E8F0] px-2 py-1 text-xs focus:border-[#FF8A1F] focus:outline-none">
+                                    className="w-full rounded border border-[#E2E8F0] px-2 py-1 text-xs focus:border-[#0E7490] focus:outline-none">
                                     <option value="REVERSAL">Reversal</option>
                                     <option value="REFUND">Refund</option>
                                     <option value="CORRECTION">Correction</option>
                                   </select>
                                   <input value={reversalReason} onChange={e => setReversalReason(e.target.value)}
                                     placeholder="Reason (required)" autoFocus
-                                    className="w-full rounded border border-[#E2E8F0] px-2 py-1 text-xs focus:border-[#FF8A1F] focus:outline-none" />
-                                  {reversalErr && <p className="text-[10px] text-[#EF4444]">{reversalErr}</p>}
+                                    className="w-full rounded border border-[#E2E8F0] px-2 py-1 text-xs focus:border-[#0E7490] focus:outline-none" />
+                                  {reversalErr && <p className="text-[11px] text-[#EF4444]">{reversalErr}</p>}
                                   <div className="flex gap-1">
                                     <button onClick={() => handleReversalSubmit(p.id, p.amount)} disabled={reversalLoading}
-                                      className="flex-1 rounded bg-[#DC2626] py-1 text-[10px] font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-1">
+                                      className="flex-1 rounded bg-[#DC2626] py-1 text-[11px] font-semibold text-white disabled:opacity-40 flex items-center justify-center gap-1">
                                       {reversalLoading && <span className="h-2.5 w-2.5 animate-spin rounded-full border border-white border-t-transparent" />}
                                       Confirm
                                     </button>
                                     <button onClick={() => { setReversing(null); setReversalReason(''); setReversalErr(null) }} disabled={reversalLoading}
-                                      className="flex-1 rounded border border-[#E2E8F0] py-1 text-[10px] text-[#64748B] disabled:opacity-40">Cancel</button>
+                                      className="flex-1 rounded border border-[#E2E8F0] py-1 text-[11px] text-[#64748B] disabled:opacity-40">Cancel</button>
                                   </div>
                                 </div>
                               ) : (
                                 <button onClick={() => { setReversing(p.id); setReversalErr(null) }}
-                                  className="rounded px-2 py-0.5 text-[10px] font-medium text-[#EF4444] bg-[#FEE2E2] hover:bg-[#FEE2E2]">
+                                  className="rounded px-2 py-0.5 text-[11px] font-medium text-[#EF4444] bg-[#FEE2E2] hover:bg-[#FEE2E2]">
                                   Reverse
                                 </button>
                               )}
@@ -1015,7 +1015,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                   <div className="absolute left-3.75 top-0 bottom-0 w-px bg-[#E2E8F0]" />
                   {timeline.map(ev => (
                     <div key={ev.id} className="relative flex gap-3 pb-3">
-                      <div className={`relative z-10 mt-1 flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-full border-2 border-white text-[10px] font-bold ${
+                      <div className={`relative z-10 mt-1 flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-full border-2 border-white text-[11px] font-bold ${
                         ev.kind === 'payment' ? (ev.isCredit ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-[#FEE2E2] text-[#EF4444]') :
                         ev.kind === 'attendance' ? (ev.isCredit ? 'bg-[#EFF6FF] text-[#1D4ED8]' : 'bg-[#F1F5F9] text-[#64748B]') :
                         ev.kind === 'promise' ? 'bg-[#FFFBEB] text-[#B45309]' :
@@ -1029,10 +1029,10 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <p className="text-xs font-medium text-[#0B1F3A] truncate">{ev.title}</p>
-                            {ev.sub && <p className="mt-0.5 text-[11px] text-[#64748B] line-clamp-2">{ev.sub}</p>}
+                            {ev.sub && <p className="mt-0.5 text-[12px] text-[#64748B] line-clamp-2">{ev.sub}</p>}
                           </div>
                           <div className="flex shrink-0 flex-col items-end gap-1">
-                            <span className="text-[10px] text-[#94A3B8] whitespace-nowrap">{fmtDateShort(ev.date)}</span>
+                            <span className="text-[11px] text-[#94A3B8] whitespace-nowrap">{fmtDateShort(ev.date)}</span>
                             {ev.badge && (
                               <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold capitalize ${ev.bColor ?? 'bg-[#F8FAFC] text-[#475569]'}`}>{ev.badge}</span>
                             )}
@@ -1040,7 +1040,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                         </div>
                         {ev.receiptUrl && (
                           <a href={ev.receiptUrl} target="_blank" rel="noopener noreferrer"
-                            className="mt-1 inline-flex items-center gap-1 text-[10px] text-[#2563EB] hover:underline">
+                            className="mt-1 inline-flex items-center gap-1 text-[11px] text-[#2563EB] hover:underline">
                             View receipt →
                           </a>
                         )}
@@ -1097,7 +1097,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                             <td className="px-3 py-2 text-[#0B1F3A]">{s.topic ?? <span className="text-[#94A3B8]">—</span>}</td>
                             <td className="px-3 py-2">
                               {s.attendance_status ? (
-                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium capitalize ${
+                                <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${
                                   pos ? 'bg-[#E7F8EE] text-[#15803D]' :
                                   s.attendance_status === 'absent' ? 'bg-[#FEE2E2] text-[#EF4444]' :
                                   'bg-purple-50 text-purple-700'

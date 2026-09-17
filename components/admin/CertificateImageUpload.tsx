@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState, useRef } from 'react'
 import { compressImage } from '@/lib/uploads/compressImage'
@@ -106,11 +106,11 @@ export default function CertificateImageUpload({
             type="button"
             disabled={uploading}
             onClick={() => inputRef.current?.click()}
-            className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] transition hover:border-[#FF8A1F] hover:text-[#FF8A1F] disabled:opacity-50"
+            className="inline-flex w-fit items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-sm text-[#0B1F3A] transition hover:border-[#0E7490] hover:text-[#9A3412] disabled:opacity-50"
           >
             {uploading ? (
               <>
-                <svg className="h-4 w-4 animate-spin text-[#FF8A1F]" fill="none" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 animate-spin text-[#C2410C]" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
