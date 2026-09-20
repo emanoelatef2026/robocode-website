@@ -135,7 +135,7 @@ async function _computePreview(
   if (enrollmentId) {
     const { data: enrRow } = await db
       .from('student_enrollments')
-      .select('id, enrolled_sessions, consumed_sessions, remaining_sessions, allow_overdraft_sessions, net_amount')
+      .select('id, enrolled_sessions, consumed_sessions, remaining_sessions, net_amount')
       .eq('id', enrollmentId)
       .maybeSingle()
     if (enrRow) {
@@ -145,7 +145,9 @@ async function _computePreview(
         enrolled_sessions:        Number(e.enrolled_sessions ?? 0),
         consumed_sessions:        Number(e.consumed_sessions ?? 0),
         remaining_sessions:       Number(e.remaining_sessions ?? 0),
-        allow_overdraft_sessions: Boolean(e.allow_overdraft_sessions),
+        // Production schemas created before the optional overdraft feature do
+        // not have this column. A contract is therefore capped by default.
+        allow_overdraft_sessions: false,
         net_amount:               Number(e.net_amount ?? 0),
       }
     }

@@ -76,8 +76,13 @@ export function HistoricalReconciliationDialog({
         return
       }
       if (res.data.sessions.length === 0) {
-        // Nothing historical to reconcile — skip silently, no dialog shown.
-        onResolved({ applied: false, choice: { mode: 'NEXT_ONLY' } })
+        // No completed session is eligible for this new contract yet.
+        // Keep this step visible. Staff must explicitly acknowledge that the
+        // new contract starts from the next session.
+        setPreview(res.data)
+        setSelectedIds(new Set())
+        setChoiceMode('NEXT_ONLY')
+        setLoading(false)
         return
       }
       setPreview(res.data)
@@ -135,8 +140,12 @@ export function HistoricalReconciliationDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-90 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+        onMouseDown={event => event.stopPropagation()}
+        onClick={event => event.stopPropagation()}
+      >
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-4">
           <h2 className="text-base font-bold text-[#0B1F3A]">Historical Session Reconciliation</h2>
           <button onClick={onClose} className="text-[#94A3B8] hover:text-[#0B1F3A]" aria-label="Close">✕</button>
@@ -155,9 +164,15 @@ export function HistoricalReconciliationDialog({
 
           {!loading && preview && step === 1 && (
             <>
-              <p className="mb-3 text-sm text-[#475569]">
-                This group has <strong>{preview.sessions.length}</strong> completed session(s) not linked to another contract. Choose exactly which ones belong to this contract.
-              </p>
+              {preview.sessions.length > 0 ? (
+                <p className="mb-3 text-sm text-[#475569]">
+                  This group has <strong>{preview.sessions.length}</strong> completed session(s) not linked to another contract. Choose exactly which ones belong to this contract.
+                </p>
+              ) : (
+                <p className="mb-3 rounded-lg border border-[#BFDBFE] bg-[#EFF6FF] px-3 py-2 text-sm text-[#1D4ED8]">
+                  There are no completed sessions available to load onto this contract. It will start from the next session.
+                </p>
+              )}
 
               <div className="flex flex-col gap-2 sm:flex-row">
                 <button

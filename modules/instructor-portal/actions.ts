@@ -490,7 +490,7 @@ export async function endSession(
   if (sessionDateISO && attRows && attRows.length > 0) {
     const { data: enrollRows } = await db
       .from('student_enrollments')
-      .select('id, student_id, remaining_sessions, allow_overdraft_sessions, enrolled_sessions, start_date, end_date')
+      .select('id, student_id, remaining_sessions, enrolled_sessions, start_date, end_date')
       .eq('status', 'ACTIVE')
       .in('student_id', safeStudents)
       .order('start_date', { ascending: true })
@@ -505,7 +505,7 @@ export async function endSession(
         end_date:           (e.end_date as string | null) ?? null,
         enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
         remaining_sessions: Number(e.remaining_sessions ?? 0),
-        allow_overdraft:    Boolean(e.allow_overdraft_sessions),
+        allow_overdraft:    false,
       }
       const list = allEnrollsByStudent.get(sid) ?? []
       list.push(entry)

@@ -47,7 +47,7 @@ export async function recordContractAttendanceAction(
     .from('student_enrollments')
     .select(`
       id, student_id, branch_id, status, start_date, end_date,
-      enrolled_sessions, remaining_sessions, allow_overdraft_sessions,
+      enrolled_sessions, remaining_sessions,
       group_name_snapshot, course_name_snapshot, instructor_name_snapshot, branch_name_snapshot
     `)
     .eq('id', input.enrollmentId)
@@ -68,7 +68,7 @@ export async function recordContractAttendanceAction(
   }
 
   const consumes = SLOT_CONSUMING_STATUSES.has(input.status)
-  if (consumes && Number(contract.remaining_sessions ?? 0) <= 0 && !contract.allow_overdraft_sessions) {
+  if (consumes && Number(contract.remaining_sessions ?? 0) <= 0) {
     return { error: 'This contract has no remaining sessions.' }
   }
 

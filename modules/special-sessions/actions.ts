@@ -757,7 +757,7 @@ export async function endMakeupSession(sessionId: string): Promise<ActionResult<
 
     const { data: enrollRows } = await db
       .from('student_enrollments')
-      .select('id, student_id, remaining_sessions, allow_overdraft_sessions, enrolled_sessions, start_date, end_date')
+      .select('id, student_id, remaining_sessions, enrolled_sessions, start_date, end_date')
       .eq('status', 'ACTIVE')
       .in('student_id', extraStudentIds)
       .order('start_date', { ascending: true })
