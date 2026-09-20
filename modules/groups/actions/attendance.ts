@@ -13,6 +13,7 @@ interface AttendanceRow {
 
 export async function getStudentAttendanceHistoryAction(
   studentId: string,
+  enrollmentId?: string | null,
 ): Promise<StudentAttendanceHistoryRecord[]> {
   await requirePermission('manage_attendance')
   const db = createServiceClient()
@@ -21,26 +22,36 @@ export async function getStudentAttendanceHistoryAction(
   // (instructors → profiles directly via instructors_user_id_fkey is wrong;
   //  the correct path is instructors → users → profiles).
   // We fetch schedules and group_courses separately to keep the join simple.
-  const [attRes, consRes] = await Promise.all([
-    db
-      .from('attendance_records')
-      .select('id, status, schedule_id')
-      .eq('student_id', studentId)
-      .is('invalidated_at', null)
-      .order('id', { ascending: false })
-      .limit(10),
-    db
-      .from('attendance_consumptions')
-      .select('attendance_record_id')
-      .eq('student_id', studentId),
-  ])
+  const consumptionQuery = db
+    .from('attendance_consumptions')
+    .select('attendance_record_id')
+    .eq('student_id', studentId)
+
+  if (enrollmentId) consumptionQuery.eq('enrollment_id', enrollmentId)
+  const { data: consumptionRows } = await consumptionQuery
+  const consumedIds = new Set(
+    ((consumptionRows ?? []) as Array<{ attendance_record_id: string }>)
+      .map(row => row.attendance_record_id)
+  )
+
+  // Contract-scoped attendance is intentionally read through the consumption
+  // ledger. This prevents an old group or an old contract appearing under a
+  // newly created package in the student quick view.
+  if (enrollmentId && consumedIds.size === 0) return []
+
+  let attendanceQuery = db
+    .from('attendance_records')
+    .select('id, status, schedule_id, group_name_snapshot, instructor_name_snapshot')
+    .eq('student_id', studentId)
+    .is('invalidated_at', null)
+    .order('recorded_at', { ascending: false })
+    .limit(10)
+
+  if (enrollmentId) attendanceQuery = attendanceQuery.in('id', [...consumedIds])
+  const { data: attendanceRows } = await attendanceQuery
+  const attRes = { data: attendanceRows }
 
   if (!attRes.data || attRes.data.length === 0) return []
-
-  const consumedIds = new Set(
-    ((consRes.data ?? []) as Array<{ attendance_record_id: string }>)
-      .map(r => r.attendance_record_id)
-  )
 
   // Enrich with schedule → group_course → group + instructor data
   const schedIds = (attRes.data as any[]).map((r: any) => r.schedule_id as string)
@@ -82,8 +93,8 @@ export async function getStudentAttendanceHistoryAction(
       id:              r.id,
       scheduled_at:    (sched as any).scheduled_at ?? '',
       topic:           (sched as any).topic        ?? null,
-      group_name:      (gc    as any).groups?.name ?? null,
-      instructor_name: instrName,
+      group_name:      (gc    as any).groups?.name ?? r.group_name_snapshot ?? null,
+      instructor_name: instrName ?? r.instructor_name_snapshot ?? null,
       status:          r.status,
       is_consumed:     consumedIds.has(r.id),
     }

@@ -18,6 +18,7 @@ export {
   removeConsumptionAction,
   reconcileStudentConsumptionAction,
 } from './actions/package-ledger'
+export { recordContractAttendanceAction } from './actions/contract-attendance'
 
 export type {
   GroupDetailData,

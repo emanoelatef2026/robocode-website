@@ -76,12 +76,17 @@ export default async function CertificatesPage({ searchParams }: Props) {
       </div>
 
       <div className="ds-card">
-        <div className="flex flex-wrap items-center gap-3 border-b border-[#E2E8F0] px-4 py-3">
-          <SearchInput placeholder="Search by title, name, or code…" />
+        <div className="space-y-2 border-b border-[#E2E8F0] px-3 py-2 sm:flex sm:flex-wrap sm:items-center sm:gap-2 sm:space-y-0 sm:px-4 sm:py-3">
+          <SearchInput
+            placeholder="Search by title, name, or code…"
+            className="w-full sm:w-auto sm:min-w-[260px]"
+          />
+          <div className="grid grid-cols-2 gap-2 sm:contents">
           <FilterSelect
             name="type"
             value={type ?? ''}
             placeholder="All Types"
+            className="ds-filter-select w-full text-sm sm:w-auto"
             options={[
               { value: 'semester_completion', label: 'Course Completion' },
               { value: 'course_completion',   label: 'Course' },
@@ -94,11 +99,13 @@ export default async function CertificatesPage({ searchParams }: Props) {
             name="status"
             value={status ?? ''}
             placeholder="All Statuses"
+            className="ds-filter-select w-full text-sm sm:w-auto"
             options={[
               { value: 'active',  label: 'Active' },
               { value: 'revoked', label: 'Revoked' },
             ]}
           />
+          </div>
         </div>
 
         {result.data.length === 0 ? (
@@ -108,7 +115,61 @@ export default async function CertificatesPage({ searchParams }: Props) {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* On phones, certificates are a readable card list — never a squeezed desktop table. */}
+            <div className="divide-y divide-[#E2E8F0] md:hidden">
+              {result.data.map((c) => (
+                <article key={c.id} className="px-4 py-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-semibold leading-tight text-[#0B1F3A]">{c.title}</p>
+                      <p className="mt-1 truncate text-[13px] font-semibold text-[#0B1F3A]">{c.recipient_name}</p>
+                      {c.student_email && (
+                        <p className="mt-0.5 truncate text-[12px] text-[#64748B]">{c.student_email}</p>
+                      )}
+                    </div>
+                    <StatusBadge status={c.status === 'active' ? 'active' : 'inactive'} />
+                  </div>
+
+                  <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 rounded-xl bg-[#F8FAFC] px-3 py-2.5 text-[12px]">
+                    <div className="min-w-0">
+                      <dt className="font-medium uppercase tracking-wide text-[#94A3B8]">Code</dt>
+                      <dd className="mt-0.5 truncate font-mono text-[#0B1F3A]">{c.certificate_code}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="font-medium uppercase tracking-wide text-[#94A3B8]">Type</dt>
+                      <dd className="mt-0.5 truncate text-[#0B1F3A]">{TYPE_LABELS[c.certificate_type] ?? c.certificate_type}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="font-medium uppercase tracking-wide text-[#94A3B8]">Course</dt>
+                      <dd className="mt-0.5 truncate text-[#0B1F3A]">{c.course_title ?? c.semester_name ?? '—'}</dd>
+                    </div>
+                    <div>
+                      <dt className="font-medium uppercase tracking-wide text-[#94A3B8]">Issued</dt>
+                      <dd className="mt-0.5 text-[#0B1F3A]">{new Date(c.issued_at).toLocaleDateString('en-GB')}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="mt-3 flex items-center justify-end gap-2">
+                    <a
+                      href={`/api/certificates/${c.certificate_code}/pdf`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-lg border border-[#D7E0EA] px-3 py-2 text-[13px] font-semibold text-[#0B1F3A] transition hover:border-[#0E7490] hover:text-[#0E7490]"
+                    >
+                      Download PDF
+                    </a>
+                    <Link
+                      href={`/admin/certificates/${c.id}`}
+                      className="rounded-lg bg-[#C2410C] px-3 py-2 text-[13px] font-semibold text-white transition hover:bg-[#9A3412]"
+                    >
+                      View details
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full text-sm">
                 <thead className="ds-table-head">
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">

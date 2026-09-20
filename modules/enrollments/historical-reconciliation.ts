@@ -98,14 +98,25 @@ async function _computePreview(
   // (any prior enrollment, any status, rows never deleted) never reappear.
   const { data: existingAttendance } = await db
     .from('attendance_records')
-    .select('schedule_id')
+    .select('id, schedule_id, status, invalidated_at')
     .eq('student_id', input.studentId)
     .in('schedule_id', scheduleRows.map(s => s.id))
 
-  const alreadyHas = new Set((existingAttendance ?? []).map((r: any) => r.schedule_id as string))
+  const attendanceBySchedule = new Map(
+    (existingAttendance ?? []).map((r: any) => [r.schedule_id as string, r])
+  )
+  const existingRecordIds = (existingAttendance ?? []).map((r: any) => r.id as string)
+  const { data: linkedRows } = existingRecordIds.length > 0
+    ? await db.from('attendance_consumptions').select('attendance_record_id').in('attendance_record_id', existingRecordIds)
+    : { data: [] as any[] }
+  const linkedRecordIds = new Set((linkedRows ?? []).map((r: any) => r.attendance_record_id as string))
+  const slotStatuses = new Set(['present', 'absent', 'late', 'excused', 'makeup'])
 
   const sessions: HistoricalSessionRow[] = scheduleRows
-    .filter(s => !alreadyHas.has(s.id))
+    .filter(s => {
+      const attendance = attendanceBySchedule.get(s.id) as any
+      return !attendance || (!attendance.invalidated_at && slotStatuses.has(attendance.status) && !linkedRecordIds.has(attendance.id))
+    })
     .map(s => ({
       schedule_id:    s.id,
       session_number: s.session_number,

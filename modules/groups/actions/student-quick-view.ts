@@ -19,15 +19,34 @@ export const getParentAuthDataAction = getParentPortalCredentialsForStudent
 
 export async function getStudentAttendanceSummaryAction(
   studentId: string,
+  enrollmentId?: string | null,
 ): Promise<StudentAttendanceSummary> {
   await requirePermission('manage_attendance')
   const db = createServiceClient()
 
-  const { data } = await db
+  // A contract view is financial/package-scoped, not the student's lifetime
+  // academic history. The ledger is the single source of truth for that scope.
+  let attendanceRecordIds: string[] | null = null
+  if (enrollmentId) {
+    const { data: consumptions } = await db
+      .from('attendance_consumptions')
+      .select('attendance_record_id')
+      .eq('student_id', studentId)
+      .eq('enrollment_id', enrollmentId)
+    attendanceRecordIds = (consumptions ?? []).map((row: any) => row.attendance_record_id as string)
+    if (attendanceRecordIds.length === 0) {
+      return emptyAttendanceSummary()
+    }
+  }
+
+  let query = db
     .from('attendance_records')
     .select('status')
     .eq('student_id', studentId)
     .is('invalidated_at', null)
+
+  if (attendanceRecordIds) query = query.in('id', attendanceRecordIds)
+  const { data } = await query
 
   const rows = (data ?? []) as Array<{ status: string }>
 
@@ -63,5 +82,13 @@ export async function getStudentAttendanceSummaryAction(
     consumed_count:  consumed,
     total_records:   rows.length,
     attendance_pct:  pct,
+  }
+}
+
+function emptyAttendanceSummary(): StudentAttendanceSummary {
+  return {
+    present_count: 0, absent_count: 0, late_count: 0, excused_count: 0,
+    makeup_count: 0, cancelled_count: 0, consumed_count: 0,
+    total_records: 0, attendance_pct: 0,
   }
 }

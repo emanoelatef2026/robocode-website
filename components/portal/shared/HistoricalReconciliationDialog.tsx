@@ -156,7 +156,7 @@ export function HistoricalReconciliationDialog({
           {!loading && preview && step === 1 && (
             <>
               <p className="mb-3 text-sm text-[#475569]">
-                This group already has <strong>{preview.sessions.length}</strong> completed session(s) this student wasn&apos;t marked attendance for. Choose how to handle them.
+                This group has <strong>{preview.sessions.length}</strong> completed session(s) not linked to another contract. Choose exactly which ones belong to this contract.
               </p>
 
               <div className="flex flex-col gap-2 sm:flex-row">
@@ -166,7 +166,7 @@ export function HistoricalReconciliationDialog({
                   onClick={() => setChoiceMode('ALL')}
                 >
                   <div className="text-sm font-bold text-[#0B1F3A]">Apply All</div>
-                  <div className="text-xs text-[#64748B]">Mark every past session present and consume the matching contract sessions.</div>
+                  <div className="text-xs text-[#64748B]">Record missing attendance where needed and consume these contract sessions.</div>
                 </button>
                 <button
                   type="button"

@@ -9,6 +9,7 @@ import Pagination                                from '@/components/admin/Pagina
 import SearchInput                               from '@/components/admin/SearchInput'
 import FilterSelect                              from '@/components/admin/FilterSelect'
 import IssueCertificateModal                     from '@/app/admin/certificates/IssueCertificateModal'
+import { TopbarAction }                          from '@/components/shared/layout/TopbarActionContext'
 import Link                                      from 'next/link'
 
 interface Props {
@@ -61,16 +62,16 @@ export default async function TLCertificatesPage({ searchParams }: Props) {
 
   return (
     <div>
-      <div className="mb-6 flex justify-end">
+      <TopbarAction>
         <IssueCertificateModal
           templates={templates}
           students={students}
           semesters={semestersResult.data.map(s => ({ id: s.id, name: s.name }))}
           courses={coursesResult.data.map(c => ({ id: c.id, title: c.title }))}
-          triggerClassName="inline-flex items-center gap-1.5 rounded-lg bg-[#C2410C] px-3 py-1.5 text-[13px] font-medium text-white transition hover:bg-[#e87c18]"
+          triggerClassName="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-[#C2410C] px-3 text-[13px] font-semibold text-white transition hover:bg-[#9A3412] active:scale-95"
           successRedirect="/portal/team-leader/certificates"
         />
-      </div>
+      </TopbarAction>
 
       <div className="ds-card">
         <div className="border-b border-[#E2E8F0] px-3 py-2 space-y-1.5 sm:px-4 sm:py-3 sm:space-y-0 sm:flex sm:flex-wrap sm:items-center sm:gap-2">

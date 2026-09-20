@@ -15,6 +15,7 @@ import {
   getStudentCourseTimelineAction,
   removeConsumptionAction,
   reconcileStudentConsumptionAction,
+  recordContractAttendanceAction,
   type GroupDetailStudent,
   type StudentAttendanceHistoryRecord,
   type StudentPortalCredentials,
@@ -525,15 +526,31 @@ function FinanceTab({
 // ─── Attendance Tab ───────────────────────────────────────────────────────────
 
 function AttendanceTab({
-  history, loading, attSummary, attSumLoading,
+  history, loading, attSummary, attSumLoading, onAddAttendance, hasContract,
 }: {
   history:       StudentAttendanceHistoryRecord[] | null
   loading:       boolean
   attSummary:    StudentAttendanceSummary | null
   attSumLoading: boolean
+  onAddAttendance: () => void
+  hasContract: boolean
 }) {
   return (
     <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <SectionLabel>Contract Attendance</SectionLabel>
+          <p className="-mt-1 text-[12px] text-[#64748B]">Only sessions consumed from this contract are shown.</p>
+        </div>
+        <button
+          type="button"
+          onClick={onAddAttendance}
+          disabled={!hasContract}
+          className="shrink-0 rounded-lg bg-[#C2410C] px-3 py-1.5 text-[12px] font-semibold text-white transition hover:bg-[#9A3412] disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          + Add attendance
+        </button>
+      </div>
       {attSumLoading ? (
         <div className="grid grid-cols-3 gap-2">
           {[1,2,3].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}
@@ -556,7 +573,7 @@ function AttendanceTab({
       ) : null}
 
       <div>
-        <SectionLabel>Recent Attendance (latest 10)</SectionLabel>
+        <SectionLabel>Contract sessions (latest 10)</SectionLabel>
         {loading ? (
           <div className="space-y-2">
             {[1,2,3].map(i => <Skeleton key={i} className="h-11 rounded-xl" />)}
@@ -592,6 +609,69 @@ function AttendanceTab({
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function ManualContractAttendanceDialog({
+  studentId, enrollmentId, onClose, onSaved,
+}: {
+  studentId: string
+  enrollmentId: string
+  onClose: () => void
+  onSaved: () => void
+}) {
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 16))
+  const [topic, setTopic] = useState('')
+  const [status, setStatus] = useState<'present' | 'absent' | 'late' | 'excused' | 'makeup'>('present')
+  const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+    const result = await recordContractAttendanceAction({
+      studentId, enrollmentId, occurredAt: date, topic, status, notes,
+    })
+    setSaving(false)
+    if ('error' in result) { setError(result.error); return }
+    onSaved()
+  }
+
+  return (
+    <div className="fixed inset-0 z-[85] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4">
+      <form onSubmit={submit} className="w-full max-w-md rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
+        <div className="flex items-start justify-between border-b border-[#E2E8F0] px-5 py-4">
+          <div>
+            <h3 className="text-[15px] font-bold text-[#0B1F3A]">Add contract attendance</h3>
+            <p className="mt-0.5 text-[12px] text-[#64748B]">Individual makeup/other-location attendance. It consumes this contract only.</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-lg p-1 text-[#94A3B8] hover:bg-[#F1F5F9]" aria-label="Close">×</button>
+        </div>
+        <div className="space-y-3 px-5 py-4">
+          {error && <p className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-[12px] text-[#DC2626]">{error}</p>}
+          <label className="block text-[12px] font-semibold text-[#334155]">Date and time
+            <input required type="datetime-local" value={date} onChange={e => setDate(e.target.value)} className="mt-1.5 w-full rounded-lg border border-[#CBD5E1] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
+          </label>
+          <label className="block text-[12px] font-semibold text-[#334155]">Topic
+            <input required maxLength={200} value={topic} onChange={e => setTopic(e.target.value)} placeholder="e.g. Makeup: Variables practice" className="mt-1.5 w-full rounded-lg border border-[#CBD5E1] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
+          </label>
+          <label className="block text-[12px] font-semibold text-[#334155]">Status
+            <select value={status} onChange={e => setStatus(e.target.value as typeof status)} className="mt-1.5 w-full rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-[13px] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15">
+              <option value="present">Present</option><option value="late">Late</option><option value="absent">Absent</option><option value="excused">Excused</option><option value="makeup">Makeup</option>
+            </select>
+          </label>
+          <label className="block text-[12px] font-semibold text-[#334155]">Notes <span className="font-normal text-[#94A3B8]">(optional)</span>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} maxLength={500} rows={2} className="mt-1.5 w-full resize-none rounded-lg border border-[#CBD5E1] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15" />
+          </label>
+        </div>
+        <div className="flex justify-end gap-2 border-t border-[#E2E8F0] px-5 py-4">
+          <button type="button" onClick={onClose} className="rounded-lg border border-[#CBD5E1] px-4 py-2 text-[13px] font-medium text-[#475569]">Cancel</button>
+          <button disabled={saving || !topic.trim()} className="rounded-lg bg-[#C2410C] px-4 py-2 text-[13px] font-semibold text-white hover:bg-[#9A3412] disabled:opacity-50">{saving ? 'Saving…' : 'Save & consume'}</button>
+        </div>
+      </form>
     </div>
   )
 }
@@ -902,6 +982,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   const [ledgerLoad,   setLedgerLoad]  = useState(false)
   const [ledgerDirty,  setLedgerDirty] = useState(false)
   const [reconciling,  setReconciling] = useState(false)
+  const [manualAttendanceOpen, setManualAttendanceOpen] = useState(false)
 
   // History / timeline data (loaded on tab open)
   const [timeline,     setTimeline]    = useState<StudentCourseTimelineEntry[] | null>(null)
@@ -941,11 +1022,11 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   useEffect(() => {
     let cancelled = false
     setHistLoad(true)
-    getStudentAttendanceHistoryAction(s.student_id)
+    getStudentAttendanceHistoryAction(s.student_id, s.enrollment_id)
       .then(h => { if (!cancelled) { setHistory(h); setHistLoad(false) } })
       .catch(() => { if (!cancelled) { setHistory([]); setHistLoad(false) } })
     return () => { cancelled = true }
-  }, [s.student_id])
+  }, [s.student_id, s.enrollment_id])
 
   // Shared loaders — reused by the eager-load effect below AND by
   // handleGenerateCredentials, so a freshly generated password shows up in this
@@ -985,11 +1066,11 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   useEffect(() => {
     let cancelled = false
     setAttSumLoading(true)
-    getStudentAttendanceSummaryAction(s.student_id)
+    getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id)
       .then(d => { if (!cancelled) { setAttSummary(d); setAttSumLoading(false) } })
       .catch(() => { if (!cancelled) { setAttSummary(null); setAttSumLoading(false) } })
     return () => { cancelled = true }
-  }, [s.student_id])
+  }, [s.student_id, s.enrollment_id])
 
   // Lazy-load Package Ledger when that tab is opened (or when dirty after an action)
   const loadLedger = useCallback(() => {
@@ -1034,7 +1115,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     }
     setLedgerDirty(true)
     setTimelineDirty(true)
-    getStudentAttendanceSummaryAction(s.student_id).then(d => setAttSummary(d)).catch(() => {})
+    getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id).then(d => setAttSummary(d)).catch(() => {})
     router.refresh()
     onStudentUpdated?.()
   }
@@ -1049,7 +1130,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     }
     setLedgerDirty(true)
     setTimelineDirty(true)
-    getStudentAttendanceSummaryAction(s.student_id).then(d => setAttSummary(d)).catch(() => {})
+    getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id).then(d => setAttSummary(d)).catch(() => {})
     router.refresh()
     onStudentUpdated?.()
   }
@@ -1185,8 +1266,8 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
 
   function handleEnrollmentWizardSuccess() {
     setWizardOpen(false)
-    getStudentAttendanceSummaryAction(s.student_id).then(d => setAttSummary(d)).catch(() => {})
-    getStudentAttendanceHistoryAction(s.student_id).then(h => setHistory(h)).catch(() => {})
+    getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id).then(d => setAttSummary(d)).catch(() => {})
+    getStudentAttendanceHistoryAction(s.student_id, s.enrollment_id).then(h => setHistory(h)).catch(() => {})
     setTimelineDirty(true)
     router.refresh()
     onStudentUpdated?.()
@@ -1373,6 +1454,8 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 loading={histLoad}
                 attSummary={attSummary}
                 attSumLoading={attSumLoading}
+                hasContract={Boolean(s.enrollment_id)}
+                onAddAttendance={() => setManualAttendanceOpen(true)}
               />
             )}
             {activeTab === 'package-ledger' && (
@@ -1410,6 +1493,21 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
           onClose={() => setWizardOpen(false)}
           onSuccess={handleEnrollmentWizardSuccess}
           overlayClassName="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-8"
+        />
+      )}
+      {manualAttendanceOpen && s.enrollment_id && (
+        <ManualContractAttendanceDialog
+          studentId={s.student_id}
+          enrollmentId={s.enrollment_id}
+          onClose={() => setManualAttendanceOpen(false)}
+          onSaved={() => {
+            setManualAttendanceOpen(false)
+            getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id).then(d => setAttSummary(d)).catch(() => {})
+            getStudentAttendanceHistoryAction(s.student_id, s.enrollment_id).then(h => setHistory(h)).catch(() => {})
+            setLedgerDirty(true)
+            setTimelineDirty(true)
+            router.refresh()
+          }}
         />
       )}
 

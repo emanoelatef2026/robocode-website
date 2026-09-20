@@ -113,6 +113,9 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
       ? db.from('student_enrollments')
           .select('id, student_id, remaining_sessions, consumed_sessions, enrolled_sessions, start_date')
           .in('student_id', studentIds)
+          // The quick view is opened from one group: its package controls must
+          // never pick an unrelated active contract from another group/course.
+          .eq('group_id', groupId)
           .eq('status', 'ACTIVE')
           .order('start_date', { ascending: true, nullsFirst: false })
           .order('created_at', { ascending: true })
@@ -151,7 +154,8 @@ export async function getGroupDetailDataAction(groupId: string): Promise<GroupDe
   for (const p of (progRes.data ?? []) as ProgressRow[]) {
     progMap.set(p.student_id, p.attendance_score ?? 0)
   }
-  // FIFO: take the oldest active enrollment per student (first in ordered results)
+  // A student can have concurrent contracts elsewhere. Within this group, take
+  // the earliest active contract only when more than one group contract exists.
   for (const e of (enrollRes.data ?? []) as EnrollmentRow[]) {
     if (!sessMap.has(e.student_id)) {
       sessMap.set(e.student_id, {
