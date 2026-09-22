@@ -20,7 +20,7 @@ import {
 } from '@/modules/finance/actions'
 import { compressImage } from '@/lib/uploads/compressImage'
 import { buildWhatsAppUrl } from '@/lib/contact-utils'
-import EnrollmentWizard, { type StudentResult, type PreselectedPackage } from './EnrollmentWizard'
+import EnrollmentWizard, { type GroupContext, type StudentResult, type PreselectedPackage } from './EnrollmentWizard'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -137,9 +137,11 @@ type DrawerTab = 'ledger' | 'timeline' | 'attendance'
 interface Props {
   student: StudentOperationsRow
   onClose: () => void
+  /** Present only when the drawer was opened from a group workspace. */
+  groupContext?: GroupContext
 }
 
-export default function StudentOpsDrawer({ student, onClose }: Props) {
+export default function StudentOpsDrawer({ student, onClose, groupContext }: Props) {
   const router = useRouter()
 
   // Detail
@@ -151,6 +153,8 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
   const [netAmt,       setNetAmt]       = useState(student.net_amount)
   const [paidAmt,      setPaidAmt]      = useState(student.paid_amount)
   const [remainingAmt, setRemainingAmt] = useState(student.remaining_amount)
+  const [activeEnrollmentId, setActiveEnrollmentId] = useState<string | null>(student.enrollment_id ?? null)
+  const [autoSelectedContract, setAutoSelectedContract] = useState(false)
 
   // UI state
   const [tab,          setTab]          = useState<DrawerTab>('ledger')
@@ -195,7 +199,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
   const fetchDetail = useCallback(async () => {
     setLoading(true); setDetailErr(null)
     try {
-      const qs  = student.enrollment_id ? `?enrollmentId=${student.enrollment_id}` : ''
+      const qs  = activeEnrollmentId ? `?enrollmentId=${activeEnrollmentId}` : ''
       const res = await fetch(`/api/student-ops/${student.student_id}${qs}`)
       if (!res.ok) throw new Error('Failed to load')
       const data = await res.json()
@@ -208,7 +212,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
     } finally {
       setLoading(false)
     }
-  }, [student.student_id, student.enrollment_id])
+  }, [student.student_id, activeEnrollmentId])
 
   // Always hold the latest fetchDetail in a ref so refreshAll never uses a stale closure
   const fetchDetailRef = useRef(fetchDetail)
@@ -216,6 +220,21 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
 
   // Initial load
   useEffect(() => { fetchDetail() }, [fetchDetail])
+
+  // A fresh group can have a zero-value placeholder while an older contract
+  // still has a balance. Default staff to the payable contract, not the empty
+  // placeholder, and keep the decision visibly selectable.
+  useEffect(() => {
+    if (!detail || autoSelectedContract) return
+    const payable = detail.all_enrollments.find(item => !!item.account_id && item.remaining_amount > 0)
+    setAutoSelectedContract(true)
+    if (payable && payable.enrollment_id !== activeEnrollmentId) setActiveEnrollmentId(payable.enrollment_id)
+  }, [detail, autoSelectedContract, activeEnrollmentId])
+
+  useEffect(() => {
+    setActiveEnrollmentId(student.enrollment_id ?? null)
+    setAutoSelectedContract(false)
+  }, [student.student_id, student.enrollment_id])
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -254,7 +273,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
     try {
       const form = new FormData()
       form.append('file', receiptFile)
-      if (student.enrollment_id) form.append('enrollmentId', student.enrollment_id)
+      if (activeEnrollmentId) form.append('enrollmentId', activeEnrollmentId)
       const res = await fetch('/api/finance/receipts', { method: 'POST', body: form })
       if (!res.ok) { const b = await res.json(); setReceiptUpErr(b.error ?? 'Upload failed'); return null }
       return (await res.json()).url as string
@@ -263,13 +282,13 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
 
   // ── Quick pay ─────────────────────────────────────────────────────────────
   async function handleQuickPay(amount: number | 'full') {
-    if (!student.account_id) return
+    if (!activeAccountId) return
     setQuickPaying(amount); setQuickErr(null)
     startTransition(async () => {
       const res = await quickPayment({
-        account_id:    student.account_id!,
+        account_id:    activeAccountId,
         student_id:    student.student_id,
-        enrollment_id: student.enrollment_id ?? undefined,
+        enrollment_id: activeEnrollmentId ?? undefined,
         amount,
       })
       if ('error' in res) {
@@ -284,7 +303,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
 
   // ── Full payment form submit ───────────────────────────────────────────────
   async function handlePayFormSubmit() {
-    if (!student.account_id) return
+    if (!activeAccountId) return
     const amount = parseFloat(payAmt)
     if (!amount || amount <= 0) { setPayErr('Enter a valid amount'); return }
     setPayErr(null)
@@ -297,9 +316,9 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
 
     startTransition(async () => {
       const res = await addPayment({
-        account_id:       student.account_id!,
+        account_id:       activeAccountId,
         student_id:       student.student_id,
-        enrollment_id:    student.enrollment_id ?? undefined,
+        enrollment_id:    activeEnrollmentId ?? undefined,
         amount,
         payment_date:     payDate,
         payment_method:   payMethod,
@@ -350,8 +369,8 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
     startTransition(async () => {
       await recordActivity({
         student_id:    student.student_id,
-        account_id:    student.account_id    ?? undefined,
-        enrollment_id: student.enrollment_id ?? undefined,
+        account_id:    activeAccountId       ?? undefined,
+        enrollment_id: activeEnrollmentId    ?? undefined,
         activity_type: type,
       })
       refreshAll()
@@ -363,8 +382,8 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
     startTransition(async () => {
       await addFinanceNote({
         student_id:    student.student_id,
-        account_id:    student.account_id    ?? undefined,
-        enrollment_id: student.enrollment_id ?? undefined,
+        account_id:    activeAccountId       ?? undefined,
+        enrollment_id: activeEnrollmentId    ?? undefined,
         note_text:     noteText.trim(),
         is_internal:   true,
       })
@@ -379,8 +398,8 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
     startTransition(async () => {
       await addPaymentPromise({
         student_id:      student.student_id,
-        account_id:      student.account_id    ?? undefined,
-        enrollment_id:   student.enrollment_id ?? undefined,
+        account_id:      activeAccountId       ?? undefined,
+        enrollment_id:   activeEnrollmentId    ?? undefined,
         promised_amount: amt,
         promised_date:   promiseDate,
       })
@@ -393,6 +412,11 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
   const parentPhone   = student.parent_phone_1 || student.parent_phone_2
 
   // Shape used to pre-fill EnrollmentWizard when "Add Payment" is opened from the drawer
+  const activeContract = detail?.all_enrollments.find(item => item.enrollment_id === activeEnrollmentId) ?? null
+  const activeAccountId = activeContract?.account_id ?? student.account_id ?? null
+  const activeEnrolledSessions = activeContract?.enrolled_sessions ?? student.enrolled_sessions
+  const activeRemainingSessions = activeContract?.remaining_sessions ?? student.remaining_sessions
+
   const preselectedStudent: StudentResult = {
     id:                       student.student_id,
     name:                     student.student_name,
@@ -404,17 +428,18 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
     branch_name:              student.branch_name,
     parent_name:              student.parent_name ?? null,
     parent_phone:             student.parent_phone_1 ?? student.parent_phone_2 ?? null,
-    active_enrollments_count: student.enrollment_id ? 1 : 0,
+    active_enrollments_count: activeEnrollmentId ? 1 : 0,
     active_course_ids:        [],
     active_group_name:        student.group_name ?? null,
     financial_status:         student.financial_status ?? null,
-    enrolled_sessions:        student.enrolled_sessions > 0 ? student.enrolled_sessions : null,
-    remaining_sessions:       student.enrolled_sessions > 0 ? student.remaining_sessions : null,
+    enrolled_sessions:        activeEnrolledSessions > 0 ? activeEnrolledSessions : null,
+    remaining_sessions:       activeEnrolledSessions > 0 ? activeRemainingSessions : null,
     active_summaries:         [],
   }
 
-  const preselectedPackages: PreselectedPackage[] = (detail?.all_enrollments ?? [])
+  const preselectedPackages: PreselectedPackage[] = [...(detail?.all_enrollments ?? [])]
     .filter(e => !!e.account_id)
+    .sort((a, b) => Number(b.enrollment_id === activeEnrollmentId) - Number(a.enrollment_id === activeEnrollmentId))
     .map(e => ({
       enrollment_id:      e.enrollment_id,
       account_id:         e.account_id,
@@ -430,7 +455,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
     }))
 
   const progressPct   = netAmt > 0 ? Math.min(100, Math.round((paidAmt / netAmt) * 100)) : 0
-  const exhaustion    = computeSessionExhaustion(student.enrolled_sessions, student.remaining_sessions)
+  const exhaustion    = computeSessionExhaustion(activeEnrolledSessions, activeRemainingSessions)
   const timeline      = detail ? buildTimeline(detail) : []
   const runningBal    = detail ? computeRunningBalance(detail.payments, netAmt) : new Map()
   const posPayments   = detail?.payments.filter(p => p.amount > 0) ?? []
@@ -445,7 +470,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
 
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div
-        className="relative flex w-full max-w-2xl max-h-[90vh] flex-col bg-white shadow-2xl rounded-2xl overflow-hidden"
+        className="relative flex h-[90dvh] max-h-[840px] w-full max-w-2xl min-h-0 flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         role="dialog" aria-modal="true"
         onClick={e => e.stopPropagation()}
       >
@@ -470,7 +495,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                     {STATUS_LABELS[student.financial_status as keyof typeof STATUS_LABELS] ?? student.financial_status}
                   </span>
                 )}
-                {student.enrolled_sessions > 0 && exhaustion !== 'HEALTHY' && (
+                {activeEnrolledSessions > 0 && exhaustion !== 'HEALTHY' && (
                   <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${SESSION_EXHAUSTION_COLORS[exhaustion]}`}>
                     {SESSION_EXHAUSTION_LABELS[exhaustion]}
                   </span>
@@ -556,27 +581,35 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
         {detail?.all_enrollments && detail.all_enrollments.length > 1 && (
           <div className="shrink-0 border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-2.5">
             <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8]">Active Contracts</p>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex gap-1.5 overflow-x-auto pb-1">
               {detail.all_enrollments.map(pkg => {
-                const isCurrent = pkg.enrollment_id === student.enrollment_id
+                const isCurrent = pkg.enrollment_id === activeEnrollmentId
+                const contractLabel = pkg.course_name ?? pkg.group_name ?? (
+                  pkg.remaining_amount > 0 ? 'Previous contract' : `Contract ${detail.all_enrollments.indexOf(pkg) + 1}`
+                )
                 const finCls =
                   pkg.financial_status === 'BLOCKED' ? 'border-[#FCA5A5] bg-[#FEE2E2] text-[#DC2626]' :
                   pkg.financial_status === 'OVERDUE'  ? 'border-amber-300 bg-[#FFFBEB] text-[#B45309]' :
                   isCurrent ? 'border-[#0E7490]/40 bg-orange-50 text-[#C2410C]' :
                   'border-[#E2E8F0] bg-white text-[#0B1F3A]'
                 return (
-                  <div key={pkg.enrollment_id} className={`rounded-lg border px-2.5 py-1.5 text-xs ${finCls}`}>
+                  <button key={pkg.enrollment_id} type="button" onClick={() => {
+                    setActiveEnrollmentId(pkg.enrollment_id)
+                    setShowPayForm(false); setPayErr(null); setQuickErr(null)
+                  }} className={`min-w-[132px] rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors ${finCls} ${isCurrent ? 'ring-1 ring-[#0E7490]' : 'hover:border-[#94A3B8]'}`}>
                     <p className="max-w-28 truncate font-medium">
-                      {pkg.course_name ?? pkg.group_name ?? 'Contract'}
+                      {contractLabel}
                       {isCurrent && <span className="ml-1 text-[9px] opacity-70">●</span>}
                     </p>
                     <p className="text-[11px] opacity-70">
                       {pkg.remaining_sessions > 0 ? `${pkg.remaining_sessions} sess. left` : 'Exhausted'}
                     </p>
-                  </div>
+                    {pkg.remaining_amount > 0 && <p className="text-[11px] font-semibold">EGP {fmt(pkg.remaining_amount)} due</p>}
+                  </button>
                 )
               })}
             </div>
+            <p className="mt-1 text-[11px] text-[#64748B]">The selected contract controls payments, balances, and the tabs below.</p>
           </div>
         )}
 
@@ -607,16 +640,16 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
               'border-[#E2E8F0] bg-white'
             }`}>
               <p className="text-[11px] text-[#94A3B8]">Sessions</p>
-              {student.enrolled_sessions > 0 ? (
+              {activeEnrolledSessions > 0 ? (
                 <>
                   <p className={`text-xs font-bold ${
                     exhaustion === 'EXHAUSTED' ? 'text-purple-700' :
                     exhaustion === 'CRITICAL'  ? 'text-[#EF4444]' :
                     exhaustion === 'WARNING'   ? 'text-[#B45309]' : 'text-[#2563EB]'
                   }`}>
-                    {student.remaining_sessions <= 0 ? 'Exhausted' : `${student.remaining_sessions} left`}
+                    {activeRemainingSessions <= 0 ? 'Exhausted' : `${activeRemainingSessions} left`}
                   </p>
-                  <p className="text-[11px] text-[#94A3B8]">{student.consumed_sessions}/{student.enrolled_sessions}</p>
+                  <p className="text-[11px] text-[#94A3B8]">{activeEnrolledSessions - activeRemainingSessions}/{activeEnrolledSessions}</p>
                 </>
               ) : (
                 <p className="text-xs font-medium text-[#F59E0B]">No pkg</p>
@@ -664,7 +697,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
         </div>
 
         {/* ── QUICK ACTIONS ────────────────────────────────────────────────── */}
-        {student.account_id ? (
+        {activeAccountId ? (
           <div className="shrink-0 border-b border-[#E2E8F0] px-5 py-3 space-y-2">
             {quickErr && <p className="rounded-lg bg-[#FEE2E2] px-3 py-1.5 text-xs text-[#EF4444]">{quickErr}</p>}
 
@@ -734,7 +767,18 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
 
             {/* Full payment form */}
             {showPayForm && (
-              <div className="ds-card p-3 space-y-2">
+              <div className="absolute inset-0 z-20 flex min-h-0 flex-col bg-white">
+                <div className="flex shrink-0 items-center justify-between border-b border-[#E2E8F0] px-5 py-4">
+                  <div>
+                    <h3 className="text-base font-bold text-[#0B1F3A]">Record payment</h3>
+                    <p className="mt-0.5 text-xs text-[#64748B]">This payment will be recorded on the selected contract.</p>
+                  </div>
+                  <button onClick={() => { setShowPayForm(false); setPayErr(null); setPayAmt('') }} className="flex h-8 w-8 items-center justify-center rounded-full text-[#64748B] hover:bg-[#F1F5F9]" aria-label="Close payment form">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+                  </button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+                <div className="ds-card space-y-2 p-3">
                 <p className="text-xs font-semibold text-[#0B1F3A]">Record payment</p>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -806,6 +850,8 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                   </button>
                 </div>
               </div>
+              </div>
+              </div>
             )}
           </div>
         ) : (
@@ -826,10 +872,10 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
         )}
 
         {/* ── TAB BAR ──────────────────────────────────────────────────────── */}
-        <div className="shrink-0 flex border-b border-[#E2E8F0] bg-[#F8FAFC] px-5">
+        <div className="shrink-0 flex overflow-x-auto border-b border-[#E2E8F0] bg-[#F8FAFC] px-5">
           {(['ledger','timeline','attendance'] as DrawerTab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`py-2.5 px-4 text-xs font-medium capitalize border-b-2 transition-colors ${
+              className={`shrink-0 py-2.5 px-4 text-xs font-medium capitalize border-b-2 transition-colors ${
                 tab === t ? 'border-[#0E7490] text-[#0B1F3A]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'
               }`}>
               {t}
@@ -838,7 +884,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
         </div>
 
         {/* ── SCROLLABLE BODY ──────────────────────────────────────────────── */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 space-y-4">
 
           {loading && (
             <div className="space-y-3">
@@ -912,7 +958,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
                 {posPayments.length === 0 ? (
                   <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-6 text-center">
                     <p className="text-xs text-[#94A3B8]">No payments recorded yet.</p>
-                    {student.account_id && (
+                    {activeAccountId && (
                       <p className="mt-1 text-xs text-[#94A3B8]">Use <strong>+ Add Payment</strong> above to record the first payment.</p>
                     )}
                   </div>
@@ -1125,6 +1171,7 @@ export default function StudentOpsDrawer({ student, onClose }: Props) {
           branchIds={[student.branch_id]}
           preselectedStudent={preselectedStudent}
           preselectedPackages={preselectedPackages.length > 0 ? preselectedPackages : undefined}
+          groupContext={groupContext}
           onClose={() => setShowAddPayment(false)}
           onSuccess={() => { setShowAddPayment(false); refreshAll() }}
         />

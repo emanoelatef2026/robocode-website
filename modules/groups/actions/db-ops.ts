@@ -55,7 +55,7 @@ export async function applyStudentChanges(
 
   const courseId = await resolveGroupCourseId(db, groupId)
 
-  await Promise.all([
+  const [removeResult, addResult] = await Promise.all([
     toRemove.length > 0
       ? db.from('group_students')
           .update({ status: 'dropped', left_at: now })
@@ -73,6 +73,20 @@ export async function applyStudentChanges(
         )
       : Promise.resolve(),
   ])
+  if (removeResult && 'error' in removeResult && removeResult.error) throw new Error(removeResult.error.message)
+  if (addResult && 'error' in addResult && addResult.error) throw new Error(addResult.error.message)
+
+  // A successful save must mean that every selected student exists as an
+  // active membership. Never allow the group form to report success while a
+  // roster write was skipped or rejected.
+  if (toAdd.length > 0) {
+    const { data: persisted, error: persistedError } = await db.from('group_students')
+      .select('student_id').eq('group_id', groupId).eq('status', 'active').in('student_id', toAdd)
+    if (persistedError) throw new Error(persistedError.message)
+    if ((persisted ?? []).length !== toAdd.length) {
+      throw new Error(`Roster verification failed: selected ${toAdd.length} student(s), saved ${(persisted ?? []).length}.`)
+    }
+  }
 
   // Close the previous membership only after the new membership is safely
   // written. This is the shared chokepoint for create/edit/quick-add flows.
@@ -102,12 +116,17 @@ export async function applyContractChoice(
     .select('id').eq('group_id', input.groupId).eq('student_id', input.studentId).maybeSingle()
   if (!membership) return
 
+  // Joining a group must never silently create a zero-value contract. Contracts
+  // and their financial accounts are created explicitly from the payment flow.
+  // The only automatic operation allowed here is continuing an existing contract.
+  if (input.mode !== 'continue') return
+
   const { data: current } = await db.from('student_enrollments')
     .select('id, group_id, group_student_id, branch_id, group_course_id, instructor_id, enrollment_type, pricing_plan, total_amount, discount_amount, net_amount, enrolled_sessions, consumed_sessions, notes')
     .eq('student_id', input.studentId).eq('course_id', input.courseId).eq('status', 'ACTIVE')
     .order('created_at', { ascending: true }).limit(1).maybeSingle()
 
-  if (input.mode === 'continue' && current) {
+  if (current) {
     await db.from('student_enrollments').update({
       group_id: input.groupId,
       group_student_id: (membership as { id: string }).id,
@@ -118,53 +137,6 @@ export async function applyContractChoice(
       .eq('enrollment_id', (current as { id: string }).id)
     return
   }
-
-  if (input.mode === 'new' && current) {
-    await db.from('student_enrollments').update({
-      status: 'CANCELLED',
-      end_date: new Date().toISOString().slice(0, 10),
-      notes: `Closed when a new contract was started in group ${input.groupId}.`,
-    }).eq('id', (current as { id: string }).id)
-  }
-
-  const { data: gc } = await db.from('group_courses')
-    .select('id, instructor_id').eq('group_id', input.groupId).eq('course_id', input.courseId)
-    .eq('status', 'active').maybeSingle()
-
-  const { data: enrollment } = await db.from('student_enrollments').insert({
-    student_id: input.studentId,
-    branch_id: input.branchId,
-    group_id: input.groupId,
-    course_id: input.courseId,
-    group_course_id: (gc as any)?.id ?? null,
-    group_student_id: (membership as { id: string }).id,
-    instructor_id: (gc as any)?.instructor_id ?? null,
-    start_date: new Date().toISOString().slice(0, 10),
-    status: 'ACTIVE',
-    enrollment_type: 'primary',
-    total_amount: 0,
-    discount_amount: 0,
-    net_amount: 0,
-    enrolled_sessions: 0,
-    consumed_sessions: 0,
-    pricing_snapshot: { total_amount: 0, discount_amount: 0, net_amount: 0, enrolled_sessions: 0 },
-    created_by: userId,
-  }).select('id').single()
-  if (!enrollment) return
-
-  await db.from('student_financial_accounts').insert({
-    student_id: input.studentId,
-    branch_id: input.branchId,
-    group_id: input.groupId,
-    enrollment_id: (enrollment as { id: string }).id,
-    total_amount: 0,
-    discount_amount: 0,
-    net_amount: 0,
-    paid_amount: 0,
-    remaining_amount: 0,
-    status: 'PAID',
-    created_by: userId,
-  })
 }
 
 // Assigns (or removes) a course + instructor pair to a group.

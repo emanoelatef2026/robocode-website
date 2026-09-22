@@ -679,9 +679,18 @@ export default function GroupFormModal({
 
   const pickerRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
+  // Option data can be refreshed while this modal is open. Keep the draft
+  // roster intact instead of treating that refresh as a fresh create form.
+  const initializedDraftRef = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) {
+      initializedDraftRef.current = null
+      return
+    }
+    const draftKey = `${mode}:${group?.group_id ?? 'new'}`
+    if (initializedDraftRef.current === draftKey) return
+    initializedDraftRef.current = draftKey
     setSelectedBranchId(group?.branch_id ?? defaultBranchId ?? options.branches[0]?.id ?? '')
     setSelectedCourseId(group?.course_id ?? '')
     setPlannedSessions(group?.planned_sessions != null ? String(group.planned_sessions) : '')
@@ -716,7 +725,7 @@ export default function GroupFormModal({
     setShowPicker(false)
     setPickerBranch('')
     setPickerHasGroup('')
-  }, [isOpen, mode, group, studentOptions])
+  }, [isOpen, mode, group?.group_id, defaultBranchId, options.branches])
 
   useEffect(() => {
     if (state?.success) onSuccess(state.data.id)
@@ -1243,6 +1252,9 @@ export default function GroupFormModal({
           )}
 
           <div className="flex items-center justify-end gap-3 border-t border-[#E2E8F0] pt-4">
+            {mode === 'create' && studentsToAdd.length > 0 && (
+              <span className="mr-auto text-xs font-medium text-[#0E7490]">{studentsToAdd.length} student{studentsToAdd.length === 1 ? '' : 's'} will be added</span>
+            )}
             <button type="button" onClick={onClose}
               className="rounded-lg border border-[#E2E8F0] px-4 py-2 text-sm font-medium text-[#374151] hover:bg-[#F8FAFC] transition">
               Cancel

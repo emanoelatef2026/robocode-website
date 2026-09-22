@@ -49,6 +49,98 @@ export interface EnrollStudentFullInput {
   initial_payment_date:    string  // 'YYYY-MM-DD'
   initial_payment_reference?: string
   initial_payment_notes?:   string
+  /** Must be explicit when an active same-course contract already exists. */
+  contract_choice?: 'new' | 'continue'
+}
+
+export interface ContinuableContract {
+  enrollment_id: string
+  contract_code: string | null
+  group_name: string | null
+  enrolled_sessions: number
+  consumed_sessions: number
+  remaining_sessions: number
+  net_amount: number
+  paid_amount: number
+  remaining_amount: number
+}
+
+/** Server-resolved contract summary shown before a group starts another contract. */
+export async function getContinuableContractForGroup(input: {
+  student_id: string
+  group_id: string
+  course_id?: string | null
+}): Promise<{ contract: ContinuableContract | null } | { error: string }> {
+  const user = await requirePermission('manage_financials')
+  const db = createServiceClient()
+  const { data: group } = await db.from('groups').select('branch_id').eq('id', input.group_id).maybeSingle()
+  if (!group) return { error: 'Group not found' }
+  if (user.globalRole !== 'super_admin' && !user.branchIds.includes((group as any).branch_id)) return { error: 'Not authorized for this branch' }
+
+  let courseId = input.course_id ?? null
+  if (!courseId) {
+    const { data } = await db.from('group_courses').select('course_id').eq('group_id', input.group_id).eq('status', 'active').maybeSingle()
+    courseId = (data as any)?.course_id ?? null
+  }
+  if (!courseId) return { contract: null }
+  const { data: enrollment, error } = await db.from('student_enrollments')
+    .select('id, contract_code, group_name_snapshot, enrolled_sessions, consumed_sessions, remaining_sessions, net_amount')
+    .eq('student_id', input.student_id).eq('course_id', courseId).eq('status', 'ACTIVE')
+    .order('created_at', { ascending: true }).limit(1).maybeSingle()
+  if (error) return { error: error.message }
+  if (!enrollment) return { contract: null }
+  const { data: accounts, error: accountError } = await db.from('student_financial_accounts')
+    .select('paid_amount, remaining_amount').eq('enrollment_id', (enrollment as any).id)
+  if (accountError) return { error: accountError.message }
+  const financials = (accounts ?? []) as Array<{ paid_amount: number | null; remaining_amount: number | null }>
+  return { contract: {
+    enrollment_id: (enrollment as any).id,
+    contract_code: (enrollment as any).contract_code ?? null,
+    group_name: (enrollment as any).group_name_snapshot ?? null,
+    enrolled_sessions: Number((enrollment as any).enrolled_sessions ?? 0),
+    consumed_sessions: Number((enrollment as any).consumed_sessions ?? 0),
+    remaining_sessions: Number((enrollment as any).remaining_sessions ?? 0),
+    net_amount: Number((enrollment as any).net_amount ?? 0),
+    paid_amount: financials.reduce((total, item) => total + Number(item.paid_amount ?? 0), 0),
+    remaining_amount: financials.reduce((total, item) => total + Number(item.remaining_amount ?? 0), 0),
+  } }
+}
+
+/** Moves the existing same-course contract to this group without a new account or payment. */
+export async function continueContractInGroup(input: {
+  student_id: string
+  enrollment_id: string
+  group_id: string
+}): Promise<{ ok: true; enrollmentId: string } | { error: string }> {
+  const user = await requirePermission('manage_financials')
+  const db = createServiceClient()
+  const { data: group } = await db.from('groups').select('branch_id, name').eq('id', input.group_id).maybeSingle()
+  if (!group) return { error: 'Group not found' }
+  if (user.globalRole !== 'super_admin' && !user.branchIds.includes((group as any).branch_id)) return { error: 'Not authorized for this branch' }
+  const [{ data: enrollment }, { data: membership }, { data: groupCourse }] = await Promise.all([
+    db.from('student_enrollments').select('id, student_id, course_id').eq('id', input.enrollment_id).eq('student_id', input.student_id).eq('status', 'ACTIVE').maybeSingle(),
+    db.from('group_students').select('id').eq('group_id', input.group_id).eq('student_id', input.student_id).eq('status', 'active').maybeSingle(),
+    db.from('group_courses').select('id, course_id, instructor_id, courses!group_courses_course_id_fkey(title)').eq('group_id', input.group_id).eq('status', 'active').maybeSingle(),
+  ])
+  if (!enrollment) return { error: 'The selected contract is no longer active. Refresh and try again.' }
+  if (!membership) return { error: 'Student must be active in this group before continuing a contract.' }
+  if (!(groupCourse as any)?.course_id || (groupCourse as any).course_id !== (enrollment as any).course_id) return { error: 'The previous contract belongs to a different course.' }
+
+  await closeSameCourseGroupMemberships(db, { studentId: input.student_id, courseId: (enrollment as any).course_id, excludeGroupId: input.group_id, reason: `Contract continued in group ${input.group_id}.` })
+  const { error: enrollmentError } = await db.from('student_enrollments').update({
+    branch_id: (group as any).branch_id, group_id: input.group_id, group_student_id: (membership as any).id,
+    group_course_id: (groupCourse as any).id, instructor_id: (groupCourse as any).instructor_id ?? null,
+    group_name_snapshot: (group as any).name ?? null, course_name_snapshot: (groupCourse as any).courses?.title ?? null,
+  }).eq('id', input.enrollment_id)
+  if (enrollmentError) return { error: enrollmentError.message }
+  const { error: accountError } = await db.from('student_financial_accounts').update({ group_id: input.group_id, branch_id: (group as any).branch_id }).eq('enrollment_id', input.enrollment_id)
+  if (accountError) return { error: accountError.message }
+  await logTimelineEvent({ student_id: input.student_id, enrollment_id: input.enrollment_id, event_type: 'TRANSFER', notes: `Contract continued in ${(group as any).name ?? 'group'}; no new payment was created.`, created_by: user.id, branch_id: (group as any).branch_id })
+  revalidatePath('/portal/team-leader/groups')
+  revalidatePath('/admin/groups')
+  revalidatePath('/portal/team-leader/finance')
+  revalidatePath('/admin/finance')
+  return { ok: true, enrollmentId: input.enrollment_id }
 }
 
 export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<{ ok: true; enrollmentId: string } | { error: string }> {
@@ -123,7 +215,18 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
   // does not depend on the DB constraint firing/racing to behave correctly).
   const existingActive = await findActiveEnrollmentForCourse(db, input.student_id, resolvedCourseId)
   if (existingActive) {
-    return _createFinanceForEnrollment(db, user, existingActive.id, input, net)
+    // Standalone finance remains idempotent. Group flows have a visible
+    // contract-choice step and must never make this decision implicitly.
+    if (!input.group_id) return _createFinanceForEnrollment(db, user, existingActive.id, input, net)
+    if (input.contract_choice !== 'new') {
+      return { error: 'An active contract already exists for this course. Choose “Continue existing contract” or explicitly start a new contract.' }
+    }
+    const { error: closeError } = await db.from('student_enrollments').update({
+      status: 'TRANSFERRED',
+      end_date: input.start_date,
+      notes: 'Superseded by an explicitly created new contract.',
+    }).eq('id', existingActive.id).eq('status', 'ACTIVE')
+    if (closeError) return { error: closeError.message }
   }
 
   // ── 3. Create student_enrollments (with snapshots) ─────────────────────────
@@ -156,6 +259,8 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
         net_amount:      net,
         enrolled_sessions: input.enrolled_sessions ?? 0,
       },
+      renewal_of: existingActive?.id ?? null,
+      transferred_from: existingActive?.id ?? null,
       created_by: user.id,
     })
     .select('id')
@@ -177,12 +282,15 @@ export async function enrollStudentFull(input: EnrollStudentFullInput): Promise<
               .maybeSingle()).data as { id: string } | null
           : null)
       if (!raceExisting) return { error: 'Duplicate enrollment — could not resolve existing record' }
-      return _createFinanceForEnrollment(db, user, raceExisting.id, input, net)
+      return { error: 'Another active contract was created while this form was open. Refresh, review it, and choose the contract explicitly.' }
     }
     return { error: seErr.message }
   }
 
   const enrollmentId = (seRow as any).id as string
+  if (existingActive) {
+    await db.from('student_enrollments').update({ transferred_to: enrollmentId }).eq('id', existingActive.id)
+  }
   return _createFinanceForEnrollment(db, user, enrollmentId, input, net)
 }
 
@@ -217,35 +325,12 @@ async function _createFinanceForEnrollment(
     .select('id')
     .single()
 
-  if (accErr) {
-    // If duplicate (student already has an account), update the enrollment linkage
-    if (accErr.code === '23505') {
-      const { data: existingAcc } = await db
-        .from('student_financial_accounts')
-        .select('id')
-        .eq('student_id', input.student_id)
-        .maybeSingle()
-      if (existingAcc) {
-        await db.from('student_financial_accounts')
-          .update({ enrollment_id: enrollmentId })
-          .eq('id', (existingAcc as any).id)
-      }
-    } else {
-      return { error: accErr.message }
-    }
-  }
+  // Never re-link an arbitrary account belonging to this student. That used
+  // to make a new group look paid while its contract still belonged elsewhere.
+  if (accErr) return { error: accErr.message }
 
   const accountId = (accRow as any)?.id as string | undefined
-  if (!accountId) {
-    // Get the account ID for the existing account
-    const { data: existingAcc } = await db
-      .from('student_financial_accounts')
-      .select('id')
-      .eq('student_id', input.student_id)
-      .maybeSingle()
-    if (!existingAcc) return { error: 'Could not create or find financial account' }
-    return _finishEnrollment(db, user, enrollmentId, (existingAcc as any).id, input)
-  }
+  if (!accountId) return { error: 'Could not create financial account' }
 
   return _finishEnrollment(db, user, enrollmentId, accountId, input)
 }

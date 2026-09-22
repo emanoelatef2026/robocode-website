@@ -47,6 +47,7 @@ export async function createGroupModal(
   }
 
   const { course_id, instructor_id, asst_instructor_id, students_to_add_json, planned_sessions, open_ended, ...rest } = parsed.data
+  const selectedStudentIds = parseStudentIds(students_to_add_json)
 
   if (instructor_id && asst_instructor_id && instructor_id === asst_instructor_id) {
     return { success: false, error: { code: 'VALIDATION', message: 'Lead and assistant instructor must be different.' } }
@@ -56,7 +57,7 @@ export async function createGroupModal(
   const db   = createServiceClient()
 
   // Students must be in the group's branch — validate before creating the group
-  const branchErr = await validateStudentsMatchBranch(db, rest.branch_id, parseStudentIds(students_to_add_json))
+  const branchErr = await validateStudentsMatchBranch(db, rest.branch_id, selectedStudentIds)
   if (branchErr) {
     return { success: false, error: { code: 'VALIDATION', message: branchErr } }
   }
@@ -67,11 +68,10 @@ export async function createGroupModal(
   const processGroup = async (gid: string) => {
     await assignCourseAndInstructor(db, gid, course_id, instructor_id, asst_instructor_id, user.id)
     if (course_id) await updateGroupCoursePlan(db, gid, planned_sessions, open_ended ?? false, user.id)
-    const toAdd = parseStudentIds(students_to_add_json)
-    if (toAdd.length) await applyStudentChanges(db, user.id, gid, rest.branch_id, toAdd, [], parseContractChoices(formData.get('contract_choices_json') as string))
+    if (selectedStudentIds.length) await applyStudentChanges(db, user.id, gid, rest.branch_id, selectedStudentIds, [], parseContractChoices(formData.get('contract_choices_json') as string))
     await db.rpc('write_audit_log', {
       p_performed_by: user.id, p_action: 'create', p_entity_type: 'group',
-      p_entity_id: gid, p_new_values: { name: rest.name, type: rest.type }, p_branch_id: rest.branch_id,
+      p_entity_id: gid, p_new_values: { name: rest.name, type: rest.type, selected_student_count: selectedStudentIds.length }, p_branch_id: rest.branch_id,
     })
     revalidatePath(GROUPS_PATH)
   }

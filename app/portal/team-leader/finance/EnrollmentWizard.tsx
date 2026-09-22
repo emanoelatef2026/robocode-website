@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { enrollStudentFull, cancelContract } from '@/modules/enrollments/actions'
-import type { CancellationReport } from '@/modules/enrollments/actions'
+import { enrollStudentFull, cancelContract, continueContractInGroup, getContinuableContractForGroup } from '@/modules/enrollments/actions'
+import type { CancellationReport, ContinuableContract } from '@/modules/enrollments/actions'
 import { addPayment } from '@/modules/finance/actions'
 import type { PaymentMethod } from '@/modules/finance/types'
 import { PAYMENT_METHOD_LABELS } from '@/modules/finance/types'
@@ -222,6 +222,11 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
   const [quickPayMethod, setQuickPayMethod] = useState<PaymentMethod>('cash')
   const [quickPayDate,   setQuickPayDate]   = useState(new Date().toISOString().slice(0, 10))
   const [quickPayRef,    setQuickPayRef]    = useState('')
+  // For group-driven contracts the operator must deliberately choose whether
+  // an existing same-course contract continues or a new one replaces it.
+  const [continuableContract, setContinuableContract] = useState<ContinuableContract | null>(null)
+  const [loadingContract, setLoadingContract] = useState(false)
+  const [contractChoice, setContractChoice] = useState<'new' | 'continue' | null>(null)
 
   // Historical Enrollment Reconciliation — shown after a successful enrollment
   // into a group, before closing the wizard.
@@ -252,6 +257,25 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
   }, [onClose, reconcileEnrollmentId])
+
+  useEffect(() => {
+    if (!groupContext || !state.student || !groupContext.course_id) {
+      setContinuableContract(null)
+      setContractChoice(null)
+      return
+    }
+    let cancelled = false
+    setLoadingContract(true)
+    setContractChoice(null)
+    getContinuableContractForGroup({ student_id: state.student.id, group_id: groupContext.group_id, course_id: groupContext.course_id })
+      .then(result => {
+        if (cancelled) return
+        if ('error' in result) setError(result.error)
+        else setContinuableContract(result.contract)
+      })
+      .finally(() => { if (!cancelled) setLoadingContract(false) })
+    return () => { cancelled = true }
+  }, [groupContext?.group_id, groupContext?.course_id, state.student?.id])
 
   // Student search with debounce + anti-stale versioning
   useEffect(() => {
@@ -358,6 +382,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
       initial_payment_date:     state.initPayDate,
       initial_payment_reference: state.initPayRef || undefined,
       initial_payment_notes:    state.initPayNotes || undefined,
+      contract_choice:          groupContext ? 'new' : undefined,
     })
 
     setSubmitting(false)
@@ -369,6 +394,32 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
     } else {
       onSuccess(); onClose()
     }
+  }
+
+  async function handleContinueContract() {
+    if (!state.student || !groupContext || !continuableContract) return
+    if (continuableContract.enrolled_sessions > 0 && continuableContract.remaining_sessions <= 0) {
+      setError('This contract has no sessions remaining. Start a new contract instead.')
+      return
+    }
+    setSubmitting(true); setError(null)
+    const result = await continueContractInGroup({
+      student_id: state.student.id,
+      enrollment_id: continuableContract.enrollment_id,
+      group_id: groupContext.group_id,
+    })
+    setSubmitting(false)
+    if ('error' in result) setError(result.error)
+    else setReconcileEnrollmentId(result.enrollmentId)
+  }
+
+  function handleAcademicNext() {
+    if (groupContext && continuableContract) {
+      if (!contractChoice) { setError('Choose whether to continue the existing contract or start a new one.'); return }
+      if (contractChoice === 'continue') { void handleContinueContract(); return }
+    }
+    setError(null)
+    setState(prev => ({ ...prev, step: 3 }))
   }
 
   async function handleExistingPaySubmit() {
@@ -967,6 +1018,37 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
             {/* ── New contract academic fields (hidden in existing mode) ────── */}
             {payMode !== 'existing' && (
               <>
+            {groupContext && loadingContract && (
+              <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-3 text-xs text-[#64748B]">Checking the student’s existing contract…</div>
+            )}
+            {groupContext && continuableContract && (
+              <section className="space-y-3 rounded-xl border border-[#FCD34D] bg-[#FFFBEB] p-3">
+                <div>
+                  <p className="text-sm font-bold text-[#0B1F3A]">Existing contract found for this course</p>
+                  <p className="mt-0.5 text-xs text-[#64748B]">Choose before creating anything financial. Payments already recorded will never be copied.</p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="rounded-lg bg-white px-2 py-2"><p className="text-[#94A3B8]">Package</p><p className="mt-0.5 font-bold text-[#0B1F3A]">{continuableContract.enrolled_sessions || '∞'}</p></div>
+                  <div className="rounded-lg bg-white px-2 py-2"><p className="text-[#94A3B8]">Consumed</p><p className="mt-0.5 font-bold text-[#0B1F3A]">{continuableContract.consumed_sessions}</p></div>
+                  <div className="rounded-lg bg-white px-2 py-2"><p className="text-[#94A3B8]">Left</p><p className="mt-0.5 font-bold text-[#15803D]">{continuableContract.enrolled_sessions ? continuableContract.remaining_sessions : 'Unlimited'}</p></div>
+                </div>
+                <p className="text-[11px] text-[#64748B]">
+                  {continuableContract.contract_code ?? 'Existing contract'}{continuableContract.group_name ? ` · ${continuableContract.group_name}` : ''} · Paid EGP {fmt(continuableContract.paid_amount)} / {fmt(continuableContract.net_amount)}
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <button type="button" onClick={() => { setContractChoice('continue'); setError(null) }}
+                    className={`rounded-xl border p-3 text-left transition-colors ${contractChoice === 'continue' ? 'border-[#0E7490] bg-[#E0F2FE] ring-1 ring-[#0E7490]' : 'border-[#E2E8F0] bg-white hover:border-[#94A3B8]'}`}>
+                    <span className="block text-sm font-bold text-[#0B1F3A]">Continue existing contract</span>
+                    <span className="mt-1 block text-xs text-[#64748B]">No new account or payment. Then choose completed sessions from this group to consume.</span>
+                  </button>
+                  <button type="button" onClick={() => { setContractChoice('new'); setError(null) }}
+                    className={`rounded-xl border p-3 text-left transition-colors ${contractChoice === 'new' ? 'border-[#C2410C] bg-[#FFF7ED] ring-1 ring-[#C2410C]' : 'border-[#E2E8F0] bg-white hover:border-[#94A3B8]'}`}>
+                    <span className="block text-sm font-bold text-[#0B1F3A]">Start a new contract</span>
+                    <span className="mt-1 block text-xs text-[#64748B]">The old contract is preserved in history and a separate new payment plan is created.</span>
+                  </button>
+                </div>
+              </section>
+            )}
             {state.student.active_summaries.length > 0 && (
               <div>
                 <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-wide text-[#64748B]">
@@ -1090,7 +1172,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
                     </button>
                   )}
                   <button
-                    onClick={() => setState(prev => ({ ...prev, step: 3 }))}
+                    onClick={handleAcademicNext}
                     className="flex-1 rounded-xl bg-[#C2410C] py-2.5 text-sm font-medium text-white hover:bg-[#e87c18]"
                   >
                     Next: Finance →
@@ -1263,7 +1345,7 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
               >
                 {submitting ? (
                   <><div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Creating…</>
-                ) : 'Create Contract'}
+                ) : continuableContract ? 'Create New Contract' : 'Create Contract'}
               </button>
             </div>
           </div>

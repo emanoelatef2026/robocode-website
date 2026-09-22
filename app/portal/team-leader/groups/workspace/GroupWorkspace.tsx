@@ -299,6 +299,14 @@ export function GroupWorkspace({
       {drawerOpsRow && isTL && (
         <StudentOpsDrawer
           student={drawerOpsRow}
+          groupContext={{
+            group_id:        group.group_id,
+            group_name:      group.name,
+            course_id:       group.course_id ?? null,
+            course_name:     group.course_name ?? null,
+            instructor_id:   group.lead_instructor_id ?? null,
+            instructor_name: group.lead_instructor_name ?? null,
+          } satisfies GroupContext}
           onClose={() => {
             setDrawerOpsRow(null)
             setSelectedIds(new Set())
