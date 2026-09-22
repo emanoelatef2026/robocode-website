@@ -10,7 +10,7 @@ import { SLOT_CONSUMING_STATUSES } from './constants'
 import { validateAcademicTopic } from '@/modules/academic/constants'
 import {
   checkConsumptionEligibility,
-  resolveFifoEnrollment,
+  resolveAttendanceEnrollment,
   type EnrollmentForConsumption,
   type StudentConsumptionResult,
 } from '@/modules/academic/contract-consumption'
@@ -100,7 +100,7 @@ export async function recordAttendanceSession(
     // Fetch ALL ACTIVE enrollments — we apply the start_date window in JS
     // so we can show 'pre_enrollment' reason even for future-starting contracts.
     db.from('student_enrollments')
-      .select('id, student_id, remaining_sessions, enrolled_sessions, start_date, end_date')
+      .select('id, student_id, group_id, course_id, remaining_sessions, enrolled_sessions, start_date, end_date')
       .eq('status', 'ACTIVE')
       .in('student_id', safeStudentIds)
       .order('start_date', { ascending: true })
@@ -108,6 +108,7 @@ export async function recordAttendanceSession(
 
     db.from('group_courses')
       .select(`
+        course_id,
         courses(title),
         instructors!group_courses_instructor_id_fkey(
           users!instructors_user_id_fkey(
@@ -124,6 +125,7 @@ export async function recordAttendanceSession(
 
   // Extract snapshot values for attendance_records denormalised columns
   const courseName = (gcSnap as any)?.courses?.title ?? null
+  const courseId   = (gcSnap as any)?.course_id as string | null
   const instrProf  = (gcSnap as any)?.instructors?.users?.profiles
   const instrName  = instrProf
     ? ([instrProf.first_name, instrProf.last_name].filter(Boolean).join(' ') || null)
@@ -139,6 +141,8 @@ export async function recordAttendanceSession(
     const sid     = e.student_id as string
     const entry: EnrollmentForConsumption = {
       id:                 e.id,
+      group_id:           (e.group_id as string | null) ?? null,
+      course_id:          (e.course_id as string | null) ?? null,
       start_date:         e.start_date ?? sessionDatePart,  // fallback to session date if missing
       end_date:           (e.end_date as string | null) ?? null,
       enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
@@ -152,9 +156,16 @@ export async function recordAttendanceSession(
 
   // For each student, resolve the FIFO enrollment applicable to sessionDate
   const enrollForSession = new Map<string, EnrollmentForConsumption | null>()
+  const allowHistoricalGroupSession = new Map<string, boolean>()
   for (const sid of safeStudentIds) {
     const enrollments = allEnrollsByStudent.get(sid) ?? []
-    enrollForSession.set(sid, resolveFifoEnrollment(enrollments, sessionDateISO))
+    const resolution = resolveAttendanceEnrollment(enrollments, {
+      groupId: group_id,
+      courseId,
+      sessionDate: sessionDateISO,
+    })
+    enrollForSession.set(sid, resolution.enrollment)
+    allowHistoricalGroupSession.set(sid, resolution.allowHistoricalGroupSession)
   }
 
   // ── Session upsert: reuse existing schedule at exact same datetime ─────────────
@@ -268,7 +279,8 @@ export async function recordAttendanceSession(
       rec.status as string,
       sessionDateISO,
       enrollment,
-      SLOT_CONSUMING_STATUSES
+      SLOT_CONSUMING_STATUSES,
+      { allowPreEnrollment: allowHistoricalGroupSession.get(sid) ?? false },
     )
     checkByStudentId.set(sid, check)
 

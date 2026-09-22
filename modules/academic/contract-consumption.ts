@@ -31,6 +31,15 @@ export interface EnrollmentForConsumption {
   enrolled_sessions:  number
   remaining_sessions: number
   allow_overdraft:    boolean
+  group_id?:          string | null
+  course_id?:         string | null
+}
+
+export interface AttendanceEnrollmentResolution {
+  enrollment: EnrollmentForConsumption | null
+  /** A contract explicitly assigned to this group may absorb a historical
+   * group session selected by an admin during reconciliation. */
+  allowHistoricalGroupSession: boolean
 }
 
 export interface StudentConsumptionResult {
@@ -63,7 +72,8 @@ export function checkConsumptionEligibility(
   attendanceStatus:      string,
   sessionDate:           string,
   enrollment:            EnrollmentForConsumption | null,
-  slotConsumingStatuses: ReadonlySet<string>
+  slotConsumingStatuses: ReadonlySet<string>,
+  options:               { allowPreEnrollment?: boolean } = {},
 ): ConsumptionCheck {
   // Rule 1 — attendance must be slot-consuming
   if (!slotConsumingStatuses.has(attendanceStatus)) {
@@ -89,7 +99,7 @@ export function checkConsumptionEligibility(
   // Rule 4a — session must be on or after enrollment effective date
   const sessionDay    = sessionDate.slice(0, 10)          // 'YYYY-MM-DD'
   const enrollmentDay = enrollment.start_date.slice(0, 10)
-  if (sessionDay < enrollmentDay) {
+  if (sessionDay < enrollmentDay && !options.allowPreEnrollment) {
     return {
       shouldConsume:        false,
       reason:               'pre_enrollment',
@@ -142,6 +152,38 @@ export function checkConsumptionEligibility(
     enrollmentId:         enrollment.id,
     enrollmentStartDate:  enrollment.start_date,
     sessionsRemaining:    enrollment.remaining_sessions,
+  }
+}
+
+/**
+ * Resolves the only contract that an attendance record is allowed to consume.
+ *
+ * A group attendance submission must never consume an unrelated legacy
+ * contract just because it is older. Prefer the group's explicit contract;
+ * for legacy data, fall back only to a contract for the same course. Generic
+ * or another-group contracts are intentionally excluded.
+ */
+export function resolveAttendanceEnrollment(
+  enrollments: EnrollmentForConsumption[],
+  context: { groupId: string; courseId: string | null; sessionDate: string },
+): AttendanceEnrollmentResolution {
+  const groupEnrollments = enrollments.filter(enrollment => enrollment.group_id === context.groupId)
+  if (groupEnrollments.length > 0) {
+    return {
+      enrollment: resolveFifoEnrollment(groupEnrollments, context.sessionDate),
+      allowHistoricalGroupSession: true,
+    }
+  }
+
+  const courseEnrollments = context.courseId
+    ? enrollments.filter(enrollment => enrollment.course_id === context.courseId)
+    : []
+
+  return {
+    enrollment: courseEnrollments.length > 0
+      ? resolveFifoEnrollment(courseEnrollments, context.sessionDate)
+      : null,
+    allowHistoricalGroupSession: false,
   }
 }
 

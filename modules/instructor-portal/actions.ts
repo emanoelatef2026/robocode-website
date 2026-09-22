@@ -17,7 +17,7 @@ import { validateAcademicTopic } from '@/modules/academic/constants'
 import { SLOT_CONSUMING_STATUSES } from '@/modules/attendance/constants'
 import {
   checkConsumptionEligibility,
-  resolveFifoEnrollment,
+  resolveAttendanceEnrollment,
   type EnrollmentForConsumption,
 } from '@/modules/academic/contract-consumption'
 import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
@@ -82,24 +82,25 @@ async function getSessionAccessContext(
   sessionId:    string,
   instructorId: string,
   db:           ReturnType<typeof createServiceClient>
-): Promise<{ groupId: string; branchId: string } | null> {
+): Promise<{ groupId: string; courseId: string | null; branchId: string } | null> {
   // Fetch branch_id in the same query (needed for audit logs)
   const { data: sessRow } = await db
     .from('schedules')
-    .select('branch_id, group_courses!schedules_group_course_id_fkey(group_id)')
+    .select('branch_id, group_courses!schedules_group_course_id_fkey(group_id, course_id)')
     .eq('id', sessionId)
     .maybeSingle()
 
   if (!sessRow) return null
   const branchId = (sessRow as any).branch_id as string
   const groupId  = (sessRow as any).group_courses?.group_id as string | undefined
+  const courseId = (sessRow as any).group_courses?.course_id as string | null
   if (!groupId) return null
 
   // Ownership check (membership + allocation range + allocation_status)
   const check = await validateSessionOwnership(instructorId, sessionId, db)
   if (!check.allowed) return null
 
-  return { groupId, branchId }
+  return { groupId, courseId, branchId }
 }
 
 // ── Session CRUD ──────────────────────────────────────────────────────────────
@@ -490,7 +491,7 @@ export async function endSession(
   if (sessionDateISO && attRows && attRows.length > 0) {
     const { data: enrollRows } = await db
       .from('student_enrollments')
-      .select('id, student_id, remaining_sessions, enrolled_sessions, start_date, end_date')
+      .select('id, student_id, group_id, course_id, remaining_sessions, enrolled_sessions, start_date, end_date')
       .eq('status', 'ACTIVE')
       .in('student_id', safeStudents)
       .order('start_date', { ascending: true })
@@ -501,6 +502,8 @@ export async function endSession(
       const sid   = e.student_id as string
       const entry: EnrollmentForConsumption = {
         id:                 e.id,
+        group_id:           (e.group_id as string | null) ?? null,
+        course_id:          (e.course_id as string | null) ?? null,
         start_date:         e.start_date ?? sessionDateISO.slice(0, 10),
         end_date:           (e.end_date as string | null) ?? null,
         enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
@@ -518,8 +521,19 @@ export async function endSession(
 
     for (const rec of (attRows as any[])) {
       const sid        = rec.student_id as string
-      const enrollment = resolveFifoEnrollment(allEnrollsByStudent.get(sid) ?? [], sessionDateISO)
-      const check      = checkConsumptionEligibility(rec.status as string, sessionDateISO, enrollment, SLOT_CONSUMING_STATUSES)
+      const resolution = resolveAttendanceEnrollment(allEnrollsByStudent.get(sid) ?? [], {
+        groupId: ctx.groupId,
+        courseId: ctx.courseId,
+        sessionDate: sessionDateISO,
+      })
+      const enrollment = resolution.enrollment
+      const check = checkConsumptionEligibility(
+        rec.status as string,
+        sessionDateISO,
+        enrollment,
+        SLOT_CONSUMING_STATUSES,
+        { allowPreEnrollment: resolution.allowHistoricalGroupSession },
+      )
       if (check.shouldConsume && enrollment) {
         p_record_ids.push(rec.id as string)
         p_enrollment_ids.push(enrollment.id)
