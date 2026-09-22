@@ -15,7 +15,7 @@ import {
   SESSION_EXHAUSTION_LABELS, SESSION_EXHAUSTION_COLORS,
 } from '@/modules/finance/types'
 import {
-  addPayment, quickPayment, addFinanceNote,
+  addPayment, quickPayment, addFinanceNote, setContractPricing,
   recordActivity, addPaymentPromise, createReversal,
 } from '@/modules/finance/actions'
 import { compressImage } from '@/lib/uploads/compressImage'
@@ -169,6 +169,8 @@ export default function StudentOpsDrawer({ student, onClose, groupContext }: Pro
   const [payRef,    setPayRef]    = useState('')
   const [payNotes,  setPayNotes]  = useState('')
   const [payErr,    setPayErr]    = useState<string | null>(null)
+  const [contractTotal, setContractTotal] = useState('')
+  const [contractDiscount, setContractDiscount] = useState('0')
 
   // Receipt upload
   const [receiptFile,  setReceiptFile]  = useState<File | null>(null)
@@ -235,6 +237,13 @@ export default function StudentOpsDrawer({ student, onClose, groupContext }: Pro
     setActiveEnrollmentId(student.enrollment_id ?? null)
     setAutoSelectedContract(false)
   }, [student.student_id, student.enrollment_id])
+
+  useEffect(() => {
+    const selectedContract = detail?.all_enrollments.find(item => item.enrollment_id === activeEnrollmentId)
+    if (!showPayForm || !selectedContract) return
+    setContractTotal(selectedContract.total_amount > 0 ? String(selectedContract.total_amount) : '')
+    setContractDiscount(String(selectedContract.discount_amount ?? 0))
+  }, [showPayForm, detail, activeEnrollmentId])
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -304,8 +313,15 @@ export default function StudentOpsDrawer({ student, onClose, groupContext }: Pro
   // ── Full payment form submit ───────────────────────────────────────────────
   async function handlePayFormSubmit() {
     if (!activeAccountId) return
-    const amount = parseFloat(payAmt)
-    if (!amount || amount <= 0) { setPayErr('Enter a valid amount'); return }
+    const amount = payAmt.trim() ? parseFloat(payAmt) : 0
+    const total = contractTotal.trim() ? parseFloat(contractTotal) : 0
+    const discount = contractDiscount.trim() ? parseFloat(contractDiscount) : 0
+    const pricingChanged = total > 0 || contractDiscount.trim() !== '0'
+    if (payAmt.trim() && (!Number.isFinite(amount) || amount <= 0)) { setPayErr('Payment amount must be greater than zero.'); return }
+    if (pricingChanged && (!Number.isFinite(total) || total <= 0)) { setPayErr('Enter the agreed contract price.'); return }
+    if (pricingChanged && (!Number.isFinite(discount) || discount < 0 || discount > total)) { setPayErr('Check the discount amount.'); return }
+    if (!pricingChanged && netAmt <= 0) { setPayErr('Set the agreed contract price before recording payments.'); return }
+    if (!pricingChanged && amount <= 0) { setPayErr('Enter a contract price or a payment amount.'); return }
     setPayErr(null)
 
     let receiptUrl: string | null = null
@@ -315,6 +331,23 @@ export default function StudentOpsDrawer({ student, onClose, groupContext }: Pro
     }
 
     startTransition(async () => {
+      if (pricingChanged) {
+        const pricingResult = await setContractPricing({
+          account_id: activeAccountId,
+          enrollment_id: activeEnrollmentId ?? '',
+          total_amount: total,
+          discount_amount: discount,
+        })
+        if ('error' in pricingResult) { setPayErr(pricingResult.error); return }
+        setNetAmt(pricingResult.net_amount)
+        syncBalance(pricingResult.paid_amount, pricingResult.remaining_amount)
+      }
+
+      if (amount <= 0) {
+        setShowPayForm(false)
+        refreshAll()
+        return
+      }
       const res = await addPayment({
         account_id:       activeAccountId,
         student_id:       student.student_id,
@@ -462,7 +495,12 @@ export default function StudentOpsDrawer({ student, onClose, groupContext }: Pro
   const negPayments   = detail?.payments.filter(p => p.amount < 0) ?? []
   const lastFiveSess  = detail?.attendance_sessions.slice(0, 5) ?? []
   const payAmtNum     = parseFloat(payAmt) || 0
-  const previewRemaining = Math.max(0, remainingAmt - payAmtNum)
+  const formTotal = parseFloat(contractTotal) || 0
+  const formDiscount = parseFloat(contractDiscount) || 0
+  const formNet = Math.max(0, formTotal - formDiscount)
+  const effectiveNet = formTotal > 0 ? formNet : netAmt
+  const effectiveRemaining = Math.max(0, effectiveNet - paidAmt)
+  const previewRemaining = Math.max(0, effectiveRemaining - payAmtNum)
 
   return (
     <>
@@ -778,12 +816,34 @@ export default function StudentOpsDrawer({ student, onClose, groupContext }: Pro
                   </button>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
-                <div className="ds-card space-y-2 p-3">
-                <p className="text-xs font-semibold text-[#0B1F3A]">Record payment</p>
+                <div className="ds-card space-y-3 p-3">
+                <section className="rounded-lg border border-[#D9E4F0] bg-[#F8FAFC] p-3">
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold text-[#0B1F3A]">Contract price</p>
+                      <p className="text-[11px] text-[#64748B]">Set this even when no payment has been received yet.</p>
+                    </div>
+                    {formTotal > 0 && <span className="text-xs font-bold text-[#C2410C]">Net: EGP {fmt(formNet)}</span>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="mb-1 block text-[11px] text-[#64748B]">Agreed price (EGP)</label>
+                      <input type="number" min="1" autoFocus value={contractTotal} onChange={e => setContractTotal(e.target.value)} placeholder="e.g. 3,400"
+                        className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[11px] text-[#64748B]">Discount (EGP)</label>
+                      <input type="number" min="0" value={contractDiscount} onChange={e => setContractDiscount(e.target.value)} placeholder="0"
+                        className="w-full rounded-lg border border-[#E2E8F0] bg-white px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
+                    </div>
+                  </div>
+                </section>
+                <section>
+                <p className="mb-2 text-xs font-semibold text-[#0B1F3A]">Payment received today <span className="font-normal text-[#94A3B8]">(optional)</span></p>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[11px] text-[#94A3B8] mb-1">Amount (EGP)</label>
-                    <input type="number" min="1" autoFocus value={payAmt} onChange={e => setPayAmt(e.target.value)}
+                    <input type="number" min="0" value={payAmt} onChange={e => setPayAmt(e.target.value)} placeholder="0"
                       className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
                   </div>
                   <div>
@@ -804,6 +864,7 @@ export default function StudentOpsDrawer({ student, onClose, groupContext }: Pro
                       className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
                   </div>
                 </div>
+                </section>
                 <input value={payNotes} onChange={e => setPayNotes(e.target.value)} placeholder="Notes (optional)"
                   className="w-full rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm focus:border-[#0E7490] focus:outline-none" />
 
@@ -813,7 +874,7 @@ export default function StudentOpsDrawer({ student, onClose, groupContext }: Pro
                     <p className="font-semibold text-blue-800 mb-1">After this payment:</p>
                     <div className="flex justify-between">
                       <span className="text-[#64748B]">Paid:</span>
-                      <span className="font-semibold text-[#15803D]">EGP {fmt(paidAmt + payAmtNum)} / {fmt(netAmt)}</span>
+                      <span className="font-semibold text-[#15803D]">EGP {fmt(paidAmt + payAmtNum)} / {fmt(effectiveNet)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-[#64748B]">Remaining:</span>

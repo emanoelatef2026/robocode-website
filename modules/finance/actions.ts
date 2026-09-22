@@ -715,3 +715,61 @@ export async function updateAccountDiscount(accountId: string, discountAmount: n
   revalidatePath('/portal/team-leader/finance')
   return { ok: true }
 }
+
+/**
+ * Sets the agreed price of an existing contract without recording a payment.
+ * The financial account and its enrollment are updated together so group
+ * collection percentages always use the agreed (discounted) value.
+ */
+export async function setContractPricing(input: {
+  account_id: string
+  enrollment_id: string
+  total_amount: number
+  discount_amount: number
+}): Promise<{ ok: true; net_amount: number; paid_amount: number; remaining_amount: number } | { error: string }> {
+  const user = await requirePermission('manage_financials')
+  const total = Number(input.total_amount)
+  const discount = Number(input.discount_amount ?? 0)
+  if (!Number.isFinite(total) || total <= 0) return { error: 'Contract price must be greater than zero.' }
+  if (!Number.isFinite(discount) || discount < 0) return { error: 'Discount cannot be negative.' }
+  if (discount > total) return { error: 'Discount cannot exceed the contract price.' }
+
+  const db = createServiceClient()
+  const { data: account, error: accountError } = await db.from('student_financial_accounts')
+    .select('branch_id, enrollment_id, paid_amount')
+    .eq('id', input.account_id)
+    .maybeSingle()
+  if (accountError || !account) return { error: 'Financial account not found.' }
+  if ((account as any).enrollment_id !== input.enrollment_id) return { error: 'The selected contract does not match this financial account.' }
+  assertBranchAccess(user, (account as any).branch_id)
+
+  const net = total - discount
+  const paid = Number((account as any).paid_amount ?? 0)
+  const remaining = Math.max(0, net - paid)
+  const status = remaining <= 0 ? 'PAID' : 'CURRENT'
+  const updatedAt = new Date().toISOString()
+
+  const { error: financialError } = await db.from('student_financial_accounts').update({
+    total_amount: total,
+    discount_amount: discount,
+    net_amount: net,
+    remaining_amount: remaining,
+    status,
+    updated_at: updatedAt,
+  }).eq('id', input.account_id)
+  if (financialError) return { error: financialError.message }
+
+  const { error: enrollmentError } = await db.from('student_enrollments').update({
+    total_amount: total,
+    discount_amount: discount,
+    net_amount: net,
+    updated_at: updatedAt,
+  }).eq('id', input.enrollment_id)
+  if (enrollmentError) return { error: enrollmentError.message }
+
+  revalidatePath('/admin/groups')
+  revalidatePath('/portal/team-leader/groups')
+  revalidatePath('/admin/finance')
+  revalidatePath('/portal/team-leader/finance')
+  return { ok: true, net_amount: net, paid_amount: paid, remaining_amount: remaining }
+}

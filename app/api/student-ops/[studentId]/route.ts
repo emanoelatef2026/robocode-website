@@ -246,17 +246,19 @@ export async function GET(
 
   // Build all_enrollments with account_ids + per-enrollment balance
   const aeIds = ((allEnrollRes as any).data ?? []).map((e: any) => e.id as string)
-  type AeAccEntry = { account_id: string; net_amount: number; paid_amount: number; remaining_amount: number }
+  type AeAccEntry = { account_id: string; total_amount: number; discount_amount: number; net_amount: number; paid_amount: number; remaining_amount: number }
   const aeAccMap = new Map<string, AeAccEntry>()
   if (aeIds.length) {
     const { data: aeAccData } = await db
       .from('student_financial_accounts')
-      .select('id, enrollment_id, net_amount, paid_amount, remaining_amount')
+      .select('id, enrollment_id, total_amount, discount_amount, net_amount, paid_amount, remaining_amount')
       .in('enrollment_id', aeIds)
     for (const a of (aeAccData ?? []) as any[]) {
       if (a.enrollment_id) {
         aeAccMap.set(a.enrollment_id as string, {
           account_id:       a.id,
+          total_amount:     Number(a.total_amount     ?? 0),
+          discount_amount:  Number(a.discount_amount  ?? 0),
           net_amount:       Number(a.net_amount       ?? 0),
           paid_amount:      Number(a.paid_amount      ?? 0),
           remaining_amount: Number(a.remaining_amount ?? 0),
@@ -275,6 +277,8 @@ export async function GET(
       enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
       remaining_sessions: Number(e.remaining_sessions ?? 0),
       financial_status:   (e.financial_status as string | null) ?? null,
+      total_amount:       acc?.total_amount     ?? 0,
+      discount_amount:    acc?.discount_amount  ?? 0,
       net_amount:         acc?.net_amount       ?? 0,
       paid_amount:        acc?.paid_amount      ?? 0,
       remaining_amount:   acc?.remaining_amount ?? 0,

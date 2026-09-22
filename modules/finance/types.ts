@@ -508,6 +508,8 @@ export interface StudentOpsDetail {
     enrolled_sessions:  number
     remaining_sessions: number
     financial_status:   string | null
+    total_amount:       number
+    discount_amount:    number
     net_amount:         number
     paid_amount:        number
     remaining_amount:   number
