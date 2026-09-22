@@ -1,4 +1,4 @@
-import { requireAuth }               from '@/modules/rbac/guards'
+import { checkPermission, requireAuth } from '@/modules/rbac/guards'
 import { redirect }                   from 'next/navigation'
 import { listGroupsOperational, getGroupFormOptions, getGroupStudentOptions } from '@/modules/groups/operational'
 import { createServiceClient }        from '@/lib/supabase/service'
@@ -12,6 +12,7 @@ export default async function AdminGroupsPage() {
   }
 
   const isSuperAdmin = user.globalRole === 'super_admin'
+  const canSendWelcome = await checkPermission('manage_students')
   const db = createServiceClient()
 
   let branchIds: string[] = user.branchIds ?? []
@@ -58,6 +59,7 @@ export default async function AdminGroupsPage() {
       studentOptions={studentOptions}
       defaultBranchId={defaultBranchId}
       isTL
+      canSendWelcome={canSendWelcome}
       isSuperAdmin={isSuperAdmin}
       showPageHeader
     />

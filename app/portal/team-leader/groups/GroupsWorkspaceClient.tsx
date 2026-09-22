@@ -21,12 +21,13 @@ interface Props {
   studentOptions:  GroupStudentOption[]
   defaultBranchId: string
   isTL:            boolean
+  canSendWelcome?: boolean
   isSuperAdmin?:   boolean
   showPageHeader?: boolean
 }
 
 export default function GroupsWorkspaceClient({
-  groups, options, studentOptions, defaultBranchId, isTL, isSuperAdmin = false, showPageHeader = false,
+  groups, options, studentOptions, defaultBranchId, isTL, canSendWelcome = false, isSuperAdmin = false, showPageHeader = false,
 }: Props) {
   const router = useRouter()
 
@@ -215,6 +216,7 @@ export default function GroupsWorkspaceClient({
               key={selectedGroup.group_id}
               group={selectedGroup}
               isTL={isTL}
+              canSendWelcome={canSendWelcome}
               isSuperAdmin={isSuperAdmin}
               onEdit={openEdit}
               onDelete={handleGroupDeleted}
@@ -264,6 +266,7 @@ export default function GroupsWorkspaceClient({
                 key={`mobile-${selectedGroup.group_id}`}
                 group={selectedGroup}
                 isTL={isTL}
+                canSendWelcome={canSendWelcome}
                 isSuperAdmin={isSuperAdmin}
                 onEdit={openEdit}
                 onDelete={handleGroupDeleted}

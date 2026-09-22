@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
 import { generateUniqueLoginEmail, ORG_EMAIL_DOMAIN } from '@/lib/generate-login-email'
-import { requirePermission } from '@/modules/rbac/guards'
+import { getCurrentUser, requirePermission } from '@/modules/rbac/guards'
 import { ROLE_PORTAL_MAP } from '@/types/enums'
 import { normalizeEgyptPhone } from '@/lib/contact-utils'
 import { getStudentPortalCredentials } from '@/modules/students/portal-credentials'
@@ -88,7 +88,21 @@ export interface WelcomeMessageStatus {
 }
 
 export async function getWelcomeMessageStatusAction(studentId: string): Promise<WelcomeMessageStatus> {
-  await requireWelcomeSenderPermission()
+  // This is used to paint a disabled-state explanation in the UI. Unlike the
+  // mutation actions below, it must never redirect when a caller lacks the
+  // permission; a redirect rejects the Server Action promise and turns a
+  // useful eligibility reason into the misleading generic client error.
+  const user = await getCurrentUser()
+  if (!user || user.globalRole === 'instructor' || !user.permissions.includes('manage_students')) {
+    return {
+      eligibility: {
+        eligible: false,
+        reason: 'You do not have permission to send welcome messages.',
+        canRegenerate: false,
+      },
+      lastSentAt: null,
+    }
+  }
   const db = createServiceClient()
 
   const [info, studentCreds, parentCreds, lastLog] = await Promise.all([

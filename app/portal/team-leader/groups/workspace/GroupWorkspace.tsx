@@ -40,11 +40,12 @@ const TABS: { key: WorkspaceTab; label: (count: number) => string }[] = [
 ]
 
 export function GroupWorkspace({
-  group, isTL, isSuperAdmin = false, onEdit, onDelete, onStudentsChanged, studentOptions, refreshKey, allGroups,
+  group, isTL, canSendWelcome = false, isSuperAdmin = false, onEdit, onDelete, onStudentsChanged, studentOptions, refreshKey, allGroups,
   onGraduationCommitted,
 }: {
   group:             GroupOperationalRow
   isTL:              boolean
+  canSendWelcome?:   boolean
   isSuperAdmin?:     boolean
   onEdit:            (g: GroupOperationalRow) => void
   onDelete:          () => void
@@ -347,7 +348,7 @@ export function GroupWorkspace({
         <StudentQuickViewModal
           student={quickViewStudent}
           group={group}
-          canSendWelcome={isTL}
+          canSendWelcome={canSendWelcome}
           onClose={() => setQuickViewStudent(null)}
           onStudentUpdated={() => {
             setQuickViewStudent(null)
