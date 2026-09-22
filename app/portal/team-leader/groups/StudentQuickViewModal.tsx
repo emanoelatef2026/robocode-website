@@ -6,6 +6,7 @@ import { buildWhatsAppUrl, buildTelUrl } from '@/lib/phone'
 import EnrollmentWizard from '../finance/EnrollmentWizard'
 import type { GroupContext, StudentResult } from '../finance/EnrollmentWizard'
 import ParentFormModal from '../parents/ParentFormModal'
+import { HistoricalReconciliationDialog } from '@/components/portal/shared/HistoricalReconciliationDialog'
 import {
   getStudentAttendanceHistoryAction,
   getStudentAuthDataAction,
@@ -613,6 +614,50 @@ function AttendanceTab({
   )
 }
 
+function ContractAttendanceSourceDialog({
+  groupName, onClose, onLoadGroupSessions, onRecordIndividual,
+}: {
+  groupName: string
+  onClose: () => void
+  onLoadGroupSessions: () => void
+  onRecordIndividual: () => void
+}) {
+  return (
+    <div className="fixed inset-0 z-[85] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-4" role="presentation">
+      <div role="dialog" aria-modal="true" aria-labelledby="attendance-source-title" className="w-full max-w-md rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
+        <div className="flex items-start justify-between border-b border-[#E2E8F0] px-5 py-4">
+          <div>
+            <h3 id="attendance-source-title" className="text-[15px] font-bold text-[#0B1F3A]">Add contract attendance</h3>
+            <p className="mt-0.5 text-[12px] text-[#64748B]">Choose where this contract session came from.</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-lg p-1 text-[#94A3B8] hover:bg-[#F1F5F9]" aria-label="Close">×</button>
+        </div>
+        <div className="space-y-3 px-5 py-4">
+          <button
+            type="button"
+            onClick={onLoadGroupSessions}
+            className="w-full rounded-xl border-2 border-[#0E7490] bg-[#F0FDFA] px-4 py-3 text-left transition hover:bg-[#CCFBF1]"
+          >
+            <span className="block text-[13px] font-bold text-[#0B1F3A]">Load completed group sessions</span>
+            <span className="mt-1 block text-[12px] leading-5 text-[#475569]">Choose completed sessions from {groupName}. Present, absent, and late records all consume this contract.</span>
+          </button>
+          <button
+            type="button"
+            onClick={onRecordIndividual}
+            className="w-full rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-left transition hover:border-[#CBD5E1] hover:bg-[#F8FAFC]"
+          >
+            <span className="block text-[13px] font-bold text-[#0B1F3A]">Record individual attendance</span>
+            <span className="mt-1 block text-[12px] leading-5 text-[#64748B]">For a makeup lesson or attendance at another location. This creates one separate attendance record.</span>
+          </button>
+        </div>
+        <div className="flex justify-end border-t border-[#E2E8F0] px-5 py-3">
+          <button type="button" onClick={onClose} className="rounded-lg border border-[#CBD5E1] px-4 py-2 text-[13px] font-medium text-[#475569]">Cancel</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ManualContractAttendanceDialog({
   studentId, enrollmentId, onClose, onSaved,
 }: {
@@ -982,6 +1027,8 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   const [ledgerLoad,   setLedgerLoad]  = useState(false)
   const [ledgerDirty,  setLedgerDirty] = useState(false)
   const [reconciling,  setReconciling] = useState(false)
+  const [attendanceSourceOpen, setAttendanceSourceOpen] = useState(false)
+  const [historicalAttendanceOpen, setHistoricalAttendanceOpen] = useState(false)
   const [manualAttendanceOpen, setManualAttendanceOpen] = useState(false)
 
   // History / timeline data (loaded on tab open)
@@ -1133,6 +1180,14 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id).then(d => setAttSummary(d)).catch(() => {})
     router.refresh()
     onStudentUpdated?.()
+  }
+
+  function refreshContractAttendance() {
+    getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id).then(d => setAttSummary(d)).catch(() => {})
+    getStudentAttendanceHistoryAction(s.student_id, s.enrollment_id).then(h => setHistory(h)).catch(() => {})
+    setLedgerDirty(true)
+    setTimelineDirty(true)
+    router.refresh()
   }
 
   // Welcome message eligibility (only relevant for TL/super_admin)
@@ -1455,7 +1510,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 attSummary={attSummary}
                 attSumLoading={attSumLoading}
                 hasContract={Boolean(s.enrollment_id)}
-                onAddAttendance={() => setManualAttendanceOpen(true)}
+                onAddAttendance={() => setAttendanceSourceOpen(true)}
               />
             )}
             {activeTab === 'package-ledger' && (
@@ -1502,12 +1557,37 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
           onClose={() => setManualAttendanceOpen(false)}
           onSaved={() => {
             setManualAttendanceOpen(false)
-            getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id).then(d => setAttSummary(d)).catch(() => {})
-            getStudentAttendanceHistoryAction(s.student_id, s.enrollment_id).then(h => setHistory(h)).catch(() => {})
-            setLedgerDirty(true)
-            setTimelineDirty(true)
-            router.refresh()
+            refreshContractAttendance()
           }}
+        />
+      )}
+      {attendanceSourceOpen && s.enrollment_id && (
+        <ContractAttendanceSourceDialog
+          groupName={group.name}
+          onClose={() => setAttendanceSourceOpen(false)}
+          onLoadGroupSessions={() => {
+            setAttendanceSourceOpen(false)
+            setHistoricalAttendanceOpen(true)
+          }}
+          onRecordIndividual={() => {
+            setAttendanceSourceOpen(false)
+            setManualAttendanceOpen(true)
+          }}
+        />
+      )}
+      {historicalAttendanceOpen && s.enrollment_id && (
+        <HistoricalReconciliationDialog
+          open
+          mode="apply"
+          studentId={s.student_id}
+          groupId={group.group_id}
+          courseId={group.course_id ?? null}
+          enrollmentId={s.enrollment_id}
+          onResolved={() => {
+            setHistoricalAttendanceOpen(false)
+            refreshContractAttendance()
+          }}
+          onClose={() => setHistoricalAttendanceOpen(false)}
         />
       )}
 

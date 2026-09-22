@@ -8,8 +8,10 @@ vi.mock('@/lib/supabase/service', () => ({
 }))
 
 const requirePermissionMock = vi.fn()
+const getCurrentUserMock = vi.fn()
 vi.mock('@/modules/rbac/guards', () => ({
   requirePermission: (...args: unknown[]) => requirePermissionMock(...args),
+  getCurrentUser: (...args: unknown[]) => getCurrentUserMock(...args),
 }))
 
 const getStudentPortalCredentialsMock = vi.fn()
@@ -70,6 +72,9 @@ function fullEligibleDb() {
 beforeEach(() => {
   vi.clearAllMocks()
   requirePermissionMock.mockResolvedValue({ id: 'user-tl-001', globalRole: 'team_leader' })
+  getCurrentUserMock.mockResolvedValue({
+    id: 'user-tl-001', globalRole: 'team_leader', permissions: ['manage_students'],
+  })
   getStudentPortalCredentialsMock.mockResolvedValue({
     email: 'ali@example.com', portal_password: 'Ali123', has_portal_access: true, status: 'active',
   })

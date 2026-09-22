@@ -243,10 +243,15 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
   const searchVersionRef = useRef(0)
 
   useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    // A completed-group reconciliation is a deliberate second decision after
+    // the contract is created. Escape must not dismiss it (and the wizard
+    // underneath it) before staff can choose the sessions to load.
+    const h = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !reconcileEnrollmentId) onClose()
+    }
     window.addEventListener('keydown', h)
     return () => window.removeEventListener('keydown', h)
-  }, [onClose])
+  }, [onClose, reconcileEnrollmentId])
 
   // Student search with debounce + anti-stale versioning
   useEffect(() => {
@@ -1274,7 +1279,10 @@ export default function EnrollmentWizard({ branchIds, onClose, onSuccess, presel
           courseId={groupContext.course_id}
           enrollmentId={reconcileEnrollmentId}
           onResolved={() => { setReconcileEnrollmentId(null); onSuccess(); onClose() }}
-          onClose={() => { setReconcileEnrollmentId(null); onSuccess(); onClose() }}
+          // Closing the reconciliation is not confirmation. Keep the payment
+          // wizard open so an accidental close never looks like the chooser
+          // vanished or creates a duplicate contract on a second submission.
+          onClose={() => setReconcileEnrollmentId(null)}
         />
       )}
     </div>
