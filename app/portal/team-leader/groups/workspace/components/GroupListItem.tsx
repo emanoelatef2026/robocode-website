@@ -3,10 +3,11 @@ import { StatusChip } from './StatusChip'
 import { DAYS_FULL, fmt12, fmtDateShort } from '../utils'
 import { getCohortLifecycleStage } from '@/modules/groups/lifecycle-stage'
 
-function ProgressMetric({ label, detail, secondaryDetail, value, color }: {
+function ProgressMetric({ label, detail, secondaryDetail, belowDetail, value, color }: {
   label: string
   detail: string
   secondaryDetail?: string
+  belowDetail?: string
   value: number | null
   color: string
 }) {
@@ -23,6 +24,9 @@ function ProgressMetric({ label, detail, secondaryDetail, value, color }: {
       <div className="h-1.5 overflow-hidden rounded-full bg-[#E2E8F0]">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
+      <p className="mt-1 min-h-4 truncate text-[11px] font-medium text-[#64748B]">
+        {belowDetail ?? '\u00A0'}
+      </p>
     </div>
   )
 }
@@ -86,7 +90,8 @@ export function GroupListItem({ group, selected, onClick }: { group: GroupOperat
           <ProgressMetric
             label="Fees"
             detail={paymentDetail}
-            secondaryDetail={hasPaymentPlan ? `${paymentAmounts} · ${formatEgp(paymentRemaining)} remaining` : paymentAmounts}
+            secondaryDetail={paymentAmounts}
+            belowDetail={hasPaymentPlan ? `${formatEgp(paymentRemaining)} remaining` : undefined}
             value={group.payment_completion_pct}
             color={paymentColor}
           />
