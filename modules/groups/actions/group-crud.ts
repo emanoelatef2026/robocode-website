@@ -8,7 +8,11 @@ import { createSchema, updateSchema } from './validators'
 import { parseStudentIds, parseContractChoices, buildGroupInsert, buildGroupUpdate, stripUndefined } from './helpers'
 import { applyStudentChanges, assignCourseAndInstructor, updateGroupCoursePlan } from './db-ops'
 
-const GROUPS_PATH = '/portal/team-leader/groups'
+const GROUPS_PATHS = ['/portal/team-leader/groups', '/admin/groups'] as const
+
+function revalidateGroupWorkspaces() {
+  for (const path of GROUPS_PATHS) revalidatePath(path)
+}
 
 // Guard: every student enrolled in a group must live in the group's branch.
 // Returns an error message naming the offending students, or null when all match.
@@ -73,7 +77,10 @@ export async function createGroupModal(
       p_performed_by: user.id, p_action: 'create', p_entity_type: 'group',
       p_entity_id: gid, p_new_values: { name: rest.name, type: rest.type, selected_student_count: selectedStudentIds.length }, p_branch_id: rest.branch_id,
     })
-    revalidatePath(GROUPS_PATH)
+    // The same workspace is rendered under both paths. Revalidating only the
+    // team-leader route left a newly created Admin group invisible until a
+    // later full navigation.
+    revalidateGroupWorkspaces()
   }
 
   if (error) {
@@ -162,7 +169,7 @@ export async function updateGroupModal(
     p_performed_by: user.id, p_action: 'update', p_entity_type: 'group',
     p_entity_id: id, p_new_values: cleanUpdates,
   })
-  revalidatePath(GROUPS_PATH)
+  revalidateGroupWorkspaces()
   return { success: true, data: { id } }
 }
 
@@ -185,7 +192,7 @@ export async function archiveGroupAction(groupId: string): Promise<ActionResult<
 
   await db.from('groups').update({ status: 'cancelled', deleted_at: new Date().toISOString() }).eq('id', groupId)
   await db.rpc('write_audit_log', { p_performed_by: user.id, p_action: 'archive', p_entity_type: 'group', p_entity_id: groupId })
-  revalidatePath(GROUPS_PATH)
+  revalidateGroupWorkspaces()
   return { success: true, data: undefined }
 }
 
@@ -213,6 +220,6 @@ export async function deleteGroupAction(groupId: string): Promise<ActionResult<v
     p_performed_by: user.id, p_action: 'delete', p_entity_type: 'group',
     p_entity_id: groupId, p_branch_id: existing.branch_id,
   })
-  revalidatePath(GROUPS_PATH)
+  revalidateGroupWorkspaces()
   return { success: true, data: undefined }
 }
