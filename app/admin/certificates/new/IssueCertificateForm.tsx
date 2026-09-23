@@ -7,8 +7,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { ActionResult } from '@/types/app'
 import type { CertificateTemplate } from '@/modules/certificates/types'
+import {
+  certificateStudentLabel,
+  filterCertificateStudents,
+  type CertificateStudentOption,
+} from './student-search'
 
-interface StudentOption   { id: string; name: string; email: string }
 interface SemesterOption  { id: string; name: string }
 interface CourseOption    { id: string; title: string }
 interface Project         { title: string; sort_order: number }
@@ -16,7 +20,7 @@ interface PortfolioProject { id: string; title: string; course_title: string | n
 
 interface Props {
   templates:  CertificateTemplate[]
-  students:   StudentOption[]
+  students:   CertificateStudentOption[]
   semesters:  SemesterOption[]
   courses:    CourseOption[]
   onSuccess?: (id: string, code: string) => void
@@ -54,6 +58,7 @@ export default function IssueCertificateForm({ templates, students, semesters, c
 
   // ── Student & course state ──────────────────────────────────────────────────
   const [selectedStudentId, setSelectedStudentId] = useState('')
+  const [studentSearch, setStudentSearch] = useState('')
   const [selectedCourseId,  setSelectedCourseId]  = useState('')
   const [courseNameField,   setCourseNameField]   = useState('')
 
@@ -176,6 +181,19 @@ export default function IssueCertificateForm({ templates, students, semesters, c
     }
   }
 
+  const selectedStudent = students.find((student) => student.id === selectedStudentId)
+  const studentMatches = filterCertificateStudents(students, studentSearch)
+
+  function selectStudent(student: CertificateStudentOption) {
+    setSelectedStudentId(student.id)
+    setStudentSearch(certificateStudentLabel(student))
+  }
+
+  function clearStudent() {
+    setSelectedStudentId('')
+    setStudentSearch('')
+  }
+
   return (
     <div className="ds-card p-6">
       {state && !state.success && (
@@ -193,10 +211,57 @@ export default function IssueCertificateForm({ templates, students, semesters, c
           <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
             Student <span className="text-[#EF4444]">*</span>
           </label>
+          <div className="relative">
+            <input
+              type="search"
+              value={studentSearch}
+              onChange={(event) => {
+                setStudentSearch(event.target.value)
+                if (selectedStudentId) setSelectedStudentId('')
+              }}
+              placeholder="Search by name, phone, email, or student code..."
+              className={inputClass}
+              aria-label="Search for a student"
+              autoComplete="off"
+            />
+            {selectedStudent && (
+              <button
+                type="button"
+                onClick={clearStudent}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 py-1 text-xs font-medium text-[#64748B] hover:bg-[#F1F5F9] hover:text-[#0B1F3A]"
+              >
+                Change
+              </button>
+            )}
+            {!selectedStudent && studentSearch.trim() && (
+              <div role="listbox" className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-[#D7E0EA] bg-white p-1 shadow-lg">
+                {studentMatches.length > 0 ? studentMatches.map((student) => (
+                  <button
+                    key={student.id}
+                    type="button"
+                    role="option"
+                    aria-selected={false}
+                    onClick={() => selectStudent(student)}
+                    className="block w-full rounded-md px-3 py-2 text-left transition hover:bg-[#FFF7ED]"
+                  >
+                    <span className="block text-sm font-medium text-[#0B1F3A]">{student.name}</span>
+                    <span className="block text-xs text-[#64748B]">
+                      {[student.student_code, student.phone, student.email].filter(Boolean).join(' · ')}
+                    </span>
+                  </button>
+                )) : (
+                  <p className="px-3 py-2 text-sm text-[#64748B]">No students found.</p>
+                )}
+              </div>
+            )}
+          </div>
+          {!selectedStudent && (
+            <p className="mt-1 text-xs text-[#94A3B8]">Search, then choose one student from the results.</p>
+          )}
           <select
             name="student_id"
             required
-            className={inputClass}
+            className="sr-only"
             value={selectedStudentId}
             onChange={(e) => setSelectedStudentId(e.target.value)}
           >

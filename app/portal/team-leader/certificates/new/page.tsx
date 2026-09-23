@@ -19,7 +19,7 @@ export default async function TLIssueCertificatePage() {
     // Branch-scoped: only students in TL branches
     db
       .from('students')
-      .select('id, branch_id, users!students_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name))')
+      .select('id, branch_id, student_code, users!students_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name))')
       .is('deleted_at', null)
       .eq('status', 'active')
       .in('branch_id', user.branchIds)
@@ -32,6 +32,8 @@ export default async function TLIssueCertificatePage() {
       id:    row.id,
       name:  [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || row.users?.email || '—',
       email: row.users?.email ?? '',
+      phone: row.users?.phone ?? null,
+      student_code: row.student_code ?? null,
     }
   })
 

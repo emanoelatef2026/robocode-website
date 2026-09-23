@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import IssueCertificateForm from './new/IssueCertificateForm'
 import type { CertificateTemplate } from '@/modules/certificates/types'
+import type { CertificateStudentOption } from './new/student-search'
 
-interface StudentOption  { id: string; name: string; email: string }
 interface SemesterOption { id: string; name: string }
 interface CourseOption   { id: string; title: string }
 
 interface Props {
   templates:        CertificateTemplate[]
-  students:         StudentOption[]
+  students:         CertificateStudentOption[]
   semesters:        SemesterOption[]
   courses:          CourseOption[]
   triggerLabel?:    string

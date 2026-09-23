@@ -45,7 +45,7 @@ export default async function CertificatesPage({ searchParams }: Props) {
     listSemesters({ perPage: 100 }),
     db
       .from('students')
-      .select('id, users!students_user_id_fkey(email, profiles!profiles_user_id_fkey(first_name, last_name))')
+      .select('id, student_code, users!students_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name))')
       .is('deleted_at', null)
       .eq('status', 'active')
       .order('id'),
@@ -57,6 +57,8 @@ export default async function CertificatesPage({ searchParams }: Props) {
       id:    row.id,
       name:  [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || row.users?.email || '—',
       email: row.users?.email ?? '',
+      phone: row.users?.phone ?? null,
+      student_code: row.student_code ?? null,
     }
   })
 
