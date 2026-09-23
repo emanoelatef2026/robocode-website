@@ -6,14 +6,13 @@ import SubmitButton from '@/components/admin/SubmitButton'
 import Link from 'next/link'
 import type { Group } from '@/modules/groups/types'
 import type { ActionResult } from '@/types/app'
+import { GROUP_STATUS_OPTIONS } from '@/modules/groups/lifecycle-stage'
 
 interface Props { group: Group }
 
 // 'active' is intentionally excluded — status is auto-managed by syncGroupStatus()
 // based on whether course+semester+instructor are all assigned.
 // Admins use the Academic Configuration card to activate a group.
-const GROUP_STATUSES = ['forming', 'completed', 'cancelled'] as const
-
 export default function GroupDetailView({ group }: Props) {
   const [editState, editAction] = useActionState<ActionResult<void> | null, FormData>(updateGroup, null)
 
@@ -68,8 +67,8 @@ export default function GroupDetailView({ group }: Props) {
             <div>
               <label className="mb-1 block text-xs font-medium text-[#64748B]">Status</label>
               <select name="status" defaultValue={group.status} className={cls}>
-                {GROUP_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                {GROUP_STATUS_OPTIONS.map((status) => (
+                  <option key={status.value} value={status.value}>{status.label}</option>
                 ))}
               </select>
             </div>

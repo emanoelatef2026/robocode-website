@@ -44,3 +44,13 @@ export const COHORT_LIFECYCLE_STAGE_LABELS: Record<CohortLifecycleStage, string>
   completed: 'Completed',
   archived:  'Archived',
 }
+
+// Database state `active` is the operational Running stage. Keep this mapping
+// at the UI boundary so the persisted enum and existing lifecycle automation
+// remain unchanged.
+export const GROUP_STATUS_OPTIONS = [
+  { value: 'forming', label: 'Draft' },
+  { value: 'active', label: 'Running' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' },
+] as const satisfies ReadonlyArray<{ value: GroupStatus; label: string }>

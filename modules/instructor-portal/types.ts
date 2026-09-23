@@ -161,6 +161,10 @@ export interface SessionHomeworkItem {
   submission_type: string
   due_at:          string | null
   status:          string
+  description:     string | null
+  instructions:    string | null
+  max_score:       number
+  allow_late:      boolean
 }
 
 export interface PendingSubmissionItem {

@@ -8,6 +8,7 @@ import {
   removeSessionRecording,
   updateSessionResources,
   createSessionHomework,
+  updateSessionHomework,
   endSession,
   cancelSession,
   postponeSession,
@@ -123,6 +124,8 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
   // ── Homework ──────────────────────────────────────────────────────────────────
   const [hwState, hwAction] = useActionState<ActionResult<{ assignmentId: string }> | null, FormData>(createSessionHomework, null)
   const [hwOpen, setHwOpen] = useState(false)
+  const [editingHomeworkId, setEditingHomeworkId] = useState<string | null>(null)
+  const [editHomeworkState, editHomeworkAction] = useActionState<ActionResult<void> | null, FormData>(updateSessionHomework, null)
   const defaultModule = session.course_modules[0]
 
   // ── End Session ───────────────────────────────────────────────────────────────
@@ -216,7 +219,8 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
         {session.session_homework.length > 0 && (
           <div className="mb-4 space-y-2">
             {session.session_homework.map((hw) => (
-              <div key={hw.id} className="flex items-start gap-2 rounded-lg border border-[#E2E8F0] px-3 py-2.5">
+              <div key={hw.id}>
+              <div className="flex items-start gap-2 rounded-lg border border-[#E2E8F0] px-3 py-2.5">
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-sm font-medium text-[#0B1F3A]">{hw.title}</p>
                   <p className="mt-0.5 text-xs text-[#94A3B8] capitalize">
@@ -227,6 +231,20 @@ export default function SessionDetailsPanel({ session, groupId }: Props) {
                 <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${hw.status === 'published' ? 'bg-[#E7F8EE] text-[#15803D]' : 'bg-yellow-100 text-yellow-700'}`}>
                   {hw.status}
                 </span>
+                <button type="button" onClick={() => setEditingHomeworkId(editingHomeworkId === hw.id ? null : hw.id)} className="text-xs font-medium text-[#C2410C] hover:underline">Edit</button>
+              </div>
+              {editingHomeworkId === hw.id && (
+                <form action={editHomeworkAction} className="mt-2 space-y-2 rounded-lg bg-[#F8FAFC] p-3">
+                  <input type="hidden" name="assignment_id" value={hw.id} /><input type="hidden" name="session_id" value={session.id} /><input type="hidden" name="group_id" value={groupId} />
+                  <input name="title" required defaultValue={hw.title} className={cls} />
+                  <textarea name="description" defaultValue={hw.description ?? ''} placeholder="Description" rows={2} className={cls} />
+                  <textarea name="instructions" defaultValue={hw.instructions ?? ''} placeholder="Instructions" rows={2} className={cls} />
+                  <div className="grid grid-cols-2 gap-2"><input name="due_at" type="date" defaultValue={hw.due_at?.slice(0, 10) ?? ''} className={cls} /><input name="max_score" type="number" min={1} defaultValue={hw.max_score} className={cls} /></div>
+                  <input type="hidden" name="type" value={hw.type} /><input type="hidden" name="submission_type" value={hw.submission_type} />
+                  {editHomeworkState && !editHomeworkState.success && <p className="text-xs text-[#DC2626]">{editHomeworkState.error.message}</p>}
+                  <button type="submit" className="rounded-lg bg-[#C2410C] px-3 py-1.5 text-xs font-medium text-white">Save homework</button>
+                </form>
+              )}
               </div>
             ))}
           </div>

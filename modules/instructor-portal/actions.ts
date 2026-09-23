@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
+import { canEditSessionContent } from './session-content'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, requireAuth } from '@/modules/rbac/guards'
 import { getInstructorByUserId } from './queries'
@@ -328,6 +329,11 @@ export async function updateSession(
   const ctx = await getSessionAccessContext(d.session_id, instructor.id, db)
   if (!ctx) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
+  }
+
+  const { data: session } = await db.from('schedules').select('status').eq('id', d.session_id).maybeSingle()
+  if (!session || !canEditSessionContent((session as any).status)) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Cancelled sessions cannot be edited.' } }
   }
 
   const updates: Record<string, unknown> = { status: d.status }
@@ -975,6 +981,43 @@ export async function createSessionHomework(
   revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
   revalidatePath('/portal/instructor/homework')
   return { success: true, data: { assignmentId } }
+}
+
+const updateSessionHomeworkSchema = homeworkSchema.extend({ assignment_id: z.string().uuid() })
+
+export async function updateSessionHomework(
+  _prev: unknown,
+  formData: FormData,
+): Promise<ActionResult<void>> {
+  const user = await requirePermission('manage_courses')
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+
+  const parsed = updateSessionHomeworkSchema.safeParse({
+    assignment_id: formData.get('assignment_id'), session_id: formData.get('session_id'), group_id: formData.get('group_id'),
+    module_id: formData.get('module_id') || undefined, title: formData.get('title'), description: formData.get('description') || undefined,
+    instructions: formData.get('instructions') || undefined, due_at: formData.get('due_at') || undefined, type: formData.get('type') || 'homework',
+    submission_type: formData.get('submission_type') || 'text', max_score: formData.get('max_score') || 100,
+    allow_late: formData.get('allow_late') ?? undefined, resubmission_allowed: formData.get('resubmission_allowed') ?? undefined,
+    max_resubmissions: formData.get('max_resubmissions') || 1, portfolio_eligible: formData.get('portfolio_eligible') ?? undefined,
+  })
+  if (!parsed.success) return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+  const d = parsed.data
+  const db = createServiceClient()
+  const ctx = await getSessionAccessContext(d.session_id, instructor.id, db)
+  if (!ctx) return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
+  const { data: session } = await db.from('schedules').select('status').eq('id', d.session_id).maybeSingle()
+  if (!session || !canEditSessionContent((session as any).status)) return { success: false, error: { code: 'VALIDATION', message: 'Cancelled sessions cannot be edited.' } }
+  const { error } = await db.from('assignments').update({
+    module_id: d.module_id || null, title: d.title, description: d.description || null, instructions: d.instructions || null,
+    type: d.type, submission_type: d.submission_type, max_score: d.max_score, due_at: d.due_at ? new Date(d.due_at).toISOString() : null,
+    allow_late: d.allow_late, resubmission_allowed: d.resubmission_allowed, max_resubmissions: d.max_resubmissions,
+    portfolio_eligible: d.portfolio_eligible,
+  }).eq('id', d.assignment_id).eq('schedule_id', d.session_id).eq('created_by', user.id)
+  if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
+  revalidatePath('/portal/instructor/homework')
+  return { success: true, data: undefined }
 }
 
 // ── Cancel Session ────────────────────────────────────────────────────────────

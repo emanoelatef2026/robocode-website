@@ -34,6 +34,7 @@ import type {
   StudentSearchResult,
   InboxSubmissionItem,
 } from './types'
+import { INSTRUCTOR_VISIBLE_GROUP_STATUSES } from './group-visibility'
 
 // ── Shared helper: resolve all group_courses the instructor is linked to ───────
 
@@ -172,11 +173,20 @@ export async function getInstructorDashboardStats(
   const db = createServiceClient()
   const { gcIds, groupIds } = await resolveGcContext(instructorId)
 
+  const { data: visibleGroups } = groupIds.length > 0
+    ? await db.from('groups')
+      .select('id')
+      .in('id', groupIds)
+      .in('status', [...INSTRUCTOR_VISIBLE_GROUP_STATUSES])
+      .is('deleted_at', null)
+    : { data: [] }
+  const visibleGroupIds = (visibleGroups ?? []).map((group: any) => group.id as string)
+
   const [studentRes, completedRes] = await Promise.all([
-    groupIds.length > 0
+    visibleGroupIds.length > 0
       ? db.from('group_students')
           .select('id', { count: 'exact', head: true })
-          .in('group_id', groupIds)
+          .in('group_id', visibleGroupIds)
           .eq('status', 'active')
       : Promise.resolve({ count: 0, error: null }),
     gcIds.length > 0
@@ -188,7 +198,7 @@ export async function getInstructorDashboardStats(
   ])
 
   return {
-    groupCount:        groupIds.length,
+    groupCount:        visibleGroupIds.length,
     studentCount:      (studentRes as any).count  ?? 0,
     completedSessions: (completedRes as any).count ?? 0,
     pendingReviews:    0,
@@ -211,7 +221,7 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
       .from('group_courses')
       .select(
         `id, group_id, course_id, total_sessions,
-         groups!group_courses_group_id_fkey(
+         groups!group_courses_group_id_fkey!inner(
            name, code, day_of_week, time,
            branches!groups_branch_id_fkey(name)
          ),
@@ -219,6 +229,7 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
       )
       .in('id', gcIds)
       .eq('status', 'active')
+      .in('groups.status', [...INSTRUCTOR_VISIBLE_GROUP_STATUSES])
 
     if (gcRows && gcRows.length > 0) {
       const gcGroupIds = (gcRows as any[]).map((r) => r.group_id as string)
@@ -306,6 +317,7 @@ export async function listInstructorGroups(instructorId: string): Promise<Instru
       .from('groups')
       .select('id, name, code, day_of_week, time, branches!groups_branch_id_fkey(name)')
       .in('id', uncoveredIds)
+      .in('status', [...INSTRUCTOR_VISIBLE_GROUP_STATUSES])
       .is('deleted_at', null)
 
     const { data: gsRows } = await db
@@ -777,7 +789,7 @@ export async function getSessionDetail(
         : Promise.resolve({ data: null as any }),
       // Homework created for this specific session
       db.from('assignments')
-        .select('id, title, type, submission_type, due_at, status')
+        .select('id, title, type, submission_type, due_at, status, description, instructions, max_score, allow_late')
         .eq('schedule_id', sessionId)
         .is('deleted_at', null)
         .order('created_at', { ascending: true }),
@@ -854,6 +866,10 @@ export async function getSessionDetail(
     submission_type: h.submission_type,
     due_at:          h.due_at ?? null,
     status:          h.status,
+    description:     h.description ?? null,
+    instructions:    h.instructions ?? null,
+    max_score:       h.max_score ?? 100,
+    allow_late:      h.allow_late ?? false,
   }))
 
   return {
