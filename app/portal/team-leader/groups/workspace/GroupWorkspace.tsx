@@ -231,10 +231,10 @@ export function GroupWorkspace({
             key={t.key}
             onClick={() => setTab(t.key)}
             className={[
-              'min-h-10 min-w-0 border-b-2 px-1 py-2.5 text-[13px] font-medium leading-tight transition-colors text-center md:flex-none md:px-4 md:text-[13px] md:whitespace-nowrap',
+              'min-h-11 min-w-0 border-b-2 px-2 py-3 text-[14px] font-semibold leading-tight transition-colors text-center md:flex-none md:px-5 md:text-[14px] md:whitespace-nowrap',
               tab === t.key
                 ? 'border-[#C2410C] text-[#0B1F3A] font-semibold'
-                : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]',
+                : 'border-transparent text-[#52677F] hover:bg-[#F8FAFC] hover:text-[#0B1F3A]',
             ].join(' ')}
           >
             {t.label(group.student_count)}
@@ -245,7 +245,7 @@ export function GroupWorkspace({
       {/* Students toolbar */}
       {tab === 'students' && (
         <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#E2E8F0] bg-white px-4 py-2 flex-wrap">
-          <span className="text-[13px] text-[#64748B]">
+          <span className="text-[14px] font-semibold text-[#52677F]">
             {loading ? '' : `${students.length} students`}
           </span>
           <div className="flex items-center gap-2 flex-wrap">

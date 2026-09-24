@@ -102,12 +102,12 @@ export function GroupSummaryBar({
   ]
 
   return (
-    <div ref={barRef} className="border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 py-3 shrink-0">
+    <div ref={barRef} className="border-b border-[#D7E0EA] bg-[#F8FAFC] px-5 py-4 shrink-0">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <h2 className="text-[15px] font-bold text-[#0B1F3A] truncate">{group.name}</h2>
+          <h2 className="text-[18px] font-bold leading-tight text-[#0B1F3A] truncate">{group.name}</h2>
           {group.code && (
-            <span className="font-mono text-[12px] text-[#94A3B8] shrink-0 hidden sm:inline">{group.code}</span>
+            <span className="font-mono text-[12px] font-medium text-[#64748B] shrink-0 hidden sm:inline">{group.code}</span>
           )}
           <StatusChip group={group} />
         </div>
@@ -148,12 +148,12 @@ export function GroupSummaryBar({
         </div>
       </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[12px] sm:grid-cols-3 lg:grid-cols-5">
-        <div className="min-w-0"><span className="text-[#94A3B8]">Course </span><span className="font-semibold text-[#374151]">{group.course_name ?? '—'}</span></div>
-        <div className="min-w-0"><span className="text-[#94A3B8]">Instructor </span><span className="font-semibold text-[#374151]">{group.lead_instructor_name ?? 'Unassigned'}</span></div>
-        <div className="min-w-0"><span className="text-[#94A3B8]">Schedule </span><span className="font-semibold text-[#374151]">{sched || '—'}</span></div>
-        <div className="min-w-0"><span className="text-[#94A3B8]">Started </span><span className="font-semibold text-[#374151]">{fmtDate(group.start_date)}</span></div>
-        <div className="min-w-0"><span className="text-[#94A3B8]">Fees </span><span className="font-semibold text-[#15803D]">{group.payment_completion_pct == null ? '—' : `${group.payment_completion_pct}% paid`}</span></div>
+      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[13px] sm:grid-cols-3 lg:grid-cols-5">
+        <div className="min-w-0"><span className="font-medium text-[#52677F]">Course </span><span className="font-semibold text-[#0B1F3A]">{group.course_name ?? '—'}</span></div>
+        <div className="min-w-0"><span className="font-medium text-[#52677F]">Instructor </span><span className="font-semibold text-[#0B1F3A]">{group.lead_instructor_name ?? 'Unassigned'}</span></div>
+        <div className="min-w-0"><span className="font-medium text-[#52677F]">Schedule </span><span className="font-semibold text-[#0B1F3A]">{sched || '—'}</span></div>
+        <div className="min-w-0"><span className="font-medium text-[#52677F]">Started </span><span className="font-semibold text-[#0B1F3A]">{fmtDate(group.start_date)}</span></div>
+        <div className="min-w-0"><span className="font-medium text-[#52677F]">Fees </span><span className="font-semibold text-[#15803D]">{group.payment_completion_pct == null ? '—' : `${group.payment_completion_pct}% paid`}</span></div>
       </div>
 
       {mounted && infoOpen && popupPos && createPortal(

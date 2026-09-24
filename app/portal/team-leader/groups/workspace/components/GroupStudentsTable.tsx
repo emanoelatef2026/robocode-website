@@ -104,7 +104,7 @@ export function GroupStudentsTable({
       <table className="w-full text-sm min-w-240">
         <thead className="ds-table-head">
           <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] sticky top-0 z-10">
-            <th className="pl-3 pr-2 py-2 w-8">
+            <th className="pl-3 pr-2 py-3 w-8">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -112,18 +112,18 @@ export function GroupStudentsTable({
                 className="h-3.5 w-3.5 cursor-pointer rounded border-[#CBD5E1] accent-[#FF8A1F]"
               />
             </th>
-            <th className="w-7 px-1 py-2 text-center text-[12px] font-semibold text-[#94A3B8]">#</th>
-            <th className="px-3 py-2 text-left text-[12px] font-semibold text-[#64748B] whitespace-nowrap">Student</th>
-            <th className="px-2 py-2 text-center text-[12px] font-semibold text-[#64748B]">Age</th>
-            <th className="px-3 py-2 text-left text-[12px] font-semibold text-[#64748B] whitespace-nowrap">Stu. Phone</th>
-            <th className="px-3 py-2 text-left text-[12px] font-semibold text-[#64748B] whitespace-nowrap">Par. Phone</th>
-            <th className="px-2 py-2 text-center text-[12px] font-semibold text-[#64748B] whitespace-nowrap">Sessions</th>
-            <th className="px-2 py-2 text-center text-[12px] font-semibold text-[#64748B]">Left</th>
-            <th className="px-3 py-2 text-right text-[12px] font-semibold text-[#64748B] whitespace-nowrap">Subscription</th>
-            <th className="px-3 py-2 text-right text-[12px] font-semibold text-[#64748B]">Paid</th>
-            <th className="px-3 py-2 text-right text-[12px] font-semibold text-[#64748B]">Remaining</th>
-            <th className="px-3 py-2 text-center text-[12px] font-semibold text-[#64748B]">Risk</th>
-            <th className="px-3 py-2 text-center text-[12px] font-semibold text-[#64748B]">Joined</th>
+            <th className="w-7 px-1 py-3 text-center text-[11px] font-bold uppercase tracking-[.06em] text-[#52677F]">#</th>
+            <th className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-[.06em] text-[#475569] whitespace-nowrap">Student</th>
+            <th className="px-2 py-3 text-center text-[11px] font-bold uppercase tracking-[.06em] text-[#475569]">Age</th>
+            <th className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-[.06em] text-[#475569] whitespace-nowrap">Stu. Phone</th>
+            <th className="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-[.06em] text-[#475569] whitespace-nowrap">Par. Phone</th>
+            <th className="px-2 py-3 text-center text-[11px] font-bold uppercase tracking-[.06em] text-[#475569] whitespace-nowrap">Sessions</th>
+            <th className="px-2 py-3 text-center text-[11px] font-bold uppercase tracking-[.06em] text-[#475569]">Left</th>
+            <th className="px-3 py-3 text-right text-[11px] font-bold uppercase tracking-[.06em] text-[#475569] whitespace-nowrap">Subscription</th>
+            <th className="px-3 py-3 text-right text-[11px] font-bold uppercase tracking-[.06em] text-[#475569]">Paid</th>
+            <th className="px-3 py-3 text-right text-[11px] font-bold uppercase tracking-[.06em] text-[#475569]">Remaining</th>
+            <th className="px-3 py-3 text-center text-[11px] font-bold uppercase tracking-[.06em] text-[#475569]">Risk</th>
+            <th className="px-3 py-3 text-center text-[11px] font-bold uppercase tracking-[.06em] text-[#475569]">Joined</th>
           </tr>
         </thead>
         <tbody>
@@ -149,11 +149,11 @@ export function GroupStudentsTable({
                 key={s.student_id}
                 onClick={() => onToggleStudent(s.student_id)}
                 className={[
-                  'border-b border-[#F1F5F9] cursor-pointer transition-colors',
+                  'border-b border-[#E8EEF4] cursor-pointer transition-colors',
                   isSelected ? 'bg-[#FFF7ED]' : 'hover:bg-[#FAFAFA]',
                 ].join(' ')}
               >
-                <td className="pl-3 pr-2 py-1.5 w-8" onClick={e => e.stopPropagation()}>
+                <td className="pl-3 pr-2 py-2.5 w-8" onClick={e => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={isSelected}
@@ -162,11 +162,11 @@ export function GroupStudentsTable({
                   />
                 </td>
 
-                <td className="w-7 px-1 py-1.5 text-center text-[12px] font-semibold text-[#94A3B8]">
+                <td className="w-7 px-1 py-2.5 text-center text-[12px] font-semibold text-[#64748B]">
                   {idx + 1}
                 </td>
 
-                <td className="px-3 py-1.5">
+                <td className="px-3 py-2.5">
                   <p className="text-[13px] font-semibold text-[#0B1F3A] whitespace-nowrap leading-tight">{s.student_name}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     {s.student_code && (
@@ -178,50 +178,50 @@ export function GroupStudentsTable({
                   </div>
                 </td>
 
-                <td className="px-2 py-1.5 text-center text-[12px] text-[#64748B]">
+                <td className="px-2 py-2.5 text-center text-[13px] font-medium text-[#475569]">
                   {s.age != null ? `${s.age}y` : '—'}
                 </td>
 
-                <td className="px-3 py-1.5">
-                  <span className="font-mono text-[12px] text-[#374151] whitespace-nowrap">{s.phone ?? '—'}</span>
+                <td className="px-3 py-2.5">
+                  <span className="font-mono text-[12px] font-medium text-[#334155] whitespace-nowrap">{s.phone ?? '—'}</span>
                 </td>
 
-                <td className="px-3 py-1.5">
-                  <span className="font-mono text-[12px] text-[#374151] whitespace-nowrap">{s.parent_phone ?? '—'}</span>
+                <td className="px-3 py-2.5">
+                  <span className="font-mono text-[12px] font-medium text-[#334155] whitespace-nowrap">{s.parent_phone ?? '—'}</span>
                 </td>
 
-                <td className="px-2 py-1.5 text-center text-[12px] text-[#64748B] whitespace-nowrap">
+                <td className="px-2 py-2.5 text-center text-[13px] font-medium text-[#475569] whitespace-nowrap">
                   {sessStat}
                 </td>
 
-                <td className="px-2 py-1.5 text-center">
-                  <span className={`text-[12px] ${sessLeftColor}`}>
+                <td className="px-2 py-2.5 text-center">
+                  <span className={`text-[13px] ${sessLeftColor}`}>
                     {sessLeft != null ? sessLeft : '—'}
                   </span>
                 </td>
 
-                <td className="px-3 py-1.5 text-right whitespace-nowrap">
+                <td className="px-3 py-2.5 text-right whitespace-nowrap">
                   {s.subscription_amount
-                    ? <span className="text-[12px] text-[#374151]">{fmtCurrency(s.subscription_amount)}</span>
-                    : <span className="text-[11px] text-[#CBD5E1]">No Package</span>
+                    ? <span className="text-[13px] font-medium text-[#334155]">{fmtCurrency(s.subscription_amount)}</span>
+                    : <span className="text-[12px] font-medium text-[#94A3B8]">No Package</span>
                   }
                 </td>
 
-                <td className="px-3 py-1.5 text-right text-[12px] text-[#374151] whitespace-nowrap">
+                <td className="px-3 py-2.5 text-right text-[13px] font-medium text-[#334155] whitespace-nowrap">
                   {s.paid_amount > 0 ? fmtCurrency(s.paid_amount) : '—'}
                 </td>
 
-                <td className="px-3 py-1.5 text-right whitespace-nowrap">
-                  <span className={`text-[12px] ${s.remaining_balance > 0 ? 'text-[#EF4444] font-semibold' : 'text-[#94A3B8]'}`}>
+                <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                  <span className={`text-[13px] ${s.remaining_balance > 0 ? 'text-[#DC2626] font-semibold' : 'text-[#64748B] font-medium'}`}>
                     {s.remaining_balance > 0 ? fmtCurrency(s.remaining_balance) : '—'}
                   </span>
                 </td>
 
-                <td className="px-3 py-1.5 text-center">
+                <td className="px-3 py-2.5 text-center">
                   <RiskBadge level={s.risk_level} />
                 </td>
 
-                <td className="px-3 py-1.5 text-center text-[12px] text-[#94A3B8] whitespace-nowrap">
+                <td className="px-3 py-2.5 text-center text-[13px] font-medium text-[#64748B] whitespace-nowrap">
                   {fmtDateShort(s.joined_at)}
                 </td>
               </tr>
