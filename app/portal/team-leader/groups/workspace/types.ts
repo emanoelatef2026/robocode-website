@@ -15,6 +15,8 @@ export interface Filters {
   day_of_week: string
 }
 
-export const DEFAULT_FILTERS: Filters = { q: '', branch_id: '', instructor_id: '', quickFilter: '', day_of_week: '' }
+// The operational view opens on live teaching by default. Other lifecycle
+// stages remain available from the status filter when they are needed.
+export const DEFAULT_FILTERS: Filters = { q: '', branch_id: '', instructor_id: '', quickFilter: 'running', day_of_week: '' }
 
 export type WorkspaceTab = 'students' | 'attendance' | 'finance' | 'performance'

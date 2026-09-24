@@ -21,6 +21,10 @@ function group(name: string, day_of_week: string | null): GroupOperationalRow {
 }
 
 describe('applyFilters', () => {
+  it('opens the groups workspace on running groups by default', () => {
+    expect(DEFAULT_FILTERS.quickFilter).toBe('running')
+  })
+
   it('limits groups to the selected teaching day', () => {
     const groups = [group('Thursday Python', 'thursday'), group('Friday Robotics', 'friday')]
 
