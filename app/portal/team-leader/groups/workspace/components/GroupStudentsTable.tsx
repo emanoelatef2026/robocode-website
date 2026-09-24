@@ -207,8 +207,11 @@ export function GroupStudentsTable({
                   }
                 </td>
 
-                <td className="px-3 py-2.5 text-right text-[13px] font-medium text-[#334155] whitespace-nowrap">
-                  {s.paid_amount > 0 ? fmtCurrency(s.paid_amount) : '—'}
+                <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                  {s.paid_amount > 0
+                    ? <span className="text-[13px] font-semibold text-[#15803D]">{fmtCurrency(s.paid_amount)}</span>
+                    : <span className="text-[13px] font-medium text-[#64748B]">—</span>
+                  }
                 </td>
 
                 <td className="px-3 py-2.5 text-right whitespace-nowrap">
