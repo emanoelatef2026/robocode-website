@@ -173,7 +173,10 @@ export function filterStudentOptions(
 ): GroupStudentOption[] {
   const eligible = options.filter(s => !currentIds.includes(s.student_id))
   if (!query.trim()) return eligible
-  const q = query.trim().toLowerCase()
+  // Student codes are displayed with a leading # in the LMS, while they are
+  // stored without it. Accept either form so copying the visible code always
+  // finds the student.
+  const q = query.trim().replace(/^#\s*/, '').toLowerCase()
   return eligible.filter(s => {
     const hay = [s.student_name, s.student_code, s.phone, s.parent_phone, s.branch_name]
       .filter(Boolean).join(' ').toLowerCase()
