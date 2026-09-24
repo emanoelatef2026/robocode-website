@@ -40,6 +40,11 @@ export function fmtDateShort(iso: string | null | undefined): string {
 export function applyFilters(groups: GroupOperationalRow[], f: Filters): GroupOperationalRow[] {
   return groups.filter(g => {
     if (f.branch_id && g.branch_id !== f.branch_id) return false
+    if (f.instructor_id && ![
+      g.lead_instructor_id,
+      g.asst_instructor_id,
+      g.active_allocation?.instructor_id,
+    ].includes(f.instructor_id)) return false
     if (f.day_of_week && g.day_of_week !== f.day_of_week) return false
     if (f.quickFilter === 'draft'          && getCohortLifecycleStage(g) !== 'draft')                  return false
     if (f.quickFilter === 'open'           && getCohortLifecycleStage(g) !== 'open')                   return false
@@ -54,7 +59,10 @@ export function applyFilters(groups: GroupOperationalRow[], f: Filters): GroupOp
     if (f.quickFilter === 'starts_soon'    && !g.starts_soon)                                          return false
     if (f.q) {
       const q   = f.q.toLowerCase()
-      const hay = [g.name, g.code, g.lead_instructor_name, g.course_name, g.branch_name]
+      const hay = [
+        g.name, g.code, g.lead_instructor_name, g.asst_instructor_name,
+        g.active_allocation?.instructor_name, g.course_name, g.branch_name,
+      ]
         .filter(Boolean).join(' ').toLowerCase()
       if (!hay.includes(q)) return false
     }

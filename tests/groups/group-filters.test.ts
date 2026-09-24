@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { applyFilters } from '@/app/portal/team-leader/groups/workspace/utils'
+import { DEFAULT_FILTERS } from '@/app/portal/team-leader/groups/workspace/types'
 import type { GroupOperationalRow } from '@/modules/groups/operational'
 
 function group(name: string, day_of_week: string | null): GroupOperationalRow {
@@ -23,10 +24,21 @@ describe('applyFilters', () => {
   it('limits groups to the selected teaching day', () => {
     const groups = [group('Thursday Python', 'thursday'), group('Friday Robotics', 'friday')]
 
-    const visible = applyFilters(groups, {
-      q: '', branch_id: '', quickFilter: '', day_of_week: 'thursday',
-    } as any)
+    const visible = applyFilters(groups, { ...DEFAULT_FILTERS, day_of_week: 'thursday' })
 
     expect(visible.map(g => g.name)).toEqual(['Thursday Python'])
+  })
+
+  it('finds groups assigned to the selected lead, assistant, or active instructor', () => {
+    const lead = group('Lead group', 'monday')
+    const assistant = { ...group('Assistant group', 'tuesday'), lead_instructor_id: 'instructor-2', asst_instructor_id: 'instructor-1' }
+    const allocated = {
+      ...group('Allocated group', 'wednesday'), lead_instructor_id: 'instructor-3',
+      active_allocation: { instructor_id: 'instructor-1', instructor_name: 'Instructor', from_session: 3, to_session: null },
+    }
+
+    const visible = applyFilters([lead, assistant, allocated], { ...DEFAULT_FILTERS, instructor_id: 'instructor-1' })
+
+    expect(visible.map(g => g.name)).toEqual(['Lead group', 'Assistant group', 'Allocated group'])
   })
 })

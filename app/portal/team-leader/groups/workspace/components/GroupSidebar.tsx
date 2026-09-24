@@ -37,7 +37,10 @@ export function GroupSidebar({
   onSelect:       (g: GroupOperationalRow) => void
 }) {
   const baseFiltered   = applyFilters(allGroups, { ...filters, quickFilter: '' })
-  const searchFiltered = applyFilters(allGroups, { q: filters.q, branch_id: '', quickFilter: '', day_of_week: filters.day_of_week })
+  const searchFiltered = applyFilters(allGroups, {
+    q: filters.q, branch_id: '', instructor_id: filters.instructor_id,
+    quickFilter: '', day_of_week: filters.day_of_week,
+  })
   // Keep the branch filter available even if the form-options request was
   // incomplete. The operational group rows already contain the authoritative
   // branch id/name pair, so they are a reliable fallback for this UI filter.
@@ -50,7 +53,7 @@ export function GroupSidebar({
   return (
     <div className="flex flex-col">
       <div className="sticky top-0 z-10 border-b border-[#E2E8F0] bg-[#F5F7FA] p-3">
-        <div className="grid gap-2 rounded-[14px] border border-[#D7E0EA] bg-white p-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-2 rounded-[14px] border border-[#D7E0EA] bg-white p-2 sm:grid-cols-2 lg:grid-cols-5">
         <input
           type="text"
           value={filters.q}
@@ -72,6 +75,17 @@ export function GroupSidebar({
               ))}
             </select>
           )}
+          <select
+            value={filters.instructor_id}
+            onChange={e => onFilterChange({ instructor_id: e.target.value })}
+            className="ds-filter-select w-full text-[14px] font-normal"
+            aria-label="Filter by instructor"
+          >
+            <option value="">All Instructors</option>
+            {options.instructors.map(instructor => (
+              <option key={instructor.id} value={instructor.id}>{instructor.name}</option>
+            ))}
+          </select>
           <select
             value={filters.day_of_week}
             onChange={e => onFilterChange({ day_of_week: e.target.value })}
