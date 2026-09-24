@@ -41,6 +41,9 @@ export const updateSchema = z.object({
   id:     z.string().uuid(),
   status: z.enum(GROUP_STATUSES).optional(),
   ...baseFields,
+  // Create treats an empty capacity as "unspecified". In edit mode it is an
+  // explicit user request to remove the limit, so preserve that distinction.
+  capacity: z.coerce.number().int().min(1).max(500).optional().or(emptyStr).transform(v => v === '' ? null : v as number | undefined),
 })
 
 export type CreateGroupInput = z.infer<typeof createSchema>

@@ -891,7 +891,8 @@ export default function GroupFormModal({
                 <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Max Capacity</label>
                 <input name="capacity" type="number" min={1} max={500} defaultValue={capacity as string}
                   className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/20"
-                  placeholder="Optional" />
+                  placeholder="No limit" />
+                <p className="mt-1 text-[12px] font-medium text-[#52677F]">Leave blank for no limit.</p>
               </div>
 
               {mode === 'edit' && (
