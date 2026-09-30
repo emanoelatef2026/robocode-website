@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { assignGroupModalAction } from '@/modules/instructors/modal-actions'
+import { assignGroupModalAction, assignGroupsModalAction } from '@/modules/instructors/modal-actions'
 import type { InstructorFormOptions } from '@/modules/instructors/types'
 
 export function AssignGroupModal({ instructorId, currentGroupIds, options, onClose, onAssigned }: {
@@ -11,14 +11,18 @@ export function AssignGroupModal({ instructorId, currentGroupIds, options, onClo
   onClose:         () => void
   onAssigned:      () => void
 }) {
-  const [groupId, setGroupId]              = useState('')
+  const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([])
   const [role, setRole]                    = useState<'lead' | 'assistant'>('lead')
   const [q, setQ]                          = useState('')
+  const [branchId, setBranchId]            = useState('')
+  const [instructorFilter, setInstructorFilter] = useState<'all' | 'unassigned' | 'assigned'>('all')
   const [allocatedSessions, setAllocated]  = useState<string>('')
   const [isPending, startTransition]       = useTransition()
   const [error, setError]                  = useState<string | null>(null)
 
-  const selectedGroup = options.groups.find(g => g.id === groupId) ?? null
+  const selectedGroup = selectedGroupIds.length === 1
+    ? options.groups.find(g => g.id === selectedGroupIds[0]) ?? null
+    : null
   const fromSession   = selectedGroup ? selectedGroup.next_from_session : 1
   const remaining     = selectedGroup ? Math.max(0, (selectedGroup.total_sessions ?? 0) - fromSession + 1) : 0
 
@@ -26,15 +30,37 @@ export function AssignGroupModal({ instructorId, currentGroupIds, options, onClo
     g.status !== 'cancelled' &&
     g.status !== 'archived' &&
     !currentGroupIds.includes(g.id) &&
-    (!q || g.name.toLowerCase().includes(q.toLowerCase()) || (g.code ?? '').toLowerCase().includes(q.toLowerCase()))
+    (!branchId || g.branch_id === branchId) &&
+    (instructorFilter === 'all' || (instructorFilter === 'assigned' ? g.has_instructor : !g.has_instructor)) &&
+    (!q || [g.name, g.code ?? '', g.branch_name].join(' ').toLowerCase().includes(q.toLowerCase()))
   )
 
+  const allVisibleSelected = eligible.length > 0 && eligible.every(group => selectedGroupIds.includes(group.id))
+
+  function toggleGroup(groupId: string) {
+    setError(null)
+    setAllocated('')
+    setSelectedGroupIds(selected => selected.includes(groupId)
+      ? selected.filter(id => id !== groupId)
+      : [...selected, groupId])
+  }
+
+  function toggleVisibleGroups() {
+    setError(null)
+    setAllocated('')
+    setSelectedGroupIds(selected => allVisibleSelected
+      ? selected.filter(id => !eligible.some(group => group.id === id))
+      : [...new Set([...selected, ...eligible.map(group => group.id)])])
+  }
+
   function handleAssign() {
-    if (!groupId) { setError('Select a group.'); return }
+    if (selectedGroupIds.length === 0) { setError('Select at least one group.'); return }
     const parsed = allocatedSessions !== '' ? parseInt(allocatedSessions, 10) : undefined
     if (parsed !== undefined && (isNaN(parsed) || parsed < 1)) { setError('Sessions to teach must be a positive number.'); return }
     startTransition(async () => {
-      const res = await assignGroupModalAction(instructorId, groupId, role, fromSession, parsed)
+      const res = selectedGroupIds.length === 1
+        ? await assignGroupModalAction(instructorId, selectedGroupIds[0], role, fromSession, parsed)
+        : await assignGroupsModalAction(instructorId, selectedGroupIds, role)
       if (res.success) onAssigned()
       else setError(res.error?.message ?? 'Failed.')
     })
@@ -48,7 +74,10 @@ export function AssignGroupModal({ instructorId, currentGroupIds, options, onClo
         </div>
 
         <div className="flex items-center justify-between border-b border-[#E2E8F0] px-4 md:px-6 py-3 md:py-4 shrink-0">
-          <h2 className="text-[14px] md:text-[15px] font-bold text-[#0B1F3A]">Assign Group</h2>
+          <div>
+            <h2 className="text-[14px] md:text-[15px] font-bold text-[#0B1F3A]">Assign Groups</h2>
+            <p className="mt-0.5 text-[12px] text-[#64748B]">Select one or more groups for this instructor.</p>
+          </div>
           <button onClick={onClose} className="text-[#94A3B8] hover:text-[#0B1F3A]">✕</button>
         </div>
 
@@ -70,15 +99,37 @@ export function AssignGroupModal({ instructorId, currentGroupIds, options, onClo
             <input type="text" value={q} onChange={e => setQ(e.target.value)} placeholder="Group name or code…"
               className="mb-2 w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]"
             />
-            <div className="max-h-64 overflow-y-auto rounded-xl border border-[#E2E8F0]">
+            <div className="mb-2 grid grid-cols-2 gap-2">
+              <select value={branchId} onChange={event => setBranchId(event.target.value)}
+                className="min-w-0 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] text-[#374151] outline-none focus:border-[#0E7490]">
+                <option value="">All branches</option>
+                {options.branches.map(branch => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
+              </select>
+              <select value={instructorFilter} onChange={event => setInstructorFilter(event.target.value as typeof instructorFilter)}
+                className="min-w-0 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-[12px] text-[#374151] outline-none focus:border-[#0E7490]">
+                <option value="all">All groups</option>
+                <option value="unassigned">No instructor</option>
+                <option value="assigned">Has instructor</option>
+              </select>
+            </div>
+            <div className="flex items-center justify-between rounded-t-xl border border-b-0 border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2">
+              <span className="text-[12px] font-medium text-[#475569]">{eligible.length} groups</span>
+              <button type="button" onClick={toggleVisibleGroups} disabled={eligible.length === 0}
+                className="text-[12px] font-semibold text-[#C2410C] disabled:text-[#94A3B8]">
+                {allVisibleSelected ? 'Clear visible' : 'Select visible'}
+              </button>
+            </div>
+            <div className="max-h-64 overflow-y-auto rounded-b-xl border border-[#E2E8F0]">
               {eligible.length === 0 ? (
                 <p className="px-4 py-6 text-center text-[13px] text-[#94A3B8]">
                   {q ? 'No groups match' : currentGroupIds.length > 0 ? 'All eligible groups already assigned' : 'No active groups available to assign'}
                 </p>
               ) : (
-                eligible.map(g => (
-                  <button key={g.id} type="button" onClick={() => { setGroupId(g.id); setAllocated('') }}
-                    className={`flex w-full items-center justify-between px-4 py-3 text-left border-b border-[#F1F5F9] last:border-0 transition ${groupId === g.id ? 'bg-[#FFF7ED]' : 'hover:bg-[#F8FAFC]'}`}>
+                eligible.map(g => {
+                  const isSelected = selectedGroupIds.includes(g.id)
+                  return (
+                  <button key={g.id} type="button" onClick={() => toggleGroup(g.id)}
+                    className={`flex w-full items-center justify-between px-4 py-3 text-left border-b border-[#F1F5F9] last:border-0 transition ${isSelected ? 'bg-[#FFF7ED]' : 'hover:bg-[#F8FAFC]'}`}>
                     <div>
                       <p className="text-[13px] font-semibold text-[#0B1F3A]">{g.name}</p>
                       <p className="text-[12px] text-[#64748B]">{g.branch_name}{g.code ? ` · ${g.code}` : ''}</p>
@@ -86,10 +137,11 @@ export function AssignGroupModal({ instructorId, currentGroupIds, options, onClo
                     <div className="text-right shrink-0 ml-3">
                       <p className="text-[13px] text-[#64748B]">{g.student_count} students</p>
                       {g.has_instructor && <p className="text-[11px] text-[#F59E0B]">Has instructor</p>}
-                      {groupId === g.id && <div className="mt-0.5 h-2 w-2 rounded-full bg-[#C2410C] mx-auto" />}
+                      <span className={`mt-1 ml-auto flex h-4 w-4 items-center justify-center rounded border ${isSelected ? 'border-[#C2410C] bg-[#C2410C] text-white' : 'border-[#CBD5E1] bg-white text-transparent'}`}>✓</span>
                     </div>
                   </button>
-                ))
+                  )
+                })
               )}
             </div>
           </div>
@@ -132,6 +184,11 @@ export function AssignGroupModal({ instructorId, currentGroupIds, options, onClo
               </div>
             )
           )}
+          {selectedGroupIds.length > 1 && (
+            <div className="rounded-lg border border-[#BAE6FD] bg-[#F0F9FF] px-3 py-2 text-[12px] text-[#0E7490]">
+              {selectedGroupIds.length} groups selected. Each group will use its own next available session allocation.
+            </div>
+          )}
           {error && <p className="text-[13px] text-[#EF4444]">{error}</p>}
         </div>
 
@@ -139,10 +196,10 @@ export function AssignGroupModal({ instructorId, currentGroupIds, options, onClo
           <button onClick={onClose} className="flex-1 rounded-lg border border-[#E2E8F0] py-2.5 text-[13px] text-[#64748B] hover:bg-[#F8FAFC] transition">Cancel</button>
           <button
             onClick={handleAssign}
-            disabled={isPending || !groupId}
+            disabled={isPending || selectedGroupIds.length === 0}
             className="flex-1 rounded-lg bg-[#C2410C] py-2.5 text-[13px] font-semibold text-white hover:bg-[#e87c18] disabled:opacity-50 transition"
           >
-            {isPending ? 'Assigning…' : 'Assign Group'}
+            {isPending ? 'Assigning…' : `Assign ${selectedGroupIds.length || ''} Group${selectedGroupIds.length === 1 ? '' : 's'}`}
           </button>
         </div>
       </div>

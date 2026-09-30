@@ -405,6 +405,81 @@ export async function assignGroupModalAction(
   return { success: true, data: undefined }
 }
 
+/**
+ * Assign the same instructor and role to several groups from the operations
+ * workspace. Each group keeps its own canonical session allocation start.
+ */
+export async function assignGroupsModalAction(
+  instructorId: string,
+  groupIds: string[],
+  role: 'lead' | 'assistant',
+): Promise<ActionResult<void>> {
+  const uniqueGroupIds = [...new Set(groupIds.filter(Boolean))]
+  if (uniqueGroupIds.length === 0) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Select at least one group.' } }
+  }
+
+  const user = await requirePermission('manage_instructors')
+  const db = createServiceClient()
+
+  const [{ data: instructor }, { data: groups }, { data: existingAssignments }] = await Promise.all([
+    db.from('instructors').select('id, branch_id').eq('id', instructorId).maybeSingle(),
+    db.from('groups').select('id, branch_id').in('id', uniqueGroupIds).is('deleted_at', null),
+    db.from('group_instructors').select('group_id').eq('instructor_id', instructorId).in('group_id', uniqueGroupIds),
+  ])
+
+  if (!instructor || !groups || groups.length !== uniqueGroupIds.length) {
+    return { success: false, error: { code: 'NOT_FOUND', message: 'One or more selected groups are no longer available.' } }
+  }
+  if (!isBranchAccessible(user, instructor.branch_id) || groups.some(group => !isBranchAccessible(user, group.branch_id))) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'No access to one or more selected groups.' } }
+  }
+  if ((existingAssignments ?? []).length > 0) {
+    return { success: false, error: { code: 'CONFLICT', message: 'One or more selected groups are already assigned to this instructor. Refresh and try again.' } }
+  }
+
+  for (const group of groups) {
+    const canonicalFrom = await computeNextAllocationStart(group.id, db)
+    const { error } = await db.from('group_instructors').upsert({
+      group_id: group.id,
+      instructor_id: instructorId,
+      role,
+      from_session: canonicalFrom,
+      allocation_status: 'active',
+      assigned_at: new Date().toISOString(),
+      released_at: null,
+      allocated_sessions: null,
+      to_session: null,
+    }, { onConflict: 'group_id,instructor_id', ignoreDuplicates: false })
+    if (error) {
+      return { success: false, error: { code: 'DB_ERROR', message: `Could not assign all selected groups: ${error.message}` } }
+    }
+
+    await db.from('instructor_branches').upsert(
+      { instructor_id: instructorId, branch_id: group.branch_id, is_primary: false },
+      { onConflict: 'instructor_id,branch_id', ignoreDuplicates: true },
+    )
+
+    const { data: groupCourses } = await db
+      .from('group_courses').select('id, status').eq('group_id', group.id).order('status', { ascending: true })
+    const groupCourse = (groupCourses ?? []).find(course => course.status === 'active') ?? groupCourses?.[0]
+    if (groupCourse) {
+      await db.from('group_courses').update({ instructor_id: instructorId }).eq('id', groupCourse.id)
+    }
+  }
+
+  await db.rpc('write_audit_log', {
+    p_performed_by: user.id,
+    p_action: 'assign_groups',
+    p_entity_type: 'instructor',
+    p_entity_id: instructorId,
+    p_new_values: { group_ids: uniqueGroupIds, role },
+  })
+
+  revalidatePath('/portal/team-leader/instructors')
+  return { success: true, data: undefined }
+}
+
 export async function removeGroupModalAction(
   instructorId: string,
   groupId: string,
