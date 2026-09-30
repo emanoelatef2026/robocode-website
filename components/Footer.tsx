@@ -12,6 +12,12 @@ const SOCIALS = [
   { label: "TikTok",    short: "Tk", href: "https://www.tiktok.com/@robocode_school" },
 ];
 
+const LEGAL_LINKS = [
+  { label: "Terms & Conditions", href: "/terms-and-conditions" },
+  { label: "Refund Policy", href: "/refund-policy" },
+  { label: "Privacy Policy", href: "/privacy-policy" },
+];
+
 export default function Footer() {
   const { t } = useLanguage();
   const pathname = usePathname();
@@ -45,7 +51,7 @@ export default function Footer() {
       <div className="mx-auto max-w-7xl px-6 pb-8 pt-14 md:pt-20">
 
         {/* Top grid */}
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
 
           {/* Brand */}
           <div className="lg:col-span-2">
@@ -112,6 +118,22 @@ export default function Footer() {
                   >
                     {t(key)}
                   </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/35">
+              Legal
+            </p>
+            <ul className="mt-5 space-y-3">
+              {LEGAL_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-sm text-white/65 transition duration-200 hover:text-[#FF8A1F]">
+                    {link.label}
+                  </Link>
                 </li>
               ))}
             </ul>

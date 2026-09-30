@@ -51,6 +51,16 @@ export default function ContactSection() {
           >
             WhatsApp Us
           </a>
+
+          <a
+            href="tel:01285864902"
+            className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/8 px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 4.5A2.25 2.25 0 014.5 2.25h2.386c.968 0 1.806.657 2.036 1.596l.969 3.95a2.25 2.25 0 01-1.125 2.54l-1.47.735a11.25 11.25 0 005.625 5.625l.735-1.47a2.25 2.25 0 012.54-1.125l3.95.969a2.25 2.25 0 011.596 2.036V19.5a2.25 2.25 0 01-2.25 2.25h-1.5C9.387 21.75 2.25 14.613 2.25 5.25V4.5z" />
+            </svg>
+            01285864902
+          </a>
         </div>
       </motion.div>
     </section>
