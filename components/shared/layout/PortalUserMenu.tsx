@@ -18,15 +18,36 @@ export interface PortalUserMenuProps {
   collapsed?: boolean
   /** Whether the flyout portal is safe to render (mounted on client). */
   mounted?: boolean
+  /** Role-specific personal destinations, shown inside My Account. */
+  accountItems?: AccountMenuItem[]
   onNavigate?: () => void
+}
+
+export interface AccountMenuItem {
+  label: string
+  href: string
+  icon: React.ReactNode
 }
 
 const MENU_LINK_CLASS =
   "flex w-full items-center gap-2 rounded-[9px] px-[10px] py-2 text-[11.5px] font-medium text-white/30 transition hover:bg-white/5 hover:text-white/60"
 
-function AccountLinks({ onNavigate }: { onNavigate?: () => void }) {
+function AccountLinks({
+  onNavigate,
+  accountItems = [],
+}: {
+  onNavigate?: () => void
+  accountItems?: AccountMenuItem[]
+}) {
   return (
     <>
+      {accountItems.map((item) => (
+        <Link key={item.href} href={item.href} onClick={onNavigate} className={MENU_LINK_CLASS}>
+          <span className="shrink-0">{item.icon}</span>
+          {item.label}
+        </Link>
+      ))}
+      {accountItems.length > 0 && <div className="my-1 border-t border-white/8" />}
       <Link href="/account/profile" onClick={onNavigate} className={MENU_LINK_CLASS}>
         <Icons.profile className="h-4 w-4 shrink-0" />
         Profile
@@ -47,7 +68,7 @@ function AccountLinks({ onNavigate }: { onNavigate?: () => void }) {
 }
 
 export function PortalUserMenu({
-  role, name, subtitle, collapsed = false, mounted = false, onNavigate,
+  role, name, subtitle, collapsed = false, mounted = false, accountItems, onNavigate,
 }: PortalUserMenuProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
@@ -107,7 +128,7 @@ export function PortalUserMenu({
               style={{ position: "fixed", left: "64px", top: `${flyoutY}px`, transform: "translateY(-50%)", zIndex: 9999 }}
               className="w-48 rounded-[10px] border border-white/10 bg-[#0B1F3A] p-1.5 shadow-2xl"
             >
-              <AccountLinks onNavigate={() => { setOpen(false); onNavigate?.() }} />
+              <AccountLinks accountItems={accountItems} onNavigate={() => { setOpen(false); onNavigate?.() }} />
               <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-[9px] px-[10px] py-2 text-[11.5px] font-medium text-[#F87171]/70 transition hover:bg-white/5 hover:text-[#F87171]">
                 <Icons.logout className="h-4 w-4 shrink-0" />
                 Logout
@@ -157,7 +178,7 @@ export function PortalUserMenu({
             className="overflow-hidden"
           >
             <div className="mt-0.5 space-y-0.5 ps-3">
-              <AccountLinks onNavigate={onNavigate} />
+              <AccountLinks accountItems={accountItems} onNavigate={onNavigate} />
               <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-[9px] px-[10px] py-2 text-[11.5px] font-medium text-[#F87171]/60 transition hover:bg-white/5 hover:text-[#F87171]">
                 <Icons.logout className="h-4 w-4 shrink-0" />
                 Logout

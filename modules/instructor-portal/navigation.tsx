@@ -1,4 +1,5 @@
 import { Icons } from "@/components/shared/layout/icons"
+import type { AccountMenuItem } from "@/components/shared/layout/PortalUserMenu"
 import type { PortalNavSection } from "@/components/shared/sidebar/PortalSidebar"
 import type { BottomNavItem } from "@/components/shared/layout/BottomNav"
 
@@ -26,9 +27,7 @@ export const INSTRUCTOR_NAV: InstructorNavItem[] = [
 /** Desktop sidebar groups the nav into sections. */
 export const INSTRUCTOR_NAV_SECTIONS = [
   { title: undefined, keys: ['dashboard', 'review'] },
-  { title: 'Teaching', keys: ['groups', 'calendar', 'students', 'homework', 'portfolio', 'history'] },
-  { title: 'Insights', keys: ['performance'] },
-  { title: 'Finance', keys: ['payments'] },
+  { title: 'Teaching', keys: ['groups', 'calendar', 'students'] },
 ] as const
 
 /** Primary tabs shown directly in the mobile bottom bar. */
@@ -54,6 +53,13 @@ function icon(key: string, className?: string) {
   return <Icon className={className} />
 }
 
+/** Personal and secondary views stay available without competing with daily teaching work. */
+export const INSTRUCTOR_ACCOUNT_ITEMS: AccountMenuItem[] = [
+  { label: 'My Sessions', href: '/portal/instructor/history',     icon: icon('history', 'h-4 w-4') },
+  { label: 'Performance', href: '/portal/instructor/performance', icon: icon('performance', 'h-4 w-4') },
+  { label: 'My Payments', href: '/portal/instructor/payments',    icon: icon('payments', 'h-4 w-4') },
+]
+
 export const INSTRUCTOR_SECTIONS: PortalNavSection[] = INSTRUCTOR_NAV_SECTIONS.map(s => ({
   title: s.title,
   items: [...s.keys].map(key => {
@@ -68,5 +74,5 @@ export const INSTRUCTOR_BOTTOM_NAV: BottomNavItem[] = BOTTOM_NAV_KEYS.map(key =>
 })
 
 export const INSTRUCTOR_BOTTOM_MORE: BottomNavItem[] = INSTRUCTOR_NAV
-  .filter(n => !BOTTOM_NAV_KEYS.includes(n.key as typeof BOTTOM_NAV_KEYS[number]))
+  .filter(n => ['students', 'homework', 'portfolio'].includes(n.key))
   .map(item => ({ label: item.label, href: item.href, icon: icon(item.key, 'h-6 w-6'), exact: item.exact }))

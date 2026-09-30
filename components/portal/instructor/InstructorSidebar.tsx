@@ -1,7 +1,7 @@
 "use client"
 
 import PortalSidebar from "@/components/shared/sidebar/PortalSidebar"
-import { INSTRUCTOR_SECTIONS } from "@/modules/instructor-portal/navigation"
+import { INSTRUCTOR_ACCOUNT_ITEMS, INSTRUCTOR_SECTIONS } from "@/modules/instructor-portal/navigation"
 
 interface Props {
   isOpen:  boolean
@@ -15,6 +15,7 @@ export default function InstructorSidebar({ isOpen, onClose, email }: Props) {
       sections={INSTRUCTOR_SECTIONS}
       role="instructor"
       name={email}
+      accountItems={INSTRUCTOR_ACCOUNT_ITEMS}
       isOpen={isOpen}
       onClose={onClose}
     />

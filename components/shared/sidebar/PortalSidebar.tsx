@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { PortalLogo } from "@/components/shared/layout/PortalLogo"
 import { PortalUserMenu } from "@/components/shared/layout/PortalUserMenu"
+import type { AccountMenuItem } from "@/components/shared/layout/PortalUserMenu"
 import { Icons } from "@/components/shared/layout/icons"
 import type { PortalRole } from "@/components/shared/layout/roles"
 
@@ -125,6 +126,8 @@ interface PortalSidebarContentProps {
   onToggleCollapse: () => void
   /** Portal-specific content rendered above "My Account" — e.g. Student's XP widget. Hidden while collapsed. */
   footerExtra?:     React.ReactNode
+  /** Role-specific personal destinations nested under My Account. */
+  accountItems?:    AccountMenuItem[]
   /** Desktop: nav scrolls and the footer stays pinned to the bottom. Mobile drawer:
    *  the whole rail (footer included) scrolls as one, so "My Account" is reachable. */
   pinFooter?:       boolean
@@ -132,7 +135,7 @@ interface PortalSidebarContentProps {
 
 function PortalSidebarContent({
   sections, role, name, subtitle,
-  onClose, collapsed, onToggleCollapse, footerExtra, pinFooter = true,
+  onClose, collapsed, onToggleCollapse, footerExtra, accountItems, pinFooter = true,
 }: PortalSidebarContentProps) {
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
@@ -222,6 +225,7 @@ function PortalSidebarContent({
         subtitle={subtitle}
         collapsed={collapsed}
         mounted={mounted}
+        accountItems={accountItems}
         onNavigate={onClose}
       />
 
@@ -261,6 +265,8 @@ export interface PortalSidebarProps {
   onClose:      () => void
   /** Portal-specific content above "My Account" — e.g. Student's XP widget. */
   footerExtra?: React.ReactNode
+  /** Role-specific personal destinations nested under My Account. */
+  accountItems?: AccountMenuItem[]
 }
 
 export default function PortalSidebar({
@@ -271,6 +277,7 @@ export default function PortalSidebar({
   isOpen,
   onClose,
   footerExtra,
+  accountItems,
 }: PortalSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
 
@@ -287,7 +294,7 @@ export default function PortalSidebar({
     })
   }
 
-  const contentProps = { sections, role, name, subtitle, footerExtra }
+  const contentProps = { sections, role, name, subtitle, footerExtra, accountItems }
 
   return (
     <>
