@@ -86,11 +86,6 @@ function InstructorRow({ instr }: { instr: InstructorOpsRow }) {
           View profile →
         </Link>
         <span className="flex-1" />
-        {instr.outstanding_amount > 0 && (
-          <span className="text-[11px] text-[#94A3B8]">
-            EGP {instr.outstanding_amount.toLocaleString()} outstanding
-          </span>
-        )}
       </div>
     </div>
   )

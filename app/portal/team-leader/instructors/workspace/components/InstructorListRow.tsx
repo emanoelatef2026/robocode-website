@@ -1,7 +1,7 @@
 import { buildWhatsAppUrl } from '@/lib/phone'
 import type { InstructorOperationalRow } from '@/modules/instructors/types'
 import { Avatar } from './Avatar'
-import { attColor, statusCls, fmtCurrency, displayName } from '../utils'
+import { attColor, statusCls, displayName } from '../utils'
 
 export function InstructorListRow({
   instructor, selected, onClick, canManage, onAssign, onEdit, onDelete,
@@ -52,9 +52,6 @@ export function InstructorListRow({
         <span className={`text-[13px] font-bold ${instructor.attendance_compliance > 0 ? attColor(instructor.attendance_compliance) : 'text-[#CBD5E1]'}`}>
           {instructor.attendance_compliance > 0 ? `${instructor.attendance_compliance}%` : '—'}
         </span>
-      </td>
-      <td className="px-4 py-2.5 text-[13px] text-[#64748B]">
-        {instructor.salary_per_session ? fmtCurrency(instructor.salary_per_session) : <span className="text-[#CBD5E1]">—</span>}
       </td>
       <td className="px-4 py-2.5">
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${statusCls(instructor.status)}`}>

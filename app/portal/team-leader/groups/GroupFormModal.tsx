@@ -912,25 +912,8 @@ export default function GroupFormModal({
                   placeholder="Optional notes…" />
               </div>
 
-              <div>
-                <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">
-                  Robocode Share %
-                  <span className="ml-1.5 text-[12px] font-normal text-[#94A3B8]">0–100 · default 100</span>
-                </label>
-                <input
-                  name="robocode_share_percent"
-                  type="number"
-                  min={0}
-                  max={100}
-                  step={0.01}
-                  defaultValue={sharePercent}
-                  className="w-full ds-card px-3 py-2 text-sm text-[#0B1F3A] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/20"
-                  placeholder="100"
-                />
-                <p className="mt-1 text-[12px] text-[#94A3B8]">
-                  % of collected revenue that belongs to Robocode. Use 100 for standard groups; set lower for partnership groups.
-                </p>
-              </div>
+              {/* Revenue sharing is configured by Super Admin; preserve the current value on edit. */}
+              <input name="robocode_share_percent" type="hidden" defaultValue={sharePercent} />
             </div>
           </section>
 

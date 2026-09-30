@@ -13,7 +13,6 @@ type FormSection = 'basic' | 'account' | 'financial' | 'social' | 'availability'
 const SECTIONS: { key: FormSection; label: string }[] = [
   { key: 'basic',        label: 'Basic'        },
   { key: 'account',      label: 'Account'      },
-  { key: 'financial',    label: 'Financial'    },
   { key: 'social',       label: 'Social'       },
   { key: 'availability', label: 'Availability' },
 ]

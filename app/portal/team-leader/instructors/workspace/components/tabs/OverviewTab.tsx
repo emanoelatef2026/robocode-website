@@ -1,7 +1,7 @@
 import type { InstructorDetailData } from '@/modules/instructors/types'
 import { StatCard } from '../StatCard'
 import { SectionLabel } from '../SectionLabel'
-import { fmtDate, fmtTime, fmtCurrency, sessionStatusMeta, isToday, isFuture, attColor } from '../../utils'
+import { fmtDate, fmtTime, sessionStatusMeta, isToday, isFuture } from '../../utils'
 
 export function OverviewTab({ detail }: { detail: InstructorDetailData }) {
   const { instructor, sessions, groups, attendance_stats, performance } = detail
@@ -17,13 +17,6 @@ export function OverviewTab({ detail }: { detail: InstructorDetailData }) {
     const d = new Date(s.scheduled_at)
     return d >= weekStart && d <= weekEnd
   }).length
-
-  const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const sessionsThisMonth = sessions.filter(s =>
-    s.status === 'completed' && new Date(s.scheduled_at) >= monthStart
-  ).length
-  const estimatedPayout = (instructor.salary_per_session ?? 0) * sessionsThisMonth
 
   return (
     <div className="space-y-5">
@@ -64,13 +57,11 @@ export function OverviewTab({ detail }: { detail: InstructorDetailData }) {
       </div>
 
       {/* KPI strip */}
-      <div className="grid grid-cols-3 gap-1.5 md:gap-3 sm:grid-cols-6">
+      <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
         <StatCard label="Groups"      value={performance.group_count}    sub={`${performance.active_groups} active`} />
         <StatCard label="Students"    value={performance.total_students} sub={`${performance.at_risk_students} at risk`} danger={performance.at_risk_students > 0} />
         <StatCard label="Attendance"  value={`${performance.attendance_compliance}%`} sub={`${attendance_stats.sessions_missing_attendance} missing`} danger={attendance_stats.sessions_missing_attendance > 0} />
         <StatCard label="This Week"   value={thisWeekSessions}           sub="sessions" />
-        <StatCard label="Salary/Sess" value={instructor.salary_per_session ? fmtCurrency(instructor.salary_per_session, instructor.currency) : '—'} accent />
-        <StatCard label="Payout Est." value={estimatedPayout > 0 ? fmtCurrency(estimatedPayout, instructor.currency) : '—'} sub="this month" accent />
       </div>
 
       {/* Today sessions */}

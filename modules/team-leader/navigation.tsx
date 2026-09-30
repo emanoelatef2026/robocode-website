@@ -35,11 +35,10 @@ export const TL_SECTIONS: PortalNavSection[] = [
     ],
   },
   {
-    title: "Finance",
+    title: "Collections",
     items: [
-      { label: "Payroll",     href: "/portal/team-leader/payroll",     icon: <Icons.payroll /> },
-      { label: "Collections", href: "/portal/team-leader/finance",     icon: <Icons.collections /> },
-      { label: "Watchlist",   href: "/portal/team-leader/collections", icon: <Icons.watchlist /> },
+      { label: "Student Contracts", href: "/portal/team-leader/finance",     icon: <Icons.collections /> },
+      { label: "Follow-up Queue",   href: "/portal/team-leader/collections", icon: <Icons.watchlist /> },
     ],
   },
   {
@@ -82,6 +81,5 @@ export const TL_BOTTOM_MORE: BottomNavItem[] = [
   { label: "Satisfaction", href: "/portal/team-leader/parent-feedback?tab=reviews", icon: <Icons.satisfaction className="h-6 w-6" />, matchPatterns: SATISFACTION_MATCH },
   { label: "Analytics",    href: "/portal/team-leader/analytics",                   icon: <Icons.analytics className="h-6 w-6" /> },
   { label: "Performance",  href: "/portal/team-leader/instructor-performance",      icon: <Icons.performance className="h-6 w-6" /> },
-  { label: "Payroll",      href: "/portal/team-leader/payroll",                     icon: <Icons.payroll className="h-6 w-6" />, matchPatterns: ["/portal/team-leader/instructor-payroll"] },
   { label: "Watchlist",    href: "/portal/team-leader/collections",                 icon: <Icons.watchlist className="h-6 w-6" /> },
 ]

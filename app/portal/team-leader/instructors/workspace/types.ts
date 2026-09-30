@@ -1,4 +1,4 @@
-export type TabKey = 'overview' | 'groups' | 'attendance' | 'finance' | 'notes'
+export type TabKey = 'overview' | 'groups' | 'attendance' | 'notes'
 export type ViewMode = 'grid' | 'list'
 export type QuickFilter = '' | 'active' | 'inactive' | 'on_leave' | 'no_groups'
 export type FormSection = 'basic' | 'account' | 'financial' | 'social' | 'availability'
@@ -25,7 +25,6 @@ export const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview',   label: 'Overview'   },
   { key: 'groups',     label: 'Groups'     },
   { key: 'attendance', label: 'Attendance' },
-  { key: 'finance',    label: 'Finance'    },
   { key: 'notes',      label: 'Notes'      },
 ]
 

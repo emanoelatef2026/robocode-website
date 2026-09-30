@@ -3,10 +3,6 @@ import { getInstructorOpsData }        from '@/modules/tl-dashboard/queries'
 import type { InstructorOpsRow }       from '@/modules/tl-dashboard/queries'
 import Link                            from 'next/link'
 
-function fmt(n: number) {
-  return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
-}
-
 function HealthScore({ score }: { score: number }) {
   const cls =
     score >= 85 ? 'bg-[#E7F8EE] text-[#15803D]' :
@@ -47,7 +43,6 @@ export default async function InstructorOperationsPage() {
     ? Math.round((withRating.reduce((s, i) => s + i.avg_student_rating!, 0) / withRating.length) * 10) / 10
     : null
   const totalStudents = instructors.reduce((s, i) => s + i.active_students, 0)
-  const totalRevenue  = instructors.reduce((s, i) => s + i.revenue_managed, 0)
   const totalRisk     = instructors.reduce((s, i) => s + i.risk_students, 0)
   const avgHealth     = instructors.length > 0
     ? Math.round(instructors.reduce((s, i) => s + i.health_score, 0) / instructors.length)
@@ -65,11 +60,10 @@ export default async function InstructorOperationsPage() {
 
       {/* ── KPI Strip ──────────────────────────────────────────────────── */}
       {instructors.length > 0 && (
-        <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-5">
+        <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
           {[
             { label: 'Avg Rating',       value: avgRating != null ? `${avgRating}★` : '—',       cls: 'text-[#C2410C]' },
             { label: 'Active Students',  value: String(totalStudents),                             cls: 'text-[#0B1F3A]' },
-            { label: 'Revenue Managed',  value: `EGP ${fmt(totalRevenue)}`,                        cls: 'text-[#10B981]' },
             { label: 'At-Risk Students', value: String(totalRisk),                                 cls: totalRisk > 0 ? 'text-[#EF4444]' : 'text-[#10B981]' },
             { label: 'Avg Health Score', value: String(avgHealth),                                 cls: avgHealth >= 80 ? 'text-[#10B981]' : avgHealth >= 60 ? 'text-[#F59E0B]' : 'text-[#EF4444]' },
           ].map(k => (
@@ -101,7 +95,7 @@ export default async function InstructorOperationsPage() {
               <table className="w-full text-[13px]">
                 <thead className="ds-table-head">
                   <tr className="border-b border-[#F1F5F9] bg-[#F8FAFC] text-left">
-                    {['#', 'Instructor', 'Health', 'Students', 'Rating', 'Revenue', 'Retention', 'At-Risk', 'Attendance', 'HW Review'].map(h => (
+                    {['#', 'Instructor', 'Health', 'Students', 'Rating', 'Retention', 'At-Risk', 'Attendance', 'HW Review'].map(h => (
                       <th key={h} className="px-4 py-3 text-[12px] font-semibold uppercase tracking-wide text-[#94A3B8]">{h}</th>
                     ))}
                   </tr>
@@ -134,12 +128,6 @@ export default async function InstructorOperationsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <RatingBadge rating={instr.avg_student_rating} />
-                      </td>
-                      <td className="px-4 py-3 font-medium text-[#10B981]">
-                        EGP {fmt(instr.revenue_managed)}
-                        {instr.outstanding_amount > 0 && (
-                          <p className="text-[12px] font-normal text-[#F59E0B]">{fmt(instr.outstanding_amount)} due</p>
-                        )}
                       </td>
                       <td className="px-4 py-3">
                         {instr.retention_pct != null ? (
@@ -184,7 +172,7 @@ export default async function InstructorOperationsPage() {
                   </div>
                   <HealthScore score={instr.health_score} />
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[12px]">
+                <div className="mt-3 grid grid-cols-2 gap-2 text-center text-[12px]">
                   <div className="rounded-lg bg-[#F8FAFC] p-2">
                     <p className="font-bold text-[#C2410C]">{instr.avg_student_rating?.toFixed(1) ?? '—'}★</p>
                     <p className="text-[#94A3B8]">Rating</p>
@@ -192,10 +180,6 @@ export default async function InstructorOperationsPage() {
                   <div className="rounded-lg bg-[#F8FAFC] p-2">
                     <p className={`font-bold ${instr.risk_students > 0 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>{instr.risk_students}</p>
                     <p className="text-[#94A3B8]">At Risk</p>
-                  </div>
-                  <div className="rounded-lg bg-[#F8FAFC] p-2">
-                    <p className="font-bold text-[#10B981]">EGP {fmt(instr.revenue_managed)}</p>
-                    <p className="text-[#94A3B8]">Revenue</p>
                   </div>
                 </div>
                 <div className="mt-3 space-y-1.5">

@@ -1,7 +1,7 @@
 import { buildWhatsAppUrl } from '@/lib/phone'
 import type { InstructorOperationalRow } from '@/modules/instructors/types'
 import { Avatar } from './Avatar'
-import { attColor, statusCls, fmtCurrency, displayName, initials } from '../utils'
+import { attColor, statusCls, displayName, initials } from '../utils'
 
 export function InstructorGridCard({
   instructor, selected, onClick, canManage, onAssign, onEdit, onDelete,
@@ -107,10 +107,7 @@ export function InstructorGridCard({
             ? <span className="rounded bg-[#FFFBEB] px-2 py-0.5 font-semibold text-[#B45309]">{instructor.today_sessions_count} today</span>
             : <span className="text-[#CBD5E1]">No sessions today</span>
           }
-          {instructor.salary_per_session
-            ? <span className="text-[#94A3B8]">{fmtCurrency(instructor.salary_per_session)}/sess</span>
-            : <span />
-          }
+          <span />
         </div>
         {canManage && (
           <div className="flex gap-1 border-t border-[#F1F5F9] px-2 py-2 opacity-0 transition-opacity group-hover:opacity-100">

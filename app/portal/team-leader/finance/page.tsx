@@ -1,10 +1,6 @@
 import { requirePermission }          from '@/modules/rbac/guards'
 import { listStudentOperations, getFilterOptions } from '@/modules/finance/queries'
 
-function fmt(n: number) {
-  return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
-}
-
 export default async function StudentOperationsPage() {
   const user = await requirePermission('manage_financials')
 
@@ -26,10 +22,6 @@ export default async function StudentOperationsPage() {
   const totalStudents     = rows.length
   const activePackages    = rows.filter(r => r.enrolled_sessions > 0 && r.remaining_sessions > 0).length
   const exhaustedPackages = rows.filter(r => r.enrolled_sessions > 0 && r.remaining_sessions <= 0).length
-  const totalRemaining    = rows.reduce((s, r) => s + r.remaining_amount, 0)
-  const totalPaid         = rows.reduce((s, r) => s + r.paid_amount, 0)
-  const totalNet          = rows.reduce((s, r) => s + r.net_amount, 0)
-  const collectionRate    = totalNet > 0 ? Math.round((totalPaid / totalNet) * 100) : 0
   const attendedRows      = rows.filter(r => r.sessions_attended > 0)
   const avgAttendance     = attendedRows.length > 0
     ? Math.round(attendedRows.reduce((s, r) => s + r.attendance_pct, 0) / attendedRows.length)
@@ -45,8 +37,8 @@ export default async function StudentOperationsPage() {
         <p className="text-xs text-[#94A3B8]">Use the Add Payment button in the table to create contracts.</p>
       </div>
 
-      {/* ── KPI strip ────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      {/* Operational counts only — money is available per student contract below. */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           {
             label: 'Total Students',
@@ -62,16 +54,6 @@ export default async function StudentOperationsPage() {
             label: 'Exhausted Packages',
             value: exhaustedPackages,
             color: exhaustedPackages > 0 ? 'bg-purple-400' : 'bg-[#CBD5E1]',
-          },
-          {
-            label: 'Outstanding',
-            value: `EGP ${fmt(totalRemaining)}`,
-            color: totalRemaining > 0 ? 'bg-[#F59E0B]' : 'bg-[#10B981]',
-          },
-          {
-            label: 'Collection Rate',
-            value: `${collectionRate}%`,
-            color: collectionRate >= 80 ? 'bg-[#10B981]' : collectionRate >= 60 ? 'bg-[#F59E0B]' : 'bg-[#EF4444]',
           },
           {
             label: 'Avg Attendance',

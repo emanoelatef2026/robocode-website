@@ -26,7 +26,7 @@ export default async function TLCoursesPage({ searchParams }: Props) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: metricsData, error: metricsErr } = await (db as any)
       .from('v_course_metrics')
-      .select('course_id, active_enrollments, total_revenue, dropout_pct, retention_pct')
+      .select('course_id, active_enrollments, dropout_pct, retention_pct')
       .in('course_id', courseIds)
 
     if (!metricsErr && metricsData) {
@@ -35,7 +35,6 @@ export default async function TLCoursesPage({ searchParams }: Props) {
         metrics.push({
           courseId:  r.course_id,
           active:    Number(r.active_enrollments ?? 0),
-          revenue:   Number(r.total_revenue      ?? 0),
           dropout:   Number(r.dropout_pct        ?? 0),
           retention: Number(r.retention_pct      ?? 0),
         })

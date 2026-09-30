@@ -406,7 +406,6 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                             ['Sessions completed', `${summary.sessions_completed}${summary.target_sessions ? ` / ${summary.target_sessions}` : ''}`],
                             ['Attendance %', `${summary.attendance_pct}%`],
                             ['Certificates', `${summary.certificates_issued} issued · ${summary.certificates_missing} missing`],
-                            ['Outstanding balance', `${summary.outstanding_balance_total.toFixed(2)} (${summary.outstanding_balance_students} student(s))`],
                             ['Completion date', summary.completion_date ?? '—'],
                           ].map(([label, value]) => (
                             <div key={label} className="flex items-center justify-between px-4 py-2.5">
@@ -513,7 +512,6 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                               <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Student</th>
                               <th className="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Att. %</th>
                               <th className="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Cert.</th>
-                              <th className="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Balance</th>
                               <th className="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Recommended</th>
                               <th className="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Decision</th>
                             </tr>
@@ -533,7 +531,6 @@ export function GraduationWizard({ isOpen, group, onClose, onSuccess }: Props) {
                                   <td className="px-3 py-2 font-medium text-[#0B1F3A]">{s.student_name}</td>
                                   <td className="px-3 py-2 text-center text-[#64748B]">{s.attendance_pct}%</td>
                                   <td className="px-3 py-2 text-center">{s.has_certificate ? '✓' : '—'}</td>
-                                  <td className="px-3 py-2 text-center text-[#64748B]">{s.outstanding_balance > 0 ? s.outstanding_balance.toFixed(0) : '—'}</td>
                                   <td className="px-3 py-2 text-center">
                                     <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${DECISION_COLORS[s.recommended_decision]}`}>{DECISION_LABELS[s.recommended_decision]}</span>
                                   </td>

@@ -31,10 +31,6 @@ function ProgressMetric({ label, detail, secondaryDetail, belowDetail, value, co
   )
 }
 
-function formatEgp(amount: number): string {
-  return `EGP ${Math.max(0, Math.round(amount)).toLocaleString('en-EG')}`
-}
-
 export function GroupListItem({ group, selected, onClick }: { group: GroupOperationalRow; selected: boolean; onClick: () => void }) {
   const sessionPct = group.planned_sessions && group.planned_sessions > 0
     ? Math.round((group.completed_sessions / group.planned_sessions) * 100)
@@ -42,22 +38,6 @@ export function GroupListItem({ group, selected, onClick }: { group: GroupOperat
   const sessionDetail = group.planned_sessions != null
     ? `${group.completed_sessions} / ${group.planned_sessions} sessions`
     : group.open_ended ? `${group.completed_sessions} sessions` : 'Not planned'
-  const hasPaymentPlan = group.payment_total_amount > 0
-  const paymentDetail = hasPaymentPlan ? `${group.payment_completion_pct ?? 0}% collected` : 'No payment plan'
-  const paymentAmounts = hasPaymentPlan
-    ? `${formatEgp(group.payment_paid_amount)} paid of ${formatEgp(group.payment_total_amount)}`
-    : 'Add a contract to track fees'
-  const paymentRemaining = Math.max(0, group.payment_total_amount - group.payment_paid_amount)
-  const paymentStatus = group.payment_completion_pct == null
-    ? 'unknown'
-    : group.payment_completion_pct < 70 ? 'follow-up'
-    : group.payment_completion_pct < 90 ? 'watch'
-    : 'healthy'
-  const paymentColor = paymentStatus === 'follow-up'
-    ? 'bg-[#EF4444]'
-    : paymentStatus === 'watch'
-      ? 'bg-[#F59E0B]'
-      : 'bg-[#10B981]'
   const schedule = group.day_of_week
     ? `${DAYS_FULL[group.day_of_week] ?? group.day_of_week}${group.start_time ? ` · ${fmt12(group.start_time)}` : ''}`
     : 'Schedule not set'
@@ -66,7 +46,7 @@ export function GroupListItem({ group, selected, onClick }: { group: GroupOperat
     <button onClick={onClick} className={[
       'w-full rounded-xl border border-[#D7E0EA] bg-white p-2 md:p-4 text-left transition-[border-color,box-shadow,background-color] content-visibility-auto',
       selected ? 'border-[#0E7490] bg-[#F7FCFD] ring-2 ring-[#0E7490]/15' : 'hover:border-[#B8C6D6] hover:bg-[#FCFDFE] hover:shadow-sm',
-    ].join(' ')} data-group-stage={stage} data-payment-status={paymentStatus}>
+    ].join(' ')} data-group-stage={stage}>
       <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center">
         <div className="min-w-0 xl:w-[25%]">
           <div className="flex items-center gap-2"><p className="truncate text-[15px] font-semibold text-[#0B1F3A]">{group.name}</p><StatusChip group={group} /></div>
@@ -79,21 +59,13 @@ export function GroupListItem({ group, selected, onClick }: { group: GroupOperat
           <div><p className="text-[#64748B]">Attendance</p><p className="font-semibold text-[#0B1F3A]">{group.attendance_avg}%</p></div>
           <div><p className="text-[#64748B]">Health</p><p className="font-semibold text-[#0B1F3A]">{group.health_score}%</p></div>
         </div>
-        <div className="grid flex-1 gap-2 sm:grid-cols-2 xl:min-w-[23rem]">
+        <div className="flex-1 xl:min-w-[11.5rem]">
           <ProgressMetric
             label="Sessions"
             detail={sessionDetail}
             secondaryDetail={group.planned_sessions != null ? `${Math.max(0, group.planned_sessions - group.completed_sessions)} sessions remaining` : undefined}
             value={sessionPct}
             color="bg-[#C2410C]"
-          />
-          <ProgressMetric
-            label="Fees"
-            detail={paymentDetail}
-            secondaryDetail={paymentAmounts}
-            belowDetail={hasPaymentPlan ? `${formatEgp(paymentRemaining)} remaining` : undefined}
-            value={group.payment_completion_pct}
-            color={paymentColor}
           />
         </div>
       </div>

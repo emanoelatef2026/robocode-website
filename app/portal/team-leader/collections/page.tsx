@@ -77,15 +77,10 @@ export default async function CollectionsPage() {
     { id: 'highrisk',  label: 'High Risk (All)',        rows: highRisk,    color: 'bg-[#EF4444]',    emptyMsg: 'No high-risk students.' },
   ]
 
-  const totalOutstanding = allRows.reduce((s, r) => s + r.remaining_amount, 0)
-  const totalDueToday    = dueToday.reduce((s, r) => s + r.remaining_amount, 0)
-  const totalOverdue     = overdue.reduce((s, r) => s + r.remaining_amount, 0)
-
   return (
     <CollectionsView
       sections={sections}
       branchIds={user.branchIds}
-      stats={{ totalOutstanding, totalDueToday, totalOverdue, overdueCount: overdue.length, milestoneCount: milestone.length }}
     />
   )
 }

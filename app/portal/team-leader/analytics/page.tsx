@@ -41,7 +41,6 @@ type TabKey = 'overview' | 'students' | 'finance' | 'groups' | 'instructors' | '
 const TABS: { key: TabKey; label: string }[] = [
   { key: 'overview',     label: 'Overview' },
   { key: 'students',     label: 'Students' },
-  { key: 'finance',      label: 'Finance' },
   { key: 'groups',       label: 'Groups' },
   { key: 'instructors',  label: 'Instructors' },
   { key: 'assignments',  label: 'Assignments' },
@@ -64,7 +63,12 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
   const user   = await requirePortalRole('team_leader')
   const params = await searchParams
 
-  const tab = (params.tab ?? 'overview') as TabKey
+  // Finance reporting is intentionally unavailable to Team Leaders. Collection
+  // actions remain under Student Contracts and Follow-up Queue.
+  const requestedTab = params.tab ?? 'overview'
+  const tab: TabKey = requestedTab === 'finance'
+    ? 'overview'
+    : (TABS.some(item => item.key === requestedTab) ? requestedTab : 'overview') as TabKey
   const branchIds = user.branchIds
 
   if (!branchIds.length) {
@@ -97,7 +101,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
     tab === 'overview' || tab === 'students'
       ? getTLStudentsOverview(branchIds)
       : null,
-    tab === 'overview' || tab === 'finance'
+    tab === 'finance'
       ? getFinanceKPIs(branchIds)
       : null,
     tab === 'overview' || tab === 'groups'
@@ -155,7 +159,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
       </div>
 
       {/* ── OVERVIEW TAB ─────────────────────────────────────────────────────── */}
-      {tab === 'overview' && studentsData && financeKPIs && groupsData && instructorData && leadsData && (
+      {tab === 'overview' && studentsData && groupsData && instructorData && leadsData && (
         <div className="space-y-6">
 
           {/* Operational Alerts */}
@@ -198,28 +202,6 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                 { label: 'Inactive',        value: studentsData.inactive,        color: 'bg-[#CBD5E1]' },
                 { label: 'Attendance Avg',  value: `${studentsData.attendance_avg}%`, color: studentsData.attendance_avg >= 75 ? 'bg-[#10B981]' : 'bg-[#F59E0B]' },
                 { label: 'At Risk',         value: studentsData.at_risk_count,  color: studentsData.at_risk_count > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]' },
-              ].map(k => (
-                <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
-                  <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
-                  <p className="truncate text-[13px] font-bold leading-none text-[#0B1F3A] md:text-lg">{k.value}</p>
-                  <p className="mt-0.5 truncate text-[8px] leading-tight text-[#64748B] md:text-[12px]">{k.label}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Finance KPIs */}
-          <section>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-base font-semibold text-[#0B1F3A]">Finance</h2>
-              <Link href={tabHref('finance')} className="text-xs text-[#C2410C] hover:underline">View details →</Link>
-            </div>
-            <div className="grid grid-cols-2 gap-1.5 md:gap-3 sm:grid-cols-4">
-              {[
-                { label: 'Collected This Month', value: `EGP ${fmt(financeKPIs.collected_this_month)}`, color: 'bg-[#10B981]' },
-                { label: 'Outstanding',          value: `EGP ${fmt(financeKPIs.outstanding_total)}`,    color: 'bg-[#F59E0B]' },
-                { label: 'Collection Rate',      value: `${financeKPIs.collection_rate_pct}%`,          color: financeKPIs.collection_rate_pct >= 80 ? 'bg-[#10B981]' : 'bg-[#EF4444]' },
-                { label: 'Overdue Accounts',     value: financeKPIs.overdue_count,                      color: financeKPIs.overdue_count > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]' },
               ].map(k => (
                 <div key={k.label} className="min-w-0 ds-card px-2 py-1.5 md:p-3">
                   <div className={`mb-0.5 h-0.5 w-3 rounded-full ${k.color} opacity-80 md:mb-1.5 md:h-1 md:w-6`} />
@@ -282,7 +264,7 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                 <table className="w-full text-sm">
                   <thead className="ds-table-head">
                     <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
-                      {['Branch', 'Students', 'Groups', 'Collection', 'Attendance', 'At Risk', 'New Leads'].map(h => (
+                      {['Branch', 'Students', 'Groups', 'Attendance', 'At Risk', 'New Leads'].map(h => (
                         <th key={h} className="px-4 py-2.5 text-left text-xs font-medium text-[#64748B]">{h}</th>
                       ))}
                     </tr>
@@ -293,7 +275,6 @@ export default async function TLAnalyticsPage({ searchParams }: Props) {
                         <td className="px-4 py-2.5 font-medium text-[#0B1F3A]">{b.branch_name}</td>
                         <td className="px-4 py-2.5 text-[#64748B]">{b.active_students}</td>
                         <td className="px-4 py-2.5 text-[#64748B]">{b.active_groups}</td>
-                        <td className="px-4 py-2.5">{pct(b.collection_rate)}</td>
                         <td className="px-4 py-2.5">{pct(b.attendance_avg)}</td>
                         <td className="px-4 py-2.5">
                           {b.at_risk_count > 0

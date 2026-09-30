@@ -5,11 +5,6 @@ import { LoadingSpinner } from './LoadingSpinner'
 export function GroupFinanceTab({ students, loading }: { students: GroupDetailStudent[]; loading: boolean }) {
   if (loading && !students.length) return <LoadingSpinner />
 
-  const totalPaid      = students.reduce((s, st) => s + (st.paid_amount ?? 0), 0)
-  const totalBalance   = students.reduce((s, st) => s + (st.remaining_balance ?? 0), 0)
-  const overdueCount   = students.filter(s => s.payment_status === 'OVERDUE').length
-  const exhaustedCount = students.filter(s => (s.sessions_remaining ?? 1) <= 0).length
-
   const sorted = [...students].sort((a, b) => {
     const order: Record<string, number> = { OVERDUE: 0, DUE_SOON: 1, CURRENT: 2, PAID: 3 }
     return (order[a.payment_status ?? ''] ?? 4) - (order[b.payment_status ?? ''] ?? 4)
@@ -17,22 +12,6 @@ export function GroupFinanceTab({ students, loading }: { students: GroupDetailSt
 
   return (
     <div className="p-4 space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          { label: 'Total Collected', value: totalPaid > 0 ? fmtCurrency(totalPaid) : '—',         alert: false             },
-          { label: 'Outstanding',     value: totalBalance > 0 ? fmtCurrency(totalBalance) : '—',   alert: totalBalance > 0  },
-          { label: 'Overdue',         value: String(overdueCount),                                  alert: overdueCount > 0  },
-          { label: 'Exhausted Pkgs',  value: String(exhaustedCount),                               alert: exhaustedCount > 0 },
-        ].map(card => (
-          <div key={card.label} className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3">
-            <p className="text-[11px] text-[#94A3B8] uppercase tracking-wide">{card.label}</p>
-            <p className={`mt-1 text-lg font-bold ${card.alert ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
-              {card.value}
-            </p>
-          </div>
-        ))}
-      </div>
-
       <div className="divide-y divide-[#F1F5F9] ds-card">
         {sorted.length === 0 ? (
           <p className="py-10 text-center text-sm text-[#94A3B8]">No finance data available.</p>

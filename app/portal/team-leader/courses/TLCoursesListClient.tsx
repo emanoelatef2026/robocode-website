@@ -9,7 +9,7 @@ import { useTopbarAction } from '@/components/shared/layout/TopbarActionContext'
 export interface CourseMetric {
   courseId:  string
   active:    number
-  revenue:   number
+  revenue?:  number
   dropout:   number
   retention: number
 }
@@ -37,10 +37,6 @@ const LIFECYCLE_CONFIG: Record<LifecycleHealth, { color: string; text: string }>
   WATCH:     { color: 'bg-[#FFFBEB]',   text: 'text-[#B45309]'   },
   DECLINING: { color: 'bg-orange-100',  text: 'text-orange-700'  },
   CRITICAL:  { color: 'bg-[#FEE2E2]',     text: 'text-[#DC2626]'     },
-}
-
-function fmt(n: number) {
-  return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
 }
 
 export default function TLCoursesListClient({
@@ -140,14 +136,10 @@ export default function TLCoursesListClient({
                       </div>
                     </div>
                     {m && (
-                      <div className="mt-2 grid grid-cols-3 gap-1.5 text-[12px]">
+                      <div className="mt-2 grid grid-cols-2 gap-1.5 text-[12px]">
                         <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
                           <p className="font-bold text-[#0B1F3A]">{m.active}</p>
                           <p className="text-[#94A3B8]">Active</p>
-                        </div>
-                        <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
-                          <p className="font-bold text-[#0B1F3A]">EGP {fmt(m.revenue)}</p>
-                          <p className="text-[#94A3B8]">Revenue</p>
                         </div>
                         <div className="rounded-lg bg-[#F8FAFC] px-2 py-1.5 text-center">
                           <p className={`font-bold ${m.retention < 60 ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>
@@ -176,7 +168,6 @@ export default function TLCoursesListClient({
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-4 py-3 text-left   text-xs font-medium text-[#64748B]">Course</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Active</th>
-                    <th className="px-4 py-3 text-right  text-xs font-medium text-[#64748B]">Revenue</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Dropout %</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Retention %</th>
                     <th className="px-4 py-3 text-center text-xs font-medium text-[#64748B]">Lifecycle</th>
@@ -197,9 +188,6 @@ export default function TLCoursesListClient({
                         </td>
                         <td className="px-4 py-3 text-center font-semibold text-[#0B1F3A]">
                           {m ? m.active : <span className="text-[#94A3B8]">—</span>}
-                        </td>
-                        <td className="px-4 py-3 text-right font-medium text-[#0B1F3A]">
-                          {m ? `EGP ${fmt(m.revenue)}` : <span className="text-[#94A3B8]">—</span>}
                         </td>
                         <td className="px-4 py-3 text-center">
                           {m ? (

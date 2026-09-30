@@ -2,8 +2,6 @@ import { Suspense }                    from 'react'
 import Link                             from 'next/link'
 import { requirePortalRole }            from '@/modules/rbac/guards'
 import { getTLKPIs, getTodayAttendanceSummary } from '@/modules/tl-dashboard/queries'
-import { getDashboardFinanceSummary }   from '@/modules/finance/queries'
-import { getTLMessageCounts }           from '@/modules/parent-messages/queries'
 import { createServiceClient }          from '@/lib/supabase/service'
 import { SkeletonCard }                 from './_components/DashCard'
 import DashSection                      from './_components/DashSection'
@@ -11,11 +9,9 @@ import BranchFilterBar                  from './_components/BranchFilterBar'
 import TodayActionCenter                from './_sections/TodayActionCenter'
 import GroupHealthBoard                 from './_sections/GroupHealthBoard'
 import InstructorHealthBoard            from './_sections/InstructorHealthBoard'
-import FinanceCenter                    from './_sections/FinanceCenter'
 import StudentRiskBoard                 from './_sections/StudentRiskBoard'
 import ParentEscalation                 from './_sections/ParentEscalation'
 import AcademicQuality                  from './_sections/AcademicQuality'
-import InstructorPayrollWidget          from './_sections/InstructorPayrollWidget'
 import TrialConversionWidget            from './_sections/TrialConversionWidget'
 
 // ─── Page props ───────────────────────────────────────────────────────────────
@@ -60,45 +56,6 @@ async function AttendanceSummary({ branchIds }: { branchIds: string[] }) {
   )
 }
 
-// ─── Finance KPI strip ────────────────────────────────────────────────────────
-
-async function FinanceKPIStrip({ branchIds }: { branchIds: string[] }) {
-  const [fin, msgs] = await Promise.all([
-    getDashboardFinanceSummary(branchIds),
-    getTLMessageCounts(branchIds),
-  ])
-
-  function fmt(n: number) {
-    return new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(n)
-  }
-
-  const tiles = [
-    { label: 'Collected Today',  value: `EGP ${fmt(fin.collected_today)}`,      alert: false },
-    { label: 'This Month',       value: `EGP ${fmt(fin.collected_this_month)}`,  alert: false },
-    { label: 'Outstanding',      value: `EGP ${fmt(fin.outstanding)}`,           alert: false },
-    { label: 'Collection Rate',  value: `${fin.collection_rate}%`,               alert: fin.collection_rate < 70 },
-    { label: 'Overdue Accounts', value: String(fin.overdue_count),               alert: fin.overdue_count > 0 },
-    { label: 'Due This Week',    value: String(fin.due_this_week),               alert: false },
-    { label: 'Open Messages',    value: String(msgs.open),                       alert: msgs.open > 0 },
-  ]
-
-  return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7 md:gap-3">
-      {tiles.map(t => (
-        <div
-          key={t.label}
-          className={`min-w-0 rounded-xl border bg-white px-2 py-1.5 md:p-3.5 ${t.alert ? 'border-[#FECACA]' : 'border-[#E2E8F0]'}`}
-        >
-          <p className={`truncate text-[13px] font-extrabold leading-none md:text-[18px] ${t.alert ? 'text-[#EF4444]' : 'text-[#0B1F3A]'}`}>
-            {t.value}
-          </p>
-          <p className="mt-0.5 truncate text-[8px] font-medium leading-tight text-[#64748B] md:text-[11px]">{t.label}</p>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 // ─── Header KPIs ─────────────────────────────────────────────────────────────
 
 async function HeaderKPIs({ branchIds }: { branchIds: string[] }) {
@@ -130,7 +87,6 @@ function SectionNav() {
   const sections = [
     { href: '#today',              label: 'Today'       },
     { href: '#group-health',       label: 'Groups'      },
-    { href: '#finance',            label: 'Finance'     },
     { href: '#student-risk',       label: 'Risk'        },
     { href: '#instructor-health',  label: 'Instructors' },
     { href: '#trials',             label: 'Trials'      },
@@ -169,16 +125,6 @@ function AttendanceSkeleton() {
     <div className="grid grid-cols-3 gap-3">
       {[1, 2, 3].map(i => (
         <div key={i} className="h-20 rounded-2xl bg-[#F1F5F9] animate-pulse" />
-      ))}
-    </div>
-  )
-}
-
-function FinanceStripSkeleton() {
-  return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
-      {[1, 2, 3, 4, 5, 6, 7].map(i => (
-        <div key={i} className="h-16 rounded-2xl bg-[#F1F5F9] animate-pulse" />
       ))}
     </div>
   )
@@ -238,11 +184,6 @@ export default async function TLDashboardPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* ── Finance KPI strip ────────────────────────────────────────── */}
-      <Suspense fallback={<FinanceStripSkeleton />}>
-        <FinanceKPIStrip branchIds={branchIds} />
-      </Suspense>
-
       {/* ── Today's Attendance ───────────────────────────────────────── */}
       <Suspense fallback={<AttendanceSkeleton />}>
         <AttendanceSummary branchIds={branchIds} />
@@ -273,13 +214,6 @@ export default async function TLDashboardPage({ searchParams }: Props) {
         </Suspense>
       </DashSection>
 
-      {/* ══ FINANCE ══════════════════════════════════════════════════════ */}
-      <DashSection id="finance" label="Finance" icon="💰" defaultOpen>
-        <Suspense fallback={<SectionSkeleton />}>
-          <FinanceCenter branchIds={branchIds} />
-        </Suspense>
-      </DashSection>
-
       {/* ══ RISK ═════════════════════════════════════════════════════════ */}
       <DashSection id="student-risk" label="Student Risk" icon="⚠️" defaultOpen>
         <Suspense fallback={<SectionSkeleton />}>
@@ -291,11 +225,6 @@ export default async function TLDashboardPage({ searchParams }: Props) {
       <DashSection id="instructor-health" label="Instructors" icon="👨‍🏫" defaultOpen={false}>
         <Suspense fallback={<SectionSkeleton />}>
           <InstructorHealthBoard branchIds={branchIds} />
-        </Suspense>
-        <Suspense fallback={<div className="h-28 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] animate-pulse mt-4" />}>
-          <div className="mt-4">
-            <InstructorPayrollWidget branchIds={branchIds} />
-          </div>
         </Suspense>
       </DashSection>
 

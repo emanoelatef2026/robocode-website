@@ -1,4 +1,5 @@
 import { requirePortalRole }              from '@/modules/rbac/guards'
+import { redirect }                       from 'next/navigation'
 import { createServiceClient }            from '@/lib/supabase/service'
 import {
   getLiveInstructorFinance,
@@ -54,6 +55,9 @@ interface Props {
 export default async function PayrollPage({ searchParams }: Props) {
   const user   = await requirePortalRole('team_leader')
   const params = await searchParams
+
+  // Team Leaders collect student payments, but payroll is an admin-only cost view.
+  if (user.globalRole === 'team_leader') redirect('/portal/team-leader?error=forbidden')
 
   const isSuperAdmin = user.globalRole === 'super_admin' || user.branchIds.length === 0
 

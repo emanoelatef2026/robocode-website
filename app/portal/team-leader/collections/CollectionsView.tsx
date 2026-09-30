@@ -25,18 +25,9 @@ interface Section {
   emptyMsg: string
 }
 
-interface Stats {
-  totalOutstanding: number
-  totalDueToday:    number
-  totalOverdue:     number
-  overdueCount:     number
-  milestoneCount:   number
-}
-
 interface Props {
   sections:  Section[]
   branchIds: string[]
-  stats:     Stats
 }
 
 function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () => void }) {
@@ -194,7 +185,7 @@ function CollectionRow({ row, onOpen }: { row: StudentOperationsRow; onOpen: () 
   )
 }
 
-export default function CollectionsView({ sections, branchIds, stats }: Props) {
+export default function CollectionsView({ sections, branchIds }: Props) {
   const [activeSection, setActiveSection] = useState<string>('overdue')
   const [drawerStudent, setDrawerStudent] = useState<StudentOperationsRow | null>(null)
 
@@ -202,23 +193,6 @@ export default function CollectionsView({ sections, branchIds, stats }: Props) {
 
   return (
     <div className="space-y-5">
-
-      {/* ── KPI strip ───────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {[
-          { label: 'Total Outstanding', value: `EGP ${fmt(stats.totalOutstanding)}`, color: 'bg-[#94A3B8]' },
-          { label: 'Due Today',         value: `EGP ${fmt(stats.totalDueToday)}`,    color: 'bg-[#38BDF8]'  },
-          { label: 'Overdue Amount',    value: `EGP ${fmt(stats.totalOverdue)}`,     color: 'bg-[#EF4444]'   },
-          { label: 'Overdue Count',     value: stats.overdueCount,                   color: stats.overdueCount > 0 ? 'bg-[#EF4444]' : 'bg-[#CBD5E1]' },
-          { label: 'Milestone Alerts',  value: stats.milestoneCount,                 color: stats.milestoneCount > 0 ? 'bg-[#F59E0B]' : 'bg-[#CBD5E1]' },
-        ].map(k => (
-          <div key={k.label} className="ds-card p-3">
-            <div className={`mb-1.5 h-1 w-6 rounded-full ${k.color} opacity-80`} />
-            <p className="text-sm font-bold text-[#0B1F3A]">{k.value}</p>
-            <p className="text-[12px] text-[#64748B]">{k.label}</p>
-          </div>
-        ))}
-      </div>
 
       {/* ── Section tabs ────────────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-1.5">
@@ -251,11 +225,6 @@ export default function CollectionsView({ sections, branchIds, stats }: Props) {
               {current.label}
               <span className="ml-2 text-[#94A3B8] font-normal">({current.rows.length})</span>
             </h2>
-            {current.rows.length > 0 && (
-              <span className="text-xs text-[#64748B]">
-                Outstanding: <strong className="text-[#0B1F3A]">EGP {fmt(current.rows.reduce((s, r) => s + r.remaining_amount, 0))}</strong>
-              </span>
-            )}
           </div>
 
           {current.rows.length === 0 ? (

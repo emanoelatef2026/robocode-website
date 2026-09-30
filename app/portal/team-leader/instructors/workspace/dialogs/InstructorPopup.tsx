@@ -8,7 +8,6 @@ import { Spinner } from '../components/Spinner'
 import { OverviewTab } from '../components/tabs/OverviewTab'
 import { GroupsTab } from '../components/tabs/GroupsTab'
 import { AttendanceTab } from '../components/tabs/AttendanceTab'
-import { FinanceTab } from '../components/tabs/FinanceTab'
 import { NotesTab } from '../components/tabs/NotesTab'
 import { TABS, WA_PATH } from '../types'
 import { displayName, initials, statusCls } from '../utils'
@@ -243,7 +242,6 @@ export function InstructorPopup({
                 {activeTab === 'overview'   && <OverviewTab detail={detail} />}
                 {activeTab === 'groups'     && <GroupsTab groups={detail.groups} canManage={canManage} onAssignGroup={onAssignGroup} onRemoveGroup={onRemoveGroup} />}
                 {activeTab === 'attendance' && <AttendanceTab stats={detail.attendance_stats} groups={detail.groups} />}
-                {activeTab === 'finance'    && <FinanceTab detail={detail} />}
                 {activeTab === 'notes'      && <NotesTab instructorId={detail.instructor.id} notes={detail.notes} onRefresh={onRefreshDetail} />}
               </>
             )}

@@ -105,7 +105,6 @@ export default function InstructorsWorkspaceClient({
                   <th>Students</th>
                   <th>Today</th>
                   <th>Att.%</th>
-                  <th>Salary/Sess</th>
                   <th>Status</th>
                   {canManage && <th>Actions</th>}
                 </tr>
