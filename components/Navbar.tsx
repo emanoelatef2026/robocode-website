@@ -10,12 +10,6 @@ import type { Locale } from "@/lib/i18n";
 
 const NAVBAR_OFFSET = 72;
 
-const LEGAL_LINKS = [
-  { label: "Terms & Conditions", href: "/terms-and-conditions" },
-  { label: "Refund Policy", href: "/refund-policy" },
-  { label: "Privacy Policy", href: "/privacy-policy" },
-];
-
 // ── Language toggle ───────────────────────────────────────────────────────────
 
 function LangToggle({ compact = false }: { compact?: boolean }) {
@@ -131,15 +125,6 @@ export default function Navbar() {
           : "border-b border-transparent bg-transparent",
       ].join(" ")}
     >
-      <div className="hidden border-b border-[#E2E8F0]/70 lg:block">
-        <div className="mx-auto flex max-w-6xl items-center justify-end gap-4 px-6 py-1.5">
-          {LEGAL_LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="text-[11px] font-semibold text-[#475569] transition-colors hover:text-[#C2410C]">
-              {link.label}
-            </Link>
-          ))}
-        </div>
-      </div>
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
 
         {/* Logo */}
@@ -275,15 +260,6 @@ export default function Navbar() {
                 <LangToggle />
               </div>
 
-              <div className="mt-3 border-t border-[#E2E8F0] pt-3">
-                <p className="px-4 text-[10px] font-bold uppercase tracking-[0.16em] text-[#94A3B8]">Legal</p>
-                {LEGAL_LINKS.map((link) => (
-                  <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}
-                    className="block rounded-xl px-4 py-3 text-[13px] font-semibold text-[#475569] transition-colors hover:bg-[#F8FAFC] hover:text-[#C2410C]">
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
 
               {/* Primary CTA — orange */}
               <Link

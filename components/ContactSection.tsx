@@ -61,6 +61,17 @@ export default function ContactSection() {
             </svg>
             01285864902
           </a>
+
+          <a
+            href="mailto:robocodeschools@gmail.com"
+            className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/8 px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5v10.5a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V6.75z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 7.5L12 13.125 20.25 7.5" />
+            </svg>
+            robocodeschools@gmail.com
+          </a>
         </div>
       </motion.div>
     </section>
