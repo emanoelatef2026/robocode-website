@@ -12,6 +12,8 @@ import { getStudentNotes } from '@/modules/student-notes/queries'
 import { getStudentTimeline as getTimelineFeed, TIMELINE_EVENT_LABELS } from '@/lib/timeline'
 import { createServiceClient } from '@/lib/supabase/service'
 import { MAX_LEVEL } from '@/modules/gamification/types'
+import { getStudentGameProfile } from '@/modules/gamification/xp-service'
+import LearningProgress from '@/components/portal/shared/LearningProgress'
 import Link from 'next/link'
 import type { UpcomingHomework, RecentFeedbackItem } from '@/modules/student-portal/types'
 import SessionFeedbackWidget from './SessionFeedbackWidget'
@@ -19,6 +21,7 @@ import HeroHeader from '@/components/portal/student/HeroHeader'
 import LearningCard from '@/components/portal/student/LearningCard'
 import QuickStatsGrid, { type QuickStat } from '@/components/portal/student/QuickStatsGrid'
 import SectionPreviewCard from '@/components/portal/student/SectionPreviewCard'
+import MilestoneCelebration from '@/components/portal/student/MilestoneCelebration'
 
 // ── Leaderboard CTA ───────────────────────────────────────────────────────────
 
@@ -98,11 +101,11 @@ function deriveNextActions(data: {
   }
 
   if (data.portfolio_projects === 0) {
-    actions.push({ label: 'Upload your first project → earn 100 XP', href: '/portal/student/portfolio', kind: 'portfolio' })
+    actions.push({ label: 'Share your first project and earn 100 XP', href: '/portal/student/portfolio', kind: 'portfolio' })
   }
 
   if (data.portfolio_projects > 0 && data.total_xp < 500) {
-    actions.push({ label: 'Add a video to your project → earn 150 XP!', href: '/portal/student/portfolio', kind: 'xp' })
+    actions.push({ label: 'Show what you built in a short video', href: '/portal/student/videos', kind: 'xp' })
   }
 
   if (data.enrolled_sessions > 0 && data.consumed_sessions >= data.enrolled_sessions) {
@@ -228,7 +231,7 @@ export default async function StudentDashboardPage() {
 
   const [
     data, feedbackSessions, learningCards, profile,
-    evaluations, competitions, notes, timeline, completedCoursesCount,
+    evaluations, competitions, notes, timeline, completedCoursesCount, gameProfile,
   ] = await Promise.all([
     getStudentDashboardData(user.id),
     studentId ? getPendingFeedbackSessions(studentId) : Promise.resolve([]),
@@ -242,6 +245,7 @@ export default async function StudentDashboardPage() {
       ? db.from('student_enrollments').select('id', { count: 'exact', head: true })
           .eq('student_id', studentId).eq('status', 'COMPLETED').then(r => r.count ?? 0)
       : Promise.resolve(0),
+    studentId ? getStudentGameProfile(studentId) : Promise.resolve(null),
   ])
 
   if (!data) {
@@ -274,6 +278,7 @@ export default async function StudentDashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-4">
+      {studentId && <MilestoneCelebration studentId={studentId} level={data.current_level} badges={data.badge_count} />}
 
       {/* ── Section 1: Hero Header ───────────────────────────────────────────── */}
       {notEnrolled ? (
@@ -317,6 +322,7 @@ export default async function StudentDashboardPage() {
 
       {!notEnrolled && (
         <>
+          <LearningProgress evaluations={evaluations} profile={gameProfile} audience="student" compact />
           {/* ── Section 2: Current Learning ───────────────────────────────────── */}
           <section>
             <h2 className="mb-2 px-0.5 text-[12px] font-bold uppercase tracking-wider text-[#64748B]">

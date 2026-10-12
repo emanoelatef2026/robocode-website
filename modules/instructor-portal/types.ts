@@ -18,6 +18,7 @@ export interface InstructorGroup {
   course_id:          string
   course_title:       string
   branch_name:        string
+  day_of_week:        string | null
   student_count:      number
   next_session_at:    string | null
   completed_sessions: number

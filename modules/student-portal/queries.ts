@@ -1,6 +1,7 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getLevelProgress } from '@/modules/gamification/xp-service'
+import { activeLearningStreak } from '@/modules/gamification/progress'
 import { getStudentGroupRank, getStudentOfTheWeek } from '@/modules/gamification/queries'
 import { resolvePrimaryActiveGroupId, resolveActiveGroupIds } from '@/modules/academic/enrollment-integrity'
 import { getOwnCertificates } from '@/modules/certificates/queries'
@@ -73,7 +74,7 @@ export async function getStudentShellData(userId: string): Promise<StudentShellD
   const db = createServiceClient()
   const { data: studentRow } = await db
     .from('students')
-    .select(`id, total_xp, current_level, current_streak,
+    .select(`id, total_xp, current_level, current_streak, last_activity_date,
       users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
     .eq('user_id', userId)
     .is('deleted_at', null)
@@ -116,7 +117,7 @@ export async function getStudentShellData(userId: string): Promise<StudentShellD
   return {
     student_name: studentName,
     group_name: primaryMembership?.groups?.name ?? null,
-    current_streak: Number(row.current_streak ?? 0),
+    current_streak: activeLearningStreak(Number(row.current_streak ?? 0), row.last_activity_date ?? null),
     group_rank: groupRank,
     current_level: Number(row.current_level ?? 1),
     total_xp: totalXp,
@@ -165,7 +166,7 @@ export async function getStudentDashboardData(
   // Student name
   const [{ data: studentRow }, activeGroupIds] = await Promise.all([
     db.from('students')
-      .select(`id, total_xp, current_level, current_streak, best_streak,
+      .select(`id, total_xp, current_level, current_streak, best_streak, last_activity_date,
         users!students_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
       .eq('id', studentId)
       .is('deleted_at', null)
@@ -186,7 +187,7 @@ export async function getStudentDashboardData(
   const totalXp      = Number((studentRow as any)?.total_xp      ?? 0)
   const currentLevel = Number((studentRow as any)?.current_level ?? 1)
   const xpProgress   = getLevelProgress(totalXp)
-  const currentStreak = Number((studentRow as any)?.current_streak ?? 0)
+  const currentStreak = activeLearningStreak(Number((studentRow as any)?.current_streak ?? 0), (studentRow as any)?.last_activity_date ?? null)
   const bestStreak    = Number((studentRow as any)?.best_streak    ?? 0)
 
   // Achievement + badge counts
@@ -200,7 +201,7 @@ export async function getStudentDashboardData(
     total_xp:          totalXp,
     current_level:     currentLevel,
     xp_progress_pct:   xpProgress.progressPct,
-    xp_to_next_level:  xpProgress.nextLevelXp - xpProgress.levelStartXp,
+    xp_to_next_level:  Math.max(0, xpProgress.nextLevelXp - totalXp),
     current_streak:    currentStreak,
     best_streak:       bestStreak,
     group_rank:        null as number | null,
@@ -518,7 +519,7 @@ export async function getStudentDashboardData(
     total_xp:           totalXp,
     current_level:      currentLevel,
     xp_progress_pct:    xpProgress.progressPct,
-    xp_to_next_level:   xpProgress.nextLevelXp - xpProgress.levelStartXp,
+    xp_to_next_level:   Math.max(0, xpProgress.nextLevelXp - totalXp),
     current_streak:     currentStreak,
     best_streak:        bestStreak,
     group_rank:         rankResult?.rank       ?? null,

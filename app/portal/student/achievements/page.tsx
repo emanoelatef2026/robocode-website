@@ -5,6 +5,8 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { getStudentCompetitions } from '@/modules/student-competitions/queries'
 import EmptyState from '@/components/admin/EmptyState'
 import Link from 'next/link'
+import { getStudentGameProfile } from '@/modules/gamification/xp-service'
+import { xpMilestone } from '@/modules/gamification/progress'
 
 const ACHIEVEMENT_ICON: Record<string, string> = {
   project:     '🎨',
@@ -29,10 +31,11 @@ export default async function StudentAchievementsPage() {
     .from('students').select('id').eq('user_id', user.id).maybeSingle()
   const studentId = (studentRow as any)?.id ?? null
 
-  const [portfolioDetail, certificates, competitions] = await Promise.all([
+  const [portfolioDetail, certificates, competitions, gameProfile] = await Promise.all([
     getOwnPortfolioDetail(user.id),
     getOwnCertificates(user.id),
     studentId ? getStudentCompetitions(studentId) : Promise.resolve([]),
+    studentId ? getStudentGameProfile(studentId) : Promise.resolve(null),
   ])
 
   const achievements = portfolioDetail?.achievements ?? []
@@ -40,6 +43,8 @@ export default async function StudentAchievementsPage() {
   const competitionAwards = competitions.filter(c => c.rank || c.award)
 
   const totalUnlocked = achievements.length + badges.length
+  const nextLevel = xpMilestone(gameProfile?.totalXp ?? 0)
+  const nextStreakBadge = (gameProfile?.bestStreak ?? 0) < 7 ? 7 : (gameProfile?.bestStreak ?? 0) < 30 ? 30 : null
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
@@ -63,6 +68,22 @@ export default async function StudentAchievementsPage() {
           <p className="text-[11px] font-semibold text-[#64748B]">Competition Awards</p>
         </div>
       </div>
+
+      <section className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-2xl border border-[#D7E0EA] bg-[#0B1F3A] p-4 text-white">
+          <p className="text-sm font-bold text-[#BDECF5]">Next level</p>
+          <p className="mt-2 text-2xl font-extrabold">Level {gameProfile?.currentLevel ?? 1}</p>
+          <p className="mt-1 text-sm text-white/80">{nextLevel.remaining ? `${nextLevel.remaining.toLocaleString()} XP to Level ${(gameProfile?.currentLevel ?? 1) + 1}` : 'Top level reached'}</p>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/20"><div className="h-full rounded-full bg-[#FF8A1F]" style={{ width: `${nextLevel.percent}%` }} /></div>
+        </div>
+        <div className="rounded-2xl border border-[#D7E0EA] bg-white p-4">
+          <p className="text-sm font-bold text-[#0B1F3A]">Your consistency</p>
+          <p className="mt-2 text-2xl font-extrabold text-[#0B1F3A]">{gameProfile?.currentStreak ?? 0} learning days</p>
+          <p className="mt-1 text-sm text-[#475569]">Best streak: {gameProfile?.bestStreak ?? 0} days</p>
+          <p className="mt-2 text-xs leading-relaxed text-[#475569]">Recorded attendance or graded work on consecutive days extends your streak. A missed day resets the current streak; your best stays saved.</p>
+          {nextStreakBadge && <p className="mt-2 rounded-lg bg-[#FFF7ED] px-3 py-2 text-xs font-bold text-[#9A3412]">{nextStreakBadge - (gameProfile?.bestStreak ?? 0)} more consecutive learning days to the {nextStreakBadge}-day badge.</p>}
+        </div>
+      </section>
 
       {/* Badges */}
       <section>

@@ -155,11 +155,12 @@ export default async function StudentLeaderboardPage() {
         <p className="mb-2.5 text-sm font-semibold text-[#0B1F3A]">How to earn XP</p>
         <div className="space-y-1.5 text-[12px] text-[#64748B]">
           <div className="flex justify-between"><span>✅ Attend a session</span><span className="font-semibold text-[#0B1F3A]">+25 XP</span></div>
-          <div className="flex justify-between"><span>📝 Submit an assignment</span><span className="font-semibold text-[#0B1F3A]">+40 XP</span></div>
-          <div className="flex justify-between"><span>🌟 Excellent grade (90%+)</span><span className="font-semibold text-[#0B1F3A]">+60 XP</span></div>
-          <div className="flex justify-between"><span>🎥 Share a project video</span><span className="font-semibold text-[#0B1F3A]">+150 XP</span></div>
+          <div className="flex justify-between"><span>📝 Assignment graded</span><span className="font-semibold text-[#0B1F3A]">+40 XP</span></div>
+          <div className="flex justify-between"><span>🌟 Assignment graded 90%+</span><span className="font-semibold text-[#0B1F3A]">+60 XP instead</span></div>
+          <div className="flex justify-between"><span>🎥 Add a portfolio project with video</span><span className="font-semibold text-[#0B1F3A]">+150 XP instead</span></div>
           <div className="flex justify-between"><span>🖼 Add a portfolio project</span><span className="font-semibold text-[#0B1F3A]">+100 XP</span></div>
           <div className="flex justify-between"><span>📜 Earn a certificate</span><span className="font-semibold text-[#0B1F3A]">+200 XP</span></div>
+          <p className="pt-2 text-xs leading-relaxed">XP increases your level. Your learning streak counts consecutive days with recorded attendance or graded work, once per day.</p>
         </div>
       </div>
     </div>

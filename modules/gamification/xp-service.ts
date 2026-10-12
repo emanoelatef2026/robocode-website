@@ -2,6 +2,7 @@ import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
 import { LEVEL_THRESHOLDS, MAX_LEVEL, XP_AWARDS } from './types'
 import type { XPProgress, StudentGameProfile } from './types'
+import { activeLearningStreak } from './progress'
 
 // ─── Level math ───────────────────────────────────────────────────────────────
 
@@ -74,7 +75,7 @@ export async function getStudentGameProfile(studentId: string): Promise<StudentG
   return {
     totalXp:          xp,
     currentLevel:     Number(r.current_level   ?? 1),
-    currentStreak:    Number(r.current_streak  ?? 0),
+    currentStreak:    activeLearningStreak(Number(r.current_streak ?? 0), r.last_activity_date ?? null),
     bestStreak:       Number(r.best_streak     ?? 0),
     lastActivityDate: r.last_activity_date ?? null,
     progress:         getLevelProgress(xp),

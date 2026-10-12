@@ -57,6 +57,12 @@ export interface StudentEvaluation {
   evaluated_at:       string
   created_at:         string
   updated_at:         string
+  group_id?:          string | null
+  schedule_id?:       string | null
+  source_type?:       'assignment' | 'video' | 'project' | null
+  source_id?:         string | null
+  next_goal?:         string | null
+  published_at?:      string | null
 }
 
 export interface CreateStudentEvaluationInput {

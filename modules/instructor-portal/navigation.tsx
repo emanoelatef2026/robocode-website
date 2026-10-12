@@ -15,6 +15,7 @@ export const INSTRUCTOR_NAV: InstructorNavItem[] = [
   { key: 'dashboard', label: 'Dashboard',      href: '/portal/instructor',                  exact: true },
   { key: 'review',    label: 'Review Center',   href: '/portal/instructor/review'                       },
   { key: 'groups',    label: 'My Groups',       href: '/portal/instructor/groups'                       },
+  { key: 'evaluations', label: 'Evaluations',   href: '/portal/instructor/evaluations'                  },
   { key: 'calendar',  label: 'Calendar',        href: '/portal/instructor/calendar'                     },
   { key: 'students',  label: 'Students',        href: '/portal/instructor/students/search'              },
   { key: 'homework',  label: 'Homework',        href: '/portal/instructor/homework'                     },
@@ -27,7 +28,7 @@ export const INSTRUCTOR_NAV: InstructorNavItem[] = [
 /** Desktop sidebar groups the nav into sections. */
 export const INSTRUCTOR_NAV_SECTIONS = [
   { title: undefined, keys: ['dashboard', 'review'] },
-  { title: 'Teaching', keys: ['groups', 'calendar', 'students'] },
+  { title: 'Teaching', keys: ['groups', 'evaluations', 'calendar', 'students'] },
 ] as const
 
 /** Primary tabs shown directly in the mobile bottom bar. */
@@ -37,6 +38,7 @@ const ICON_MAP: Record<string, keyof typeof Icons> = {
   dashboard: 'dashboard',
   review:    'reports',
   groups:    'groups',
+  evaluations: 'performance',
   calendar:  'schedules',
   students:  'students',
   homework:  'assignments',
@@ -74,5 +76,5 @@ export const INSTRUCTOR_BOTTOM_NAV: BottomNavItem[] = BOTTOM_NAV_KEYS.map(key =>
 })
 
 export const INSTRUCTOR_BOTTOM_MORE: BottomNavItem[] = INSTRUCTOR_NAV
-  .filter(n => ['students', 'homework', 'portfolio'].includes(n.key))
+  .filter(n => ['evaluations', 'students', 'homework', 'portfolio'].includes(n.key))
   .map(item => ({ label: item.label, href: item.href, icon: icon(item.key, 'h-6 w-6'), exact: item.exact }))

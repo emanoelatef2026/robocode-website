@@ -10,6 +10,8 @@ import ChildSelector                             from '@/components/portal/paren
 import NoChildrenLinked                          from '@/components/portal/parent/NoChildrenLinked'
 import ParentHero                                from '@/components/portal/parent/ParentHero'
 import RecentActivityFeed                        from '@/components/portal/parent/RecentActivityFeed'
+import LearningProgress                          from '@/components/portal/shared/LearningProgress'
+import { getStudentGameProfile }                 from '@/modules/gamification/xp-service'
 import LearningCard                              from '@/components/portal/student/LearningCard'
 import type { ChildOverviewCard as ChildOverviewCardData } from '@/modules/parents/parent-portal-queries'
 
@@ -38,7 +40,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
   const studentId = child ?? children[0].student_id
   const selected  = children.find(c => c.student_id === studentId) ?? children[0]
 
-  const [dashboard, sessions, contracts, childrenOverview, learningCards, evaluations, competitions, notes] = await Promise.all([
+  const [dashboard, sessions, contracts, childrenOverview, learningCards, evaluations, competitions, notes, gameProfile] = await Promise.all([
     getChildDashboardData(user.id, selected.student_id),
     getChildSessionsProgress(user.id, selected.student_id),
     getChildEnrollmentContracts(user.id, selected.student_id),
@@ -47,6 +49,7 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
     getChildEvaluations(user.id, selected.student_id),
     getChildCompetitions(user.id, selected.student_id),
     getChildNotes(user.id, selected.student_id),
+    getStudentGameProfile(selected.student_id),
   ])
 
   const pendingMilestone = dashboard
@@ -112,6 +115,8 @@ export default async function ParentDashboardPage({ searchParams }: Props) {
         nextDueDate={activeContract?.next_due_date ?? null}
         childHref={childHref}
       />
+
+      <LearningProgress evaluations={evaluations} profile={gameProfile} audience="parent" name={selected.student_name} childId={selected.student_id} compact />
 
       {/* ── Important alerts — surfaced immediately below the Hero ─────────── */}
       {(pendingMilestone || alerts.length > 0) && (
