@@ -6,9 +6,10 @@ import { buildWhatsAppUrl, buildTelUrl } from '@/lib/phone'
 import EnrollmentWizard from '../finance/EnrollmentWizard'
 import type { GroupContext, StudentResult } from '../finance/EnrollmentWizard'
 import ParentFormModal from '../parents/ParentFormModal'
+import StudentAttendancePanel from './StudentAttendancePanel'
+import type { AttendanceContractOption } from '@/modules/groups/attendance-browser'
 import { HistoricalReconciliationDialog } from '@/components/portal/shared/HistoricalReconciliationDialog'
 import {
-  getStudentAttendanceHistoryAction,
   getStudentAuthDataAction,
   getParentAuthDataAction,
   getStudentAttendanceSummaryAction,
@@ -18,7 +19,6 @@ import {
   reconcileStudentConsumptionAction,
   recordContractAttendanceAction,
   type GroupDetailStudent,
-  type StudentAttendanceHistoryRecord,
   type StudentPortalCredentials,
   type ParentPortalCredentials,
   type StudentAttendanceSummary,
@@ -526,94 +526,6 @@ function FinanceTab({
 
 // ─── Attendance Tab ───────────────────────────────────────────────────────────
 
-function AttendanceTab({
-  history, loading, attSummary, attSumLoading, onAddAttendance, hasContract,
-}: {
-  history:       StudentAttendanceHistoryRecord[] | null
-  loading:       boolean
-  attSummary:    StudentAttendanceSummary | null
-  attSumLoading: boolean
-  onAddAttendance: () => void
-  hasContract: boolean
-}) {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <SectionLabel>Contract Attendance</SectionLabel>
-          <p className="-mt-1 text-[12px] text-[#64748B]">Only sessions consumed from this contract are shown.</p>
-        </div>
-        <button
-          type="button"
-          onClick={onAddAttendance}
-          disabled={!hasContract}
-          className="shrink-0 rounded-lg bg-[#C2410C] px-3 py-1.5 text-[12px] font-semibold text-white transition hover:bg-[#9A3412] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          + Add attendance
-        </button>
-      </div>
-      {attSumLoading ? (
-        <div className="grid grid-cols-3 gap-2">
-          {[1,2,3].map(i => <Skeleton key={i} className="h-14 rounded-xl" />)}
-        </div>
-      ) : attSummary && attSummary.total_records > 0 ? (
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-[#E7F8EE] border border-emerald-100 px-3 py-2 text-center">
-            <p className="text-[18px] font-bold text-[#15803D]">{attSummary.present_count}</p>
-            <p className="text-[9px] font-medium text-[#10B981] uppercase tracking-wide">Present</p>
-          </div>
-          <div className="rounded-xl bg-[#FEE2E2] border border-[#FEE2E2] px-3 py-2 text-center">
-            <p className="text-[18px] font-bold text-[#DC2626]">{attSummary.absent_count}</p>
-            <p className="text-[9px] font-medium text-[#EF4444] uppercase tracking-wide">Absent</p>
-          </div>
-          <div className="rounded-xl bg-[#F1F5F9] border border-[#E2E8F0] px-3 py-2 text-center">
-            <p className="text-[18px] font-bold text-[#0B1F3A]">{attSummary.consumed_count}</p>
-            <p className="text-[9px] font-medium text-[#94A3B8] uppercase tracking-wide">Consumed</p>
-          </div>
-        </div>
-      ) : null}
-
-      <div>
-        <SectionLabel>Contract sessions (latest 10)</SectionLabel>
-        {loading ? (
-          <div className="space-y-2">
-            {[1,2,3].map(i => <Skeleton key={i} className="h-11 rounded-xl" />)}
-          </div>
-        ) : !history || history.length === 0 ? (
-          <p className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-4 py-4 text-center text-[13px] text-[#94A3B8]">
-            No attendance records yet.
-          </p>
-        ) : (
-          <div className="rounded-xl border border-[#E2E8F0] overflow-hidden">
-            {history.map(h => (
-              <div key={h.id} className="flex items-center gap-3 border-b border-[#F1F5F9] last:border-0 px-4 py-2.5">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[13px] font-medium text-[#0B1F3A]">
-                      {h.scheduled_at ? fmtDate(h.scheduled_at) : '—'}
-                    </p>
-                    {h.is_consumed && (
-                      <span className="rounded-full bg-[#F1F5F9] px-1.5 py-0.5 text-[9px] font-semibold text-[#64748B]">
-                        Consumed
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-0.5 truncate text-[11px] text-[#64748B]">
-                    {[h.group_name, h.instructor_name].filter(Boolean).join(' · ') || h.topic || '—'}
-                  </p>
-                </div>
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize ${statusBadgeCls(h.status)}`}>
-                  {h.status}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function ContractAttendanceSourceDialog({
   groupName, onClose, onLoadGroupSessions, onRecordIndividual,
 }: {
@@ -1006,8 +918,8 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   const [activeTab, setActiveTab] = useState<Tab>('overview')
 
   // Overview + Attendance data (loaded eagerly)
-  const [history,       setHistory]       = useState<StudentAttendanceHistoryRecord[] | null>(null)
-  const [histLoad,      setHistLoad]       = useState(true)
+  const [attendanceVersion, setAttendanceVersion] = useState(0)
+  const [attendanceContract, setAttendanceContract] = useState<AttendanceContractOption | null>(null)
   const [authData,      setAuthData]       = useState<StudentPortalCredentials | null>(null)
   const [authLoading,   setAuthLoading]    = useState(true)
   const [parentAuthData,    setParentAuthData]    = useState<ParentPortalCredentials | null>(null)
@@ -1059,21 +971,11 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   // ESC to close (but not if an overlay modal is open)
   useEffect(() => {
     const fn = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !wizardOpen && !parentModalOpen) onClose()
+      if (e.key === 'Escape' && !wizardOpen && !parentModalOpen && !credentialConfirmOpen && !attendanceSourceOpen && !historicalAttendanceOpen && !manualAttendanceOpen) onClose()
     }
     window.addEventListener('keydown', fn)
     return () => window.removeEventListener('keydown', fn)
-  }, [onClose, wizardOpen, parentModalOpen])
-
-  // Eager-load data needed for Overview + Attendance tabs
-  useEffect(() => {
-    let cancelled = false
-    setHistLoad(true)
-    getStudentAttendanceHistoryAction(s.student_id, s.enrollment_id)
-      .then(h => { if (!cancelled) { setHistory(h); setHistLoad(false) } })
-      .catch(() => { if (!cancelled) { setHistory([]); setHistLoad(false) } })
-    return () => { cancelled = true }
-  }, [s.student_id, s.enrollment_id])
+  }, [onClose, wizardOpen, parentModalOpen, credentialConfirmOpen, attendanceSourceOpen, historicalAttendanceOpen, manualAttendanceOpen])
 
   // Shared loaders — reused by the eager-load effect below AND by
   // handleGenerateCredentials, so a freshly generated password shows up in this
@@ -1162,6 +1064,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     }
     setLedgerDirty(true)
     setTimelineDirty(true)
+    setAttendanceVersion(value => value + 1)
     getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id).then(d => setAttSummary(d)).catch(() => {})
     router.refresh()
     onStudentUpdated?.()
@@ -1177,6 +1080,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
     }
     setLedgerDirty(true)
     setTimelineDirty(true)
+    setAttendanceVersion(value => value + 1)
     getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id).then(d => setAttSummary(d)).catch(() => {})
     router.refresh()
     onStudentUpdated?.()
@@ -1184,7 +1088,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
 
   function refreshContractAttendance() {
     getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id).then(d => setAttSummary(d)).catch(() => {})
-    getStudentAttendanceHistoryAction(s.student_id, s.enrollment_id).then(h => setHistory(h)).catch(() => {})
+    setAttendanceVersion(value => value + 1)
     setLedgerDirty(true)
     setTimelineDirty(true)
     router.refresh()
@@ -1322,7 +1226,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
   function handleEnrollmentWizardSuccess() {
     setWizardOpen(false)
     getStudentAttendanceSummaryAction(s.student_id, s.enrollment_id).then(d => setAttSummary(d)).catch(() => {})
-    getStudentAttendanceHistoryAction(s.student_id, s.enrollment_id).then(h => setHistory(h)).catch(() => {})
+    setAttendanceVersion(value => value + 1)
     setTimelineDirty(true)
     router.refresh()
     onStudentUpdated?.()
@@ -1337,7 +1241,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 : s.risk_level === 'MEDIUM' ? 'bg-[#FFFBEB] text-[#B45309]'
                 :                             'bg-[#E7F8EE] text-[#15803D]'
 
-  const anyOverlayOpen = wizardOpen || parentModalOpen || credentialConfirmOpen
+  const anyOverlayOpen = wizardOpen || parentModalOpen || credentialConfirmOpen || attendanceSourceOpen || historicalAttendanceOpen || manualAttendanceOpen
 
   return (
     <>
@@ -1483,7 +1387,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
           </div>
 
           {/* ── Content ───────────────────────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto px-5 py-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
             {activeTab === 'overview' && (
               <OverviewTab
                 s={s}
@@ -1504,13 +1408,18 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
               />
             )}
             {activeTab === 'attendance' && (
-              <AttendanceTab
-                history={history}
-                loading={histLoad}
-                attSummary={attSummary}
-                attSumLoading={attSumLoading}
-                hasContract={Boolean(s.enrollment_id)}
-                onAddAttendance={() => setAttendanceSourceOpen(true)}
+              <StudentAttendancePanel
+                studentId={s.student_id}
+                defaultEnrollmentId={s.enrollment_id}
+                refreshVersion={attendanceVersion}
+                onAddAttendance={contract => {
+                  setAttendanceContract(contract)
+                  if (contract.course_id && group.course_id && contract.course_id !== group.course_id) {
+                    setManualAttendanceOpen(true)
+                  } else {
+                    setAttendanceSourceOpen(true)
+                  }
+                }}
               />
             )}
             {activeTab === 'package-ledger' && (
@@ -1550,10 +1459,10 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
           overlayClassName="fixed inset-0 z-[80] flex items-start justify-center overflow-y-auto bg-black/60 px-4 py-8"
         />
       )}
-      {manualAttendanceOpen && s.enrollment_id && (
+      {manualAttendanceOpen && attendanceContract && (
         <ManualContractAttendanceDialog
           studentId={s.student_id}
-          enrollmentId={s.enrollment_id}
+          enrollmentId={attendanceContract.id}
           onClose={() => setManualAttendanceOpen(false)}
           onSaved={() => {
             setManualAttendanceOpen(false)
@@ -1561,7 +1470,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
           }}
         />
       )}
-      {attendanceSourceOpen && s.enrollment_id && (
+      {attendanceSourceOpen && attendanceContract && (
         <ContractAttendanceSourceDialog
           groupName={group.name}
           onClose={() => setAttendanceSourceOpen(false)}
@@ -1575,14 +1484,14 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
           }}
         />
       )}
-      {historicalAttendanceOpen && s.enrollment_id && (
+      {historicalAttendanceOpen && attendanceContract && (
         <HistoricalReconciliationDialog
           open
           mode="apply"
           studentId={s.student_id}
           groupId={group.group_id}
           courseId={group.course_id ?? null}
-          enrollmentId={s.enrollment_id}
+          enrollmentId={attendanceContract.id}
           onResolved={() => {
             setHistoricalAttendanceOpen(false)
             refreshContractAttendance()
