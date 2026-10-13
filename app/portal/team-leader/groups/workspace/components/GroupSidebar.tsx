@@ -26,7 +26,7 @@ const QUICK_FILTER_OPTIONS: {
 
 export function GroupSidebar({
   groups, allGroups, filters, onFilterChange, options,
-  selectedId, onSelect,
+  selectedId, onSelect, isSuperAdmin = false,
 }: {
   groups:         GroupOperationalRow[]
   allGroups:      GroupOperationalRow[]
@@ -35,6 +35,7 @@ export function GroupSidebar({
   options:        GroupFormOptions
   selectedId:     string | null
   onSelect:       (g: GroupOperationalRow) => void
+  isSuperAdmin?:  boolean
 }) {
   const baseFiltered   = applyFilters(allGroups, { ...filters, quickFilter: '' })
   const searchFiltered = applyFilters(allGroups, {
@@ -125,6 +126,7 @@ export function GroupSidebar({
               <GroupListItem
                 key={g.group_id}
                 group={g}
+                isSuperAdmin={isSuperAdmin}
                 selected={g.group_id === selectedId}
                 onClick={() => onSelect(g)}
               />

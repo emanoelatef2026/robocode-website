@@ -1,4 +1,5 @@
 import type { GroupOperationalRow } from '@/modules/groups/operational'
+import type { ReactNode } from 'react'
 import { StatusChip } from './StatusChip'
 import { DAYS_FULL, fmt12, fmtDateShort } from '../utils'
 import { getCohortLifecycleStage } from '@/modules/groups/lifecycle-stage'
@@ -6,7 +7,7 @@ import { getCohortLifecycleStage } from '@/modules/groups/lifecycle-stage'
 function ProgressMetric({ label, detail, secondaryDetail, belowDetail, value, color }: {
   label: string
   detail: string
-  secondaryDetail?: string
+  secondaryDetail?: ReactNode
   belowDetail?: string
   value: number | null
   color: string
@@ -21,7 +22,7 @@ function ProgressMetric({ label, detail, secondaryDetail, belowDetail, value, co
       <p className="mb-1 min-h-4 truncate text-[11px] font-medium text-[#64748B]">
         {secondaryDetail ?? '\u00A0'}
       </p>
-      <div className="h-1.5 overflow-hidden rounded-full bg-[#E2E8F0]">
+      <div role="progressbar" aria-label={`${label} completion`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={value == null ? undefined : pct} className="h-1.5 overflow-hidden rounded-full bg-[#E2E8F0]">
         <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
       </div>
       <p className="mt-1 min-h-4 truncate text-[11px] font-medium text-[#64748B]">
@@ -31,7 +32,11 @@ function ProgressMetric({ label, detail, secondaryDetail, belowDetail, value, co
   )
 }
 
-export function GroupListItem({ group, selected, onClick }: { group: GroupOperationalRow; selected: boolean; onClick: () => void }) {
+function formatEgp(amount: number): string {
+  return `EGP ${amount.toLocaleString('en-EG', { maximumFractionDigits: 2 })}`
+}
+
+export function GroupListItem({ group, selected, onClick, isSuperAdmin = false }: { group: GroupOperationalRow; selected: boolean; onClick: () => void; isSuperAdmin?: boolean }) {
   const sessionPct = group.planned_sessions && group.planned_sessions > 0
     ? Math.round((group.completed_sessions / group.planned_sessions) * 100)
     : null
@@ -42,11 +47,17 @@ export function GroupListItem({ group, selected, onClick }: { group: GroupOperat
     ? `${DAYS_FULL[group.day_of_week] ?? group.day_of_week}${group.start_time ? ` · ${fmt12(group.start_time)}` : ''}`
     : 'Schedule not set'
   const stage = getCohortLifecycleStage(group)
+  const paid = Math.max(0, Number(group.payment_paid_amount ?? 0))
+  const total = Math.max(0, Number(group.payment_total_amount ?? 0))
+  const paymentPct = total > 0 ? Math.min(100, Math.round(paid / total * 100)) : null
+  const remaining = Math.max(0, total - paid)
+  const paymentStatus = paymentPct == null ? 'unknown' : paymentPct < 70 ? 'follow-up' : paymentPct < 90 ? 'watch' : 'healthy'
+  const paymentColor = paymentStatus === 'follow-up' ? 'bg-[#EF4444]' : paymentStatus === 'watch' ? 'bg-[#F59E0B]' : 'bg-[#10B981]'
   return (
     <button onClick={onClick} className={[
       'w-full rounded-xl border border-[#D7E0EA] bg-white p-2 md:p-4 text-left transition-[border-color,box-shadow,background-color] content-visibility-auto',
       selected ? 'border-[#0E7490] bg-[#F7FCFD] ring-2 ring-[#0E7490]/15' : 'hover:border-[#B8C6D6] hover:bg-[#FCFDFE] hover:shadow-sm',
-    ].join(' ')} data-group-stage={stage}>
+    ].join(' ')} data-group-stage={stage} data-payment-status={isSuperAdmin ? paymentStatus : undefined}>
       <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center">
         <div className="min-w-0 xl:w-[25%]">
           <div className="flex items-center gap-2"><p className="truncate text-[15px] font-semibold text-[#0B1F3A]">{group.name}</p><StatusChip group={group} /></div>
@@ -59,7 +70,7 @@ export function GroupListItem({ group, selected, onClick }: { group: GroupOperat
           <div><p className="text-[#64748B]">Attendance</p><p className="font-semibold text-[#0B1F3A]">{group.attendance_avg}%</p></div>
           <div><p className="text-[#64748B]">Health</p><p className="font-semibold text-[#0B1F3A]">{group.health_score}%</p></div>
         </div>
-        <div className="flex-1 xl:min-w-[11.5rem]">
+        <div className={isSuperAdmin ? 'grid flex-1 gap-3 sm:grid-cols-2 xl:min-w-[23rem]' : 'flex-1 xl:min-w-[11.5rem]'}>
           <ProgressMetric
             label="Sessions"
             detail={sessionDetail}
@@ -67,6 +78,16 @@ export function GroupListItem({ group, selected, onClick }: { group: GroupOperat
             value={sessionPct}
             color="bg-[#C2410C]"
           />
+          {isSuperAdmin && (
+            <ProgressMetric
+              label="Fees"
+              detail={paymentPct == null ? 'No payment plan' : `${paymentPct}% collected`}
+              secondaryDetail={paymentPct == null ? 'Add a contract to track fees' : <><span className="font-semibold text-[#15803D]">{formatEgp(paid)} paid</span> of {formatEgp(total)}</>}
+              belowDetail={paymentPct == null ? undefined : `${formatEgp(remaining)} remaining`}
+              value={paymentPct}
+              color={paymentColor}
+            />
+          )}
         </div>
       </div>
     </button>

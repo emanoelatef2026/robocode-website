@@ -18,7 +18,7 @@ const group = {
 
 describe('GroupListItem', () => {
   it('presents session and payment completion at a glance', () => {
-    render(<GroupListItem group={group} selected={false} onClick={() => {}} />)
+    render(<GroupListItem group={group} selected={false} onClick={() => {}} isSuperAdmin />)
 
     expect(screen.getByText('4 / 12 sessions')).toBeInTheDocument()
     expect(screen.getByText('65% collected')).toBeInTheDocument()
@@ -27,5 +27,36 @@ describe('GroupListItem', () => {
     expect(screen.getByRole('button')).toHaveAttribute('data-group-stage', 'running')
     expect(screen.getByRole('button')).toHaveClass('p-2')
     expect(screen.getByRole('button')).toHaveAttribute('data-payment-status', 'follow-up')
+    expect(screen.getByText('EGP 5,200 paid')).toHaveClass('text-[#15803D]')
+    const feesBar = screen.getByRole('progressbar', { name: 'Fees completion' })
+    expect(feesBar).toHaveAttribute('aria-valuenow', '65')
+    expect(feesBar.nextElementSibling).toHaveTextContent('EGP 2,800 remaining')
+  })
+
+  it('keeps group financial totals hidden for Team Leaders', () => {
+    render(<GroupListItem group={group} selected={false} onClick={() => {}} />)
+    expect(screen.getByRole('progressbar', { name: 'Sessions completion' })).toBeInTheDocument()
+    expect(screen.queryByRole('progressbar', { name: 'Fees completion' })).not.toBeInTheDocument()
+    expect(screen.queryByText(/EGP/)).not.toBeInTheDocument()
+    expect(screen.getByRole('button')).not.toHaveAttribute('data-payment-status')
+  })
+
+  it('shows 0% and the full remaining amount for an unpaid priced contract', () => {
+    render(<GroupListItem group={{ ...group, payment_paid_amount: 0, payment_completion_pct: 100 }} selected={false} onClick={() => {}} isSuperAdmin />)
+    expect(screen.getByText('0% collected')).toBeInTheDocument()
+    expect(screen.getByText('EGP 8,000 remaining')).toBeInTheDocument()
+  })
+
+  it('distinguishes missing payment plans from unpaid contracts', () => {
+    render(<GroupListItem group={{ ...group, payment_paid_amount: 0, payment_total_amount: 0 }} selected={false} onClick={() => {}} isSuperAdmin />)
+    expect(screen.getByText('No payment plan')).toBeInTheDocument()
+    expect(screen.getByText('Add a contract to track fees')).toBeInTheDocument()
+    expect(screen.queryByText(/% collected/)).not.toBeInTheDocument()
+  })
+
+  it('caps the bar at 100% and never displays negative remaining money', () => {
+    render(<GroupListItem group={{ ...group, payment_paid_amount: 9000 }} selected={false} onClick={() => {}} isSuperAdmin />)
+    expect(screen.getByRole('progressbar', { name: 'Fees completion' })).toHaveAttribute('aria-valuenow', '100')
+    expect(screen.getByText('EGP 0 remaining')).toBeInTheDocument()
   })
 })

@@ -191,6 +191,7 @@ export default function GroupsWorkspaceClient({
           className="flex flex-col"
         >
           <GroupSidebar
+            isSuperAdmin={isSuperAdmin}
             groups={visible}
             allGroups={groups}
             filters={filters}
