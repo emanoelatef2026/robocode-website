@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import type { GroupOperationalRow } from '@/modules/groups/operational'
-import { removeStudentFromGroupAction, addStudentsToGroupAction } from '@/modules/groups/modal-actions'
+import { moveStudentsToGroupAction } from '@/modules/groups/actions/students'
 import { StatusChip } from '../components/StatusChip'
 
 export function MoveGroupModal({
@@ -53,12 +53,7 @@ export function MoveGroupModal({
     setLoading(true)
     setError(null)
     try {
-      await Promise.all(Array.from(selectedIds).map(sid => removeStudentFromGroupAction(currentGroup.group_id, sid)))
-      const res = await addStudentsToGroupAction(
-        targetGroupId,
-        Array.from(selectedIds),
-        Object.fromEntries(Array.from(selectedIds).map(id => [id, contractMode])),
-      )
+      const res = await moveStudentsToGroupAction(currentGroup.group_id, targetGroupId, Array.from(selectedIds), contractMode)
       if (!res.success) {
         setError(res.error?.message ?? 'Failed to add students to new group')
         return
@@ -85,7 +80,7 @@ export function MoveGroupModal({
               Moving {selectedIds.size} student{selectedIds.size !== 1 ? 's' : ''} from {currentGroup.name}
             </p>
           </div>
-          <button onClick={onClose} className="rounded-lg p-2 text-[#94A3B8] hover:bg-[#F1F5F9] transition">
+          <button onClick={onClose} disabled={loading} aria-label="Close" className="rounded-lg p-2 text-[#94A3B8] hover:bg-[#F1F5F9] transition">
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
               <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
@@ -156,6 +151,7 @@ export function MoveGroupModal({
             <select
               value={contractMode}
               onChange={e => setContractMode(e.target.value as 'continue' | 'new')}
+              aria-label="Contract for moved students" disabled={loading}
               className="mt-2 w-full rounded-md border border-[#E2E8F0] bg-white px-2 py-2 text-[13px] text-[#374151] outline-none focus:border-[#0E7490]"
             >
               <option value="new">Start new contract</option>
@@ -163,7 +159,7 @@ export function MoveGroupModal({
             </select>
             <p className="mt-1.5 text-[12px] text-[#64748B]">
               {contractMode === 'new'
-                ? 'The previous contract and its payments stay separate.'
+                ? 'Previous contracts and payments stay separate. Create the new contract from Payment after moving.'
                 : 'The existing balance and payments move with the student.'}
             </p>
           </div>
@@ -178,6 +174,7 @@ export function MoveGroupModal({
           <div className="flex gap-2">
             <button
               onClick={onClose}
+              disabled={loading}
               className="flex-1 rounded-lg border border-[#E2E8F0] py-2 text-[13px] text-[#374151] hover:bg-[#F8FAFC] transition"
             >
               Cancel
