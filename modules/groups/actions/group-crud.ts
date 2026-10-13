@@ -67,6 +67,7 @@ export async function createGroupModal(
   }
 
   const insertPayload = buildGroupInsert(rest)
+  if (user.globalRole !== 'super_admin') insertPayload.robocode_share_percent = 100
   const { data: group, error } = await db.from('groups').insert(insertPayload).select('id').single()
 
   const processGroup = async (gid: string) => {
@@ -90,6 +91,7 @@ export async function createGroupModal(
       capacity:    rest.capacity ?? null, status: 'forming',
       day_of_week: rest.day_of_week ?? null, time: rest.start_time ?? null,
       start_date:  rest.start_date ?? null, notes: rest.notes ?? null,
+      robocode_share_percent: insertPayload.robocode_share_percent,
     }).select('id').single()
     if (e2) return { success: false, error: { code: 'DB_ERROR', message: e2.message } }
     const gid2 = (g2 as { id: string }).id
@@ -143,10 +145,11 @@ export async function updateGroupModal(
   }
 
   const cleanUpdates = stripUndefined(buildGroupUpdate(rest))
+  if (user.globalRole !== 'super_admin') delete cleanUpdates.robocode_share_percent
   const { error } = await db.from('groups').update(cleanUpdates).eq('id', id)
   if (error) {
     // Retry without columns added in optional migrations (duration_minutes, end_date, meeting_link)
-    const STABLE = new Set(['name','type','capacity','day_of_week','time','start_date','notes','status'])
+    const STABLE = new Set(['name','type','capacity','day_of_week','time','start_date','notes','status','robocode_share_percent'])
     const safeUpdates = Object.fromEntries(Object.entries(cleanUpdates).filter(([k]) => STABLE.has(k)))
     const { error: e2 } = await db.from('groups').update(safeUpdates).eq('id', id)
     if (e2) return { success: false, error: { code: 'DB_ERROR', message: e2.message } }

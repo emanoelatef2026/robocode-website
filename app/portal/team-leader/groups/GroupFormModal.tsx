@@ -36,6 +36,7 @@ interface Props {
   options:         GroupFormOptions
   studentOptions:  GroupStudentOption[]
   defaultBranchId?: string
+  isSuperAdmin?:   boolean
   onClose:         () => void
   onSuccess:       (id: string) => void
 }
@@ -656,7 +657,7 @@ function InstructorAllocationsSection({
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function GroupFormModal({
-  isOpen, mode, group, options, studentOptions, defaultBranchId, onClose, onSuccess,
+  isOpen, mode, group, options, studentOptions, defaultBranchId, isSuperAdmin = false, onClose, onSuccess,
 }: Props) {
   const action = mode === 'create' ? createGroupModal : updateGroupModal
   const [state, dispatch, pending] = useActionState<ActionResult<{ id: string }> | null, FormData>(action as any, null)
@@ -912,8 +913,28 @@ export default function GroupFormModal({
                   placeholder="Optional notes…" />
               </div>
 
-              {/* Revenue sharing is configured by Super Admin; preserve the current value on edit. */}
-              <input name="robocode_share_percent" type="hidden" defaultValue={sharePercent} />
+              {isSuperAdmin && (
+                <div className="sm:col-span-2">
+                  <label htmlFor="group-robocode-share" className="mb-1.5 block text-[13px] font-semibold text-[#374151]">
+                    Robocode Share %
+                  </label>
+                  <input
+                    id="group-robocode-share"
+                    name="robocode_share_percent"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={0.01}
+                    required
+                    defaultValue={sharePercent}
+                    className="w-full ds-card px-3 py-2 text-sm font-medium text-[#0B1F3A] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/20"
+                    aria-describedby="group-robocode-share-help"
+                  />
+                  <p id="group-robocode-share-help" className="mt-1.5 text-[12px] font-medium leading-5 text-[#52677F]">
+                    Robocode’s percentage of collected group revenue (0–100%). Use 100% for standard groups and the agreed share for partnership groups.
+                  </p>
+                </div>
+              )}
             </div>
           </section>
 

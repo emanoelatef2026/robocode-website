@@ -290,6 +290,7 @@ export default function GroupsWorkspaceClient({
         options={options}
         studentOptions={studentOptions}
         defaultBranchId={defaultBranchId}
+        isSuperAdmin={isSuperAdmin}
         onClose={() => setModalOpen(false)}
         onSuccess={handleGroupSaved}
       />
