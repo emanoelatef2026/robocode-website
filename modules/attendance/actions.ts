@@ -294,16 +294,19 @@ export async function recordAttendanceSession(
 
   // ── Idempotent batch consumption via ledger ───────────────────────────────────
   // consume_attendance_sessions_batch inserts into attendance_consumptions
-  // (UNIQUE on attendance_record_id) and increments consumed_sessions.
+  // (UNIQUE on attendance_record_id). Ledger triggers synchronize the counter.
   // ON CONFLICT DO NOTHING — safe to retry.
   let updatedRemainingMap = new Map<string, number>()
 
   if (p_record_ids.length > 0) {
-    await db.rpc('consume_attendance_sessions_batch', {
+    const { error: consumptionError } = await db.rpc('consume_attendance_sessions_batch', {
       p_record_ids,
       p_enrollment_ids,
       p_student_ids,
     })
+    if (consumptionError) {
+      return { success: false, error: { code: 'DB_ERROR', message: consumptionError.message } }
+    }
 
     // Fetch post-consumption remaining_sessions for accurate result display
     const { data: updatedEnrolls } = await db
