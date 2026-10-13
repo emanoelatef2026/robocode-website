@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { getStudentAttendanceBrowserAction } from '@/modules/groups/actions/attendance-browser'
 import { filterStudentAttendance, summarizeStudentAttendance } from '@/modules/groups/attendance-browser'
 import type { AttendanceContractOption, StudentAttendanceBrowserData } from '@/modules/groups/attendance-browser'
+import { updateStudentAttendanceStatusAction } from '@/modules/groups/actions/attendance-status'
+import { CONTRACT_ATTENDANCE_OPTIONS, isContractAttendanceStatus } from '@/modules/attendance/status-options'
+import type { ContractAttendanceStatus } from '@/modules/attendance/status-options'
 
 function dateLabel(value: string | null) {
   return value ? new Date(value.slice(0, 10) + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No start date'
@@ -11,13 +14,51 @@ function dateLabel(value: string | null) {
 
 const controlClass = 'mt-1.5 w-full min-w-0 rounded-xl border border-[#CBD5E1] bg-white px-3 py-2.5 text-[13px] font-medium text-[#0B1F3A] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/20'
 
+function AttendanceStatusEditor({ studentId, recordId, status, onSaved }: {
+  studentId: string; recordId: string; status: string; onSaved: () => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState<ContractAttendanceStatus>(isContractAttendanceStatus(status) ? status : 'present')
+  const [pending, setPending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function save() {
+    setPending(true)
+    setError(null)
+    try {
+      const result = await updateStudentAttendanceStatusAction({ studentId, attendanceRecordId: recordId, status: draft })
+      if (!result.success) { setError(result.error); return }
+      setEditing(false)
+      onSaved()
+    } catch { setError('Could not save attendance. Please try again.') }
+    finally { setPending(false) }
+  }
+
+  if (!editing) return <button type="button" className="mt-2 rounded-lg border border-[#CBD5E1] px-3 py-1.5 text-xs font-semibold text-[#0B1F3A] hover:bg-[#F8FAFC]"
+    onClick={() => { setDraft(isContractAttendanceStatus(status) ? status : 'present'); setError(null); setEditing(true) }}>Edit status</button>
+  return <div className="mt-3 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] p-3">
+    <label className="block text-xs font-semibold text-[#475569]">Attendance status
+      <select aria-label="Edit attendance status" value={draft} disabled={pending} onChange={event => setDraft(event.target.value as ContractAttendanceStatus)} className={controlClass}>
+        {CONTRACT_ATTENDANCE_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+      </select>
+    </label>
+    <p className="mt-2 text-xs font-medium leading-5 text-[#475569]">Absent still consumes the reserved session when linked to a contract.</p>
+    {error && <p role="alert" className="mt-2 text-xs font-semibold text-red-700">{error}</p>}
+    <div className="mt-3 flex justify-end gap-2">
+      <button type="button" disabled={pending} onClick={() => setEditing(false)} className="rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-xs font-semibold text-[#475569] disabled:opacity-50">Cancel</button>
+      <button type="button" disabled={pending} onClick={save} className="rounded-lg bg-[#C2410C] px-3 py-2 text-xs font-semibold text-white hover:bg-[#9A3412] disabled:opacity-50">{pending ? 'Saving…' : 'Save status'}</button>
+    </div>
+  </div>
+}
+
 export default function StudentAttendancePanel({
-  studentId, defaultEnrollmentId, refreshVersion, onAddAttendance,
+  studentId, defaultEnrollmentId, refreshVersion, onAddAttendance, onAttendanceChanged,
 }: {
   studentId: string
   defaultEnrollmentId: string | null
   refreshVersion: number
   onAddAttendance: (contract: AttendanceContractOption) => void
+  onAttendanceChanged?: () => void
 }) {
   const [response, setResponse] = useState<{ key: string; data: StudentAttendanceBrowserData | null; error: string | null } | null>(null)
   const [retry, setRetry] = useState(0)
@@ -123,6 +164,8 @@ export default function StudentAttendancePanel({
           <p className="mt-1 text-xs font-semibold text-[#475569]">{record.course_name}</p>
           <p className="mt-1 break-words text-xs leading-5 text-[#475569]">{[record.group_name, record.instructor_name].filter(Boolean).join(' · ') || record.topic || 'Individual lesson'}</p>
           <p className="mt-1 text-[11px] font-medium text-[#64748B]">{record.enrollment_id ? `${contractNames.get(record.enrollment_id) ?? 'Contract'} · Consumed` : 'Not charged to a contract'}</p>
+          <AttendanceStatusEditor studentId={studentId} recordId={record.id} status={record.status}
+            onSaved={() => { if (onAttendanceChanged) onAttendanceChanged(); else setRetry(value => value + 1) }} />
         </div>)}
       </div>}
       {records.length > visibleCount && <button type="button" className="mt-3 w-full rounded-xl border border-[#CBD5E1] px-3 py-2.5 text-sm font-semibold text-[#0B1F3A] hover:bg-[#F8FAFC]" onClick={() => setVisibleCount(value => value + 20)}>Show more ({records.length - visibleCount} remaining)</button>}

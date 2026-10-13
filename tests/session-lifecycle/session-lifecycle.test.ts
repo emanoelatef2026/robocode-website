@@ -38,7 +38,8 @@ vi.mock('@/modules/progress/safe-recalc', () => ({
   buildBatchTuples:        vi.fn().mockReturnValue([]),
 }))
 
-vi.mock('@/modules/academic/contract-consumption', () => ({
+vi.mock('@/modules/academic/contract-consumption', async (importOriginal) => ({
+  ...await importOriginal<typeof import('@/modules/academic/contract-consumption')>(),
   checkConsumptionEligibility: vi.fn().mockReturnValue({ shouldConsume: false }),
   resolveFifoEnrollment:       vi.fn().mockReturnValue(null),
 }))

@@ -16,6 +16,8 @@
 
 import { useEffect, useState } from 'react'
 import { WizardStepper } from '@/components/ui/WizardStepper'
+import { CONTRACT_ATTENDANCE_OPTIONS } from '@/modules/attendance/status-options'
+import type { ContractAttendanceStatus } from '@/modules/attendance/status-options'
 import {
   previewHistoricalReconciliationAction,
   applyHistoricalReconciliationAction,
@@ -56,6 +58,7 @@ export function HistoricalReconciliationDialog({
   const [step, setStep]         = useState<1 | 2>(1)
   const [choiceMode, setChoiceMode] = useState<ChoiceMode>('ALL')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [statuses, setStatuses] = useState<Record<string, ContractAttendanceStatus>>({})
   const [shortfallResolution, setShortfallResolution] = useState<ShortfallResolution>('CONSUME_WHAT_FITS')
   const [submitting, setSubmitting] = useState(false)
 
@@ -67,6 +70,7 @@ export function HistoricalReconciliationDialog({
     setStep(1)
     setChoiceMode('ALL')
     setShortfallResolution('CONSUME_WHAT_FITS')
+    setStatuses({})
 
     previewHistoricalReconciliationAction({ studentId, groupId, courseId, enrollmentId }).then(res => {
       if (cancelled) return
@@ -86,20 +90,22 @@ export function HistoricalReconciliationDialog({
         return
       }
       setPreview(res.data)
+      setStatuses(Object.fromEntries(res.data.sessions.map(session => [session.schedule_id, session.attendance_status ?? 'present'])))
       setSelectedIds(new Set(res.data.sessions.map(s => s.schedule_id)))
       setLoading(false)
+    }).catch(() => {
+      if (!cancelled) { setError('Could not load session history. Please close and try again.'); setLoading(false) }
     })
 
     return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, studentId, groupId, courseId, enrollmentId])
 
   if (!open) return null
 
   function buildChoice(): ReconciliationChoice {
     if (choiceMode === 'NEXT_ONLY') return { mode: 'NEXT_ONLY' }
-    if (choiceMode === 'ALL')       return { mode: 'ALL' }
-    return { mode: 'MANUAL', scheduleIds: [...selectedIds] }
+    if (choiceMode === 'ALL')       return { mode: 'ALL', statuses }
+    return { mode: 'MANUAL', scheduleIds: [...selectedIds], statuses }
   }
 
   const selectedCount = choiceMode === 'NEXT_ONLY' ? 0 : choiceMode === 'ALL' ? (preview?.sessions.length ?? 0) : selectedIds.size
@@ -123,26 +129,32 @@ export function HistoricalReconciliationDialog({
 
     setSubmitting(true)
     setError(null)
-    const res = await applyHistoricalReconciliationAction({
-      studentId, groupId, courseId, enrollmentId, choice,
-      shortfallResolution: shortfall > 0 ? shortfallResolution : undefined,
-    })
-    setSubmitting(false)
-    if (!res.success) {
-      setError(res.error.message)
-      return
+    try {
+      const res = await applyHistoricalReconciliationAction({
+        studentId, groupId, courseId, enrollmentId, choice,
+        shortfallResolution: shortfall > 0 ? shortfallResolution : undefined,
+      })
+      if (!res.success) {
+        setError(res.error.message)
+        return
+      }
+      if (res.data.cancelled) {
+        onClose()
+        return
+      }
+      onResolved({ applied: true, result: res.data })
+    } catch {
+      setError('Could not save attendance. Your selections are still here; please try again.')
+    } finally {
+      setSubmitting(false)
     }
-    if (res.data.cancelled) {
-      onClose()
-      return
-    }
-    onResolved({ applied: true, result: res.data })
   }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
       <div
-        className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl"
+        role="dialog" aria-modal="true" aria-label="Historical Session Reconciliation"
+        className="flex max-h-[92dvh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
         onMouseDown={event => event.stopPropagation()}
         onClick={event => event.stopPropagation()}
       >
@@ -153,7 +165,7 @@ export function HistoricalReconciliationDialog({
 
         <WizardStepper steps={['Choose', 'Confirm']} currentStep={step} />
 
-        <div className="max-h-[70vh] overflow-y-auto px-5 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
           {loading && <p className="py-8 text-center text-sm text-[#64748B]">Loading session history…</p>}
 
           {error && (
@@ -201,13 +213,17 @@ export function HistoricalReconciliationDialog({
                 </button>
               </div>
 
-              {choiceMode === 'MANUAL' && (
-                <div className="mt-4 max-h-48 space-y-1 overflow-y-auto rounded-lg border border-[#E2E8F0] p-2">
+              {choiceMode !== 'NEXT_ONLY' && preview.sessions.length > 0 && (
+                <div className="mt-4 space-y-2 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] p-3">
+                  <p className="text-xs font-semibold leading-5 text-[#475569]">Set attendance for each selected session. Present, absent, late, excused, and makeup each consume one contract session.</p>
                   {preview.sessions.map(s => (
-                    <label key={s.schedule_id} className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-[#F8FAFC]">
+                    <div key={s.schedule_id} className="flex flex-wrap items-center gap-3 rounded-lg border border-[#E2E8F0] bg-white p-3">
+                      <label className="flex min-w-0 flex-1 items-start gap-2 text-sm">
                       <input
                         type="checkbox"
-                        checked={selectedIds.has(s.schedule_id)}
+                        className="mt-1"
+                        checked={choiceMode === 'ALL' || selectedIds.has(s.schedule_id)}
+                        disabled={choiceMode === 'ALL'}
                         onChange={e => {
                           setSelectedIds(prev => {
                             const next = new Set(prev)
@@ -217,13 +233,23 @@ export function HistoricalReconciliationDialog({
                           })
                         }}
                       />
-                      <span className="font-medium text-[#0B1F3A]">
+                      <span className="min-w-0">
+                      <span className="block font-semibold text-[#0B1F3A]">
                         {s.session_number ? `Lesson ${s.session_number}` : 'Session'}
                       </span>
-                      <span className="text-[#94A3B8]">
-                        {new Date(s.scheduled_at).toLocaleDateString()}{s.topic ? ` — ${s.topic}` : ''}
+                      <span className="mt-1 block break-words text-xs font-medium leading-5 text-[#475569]">
+                        {new Date(s.scheduled_at).toLocaleDateString('en-GB')}{s.topic ? ` — ${s.topic}` : ''}
                       </span>
-                    </label>
+                      </span>
+                      </label>
+                      <select aria-label={`Attendance for ${s.session_number ? `lesson ${s.session_number}` : s.schedule_id}`}
+                        value={statuses[s.schedule_id] ?? s.attendance_status ?? 'present'}
+                        disabled={choiceMode === 'MANUAL' && !selectedIds.has(s.schedule_id)}
+                        onChange={event => setStatuses(previous => ({ ...previous, [s.schedule_id]: event.target.value as ContractAttendanceStatus }))}
+                        className="rounded-lg border border-[#CBD5E1] bg-white px-3 py-2 text-sm font-semibold text-[#0B1F3A] outline-none focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/20 disabled:opacity-40">
+                        {CONTRACT_ATTENDANCE_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                      </select>
+                    </div>
                   ))}
                 </div>
               )}
@@ -250,6 +276,13 @@ export function HistoricalReconciliationDialog({
                 <StatTile label="Remaining After" value={noContract ? '—' : Math.max(0, remaining - (unlimited ? selectedCount : Math.min(selectedCount, remaining)))} />
                 <StatTile label="Shortfall" value={shortfall} highlight={shortfall > 0} />
               </div>
+              {selectedCount > 0 && <div className="mt-4 rounded-xl border border-[#CBD5E1] bg-[#F8FAFC] p-3">
+                <p className="mb-2 text-xs font-bold text-[#0B1F3A]">Selected attendance</p>
+                {preview.sessions.filter(session => choiceMode === 'ALL' || (choiceMode === 'MANUAL' && selectedIds.has(session.schedule_id))).map(session => <p key={session.schedule_id} className="flex justify-between gap-3 py-1 text-xs font-medium text-[#475569]">
+                  <span>{new Date(session.scheduled_at).toLocaleDateString('en-GB')}{session.session_number ? ` · Lesson ${session.session_number}` : ''}</span>
+                  <span className="font-semibold capitalize text-[#0B1F3A]">{statuses[session.schedule_id] ?? session.attendance_status ?? 'present'}</span>
+                </p>)}
+              </div>}
 
               {noContract && selectedCount > 0 && (
                 <div className="mt-4 rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3 py-2 text-sm text-[#B45309]">

@@ -6,11 +6,14 @@
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+import type { ContractAttendanceStatus } from '@/modules/attendance/status-options'
+
 export interface HistoricalSessionRow {
   schedule_id:    string
   session_number: number | null
   topic:          string | null
   scheduled_at:   string
+  attendance_status?: ContractAttendanceStatus
 }
 
 export interface EnrollmentSummary {
@@ -50,8 +53,8 @@ export interface PreviewHistoricalReconciliationResult {
 }
 
 export type ReconciliationChoice =
-  | { mode: 'ALL' }
-  | { mode: 'MANUAL'; scheduleIds: string[] }
+  | { mode: 'ALL'; statuses?: Record<string, ContractAttendanceStatus> }
+  | { mode: 'MANUAL'; scheduleIds: string[]; statuses?: Record<string, ContractAttendanceStatus> }
   | { mode: 'NEXT_ONLY' }
 
 export type ShortfallResolution = 'CONSUME_WHAT_FITS' | 'UNPAID_PENDING' | 'CANCEL'

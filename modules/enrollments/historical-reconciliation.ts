@@ -28,6 +28,7 @@ import { logTimelineEvents }   from '@/lib/timeline'
 import { getParentUserIdsForStudent } from '@/modules/notifications/queries'
 import { seedAttendanceRecordedNotification } from '@/modules/notifications/actions'
 import { computeReconciliationImpact } from './historical-reconciliation-shared'
+import { isContractAttendanceStatus } from '@/modules/attendance/status-options'
 import type {
   HistoricalSessionRow,
   EnrollmentSummary,
@@ -122,6 +123,7 @@ async function _computePreview(
       session_number: s.session_number,
       topic:          s.topic,
       scheduled_at:   s.scheduled_at,
+      attendance_status: attendanceBySchedule.get(s.id)?.status ?? 'present',
     }))
 
   // 3. Resolve the enrollment to consume against.
@@ -137,6 +139,8 @@ async function _computePreview(
       .from('student_enrollments')
       .select('id, enrolled_sessions, consumed_sessions, remaining_sessions, net_amount')
       .eq('id', enrollmentId)
+      .eq('student_id', input.studentId)
+      .eq('status', 'ACTIVE')
       .maybeSingle()
     if (enrRow) {
       const e = enrRow as any
@@ -210,7 +214,7 @@ async function _applyInternal(
   if (input.choice.mode === 'ALL') {
     targetIds = preview.sessions.map(s => s.schedule_id)
   } else {
-    targetIds = input.choice.scheduleIds.filter(id => missingIds.has(id))
+    targetIds = [...new Set(input.choice.scheduleIds)].filter(id => missingIds.has(id))
   }
 
   if (!targetIds.length) return { created: 0, consumed: 0, unfunded: 0, cancelled: false }
@@ -246,16 +250,23 @@ async function _applyInternal(
 
   if (!targetIds.length) return { created: 0, consumed: 0, unfunded: 0, cancelled: false }
 
-  const { data: rpcData, error: rpcErr } = await db.rpc('apply_historical_reconciliation_records', {
+  const statusChoices = input.choice.statuses
+  const selectedStatuses = targetIds.map(id => statusChoices?.[id]
+    ?? preview.sessions.find(session => session.schedule_id === id)?.attendance_status ?? 'present')
+  if (!selectedStatuses.every(isContractAttendanceStatus)) throw new Error('Choose a valid attendance status for each session.')
+  const { data: rpcData, error: rpcErr } = await db.rpc(statusChoices ? 'apply_historical_reconciliation_records_with_statuses' : 'apply_historical_reconciliation_records', {
     p_schedule_ids:  targetIds,
     p_funded_count:  fundedCount,
     p_student_id:    input.studentId,
     p_enrollment_id: enrollmentId,
     p_recorded_by:   input.performedBy,
+    ...(statusChoices ? { p_statuses: selectedStatuses } : {}),
   })
   if (rpcErr) throw new Error(rpcErr.message)
 
-  const rows = (rpcData ?? []) as Array<{ attendance_record_id: string; schedule_id: string; funded: boolean }>
+  const rows = ((rpcData ?? []) as Array<{ attendance_record_id: string; schedule_id: string; funded: boolean; attendance_status?: string }>).map(row => ({
+    ...row, attendance_status: row.attendance_status ?? selectedStatuses[targetIds.indexOf(row.schedule_id)] ?? 'present',
+  }))
   const created  = rows.length
   const consumed = rows.filter(r => r.funded).length
   const unfunded = created - consumed
@@ -268,8 +279,8 @@ async function _applyInternal(
       schedule_id:   r.schedule_id,
       event_type:    'HISTORICAL_RECONCILIATION' as const,
       notes:         r.funded
-        ? 'Historical session reconciled and consumed from contract.'
-        : 'Historical session reconciled — unfunded, pending contract top-up.',
+        ? `Historical session reconciled as ${r.attendance_status} and consumed from contract.`
+        : `Historical session reconciled as ${r.attendance_status} — unfunded, pending contract top-up.`,
       created_by:    input.performedBy,
       branch_id:     input.branchId ?? null,
     })))
@@ -283,7 +294,7 @@ async function _applyInternal(
     const groupName = (groupRow as any)?.name ?? null
     for (const recordRow of rows) {
       for (const parentUserId of parentUserIds) {
-        await seedAttendanceRecordedNotification(parentUserId, recordRow.attendance_record_id, 'present', groupName)
+        await seedAttendanceRecordedNotification(parentUserId, recordRow.attendance_record_id, recordRow.attendance_status, groupName)
       }
     }
   } catch { /* non-fatal */ }
@@ -294,7 +305,7 @@ async function _applyInternal(
       p_action:       'historical_enrollment_reconciliation',
       p_entity_type:  'student_enrollments',
       p_entity_id:    enrollmentId,
-      p_new_values:   { mode: input.choice.mode, created, consumed, unfunded },
+      p_new_values:   { mode: input.choice.mode, created, consumed, unfunded, statuses: selectedStatuses },
       p_branch_id:    input.branchId ?? null,
     })
   } catch { /* non-fatal */ }
@@ -303,10 +314,13 @@ async function _applyInternal(
   revalidatePath('/portal/team-leader/finance')
   revalidatePath('/portal/team-leader/groups')
   revalidatePath('/admin/attendance')
+  revalidatePath('/admin/groups')
   revalidatePath('/admin/finance')
   revalidatePath('/portal/parent/finance')
   revalidatePath('/portal/parent/attendance')
   revalidatePath('/portal/student')
+  revalidatePath('/portal/student/attendance')
+  revalidatePath('/portal/instructor', 'layout')
 
   return { created, consumed, unfunded, cancelled: false }
 }

@@ -5,8 +5,10 @@ import StudentAttendancePanel from '@/app/portal/team-leader/groups/StudentAtten
 import { getStudentAttendanceBrowserAction } from '@/modules/groups/actions/attendance-browser'
 import { filterStudentAttendance, summarizeStudentAttendance } from '@/modules/groups/attendance-browser'
 import type { AttendanceContractOption, BrowsableAttendanceRecord } from '@/modules/groups/attendance-browser'
+import { updateStudentAttendanceStatusAction } from '@/modules/groups/actions/attendance-status'
 
 vi.mock('@/modules/groups/actions/attendance-browser', () => ({ getStudentAttendanceBrowserAction: vi.fn() }))
+vi.mock('@/modules/groups/actions/attendance-status', () => ({ updateStudentAttendanceStatusAction: vi.fn() }))
 
 function contract(id: string, course: string, status = 'ACTIVE'): AttendanceContractOption {
   return { id, code: `CTR-${id}`, course_id: course, course_name: course, group_name: 'Group', start_date: '2026-10-01', status, enrolled_sessions: 12, consumed_sessions: 2, remaining_sessions: 10 }
@@ -80,5 +82,32 @@ describe('student attendance selection', () => {
     expect(screen.queryByText('Lesson 1')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Show more (5 remaining)' }))
     expect(screen.getByText('Lesson 1')).toBeInTheDocument()
+  })
+
+  it('changes Present to Absent without changing contract consumption', async () => {
+    const user = userEvent.setup()
+    vi.mocked(getStudentAttendanceBrowserAction).mockResolvedValueOnce({ contracts: [data.contracts[0]], records: [records[2]] })
+      .mockResolvedValueOnce({ contracts: [data.contracts[0]], records: [{ ...records[2], status: 'absent' }] })
+    vi.mocked(updateStudentAttendanceStatusAction).mockResolvedValue({ success: true })
+    render(<StudentAttendancePanel studentId="student" defaultEnrollmentId="new" refreshVersion={0} onAddAttendance={vi.fn()} />)
+    await user.click(await screen.findByRole('button', { name: 'Edit status' }))
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Edit attendance status' }), 'absent')
+    await user.click(screen.getByRole('button', { name: 'Save status' }))
+    await screen.findByRole('button', { name: 'Edit status' })
+    expect(updateStudentAttendanceStatusAction).toHaveBeenCalledWith({ studentId: 'student', attendanceRecordId: '3', status: 'absent' })
+    expect(within(screen.getByLabelText('Filtered attendance totals')).getByText('Absent').previousSibling).toHaveTextContent('1')
+    expect(within(screen.getByLabelText('Filtered attendance totals')).getByText('Consumed').previousSibling).toHaveTextContent('1')
+  })
+
+  it('keeps the status draft and explains a failed save', async () => {
+    const user = userEvent.setup()
+    vi.mocked(getStudentAttendanceBrowserAction).mockResolvedValue({ contracts: [], records: [records[0]] })
+    vi.mocked(updateStudentAttendanceStatusAction).mockResolvedValue({ success: false, error: 'Please refresh this record.' })
+    render(<StudentAttendancePanel studentId="student" defaultEnrollmentId={null} refreshVersion={0} onAddAttendance={vi.fn()} />)
+    await user.click(await screen.findByRole('button', { name: 'Edit status' }))
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Edit attendance status' }), 'absent')
+    await user.click(screen.getByRole('button', { name: 'Save status' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Please refresh this record.')
+    expect(screen.getByRole('combobox', { name: 'Edit attendance status' })).toHaveValue('absent')
   })
 })

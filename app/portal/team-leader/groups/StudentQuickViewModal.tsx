@@ -1412,6 +1412,7 @@ export default function StudentQuickViewModal({ student: s, group, onClose, onSt
                 studentId={s.student_id}
                 defaultEnrollmentId={s.enrollment_id}
                 refreshVersion={attendanceVersion}
+                onAttendanceChanged={refreshContractAttendance}
                 onAddAttendance={contract => {
                   setAttendanceContract(contract)
                   if (contract.course_id && group.course_id && contract.course_id !== group.course_id) {
