@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
       )
     `)
     .is('deleted_at', null)
+    .eq('status', 'active')
     .order('created_at')
     .limit(200)
 

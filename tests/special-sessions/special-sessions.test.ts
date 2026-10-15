@@ -78,7 +78,7 @@ describe('Phase XL — Special Sessions System', () => {
     const db = mockDb({
       schedules:           [{ data: { id: SESSION_ID }, error: null }],
       session_instructors: [{ data: { id: 'si-001' }, error: null }],
-      instructors:         [{ data: { user_id: 'user-instr-001', users: { email: 'i@test.com' } }, error: null }],
+      instructors:         [{ data: { id: INSTR_ID, status: 'active', deleted_at: null }, error: null }, { data: { user_id: 'user-instr-001', users: { email: 'i@test.com' } }, error: null }],
     })
 
     const result = await createTrialSession(
@@ -108,7 +108,7 @@ describe('Phase XL — Special Sessions System', () => {
     const db = mockDb({
       schedules:           [{ data: { id: SESSION_ID }, error: null }],
       session_instructors: [{ data: { id: 'si-002' }, error: null }],
-      instructors:         [{ data: { user_id: 'user-instr-001' }, error: null }],
+      instructors:         [{ data: { id: INSTR_ID, status: 'active', deleted_at: null }, error: null }, { data: { user_id: 'user-instr-001' }, error: null }],
     })
 
     const result = await createMakeupSession(
@@ -379,7 +379,7 @@ describe('Phase XL — Special Sessions System', () => {
     mockDb({
       schedules:           [{ data: { id: SESSION_ID }, error: null }],
       session_instructors: [{ data: null, error: null }],
-      instructors:         [{ data: { user_id: 'user-instr-001', users: { email: 'i@test.com' } }, error: null }],
+      instructors:         [{ data: { id: INSTR_ID, status: 'active', deleted_at: null }, error: null }, { data: { user_id: 'user-instr-001', users: { email: 'i@test.com' } }, error: null }],
     })
 
     await createTrialSession(null, fd({
@@ -463,7 +463,7 @@ describe('Phase XL — Special Sessions System', () => {
     const db = mockDb({
       schedules:              [{ data: { id: SESSION_ID }, error: null }],
       session_instructors:    [{ data: null, error: null }],
-      instructors:            [{ data: { user_id: 'user-instr-001', users: { email: 'i@test.com' } }, error: null }],
+      instructors:            [{ data: { id: INSTR_ID, status: 'active', deleted_at: null }, error: null }, { data: { user_id: 'user-instr-001', users: { email: 'i@test.com' } }, error: null }],
       leads:                  [
         // .in() returns an array of all matching leads
         { data: [
@@ -525,7 +525,7 @@ describe('Phase XL — Special Sessions System', () => {
     mockDb({
       schedules:              [{ data: { id: SESSION_ID }, error: null }],
       session_instructors:    [{ data: null, error: null }],
-      instructors:            [{ data: { user_id: 'user-instr-001', users: { email: 'i@test.com' } }, error: null }],
+      instructors:            [{ data: { id: INSTR_ID, status: 'active', deleted_at: null }, error: null }, { data: { user_id: 'user-instr-001', users: { email: 'i@test.com' } }, error: null }],
       leads:                  [
         { data: [{ id: LEAD_ID, child_name: 'Ali', phone: '010', whatsapp: null }], error: null },
         { data: null, error: null },
@@ -574,7 +574,7 @@ describe('Phase XL — Special Sessions System', () => {
     mockDb({
       schedules:              [{ data: { id: SESSION_ID }, error: null }],
       session_instructors:    [{ data: null, error: null }],
-      instructors:            [{ data: { user_id: 'user-instr-999', users: { email: 'i@test.com' } }, error: null }],
+      instructors:            [{ data: { id: INSTR_ID, status: 'active', deleted_at: null }, error: null }, { data: { user_id: 'user-instr-999', users: { email: 'i@test.com' } }, error: null }],
       leads:                  [
         { data: [{ id: LEAD_ID, child_name: 'Ali', phone: '010', whatsapp: null }], error: null },
         { data: null, error: null },

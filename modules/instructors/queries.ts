@@ -50,12 +50,14 @@ export async function listInstructors({
   search = '',
   branchId,
   includeCrossBranch = false,
+  activeOnly = true,
 }: {
   page?: number
   perPage?: number
   search?: string
   branchId?: string | string[]
   includeCrossBranch?: boolean
+  activeOnly?: boolean
 } = {}): Promise<PaginatedResult<InstructorListItem>> {
   const db   = createServiceClient()
   const from = (page - 1) * perPage
@@ -71,6 +73,10 @@ export async function listInstructors({
     )
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
+
+  // This loader supplies assignment pickers. The instructor management
+  // workspace uses listInstructorsOperational and retains inactive records.
+  if (activeOnly) query = query.eq('status', 'active')
 
   if (branchId) {
     const ids = Array.isArray(branchId) ? branchId : [branchId]

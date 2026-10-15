@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createServiceClient } from '@/lib/supabase/service'
+import { isActiveInstructor, INACTIVE_INSTRUCTOR_MESSAGE } from './availability'
 import { getSupabasePublic } from '@/lib/supabase/server'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { createInstructorSchema, updateInstructorSchema } from './schemas'
@@ -279,7 +280,7 @@ export async function assignGroupToInstructor(
 
   // Resolve both entities and verify branch access
   const [{ data: instr }, { data: grp }] = await Promise.all([
-    db.from('instructors').select('branch_id').eq('id', instructorId).single(),
+    db.from('instructors').select('branch_id, status, deleted_at').eq('id', instructorId).single(),
     db.from('groups').select('branch_id').eq('id', groupId).is('deleted_at', null).single(),
   ])
   if (!instr || !grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Instructor or group not found.' } }
@@ -289,6 +290,7 @@ export async function assignGroupToInstructor(
   if (instr.branch_id !== grp.branch_id) {
     return { success: false, error: { code: 'VALIDATION', message: 'Instructor and group must be in the same branch.' } }
   }
+  if (!isActiveInstructor(instr)) return { success: false, error: { code: 'INACTIVE_INSTRUCTOR', message: INACTIVE_INSTRUCTOR_MESSAGE } }
 
   const { error } = await db.from('group_instructors').upsert(
     { group_id: groupId, instructor_id: instructorId, role: 'lead' },

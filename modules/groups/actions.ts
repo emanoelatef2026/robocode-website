@@ -18,6 +18,7 @@ import {
 } from '@/modules/academic/enrollment-integrity'
 import { reconcileGroupJoin } from '@/modules/enrollments/historical-reconciliation'
 import type { ActionResult } from '@/types/app'
+import { getInstructorAvailabilityError } from '@/modules/instructors/availability'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
   if (typeof raw !== 'string') return null
@@ -48,6 +49,9 @@ export async function createGroup(_prev: unknown, formData: FormData): Promise<A
   const db   = createServiceClient()
 
   const { branch_id, name, type, capacity, start_date, day_of_week, time, notes, instructor_id, robocode_share_percent } = parsed.data
+
+  const availabilityError = await getInstructorAvailabilityError(db, instructor_id)
+  if (availabilityError) return { success: false, error: availabilityError }
 
   const { data: group, error } = await db
     .from('groups')
@@ -571,7 +575,8 @@ export async function saveGroupAcademicConfig(
   }
 
   // 1. Course assignment — lifecycle-safe via canonical service
-  await assignGroupCourseService(groupId, courseId, instructorId || null, user.id, db)
+  try { await assignGroupCourseService(groupId, courseId, instructorId || null, user.id, db) }
+  catch (error) { return { success: false, error: { code: 'VALIDATION', message: error instanceof Error ? error.message : 'Assignment failed.' } } }
 
   // 2. Academic plan — explicit TL-defined session count (no hidden defaults)
   if (courseId) await updateGroupCoursePlan(db, groupId, plannedSessions, openEnded, user.id)
@@ -617,6 +622,9 @@ export async function addGroupInstructor(
   if (!isBranchAccessible(user, grp.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
+
+  const availabilityError = await getInstructorAvailabilityError(db, instructorId)
+  if (availabilityError) return { success: false, error: availabilityError }
 
   const { error } = await db.from('group_instructors').upsert(
     { group_id: groupId, instructor_id: instructorId, role },

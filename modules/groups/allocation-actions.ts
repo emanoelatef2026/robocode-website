@@ -5,6 +5,7 @@ import { createServiceClient }     from '@/lib/supabase/service'
 import { requirePermission }       from '@/modules/rbac/guards'
 import { computeNextAllocationStart } from '@/modules/academic/session-ownership'
 import type { ActionResult }       from '@/types/app'
+import { getInstructorAvailabilityError } from '@/modules/instructors/availability'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -145,6 +146,9 @@ export async function addGroupAllocationAction(
   const db   = createServiceClient()
 
   // Prevent duplicate allocation for same instructor+group
+  const availabilityError = await getInstructorAvailabilityError(db, instructorId)
+  if (availabilityError) return { success: false, error: availabilityError }
+
   const { data: existing } = await db
     .from('group_instructors')
     .select('instructor_id')

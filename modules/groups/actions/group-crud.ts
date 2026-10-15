@@ -7,6 +7,7 @@ import type { ActionResult }    from '@/types/app'
 import { createSchema, updateSchema } from './validators'
 import { parseStudentIds, parseContractChoices, buildGroupInsert, buildGroupUpdate, stripUndefined } from './helpers'
 import { applyStudentChanges, assignCourseAndInstructor, updateGroupCoursePlan } from './db-ops'
+import { getInstructorAvailabilityError } from '@/modules/instructors/availability'
 
 const GROUPS_PATHS = ['/portal/team-leader/groups', '/admin/groups'] as const
 
@@ -61,6 +62,11 @@ export async function createGroupModal(
   const db   = createServiceClient()
 
   // Students must be in the group's branch — validate before creating the group
+  for (const selectedInstructor of [instructor_id, asst_instructor_id]) {
+    const availabilityError = await getInstructorAvailabilityError(db, selectedInstructor)
+    if (availabilityError) return { success: false, error: availabilityError }
+  }
+
   const branchErr = await validateStudentsMatchBranch(db, rest.branch_id, selectedStudentIds)
   if (branchErr) {
     return { success: false, error: { code: 'VALIDATION', message: branchErr } }
@@ -142,6 +148,18 @@ export async function updateGroupModal(
   // side-effect of a general-purpose update.
   if (existing.status === 'archived') {
     return { success: false, error: { code: 'FORBIDDEN', message: 'This cohort is Archived and permanently read-only. Use Recover Cohort first if changes are needed.' } }
+  }
+
+  // Reject a stale NEW selection before changing any group fields. Keeping
+  // the current course/instructor pair unchanged is not a new assignment.
+  if (instructor_id) {
+    const { data: currentCourse, error: currentError } = await db.from('group_courses')
+      .select('course_id, instructor_id').eq('group_id', id).eq('status', 'active').maybeSingle()
+    if (currentError) return { success: false, error: { code: 'DB_ERROR', message: 'Could not verify current assignment. Please try again.' } }
+    if (!currentCourse || currentCourse.course_id !== course_id || currentCourse.instructor_id !== instructor_id) {
+      const availabilityError = await getInstructorAvailabilityError(db, instructor_id)
+      if (availabilityError) return { success: false, error: availabilityError }
+    }
   }
 
   const cleanUpdates = stripUndefined(buildGroupUpdate(rest))

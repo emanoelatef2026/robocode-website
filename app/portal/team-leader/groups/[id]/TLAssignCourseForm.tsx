@@ -94,12 +94,15 @@ export default function TLAssignCourseForm({
 
       <div>
         <label className="mb-1 block text-xs font-medium text-[#64748B]">Lead instructor</label>
+        <input type="hidden" name="instructor_id" value={instructorId} />
         <select
-          name="instructor_id"
           value={instructorId}
           onChange={e => setInstructorId(e.target.value)}
           className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm text-[#0B1F3A] outline-none transition focus:border-[#0E7490] focus:ring-2 focus:ring-[#0E7490]/15"
         >
+          {instructorId && !instructors.some(i => i.id === instructorId) && (
+            <option value={instructorId} disabled>Current assignment retained — choose an active replacement</option>
+          )}
           <option value="">No instructor assigned</option>
           {instructors.map((i) => (
             <option key={i.id} value={i.id}>

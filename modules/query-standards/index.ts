@@ -12,10 +12,11 @@ export async function getInstructorFilterOptions(branchIds: string[]): Promise<{
   if (!branchIds.length) return []
   const db = createServiceClient()
 
-  // Step 1 (parallel): all non-deleted instructors + all instructor_branches + visible group IDs
+  // Status filtering comes before every branch/legacy visibility exception.
   const [instrRes, instrBranchRes, groupRes] = await Promise.all([
     db.from('instructors')
-      .select(`id, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
+      .select(`id, status, users!instructors_user_id_fkey(profiles!profiles_user_id_fkey(first_name, last_name))`)
+      .eq('status', 'active')
       .is('deleted_at', null),
     db.from('instructor_branches').select('instructor_id, branch_id'),
     db.from('groups').select('id').in('branch_id', branchIds).is('deleted_at', null),
@@ -45,6 +46,7 @@ export async function getInstructorFilterOptions(branchIds: string[]): Promise<{
 
   return ((instrRes.data ?? []) as any[])
     .filter(i => {
+      if (i.status !== 'active') return false
       if (groupLinkedIds.has(i.id as string)) return true
       const iBranches = instrBranchMap.get(i.id as string) ?? []
       // Legacy: no instructor_branches record → visible in every branch

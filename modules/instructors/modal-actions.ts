@@ -5,6 +5,7 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, isBranchAccessible } from '@/modules/rbac/guards'
 import { validatePaymentMethodFields } from '@/modules/instructor-payments/types'
 import { getInstructorDetailData, getInstructorFormOptions, listInstructorsOperational } from './operational'
+import { isActiveInstructor, INACTIVE_INSTRUCTOR_MESSAGE } from './availability'
 import { computeNextAllocationStart } from '@/modules/academic/session-ownership'
 import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import type {
@@ -343,13 +344,14 @@ export async function assignGroupModalAction(
   const db   = createServiceClient()
 
   const [{ data: instr }, { data: grp }] = await Promise.all([
-    db.from('instructors').select('branch_id').eq('id', instructorId).single(),
+    db.from('instructors').select('branch_id, status, deleted_at').eq('id', instructorId).single(),
     db.from('groups').select('branch_id').eq('id', groupId).is('deleted_at', null).single(),
   ])
   if (!instr || !grp) return { success: false, error: { code: 'NOT_FOUND', message: 'Instructor or group not found.' } }
   if (!isBranchAccessible(user, instr.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'No access to this branch.' } }
   }
+  if (!isActiveInstructor(instr)) return { success: false, error: { code: 'INACTIVE_INSTRUCTOR', message: INACTIVE_INSTRUCTOR_MESSAGE } }
 
   // Always use the canonical from_session computed from existing allocation ranges.
   // This is immune to cancelled/deleted schedules and guarantees no gaps or overlaps.
@@ -423,7 +425,7 @@ export async function assignGroupsModalAction(
   const db = createServiceClient()
 
   const [{ data: instructor }, { data: groups }, { data: existingAssignments }] = await Promise.all([
-    db.from('instructors').select('id, branch_id').eq('id', instructorId).maybeSingle(),
+    db.from('instructors').select('id, branch_id, status, deleted_at').eq('id', instructorId).maybeSingle(),
     db.from('groups').select('id, branch_id').in('id', uniqueGroupIds).is('deleted_at', null),
     db.from('group_instructors').select('group_id').eq('instructor_id', instructorId).in('group_id', uniqueGroupIds),
   ])
@@ -434,6 +436,7 @@ export async function assignGroupsModalAction(
   if (!isBranchAccessible(user, instructor.branch_id) || groups.some(group => !isBranchAccessible(user, group.branch_id))) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'No access to one or more selected groups.' } }
   }
+  if (!isActiveInstructor(instructor)) return { success: false, error: { code: 'INACTIVE_INSTRUCTOR', message: INACTIVE_INSTRUCTOR_MESSAGE } }
   if ((existingAssignments ?? []).length > 0) {
     return { success: false, error: { code: 'CONFLICT', message: 'One or more selected groups are already assigned to this instructor. Refresh and try again.' } }
   }

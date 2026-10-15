@@ -17,6 +17,7 @@ interface Props {
 }
 
 export default function AcademicConfigCard({ groupId, config, courses, instructors }: Props) {
+  const [selectedInstructorId, setSelectedInstructorId] = useState(config.instructor_id ?? '')
   const [state, action] = useActionState<ActionResult<void> | null, FormData>(
     saveGroupAcademicConfig, null
   )
@@ -107,7 +108,11 @@ export default function AcademicConfigCard({ groupId, config, courses, instructo
 
         <div>
           <label className="mb-1 block text-xs font-medium text-[#64748B]">Lead Instructor</label>
-          <select name="instructor_id" defaultValue={config.instructor_id ?? ''} className={cls}>
+          <input type="hidden" name="instructor_id" value={selectedInstructorId} />
+          <select value={selectedInstructorId} onChange={e => setSelectedInstructorId(e.target.value)} className={cls}>
+            {selectedInstructorId && !instructors.some(i => i.id === selectedInstructorId) && (
+              <option value={selectedInstructorId} disabled>Current assignment retained — choose an active replacement</option>
+            )}
             <option value="">— No instructor assigned —</option>
             {instructors.map((i) => (
               <option key={i.id} value={i.id}>{i.name}</option>

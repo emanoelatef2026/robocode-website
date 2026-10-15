@@ -1,5 +1,6 @@
 import 'server-only'
 import { createServiceClient } from '@/lib/supabase/service'
+import { getInstructorAvailabilityError } from '@/modules/instructors/availability'
 
 type DB = ReturnType<typeof createServiceClient>
 
@@ -67,6 +68,9 @@ export async function assignGroupCourseService(
   }
 
   // ── Case C: same course, different instructor → update instructor only ─────
+  const availabilityError = await getInstructorAvailabilityError(client, instructorId)
+  if (availabilityError) throw new Error(availabilityError.message)
+
   if (active?.course_id === courseId) {
     const { data: updated, error } = await client
       .from('group_courses')

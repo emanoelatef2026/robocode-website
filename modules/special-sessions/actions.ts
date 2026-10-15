@@ -9,6 +9,7 @@ import {
   seedMakeupSessionAssignedNotification,
 } from '@/modules/notifications/actions'
 import type { ActionResult } from '@/types/app'
+import { getInstructorAvailabilityError } from '@/modules/instructors/availability'
 
 // ── Permission helpers ─────────────────────────────────────────────────────────
 // Trial sessions: TL + Super Admin only (manage_schedule)
@@ -51,6 +52,9 @@ export async function createTrialSession(
   if (!isBranchAccessible(user, d.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
+
+  const availabilityError = await getInstructorAvailabilityError(db, d.instructor_id)
+  if (availabilityError) return { success: false, error: availabilityError }
 
   const { data: schedule, error: schedErr } = await db
     .from('schedules')
@@ -146,6 +150,9 @@ export async function createMakeupSession(
   if (!isBranchAccessible(user, d.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
+
+  const availabilityError = await getInstructorAvailabilityError(db, d.instructor_id)
+  if (availabilityError) return { success: false, error: availabilityError }
 
   const { data: schedule, error: schedErr } = await db
     .from('schedules')
@@ -869,6 +876,9 @@ export async function bookTrialFromLead(
     d.notes || null,
   ].filter(Boolean).join('\n') || null
 
+  const availabilityError = await getInstructorAvailabilityError(db, d.instructor_id)
+  if (availabilityError) return { success: false, error: availabilityError }
+
   const { data: schedule, error: schedErr } = await db
     .from('schedules')
     .insert({
@@ -1102,6 +1112,9 @@ export async function bulkBookTrialFromLeads(
   if (!isBranchAccessible(user, d.branch_id)) {
     return { success: false, error: { code: 'FORBIDDEN', message: 'You do not have access to this branch.' } }
   }
+
+  const availabilityError = await getInstructorAvailabilityError(db, d.instructor_id)
+  if (availabilityError) return { success: false, error: availabilityError }
 
   const { data: schedule, error: schedErr } = await db
     .from('schedules')
