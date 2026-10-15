@@ -11,6 +11,8 @@ import { reconcileGroupJoin } from '@/modules/enrollments/historical-reconciliat
 import type { ActionResult } from '@/types/app'
 import { syncStudentCertificateNames } from './linked-data'
 import { checkStudentIdentity, discardUnregisteredStudentLogin, DUPLICATE_STUDENT_MESSAGE } from './identity'
+import { prepareRegistrationContacts, saveRegistrationContacts } from '@/modules/parents/registration'
+import type { PreparedContact } from '@/modules/parents/registration'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
   if (typeof raw !== 'string') return null
@@ -20,7 +22,6 @@ function validReturnTo(raw: FormDataEntryValue | null): string | null {
 
 export async function createStudent(_prev: unknown, formData: FormData): Promise<ActionResult<{ id: string }>> {
   const raw = {
-    password:        formData.get('password'),
     first_name:      formData.get('first_name'),
     last_name:       formData.get('last_name'),
     branch_id:       formData.get('branch_id'),
@@ -46,7 +47,7 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
   const db   = createServiceClient()
 
   const {
-    password, first_name, last_name, branch_id, enrollment_date, notes,
+    first_name, last_name, branch_id, enrollment_date, notes,
     school_grade, address, phone, date_of_birth, parent_phone_1, parent_phone_2, group_id,
   } = parsed.data
 
@@ -54,12 +55,18 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
   const identityError = await checkStudentIdentity(db, first_name, last_name, registrationPhone)
   if (identityError) return { success: false, error: { code: 'DUPLICATE', message: identityError } }
 
+  let contacts: PreparedContact[] = []
+  const contactsJson = formData.get('parent_contacts_json')
+  if (typeof contactsJson === 'string') {
+    try { contacts = await prepareRegistrationContacts(db, user, contactsJson) }
+    catch (error) { return { success: false, error: { code: 'VALIDATION', message: error instanceof Error ? error.message : 'Could not verify guardian.' } } }
+  }
+
   // 1. Generate a unique @robocodeschools.com login address, then create the auth user
   const email = await generateUniqueLoginEmail('learner', first_name, last_name, makeEmailLocalPartExists(db))
 
   const { data: created, error: createError } = await db.auth.admin.createUser({
     email,
-    password,
     email_confirm: true,
   })
   if (createError || !created?.user) {
@@ -132,6 +139,14 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
       { user_id: authUserId, role_id: studentRole.id, branch_id },
       { onConflict: 'user_id,role_id,branch_id', ignoreDuplicates: true }
     )
+  }
+
+  if (contacts.length) {
+    try { await saveRegistrationContacts(db, student.id, branch_id, contacts) }
+    catch (error) {
+      await discardUnregisteredStudentLogin(db, authUserId)
+      return { success: false, error: { code: 'DB_ERROR', message: error instanceof Error ? error.message : 'Could not save guardian.' } }
+    }
   }
 
   // 6. Optional: enroll in a group

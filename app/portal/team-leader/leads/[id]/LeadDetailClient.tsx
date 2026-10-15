@@ -18,6 +18,7 @@ import { AGING_THRESHOLDS, LEAD_STATUS_COLORS } from '@/modules/leads/types'
 import SubmitButton from '@/components/admin/SubmitButton'
 import type { Lead, LeadTimelineEvent, BranchTeamMember } from '@/modules/leads/types'
 import type { ActionResult } from '@/types/app'
+import { ExistingGuardianPicker } from '@/components/portal/shared/ExistingGuardianPicker'
 
 // ── Prop types ────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,10 @@ export default function LeadDetailClient({
   const router       = useRouter()
   const resolvedTab  = (TABS.some(t => t.id === initialTab) ? initialTab : 'status') as TabId
   const [tab, setTab] = useState<TabId>(resolvedTab)
+  const [guardian, setGuardian] = useState({
+    first: (lead.parent_name ?? '').split(' ')[0], last: (lead.parent_name ?? '').split(' ').slice(1).join(' '),
+    phone: lead.phone ?? '', source: '', separate: false,
+  })
 
   const isConverted = lead.status === 'CONVERTED'
   const isLost      = lead.status === 'LOST'
@@ -464,10 +469,7 @@ export default function LeadDetailClient({
                             <label className={labelCls}>Last Name <span className="text-[#EF4444]">*</span></label>
                             <input name="last_name" required className={inputCls} defaultValue={lead.child_name.split(' ').slice(1).join(' ')} />
                           </div>
-                          <div>
-                            <label className={labelCls}>Password <span className="text-[#EF4444]">*</span></label>
-                            <input name="password" type="password" required minLength={6} className={inputCls} />
-                          </div>
+                          <p className="text-sm font-medium text-[#526985] sm:col-span-2">Generate student and parent passwords from the group when ready. No passwords needed here.</p>
                           <div className="sm:col-span-2">
                             <label className={labelCls}>Branch <span className="text-[#EF4444]">*</span></label>
                             <select name="branch_id" required className={inputCls} defaultValue={lead.branch_id ?? ''}>
@@ -480,24 +482,34 @@ export default function LeadDetailClient({
 
                       <fieldset className="rounded-lg border border-[#E2E8F0] p-4">
                         <legend className="px-2 text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">Parent Account</legend>
+                        <ExistingGuardianPicker onSelect={parent => setGuardian({
+                          first: parent.name.split(' ')[0], last: parent.name.split(' ').slice(1).join(' ') || parent.name.split(' ')[0],
+                          phone: parent.phone1, source: parent.contactId, separate: false,
+                        })} />
+                        <input type="hidden" name="source_contact_id" value={guardian.source} />
+                        <input type="hidden" name="force_new_parent" value={String(guardian.separate)} />
+                        {guardian.source && <div className="flex flex-wrap justify-between gap-2 rounded-lg bg-[#E7F8EE] p-2 text-sm font-semibold text-[#15803D]">
+                          Existing guardian selected.
+                          <button type="button" onClick={() => setGuardian({ first: '', last: '', phone: '', source: '', separate: false })}>Clear selection</button>
+                        </div>}
                         <div className="mt-3 grid gap-4 sm:grid-cols-2">
                           <div>
                             <label className={labelCls}>First Name <span className="text-[#EF4444]">*</span></label>
-                            <input name="parent_first" required className={inputCls} defaultValue={(lead.parent_name ?? '').split(' ')[0]} />
+                            <input name="parent_first" required className={inputCls} value={guardian.first} readOnly={!!guardian.source} onChange={e => setGuardian(current => ({ ...current, first: e.target.value }))} />
                           </div>
                           <div>
                             <label className={labelCls}>Last Name <span className="text-[#EF4444]">*</span></label>
-                            <input name="parent_last" required className={inputCls} defaultValue={(lead.parent_name ?? '').split(' ').slice(1).join(' ')} />
-                          </div>
-                          <div>
-                            <label className={labelCls}>Password <span className="text-[#EF4444]">*</span></label>
-                            <input name="parent_password" type="password" required minLength={6} className={inputCls} />
+                            <input name="parent_last" required className={inputCls} value={guardian.last} readOnly={!!guardian.source} onChange={e => setGuardian(current => ({ ...current, last: e.target.value }))} />
                           </div>
                           <div>
                             <label className={labelCls}>Phone</label>
-                            <input name="parent_phone" type="tel" className={inputCls} defaultValue={lead.phone ?? ''} />
+                            <input name="parent_phone" type="tel" required className={inputCls} value={guardian.phone} readOnly={!!guardian.source} onChange={e => setGuardian(current => ({ ...current, phone: e.target.value }))} />
                           </div>
                         </div>
+                        {!guardian.source && <label className="mt-3 flex items-start gap-2 text-xs font-medium text-[#526985]">
+                          <input type="checkbox" checked={guardian.separate} onChange={e => setGuardian(current => ({ ...current, separate: e.target.checked }))} />
+                          This is a different guardian sharing an existing phone number.
+                        </label>}
                       </fieldset>
 
                       <SubmitButton label="Convert to Student" pendingLabel="Converting…" />

@@ -6,6 +6,7 @@ import type { AmbiguousParentWarning } from '@/modules/students/modal-actions'
 import type { StudentOperationalRow, GroupPickerOption } from '@/modules/students/operational'
 import type { ActionResult } from '@/types/app'
 import { HistoricalReconciliationDialog, type HistoricalReconciliationResolution } from '@/components/portal/shared/HistoricalReconciliationDialog'
+import { ExistingGuardianPicker } from '@/components/portal/shared/ExistingGuardianPicker'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -19,6 +20,8 @@ interface ParentContactBlock {
   is_primary:         boolean
   is_emergency:       boolean
   password:           string
+  source_contact_id?: string
+  force_new_parent?: boolean
 }
 
 interface Props {
@@ -542,21 +545,11 @@ export default function StudentFormModal({
               </div>
             </div>
 
-            {/* Password (create only) — login email is generated automatically as @robocodeschools.com */}
+            {/* Portal passwords are generated explicitly from the group. */}
             {!isEdit && (
-              <div>
-                <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-                  Password <span className="text-[#EF4444]">*</span>
-                </label>
-                <input
-                  name="password"
-                  type="password"
-                  required
-                  autoComplete="new-password"
-                  placeholder="Min 6 characters"
-                  className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2.5 text-sm focus:border-[#0E7490] focus:outline-none"
-                />
-              </div>
+              <p className="rounded-lg bg-[#EFF6FB] p-3 text-sm font-medium text-[#0B1F3A]">
+                No passwords needed here. Generate student and parent login credentials from the group when ready.
+              </p>
             )}
 
             {/* Status (edit only) */}
@@ -700,6 +693,24 @@ export default function StudentFormModal({
                   </div>
                 </div>
 
+                {!isEdit && <ExistingGuardianPicker onSelect={guardian => {
+                  setDirty(true)
+                  setContacts(current => current.map(contact => contact._key !== c._key ? contact : {
+                    ...contact, source_contact_id: guardian.contactId, force_new_parent: false,
+                    name: guardian.name, phone1: guardian.phone1, phone2: guardian.phone2,
+                    relation: guardian.relation, whatsapp_preferred: guardian.whatsappPreferred,
+                  }))
+                }} />}
+                {c.source_contact_id && <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[#E7F8EE] p-2 text-sm font-semibold text-[#15803D]">
+                  Existing guardian selected — shared account stays unchanged.
+                  <button type="button" onClick={() => {
+                    setDirty(true)
+                    setContacts(current => current.map(contact => contact._key !== c._key ? contact : {
+                      ...contact, source_contact_id: '', name: '', phone1: '', phone2: '', force_new_parent: false,
+                    }))
+                  }} className="rounded border border-[#15803D]/30 px-2 py-1">Clear selection</button>
+                </div>}
+
                 {/* Name + Relation */}
                 <div className="grid grid-cols-2 gap-2">
                   <div>
@@ -708,6 +719,7 @@ export default function StudentFormModal({
                     </label>
                     <input
                       value={c.name}
+                      readOnly={!!c.source_contact_id}
                       onChange={e => updateContact(c._key, 'name', e.target.value)}
                       placeholder="Contact name"
                       className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
@@ -735,6 +747,7 @@ export default function StudentFormModal({
                     </label>
                     <input
                       value={c.phone1}
+                      readOnly={!!c.source_contact_id}
                       onChange={e => updateContact(c._key, 'phone1', e.target.value)}
                       placeholder="01XXXXXXXXX"
                       className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
@@ -744,6 +757,7 @@ export default function StudentFormModal({
                     <label className="mb-0.5 block text-xs text-[#64748B]">Phone 2</label>
                     <input
                       value={c.phone2}
+                      readOnly={!!c.source_contact_id}
                       onChange={e => updateContact(c._key, 'phone2', e.target.value)}
                       placeholder="Optional"
                       className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
@@ -762,8 +776,12 @@ export default function StudentFormModal({
                   WhatsApp preferred
                 </label>
 
-                {/* Portal access — set a password to create a login (email is generated automatically) */}
-                <div className="mt-1 rounded-lg border border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-2.5 space-y-2">
+                {!isEdit && !c.source_contact_id && <label className="flex items-start gap-2 text-xs font-medium text-[#526985]">
+                  <input type="checkbox" checked={c.force_new_parent ?? false} onChange={e => updateContact(c._key, 'force_new_parent', e.target.checked)} />
+                  This is a different guardian sharing an existing phone number (do not link to the existing family).
+                </label>}
+                {/* Existing-account maintenance remains available only in edit mode. */}
+                {isEdit && <div className="mt-1 rounded-lg border border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-2.5 space-y-2">
                   <p className="text-[11px] font-semibold text-[#94A3B8] uppercase tracking-wide">
                     Portal Access (optional)
                   </p>
@@ -777,7 +795,7 @@ export default function StudentFormModal({
                       className="w-full ds-card px-3 py-2 text-sm focus:border-[#0E7490] focus:outline-none"
                     />
                   </div>
-                </div>
+                </div>}
               </div>
             ))}
 

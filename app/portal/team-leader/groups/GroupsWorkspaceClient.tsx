@@ -292,7 +292,13 @@ export default function GroupsWorkspaceClient({
         studentOptions={studentOptions}
         defaultBranchId={defaultBranchId}
         isSuperAdmin={isSuperAdmin}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false)
+          // Allocation changes are saved independently while the editor stays
+          // open; refresh the workspace only after leaving that editing session.
+          setRefreshKey(k => k + 1)
+          router.refresh()
+        }}
         onSuccess={handleGroupSaved}
       />
     </div>

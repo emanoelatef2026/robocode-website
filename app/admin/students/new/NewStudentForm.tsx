@@ -1,12 +1,13 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useState } from 'react'
 import { createStudent } from '@/modules/students/actions'
 import SubmitButton from '@/components/admin/SubmitButton'
 import Link from 'next/link'
 import type { BranchListItem } from '@/modules/branches/types'
 import type { GroupListItem } from '@/modules/groups/types'
 import type { ActionResult } from '@/types/app'
+import { ExistingGuardianPicker } from '@/components/portal/shared/ExistingGuardianPicker'
 
 interface Props {
   branches: BranchListItem[]
@@ -14,6 +15,10 @@ interface Props {
 }
 
 export default function NewStudentForm({ branches, groups }: Props) {
+  const [guardian, setGuardian] = useState({
+    name: '', phone1: '', phone2: '', source_contact_id: '', force_new_parent: false,
+    relation: 'guardian', whatsapp_preferred: false, is_primary: true, is_emergency: true,
+  })
   const [state, action] = useActionState<ActionResult<{ id: string }> | null, FormData>(
     createStudent,
     null
@@ -46,13 +51,9 @@ export default function NewStudentForm({ branches, groups }: Props) {
           </div>
         </div>
 
-        {/* Password (login email is generated automatically as @robocodeschools.com) */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">
-            Password <span className="text-[#EF4444]">*</span>
-          </label>
-          <input name="password" type="password" required autoComplete="new-password" placeholder="Minimum 6 characters" className={cls} />
-        </div>
+        <p className="rounded-lg bg-[#EFF6FB] p-3 text-sm font-medium text-[#0B1F3A]">
+          No passwords needed here. Generate student and parent login credentials from the group when ready.
+        </p>
 
         {/* Branch + date_of_birth */}
         <div className="grid grid-cols-2 gap-4">
@@ -89,17 +90,40 @@ export default function NewStudentForm({ branches, groups }: Props) {
           <input name="address" className={cls} />
         </div>
 
-        {/* Parent phones */}
+        <ExistingGuardianPicker onSelect={parent => setGuardian(current => ({
+          ...current, name: parent.name, phone1: parent.phone1, phone2: parent.phone2,
+          relation: parent.relation, whatsapp_preferred: parent.whatsappPreferred,
+          source_contact_id: parent.contactId, force_new_parent: false,
+        }))} />
+        {guardian.source_contact_id && <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[#E7F8EE] p-3 text-sm font-semibold text-[#15803D]">
+          Existing guardian selected.
+          <button type="button" onClick={() => setGuardian(current => ({ ...current, name: '', phone1: '', phone2: '', source_contact_id: '' }))}>Clear selection</button>
+        </div>}
+        <div className="grid grid-cols-2 gap-4">
+          <label className="block text-sm font-medium text-[#0B1F3A]">Guardian name
+            <input required value={guardian.name} readOnly={!!guardian.source_contact_id} onChange={e => setGuardian(current => ({ ...current, name: e.target.value }))} className={cls} />
+          </label>
+          <label className="block text-sm font-medium text-[#0B1F3A]">Relationship
+            <select value={guardian.relation} onChange={e => setGuardian(current => ({ ...current, relation: e.target.value }))} className={cls}>
+              {['father', 'mother', 'guardian', 'other'].map(relation => <option key={relation} value={relation}>{relation}</option>)}
+            </select>
+          </label>
+        </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Parent phone 1</label>
-            <input name="parent_phone_1" type="tel" className={cls} />
+            <input name="parent_phone_1" type="tel" required value={guardian.phone1} readOnly={!!guardian.source_contact_id} onChange={e => setGuardian(current => ({ ...current, phone1: e.target.value }))} className={cls} />
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-[#0B1F3A]">Parent phone 2</label>
-            <input name="parent_phone_2" type="tel" className={cls} />
+            <input name="parent_phone_2" type="tel" value={guardian.phone2} readOnly={!!guardian.source_contact_id} onChange={e => setGuardian(current => ({ ...current, phone2: e.target.value }))} className={cls} />
           </div>
         </div>
+        {!guardian.source_contact_id && <label className="flex items-start gap-2 text-xs font-medium text-[#526985]">
+          <input type="checkbox" checked={guardian.force_new_parent} onChange={e => setGuardian(current => ({ ...current, force_new_parent: e.target.checked }))} />
+          This is a different guardian sharing an existing phone number (do not link to the existing family).
+        </label>}
+        <input type="hidden" name="parent_contacts_json" value={JSON.stringify([guardian])} />
 
         {/* Enrollment date + group */}
         <div className="grid grid-cols-2 gap-4">

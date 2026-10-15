@@ -16,6 +16,8 @@ import { z } from 'zod'
 import type { ActionResult } from '@/types/app'
 import { syncParentPortalIdentity, syncStudentCertificateNames } from './linked-data'
 import { checkStudentIdentity, discardUnregisteredStudentLogin, DUPLICATE_STUDENT_MESSAGE } from './identity'
+import { prepareRegistrationContacts, saveRegistrationContacts } from '@/modules/parents/registration'
+import type { PreparedContact } from '@/modules/parents/registration'
 
 // ── Validation ─────────────────────────────────────────────────────────────────
 
@@ -40,7 +42,6 @@ const ageSchema = z
   .pipe(z.number().int().min(3, 'Age must be at least 3').max(25, 'Age must be at most 25'))
 
 const createSchema = z.object({
-  password:        z.string().min(6, 'Password must be at least 6 characters'),
   first_name:      z.string().min(1, 'First name required').max(100),
   last_name:       z.string().min(1, 'Last name required').max(100),
   branch_id:       z.string().uuid('Select a branch'),
@@ -366,7 +367,6 @@ export async function createStudentModal(
   formData: FormData
 ): Promise<ActionResult<{ id: string; ambiguousParents?: AmbiguousParentWarning[] }>> {
   const raw = {
-    password:        formData.get('password'),
     first_name:      formData.get('first_name'),
     last_name:       formData.get('last_name'),
     branch_id:       formData.get('branch_id'),
@@ -392,11 +392,15 @@ export async function createStudentModal(
   const user = await requirePermission('manage_students', { branchId: parsed.data.branch_id })
   const db   = createServiceClient()
 
-  const { password, first_name, last_name, branch_id, phone, age, school_grade, date_of_birth, enrollment_date, notes } = parsed.data
+  const { first_name, last_name, branch_id, phone, age, school_grade, date_of_birth, enrollment_date, notes } = parsed.data
 
   const registrationPhone = phone || contactResult.contacts.find(contact => contact.is_primary)?.phone1 || contactResult.contacts[0]?.phone1
   const identityError = await checkStudentIdentity(db, first_name, last_name, registrationPhone)
   if (identityError) return { success: false, error: { code: 'DUPLICATE', message: identityError } }
+
+  let preparedContacts: PreparedContact[]
+  try { preparedContacts = await prepareRegistrationContacts(db, user, parsed.data.parent_contacts_json) }
+  catch (error) { return { success: false, error: { code: 'VALIDATION', message: error instanceof Error ? error.message : 'Could not verify guardian.' } } }
 
   // 0. Groups must be in the student's branch — validate before creating anything
   const groupsToAdd = parseGroupIds(formData.get('groups_to_add_json'))
@@ -408,7 +412,7 @@ export async function createStudentModal(
   // 1. Generate a unique @robocodeschools.com login address, then create the auth user
   const email = await generateUniqueLoginEmail('learner', first_name, last_name, makeEmailLocalPartExists(db))
   const { data: created, error: createErr } = await db.auth.admin.createUser({
-    email, password, email_confirm: true,
+    email, email_confirm: true,
   })
   if (createErr || !created?.user) {
     return { success: false, error: { code: 'AUTH_ERROR', message: createErr?.message ?? 'Failed to create user' } }
@@ -467,7 +471,11 @@ export async function createStudentModal(
   }
 
   // 5. Parent contacts
-  const ambiguousParents = await syncParentContacts(db, student.id, contactResult.contacts)
+  try { await saveRegistrationContacts(db, student.id, branch_id, preparedContacts) }
+  catch (error) {
+    await discardUnregisteredStudentLogin(db, authUserId)
+    return { success: false, error: { code: 'DB_ERROR', message: error instanceof Error ? error.message : 'Could not save guardian.' } }
+  }
 
   // 8. Group assignments (branch match validated in step 0)
   if (groupsToAdd.length) {
@@ -489,7 +497,7 @@ export async function createStudentModal(
   revalidatePath('/admin/students')
   return {
     success: true,
-    data: { id: student.id, ambiguousParents: ambiguousParents.length ? ambiguousParents : undefined },
+    data: { id: student.id },
   }
 }
 

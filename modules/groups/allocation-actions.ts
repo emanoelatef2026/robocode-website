@@ -139,6 +139,7 @@ export async function addGroupAllocationAction(
   allocatedSessions: number | null,
   notes?:            string,
   fromSession?:      number,
+  options?:          { deferRefresh?: boolean },
 ): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
@@ -235,7 +236,7 @@ export async function addGroupAllocationAction(
     p_new_values:   { instructor_id: instructorId, from_session: canonicalFrom, allocated_sessions: allocatedSessions },
   })
 
-  revalidatePath('/portal/team-leader/groups')
+  if (!options?.deferRefresh) revalidatePath('/portal/team-leader/groups')
   return { success: true, data: undefined }
 }
 
@@ -246,6 +247,7 @@ export async function updateGroupAllocationAction(
   instructorId: string,
   status:       string,
   notes?:       string,
+  options?:     { deferRefresh?: boolean },
 ): Promise<ActionResult<void>> {
   await requirePermission('manage_groups')
   const db = createServiceClient()
@@ -266,7 +268,7 @@ export async function updateGroupAllocationAction(
 
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
 
-  revalidatePath('/portal/team-leader/groups')
+  if (!options?.deferRefresh) revalidatePath('/portal/team-leader/groups')
   return { success: true, data: undefined }
 }
 
@@ -276,6 +278,7 @@ export async function editGroupAllocationRangeAction(
   groupId:             string,
   instructorId:        string,
   newAllocatedSessions: number,
+  options?:             { deferRefresh?: boolean },
 ): Promise<ActionResult<void>> {
   const user = await requirePermission('manage_groups')
   const db   = createServiceClient()
@@ -402,7 +405,7 @@ export async function editGroupAllocationRangeAction(
     },
   })
 
-  revalidatePath('/portal/team-leader/groups')
+  if (!options?.deferRefresh) revalidatePath('/portal/team-leader/groups')
   return { success: true, data: undefined }
 }
 
@@ -411,6 +414,7 @@ export async function editGroupAllocationRangeAction(
 export async function removeGroupAllocationAction(
   groupId:      string,
   instructorId: string,
+  options?:     { deferRefresh?: boolean },
 ): Promise<ActionResult<void>> {
   await requirePermission('manage_groups')
   const db = createServiceClient()
@@ -423,6 +427,8 @@ export async function removeGroupAllocationAction(
 
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
 
-  revalidatePath('/portal/team-leader/groups')
+  // The open group editor reloads allocations locally. Refreshing the route
+  // mid-edit interrupts replacement and risks losing the rest of its draft.
+  if (!options?.deferRefresh) revalidatePath('/portal/team-leader/groups')
   return { success: true, data: undefined }
 }

@@ -170,7 +170,7 @@ function AllocationRowCard({
   totalSessions:  number | null
   onChanged:      () => void
 }) {
-  const [, start]       = useTransition()
+  const [pending, start] = useTransition()
   const [editing, setEditing]           = useState(false)
   const [editingRange, setEditingRange] = useState(false)
   const [status, setStatus]             = useState(alloc.allocation_status)
@@ -198,7 +198,7 @@ function AllocationRowCard({
   function handleSave() {
     setError(null)
     start(async () => {
-      const res = await updateGroupAllocationAction(groupId, alloc.instructor_id, status, notes || undefined)
+      const res = await updateGroupAllocationAction(groupId, alloc.instructor_id, status, notes || undefined, { deferRefresh: true })
       if (!res.success) { setError(res.error.message); return }
       setEditing(false)
       onChanged()
@@ -212,7 +212,7 @@ function AllocationRowCard({
     }
     setError(null)
     start(async () => {
-      const res = await editGroupAllocationRangeAction(groupId, alloc.instructor_id, rangeNum)
+      const res = await editGroupAllocationRangeAction(groupId, alloc.instructor_id, rangeNum, { deferRefresh: true })
       if (!res.success) { setError(res.error.message); return }
       setEditingRange(false)
       onChanged()
@@ -222,7 +222,7 @@ function AllocationRowCard({
   function handleRemove() {
     setError(null)
     start(async () => {
-      const res = await removeGroupAllocationAction(groupId, alloc.instructor_id)
+      const res = await removeGroupAllocationAction(groupId, alloc.instructor_id, { deferRefresh: true })
       if (!res.success) { setError(res.error.message); setRemoving(false); return }
       onChanged()
     })
@@ -285,9 +285,10 @@ function AllocationRowCard({
                 <button
                   type="button"
                   onClick={handleRemove}
+                  disabled={pending}
                   className="rounded px-1.5 py-0.5 text-[11px] font-semibold text-[#EF4444] hover:bg-[#FEE2E2] transition"
                 >
-                  Confirm
+                  {pending ? 'Removing…' : 'Confirm'}
                 </button>
                 <button
                   type="button"
@@ -312,6 +313,10 @@ function AllocationRowCard({
           )}
         </div>
       </div>
+
+      {error && !editing && !editingRange && (
+        <p role="alert" className="mt-2 text-[12px] text-[#EF4444]">{error}</p>
+      )}
 
       {/* ── Range-editing panel ─────────────────────────────────────── */}
       {editingRange && (
@@ -470,7 +475,7 @@ function AddAllocationForm({
     setError(null)
     const numSess = sessions && !isNaN(sessNum) ? sessNum : null
     start(async () => {
-      const res = await addGroupAllocationAction(groupId, instrId, numSess, notes || undefined, fromSession)
+      const res = await addGroupAllocationAction(groupId, instrId, numSess, notes || undefined, fromSession, { deferRefresh: true })
       if (!res.success) { setError(res.error.message); return }
       onDone()
     })

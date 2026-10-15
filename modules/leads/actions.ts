@@ -2,10 +2,11 @@
 
 import { revalidatePath }       from 'next/cache'
 import { createServiceClient }  from '@/lib/supabase/service'
-import { requirePortalRole }    from '@/modules/rbac/guards'
+import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
 import { checkStudentIdentity, discardUnregisteredStudentLogin, DUPLICATE_STUDENT_MESSAGE } from '@/modules/students/identity'
-import { resolveParentForPhone, AMBIGUOUS_PARENT_MATCH } from '@/modules/parents/identity'
+import { prepareRegistrationContacts, saveRegistrationContacts } from '@/modules/parents/registration'
+import type { PreparedContact } from '@/modules/parents/registration'
 import {
   resolveGroupCourseId,
   closeSameCourseGroupMemberships,
@@ -392,13 +393,13 @@ export async function convertLeadToStudent(
 
   const raw = {
     lead_id:         formData.get('lead_id'),
-    password:        formData.get('password'),
     first_name:      formData.get('first_name'),
     last_name:       formData.get('last_name'),
     branch_id:       formData.get('branch_id'),
     parent_first:    formData.get('parent_first'),
     parent_last:     formData.get('parent_last'),
-    parent_password: formData.get('parent_password'),
+    source_contact_id: formData.get('source_contact_id') || undefined,
+    force_new_parent: formData.get('force_new_parent') || undefined,
     parent_phone:    formData.get('parent_phone') || undefined,
   }
 
@@ -408,36 +409,30 @@ export async function convertLeadToStudent(
   }
 
   const {
-    lead_id, password, first_name, last_name, branch_id,
-    parent_first, parent_last, parent_password, parent_phone,
+    lead_id, first_name, last_name, branch_id,
+    parent_first, parent_last, parent_phone,
   } = parsed.data
 
   const { data: sourceLead } = await db.from('leads').select('phone, branch_id').eq('id', lead_id).maybeSingle()
   if (!sourceLead) return { success: false, error: { code: 'VALIDATION', message: 'Lead not found.' } }
+  await requirePermission('manage_students', { branchId: branch_id })
+  if (sourceLead.branch_id) await requirePermission('manage_students', { branchId: sourceLead.branch_id })
   const registrationPhone = sourceLead.phone || parent_phone
   const identityError = await checkStudentIdentity(db, first_name, last_name, registrationPhone)
   if (identityError) return { success: false, error: { code: 'DUPLICATE', message: identityError } }
 
-  // Resolve the parent side up front — before creating anything — so an
-  // ambiguous phone match doesn't leave a half-converted lead behind.
-  const parentResolution = await resolveParentForPhone(db, parent_phone, {
-    resolvedParentId: parsed.data.resolved_parent_id || null,
-    forceNew:         parsed.data.force_new_parent,
-  })
-  if (parentResolution.kind === 'ambiguous') {
-    return {
-      success: false,
-      error: {
-        code:    AMBIGUOUS_PARENT_MATCH,
-        message: `This phone number matches ${parentResolution.candidates.length} existing parent accounts. Link to one from the Parents page, or use a different phone number to create a separate account.`,
-        data:    parentResolution.candidates,
-      },
-    }
-  }
+  let contacts: PreparedContact[]
+  try {
+    contacts = await prepareRegistrationContacts(db, user, JSON.stringify([{
+      name: `${parent_first} ${parent_last}`.trim(), phone1: parent_phone || sourceLead.phone || '',
+      relation: 'guardian', is_primary: true, source_contact_id: parsed.data.source_contact_id,
+      force_new_parent: parsed.data.force_new_parent,
+    }]))
+  } catch (error) { return { success: false, error: { code: 'VALIDATION', message: error instanceof Error ? error.message : 'Could not verify guardian.' } } }
 
   // 1. Generate a unique @robocodeschools.com login address, then create the student auth user
   const email = await generateUniqueLoginEmail('learner', first_name, last_name, makeEmailLocalPartExists(db))
-  const { data: created, error: ce } = await db.auth.admin.createUser({ email, password, email_confirm: true })
+  const { data: created, error: ce } = await db.auth.admin.createUser({ email, email_confirm: true })
   if (ce || !created?.user) {
     return { success: false, error: { code: 'AUTH_ERROR', message: ce?.message ?? 'Failed to create student user' } }
   }
@@ -469,40 +464,11 @@ export async function convertLeadToStudent(
     )
   }
 
-  // 4. Resolve the parent account — link to an existing one if this phone
-  // already has a portal account, otherwise create a brand-new login.
-  let parentId: string
-  if (parentResolution.kind === 'link') {
-    parentId = parentResolution.parentId
-  } else {
-    const parent_email = await generateUniqueLoginEmail('learner', parent_first, parent_last, makeEmailLocalPartExists(db))
-    const { data: pc, error: pe } = await db.auth.admin.createUser({ email: parent_email, password: parent_password, email_confirm: true })
-    if (pe || !pc?.user) {
-      return { success: false, error: { code: 'AUTH_ERROR', message: pe?.message ?? 'Failed to create parent user' } }
-    }
-    const parentUserId = pc.user.id
-
-    await db.from('users').upsert({ id: parentUserId, email: parent_email, phone: parent_phone || null }, { onConflict: 'id' })
-    await db.from('profiles').upsert({ user_id: parentUserId, first_name: parent_first, last_name: parent_last }, { onConflict: 'user_id' })
-
-    const { data: newParent, error: pe2 } = await db.from('parents').insert({ user_id: parentUserId }).select('id').single()
-    if (pe2) return { success: false, error: { code: 'DB_ERROR', message: pe2.message } }
-    parentId = newParent.id
-
-    const { data: parentRole } = await db.from('roles').select('id').eq('name', 'parent').single()
-    if (parentRole) {
-      await db.from('user_roles').upsert(
-        { user_id: parentUserId, role_id: parentRole.id, branch_id: null },
-        { onConflict: 'user_id,role_id,branch_id', ignoreDuplicates: true }
-      )
-    }
+  try { await saveRegistrationContacts(db, studentId, branch_id, contacts) }
+  catch (error) {
+    await discardUnregisteredStudentLogin(db, studentUserId)
+    return { success: false, error: { code: 'DB_ERROR', message: error instanceof Error ? error.message : 'Could not save guardian.' } }
   }
-
-  // 5. Link the parent to the newly converted student
-  await db.from('parent_students').upsert(
-    { parent_id: parentId, student_id: studentId, relationship: 'guardian', is_primary: true },
-    { onConflict: 'parent_id,student_id', ignoreDuplicates: true }
-  )
 
   const now = new Date().toISOString()
   await db.from('leads').update({
