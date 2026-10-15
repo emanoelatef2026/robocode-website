@@ -15,6 +15,7 @@ import { applyContractChoice, type ContractJoinMode } from '@/modules/groups/act
 import { z } from 'zod'
 import type { ActionResult } from '@/types/app'
 import { syncParentPortalIdentity, syncStudentCertificateNames } from './linked-data'
+import { checkStudentIdentity, discardUnregisteredStudentLogin, DUPLICATE_STUDENT_MESSAGE } from './identity'
 
 // ── Validation ─────────────────────────────────────────────────────────────────
 
@@ -393,6 +394,10 @@ export async function createStudentModal(
 
   const { password, first_name, last_name, branch_id, phone, age, school_grade, date_of_birth, enrollment_date, notes } = parsed.data
 
+  const registrationPhone = phone || contactResult.contacts.find(contact => contact.is_primary)?.phone1 || contactResult.contacts[0]?.phone1
+  const identityError = await checkStudentIdentity(db, first_name, last_name, registrationPhone)
+  if (identityError) return { success: false, error: { code: 'DUPLICATE', message: identityError } }
+
   // 0. Groups must be in the student's branch — validate before creating anything
   const groupsToAdd = parseGroupIds(formData.get('groups_to_add_json'))
   const branchErr   = await validateGroupsMatchBranch(db, branch_id, groupsToAdd)
@@ -411,14 +416,23 @@ export async function createStudentModal(
   const authUserId = created.user.id
 
   // 2. users row
-  await db.from('users').upsert({ id: authUserId, email, phone: phone || null }, { onConflict: 'id' })
+  const { error: userWriteError } = await db.from('users').upsert({ id: authUserId, email, phone: registrationPhone || null }, { onConflict: 'id' })
+  if (userWriteError) {
+    await discardUnregisteredStudentLogin(db, authUserId)
+    return { success: false, error: { code: 'DB_ERROR', message: 'Could not save student identity. Please try again.' } }
+  }
 
   // 3. profile (with optional date_of_birth)
   const { data: existingProf } = await db.from('profiles').select('id').eq('user_id', authUserId).maybeSingle()
   const profileData: Record<string, unknown> = { user_id: authUserId, first_name, last_name }
   if (date_of_birth) profileData.date_of_birth = date_of_birth
-  if (!existingProf) await db.from('profiles').insert(profileData)
-  else               await db.from('profiles').update(profileData).eq('user_id', authUserId)
+  const { error: profileWriteError } = !existingProf
+    ? await db.from('profiles').insert(profileData)
+    : await db.from('profiles').update(profileData).eq('user_id', authUserId)
+  if (profileWriteError) {
+    await discardUnregisteredStudentLogin(db, authUserId)
+    return { success: false, error: { code: 'DB_ERROR', message: 'Could not save student profile. Please try again.' } }
+  }
 
   // 4. Student record (with required age)
   const { data: student, error: stuErr } = await db
@@ -436,8 +450,9 @@ export async function createStudentModal(
     .single()
 
   if (stuErr) {
+    await discardUnregisteredStudentLogin(db, authUserId)
     if (stuErr.code === '23505') {
-      return { success: false, error: { code: 'DUPLICATE', message: 'This student is already enrolled in this branch.' } }
+      return { success: false, error: { code: 'DUPLICATE', message: DUPLICATE_STUDENT_MESSAGE } }
     }
     return { success: false, error: { code: 'DB_ERROR', message: stuErr.message } }
   }

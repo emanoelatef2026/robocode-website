@@ -1,6 +1,7 @@
 import 'server-only'
 import { redirect } from 'next/navigation'
 import { getSessionCookie } from '@/lib/lms-session'
+import { createServiceClient } from '@/lib/supabase/service'
 import { ROLE_PORTAL_MAP } from '@/types/enums'
 import type { PermissionName, PermissionCheckOptions } from './types'
 import type { AppUser } from '@/types/app'
@@ -12,8 +13,17 @@ export async function getCurrentUser(): Promise<AppUser | null> {
   const session = await getSessionCookie()
   if (!session) return null
 
+  // Old student logins retain access to the single merged identity, never to
+  // an archived empty record. Staff/parent principals are never remapped.
+  let userId = session.sub
+  if (session.role === 'student') {
+    const { data, error } = await createServiceClient().rpc('resolve_merged_student_login', { p_user_id: session.sub })
+    if (error) throw new Error('Could not resolve student account. Please try again.')
+    if (typeof data === 'string') userId = data
+  }
+
   return {
-    id:          session.sub,
+    id:          userId,
     email:       session.email,
     globalRole:  session.role,
     branchIds:   session.branchIds,

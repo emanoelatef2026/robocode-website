@@ -10,6 +10,7 @@ import { resolveGroupCourseId } from '@/modules/academic/enrollment-integrity'
 import { reconcileGroupJoin } from '@/modules/enrollments/historical-reconciliation'
 import type { ActionResult } from '@/types/app'
 import { syncStudentCertificateNames } from './linked-data'
+import { checkStudentIdentity, discardUnregisteredStudentLogin, DUPLICATE_STUDENT_MESSAGE } from './identity'
 
 function validReturnTo(raw: FormDataEntryValue | null): string | null {
   if (typeof raw !== 'string') return null
@@ -49,6 +50,10 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
     school_grade, address, phone, date_of_birth, parent_phone_1, parent_phone_2, group_id,
   } = parsed.data
 
+  const registrationPhone = phone || parent_phone_1
+  const identityError = await checkStudentIdentity(db, first_name, last_name, registrationPhone)
+  if (identityError) return { success: false, error: { code: 'DUPLICATE', message: identityError } }
+
   // 1. Generate a unique @robocodeschools.com login address, then create the auth user
   const email = await generateUniqueLoginEmail('learner', first_name, last_name, makeEmailLocalPartExists(db))
 
@@ -63,10 +68,14 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
   const authUserId = created.user.id
 
   // 2. Ensure public.users row (with phone)
-  await db.from('users').upsert(
-    { id: authUserId, email, phone: phone || null },
+  const { error: userWriteError } = await db.from('users').upsert(
+    { id: authUserId, email, phone: registrationPhone || null },
     { onConflict: 'id' }
   )
+  if (userWriteError) {
+    await discardUnregisteredStudentLogin(db, authUserId)
+    return { success: false, error: { code: 'DB_ERROR', message: 'Could not save student identity. Please try again.' } }
+  }
 
   // 3. Upsert profile (with date_of_birth)
   const profileData: Record<string, unknown> = {
@@ -80,10 +89,12 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
     .eq('user_id', authUserId)
     .maybeSingle()
 
-  if (!existingProfile) {
-    await db.from('profiles').insert(profileData)
-  } else {
-    await db.from('profiles').update(profileData).eq('user_id', authUserId)
+  const { error: profileWriteError } = !existingProfile
+    ? await db.from('profiles').insert(profileData)
+    : await db.from('profiles').update(profileData).eq('user_id', authUserId)
+  if (profileWriteError) {
+    await discardUnregisteredStudentLogin(db, authUserId)
+    return { success: false, error: { code: 'DB_ERROR', message: 'Could not save student profile. Please try again.' } }
   }
 
   // 4. Create student record
@@ -107,8 +118,9 @@ export async function createStudent(_prev: unknown, formData: FormData): Promise
     .single()
 
   if (studentError) {
+    await discardUnregisteredStudentLogin(db, authUserId)
     if (studentError.code === '23505') {
-      return { success: false, error: { code: 'DUPLICATE', message: 'This student is already enrolled in this branch.' } }
+      return { success: false, error: { code: 'DUPLICATE', message: DUPLICATE_STUDENT_MESSAGE } }
     }
     return { success: false, error: { code: 'DB_ERROR', message: studentError.message } }
   }

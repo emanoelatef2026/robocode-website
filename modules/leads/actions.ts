@@ -4,6 +4,7 @@ import { revalidatePath }       from 'next/cache'
 import { createServiceClient }  from '@/lib/supabase/service'
 import { requirePortalRole }    from '@/modules/rbac/guards'
 import { generateUniqueLoginEmail, makeEmailLocalPartExists } from '@/lib/generate-login-email'
+import { checkStudentIdentity, discardUnregisteredStudentLogin, DUPLICATE_STUDENT_MESSAGE } from '@/modules/students/identity'
 import { resolveParentForPhone, AMBIGUOUS_PARENT_MATCH } from '@/modules/parents/identity'
 import {
   resolveGroupCourseId,
@@ -411,6 +412,12 @@ export async function convertLeadToStudent(
     parent_first, parent_last, parent_password, parent_phone,
   } = parsed.data
 
+  const { data: sourceLead } = await db.from('leads').select('phone, branch_id').eq('id', lead_id).maybeSingle()
+  if (!sourceLead) return { success: false, error: { code: 'VALIDATION', message: 'Lead not found.' } }
+  const registrationPhone = sourceLead.phone || parent_phone
+  const identityError = await checkStudentIdentity(db, first_name, last_name, registrationPhone)
+  if (identityError) return { success: false, error: { code: 'DUPLICATE', message: identityError } }
+
   // Resolve the parent side up front — before creating anything — so an
   // ambiguous phone match doesn't leave a half-converted lead behind.
   const parentResolution = await resolveParentForPhone(db, parent_phone, {
@@ -436,13 +443,21 @@ export async function convertLeadToStudent(
   }
   const studentUserId = created.user.id
 
-  await db.from('users').upsert({ id: studentUserId, email }, { onConflict: 'id' })
-  await db.from('profiles').upsert({ user_id: studentUserId, first_name, last_name }, { onConflict: 'user_id' })
+  const { error: userWriteError } = await db.from('users').upsert({ id: studentUserId, email, phone: registrationPhone || null }, { onConflict: 'id' })
+  const { error: profileWriteError } = userWriteError ? { error: userWriteError }
+    : await db.from('profiles').upsert({ user_id: studentUserId, first_name, last_name }, { onConflict: 'user_id' })
+  if (userWriteError || profileWriteError) {
+    await discardUnregisteredStudentLogin(db, studentUserId)
+    return { success: false, error: { code: 'DB_ERROR', message: 'Could not save student identity. Please try again.' } }
+  }
 
   // 2. Create student record
   const { data: studentRec, error: studentErr } = await db
     .from('students').insert({ user_id: studentUserId, branch_id, status: 'active' }).select('id').single()
-  if (studentErr) return { success: false, error: { code: 'DB_ERROR', message: studentErr.message } }
+  if (studentErr) {
+    await discardUnregisteredStudentLogin(db, studentUserId)
+    return { success: false, error: { code: studentErr.code === '23505' ? 'DUPLICATE' : 'DB_ERROR', message: studentErr.code === '23505' ? DUPLICATE_STUDENT_MESSAGE : studentErr.message } }
+  }
   const studentId = studentRec.id
 
   // 3. Assign student role
