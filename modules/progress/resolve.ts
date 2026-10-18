@@ -155,15 +155,16 @@ export async function resolveProgressFromPortfolioProject(
 // Used for attendance sessions, enrollStudent, and unenrollStudent
 // where the student set is passed separately.
 export async function resolveGroupProgressContext(
-  groupId: string
+  groupId: string,
+  db = createServiceClient(),
+  includeCompleted = false,
 ): Promise<GroupProgressContext[]> {
-  const db = createServiceClient()
 
   const { data: gcRows } = await db
     .from('group_courses')
     .select('course_id')
     .eq('group_id', groupId)
-    .eq('status', 'active')
+    .in('status', includeCompleted ? ['active', 'completed'] : ['active'])
 
   const courseIds = (gcRows ?? []).map((r: any) => r.course_id as string)
   if (!courseIds.length) return []

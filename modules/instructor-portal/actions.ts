@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { canEditSessionContent } from './session-content'
+import { persistInstructorSession } from './session-lifecycle'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, requireAuth } from '@/modules/rbac/guards'
 import { getInstructorByUserId } from './queries'
@@ -12,25 +13,14 @@ import { safeRecalcProgressBatch, buildBatchTuples } from '@/modules/progress/sa
 import {
   validateSessionOwnership,
   canInstructorCreateNextSession,
-  completeInstructorAllocation,
 } from '@/modules/academic/session-ownership'
 import { validateAcademicTopic } from '@/modules/academic/constants'
-import { SLOT_CONSUMING_STATUSES } from '@/modules/attendance/constants'
-import {
-  checkConsumptionEligibility,
-  resolveAttendanceEnrollment,
-  type EnrollmentForConsumption,
-} from '@/modules/academic/contract-consumption'
-import { awardXP, XP_AWARDS } from '@/modules/gamification/xp-service'
 import {
   deleteSessionStartingNotification,
-  readSessionStartingNotification,
   seedNewHomeworkAssignedNotification,
   seedNewSessionResourcesNotification,
 } from '@/modules/notifications/actions'
 import { getStudentUserId, getParentUserIdsForStudent } from '@/modules/notifications/queries'
-import { checkAndUnlockAchievements } from '@/modules/gamification/achievement-service'
-import { checkAndAwardBadges } from '@/modules/gamification/badge-service'
 import {
   createStudentNote as sharedCreateStudentNote,
   updateStudentNote as sharedUpdateStudentNote,
@@ -42,7 +32,6 @@ import type { ActionResult } from '@/types/app'
 
 // Statuses that count toward student attendance (XP, achievements).
 // Distinct from SLOT_CONSUMING_STATUSES (enrollment billing) — excused/absent do not award XP.
-const ATTENDANCE_PRESENCE_STATUSES = new Set(['present', 'late', 'makeup'])
 
 // ── Auth helpers ──────────────────────────────────────────────────────────────
 
@@ -202,94 +191,28 @@ export async function createSession(
 // Creates a session immediately with status='ongoing', started_at=now.
 
 export async function startGroupSession(
-  groupCourseId: string,
-  groupId:       string,
-  branchId:      string,
-  topic:         string
+  groupCourseId: string, _groupId: string, _branchId: string, topic: string,
 ): Promise<ActionResult<{ sessionId: string }>> {
-  const validTopic = validateAcademicTopic(topic)
-  if (!validTopic) {
-    return { success: false, error: { code: 'VALIDATION', message: 'Topic is required to start a session.' } }
-  }
-
-  const user       = await requirePermission('manage_attendance')
+  const user = await requirePermission('manage_attendance')
   const instructor = await getInstructorByUserId(user.id)
-  if (!instructor) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+  if (!instructor) return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+  if (!z.string().uuid().safeParse(groupCourseId).success || !validateAcademicTopic(topic)) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Valid group course and topic are required.' } }
   }
-
-  const db = createServiceClient()
-
-  const allowed = await hasGroupCourseAccess(groupCourseId, instructor.id, db)
-  if (!allowed) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
-  }
-
-  // Range guard: is the instructor allowed to create the next session?
-  const rangeCheck = await canInstructorCreateNextSession(instructor.id, groupCourseId, db)
-  if (!rangeCheck.allowed) {
-    return { success: false, error: { code: 'FORBIDDEN', message: rangeCheck.reason ?? 'Outside your allocated session range.' } }
-  }
-
-  // Guard against creating a duplicate session while one is already running —
-  // without this, a confused re-click of "Start Session" on the group page
-  // (e.g. after following a stale "Continue Session" link) silently opens a
-  // second, unrelated ongoing session for the same group.
-  const { data: ongoingRow } = await db
-    .from('schedules')
-    .select('id')
-    .eq('group_course_id', groupCourseId)
-    .eq('status', 'ongoing')
-    .maybeSingle()
-  if (ongoingRow) {
-    return {
-      success: false,
-      error: {
-        code:    'VALIDATION',
-        message: 'A session is already in progress for this group — continue it instead of starting a new one.',
-      },
-    }
-  }
-
-  const now = new Date().toISOString()
-
-  const { data: schedule, error } = await db
-    .from('schedules')
-    .insert({
-      group_course_id:  groupCourseId,
-      branch_id:        branchId,
-      scheduled_at:     now,
-      started_at:       now,
-      duration_minutes: 90,
-      type:             'regular',
-      topic:            validTopic,
-      status:           'ongoing',
-      created_by:       user.id,
-    })
-    .select('id')
-    .single()
-
-  if (error || !schedule) {
-    return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to start session.' } }
-  }
-
-  await db.rpc('write_audit_log', {
-    p_performed_by: user.id,
-    p_action:       'session.start_direct',
-    p_entity_type:  'schedule',
-    p_entity_id:    (schedule as any).id,
-    p_new_values:   { group_course_id: groupCourseId, started_at: now },
-    p_branch_id:    branchId,
+  const { data, error } = await createServiceClient().rpc('start_instructor_group_session', {
+    p_actor_id: user.id, p_instructor_id: instructor.id, p_group_course_id: groupCourseId, p_topic: topic,
   })
-
-  revalidatePath(`/portal/instructor/groups/${groupId}`)
-  return { success: true, data: { sessionId: (schedule as any).id } }
+  if (error || !data?.sessionId) return { success: false, error: {
+    code: error?.code === '42501' ? 'FORBIDDEN' : error?.code === '22023' ? 'VALIDATION' : 'DB_ERROR',
+    message: error && ['42501', '22023'].includes(error.code) ? error.message : 'Unable to start session. Please retry.',
+  } }
+  revalidatePath(`/portal/instructor/groups/${data.groupId}`)
+  return { success: true, data: { sessionId: data.sessionId } }
 }
 
 const updateSessionSchema = z.object({
   session_id:       z.string().uuid(),
   group_id:         z.string().uuid(),
-  status:           z.enum(['scheduled', 'ongoing', 'completed', 'cancelled', 'cancelled_with_makeup', 'postponed']),
   topic:            z.string().optional().or(z.literal('')),
   notes:            z.string().optional().or(z.literal('')),
   meeting_url:      z.string().optional().or(z.literal('')),
@@ -310,7 +233,6 @@ export async function updateSession(
   const raw = {
     session_id:       formData.get('session_id'),
     group_id:         formData.get('group_id'),
-    status:           formData.get('status'),
     topic:            formData.get('topic')        || undefined,
     notes:            formData.get('notes')        || undefined,
     meeting_url:      formData.get('meeting_url')  || undefined,
@@ -336,7 +258,7 @@ export async function updateSession(
     return { success: false, error: { code: 'VALIDATION', message: 'Cancelled sessions cannot be edited.' } }
   }
 
-  const updates: Record<string, unknown> = { status: d.status }
+  const updates: Record<string, unknown> = {}
   if (d.topic            !== undefined) updates.topic            = d.topic        || null
   if (d.notes            !== undefined) updates.notes            = d.notes        || null
   if (d.meeting_url      !== undefined) updates.meeting_url      = d.meeting_url  || null
@@ -382,20 +304,37 @@ export async function startSession(
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
   }
 
+  if (ctx.groupId !== groupId) {
+    return { success: false, error: { code: 'FORBIDDEN', message: 'Session does not belong to this group.' } }
+  }
   if ((sessRow as any).status === 'ongoing') {
-    return { success: false, error: { code: 'VALIDATION', message: 'Session is already in progress.' } }
+    revalidatePath(`/portal/instructor/groups/${groupId}`)
+    revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
+    return { success: true, data: undefined }
   }
   if ((sessRow as any).status === 'completed') {
     return { success: false, error: { code: 'VALIDATION', message: 'Session is already completed.' } }
   }
+  if ((sessRow as any).status !== 'scheduled') {
+    return { success: false, error: { code: 'VALIDATION', message: 'Only scheduled sessions can be started.' } }
+  }
 
-  const { error } = await db
+  const { data: started, error } = await db
     .from('schedules')
     .update({ status: 'ongoing', started_at: new Date().toISOString() })
     .eq('id', sessionId)
+    .eq('status', 'scheduled')
+    .select('id')
+    .maybeSingle()
 
   if (error) {
     return { success: false, error: { code: 'DB_ERROR', message: error.message } }
+  }
+  if (!started) {
+    const { data: current, error: readError } = await db.from('schedules').select('status').eq('id', sessionId).maybeSingle()
+    if (readError || current?.status !== 'ongoing') {
+      return { success: false, error: { code: 'VALIDATION', message: 'Session changed; refresh before starting.' } }
+    }
   }
 
   revalidatePath(`/portal/instructor/groups/${groupId}`)
@@ -403,334 +342,21 @@ export async function startSession(
   return { success: true, data: undefined }
 }
 
-export async function endSession(
-  sessionId: string,
-  groupId:   string,
-  force     = false
-): Promise<ActionResult<void>> {
-  const user       = await requirePermission('manage_attendance')
-  const instructor = await getInstructorByUserId(user.id)
-  if (!instructor) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
-  }
-
-  const db = createServiceClient()
-
-  const { data: sessRow } = await db
-    .from('schedules')
-    .select('id, status, topic, notes, branch_id, scheduled_at, group_course_id, group_courses!schedules_group_course_id_fkey(group_id)')
-    .eq('id', sessionId)
-    .single()
-
-  if (!sessRow) {
-    return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
-  }
-
-  const ctx = await getSessionAccessContext(sessionId, instructor.id, db)
-  if (!ctx) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
-  }
-
-  if ((sessRow as any).status === 'completed') {
-    return { success: false, error: { code: 'VALIDATION', message: 'Session is already completed.' } }
-  }
-  if ((sessRow as any).status === 'cancelled') {
-    return { success: false, error: { code: 'VALIDATION', message: 'Session is cancelled.' } }
-  }
-
-  if (!force) {
-    const gcGroupId = ctx.groupId
-    const [studRes, attRes] = await Promise.all([
-      db.from('group_students').select('student_id', { count: 'exact', head: true })
-        .eq('group_id', gcGroupId).eq('status', 'active'),
-      db.from('attendance_records').select('student_id', { count: 'exact', head: true })
-        .eq('schedule_id', sessionId).not('status', 'is', null),
-    ])
-
-    const totalStudents  = studRes.count ?? 0
-    const markedStudents = attRes.count  ?? 0
-    const attendanceMissing = totalStudents - markedStudents
-    const topicMissing = !validateAcademicTopic((sessRow as any).topic as string | null)
-
-    if (attendanceMissing > 0 || topicMissing) {
-      return {
-        success: false,
-        error: {
-          code:    'VALIDATION',
-          message: [
-            attendanceMissing > 0 ? `${attendanceMissing} student${attendanceMissing > 1 ? 's' : ''} without attendance.` : '',
-            topicMissing ? 'Session topic is required before ending the session.' : '',
-          ].filter(Boolean).join(' '),
-        },
-      }
-    }
-  }
-
-  const now = new Date().toISOString()
-
-  const { error } = await db
-    .from('schedules')
-    .update({ status: 'completed', ended_at: now })
-    .eq('id', sessionId)
-
-  if (error) {
-    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
-  }
-
-  // ── 1. Record instructor participation ────────────────────────────────────────
-  await db.from('session_instructors').upsert({
-    session_id:    sessionId,
-    instructor_id: instructor.id,
-    submitted_at:  now,
-  }, { onConflict: 'session_id,instructor_id', ignoreDuplicates: false })
-
-  // ── 2. Read finalized attendance records ──────────────────────────────────────
-  const { data: attRows } = await db
-    .from('attendance_records')
-    .select('id, student_id, status')
-    .eq('schedule_id', sessionId)
-
-  const sessionDateISO = (sessRow as any).scheduled_at as string | null
-  const safeStudents   = [...new Set((attRows ?? []).map((r: any) => r.student_id as string))]
-
-  // ── 3. Contract consumption (enrollment ledger) ────────────────────────────────
-  if (sessionDateISO && attRows && attRows.length > 0) {
-    const { data: enrollRows } = await db
-      .from('student_enrollments')
-      .select('id, student_id, group_id, course_id, remaining_sessions, enrolled_sessions, start_date, end_date')
-      .eq('status', 'ACTIVE')
-      .in('student_id', safeStudents)
-      .order('start_date', { ascending: true })
-      .order('created_at', { ascending: true })
-
-    const allEnrollsByStudent = new Map<string, EnrollmentForConsumption[]>()
-    for (const e of (enrollRows ?? []) as any[]) {
-      const sid   = e.student_id as string
-      const entry: EnrollmentForConsumption = {
-        id:                 e.id,
-        group_id:           (e.group_id as string | null) ?? null,
-        course_id:          (e.course_id as string | null) ?? null,
-        start_date:         e.start_date ?? sessionDateISO.slice(0, 10),
-        end_date:           (e.end_date as string | null) ?? null,
-        enrolled_sessions:  Number(e.enrolled_sessions  ?? 0),
-        remaining_sessions: Number(e.remaining_sessions ?? 0),
-        allow_overdraft:    false,
-      }
-      const list = allEnrollsByStudent.get(sid) ?? []
-      list.push(entry)
-      allEnrollsByStudent.set(sid, list)
-    }
-
-    const p_record_ids:     string[] = []
-    const p_enrollment_ids: string[] = []
-    const p_student_ids:    string[] = []
-
-    for (const rec of (attRows as any[])) {
-      const sid        = rec.student_id as string
-      const resolution = resolveAttendanceEnrollment(allEnrollsByStudent.get(sid) ?? [], {
-        groupId: ctx.groupId,
-        courseId: ctx.courseId,
-        sessionDate: sessionDateISO,
-      })
-      const enrollment = resolution.enrollment
-      const check = checkConsumptionEligibility(
-        rec.status as string,
-        sessionDateISO,
-        enrollment,
-        SLOT_CONSUMING_STATUSES,
-        { allowPreEnrollment: resolution.allowHistoricalGroupSession },
-      )
-      if (check.shouldConsume && enrollment) {
-        p_record_ids.push(rec.id as string)
-        p_enrollment_ids.push(enrollment.id)
-        p_student_ids.push(sid)
-      }
-    }
-
-    if (p_record_ids.length > 0) {
-      await db.rpc('consume_attendance_sessions_batch', { p_record_ids, p_enrollment_ids, p_student_ids })
-    }
-  }
-
-  // ── 4. Progress recalculation ─────────────────────────────────────────────────
-  if (safeStudents.length > 0) {
-    const contexts = await resolveGroupProgressContext(ctx.groupId)
-    if (contexts.length > 0) {
-      await safeRecalcProgressBatch(buildBatchTuples(safeStudents, contexts), 'endSession')
-    }
-  }
-
-  // ── 5. Gamification (XP for attending students) ────────────────────────────────
-  // Keep the dependency order for each student (XP first, then unlock checks),
-  // but process different students concurrently. The old loop made a whole
-  // group wait through dozens of independent database round-trips.
-  await Promise.all((attRows ?? [])
-    .filter((rec: any) => ATTENDANCE_PRESENCE_STATUSES.has(rec.status as string))
-    .map(async (rec: any) => {
-      const xp = rec.status === 'present' ? XP_AWARDS.ATTENDANCE_PRESENT : XP_AWARDS.ATTENDANCE_LATE
-      await awardXP(rec.student_id as string, xp, true)
-      await checkAndUnlockAchievements(rec.student_id as string)
-      await checkAndAwardBadges(rec.student_id as string)
-    }))
-
-  await db.rpc('write_audit_log', {
-    p_performed_by: user.id,
-    p_action:       'session.end',
-    p_entity_type:  'schedule',
-    p_entity_id:    sessionId,
-    p_new_values:   { ended_at: now, force },
-    p_branch_id:    ctx.branchId,
-  })
-
-  // ── 6. Auto-complete instructor allocation if this was their last session ──────
-  const { data: completedSess } = await db
-    .from('schedules')
-    .select('session_number')
-    .eq('id', sessionId)
-    .maybeSingle()
-
-  const sessionNumber = (completedSess as any)?.session_number as number | null
-
-  if (sessionNumber != null) {
-    const { data: allocRow } = await db
-      .from('group_instructors')
-      .select('to_session')
-      .eq('group_id', ctx.groupId)
-      .eq('instructor_id', instructor.id)
-      .eq('allocation_status', 'active')
-      .maybeSingle()
-
-    if (allocRow && (allocRow as any).to_session === sessionNumber) {
-      await completeInstructorAllocation(instructor.id, ctx.groupId, db)
-    }
-  }
-
-  // Mark SESSION_STARTING notification as read — session is done (fire-and-forget)
-  const gcId = (sessRow as any).group_course_id as string | undefined
-  if (gcId) {
-    void readSessionStartingNotification(user.id, gcId).catch(() => { /* non-critical */ })
-  }
-
-  revalidatePath(`/portal/instructor/groups/${groupId}`)
-  revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
-  return { success: true, data: undefined }
+// Legacy force is deliberately ignored by the common finalizer.
+export async function endSession(sessionId: string, groupId: string, _force = false): Promise<ActionResult<void>> {
+  const formData = new FormData()
+  formData.set('session_id', sessionId)
+  formData.set('group_id', groupId)
+  return persistInstructorSession(formData, true, false)
 }
 
-// ── Attendance ────────────────────────────────────────────────────────────────
-
-export async function saveAttendance(
-  _prev: unknown,
-  formData: FormData
-): Promise<ActionResult<void>> {
-  const user       = await requirePermission('manage_attendance')
-  const instructor = await getInstructorByUserId(user.id)
-  if (!instructor) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
-  }
-
-  const sessionId  = formData.get('session_id') as string
-  const groupId    = formData.get('group_id')   as string
-  const studentIds = formData.getAll('student_ids[]') as string[]
-
-  if (!sessionId || !groupId || studentIds.length === 0) {
-    return { success: false, error: { code: 'VALIDATION', message: 'Session, group, and students are required.' } }
-  }
-
-  const db  = createServiceClient()
-  const ctx = await getSessionAccessContext(sessionId, instructor.id, db)
-  if (!ctx) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
-  }
-
-  // Server-side guard: fetch session status + topic + scheduled_at together.
-  const { data: sessStatusRow } = await db
-    .from('schedules')
-    .select('status, topic, scheduled_at')
-    .eq('id', sessionId)
-    .maybeSingle()
-
-  if (sessStatusRow) {
-    const st = (sessStatusRow as any).status as string
-    if (st === 'cancelled' || st === 'cancelled_with_makeup') {
-      return {
-        success: false,
-        error: { code: 'VALIDATION', message: 'Cannot record attendance for a cancelled session. Cancelled sessions are not academically counted.' },
-      }
-    }
-  }
-
-  // Topic integrity: every academically consuming session must have a valid topic.
-  // The instructor can provide / correct the topic in the attendance form.
-  const topicFromForm  = validateAcademicTopic(formData.get('topic') as string | null)
-  const existingTopic  = validateAcademicTopic((sessStatusRow as any)?.topic as string | null)
-
-  if (!existingTopic && !topicFromForm) {
-    return {
-      success: false,
-      error: { code: 'VALIDATION', message: 'Topic is required before saving attendance. Please enter the session topic.' },
-    }
-  }
-
-  // Persist a new or corrected topic if supplied in this submission.
-  if (topicFromForm && topicFromForm !== existingTopic) {
-    await db.from('schedules').update({ topic: topicFromForm }).eq('id', sessionId)
-  }
-
-  const { data: validMembers } = await db
-    .from('group_students')
-    .select('student_id')
-    .eq('group_id', groupId)
-    .eq('status', 'active')
-    .in('student_id', studentIds)
-
-  const validSet     = new Set((validMembers ?? []).map((m: any) => m.student_id as string))
-  const safeStudents = studentIds.filter((sid) => validSet.has(sid))
-
-  if (safeStudents.length === 0) {
-    return { success: false, error: { code: 'VALIDATION', message: 'No valid group members in submission.' } }
-  }
-
-  type AttRecord = {
-    schedule_id:   string
-    student_id:    string
-    status:        string
-    late_minutes:  number | null
-    notes:         string | null
-    recorded_by:   string
-    recorded_at:   string
-  }
-  const records: AttRecord[] = safeStudents.map((sid) => ({
-    schedule_id:  sessionId,
-    student_id:   sid,
-    status:       (formData.get(`status_${sid}`) as string) || 'absent',
-    late_minutes: Number(formData.get(`late_minutes_${sid}`) || 0) || null,
-    notes:        (formData.get(`notes_${sid}`) as string | null) || null,
-    recorded_by:  user.id,
-    recorded_at:  new Date().toISOString(),
-  }))
-
-  const { error: upsertErr } = await db
-    .from('attendance_records')
-    .upsert(records, { onConflict: 'schedule_id,student_id' })
-
-  if (upsertErr) {
-    return { success: false, error: { code: 'DB_ERROR', message: upsertErr.message } }
-  }
-
-  await db.rpc('write_audit_log', {
-    p_performed_by: user.id,
-    p_action:       'record_attendance',
-    p_entity_type:  'schedule',
-    p_entity_id:    sessionId,
-    p_new_values:   { student_count: records.length },
-    p_branch_id:    ctx.branchId,
-  })
-
-  revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
-  return { success: true, data: undefined }
+export async function saveAttendance(_prev: unknown, formData: FormData): Promise<ActionResult<void>> {
+  return persistInstructorSession(formData, false, true)
 }
 
-// ── Recording management ──────────────────────────────────────────────────────
+export async function saveAndEndSession(_prev: unknown, formData: FormData): Promise<ActionResult<void>> {
+  return persistInstructorSession(formData, true, true)
+}
 
 const PROVIDERS = ['google_drive', 'youtube', 'vimeo', 'zoom', 'other'] as const
 type Provider = typeof PROVIDERS[number]

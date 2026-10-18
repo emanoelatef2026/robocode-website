@@ -2,9 +2,9 @@ import { requirePortalRole } from '@/modules/rbac/guards'
 import { getInstructorByUserId, getSessionDetail } from '@/modules/instructor-portal/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import AttendanceForm from './AttendanceForm'
-import SessionDetailsPanel from './SessionDetailsPanel'
+import SessionWorkspace from './SessionWorkspace'
 import StartSessionButton from './StartSessionButton'
+import { scheduleSessionEffects } from '@/modules/instructor-portal/session-effects'
 
 interface Props { params: Promise<{ id: string; sid: string }> }
 
@@ -33,17 +33,13 @@ export default async function SessionDetailPage({ params }: Props) {
   if (!instructor) notFound()
 
   const session = await getSessionDetail(sid, instructor.id)
-  if (!session) notFound()
-
-  const markedCount   = session.attendance.filter((r) => r.status !== null).length
-  const unmarkedCount = session.student_count - markedCount
-  const presentCount  = session.attendance.filter((r) => r.status === 'present').length
-  const absentCount   = session.attendance.filter((r) => r.status === 'absent').length
-  const lateCount     = session.attendance.filter((r) => r.status === 'late').length
+  if (!session || session.group_id !== id) notFound()
+  // A revisited completed session can resume its already-queued background job.
+  // The database lease and unique award events make this safe alongside cron.
+  if (session.status === 'completed') scheduleSessionEffects(sid)
 
   const isCancelled   = session.status === 'cancelled' || session.status === 'cancelled_with_makeup'
   const isPostponed   = session.status === 'postponed'
-  const isActionable  = !isCancelled && session.status !== 'completed'
 
   return (
     <div className="space-y-5">
@@ -158,7 +154,7 @@ export default async function SessionDetailPage({ params }: Props) {
       )}
 
       {/* ── Session meta chips ──────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="flex flex-wrap gap-x-6 gap-y-2 rounded-xl border border-(--border-soft) bg-(--bg-card) px-4 py-3">
         {[
           { label: 'Date',     value: new Date(session.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) },
           { label: 'Time',     value: new Date(session.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) },
@@ -167,7 +163,7 @@ export default async function SessionDetailPage({ params }: Props) {
           ...(session.started_at ? [{ label: 'Started', value: new Date(session.started_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) }] : []),
           ...(session.ended_at   ? [{ label: 'Ended',   value: new Date(session.ended_at).toLocaleTimeString('en-GB',   { hour: '2-digit', minute: '2-digit' }) }] : []),
         ].map(({ label, value }) => (
-          <div key={label} className="ds-card px-4 py-3">
+          <div key={label} className="flex items-baseline gap-2">
             <p className="text-xs text-[#94A3B8]">{label}</p>
             <p className="mt-0.5 text-sm font-medium text-[#0B1F3A]">{value}</p>
           </div>
@@ -185,49 +181,7 @@ export default async function SessionDetailPage({ params }: Props) {
         </a>
       )}
 
-      {/* ── Main two-column workspace ─────────────────────────────────────────── */}
-      <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
-
-        {/* LEFT — Attendance */}
-        <div className="space-y-4">
-          {/* Attendance summary chips */}
-          {session.student_count > 0 && (
-            <div className="ds-card px-5 py-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-[#0B1F3A]">Attendance</p>
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span className="rounded-full bg-[#E7F8EE] px-2.5 py-0.5 font-medium text-[#15803D]">{presentCount} present</span>
-                  <span className="rounded-full bg-[#FEE2E2] px-2.5 py-0.5 font-medium text-[#DC2626]">{absentCount} absent</span>
-                  {lateCount > 0 && <span className="rounded-full bg-yellow-100 px-2.5 py-0.5 font-medium text-yellow-700">{lateCount} late</span>}
-                  {unmarkedCount > 0 && <span className="rounded-full bg-[#FFFBEB] px-2.5 py-0.5 font-medium text-[#B45309]">{unmarkedCount} pending</span>}
-                </div>
-              </div>
-              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#F1F5F9]">
-                <div
-                  className="h-full rounded-full bg-[#C2410C] transition-all"
-                  style={{ width: `${Math.round((markedCount / session.student_count) * 100)}%` }}
-                />
-              </div>
-              <p className="mt-1 text-right text-xs text-[#94A3B8]">
-                {markedCount}/{session.student_count} marked
-              </p>
-            </div>
-          )}
-
-          {isActionable || session.status === 'completed' ? (
-            <AttendanceForm sessionId={session.id} groupId={session.group_id} rows={session.attendance} currentTopic={session.topic} />
-          ) : (
-            isCancelled && (
-              <div className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-5 text-center text-sm text-[#94A3B8]">
-                Attendance not tracked for cancelled sessions.
-              </div>
-            )
-          )}
-        </div>
-
-        {/* RIGHT — Management panel */}
-        <SessionDetailsPanel session={session} groupId={id} />
-      </div>
+      <SessionWorkspace session={session} groupId={id} />
     </div>
   )
 }

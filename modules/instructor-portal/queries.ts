@@ -762,14 +762,15 @@ export async function getSessionDetail(
       db.from('group_students')
         .select(
           `student_id,
-           students!group_students_student_id_fkey(
+           students!group_students_student_id_fkey!inner(
              users!students_user_id_fkey(
                profiles!profiles_user_id_fkey(first_name, last_name)
              )
            )`
         )
         .eq('group_id', groupId)
-        .eq('status', 'active'),
+        .eq('status', 'active')
+        .is('students.deleted_at', null),
       db.from('attendance_records')
         .select('id, student_id, status, late_minutes, notes')
         .eq('schedule_id', sessionId),
@@ -797,6 +798,13 @@ export async function getSessionDetail(
         .order('created_at', { ascending: true }),
     ])
 
+  if (studentRes.error || attRes.error) {
+    // A failed roster read must never masquerade as an empty/successful class.
+    console.error('[getSessionDetail] roster load failed', {
+      studentCode: studentRes.error?.code, attendanceCode: attRes.error?.code,
+    })
+    throw new Error('Unable to load the current attendance roster. Please retry.')
+  }
   const attMap = new Map<string, any>()
   for (const a of attRes.data ?? []) {
     attMap.set((a as any).student_id as string, a)

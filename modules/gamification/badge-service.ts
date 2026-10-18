@@ -7,8 +7,7 @@ import { BADGE_DEFS, type BadgeDef } from './types'
 
 // ─── Award a badge (idempotent) ───────────────────────────────────────────────
 
-async function awardBadge(studentId: string, portfolioId: string | null, def: BadgeDef): Promise<boolean> {
-  const db = createServiceClient()
+async function awardBadge(studentId: string, portfolioId: string | null, def: BadgeDef, db = createServiceClient()): Promise<boolean> {
 
   const { data: existing } = await db
     .from('student_badges')
@@ -19,25 +18,20 @@ async function awardBadge(studentId: string, portfolioId: string | null, def: Ba
 
   if (existing) return false
 
-  const { data: badge } = await db
-    .from('student_badges')
-    .insert({
-      student_id:   studentId,
-      portfolio_id: portfolioId,
-      badge_name:   def.badge_name,
-      description:  def.description,
-    })
-    .select('id')
-    .single()
+  const { data: badgeId, error } = await db.rpc('award_student_badge', {
+    p_student_id: studentId, p_portfolio_id: portfolioId,
+    p_name: def.badge_name, p_description: def.description,
+  })
+  if (error) throw new Error(error.message)
+  if (!badgeId) return false
 
-  void logTimelineEvent({
+  await logTimelineEvent({
     student_id: studentId,
     event_type: 'BADGE_EARNED',
     notes:      def.badge_name,
   }).catch(() => {})
 
   try {
-    const badgeId = (badge as any)?.id as string | undefined
     const studentUserId = await getStudentUserId(studentId)
     if (badgeId && studentUserId) await seedAchievementEarnedNotification(studentUserId, badgeId, def.badge_name)
   } catch {
@@ -50,8 +44,7 @@ async function awardBadge(studentId: string, portfolioId: string | null, def: Ba
 // ─── Check and award all applicable badges ────────────────────────────────────
 // Runs all condition checks. Idempotent — safe to call repeatedly.
 
-export async function checkAndAwardBadges(studentId: string): Promise<void> {
-  const db = createServiceClient()
+export async function checkAndAwardBadges(studentId: string, db = createServiceClient()): Promise<void> {
 
   const { data: student } = await db
     .from('students')
@@ -120,7 +113,7 @@ export async function checkAndAwardBadges(studentId: string): Promise<void> {
 
   for (const def of BADGE_DEFS) {
     if (conditionMet[def.condition]) {
-      await awardBadge(studentId, portfolioId, def)
+      await awardBadge(studentId, portfolioId, def, db)
     }
   }
 }

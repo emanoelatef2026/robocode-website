@@ -5,6 +5,7 @@ import type { MockResult } from '../helpers/mock-db'
 // ── Module-level mocks ────────────────────────────────────────────────────────
 
 vi.mock('server-only', () => ({}))
+vi.mock('next/server', () => ({ after: vi.fn() }))
 vi.mock('next/cache',      () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 
@@ -60,9 +61,9 @@ vi.mock('@/modules/gamification/badge-service', () => ({
 // ── Imports (after mocks) ─────────────────────────────────────────────────────
 
 import { createServiceClient } from '@/lib/supabase/service'
-import { startSession, saveAttendance, endSession, postponeSession } from '@/modules/instructor-portal/actions'
+import { startSession, saveAttendance, saveAndEndSession, endSession, postponeSession, updateSession, startGroupSession } from '@/modules/instructor-portal/actions'
 import { SLOT_CONSUMING_STATUSES } from '@/modules/attendance/constants'
-import { awardXP } from '@/modules/gamification/xp-service'
+import { after } from 'next/server'
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
@@ -85,12 +86,46 @@ function makeFormData(fields: Record<string, string | string[]>): FormData {
 // ── TEST 1: Open session → only sets status to 'ongoing', no payroll/counts ──
 
 describe('startSession', () => {
+  it.each(['cancelled', 'cancelled_with_makeup', 'postponed', 'completed'])('never starts %s', async status => {
+    const db = mockDb({ schedules: [
+      { data: { status }, error: null },
+      { data: { branch_id: 'branch', group_courses: { group_id: 'group' } }, error: null },
+    ] })
+    expect((await startSession('session', 'group')).success).toBe(false)
+    expect(db.from).toHaveBeenCalledTimes(2)
+  })
+  it('authorized ongoing retries succeed without another write', async () => {
+    const db = mockDb({ schedules: [
+      { data: { status: 'ongoing' }, error: null },
+      { data: { branch_id: 'branch', group_courses: { group_id: 'group' } }, error: null },
+    ] })
+    expect((await startSession('session', 'group')).success).toBe(true)
+    expect(db.from).toHaveBeenCalledTimes(2)
+  })
+  it('compare-and-set loser succeeds only when a reread confirms ongoing', async () => {
+    mockDb({ schedules: [
+      { data: { status: 'scheduled' }, error: null },
+      { data: { branch_id: 'branch', group_courses: { group_id: 'group' } }, error: null },
+      { data: null, error: null },
+      { data: { status: 'ongoing' }, error: null },
+    ] })
+    expect((await startSession('session', 'group')).success).toBe(true)
+  })
+  it('compare-and-set loser rejects a concurrent cancellation', async () => {
+    mockDb({ schedules: [
+      { data: { status: 'scheduled' }, error: null },
+      { data: { branch_id: 'branch', group_courses: { group_id: 'group' } }, error: null },
+      { data: null, error: null },
+      { data: { status: 'cancelled' }, error: null },
+    ] })
+    expect((await startSession('session', 'group')).success).toBe(false)
+  })
   it('sets session status to ongoing and returns success', async () => {
     const db = mockDb({
       schedules: [
         { data: { id: 'a0000000-0000-4000-8000-000000000001', status: 'scheduled' }, error: null }, // initial status fetch
         { data: { branch_id: 'a0000000-0000-4000-8000-000000000020', group_courses: { group_id: 'a0000000-0000-4000-8000-000000000010' } }, error: null }, // getSessionAccessContext
-        { data: null, error: null },                                                                  // update to ongoing
+        { data: { id: 'a0000000-0000-4000-8000-000000000001' }, error: null }, // compare-and-set returned row
       ],
     })
 
@@ -110,84 +145,115 @@ describe('startSession', () => {
 
 // ── TEST 2: Save attendance → no session_instructors, no consumption ──────────
 
-describe('saveAttendance', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    ;(createServiceClient as ReturnType<typeof vi.fn>).mockReset()
+const sessionId = 'a0000000-0000-4000-8000-000000000001'
+const groupId = 'a0000000-0000-4000-8000-000000000010'
+const studentId = 'a0000000-0000-4000-8000-000000000030'
+function attendanceForm(status: string | null = 'present') {
+  const fd = makeFormData({ session_id: sessionId, group_id: groupId, 'student_ids[]': studentId, topic: 'Variables' })
+  if (status !== null) fd.set(`status_${studentId}`, status)
+  return fd
+}
+
+describe('atomic session actions', () => {
+  beforeEach(() => { vi.clearAllMocks() })
+  it('a stale session details save never writes status and cannot reopen a completed session', async () => {
+    const db = mockDb({ schedules: [
+      { data: { branch_id: 'branch', group_courses: { group_id: groupId } }, error: null },
+      { data: { status: 'completed' }, error: null },
+      { data: null, error: null },
+    ] })
+    const original = db.from.getMockImplementation()!
+    const writes: unknown[] = []
+    db.from.mockImplementation(table => {
+      const chain = original(table)
+      chain.update = (values: unknown) => { writes.push(values); return chain }
+      return chain
+    })
+    const fd = makeFormData({ session_id: sessionId, group_id: groupId, status: 'ongoing', topic: 'Corrected topic' })
+    expect((await updateSession(null, fd)).success).toBe(true)
+    expect(writes).toEqual([{ topic: 'Corrected topic' }])
   })
-
-  it('saves attendance records but does NOT touch session_instructors or run consumption', async () => {
-    const db = mockDb({
-      schedules: [
-        // getSessionAccessContext: branch_id query
-        { data: { branch_id: 'br-1', group_courses: { group_id: 'grp-1' } }, error: null },
-        // saveAttendance: status/topic query
-        { data: { status: 'ongoing', topic: null, scheduled_at: '2026-06-28T10:00:00Z' }, error: null },
-      ],
-      group_students:     [{ data: [{ student_id: 'stu-1' }], error: null }],
-      attendance_records: [{ data: null, error: null }],
+  it('save-only delegates attendance and topic to one RPC without consuming or scheduling effects', async () => {
+    const db = mockDb({})
+    db.rpc.mockResolvedValue({ data: { status: 'ongoing' }, error: null })
+    expect((await saveAttendance(null, attendanceForm())).success).toBe(true)
+    expect(db.from).not.toHaveBeenCalled()
+    expect(db.rpc).toHaveBeenCalledExactlyOnceWith('save_instructor_session', {
+      p_actor_id: 'user-test', p_instructor_id: 'instr-1',
+      p_session_id: sessionId, p_group_id: groupId, p_complete: false, p_topic: 'Variables',
+      p_attendance: [{ student_id: studentId, status: 'present', late_minutes: null, notes: null }],
     })
-
-    const fd = makeFormData({
-      session_id:        'sess-1',
-      group_id:          'grp-1',
-      'student_ids[]':   'stu-1',
-      topic:             'Variables',
-      status_stu_1:      'present',
-      'notes_stu-1':     '',
+    expect(after).not.toHaveBeenCalled()
+  })
+  it('save-and-end passes attendance with completion in the same RPC then registers after work', async () => {
+    const db = mockDb({})
+    db.rpc.mockResolvedValue({ data: { status: 'completed' }, error: null })
+    expect((await saveAndEndSession(null, attendanceForm('absent'))).success).toBe(true)
+    expect(db.rpc).toHaveBeenCalledWith('save_instructor_session', expect.objectContaining({
+      p_complete: true, p_attendance: [expect.objectContaining({ status: 'absent' })],
+    }))
+    expect(after).toHaveBeenCalledOnce()
+  })
+  it('legacy force cannot bypass finalizer validation', async () => {
+    const db = mockDb({})
+    db.rpc.mockResolvedValue({ data: null, error: { code: '22023', message: 'Every active student needs valid attendance before ending' } })
+    expect(await endSession(sessionId, groupId, true)).toEqual({
+      success: false, error: { code: 'VALIDATION', message: 'Every active student needs valid attendance before ending' },
     })
-    // Override status key with correct suffix
-    fd.set('status_stu-1', 'present')
-
-    const result = await saveAttendance(null, fd)
-
-    const calledTables = db.from.mock.calls.map((c: any[]) => c[0])
-    expect(calledTables).not.toContain('session_instructors')
-    expect(db.rpc).not.toHaveBeenCalledWith('consume_attendance_sessions_batch', expect.anything())
-
-    // Result should succeed (attendance written)
-    expect(result?.success ?? true).toBeTruthy()
+    expect(db.rpc).toHaveBeenCalledExactlyOnceWith('save_instructor_session', expect.objectContaining({
+      p_complete: true, p_attendance: null, p_topic: null,
+    }))
+    expect(after).not.toHaveBeenCalled()
+  })
+  it.each([null, '', 'unknown'])('rejects missing/invalid status %s without defaulting it', async status => {
+    const db = mockDb({})
+    expect((await saveAttendance(null, attendanceForm(status))).success).toBe(false)
+    expect(db.rpc).not.toHaveBeenCalled()
+  })
+  it('rejects duplicate students before calling the RPC', async () => {
+    const db = mockDb({})
+    const fd = attendanceForm()
+    fd.append('student_ids[]', studentId)
+    expect((await saveAttendance(null, fd)).success).toBe(false)
+    expect(db.rpc).not.toHaveBeenCalled()
+  })
+  it('maps SQL authorization failures and schedules no after work', async () => {
+    const db = mockDb({})
+    db.rpc.mockResolvedValue({ data: null, error: { code: '42501', message: 'Session outside instructor allocation' } })
+    expect(await saveAndEndSession(null, attendanceForm())).toEqual({
+      success: false, error: { code: 'FORBIDDEN', message: 'Session outside instructor allocation' },
+    })
+    expect(after).not.toHaveBeenCalled()
+  })
+  it('unexpected critical write failures return failure, hide raw DB messages and schedule no work', async () => {
+    const db = mockDb({})
+    db.rpc.mockResolvedValue({ data: null, error: { code: '23514', message: 'sensitive internal constraint' } })
+    const result = await saveAndEndSession(null, attendanceForm())
+    expect(result).toEqual({ success: false, error: { code: 'DB_ERROR', message: 'Unable to save the session. Please retry.' } })
+    expect(after).not.toHaveBeenCalled()
+  })
+  it('completed allocation retries can return success without replaying attendance from legacy end', async () => {
+    const db = mockDb({})
+    db.rpc.mockResolvedValue({ data: { status: 'completed', already_completed: true }, error: null })
+    expect((await endSession(sessionId, groupId)).success).toBe(true)
+    expect(db.from).not.toHaveBeenCalled()
+    expect(db.rpc.mock.calls[0][1]).toMatchObject({ p_attendance: null, p_complete: true })
+  })
+  it('does not accept an empty RPC success payload', async () => {
+    mockDb({})
+    expect((await saveAndEndSession(null, attendanceForm())).success).toBe(false)
+    expect(after).not.toHaveBeenCalled()
+  })
+  it('group start ignores client group/branch identifiers and uses authoritative RPC context', async () => {
+    const db = mockDb({})
+    db.rpc.mockResolvedValue({ data: { sessionId, groupId }, error: null })
+    expect(await startGroupSession(sessionId, 'forged-group', 'forged-branch', 'Loops')).toEqual({ success: true, data: { sessionId } })
+    expect(db.from).not.toHaveBeenCalled()
+    expect(db.rpc).toHaveBeenCalledExactlyOnceWith('start_instructor_group_session', {
+      p_actor_id: 'user-test', p_instructor_id: 'instr-1', p_group_course_id: sessionId, p_topic: 'Loops',
+    })
   })
 })
-
-// ── TEST 3: End session → session_instructors created, consumption runs ───────
-
-describe('endSession', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-    ;(createServiceClient as ReturnType<typeof vi.fn>).mockReset()
-  })
-
-  it('upserts session_instructors and triggers consumption on end', async () => {
-    const db = mockDb({
-      schedules: [
-        // fetch for status/validation check (force=true skips count checks)
-        { data: { id: 'sess-1', status: 'ongoing', topic: 'Loops', notes: null, branch_id: 'br-1', scheduled_at: '2026-06-28T10:00:00Z', group_courses: { group_id: 'grp-1' } }, error: null },
-        // getSessionAccessContext branch query
-        { data: { branch_id: 'br-1', group_courses: { group_id: 'grp-1' } }, error: null },
-        // update to completed
-        { data: null, error: null },
-        // session_number query
-        { data: { session_number: 3 }, error: null },
-      ],
-      session_instructors: [{ data: null, error: null }],
-      attendance_records: [
-        { data: [{ id: 'att-1', student_id: 'stu-1', status: 'present' }], error: null },
-      ],
-      student_enrollments: [{ data: [], error: null }],
-      group_instructors:   [{ data: null, error: null }],
-    })
-
-    const result = await endSession('sess-1', 'grp-1', true)
-
-    expect(result.success).toBe(true)
-    const calledTables = db.from.mock.calls.map((c: any[]) => c[0])
-    expect(calledTables).toContain('session_instructors')
-    expect(calledTables).toContain('attendance_records')
-  })
-})
-
-// ── TEST 4 & 5: Postpone → attendance_records deleted ─────────────────────────
 
 describe('postponeSession', () => {
   beforeEach(() => {
@@ -263,81 +329,6 @@ describe('postponeSession — completed session', () => {
 })
 
 // ── TEST 7: Late attendance counts (presence for XP) ─────────────────────────
-
-describe('Attendance status rules — ATTENDANCE_PRESENCE_STATUSES', () => {
-  it('late counts as attending (present for XP purposes)', async () => {
-    const db = mockDb({
-      schedules: [
-        { data: { id: 'sess-4', status: 'ongoing', topic: 'Loops', notes: null, branch_id: 'br-1', scheduled_at: '2026-06-28T10:00:00Z', group_courses: { group_id: 'grp-1' } }, error: null },
-        { data: { branch_id: 'br-1', group_courses: { group_id: 'grp-1' } }, error: null },
-        { data: null, error: null },
-        { data: { session_number: 1 }, error: null },
-      ],
-      session_instructors: [{ data: null, error: null }],
-      attendance_records: [
-        { data: [{ id: 'att-2', student_id: 'stu-2', status: 'late' }], error: null },
-      ],
-      student_enrollments: [{ data: [], error: null }],
-      group_instructors:   [{ data: null, error: null }],
-    })
-
-    await endSession('sess-4', 'grp-1', true)
-
-    expect(awardXP).toHaveBeenCalledWith('stu-2', 10, true) // ATTENDANCE_LATE = 10
-  })
-})
-
-// ── TEST 8: Excused attendance does NOT count for XP ─────────────────────────
-
-describe('Attendance status rules — excused not counted', () => {
-  it('excused does NOT trigger XP award', async () => {
-    const db = mockDb({
-      schedules: [
-        { data: { id: 'sess-5', status: 'ongoing', topic: 'Loops', notes: null, branch_id: 'br-1', scheduled_at: '2026-06-28T10:00:00Z', group_courses: { group_id: 'grp-1' } }, error: null },
-        { data: { branch_id: 'br-1', group_courses: { group_id: 'grp-1' } }, error: null },
-        { data: null, error: null },
-        { data: { session_number: 1 }, error: null },
-      ],
-      session_instructors: [{ data: null, error: null }],
-      attendance_records: [
-        { data: [{ id: 'att-3', student_id: 'stu-3', status: 'excused' }], error: null },
-      ],
-      student_enrollments: [{ data: [], error: null }],
-      group_instructors:   [{ data: null, error: null }],
-    })
-
-    await endSession('sess-5', 'grp-1', true)
-
-    expect(awardXP).not.toHaveBeenCalledWith('stu-3', expect.anything(), expect.anything())
-  })
-})
-
-// ── TEST 9: Makeup attendance counts for XP ───────────────────────────────────
-
-describe('Attendance status rules — makeup counted', () => {
-  it('makeup triggers XP award (same as late)', async () => {
-    const db = mockDb({
-      schedules: [
-        { data: { id: 'sess-6', status: 'ongoing', topic: 'Loops', notes: null, branch_id: 'br-1', scheduled_at: '2026-06-28T10:00:00Z', group_courses: { group_id: 'grp-1' } }, error: null },
-        { data: { branch_id: 'br-1', group_courses: { group_id: 'grp-1' } }, error: null },
-        { data: null, error: null },
-        { data: { session_number: 1 }, error: null },
-      ],
-      session_instructors: [{ data: null, error: null }],
-      attendance_records: [
-        { data: [{ id: 'att-4', student_id: 'stu-4', status: 'makeup' }], error: null },
-      ],
-      student_enrollments: [{ data: [], error: null }],
-      group_instructors:   [{ data: null, error: null }],
-    })
-
-    await endSession('sess-6', 'grp-1', true)
-
-    expect(awardXP).toHaveBeenCalledWith('stu-4', expect.any(Number), true)
-  })
-})
-
-// ── SLOT_CONSUMING_STATUSES constants sanity check ────────────────────────────
 
 describe('SLOT_CONSUMING_STATUSES', () => {
   it('present, late, makeup all consume enrollment slots', () => {

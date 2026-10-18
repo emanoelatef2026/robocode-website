@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/session-effects",
+      "schedule": "0 4 * * *"
+    },
+    {
       "path": "/api/cron/finance-maintenance",
       "schedule": "0 2 * * *"
     },

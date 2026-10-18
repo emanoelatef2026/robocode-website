@@ -4,7 +4,6 @@ import { logTimelineEvent } from '@/lib/timeline'
 import { seedAchievementEarnedNotification } from '@/modules/notifications/actions'
 import { getStudentUserId } from '@/modules/notifications/queries'
 import { ACHIEVEMENT_DEFS, type AchievementDef } from './types'
-import { awardXP } from './xp-service'
 
 // ─── Unlock a single named achievement (idempotent) ───────────────────────────
 // Returns true if newly unlocked, false if already existed.
@@ -12,10 +11,9 @@ import { awardXP } from './xp-service'
 async function unlockAchievement(
   studentId: string,
   portfolioId: string | null,
-  def: AchievementDef
+  def: AchievementDef,
+  db = createServiceClient(),
 ): Promise<boolean> {
-  const db = createServiceClient()
-
   // Check if already awarded (by title — titles are canonical per ACHIEVEMENT_DEFS)
   const { data: existing } = await db
     .from('student_achievements')
@@ -26,32 +24,20 @@ async function unlockAchievement(
 
   if (existing) return false
 
-  const { data: achievement } = await db
-    .from('student_achievements')
-    .insert({
-      student_id:       studentId,
-      portfolio_id:     portfolioId,
-      title:            def.title,
-      description:      def.description,
-      achievement_type: def.type,
-      date_awarded:     new Date().toISOString().slice(0, 10),
-    })
-    .select('id')
-    .single()
+  const { data: achievementId, error } = await db.rpc('unlock_student_achievement', {
+    p_student_id: studentId, p_portfolio_id: portfolioId, p_title: def.title,
+    p_description: def.description, p_type: def.type, p_xp: def.xpReward,
+  })
+  if (error) throw new Error(error.message)
+  if (!achievementId) return false
 
-  // Award bonus XP for unlocking this achievement (if any)
-  if (def.xpReward > 0) {
-    await awardXP(studentId, def.xpReward, false)
-  }
-
-  void logTimelineEvent({
+  await logTimelineEvent({
     student_id: studentId,
     event_type: 'ACHIEVEMENT_EARNED',
     notes:      def.title,
   }).catch(() => {})
 
   try {
-    const achievementId = (achievement as any)?.id as string | undefined
     const studentUserId = await getStudentUserId(studentId)
     if (achievementId && studentUserId) await seedAchievementEarnedNotification(studentUserId, achievementId, def.title)
   } catch {
@@ -63,8 +49,7 @@ async function unlockAchievement(
 
 // ─── Resolve portfolio id (null-safe) ────────────────────────────────────────
 
-export async function resolvePortfolioId(studentId: string): Promise<string | null> {
-  const db = createServiceClient()
+export async function resolvePortfolioId(studentId: string, db = createServiceClient()): Promise<string | null> {
   const { data } = await db
     .from('student_portfolios')
     .select('id')
@@ -77,9 +62,8 @@ export async function resolvePortfolioId(studentId: string): Promise<string | nu
 // Designed to be called after any activity that could trigger an achievement.
 // Runs ALL checks every time (cheap: at most ~10 DB reads, all indexed).
 
-export async function checkAndUnlockAchievements(studentId: string): Promise<void> {
-  const db          = createServiceClient()
-  const portfolioId = await resolvePortfolioId(studentId)
+export async function checkAndUnlockAchievements(studentId: string, db = createServiceClient()): Promise<void> {
+  const portfolioId = await resolvePortfolioId(studentId, db)
 
   // ── Attendance milestones ─────────────────────────────────────────────────
 
@@ -91,7 +75,7 @@ export async function checkAndUnlockAchievements(studentId: string): Promise<voi
     .is('invalidated_at', null)
 
   if ((attCount ?? 0) >= 1) {
-    await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === 'First Attendance')!)
+    await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === 'First Attendance')!, db)
   }
 
   // ── Assignment milestones ─────────────────────────────────────────────────
@@ -102,7 +86,7 @@ export async function checkAndUnlockAchievements(studentId: string): Promise<voi
     .eq('student_id', studentId)
 
   if ((subCount ?? 0) >= 1) {
-    await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === 'First Assignment')!)
+    await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === 'First Assignment')!, db)
   }
 
   // ── Portfolio project milestones ──────────────────────────────────────────
@@ -115,9 +99,9 @@ export async function checkAndUnlockAchievements(studentId: string): Promise<voi
       .eq('is_archived', false)
 
     const pc = projCount ?? 0
-    if (pc >= 1)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === 'First Project')!)
-    if (pc >= 5)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '5 Projects')!)
-    if (pc >= 10) await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '10 Projects')!)
+    if (pc >= 1)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === 'First Project')!, db)
+    if (pc >= 5)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '5 Projects')!, db)
+    if (pc >= 10) await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '10 Projects')!, db)
 
     // Video milestones — projects with a non-null video_url
     const { count: vidCount } = await db
@@ -128,10 +112,10 @@ export async function checkAndUnlockAchievements(studentId: string): Promise<voi
       .not('video_url', 'is', null)
 
     const vc = vidCount ?? 0
-    if (vc >= 1)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === 'First Video')!)
-    if (vc >= 5)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '5 Videos')!)
-    if (vc >= 10) await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '10 Videos')!)
-    if (vc >= 25) await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '25 Videos')!)
+    if (vc >= 1)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === 'First Video')!, db)
+    if (vc >= 5)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '5 Videos')!, db)
+    if (vc >= 10) await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '10 Videos')!, db)
+    if (vc >= 25) await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '25 Videos')!, db)
   }
 
   // ── XP milestones ─────────────────────────────────────────────────────────
@@ -143,9 +127,9 @@ export async function checkAndUnlockAchievements(studentId: string): Promise<voi
     .maybeSingle()
   const xp = Number((student as any)?.total_xp ?? 0)
 
-  if (xp >= 1000)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '1000 XP')!)
-  if (xp >= 5000)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '5000 XP')!)
-  if (xp >= 10000) await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '10000 XP')!)
+  if (xp >= 1000)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '1000 XP')!, db)
+  if (xp >= 5000)  await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '5000 XP')!, db)
+  if (xp >= 10000) await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === '10000 XP')!, db)
 
   // ── Certificate milestones ────────────────────────────────────────────────
 
@@ -156,7 +140,7 @@ export async function checkAndUnlockAchievements(studentId: string): Promise<voi
     .eq('status', 'active')
 
   if ((certCount ?? 0) >= 1) {
-    await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === 'First Certificate')!)
+    await unlockAchievement(studentId, portfolioId, ACHIEVEMENT_DEFS.find(a => a.title === 'First Certificate')!, db)
   }
 }
 

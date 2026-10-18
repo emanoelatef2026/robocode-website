@@ -1,6 +1,7 @@
 'use client'
 
-import { useActionState, useState, useEffect, useRef } from 'react'
+import { useActionState, useState, useEffect } from 'react'
+import StudentSessionDialog from './StudentSessionDialog'
 import { createInstructorEvaluation } from '@/modules/instructor-portal/actions'
 import { EVALUATION_CRITERIA, EVALUATION_CRITERION_LABELS } from '@/modules/student-evaluations/types'
 import type { EvaluationCriterion } from '@/modules/student-evaluations/types'
@@ -136,7 +137,6 @@ interface ModalProps {
 
 export default function StudentEvaluationModal({ studentId, studentName, groupId }: ModalProps) {
   const [open, setOpen] = useState(false)
-  const backdropRef = useRef<HTMLDivElement>(null)
   const close = () => setOpen(false)
 
   return (
@@ -146,32 +146,15 @@ export default function StudentEvaluationModal({ studentId, studentName, groupId
         aria-label={`Quick-evaluate ${studentName}`}
         title="Quick evaluation"
         onClick={() => setOpen(true)}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded p-1 text-[#94A3B8] transition hover:text-[#9A3412]"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#E2E8F0] p-1 text-[#475569] transition hover:bg-[#FFF7ED] hover:text-[#9A3412] focus-visible:outline-2 focus-visible:outline-[#0E7490]"
       >
         <span className="text-[15px]">⭐</span>
       </button>
 
       {open && (
-        <div
-          ref={backdropRef}
-          className="ds-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
-          onMouseDown={(e) => { if (e.target === backdropRef.current) close() }}
-        >
-          <div className="ds-modal-panel w-full max-w-sm p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-[#0B1F3A]">Quick Evaluation</h3>
-                <p className="text-xs text-[#64748B]">{studentName}</p>
-              </div>
-              <button onClick={close} aria-label="Close" className="text-[#94A3B8] hover:text-[#64748B] transition">
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
-            </div>
+        <StudentSessionDialog title="Quick Evaluation" studentName={studentName} onClose={close}>
             <EvaluationFields studentId={studentId} groupId={groupId} onSaved={close} />
-          </div>
-        </div>
+        </StudentSessionDialog>
       )}
     </>
   )
