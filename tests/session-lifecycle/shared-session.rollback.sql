@@ -70,7 +70,10 @@ BEGIN
     RAISE EXCEPTION 'Expected duplicate ongoing class constraint';
   EXCEPTION WHEN unique_violation THEN NULL; END;
   ASSERT NOT EXISTS (SELECT 1 FROM public.session_instructors WHERE session_id=sess),'Joining credited payroll without confirmation';
+  -- Legacy/manual assignment can create an unsubmitted teaching row in advance.
+  INSERT INTO public.session_instructors(session_id,instructor_id) VALUES(sess,instructor);
   PERFORM public.record_session_participation(actor,instructor,sess,'confirm');
+  ASSERT (SELECT submitted_at FROM public.session_instructors WHERE session_id=sess AND instructor_id=instructor) IS NOT NULL,'Preassigned instructor confirmation was not submitted';
   ASSERT (SELECT status FROM public.schedules WHERE id=sess)='ongoing','Participation ended shared class';
   ASSERT (SELECT consumed_sessions FROM public.student_enrollments WHERE id=contract)=0,'Participation charged student';
   payload:=jsonb_build_array(jsonb_build_object('student_id',student1,'status','absent'),jsonb_build_object('student_id',student2,'status','late'));
@@ -107,11 +110,13 @@ BEGIN
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
   PERFORM public.record_session_participation(u3,instructor3,sess,'request','Helped with practical exercises');
   ASSERT NOT EXISTS (SELECT 1 FROM public.session_instructors WHERE session_id=sess AND instructor_id=instructor3),'Unapproved claim credited payroll';
+  INSERT INTO public.session_instructors(session_id,instructor_id) VALUES(sess,instructor3);
   BEGIN
     PERFORM public.review_session_participation(other_actor,sess,instructor3,true);
     RAISE EXCEPTION 'Expected instructor approval rejection';
   EXCEPTION WHEN insufficient_privilege THEN NULL; END;
   PERFORM public.review_session_participation(u1,sess,instructor3,true);
+  ASSERT (SELECT submitted_at FROM public.session_instructors WHERE session_id=sess AND instructor_id=instructor3) IS NOT NULL,'Approved preassigned participation was not submitted';
   PERFORM public.review_session_participation(u1,sess,instructor3,true);
   ASSERT (SELECT count(*) FROM public.session_instructors WHERE session_id=sess)=3,'Admin approval missing or duplicated payroll';
   ASSERT (SELECT completed_sessions FROM public.groups WHERE id=grp)=4,'Approval changed class count';

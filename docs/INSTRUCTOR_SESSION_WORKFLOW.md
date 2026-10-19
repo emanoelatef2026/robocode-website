@@ -74,6 +74,9 @@ All participation tables/helpers are service-only, invoker-security, and recheck
 actor identity, active instructor, allocation range and branch permission. Late
 approval also checks the approver's administrative role and branch in the database.
 Required migration: `20261019124846_shared_instructor_session_participation`.
+Follow-up `20261019125304_confirm_preassigned_session_participation` ensures an
+existing unsubmitted teaching assignment is confirmed in-place rather than
+ignored; retries preserve the first submission timestamp and never duplicate it.
 Integration regression: `tests/session-lifecycle/shared-session.rollback.sql`,
 always inside BEGIN/ROLLBACK. Covers co-teaching, late confirmation/approval,
 stale saves/starts, duplicate ongoing classes and single student consumption.
