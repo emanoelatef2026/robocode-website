@@ -57,6 +57,9 @@ joined before completion can confirm afterwards without replaying attendance,
 contract consumption, group progression or XP. Never credit every assigned
 instructor automatically. Historical lead fallback is excluded once explicit
 teaching participation exists.
+For shared classes, both instructor earnings and management payroll reports also
+exclude preassigned teaching rows until `submitted_at` is populated by confirmation
+or approval. Historical non-shared payroll attribution is preserved.
 
 Late claims require a reason and branch-scoped team-leader/super-admin approval.
 Pending/rejected claims do not earn payroll. Review requests in the Instructors
@@ -77,6 +80,9 @@ Required migration: `20261019124846_shared_instructor_session_participation`.
 Follow-up `20261019125304_confirm_preassigned_session_participation` ensures an
 existing unsubmitted teaching assignment is confirmed in-place rather than
 ignored; retries preserve the first submission timestamp and never duplicate it.
+`20261019125947_shared_session_payroll_hardening` isolates historical confirmations
+from the group's current course allocation and reconciles approved current-course
+participation without changing student attendance or consumption.
 Integration regression: `tests/session-lifecycle/shared-session.rollback.sql`,
 always inside BEGIN/ROLLBACK. Covers co-teaching, late confirmation/approval,
 stale saves/starts, duplicate ongoing classes and single student consumption.

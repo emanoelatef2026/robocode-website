@@ -135,9 +135,15 @@ export async function getInstructorSessionEarnings(
   // 3. Session-instructor direct assignments (covers trial/makeup + explicit regular assignments)
   const { data: siRows } = await db
     .from('session_instructors')
-    .select('session_id')
+    .select('session_id, submitted_at')
     .eq('instructor_id', instructorId)
-  const directSessionIds = new Set<string>((siRows ?? []).map((r: any) => r.session_id as string))
+  let sharedDirectIds = new Set<string>()
+  if (siRows?.length) {
+    const shared = await db.from('session_participations').select('session_id').in('session_id', siRows.map(r => r.session_id))
+    if (shared.error) throw new Error('Unable to verify confirmed teaching participation.')
+    sharedDirectIds = new Set((shared.data ?? []).map(r => r.session_id))
+  }
+  const directSessionIds = new Set<string>((siRows ?? []).filter(r => !sharedDirectIds.has(r.session_id) || r.submitted_at != null).map(r => r.session_id))
 
   // 4. Fallback: regular sessions attributed via group_courses (historical, no session_instructors row)
   let fallbackSchedules: any[] = []

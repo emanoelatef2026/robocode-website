@@ -90,16 +90,21 @@ export async function getLiveInstructorFinance(
   //    each session. Falls back to group lead for sessions without a record.
   const { data: siData } = await db
     .from('session_instructors')
-    .select('session_id, instructor_id')
+    .select('session_id, instructor_id, submitted_at')
     .in('session_id', allScheduleIds)
+  const sharedParticipation = await db.from('session_participations').select('session_id').in('session_id', allScheduleIds)
+  if (sharedParticipation.error) throw new Error('Unable to verify shared teaching participation.')
+  const sharedClasses = new Set((sharedParticipation.data ?? []).map(r => r.session_id))
 
   // Build set of session_ids that have session_instructors records
   const siBySession = new Map<string, string[]>()
   for (const si of (siData ?? []) as any[]) {
     const list = siBySession.get(si.session_id as string) ?? []
-    list.push(si.instructor_id as string)
+    if (!sharedClasses.has(si.session_id) || si.submitted_at != null) list.push(si.instructor_id as string)
     siBySession.set(si.session_id as string, list)
   }
+
+  for (const id of sharedClasses) if (!siBySession.has(id)) siBySession.set(id, [])
 
   // Accumulate per-instructor: schedules + earnings (rate hierarchy applied per session)
   type SessionEntry = {
@@ -123,9 +128,9 @@ export async function getLiveInstructorFinance(
     if (!gc) continue
 
     const participating = siBySession.get(s.id)
-    if (participating && participating.length > 0) {
+    if (siBySession.has(s.id)) {
       // Payroll from actual participants
-      for (const instructorId of participating) {
+      for (const instructorId of participating ?? []) {
         addToSession(instructorId, s.id, gc.group_id, s.branch_id)
       }
     } else {
@@ -669,23 +674,28 @@ export async function getInstructorSessionsDetail(
   // 4. session_instructors — source of truth for who actually taught each session
   const { data: siData } = await db
     .from('session_instructors')
-    .select('session_id, instructor_id')
+    .select('session_id, instructor_id, submitted_at')
     .in('session_id', allScheduleIds)
+  const sharedParticipation = await db.from('session_participations').select('session_id').in('session_id', allScheduleIds)
+  if (sharedParticipation.error) throw new Error('Unable to verify shared teaching participation.')
+  const sharedClasses = new Set((sharedParticipation.data ?? []).map(r => r.session_id))
 
   const siBySession = new Map<string, string[]>()
   for (const si of (siData ?? []) as any[]) {
     const list = siBySession.get(si.session_id as string) ?? []
-    list.push(si.instructor_id as string)
+    if (!sharedClasses.has(si.session_id) || si.submitted_at != null) list.push(si.instructor_id as string)
     siBySession.set(si.session_id as string, list)
   }
+
+  for (const id of sharedClasses) if (!siBySession.has(id)) siBySession.set(id, [])
 
   // 5. Keep only schedules actually attributed to this instructor (same rule as getLiveInstructorFinance)
   const schedules = allSchedules.filter((s: any) => {
     const gc = gcMap.get(s.group_course_id)
     if (!gc) return false
     const participating = siBySession.get(s.id)
-    if (participating && participating.length > 0) {
-      return participating.includes(instructorId)
+    if (siBySession.has(s.id)) {
+      return participating?.includes(instructorId) ?? false
     }
     const fallbackId = gc.instructor_id ?? groupLeadMap.get(gc.group_id)
     return fallbackId === instructorId

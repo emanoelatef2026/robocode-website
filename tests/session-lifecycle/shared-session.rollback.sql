@@ -129,6 +129,16 @@ BEGIN
     RAISE EXCEPTION 'Expected rejected claim to stay rejected';
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
   ASSERT NOT has_function_privilege('authenticated','public.record_session_participation(uuid,uuid,uuid,text,text)','EXECUTE'),'Participation RPC exposed';
+  -- A late confirmation for an old course must not complete a reused group-level
+  -- allocation belonging to the group's next active course.
+  INSERT INTO public.session_participations(session_id,instructor_id,joined_at,state)
+    SELECT sid,instructor2,started_at,'joined' FROM public.schedules WHERE id=sid;
+  UPDATE public.group_courses SET status='completed' WHERE id=gc;
+  INSERT INTO public.group_courses(group_id,course_id,instructor_id,status,total_sessions)
+    VALUES(grp,other_course,instructor2,'active',12);
+  UPDATE public.group_instructors SET from_session=1,to_session=1,allocation_status='active' WHERE group_id=grp AND instructor_id=instructor2;
+  PERFORM public.record_session_participation(other_actor,instructor2,sid,'confirm');
+  ASSERT (SELECT allocation_status FROM public.group_instructors WHERE group_id=grp AND instructor_id=instructor2)='active','Historical participation completed the current course allocation';
   ASSERT NOT has_function_privilege('authenticated','public.review_session_participation(uuid,uuid,uuid,boolean)','EXECUTE'),'Approval RPC exposed';
   RAISE NOTICE 'PASS: shared class, two instructors, one charge, revisions, late claims and retries';
 END;
