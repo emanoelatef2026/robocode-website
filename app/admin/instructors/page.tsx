@@ -3,6 +3,7 @@ import { redirect }                    from 'next/navigation'
 import { listInstructorsOperational, getInstructorFormOptions } from '@/modules/instructors/operational'
 import { createServiceClient }         from '@/lib/supabase/service'
 import InstructorsWorkspaceClient      from '@/app/portal/team-leader/instructors/InstructorsWorkspaceClient'
+import ParticipationRequests from '@/components/portal/instructor/ParticipationRequests'
 
 export default async function AdminInstructorsPage() {
   const user = await requireAuth()
@@ -26,11 +27,13 @@ export default async function AdminInstructorsPage() {
   ])
 
   return (
+    <><ParticipationRequests />
     <InstructorsWorkspaceClient
       instructors={instructors}
       options={options}
       branchIds={branchIds}
       canManage
     />
+    </>
   )
 }

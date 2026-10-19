@@ -10,18 +10,11 @@ import { getGroupLeaderboard, getStudentOfTheWeek } from '@/modules/gamification
 import { listProjectsForInstructorReview } from '@/modules/portfolio/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import StartGroupSessionButton from './StartGroupSessionButton'
+import SharedSessionHub from './SharedSessionHub'
+import { loadSharedSessions } from '@/modules/instructor-portal/shared-queries'
 import InstructorCoursePanel from './InstructorCoursePanel'
 
 interface Props { params: Promise<{ id: string }> }
-
-const SESSION_STATUS: Record<string, string> = {
-  scheduled:   'bg-[#EFF6FF] text-[#1D4ED8]',
-  in_progress: 'bg-yellow-100 text-yellow-700',
-  ongoing:     'bg-yellow-100 text-yellow-700',
-  completed:   'bg-[#E7F8EE] text-[#15803D]',
-  cancelled:   'bg-[#FEE2E2] text-[#DC2626]',
-}
 
 const DAY_SHORT: Record<string, string> = {
   sunday: 'Sun', monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed',
@@ -48,7 +41,7 @@ export default async function GroupDetailPage({ params }: Props) {
   const pendingReviewCount = pendingHomework.length + pendingProjects.length
 
   const isActive = !!group.group_course_id
-  const ongoingSession = group.sessions.find((s) => s.status === 'ongoing')
+  const sharedSessions = await loadSharedSessions(id, instructor.id)
 
   const totalPct =
     group.total_sessions != null && group.total_sessions > 0
@@ -133,31 +126,8 @@ export default async function GroupDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* ── 3. START SESSION — or, if one is already running, continue it ──────── */}
-      {isActive && (
-        ongoingSession ? (
-          <Link
-            href={`/portal/instructor/groups/${id}/sessions/${ongoingSession.id}`}
-            className="flex items-center justify-between gap-3 rounded-xl border-2 border-[#A7F3D0] bg-[#E7F8EE] px-4 py-3.5 transition hover:bg-emerald-100"
-          >
-            <div>
-              <p className="text-sm font-semibold text-[#065F46]">Session in progress</p>
-              <p className="mt-0.5 text-xs text-[#15803D]">
-                {ongoingSession.topic ?? 'Untitled session'} — tap to continue
-              </p>
-            </div>
-            <span className="shrink-0 rounded-lg bg-[#10B981] px-4 py-2 text-sm font-semibold text-white">
-              Continue Session
-            </span>
-          </Link>
-        ) : (
-          <StartGroupSessionButton
-            groupId={id}
-            groupCourseId={group.group_course_id!}
-            branchId={group.branch_id}
-          />
-        )
-      )}
+      {isActive && <SharedSessionHub groupId={id} courseId={group.group_course_id} sessions={sharedSessions} />}
+      {pendingReviewCount > 0 && <Link href={`/portal/instructor/review?groupId=${id}`} className="inline-flex min-h-11 items-center font-semibold text-(--cyan-strong)">{pendingReviewCount} submissions to review →</Link>}
 
       {/* ── 4. COURSE CONTENT (accordion, collapsed by default) ──────────────── */}
       {isActive && course && (
@@ -287,66 +257,6 @@ export default async function GroupDetailPage({ params }: Props) {
         )}
       </section>
 
-      {/* ── 6. SESSIONS LIST ─────────────────────────────────────────────────── */}
-      <section>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-[#0B1F3A]">Sessions</h2>
-          {pendingReviewCount > 0 && (
-            <Link
-              href={`/portal/instructor/review?groupId=${id}`}
-              className="text-xs font-medium text-[#C2410C] hover:underline"
-            >
-              {pendingReviewCount} to review →
-            </Link>
-          )}
-        </div>
-
-        {!isActive ? (
-          <div className="rounded-xl border border-dashed border-[#FDE68A] bg-[#FFFBEB] px-4 py-4 text-center">
-            <p className="text-sm font-medium text-[#92400E]">Sessions unavailable</p>
-            <p className="mt-0.5 text-xs text-[#B45309]">Assign a course to this group first.</p>
-          </div>
-        ) : group.sessions.length === 0 ? (
-          <div className="flex h-14 items-center justify-center rounded-xl border border-dashed border-[#E2E8F0] text-sm text-[#94A3B8]">
-            No sessions yet — use the form above to start one.
-          </div>
-        ) : (
-          <div className="overflow-hidden ds-card divide-y divide-[#F1F5F9]">
-            {group.sessions.map((s, idx) => (
-              <Link
-                key={s.id}
-                href={`/portal/instructor/groups/${id}/sessions/${s.id}`}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-[#F8FAFC] active:bg-[#F1F5F9] transition"
-              >
-                {/* Session number badge */}
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F1F5F9] text-xs font-semibold text-[#64748B]">
-                  {group.sessions.length - idx}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-[#0B1F3A]">
-                    {s.topic ??
-                      new Date(s.scheduled_at).toLocaleDateString('en-GB', {
-                        weekday: 'short', day: 'numeric', month: 'short',
-                      })}
-                  </p>
-                  <p className="text-xs text-[#64748B]">
-                    {new Date(s.scheduled_at).toLocaleDateString('en-GB', {
-                      day: 'numeric', month: 'short',
-                    })}
-                    {' · '}{s.duration_minutes}min
-                    {s.attendance_count !== null && <> · {s.attendance_count} marked</>}
-                  </p>
-                </div>
-
-                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${SESSION_STATUS[s.status] ?? 'bg-[#F3F4F6] text-[#4B5563]'}`}>
-                  {s.status}
-                </span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
 
     </div>
   )

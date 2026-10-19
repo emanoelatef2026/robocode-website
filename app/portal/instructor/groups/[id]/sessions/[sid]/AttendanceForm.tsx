@@ -15,6 +15,7 @@ interface Props {
   rows: SessionAttendanceRow[]
   currentTopic: string | null
   sessionStatus?: string
+  attendanceRevision?: number
   activeSection?: WorkspaceSection
   onBusyChange?: (busy: boolean) => void
   onCompleted?: () => void
@@ -33,7 +34,7 @@ const selectedColors: Record<AttStatus, string> = {
   makeup: 'border-(--navy) bg-(--bg-muted) text-(--navy)',
 }
 
-export default function AttendanceForm({ sessionId, groupId, rows, currentTopic, sessionStatus = 'ongoing', activeSection = 'attendance', onBusyChange, onCompleted, onSectionChange, externalBusy = false, children }: Props) {
+export default function AttendanceForm({ sessionId, groupId, rows, currentTopic, sessionStatus = 'ongoing', attendanceRevision = 0, activeSection = 'attendance', onBusyChange, onCompleted, onSectionChange, externalBusy = false, children }: Props) {
   const router = useRouter()
   const formId = useId()
   const lock = useRef(false)
@@ -49,6 +50,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
   const [feedback, setFeedback] = useState('No unsaved changes')
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+  const [revision, setRevision] = useState(attendanceRevision)
   const busy = pending || externalBusy
   const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({})
   const [completed, setCompleted] = useState(sessionStatus === 'completed')
@@ -78,7 +80,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
     window.addEventListener('beforeunload', warn)
     return () => window.removeEventListener('beforeunload', warn)
   }, [hasChanges, pending])
-  const editable = ['ongoing', 'completed'].includes(sessionStatus)
+  const editable = sessionStatus === 'ongoing' && !completed
   const canEnd = editable && !completed && sessionStatus === 'ongoing'
   const validTopic = !!topic.trim() && topic.trim().toLowerCase() !== 'no topic'
   const marked = rows.filter(r => statuses[r.student_id]).length
@@ -108,8 +110,9 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
         return
       }
       setConfirmEnd(false)
+      if (result.data) setRevision(result.data.attendanceRevision)
       setHasChanges(false)
-      setFeedback(ending ? 'Session completed · Saved' : 'Saved')
+      setFeedback(ending ? result.data?.alreadyCompleted ? 'Class was already completed. Shared attendance was not overwritten.' : 'Session completed · Saved' : 'Saved')
       if (ending) { setCompleted(true); onCompleted?.() }
       router.refresh()
     } catch {
@@ -148,6 +151,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
   const buttonClass = 'min-h-11 rounded-lg border border-(--border) px-4 py-2 text-sm font-medium transition hover:bg-(--bg-muted) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--cyan-strong) disabled:opacity-50'
   return (
     <div ref={container} className="space-y-4 text-(--text)" style={{ paddingBottom: editable ? toolbarHeight : 0 }}>
+      {completed && <p role="status" className="rounded-xl border border-(--border) bg-(--bg-muted) p-3 text-sm font-medium">Completed class · attendance is read-only. Confirm your teaching participation separately above. Contact your administrator for attendance corrections.</p>}
       <form id={formId} action={submit} onSubmit={event => {
         event.preventDefault()
         const submitter = (event.nativeEvent as SubmitEvent).submitter
@@ -155,6 +159,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
       }}>
         <input type="hidden" name="session_id" value={sessionId} />
         <input type="hidden" name="group_id" value={groupId} />
+        <input type="hidden" name="attendance_revision" value={revision} />
         {rows.filter(r => statuses[r.student_id]).map(r => <div key={r.student_id}>
           <input type="hidden" name="student_ids[]" value={r.student_id} />
           <input type="hidden" name={`status_${r.student_id}`} value={statuses[r.student_id]} />
@@ -190,12 +195,12 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
       </section>
       {children}
       {editable && <div ref={toolbar} style={{ left: toolbarBounds?.left ?? '1rem', width: toolbarBounds?.width ?? 'calc(100% - 2rem)' }} className="fixed bottom-[calc(var(--bottom-nav-height)+var(--safe-bottom))] z-(--z-fab) max-h-[60dvh] overflow-y-auto rounded-xl border border-(--border) bg-(--bg-card) p-4 shadow-lg md:bottom-4">
-        {error && <p role="alert" className="mb-3 text-sm text-(--red-dark)">{error}</p>}
+        {error && <div role="alert" className="mb-3 text-sm text-(--red-dark)">{error}<button type="button" className="ml-2 min-h-11 font-semibold underline" onClick={() => { if (window.confirm('Reload shared attendance? Your unsaved draft will be discarded.')) window.location.reload() }}>Reload latest attendance</button></div>}
         {confirmEnd && canEnd && <section ref={confirmation} tabIndex={-1} role="region" aria-label="Confirm session completion" className="mb-4 space-y-2 border-b border-(--border) pb-4">
           <h2 className="text-sm font-semibold">Complete this session?</h2>
           <p className="text-sm text-(--text-2)">Topic: {topic || 'Missing topic'}</p>
           <p className="text-sm text-(--text-3)">{summary} · {rows.length - marked} unmarked</p>
-          <p className="text-sm text-(--muted)">Your current topic and attendance will be saved before completing the session.</p>
+          <p className="text-sm text-(--muted)">This ends the shared class for everyone, saves the latest attendance once, and confirms your own teaching participation. Other instructors confirm their participation separately.</p>
           <div className="flex flex-wrap gap-2"><button type="submit" form={formId} name="intent" value="end" disabled={busy} className={`${buttonClass} bg-(--navy) text-white hover:bg-(--navy-light)`}>Confirm save &amp; end</button><button type="button" disabled={busy} onClick={() => setConfirmEnd(false)} className={buttonClass}>Keep editing</button></div>
         </section>}
         <div className="flex flex-wrap items-center justify-between gap-3">

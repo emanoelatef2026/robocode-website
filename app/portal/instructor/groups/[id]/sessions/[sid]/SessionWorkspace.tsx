@@ -31,7 +31,7 @@ export default function SessionWorkspace({ session, groupId }: { session: Sessio
       }} className={`min-h-11 shrink-0 border-b-2 px-4 py-3 text-sm font-medium disabled:opacity-50 ${active === section.id ? 'border-(--cyan-strong) text-(--cyan-strong)' : 'border-transparent text-(--text-3) hover:bg-(--bg-muted)'}`}>{section.label}</button>)}
     </div>
     <div id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-${active}`}>
-      <AttendanceForm sessionId={session.id} groupId={groupId} rows={session.attendance} currentTopic={session.topic} sessionStatus={ended ? 'completed' : session.status} activeSection={active} onBusyChange={setAttendanceBusy} onCompleted={() => setEnded(true)} onSectionChange={setActive} externalBusy={panelBusy}>
+      <AttendanceForm sessionId={session.id} groupId={groupId} rows={session.attendance} currentTopic={session.topic} attendanceRevision={session.attendance_revision} sessionStatus={ended ? 'completed' : session.status} activeSection={active} onBusyChange={setAttendanceBusy} onCompleted={() => setEnded(true)} onSectionChange={setActive} externalBusy={panelBusy}>
         <SessionDetailsPanel session={ended ? { ...session, status: 'completed' } : session} groupId={groupId} activeSection={active} busy={attendanceBusy} onBusyChange={setPanelBusy} />
       </AttendanceForm>
     </div>

@@ -28,7 +28,7 @@ DECLARE
   contract uuid:=gen_random_uuid(); unrelated uuid:=gen_random_uuid(); role_id uuid:=gen_random_uuid();
   branch uuid; course uuid; other_course uuid; sess uuid; other_sess uuid;
   payload jsonb; result jsonb; job public.session_completion_effects%ROWTYPE; xp integer;
-  before_att integer; before_audit integer; sid uuid;
+  before_att integer; before_audit integer; sid uuid; planned uuid; planned_date timestamptz;
 BEGIN
   SELECT id INTO branch FROM public.branches WHERE deleted_at IS NULL ORDER BY id LIMIT 1;
   SELECT id INTO course FROM public.courses WHERE deleted_at IS NULL ORDER BY id LIMIT 1;
@@ -60,13 +60,61 @@ BEGIN
     VALUES(contract,student1,branch,grp,course,'ACTIVE',5,current_date-1),
       (unrelated,student2,branch,NULL,other_course,'ACTIVE',5,current_date-100);
 
+  -- Exact regression: a 12-lesson plan with three delivered lessons starts #4,
+  -- not #13. Roll back this subcase before the completion/reward fixture below.
+  BEGIN
+    UPDATE public.group_courses SET total_sessions=12 WHERE id=gc;
+    UPDATE public.group_instructors SET to_session=12 WHERE group_id=grp;
+    INSERT INTO public.schedules(group_course_id,branch_id,scheduled_at,duration_minutes,type,topic,status)
+      SELECT gc,branch,now()+(n-4)*interval '7 days',90,'regular','Planned topic','scheduled'
+      FROM generate_series(1,12) n ORDER BY n;
+    UPDATE public.schedules SET status='completed',started_at=scheduled_at,ended_at=scheduled_at+interval '90 minutes'
+      WHERE group_course_id=gc AND session_number<=3;
+    SELECT id,scheduled_at INTO planned,planned_date FROM public.schedules WHERE group_course_id=gc AND session_number=4;
+    result:=public.start_instructor_group_session(actor,instructor,gc,'Fourth lesson');
+    ASSERT (result->>'sessionId')::uuid=planned,'Three completed lessons must start scheduled #4';
+    ASSERT (SELECT scheduled_at FROM public.schedules WHERE id=planned)=planned_date,'Start changed planned date';
+    ASSERT (SELECT count(*) FROM public.schedules WHERE group_course_id=gc)=12,'Start created a thirteenth lesson';
+    ASSERT (SELECT count(*) FROM public.schedules WHERE group_course_id=gc AND status='completed')=3,'Start changed delivered lessons';
+    ASSERT (SELECT count(*) FROM public.schedules WHERE group_course_id=gc AND status='scheduled')=8,'Start changed future lessons';
+    result:=public.start_instructor_group_session(actor,instructor,gc,'Repeated click');
+    ASSERT (result->>'sessionId')::uuid=planned,'Repeated start did not return #4';
+    ASSERT (SELECT topic FROM public.schedules WHERE id=planned)='Fourth lesson','Repeated start changed topic';
+    ASSERT NOT EXISTS (SELECT 1 FROM public.attendance_records WHERE schedule_id=planned),'Start recorded attendance';
+    ASSERT (SELECT consumed_sessions FROM public.student_enrollments WHERE id=contract)=0,'Start consumed contract';
+    RAISE EXCEPTION 'Rollback exact start regression subcase' USING ERRCODE='ZX001';
+  EXCEPTION WHEN SQLSTATE 'ZX001' THEN NULL; END;
+  ASSERT NOT EXISTS (SELECT 1 FROM public.schedules WHERE group_course_id=gc),'Regression subcase did not roll back';
+
+  -- Pre-generated schedules must be started, not counted as delivered lessons
+  -- and bypassed by inserting #11 beyond this instructor's allocation of #1.
+  INSERT INTO public.schedules(group_course_id,branch_id,scheduled_at,duration_minutes,type,topic,status)
+    SELECT gc,branch,now()+n*interval '7 days',90,'regular','Planned topic','scheduled'
+    FROM generate_series(1,10) n ORDER BY n;
+  SELECT id INTO planned FROM public.schedules WHERE group_course_id=gc AND session_number=1;
+  UPDATE public.group_instructors SET from_session=2,to_session=2 WHERE group_id=grp;
+  BEGIN
+    PERFORM public.start_instructor_group_session(actor,instructor,gc,'Must not skip #1');
+    RAISE EXCEPTION 'Expected scheduled session allocation rejection';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  ASSERT NOT EXISTS (SELECT 1 FROM public.schedules WHERE group_course_id=gc AND status='ongoing'),'Out-of-range start changed schedule';
+  UPDATE public.group_instructors SET from_session=1,to_session=1 WHERE group_id=grp;
+  BEGIN
+    PERFORM public.start_instructor_group_session(actor,instructor,gc,' ');
+    RAISE EXCEPTION 'Expected blank topic rejection';
+  EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
   result:=public.start_instructor_group_session(actor,instructor,gc,'Original topic');
   sess:=(result->>'sessionId')::uuid;
+  ASSERT sess=planned,'Start did not reuse earliest scheduled lesson';
+  ASSERT (SELECT session_number FROM public.schedules WHERE id=sess)=1,'Scheduled number changed';
+  ASSERT (SELECT topic FROM public.schedules WHERE id=sess)='Original topic','Scheduled topic not saved';
+  ASSERT (SELECT started_at FROM public.schedules WHERE id=sess) IS NOT NULL,'Scheduled lesson not started';
+  ASSERT (SELECT count(*) FROM public.schedules WHERE group_course_id=gc AND status='scheduled')=9,'Future schedules changed';
   PERFORM set_config('test.atomic_session_id',sess::text,true);
   -- Network retry returns exactly the original session, ignoring new topic.
   result:=public.start_instructor_group_session(actor,instructor,gc,'Retried topic');
   ASSERT (result->>'sessionId')::uuid=sess,'Group start retry duplicated session';
-  ASSERT (SELECT count(*) FROM public.schedules WHERE group_course_id=gc)=1,'Duplicate group start';
+  ASSERT (SELECT count(*) FROM public.schedules WHERE group_course_id=gc)=10,'Duplicate group start';
   payload:=jsonb_build_array(jsonb_build_object('student_id',student1,'status','absent'),
     jsonb_build_object('student_id',student2,'status','late'));
 
@@ -171,6 +219,13 @@ BEGIN
   ASSERT (SELECT state FROM public.session_completion_effects WHERE session_id=sess)='failed','Expired final lease stuck';
   ASSERT NOT has_table_privilege('authenticated','public.session_completion_effects','SELECT'),'Outbox exposed';
   ASSERT NOT has_function_privilege('authenticated','public.save_instructor_session(uuid,uuid,uuid,uuid,boolean,jsonb,text)','EXECUTE'),'Finalizer exposed';
+  ASSERT NOT has_function_privilege('authenticated','public.start_instructor_group_session(uuid,uuid,uuid,text)','EXECUTE'),'Starter exposed';
+  -- No remaining planned sessions: retain direct creation and allocation bounds.
+  DELETE FROM public.schedules WHERE group_course_id=gc AND status='scheduled';
+  UPDATE public.group_courses SET status='active' WHERE id=gc;
+  UPDATE public.group_instructors SET from_session=2,to_session=2,allocation_status='active' WHERE group_id=grp;
+  result:=public.start_instructor_group_session(actor,instructor,gc,'Unplanned second session');
+  ASSERT (SELECT session_number FROM public.schedules WHERE id=(result->>'sessionId')::uuid)=2,'Direct creation no longer works';
   RAISE NOTICE 'PASS: atomic session synthetic fixture, rollback, retries, frozen rewards, service-only access';
 END;
 $fixture$;

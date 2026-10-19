@@ -637,7 +637,7 @@ export async function getSessionDetail(
   // as { data: null, error } — silently producing a 404 when we only check data.
   const { data: sessRow, error: sessBaseErr } = await db
     .from('schedules')
-    .select('id, group_course_id, branch_id, scheduled_at, duration_minutes, type, delivery, meeting_url, room, status')
+    .select('id, group_course_id, branch_id, scheduled_at, duration_minutes, type, delivery, meeting_url, room, status, attendance_revision')
     .eq('id', sessionId)
     .maybeSingle()
 
@@ -884,6 +884,7 @@ export async function getSessionDetail(
 
   return {
     id:                  s.id,
+    attendance_revision: s.attendance_revision ?? 0,
     group_course_id:     s.group_course_id,
     group_id:            groupId,
     branch_id:           s.branch_id,

@@ -123,6 +123,7 @@ export interface CourseModuleItem {
 }
 
 export interface SessionDetail {
+  attendance_revision?: number
   id:                  string
   group_course_id:     string
   group_id:            string

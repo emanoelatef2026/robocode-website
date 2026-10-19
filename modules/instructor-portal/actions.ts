@@ -192,6 +192,7 @@ export async function createSession(
 
 export async function startGroupSession(
   groupCourseId: string, _groupId: string, _branchId: string, topic: string,
+  expectedSession?: string | null, expectedPrevious?: string | null,
 ): Promise<ActionResult<{ sessionId: string }>> {
   const user = await requirePermission('manage_attendance')
   const instructor = await getInstructorByUserId(user.id)
@@ -199,8 +200,10 @@ export async function startGroupSession(
   if (!z.string().uuid().safeParse(groupCourseId).success || !validateAcademicTopic(topic)) {
     return { success: false, error: { code: 'VALIDATION', message: 'Valid group course and topic are required.' } }
   }
-  const { data, error } = await createServiceClient().rpc('start_instructor_group_session', {
-    p_actor_id: user.id, p_instructor_id: instructor.id, p_group_course_id: groupCourseId, p_topic: topic,
+  if (expectedSession === undefined || expectedPrevious === undefined) return { success: false, error: { code: 'VALIDATION', message: 'Refresh the session list before starting a class.' } }
+  const { data, error } = await createServiceClient().rpc('open_shared_instructor_session', {
+    p_actor: user.id, p_instructor: instructor.id, p_course: groupCourseId, p_topic: topic,
+    p_expected_session: expectedSession, p_expected_previous: expectedPrevious,
   })
   if (error || !data?.sessionId) return { success: false, error: {
     code: error?.code === '42501' ? 'FORBIDDEN' : error?.code === '22023' ? 'VALIDATION' : 'DB_ERROR',
@@ -277,84 +280,40 @@ export async function updateSession(
 
 // ── Session lifecycle: start / end ───────────────────────────────────────────
 
-export async function startSession(
-  sessionId: string,
-  groupId:   string
-): Promise<ActionResult<void>> {
-  const user       = await requirePermission('manage_attendance')
+export async function startSession(sessionId: string, groupId: string): Promise<ActionResult<{ sessionId: string }>> {
+  const user = await requirePermission('manage_attendance')
   const instructor = await getInstructorByUserId(user.id)
-  if (!instructor) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
-  }
-
+  if (!instructor) return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
   const db = createServiceClient()
-
-  const { data: sessRow } = await db
-    .from('schedules')
-    .select('id, status')
-    .eq('id', sessionId)
-    .single()
-
-  if (!sessRow) {
-    return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
-  }
-
-  const ctx = await getSessionAccessContext(sessionId, instructor.id, db)
-  if (!ctx) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
-  }
-
-  if (ctx.groupId !== groupId) {
-    return { success: false, error: { code: 'FORBIDDEN', message: 'Session does not belong to this group.' } }
-  }
-  if ((sessRow as any).status === 'ongoing') {
-    revalidatePath(`/portal/instructor/groups/${groupId}`)
-    revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
-    return { success: true, data: undefined }
-  }
-  if ((sessRow as any).status === 'completed') {
-    return { success: false, error: { code: 'VALIDATION', message: 'Session is already completed.' } }
-  }
-  if ((sessRow as any).status !== 'scheduled') {
-    return { success: false, error: { code: 'VALIDATION', message: 'Only scheduled sessions can be started.' } }
-  }
-
-  const { data: started, error } = await db
-    .from('schedules')
-    .update({ status: 'ongoing', started_at: new Date().toISOString() })
-    .eq('id', sessionId)
-    .eq('status', 'scheduled')
-    .select('id')
-    .maybeSingle()
-
-  if (error) {
-    return { success: false, error: { code: 'DB_ERROR', message: error.message } }
-  }
-  if (!started) {
-    const { data: current, error: readError } = await db.from('schedules').select('status').eq('id', sessionId).maybeSingle()
-    if (readError || current?.status !== 'ongoing') {
-      return { success: false, error: { code: 'VALIDATION', message: 'Session changed; refresh before starting.' } }
-    }
-  }
-
+  const { data: session, error: readError } = await db.from('schedules')
+    .select('id,group_course_id,topic,status,group_courses!schedules_group_course_id_fkey(group_id)').eq('id', sessionId).maybeSingle()
+  if (readError || !session) return { success: false, error: { code: 'NOT_FOUND', message: 'Session not found.' } }
+  const context = session.group_courses as unknown as { group_id: string }
+  if (context?.group_id !== groupId) return { success: false, error: { code: 'FORBIDDEN', message: 'Session does not belong to this group.' } }
+  if (!['scheduled', 'ongoing'].includes(session.status)) return { success: false, error: { code: 'VALIDATION', message: 'This class is no longer available to start. Review previous classes instead.' } }
+  const { data, error } = await db.rpc('open_shared_instructor_session', {
+    p_actor: user.id, p_instructor: instructor.id, p_course: session.group_course_id,
+    p_expected_session: sessionId, p_expected_previous: null, p_topic: session.topic || 'Session',
+  })
+  if (error || !data?.sessionId) return { success: false, error: { code: 'VALIDATION',
+    message: error && ['22023', '42501'].includes(error.code) ? error.message : 'Unable to open shared session. Please retry.' } }
   revalidatePath(`/portal/instructor/groups/${groupId}`)
-  revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
-  return { success: true, data: undefined }
+  return { success: true, data: { sessionId: data.sessionId } }
 }
 
 // Legacy force is deliberately ignored by the common finalizer.
-export async function endSession(sessionId: string, groupId: string, _force = false): Promise<ActionResult<void>> {
+export async function endSession(sessionId: string, groupId: string, _force = false): Promise<ActionResult<{ attendanceRevision: number }>> {
   const formData = new FormData()
   formData.set('session_id', sessionId)
   formData.set('group_id', groupId)
   return persistInstructorSession(formData, true, false)
 }
 
-export async function saveAttendance(_prev: unknown, formData: FormData): Promise<ActionResult<void>> {
+export async function saveAttendance(_prev: unknown, formData: FormData): Promise<ActionResult<{ attendanceRevision: number; alreadyCompleted?: boolean }>> {
   return persistInstructorSession(formData, false, true)
 }
 
-export async function saveAndEndSession(_prev: unknown, formData: FormData): Promise<ActionResult<void>> {
+export async function saveAndEndSession(_prev: unknown, formData: FormData): Promise<ActionResult<{ attendanceRevision: number; alreadyCompleted?: boolean }>> {
   return persistInstructorSession(formData, true, true)
 }
 

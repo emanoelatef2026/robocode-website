@@ -6,6 +6,13 @@ import type { SessionDetail } from '@/modules/instructor-portal/types'
 import '@/app/globals.css'
 import { makeSession } from './fixture'
 import { controls, PREVIEW_EVENT, type PreviewAction } from './actions'
+import SharedSessionHub from '@/app/portal/instructor/groups/[id]/SharedSessionHub'
+import type { SharedSessionItem } from '@/modules/instructor-portal/shared-queries'
+
+const sharedFixture: SharedSessionItem[] = [
+  { id: 'synthetic-4', group_course_id: 'synthetic-course', session_number: 4, scheduled_at: '2026-10-21T18:00:00Z', ended_at: null, status: 'ongoing', topic: 'Loops and robots', attendance_revision: 0, participants: [{ instructor_id: 'synthetic-colleague', name: 'Test colleague', state: 'joined', joined_at: '2026-10-21T18:00:00Z' }], myState: null, joined: false },
+  { id: 'synthetic-3', group_course_id: 'synthetic-course', session_number: 3, scheduled_at: '2026-10-14T18:00:00Z', ended_at: '2026-10-14T19:30:00Z', status: 'completed', topic: 'Robot sensors', attendance_revision: 2, participants: [], myState: null, joined: false },
+]
 
 // QA fixture only. This must never become a production route or auth bypass.
 function Preview() {
@@ -13,6 +20,16 @@ function Preview() {
   const [version, setVersion] = useState(0)
   const [failOnce, setFailOnce] = useState(false)
   const [lastAction, setLastAction] = useState('No mock calls yet')
+  const [view, setView] = useState('workspace')
+  const [shared, setShared] = useState(sharedFixture)
+  useEffect(() => {
+    const update = (event: Event) => {
+      const { sessionId, state } = (event as CustomEvent<{ sessionId: string; state: string }>).detail
+      setShared(rows => rows.map(s => s.id === sessionId ? { ...s, myState: state, joined: state !== 'requested', participants: [...s.participants.filter(p => p.instructor_id !== 'synthetic-me'), { instructor_id: 'synthetic-me', name: 'Test instructor', state, joined_at: state === 'requested' ? null : '2026-10-21T18:05:00Z' }] } : s))
+    }
+    window.addEventListener('synthetic-shared', update)
+    return () => window.removeEventListener('synthetic-shared', update)
+  }, [])
   useEffect(() => {
     function saved(event: Event) {
       const action = (event as CustomEvent<PreviewAction>).detail
@@ -46,6 +63,7 @@ function Preview() {
     </aside>}
     renderHeader={() => <header aria-label="Synthetic QA controls" className="flex flex-wrap items-center gap-3 border-b border-(--border) bg-white p-3 text-sm">
       <strong>Synthetic QA only · 8 test students</strong>
+      <label>Preview view<select value={view} onChange={e => setView(e.target.value)} className="ml-2 rounded border p-2"><option value="workspace">Session workspace</option><option value="group">Shared group sessions</option></select></label>
       <label className="flex items-center gap-2"><input type="checkbox" checked={failOnce} onChange={event => { controls.failOnce = event.target.checked; setFailOnce(event.target.checked) }} />Fail next action once</label>
       <label>Save delay (ms) <input aria-label="Save delay (ms)" type="number" min="0" max="10000" defaultValue={900} onChange={event => { controls.delay = Math.min(10000, Math.max(0, Number(event.target.value))) }} className="w-24 rounded border px-2 py-1" /></label>
       <button type="button" className="rounded border px-3 py-2" onClick={() => { controls.failOnce = false; controls.calls = 0; setFailOnce(false); setLastAction('No mock calls yet'); setSession(makeSession()); setVersion(value => value + 1) }}>Reset synthetic session</button>
@@ -55,7 +73,7 @@ function Preview() {
       <span>Test home</span><span aria-current="page" className="font-semibold text-(--cyan-strong)">Test sessions</span><span>Test groups</span>
     </nav>}
   >
-    <div className="mx-auto w-full max-w-7xl"><SessionWorkspace key={version} session={session} groupId={session.group_id} /></div>
+    <div className="mx-auto w-full max-w-7xl">{view === 'group' ? <SharedSessionHub groupId="synthetic-group" courseId="synthetic-course" sessions={shared} /> : <SessionWorkspace key={version} session={session} groupId={session.group_id} />}</div>
   </AppLayout>
 }
 

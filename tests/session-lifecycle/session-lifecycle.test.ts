@@ -86,60 +86,30 @@ function makeFormData(fields: Record<string, string | string[]>): FormData {
 // ── TEST 1: Open session → only sets status to 'ongoing', no payroll/counts ──
 
 describe('startSession', () => {
+  beforeEach(() => vi.clearAllMocks())
   it.each(['cancelled', 'cancelled_with_makeup', 'postponed', 'completed'])('never starts %s', async status => {
-    const db = mockDb({ schedules: [
-      { data: { status }, error: null },
-      { data: { branch_id: 'branch', group_courses: { group_id: 'group' } }, error: null },
-    ] })
+    const db = mockDb({ schedules: [{ data: { status, group_courses: { group_id: 'group' } }, error: null }] })
     expect((await startSession('session', 'group')).success).toBe(false)
-    expect(db.from).toHaveBeenCalledTimes(2)
+    expect(db.rpc).not.toHaveBeenCalled()
   })
-  it('authorized ongoing retries succeed without another write', async () => {
-    const db = mockDb({ schedules: [
-      { data: { status: 'ongoing' }, error: null },
-      { data: { branch_id: 'branch', group_courses: { group_id: 'group' } }, error: null },
-    ] })
-    expect((await startSession('session', 'group')).success).toBe(true)
-    expect(db.from).toHaveBeenCalledTimes(2)
-  })
-  it('compare-and-set loser succeeds only when a reread confirms ongoing', async () => {
-    mockDb({ schedules: [
-      { data: { status: 'scheduled' }, error: null },
-      { data: { branch_id: 'branch', group_courses: { group_id: 'group' } }, error: null },
-      { data: null, error: null },
-      { data: { status: 'ongoing' }, error: null },
-    ] })
-    expect((await startSession('session', 'group')).success).toBe(true)
-  })
-  it('compare-and-set loser rejects a concurrent cancellation', async () => {
-    mockDb({ schedules: [
-      { data: { status: 'scheduled' }, error: null },
-      { data: { branch_id: 'branch', group_courses: { group_id: 'group' } }, error: null },
-      { data: null, error: null },
-      { data: { status: 'cancelled' }, error: null },
-    ] })
-    expect((await startSession('session', 'group')).success).toBe(false)
-  })
-  it('sets session status to ongoing and returns success', async () => {
-    const db = mockDb({
-      schedules: [
-        { data: { id: 'a0000000-0000-4000-8000-000000000001', status: 'scheduled' }, error: null }, // initial status fetch
-        { data: { branch_id: 'a0000000-0000-4000-8000-000000000020', group_courses: { group_id: 'a0000000-0000-4000-8000-000000000010' } }, error: null }, // getSessionAccessContext
-        { data: { id: 'a0000000-0000-4000-8000-000000000001' }, error: null }, // compare-and-set returned row
-      ],
+  it.each(['ongoing', 'scheduled'])('opens %s through the locked shared RPC without writing attendance/payroll directly', async status => {
+    const db = mockDb({ schedules: [{ data: { id: 'session', group_course_id: 'course', topic: 'Loops', status, group_courses: { group_id: 'group' } }, error: null }] })
+    db.rpc.mockResolvedValue({ data: { sessionId: 'shared-session', groupId: 'group' }, error: null })
+    expect(await startSession('session', 'group')).toEqual({ success: true, data: { sessionId: 'shared-session' } })
+    expect(db.rpc).toHaveBeenCalledExactlyOnceWith('open_shared_instructor_session', {
+      p_actor: 'user-test', p_instructor: 'instr-1', p_course: 'course', p_expected_session: 'session', p_expected_previous: null, p_topic: 'Loops',
     })
-
-    const result = await startSession('a0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000010')
-
-    expect(result.success).toBe(true)
-
-    // Check that the schedules table was updated (ongoing) — NOT completed
-    const calls = db.from.mock.calls.map((c: any[]) => c[0])
-    expect(calls).toContain('schedules')
-    // session_instructors must NOT be touched
-    expect(calls).not.toContain('session_instructors')
-    // attendance_records must NOT be touched
-    expect(calls).not.toContain('attendance_records')
+    expect(db.from).toHaveBeenCalledExactlyOnceWith('schedules')
+  })
+  it('rejects a forged group before invoking the starter', async () => {
+    const db = mockDb({ schedules: [{ data: { status: 'scheduled', group_courses: { group_id: 'actual' } }, error: null }] })
+    expect((await startSession('session', 'forged')).success).toBe(false)
+    expect(db.rpc).not.toHaveBeenCalled()
+  })
+  it('a concurrent cancellation is rejected by the RPC rather than creating the next class', async () => {
+    const db = mockDb({ schedules: [{ data: { status: 'scheduled', group_courses: { group_id: 'group' } }, error: null }] })
+    db.rpc.mockResolvedValue({ data: null, error: { code: '22023', message: 'Session list changed. Refresh first.' } })
+    expect((await startSession('session', 'group')).success).toBe(false)
   })
 })
 
@@ -178,10 +148,10 @@ describe('atomic session actions', () => {
     db.rpc.mockResolvedValue({ data: { status: 'ongoing' }, error: null })
     expect((await saveAttendance(null, attendanceForm())).success).toBe(true)
     expect(db.from).not.toHaveBeenCalled()
-    expect(db.rpc).toHaveBeenCalledExactlyOnceWith('save_instructor_session', {
+    expect(db.rpc).toHaveBeenCalledExactlyOnceWith('save_shared_instructor_session', {
       p_actor_id: 'user-test', p_instructor_id: 'instr-1',
       p_session_id: sessionId, p_group_id: groupId, p_complete: false, p_topic: 'Variables',
-      p_attendance: [{ student_id: studentId, status: 'present', late_minutes: null, notes: null }],
+      p_attendance: [{ student_id: studentId, status: 'present', late_minutes: null, notes: null }], p_expected_revision: null,
     })
     expect(after).not.toHaveBeenCalled()
   })
@@ -189,7 +159,7 @@ describe('atomic session actions', () => {
     const db = mockDb({})
     db.rpc.mockResolvedValue({ data: { status: 'completed' }, error: null })
     expect((await saveAndEndSession(null, attendanceForm('absent'))).success).toBe(true)
-    expect(db.rpc).toHaveBeenCalledWith('save_instructor_session', expect.objectContaining({
+    expect(db.rpc).toHaveBeenCalledWith('save_shared_instructor_session', expect.objectContaining({
       p_complete: true, p_attendance: [expect.objectContaining({ status: 'absent' })],
     }))
     expect(after).toHaveBeenCalledOnce()
@@ -200,7 +170,7 @@ describe('atomic session actions', () => {
     expect(await endSession(sessionId, groupId, true)).toEqual({
       success: false, error: { code: 'VALIDATION', message: 'Every active student needs valid attendance before ending' },
     })
-    expect(db.rpc).toHaveBeenCalledExactlyOnceWith('save_instructor_session', expect.objectContaining({
+    expect(db.rpc).toHaveBeenCalledExactlyOnceWith('save_shared_instructor_session', expect.objectContaining({
       p_complete: true, p_attendance: null, p_topic: null,
     }))
     expect(after).not.toHaveBeenCalled()
@@ -247,10 +217,10 @@ describe('atomic session actions', () => {
   it('group start ignores client group/branch identifiers and uses authoritative RPC context', async () => {
     const db = mockDb({})
     db.rpc.mockResolvedValue({ data: { sessionId, groupId }, error: null })
-    expect(await startGroupSession(sessionId, 'forged-group', 'forged-branch', 'Loops')).toEqual({ success: true, data: { sessionId } })
+    expect(await startGroupSession(sessionId, 'forged-group', 'forged-branch', 'Loops', null, null)).toEqual({ success: true, data: { sessionId } })
     expect(db.from).not.toHaveBeenCalled()
-    expect(db.rpc).toHaveBeenCalledExactlyOnceWith('start_instructor_group_session', {
-      p_actor_id: 'user-test', p_instructor_id: 'instr-1', p_group_course_id: sessionId, p_topic: 'Loops',
+    expect(db.rpc).toHaveBeenCalledExactlyOnceWith('open_shared_instructor_session', {
+      p_actor: 'user-test', p_instructor: 'instr-1', p_course: sessionId, p_topic: 'Loops', p_expected_session: null, p_expected_previous: null,
     })
   })
 })

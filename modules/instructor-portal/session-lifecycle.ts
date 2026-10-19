@@ -19,7 +19,7 @@ const attendance = z.array(z.object({
 
 export async function persistInstructorSession(
   form: FormData, complete: boolean, includeAttendance: boolean,
-): Promise<ActionResult<void>> {
+): Promise<ActionResult<{ attendanceRevision: number; alreadyCompleted?: boolean }>> {
   const user = await requirePermission('manage_attendance')
   const instructor = await getInstructorByUserId(user.id)
   if (!instructor) return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
@@ -35,10 +35,13 @@ export async function persistInstructorSession(
   const topic = form.get('topic')
   if (topic !== null && typeof topic !== 'string') return { success: false, error: { code: 'VALIDATION', message: 'Invalid topic.' } }
   const { sessionId, groupId } = ids.data
-  const { data, error } = await createServiceClient().rpc('save_instructor_session', {
+  const rawRevision = form.get('attendance_revision')
+  const revision = rawRevision === null ? null : Number(rawRevision)
+  if (revision !== null && (!Number.isSafeInteger(revision) || revision < 0)) return { success: false, error: { code: 'VALIDATION', message: 'Invalid attendance revision.' } }
+  const { data, error } = await createServiceClient().rpc('save_shared_instructor_session', {
     p_actor_id: user.id, p_instructor_id: instructor.id,
     p_session_id: sessionId, p_group_id: groupId, p_complete: complete,
-    p_attendance: rows?.success ? rows.data : null, p_topic: topic,
+    p_attendance: rows?.success ? rows.data : null, p_topic: topic, p_expected_revision: revision,
   })
   if (error) return { success: false, error: {
     code: error.code === '42501' ? 'FORBIDDEN' : error.code === '22023' ? 'VALIDATION' : 'DB_ERROR',
@@ -48,5 +51,5 @@ export async function persistInstructorSession(
   if (complete) scheduleSessionEffects(sessionId)
   revalidatePath(`/portal/instructor/groups/${groupId}`)
   revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
-  return { success: true, data: undefined }
+  return { success: true, data: { attendanceRevision: data.attendance_revision ?? 0, alreadyCompleted: data.already_completed === true } }
 }

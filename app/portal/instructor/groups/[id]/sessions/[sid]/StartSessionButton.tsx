@@ -23,7 +23,7 @@ export default function StartSessionButton({
     startTransition(async () => {
       try {
         const res = await startSession(sessionId, groupId)
-        if (res.success) router.refresh()
+        if (res.success) { if (res.data?.sessionId && res.data.sessionId !== sessionId) router.push(`/portal/instructor/groups/${groupId}/sessions/${res.data.sessionId}`); else router.refresh() }
         else setError(res.error.message)
       } catch {
         setError('Could not confirm the session started. Please try again; your session will not be duplicated.')

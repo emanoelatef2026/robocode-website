@@ -5,6 +5,8 @@ import Link from 'next/link'
 import SessionWorkspace from './SessionWorkspace'
 import StartSessionButton from './StartSessionButton'
 import { scheduleSessionEffects } from '@/modules/instructor-portal/session-effects'
+import { loadSharedSessions } from '@/modules/instructor-portal/shared-queries'
+import SessionParticipation from '@/components/portal/instructor/SessionParticipation'
 
 interface Props { params: Promise<{ id: string; sid: string }> }
 
@@ -34,6 +36,7 @@ export default async function SessionDetailPage({ params }: Props) {
 
   const session = await getSessionDetail(sid, instructor.id)
   if (!session || session.group_id !== id) notFound()
+  const shared = (await loadSharedSessions(id, instructor.id)).find(s => s.id === sid)
   // A revisited completed session can resume its already-queued background job.
   // The database lease and unique award events make this safe alongside cron.
   if (session.status === 'completed') scheduleSessionEffects(sid)
@@ -43,6 +46,7 @@ export default async function SessionDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-5">
+      {shared && ['ongoing', 'completed'].includes(session.status) && <SessionParticipation key={`${sid}-${shared.myState}`} session={shared} />}
       {/* ── Breadcrumb ───────────────────────────────────────────────────────── */}
       <div>
         <Link href={`/portal/instructor/groups/${id}`}
@@ -181,7 +185,7 @@ export default async function SessionDetailPage({ params }: Props) {
         </a>
       )}
 
-      <SessionWorkspace session={session} groupId={id} />
+      <SessionWorkspace key={`${session.id}-${session.status}`} session={session} groupId={id} />
     </div>
   )
 }

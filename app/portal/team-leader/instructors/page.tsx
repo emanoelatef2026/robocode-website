@@ -1,6 +1,7 @@
 import { requirePortalRole, requirePermission } from '@/modules/rbac/guards'
 import { listInstructorsOperational, getInstructorFormOptions } from '@/modules/instructors/operational'
 import InstructorsWorkspaceClient from './InstructorsWorkspaceClient'
+import ParticipationRequests from '@/components/portal/instructor/ParticipationRequests'
 
 export default async function TLInstructorsPage() {
   const user      = await requirePortalRole('team_leader')
@@ -14,11 +15,13 @@ export default async function TLInstructorsPage() {
   ])
 
   return (
+    <>{canManage && <ParticipationRequests />}
     <InstructorsWorkspaceClient
       instructors={instructors}
       options={options}
       branchIds={branchIds}
       canManage={canManage}
     />
+    </>
   )
 }

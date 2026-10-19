@@ -7,6 +7,14 @@ review **Save & end session**. Completion submits the current topic and roster i
 one request. Unmarked students are never silently marked present. Cancelled,
 postponed and not-yet-started sessions cannot record attendance through this flow.
 
+Starting from the group page resumes an ongoing session, otherwise starts the
+earliest numbered scheduled session (preserving its date, number and metadata).
+Only when none is scheduled does it create a new session. The selected lesson must
+still be inside the instructor's active allocation; later allocations cannot skip
+an earlier planned lesson. Retrying returns the same ongoing lesson. Migration
+`reuse_scheduled_instructor_session` corrects the former MAX(number)+1 start logic,
+which rejected fully pre-scheduled groups as if all planned lessons were delivered.
+
 Attendance, content, homework, and notes/evaluations have separate tabs. Switching
 tabs preserves the attendance draft. The fixed toolbar follows the content width,
 reserves space below the content, and clears the mobile bottom navigation. Pending
@@ -33,7 +41,44 @@ rules. Present, absent, late, excused and makeup consume slots. Existing ledger
 links are never reassigned by this workflow; generated remaining-session counters
 are not manually written. Unrelated contracts remain untouched.
 
-## Non-blocking effects
+## Shared teaching participation
+
+The group session hub shows the ongoing class, the next planned lesson and all
+previous classes with participant names and the instructor's own participation
+state. Starting uses expected class IDs under the group lock: a stale page cannot
+silently create the following class after a colleague ends the previous one.
+A partial unique index enforces one ongoing schedule per group course.
+
+`session_participations` records joining independently of student attendance.
+Joining alone does not earn payroll. Explicit confirmation creates one
+`session_instructors` row per instructor/class; only completed classes contribute
+to payable earnings. Ending also confirms the ending instructor. A colleague who
+joined before completion can confirm afterwards without replaying attendance,
+contract consumption, group progression or XP. Never credit every assigned
+instructor automatically. Historical lead fallback is excluded once explicit
+teaching participation exists.
+
+Late claims require a reason and branch-scoped team-leader/super-admin approval.
+Pending/rejected claims do not earn payroll. Review requests in the Instructors
+page of either management portal. Approval only adds that instructor's teaching
+participation; it does not reopen or add a class. No historical backfill is run.
+
+Shared attendance uses `schedules.attendance_revision`, advanced by a trigger on
+every attendance write. Stale revisions are rejected and drafts retained for
+review; a reload action explicitly discards the draft. Unversioned legacy writes
+are rejected once multiple instructors have joined. Completed attendance is
+read-only in the instructor workspace; administrative corrections use existing
+attendance management. Group-before-schedule lock ordering is shared by these RPCs.
+
+All participation tables/helpers are service-only, invoker-security, and recheck
+actor identity, active instructor, allocation range and branch permission. Late
+approval also checks the approver's administrative role and branch in the database.
+Required migration: `20261019124846_shared_instructor_session_participation`.
+Integration regression: `tests/session-lifecycle/shared-session.rollback.sql`,
+always inside BEGIN/ROLLBACK. Covers co-teaching, late confirmation/approval,
+stale saves/starts, duplicate ongoing classes and single student consumption.
+
+## Non-blocking completion effects
 
 Completion freezes the reward roster in `session_completion_effects`. An awaited
 Next `after()` callback processes it after the response. A completed-session revisit
@@ -67,7 +112,10 @@ error without weakening permissions.
   and groups, injects a critical audit failure, and asserts rollback, absent-slot
   consumption, unrelated-contract protection, idempotent starts/completion, leases,
   frozen reward eligibility, XP/achievement/badge retry safety and service-only
-  access. Never run it without the rollback wrapper.
+  access. Also reproduces a 12-lesson plan with three completed lessons: start must
+  reuse #4, preserve its planned date, leave future/completed lessons intact and
+  never consume attendance/contracts merely by starting. Never run it without
+  the rollback wrapper.
 
 The application requires migration `20261018071826_atomic_instructor_session`.
 Its local version matches the applied remote migration. No historical attendance,

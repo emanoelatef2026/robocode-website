@@ -109,7 +109,7 @@ export async function getInstructorSessionEarnings(
   // 2. Group courses this instructor is linked to (direct lead OR group_instructors member)
   const [{ data: gcDirect }, { data: giRows }] = await Promise.all([
     db.from('group_courses').select('id, group_id').eq('instructor_id', instructorId),
-    db.from('group_instructors').select('group_id, session_rate').eq('instructor_id', instructorId),
+    db.from('group_instructors').select('group_id, role, session_rate').eq('instructor_id', instructorId),
   ])
 
   const giGroupIds  = [...new Set((giRows ?? []).map((r: any) => r.group_id as string))]
@@ -129,6 +129,8 @@ export async function getInstructorSessionEarnings(
     gcMap.set(gc.id, gc.group_id)
   }
   const gcIds = [...gcMap.keys()]
+  const historicalLeadGroups = new Set((giRows ?? []).filter((r: any) => r.role === 'lead').map((r: any) => r.group_id))
+  const directCourseIds = new Set((gcDirect ?? []).map((r: any) => r.id))
 
   // 3. Session-instructor direct assignments (covers trial/makeup + explicit regular assignments)
   const { data: siRows } = await db
@@ -146,6 +148,19 @@ export async function getInstructorSessionEarnings(
       .in('group_course_id', gcIds)
       .in('branch_id', branchIds)
     fallbackSchedules = (data ?? []).filter((s: any) => !directSessionIds.has(s.id))
+    if (fallbackSchedules.length) {
+      // A co-teacher is not entitled to every group class. Once explicit
+      // participation exists, only its confirmed instructor rows are payable.
+      const candidates = fallbackSchedules.map((s: any) => s.id)
+      const [actualParticipants, sharedParticipants] = await Promise.all([
+        db.from('session_instructors').select('session_id').in('session_id', candidates),
+        db.from('session_participations').select('session_id').in('session_id', candidates),
+      ])
+      if (actualParticipants.error || sharedParticipants.error) throw new Error('Unable to verify teaching participation for earnings.')
+      const explicit = new Set([...(actualParticipants.data ?? []), ...(sharedParticipants.data ?? [])].map(r => r.session_id))
+      fallbackSchedules = fallbackSchedules.filter((s: any) => !explicit.has(s.id)
+        && (directCourseIds.has(s.group_course_id) || historicalLeadGroups.has(gcMap.get(s.group_course_id))))
+    }
   }
 
   // 5. Direct-assignment schedules (regular + standalone trial/makeup)

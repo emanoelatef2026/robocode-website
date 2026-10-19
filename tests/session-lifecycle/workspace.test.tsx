@@ -64,7 +64,7 @@ describe('session attendance workspace', () => {
     expect(fd.get('status_s1')).toBe('absent')
     expect(fd.get('intent')).toBe('end')
     expect(mocks.save).not.toHaveBeenCalled()
-    expect(screen.getByRole('status')).toHaveTextContent('Session completed')
+    expect(screen.queryByRole('button', { name: 'Save attendance' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Save & end session' })).not.toBeInTheDocument()
   })
 
@@ -94,13 +94,11 @@ describe('session attendance workspace', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Saved')
   })
 
-  it('allows save only for completed sessions and marks new edits unsaved', async () => {
-    const user = setup('completed')
+  it('completed attendance is read-only and cannot be resubmitted by a co-teacher', () => {
+    setup('completed')
     expect(screen.queryByRole('button', { name: 'Save & end session' })).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Save attendance' }))
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Saved'))
-    await user.click(screen.getByRole('button', { name: 'Ada: Excused' }))
-    expect(screen.getByRole('status')).toHaveTextContent('Unsaved changes')
+    expect(screen.queryByRole('button', { name: 'Save attendance' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Ada: Excused' })).toBeDisabled()
   })
 
   it('warns before leaving with unsaved changes and clears the warning after save', async () => {

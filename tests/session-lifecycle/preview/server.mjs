@@ -16,6 +16,7 @@ const server = await createServer({
   resolve: {
     alias: [
       { find: '@/modules/instructor-portal/actions', replacement: local('actions.ts') },
+      { find: '@/modules/instructor-portal/shared-actions', replacement: local('shared-actions.ts') },
       { find: 'next/link', replacement: local('link.tsx') },
       { find: 'next/navigation', replacement: local('navigation.ts') },
       { find: '@', replacement: repo },
