@@ -2,6 +2,17 @@
 -- No real identities or real attendance are modified.
 SELECT set_config('request.jwt.claims','{"role":"service_role"}',true);
 SELECT set_config('request.jwt.claim.role','service_role',true);
+-- Fail one synthetic request's notification to verify the request rolls back too.
+CREATE FUNCTION pg_temp.fail_participation_notice() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.type='SESSION_PARTICIPATION_REQUESTED'
+    AND current_setting('test.fail_participation_notice',true)='yes' THEN
+    RAISE EXCEPTION 'Synthetic notification failure' USING ERRCODE='P0001';
+  END IF;
+  RETURN NEW;
+END; $$;
+CREATE TRIGGER test_fail_participation_notice BEFORE INSERT ON public.notifications
+  FOR EACH ROW EXECUTE FUNCTION pg_temp.fail_participation_notice();
 DO $fixture$
 DECLARE
   actor uuid:=gen_random_uuid(); other_actor uuid:=gen_random_uuid();
@@ -13,6 +24,7 @@ DECLARE
   payload jsonb; result jsonb; job public.session_completion_effects%ROWTYPE; xp integer;
   before_att integer; before_audit integer; sid uuid; planned uuid; planned_date timestamptz;
   instructor2 uuid:=gen_random_uuid(); instructor3 uuid:=gen_random_uuid(); admin_role uuid; revision integer;
+  super_user uuid:=gen_random_uuid(); foreign_leader uuid:=gen_random_uuid(); super_role uuid; foreign_branch uuid; notice_key text;
 BEGIN
   SELECT id INTO branch FROM public.branches WHERE deleted_at IS NULL ORDER BY id LIMIT 1;
   SELECT id INTO course FROM public.courses WHERE deleted_at IS NULL ORDER BY id LIMIT 1;
@@ -23,10 +35,10 @@ BEGIN
   -- Auth trigger may already create public.users; ON CONFLICT affects only these new IDs.
   INSERT INTO auth.users(id,email,raw_user_meta_data,raw_app_meta_data,aud,role)
     SELECT id,'atomic-session-'||id||'@robocodeschools.com','{}','{}','authenticated','authenticated'
-    FROM unnest(ARRAY[actor,other_actor,u1,u2,u3]) x(id);
+    FROM unnest(ARRAY[actor,other_actor,u1,u2,u3,super_user,foreign_leader]) x(id);
   INSERT INTO public.users(id,email)
     SELECT id,'atomic-session-'||id||'@robocodeschools.com'
-    FROM unnest(ARRAY[actor,other_actor,u1,u2,u3]) x(id) ON CONFLICT(id) DO NOTHING;
+    FROM unnest(ARRAY[actor,other_actor,u1,u2,u3,super_user,foreign_leader]) x(id) ON CONFLICT(id) DO NOTHING;
   INSERT INTO public.roles(id,name) VALUES(role_id,'test-atomic-session-'||role_id);
   INSERT INTO public.role_permissions(role_id,permission_id)
     SELECT role_id,p.id FROM public.permissions p WHERE p.name='manage_attendance';
@@ -46,6 +58,11 @@ BEGIN
 
 
   SELECT id INTO admin_role FROM public.roles WHERE name='team_leader' LIMIT 1;
+  SELECT id INTO super_role FROM public.roles WHERE name='super_admin' LIMIT 1;
+  SELECT id INTO foreign_branch FROM public.branches WHERE deleted_at IS NULL AND id<>branch ORDER BY id LIMIT 1;
+  ASSERT foreign_branch IS NOT NULL,'Fixture needs two branches';
+  INSERT INTO public.user_roles(user_id,role_id,branch_id)
+    VALUES(super_user,super_role,branch),(super_user,admin_role,branch),(foreign_leader,admin_role,foreign_branch);
   INSERT INTO public.user_roles(user_id,role_id,branch_id) VALUES(other_actor,role_id,branch),(u1,admin_role,branch),(u3,role_id,branch);
   INSERT INTO public.instructors(id,user_id,branch_id) VALUES(instructor2,other_actor,branch),(instructor3,u3,branch);
   UPDATE public.group_courses SET total_sessions=12 WHERE id=gc;
@@ -108,7 +125,30 @@ BEGIN
     PERFORM public.record_session_participation(u3,instructor3,sess,'confirm');
     RAISE EXCEPTION 'Expected late participation approval requirement';
   EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
+  ASSERT NOT EXISTS (SELECT 1 FROM public.notifications WHERE type='SESSION_PARTICIPATION_REQUESTED'
+    AND data->>'session_id'=sess::text),'Ordinary join/confirmation generated an approval notification';
+  PERFORM set_config('test.fail_participation_notice','yes',true);
+  BEGIN
+    PERFORM public.record_session_participation(u3,instructor3,sess,'request','Helped with practical exercises');
+    RAISE EXCEPTION 'Expected notification failure' USING ERRCODE='P0004';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+  ASSERT NOT EXISTS (SELECT 1 FROM public.session_participations WHERE session_id=sess AND instructor_id=instructor3),'Notification failure left a request without its notification';
+  PERFORM set_config('test.fail_participation_notice','no',true);
   PERFORM public.record_session_participation(u3,instructor3,sess,'request','Helped with practical exercises');
+  notice_key:='session_participation_request:'||sess::text||':'||instructor3::text;
+  ASSERT (SELECT count(*) FROM public.notifications WHERE dedup_key=notice_key AND recipient_id=u1)=1,'Branch leader did not receive request notification';
+  ASSERT (SELECT count(*) FROM public.notifications WHERE dedup_key=notice_key AND recipient_id=super_user)=1,'Super admin with multiple roles did not get exactly one notification';
+  ASSERT NOT EXISTS (SELECT 1 FROM public.notifications WHERE dedup_key=notice_key AND recipient_id IN(foreign_leader,actor,other_actor,u2,u3)),'Request notification leaked outside management/branch scope';
+  ASSERT EXISTS (SELECT 1 FROM public.notifications WHERE dedup_key=notice_key AND recipient_id=super_user
+    AND type='SESSION_PARTICIPATION_REQUESTED' AND href='/admin/instructors#participation-approvals'
+    AND data->>'session_id'=sess::text AND data->>'instructor_id'=instructor3::text
+    AND body LIKE '%Synthetic atomic session fixture%'),'Admin request notification context/link incorrect';
+  ASSERT EXISTS (SELECT 1 FROM public.notifications WHERE dedup_key=notice_key AND recipient_id=u1
+    AND href='/portal/team-leader/instructors#participation-approvals'),'Team leader request notification link incorrect';
+  PERFORM public.record_session_participation(u3,instructor3,sess,'request','Retry of practical exercise request');
+  PERFORM public.notify_session_participation_request(sess,instructor3);
+  PERFORM public.notify_session_participation_request(sess,instructor3);
+  ASSERT (SELECT count(*) FROM public.notifications WHERE dedup_key=notice_key AND recipient_id=super_user)=1,'Request retry/backfill duplicated notification';
   ASSERT NOT EXISTS (SELECT 1 FROM public.session_instructors WHERE session_id=sess AND instructor_id=instructor3),'Unapproved claim credited payroll';
   INSERT INTO public.session_instructors(session_id,instructor_id) VALUES(sess,instructor3);
   BEGIN
@@ -116,6 +156,8 @@ BEGIN
     RAISE EXCEPTION 'Expected instructor approval rejection';
   EXCEPTION WHEN insufficient_privilege THEN NULL; END;
   PERFORM public.review_session_participation(u1,sess,instructor3,true);
+  PERFORM public.notify_session_participation_request(sess,instructor3);
+  ASSERT (SELECT count(*) FROM public.notifications WHERE dedup_key=notice_key AND recipient_id=super_user)=1,'Approval generated another request notification';
   ASSERT (SELECT submitted_at FROM public.session_instructors WHERE session_id=sess AND instructor_id=instructor3) IS NOT NULL,'Approved preassigned participation was not submitted';
   PERFORM public.review_session_participation(u1,sess,instructor3,true);
   ASSERT (SELECT count(*) FROM public.session_instructors WHERE session_id=sess)=3,'Admin approval missing or duplicated payroll';
@@ -140,6 +182,7 @@ BEGIN
   PERFORM public.record_session_participation(other_actor,instructor2,sid,'confirm');
   ASSERT (SELECT allocation_status FROM public.group_instructors WHERE group_id=grp AND instructor_id=instructor2)='active','Historical participation completed the current course allocation';
   ASSERT NOT has_function_privilege('authenticated','public.review_session_participation(uuid,uuid,uuid,boolean)','EXECUTE'),'Approval RPC exposed';
+  ASSERT NOT has_function_privilege('authenticated','public.notify_session_participation_request(uuid,uuid)','EXECUTE'),'Request notification helper exposed';
   RAISE NOTICE 'PASS: shared class, two instructors, one charge, revisions, late claims and retries';
 END;
 $fixture$;

@@ -31,7 +31,7 @@ export default function AdminShell({ children, role, permissions, email, unreadN
             onMenuClick={onMenuClick}
             role={role}
             sections={ADMIN_SECTIONS}
-            notificationSlot={<NotificationBell initialUnreadCount={unreadNotifications} />}
+            notificationSlot={<NotificationBell initialUnreadCount={unreadNotifications} autoRefresh />}
           />
         )}
         bottomNav={<AdminBottomNav role={role} permissions={permissions} />}

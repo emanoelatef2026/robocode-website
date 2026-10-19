@@ -19,6 +19,19 @@ const mockDb = (queues: Record<string, MockResult[]>) => {
 describe('Notification queries', () => {
   beforeEach(() => { vi.clearAllMocks() })
 
+  it('rejects feed failures instead of incorrectly clearing the unread badge', async () => {
+    mockDb({ notifications: [{ data: null, error: { message: 'offline' } }] })
+    await expect(getNotificationFeed(USER_ID)).rejects.toThrow('Unable to load notifications')
+  })
+
+  it('rejects read-status failures instead of treating read notifications as unread', async () => {
+    mockDb({
+      notifications: [{ data: [{ id: 'n1' }], error: null }],
+      notification_reads: [{ data: null, error: { message: 'offline' } }],
+    })
+    await expect(getNotificationFeed(USER_ID)).rejects.toThrow('Unable to load notification read status')
+  })
+
   it('TEST 3 — getUnreadNotificationCount returns correct unread count', async () => {
     mockDb({
       notifications:      [{ data: null, error: null }],  // count=3 via head

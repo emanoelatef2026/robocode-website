@@ -66,6 +66,27 @@ Pending/rejected claims do not earn payroll. Review requests in the Instructors
 page of either management portal. Approval only adds that instructor's teaching
 participation; it does not reopen or add a class. No historical backfill is run.
 
+### Request notifications
+
+Migration `20261019135021_participation_request_notifications` adds a transactional
+in-app bell notification when a late participation request is saved. It targets
+super admins and the session branch's team leaders who have `manage_instructors`.
+Other branches, students, parents and ordinary instructors are not recipients.
+Multiple qualifying roles and repeated requests still produce one notification
+per recipient/session/instructor. Notification failure rolls back the request,
+so a saved request cannot silently lose its notification.
+
+The message identifies the instructor, group, lesson number and date. Its link
+opens the relevant management portal's Instructors page at Participation approvals.
+No payroll amounts or financial totals are included. Existing pending requests
+are notified once when the migration runs; resolved requests are not backfilled.
+This is a notification backfill only, not an attendance or payroll backfill.
+
+Admin/team-leader bells refresh every 30 seconds while the tab is visible and on
+returning to it. Other portals keep their existing on-open behavior. Temporary
+feed failures preserve the badge, and opening failures offer Retry. Overlapping
+polls are deduplicated; stale polls cannot undo a successful mark-all-read.
+
 Shared attendance uses `schedules.attendance_revision`, advanced by a trigger on
 every attendance write. Stale revisions are rejected and drafts retained for
 review; a reload action explicitly discards the draft. Unversioned legacy writes

@@ -6,22 +6,26 @@ import type { Notification, NotificationFeed } from './types'
 export async function getNotificationFeed(userId: string): Promise<NotificationFeed> {
   const db = createServiceClient()
 
-  const { data: rows } = await db
+  const { data: rows, error: feedError } = await db
     .from('notifications')
     .select('id, type, title, body, href, created_at')
     .eq('recipient_id', userId)
     .order('created_at', { ascending: false })
     .limit(30)
 
+  if (feedError) throw new Error('Unable to load notifications. Please retry.')
+
   if (!rows || rows.length === 0) return { notifications: [], unread_count: 0 }
 
   const notifIds = (rows as any[]).map((r) => r.id as string)
 
-  const { data: readRows } = await db
+  const { data: readRows, error: readError } = await db
     .from('notification_reads')
     .select('notification_id')
     .eq('user_id', userId)
     .in('notification_id', notifIds)
+
+  if (readError) throw new Error('Unable to load notification read status. Please retry.')
 
   const readSet = new Set((readRows ?? []).map((r: any) => r.notification_id as string))
 

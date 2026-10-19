@@ -12,6 +12,7 @@ const TYPE_ICON: Record<string, string> = {
   STUDENT_PROJECT:         '🎯',
   STUDENT_VIDEO:           '🎥',
   ANNOUNCEMENT:            '📢',
+  SESSION_PARTICIPATION_REQUESTED: '👥',
   // Student domain (Sprint 2) — shared by student + parent portals
   EVALUATION_PUBLISHED:    '📊',
   STUDENT_NOTE_SHARED:     '📌',
@@ -34,17 +35,57 @@ function timeAgo(iso: string): string {
 
 interface Props {
   initialUnreadCount: number
+  autoRefresh?: boolean
 }
 
 const CACHE_TTL_MS = 60_000
 
-export default function NotificationBell({ initialUnreadCount }: Props) {
+export default function NotificationBell({ initialUnreadCount, autoRefresh = false }: Props) {
   const [open,         setOpen]         = useState(false)
   const [unread,       setUnread]       = useState(initialUnreadCount)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading,      setLoading]      = useState(false)
   const dropdownRef   = useRef<HTMLDivElement>(null)
   const lastFetchedAt = useRef<number | null>(null)
+  const fetching = useRef(false)
+  const alive = useRef(true)
+  const feedVersion = useRef(0)
+  const [error, setError] = useState<string | null>(null)
+
+  const refreshFeed = useCallback(async (showLoading: boolean) => {
+    if (fetching.current) return
+    fetching.current = true
+    const version = feedVersion.current
+    if (showLoading) setLoading(true)
+    try {
+      const feed = await fetchNotificationFeed()
+      if (!alive.current || version !== feedVersion.current) return
+      setNotifications(feed.notifications)
+      setUnread(feed.unread_count)
+      lastFetchedAt.current = Date.now()
+      setError(null)
+    } catch {
+      if (alive.current && showLoading) setError('Unable to load notifications. Please retry.')
+    } finally {
+      fetching.current = false
+      if (alive.current) setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    alive.current = true
+    if (!autoRefresh) return () => { alive.current = false }
+    const refreshVisible = () => { if (document.visibilityState === 'visible') void refreshFeed(false) }
+    const timer = window.setInterval(refreshVisible, 30_000)
+    window.addEventListener('focus', refreshVisible)
+    document.addEventListener('visibilitychange', refreshVisible)
+    return () => {
+      alive.current = false
+      window.clearInterval(timer)
+      window.removeEventListener('focus', refreshVisible)
+      document.removeEventListener('visibilitychange', refreshVisible)
+    }
+  }, [autoRefresh, refreshFeed])
 
   const openDropdown = useCallback(async () => {
     if (open) { setOpen(false); return }
@@ -52,33 +93,29 @@ export default function NotificationBell({ initialUnreadCount }: Props) {
     const now   = Date.now()
     const stale = lastFetchedAt.current === null || (now - lastFetchedAt.current) > CACHE_TTL_MS
     if (stale) {
-      setLoading(true)
-      try {
-        const feed = await fetchNotificationFeed()
-        setNotifications(feed.notifications)
-        setUnread(feed.unread_count)
-        lastFetchedAt.current = now
-      } finally {
-        setLoading(false)
-      }
+      await refreshFeed(true)
     }
-  }, [open])
+  }, [open, refreshFeed])
 
   const handleRead = useCallback(async (n: Notification) => {
     if (!n.is_read) {
-      await markNotificationRead(n.id)
-      setNotifications((prev) =>
-        prev.map((x) => x.id === n.id ? { ...x, is_read: true } : x)
-      )
-      setUnread((u) => Math.max(0, u - 1))
+      try {
+        await markNotificationRead(n.id)
+        feedVersion.current += 1
+        setNotifications((prev) => prev.map((x) => x.id === n.id ? { ...x, is_read: true } : x))
+        setUnread((u) => Math.max(0, u - 1))
+      } catch { setError('Unable to mark this notification read.') }
     }
     if (n.href) window.location.href = n.href
   }, [])
 
   const handleMarkAll = useCallback(async () => {
-    await markAllNotificationsRead()
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
-    setUnread(0)
+    try {
+      await markAllNotificationsRead()
+      feedVersion.current += 1
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
+      setUnread(0)
+    } catch { setError('Unable to mark notifications read. Please retry.') }
   }, [])
 
   // Close on outside click
@@ -98,6 +135,7 @@ export default function NotificationBell({ initialUnreadCount }: Props) {
         onClick={openDropdown}
         className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-[8px] border border-[#E2E8F0] bg-white transition hover:border-[#94A3B8]"
         aria-label="Notifications"
+        aria-expanded={open}
       >
         <svg viewBox="0 0 20 20" fill="currentColor" className="h-[17px] w-[17px] text-[#64748B]">
           <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-2.83-2h5.66A3 3 0 0110 18z" />
@@ -126,6 +164,7 @@ export default function NotificationBell({ initialUnreadCount }: Props) {
           </div>
 
           {/* List */}
+          {error && <div role="alert" className="p-3 text-sm font-medium text-red-700">{error}<button type="button" onClick={() => void refreshFeed(true)} className="ml-2 min-h-11 underline">Retry</button></div>}
           <div className="max-h-[380px] overflow-y-auto">
             {loading ? (
               <div className="space-y-3 p-4">
@@ -139,7 +178,7 @@ export default function NotificationBell({ initialUnreadCount }: Props) {
                   </div>
                 ))}
               </div>
-            ) : notifications.length === 0 ? (
+            ) : notifications.length === 0 && !error ? (
               <p className="py-10 text-center text-sm text-[#94A3B8]">No notifications yet</p>
             ) : (
               <div className="divide-y divide-[#F8FAFC]">

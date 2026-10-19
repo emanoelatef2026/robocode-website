@@ -28,7 +28,7 @@ export default function TLShell({ children, email, unreadNotifications = 0 }: Pr
             onMenuClick={onMenuClick}
             role="team_leader"
             sections={TL_SECTIONS}
-            notificationSlot={<NotificationBell initialUnreadCount={unreadNotifications} />}
+            notificationSlot={<NotificationBell initialUnreadCount={unreadNotifications} autoRefresh />}
           />
         )}
         bottomNav={<TLBottomNav />}

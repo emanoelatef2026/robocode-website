@@ -22,7 +22,7 @@ export default function ParticipationReview({ requests }: { requests: Request[] 
     finally { lock.current = false; setBusy(false) }
   }
   const visible = requests.filter(r => !resolved.includes(`${r.sessionId}:${r.instructorId}`))
-  return <section className="ds-card mb-5 space-y-3 p-4" aria-label="Participation approvals">
+  return <section id="participation-approvals" className="ds-card mb-5 scroll-mt-24 space-y-3 p-4" aria-label="Participation approvals">
     <h2 className="text-lg font-bold text-(--navy)">Teaching participation approvals ({visible.length})</h2>
     <p className="text-sm text-(--text-2)">Late claims for completed classes. Approval records this instructor only; it never adds a class or charges students again.</p>
     {visible.length === 0 && <p className="text-sm font-medium">No pending requests.</p>}
