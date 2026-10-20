@@ -74,9 +74,87 @@ BEGIN
   UPDATE public.schedules SET status='completed',started_at=scheduled_at,ended_at=scheduled_at+interval '90 minutes'
     WHERE group_course_id=gc AND session_number<=3;
   SELECT id INTO planned FROM public.schedules WHERE group_course_id=gc AND session_number=4;
+  -- Cross-branch teachers need no branch role or instructor_branches pivot for
+  -- the assigned group. Management reviewers still belong to the group branch.
+  UPDATE public.user_roles SET branch_id=foreign_branch WHERE user_id IN(actor,other_actor,u3);
+  UPDATE public.instructors SET branch_id=foreign_branch WHERE id IN(instructor,instructor2,instructor3);
+  ASSERT NOT public.user_has_permission(actor,'manage_attendance',branch),'Fixture accidentally granted group-branch permissions';
+  -- Identity, activity and explicit per-user revocations still win over assignment.
+  BEGIN
+    PERFORM public.open_shared_instructor_session(other_actor,instructor,gc,planned,NULL,'Spoofed identity');
+    RAISE EXCEPTION 'Expected spoofed identity rejection' USING ERRCODE='P0004';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  UPDATE public.instructors SET status='inactive' WHERE id=instructor;
+  BEGIN
+    PERFORM public.open_shared_instructor_session(actor,instructor,gc,planned,NULL,'Inactive teacher');
+    RAISE EXCEPTION 'Expected inactive teacher rejection' USING ERRCODE='P0004';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  UPDATE public.instructors SET status='active' WHERE id=instructor;
+  UPDATE public.instructors SET deleted_at=now() WHERE id=instructor;
+  BEGIN
+    PERFORM public.open_shared_instructor_session(actor,instructor,gc,planned,NULL,'Deleted teacher');
+    RAISE EXCEPTION 'Expected deleted teacher rejection' USING ERRCODE='P0004';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  UPDATE public.instructors SET deleted_at=NULL WHERE id=instructor;
+  INSERT INTO public.user_permissions(user_id,permission_id)
+    SELECT actor,id FROM public.permissions WHERE name='manage_groups';
+  BEGIN
+    PERFORM public.open_shared_instructor_session(actor,instructor,gc,planned,NULL,'Revoked attendance permission');
+    RAISE EXCEPTION 'Expected explicit permission revocation rejection' USING ERRCODE='P0004';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  DELETE FROM public.user_permissions WHERE user_id=actor;
+  -- Explicit grant must work too; co-teachers below still use role defaults.
+  INSERT INTO public.user_permissions(user_id,permission_id)
+    SELECT actor,id FROM public.permissions WHERE name='manage_attendance';
   result:=public.open_shared_instructor_session(actor,instructor,gc,planned,NULL,'Shared fourth lesson');
   sess:=(result->>'sessionId')::uuid;
   ASSERT sess=planned,'Expected planned fourth lesson';
+  ASSERT NOT public.instructor_can_teach_group(actor,instructor,grp,'manage_instructors'),'Teaching assignment granted management access';
+  ASSERT NOT public.instructor_can_teach_group(actor,instructor,grp,'manage_evaluations'),'Attendance grant bypassed evaluation revocation';
+  INSERT INTO public.user_permissions(user_id,permission_id)
+    SELECT actor,id FROM public.permissions WHERE name='manage_evaluations';
+  ASSERT public.instructor_can_teach_group(actor,instructor,grp,'manage_evaluations'),'Explicit evaluation grant did not work across branches';
+  ASSERT NOT EXISTS(SELECT 1 FROM public.user_roles WHERE user_id=actor AND branch_id=branch),'Opening a class granted broad branch access';
+  ASSERT NOT EXISTS(SELECT 1 FROM public.instructor_branches WHERE instructor_id=instructor AND branch_id=branch),'Opening a class required or created a branch pivot';
+  UPDATE public.group_instructors SET allocation_status='released' WHERE group_id=grp AND instructor_id=instructor;
+  BEGIN
+    PERFORM public.lock_shared_instructor_session(actor,instructor,sess);
+    RAISE EXCEPTION 'Expected stale lead pointer not to bypass release' USING ERRCODE='P0004';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  UPDATE public.group_instructors SET allocation_status='active' WHERE group_id=grp AND instructor_id=instructor;
+  BEGIN
+    DELETE FROM public.group_instructors WHERE group_id=grp AND instructor_id=instructor2;
+    BEGIN
+      PERFORM public.record_session_participation(other_actor,instructor2,sess,'join');
+      RAISE EXCEPTION 'Expected unassigned teacher rejection' USING ERRCODE='P0004';
+    EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+    RAISE EXCEPTION 'Rollback synthetic removal' USING ERRCODE='P0001';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN
+    DELETE FROM public.group_instructors WHERE group_id=grp AND instructor_id=instructor;
+    ASSERT public.instructor_can_teach_group(actor,instructor,grp),'Legacy course lead fallback lost access';
+    PERFORM public.lock_shared_instructor_session(actor,instructor,sess);
+    RAISE EXCEPTION 'Rollback synthetic lead-only case' USING ERRCODE='P0001';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+  BEGIN
+    DELETE FROM public.user_roles WHERE user_id=actor;
+    BEGIN
+      PERFORM public.lock_shared_instructor_session(actor,instructor,sess);
+      RAISE EXCEPTION 'Expected removed account role rejection' USING ERRCODE='P0004';
+    EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+    RAISE EXCEPTION 'Rollback synthetic role removal' USING ERRCODE='P0001';
+  EXCEPTION WHEN raise_exception THEN NULL; END;
+  UPDATE public.group_instructors SET allocation_status='released' WHERE group_id=grp AND instructor_id=instructor2;
+  BEGIN
+    PERFORM public.record_session_participation(other_actor,instructor2,sess,'join');
+    RAISE EXCEPTION 'Expected released assignment rejection' USING ERRCODE='P0004';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  UPDATE public.group_instructors SET allocation_status='active',from_session=5 WHERE group_id=grp AND instructor_id=instructor2;
+  BEGIN
+    PERFORM public.record_session_participation(other_actor,instructor2,sess,'join');
+    RAISE EXCEPTION 'Expected allocation range rejection' USING ERRCODE='P0004';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  UPDATE public.group_instructors SET from_session=1 WHERE group_id=grp AND instructor_id=instructor2;
   result:=public.open_shared_instructor_session(other_actor,instructor2,gc,planned,NULL,'Ignored topic');
   ASSERT (result->>'sessionId')::uuid=sess,'Co-teacher started a second class';
   ASSERT (SELECT count(*) FROM public.schedules WHERE group_course_id=gc)=12,'Extra class created';
@@ -94,6 +172,13 @@ BEGIN
   ASSERT (SELECT status FROM public.schedules WHERE id=sess)='ongoing','Participation ended shared class';
   ASSERT (SELECT consumed_sessions FROM public.student_enrollments WHERE id=contract)=0,'Participation charged student';
   payload:=jsonb_build_array(jsonb_build_object('student_id',student1,'status','absent'),jsonb_build_object('student_id',student2,'status','late'));
+  DELETE FROM public.user_permissions WHERE user_id=actor AND permission_id IN(SELECT id FROM public.permissions WHERE name='manage_attendance');
+  BEGIN
+    PERFORM public.save_shared_instructor_session(actor,instructor,sess,grp,false,payload,'Revoked permission after start',0);
+    RAISE EXCEPTION 'Expected save to respect live permission revocation' USING ERRCODE='P0004';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  INSERT INTO public.user_permissions(user_id,permission_id)
+    SELECT actor,id FROM public.permissions WHERE name='manage_attendance';
   PERFORM public.save_shared_instructor_session(actor,instructor,sess,grp,false,payload,'Shared fourth lesson',0);
   SELECT attendance_revision INTO revision FROM public.schedules WHERE id=sess;
   ASSERT revision>0,'Attendance revision did not advance';
@@ -183,6 +268,8 @@ BEGIN
   ASSERT (SELECT allocation_status FROM public.group_instructors WHERE group_id=grp AND instructor_id=instructor2)='active','Historical participation completed the current course allocation';
   ASSERT NOT has_function_privilege('authenticated','public.review_session_participation(uuid,uuid,uuid,boolean)','EXECUTE'),'Approval RPC exposed';
   ASSERT NOT has_function_privilege('authenticated','public.notify_session_participation_request(uuid,uuid)','EXECUTE'),'Request notification helper exposed';
+  ASSERT NOT has_function_privilege('authenticated','public.instructor_can_teach_group(uuid,uuid,uuid,text)','EXECUTE'),'Teaching helper exposed to browser';
+  ASSERT NOT has_function_privilege('anon','public.instructor_can_teach_group(uuid,uuid,uuid,text)','EXECUTE'),'Teaching helper exposed anonymously';
   RAISE NOTICE 'PASS: shared class, two instructors, one charge, revisions, late claims and retries';
 END;
 $fixture$;

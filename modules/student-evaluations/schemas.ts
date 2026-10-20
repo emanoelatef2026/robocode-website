@@ -6,6 +6,7 @@ const criterionEnum = z.enum(EVALUATION_CRITERIA as [string, ...string[]])
 export const createEvaluationSchema = z
   .object({
     student_id:         z.string().uuid(),
+    group_id:           z.string().uuid().optional(),
     enrollment_id:       z.string().uuid().nullable().optional(),
     course_id:           z.string().uuid().nullable().optional(),
     branch_id:           z.string().uuid(),

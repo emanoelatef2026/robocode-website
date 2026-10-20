@@ -24,6 +24,34 @@ before leaving. Notes/evaluations use portalled dialogs, never nested forms.
 
 ## Transaction boundary
 
+### Group-scoped teaching access
+
+`instructor_can_teach_group` authorizes an active instructor by their explicit
+group assignment (or legacy course lead when no allocation row exists). A teacher
+assigned to a group in another branch does not need a home-branch edit, a new
+branch role or an `instructor_branches` row. This does not grant branch-wide
+management access. Start, shared participation and attendance finalization use
+the same database check; allocation state/range and course checks still apply.
+Released assignments cannot regain access through a stale course-lead pointer.
+
+Account roles and the effective `manage_attendance` permission are checked against
+the database. Per-user configurable permission overrides replace role defaults,
+matching the application resolver; explicit revocation is respected even if a
+browser still has old permission claims. Super-admin override semantics are kept.
+The optional permission argument accepts only `manage_attendance` or
+`manage_evaluations`; it cannot confer instructor management or financial access.
+The legacy student evaluation modal passes its group context and derives the
+branch from the group, not the student's home branch. Its server action verifies
+active student membership, assignment, effective evaluation permission and any
+supplied course/enrollment references. Management retains its branch-scoped guard.
+The helper is invoker-security, with an empty search path and service-only execute.
+No branch roles, attendance, contract consumption or payroll history are backfilled.
+Required migration: `20261020135429_assignment_scoped_instructor_teaching`.
+
+Regression: `tests/session-lifecycle/shared-session.rollback.sql` exercises the
+complete shared-class lifecycle with both teachers' home roles in another branch,
+including absence consumption once, approval notifications and permission failures.
+
 `save_instructor_session` is a service-only, invoker-security RPC. It rechecks actor,
 branch permission, instructor allocation, session/group identity and active roster
 under database locks. Missing, foreign, duplicate or invalid student/status input

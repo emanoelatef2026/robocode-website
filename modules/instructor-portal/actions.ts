@@ -919,14 +919,15 @@ export async function createInstructorEvaluation(
     return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
   }
 
-  const { data: studentRow } = await db.from('students').select('branch_id').eq('id', d.student_id).maybeSingle()
-  const branchId = (studentRow as any)?.branch_id as string | undefined
+  const { data: groupRow } = await db.from('groups').select('branch_id').eq('id', d.group_id).is('deleted_at', null).maybeSingle()
+  const branchId = groupRow?.branch_id as string | undefined
   if (!branchId) {
-    return { success: false, error: { code: 'NOT_FOUND', message: 'Student not found.' } }
+    return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
   }
 
   const result = await createStudentEvaluation({
     student_id:          d.student_id,
+    group_id:            d.group_id,
     branch_id:           branchId,
     criterion:            d.criterion as EvaluationCriterion,
     custom_label:         d.custom_label || null,

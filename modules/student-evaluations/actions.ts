@@ -42,8 +42,36 @@ export async function createStudentEvaluation(
   }
   const d = parsed.data
 
-  const user = await requirePermission('manage_evaluations', { branchId: d.branch_id })
+  const user = await requirePermission('manage_evaluations')
   const db = createServiceClient()
+
+  if (user.globalRole === 'instructor') {
+    // Assignment permits this group's students, never all students in its branch.
+    const forbidden: ActionResult<{ evaluationId: string }> = {
+      success: false, error: { code: 'FORBIDDEN', message: 'You cannot evaluate this student in this group.' },
+    }
+    if (!d.group_id) return forbidden
+    const [teacher, group, member] = await Promise.all([
+      db.from('instructors').select('id').eq('user_id', user.id).eq('status', 'active').is('deleted_at', null).maybeSingle(),
+      db.from('groups').select('branch_id').eq('id', d.group_id).is('deleted_at', null).maybeSingle(),
+      db.from('group_students').select('student_id').eq('group_id', d.group_id).eq('student_id', d.student_id).eq('status', 'active').maybeSingle(),
+    ])
+    if (teacher.error || group.error || member.error || !teacher.data || !group.data || !member.data || group.data.branch_id !== d.branch_id) return forbidden
+    const { data: allowed, error: accessError } = await db.rpc('instructor_can_teach_group', {
+      p_actor: user.id, p_instructor: teacher.data.id, p_group: d.group_id, p_permission: 'manage_evaluations',
+    })
+    if (accessError || allowed !== true) return forbidden
+    if (d.course_id) {
+      const { data, error } = await db.from('group_courses').select('id').eq('group_id', d.group_id).eq('course_id', d.course_id).eq('status', 'active').maybeSingle()
+      if (error || !data) return forbidden
+    }
+    if (d.enrollment_id) {
+      const { data, error } = await db.from('student_enrollments').select('id').eq('id', d.enrollment_id).eq('student_id', d.student_id).eq('group_id', d.group_id).maybeSingle()
+      if (error || !data) return forbidden
+    }
+  } else {
+    await requirePermission('manage_evaluations', { branchId: d.branch_id })
+  }
 
   const { data: row, error } = await db
     .from('student_evaluations')
