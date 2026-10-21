@@ -13,13 +13,13 @@ const SOCIALS = [
 ];
 
 const LEGAL_LINKS = [
-  { label: "Terms & Conditions", href: "/terms-and-conditions" },
-  { label: "Refund Policy", href: "/refund-policy" },
-  { label: "Privacy Policy", href: "/privacy-policy" },
+  { label: "Terms & Conditions", ar: "الشروط والأحكام", href: "/terms-and-conditions" },
+  { label: "Refund Policy", ar: "سياسة الاسترداد", href: "/refund-policy" },
+  { label: "Privacy Policy", ar: "سياسة الخصوصية", href: "/privacy-policy" },
 ];
 
 export default function Footer() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const pathname = usePathname();
 
   const PROGRAM_LINKS = [
@@ -47,7 +47,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative z-10 bg-[#0B132B] text-white">
+    <footer className="relative z-10 bg-[var(--navy)] text-white">
       <div className="mx-auto max-w-7xl px-6 pb-8 pt-14 md:pt-20">
 
         {/* Top grid */}
@@ -75,7 +75,7 @@ export default function Footer() {
                   aria-label={label}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/12 text-[10px] font-semibold text-white/40 transition duration-200 hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-white/25 text-xs font-semibold transition duration-200 hover:border-white"
                 >
                   {short}
                 </a>
@@ -85,7 +85,7 @@ export default function Footer() {
 
           {/* Programs */}
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/35">
+            <p data-site-footer-label>
               {t("footer.programsHeading")}
             </p>
             <ul className="mt-5 space-y-3">
@@ -105,7 +105,7 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/35">
+            <p data-site-footer-label>
               {t("footer.companyHeading")}
             </p>
             <ul className="mt-5 space-y-3">
@@ -125,14 +125,14 @@ export default function Footer() {
 
           {/* Legal */}
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-white/35">
-              Legal
+            <p data-site-footer-label>
+              {locale === "ar" ? "السياسات" : "Policies"}
             </p>
             <ul className="mt-5 space-y-3">
               {LEGAL_LINKS.map((link) => (
                 <li key={link.href}>
-                  <Link href={link.href} className="text-sm text-white/65 transition duration-200 hover:text-[#FF8A1F]">
-                    {link.label}
+                  <Link href={link.href} className="text-sm text-white/65 transition duration-200 hover:text-[var(--orange-strong)]">
+                    {locale === "ar" ? link.ar : link.label}
                   </Link>
                 </li>
               ))}
@@ -143,7 +143,7 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="mt-12 border-t border-white/[0.07] pt-6">
-          <div className="flex flex-col items-center justify-between gap-2 text-center text-xs text-white/35 md:flex-row">
+          <div data-site-footer-bottom className="flex flex-col items-center justify-between gap-2 text-center text-xs md:flex-row">
             <span>{t("footer.copyright")}</span>
             <span>{t("footer.poweredBy")}</span>
           </div>

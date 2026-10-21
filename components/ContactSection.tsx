@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ACADEMY_PHONE, ACADEMY_TEL_URL, ACADEMY_WHATSAPP_URL } from "@/lib/public-site/contact";
 import PublicSectionTitle from "./public-site/PublicSectionTitle";
+import { publicButtonClass } from "./ui/Button";
 
 export default function ContactSection() {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
 
   return (
     <section id="contact" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24">
@@ -17,11 +18,11 @@ export default function ContactSection() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="relative overflow-hidden rounded-3xl bg-[#0B2341] px-8 py-14 text-center shadow-2xl md:px-16 md:py-20"
+        className="relative overflow-hidden rounded-[var(--radius-xl)] bg-[var(--navy)] px-8 py-14 text-center shadow-[var(--shadow-card)] md:px-16 md:py-20"
       >
         {/* Ambient glow — brand orange */}
-        <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF8A1F]/12 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 right-0 h-48 w-48 translate-x-1/4 translate-y-1/4 rounded-full bg-[#FF8A1F]/8 blur-3xl" />
+        <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[var(--orange-strong)]/12 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 right-0 h-48 w-48 translate-x-1/4 translate-y-1/4 rounded-full bg-[var(--orange-strong)]/8 blur-3xl" />
 
         <PublicSectionTitle section="contact" inverse />
 
@@ -29,7 +30,7 @@ export default function ContactSection() {
           {/* Primary CTA — orange */}
           <Link
             href="/book-session"
-            className="inline-flex items-center gap-2 rounded-full bg-[#FF8A1F] px-8 py-3.5 text-sm font-bold text-white shadow-[0_4px_20px_rgba(255,138,31,0.36)] transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_8px_28px_rgba(255,138,31,0.46)]"
+            className={publicButtonClass("primary")}
           >
             {t("hero.bookSession")}
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -42,14 +43,14 @@ export default function ContactSection() {
             href={ACADEMY_WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/8 px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
+            className={publicButtonClass("inverse")}
           >
-            WhatsApp Us
+            {locale === "ar" ? "واتساب" : "WhatsApp Us"}
           </a>
 
           <a
             href={ACADEMY_TEL_URL}
-            className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/8 px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
+            className={publicButtonClass("inverse")}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 4.5A2.25 2.25 0 014.5 2.25h2.386c.968 0 1.806.657 2.036 1.596l.969 3.95a2.25 2.25 0 01-1.125 2.54l-1.47.735a11.25 11.25 0 005.625 5.625l.735-1.47a2.25 2.25 0 012.54-1.125l3.95.969a2.25 2.25 0 011.596 2.036V19.5a2.25 2.25 0 01-2.25 2.25h-1.5C9.387 21.75 2.25 14.613 2.25 5.25V4.5z" />
@@ -59,7 +60,7 @@ export default function ContactSection() {
 
           <a
             href="mailto:robocodeschools@gmail.com"
-            className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/8 px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
+            className={publicButtonClass("inverse")}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5v10.5a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5V6.75z" />

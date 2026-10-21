@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cairo, Orbitron, Poppins } from "next/font/google";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import "./globals.css";
+import PublicSiteTheme from "@/components/public-site/PublicSiteTheme";
 
 const orbitron = Orbitron({
   subsets: ["latin"],
@@ -68,7 +69,7 @@ export default function RootLayout({
       className={`${orbitron.variable} ${poppins.variable} ${cairo.variable} antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <LanguageProvider>{children}</LanguageProvider>
+        <LanguageProvider><PublicSiteTheme>{children}</PublicSiteTheme></LanguageProvider>
       </body>
     </html>
   );

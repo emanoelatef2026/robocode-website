@@ -22,10 +22,10 @@ interface Student {
 
 function StudentCard({ student }: { student: Student }) {
   return (
-    <div className="group w-52 shrink-0 overflow-hidden rounded-2xl bg-white shadow-[0_2px_16px_rgba(11,31,58,0.10)] transition-shadow duration-300 hover:shadow-[0_8px_28px_rgba(11,31,58,0.16)] sm:w-56">
+    <div className="group w-52 shrink-0 overflow-hidden rounded-[var(--radius-xl)] bg-white shadow-[var(--shadow-card)] transition-shadow duration-300 hover:shadow-[var(--shadow-card)] sm:w-56">
 
       {/* Portrait photo — 3:4 */}
-      <div className="relative w-full overflow-hidden bg-[#E2E8F0]" style={{ aspectRatio: "3/4" }}>
+      <div className="relative w-full overflow-hidden bg-[var(--border)]" style={{ aspectRatio: "3/4" }}>
         <Image
           src={student.image_url}
           alt={student.name}
@@ -36,11 +36,11 @@ function StudentCard({ student }: { student: Student }) {
       </div>
 
       {/* Info panel */}
-      <div className="bg-[#0B1F3A] px-4 py-3.5">
+      <div className="bg-[var(--navy)] px-4 py-3.5">
         <p className="truncate text-[13px] font-extrabold text-white">{student.name}</p>
 
         {student.achievement_title && (
-          <p className="mt-0.5 truncate text-[11px] font-semibold text-[#38BDF8]">
+          <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--cyan-strong)]">
             {student.achievement_title}
           </p>
         )}
@@ -57,7 +57,7 @@ function StudentCard({ student }: { student: Student }) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[#38BDF8]/40 px-3 py-1 text-[10px] font-bold text-[#38BDF8] transition-all duration-200 hover:border-[#38BDF8] hover:bg-[#38BDF8]/10"
+            className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[var(--cyan-strong)]/40 px-3 py-1 text-[10px] font-bold text-[var(--cyan-strong)] transition-all duration-200 hover:border-[var(--cyan-strong)] hover:bg-[var(--cyan-strong)]/10"
           >
             <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
               <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
@@ -126,8 +126,8 @@ export default function FeaturedStudentsSection() {
   return (
     <section id="featured-students" className="relative z-10 overflow-hidden pb-16 md:pb-24">
 
-      <div className="pointer-events-none absolute left-1/3 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[#FF8A1F]/5 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[#0B1F3A]/4 blur-3xl" />
+      <div className="pointer-events-none absolute left-1/3 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[var(--orange-strong)]/5 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 rounded-full bg-[var(--navy)]/4 blur-3xl" />
 
       {/* Header */}
       <motion.div
@@ -143,7 +143,7 @@ export default function FeaturedStudentsSection() {
       {/* Marquee */}
       {loading ? (
         <div className="flex h-48 items-center justify-center">
-          <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-[var(--orange-strong)] border-t-transparent" />
         </div>
       ) : students.length === 0 ? (
         <div className="mx-auto max-w-7xl px-6">

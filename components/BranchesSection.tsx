@@ -87,8 +87,8 @@ const STUDY_FEATURES: Record<StudyMode, { icon: string; label: string }[]> = {
 };
 
 const STUDY_MODE_META: Record<StudyMode, { label: string; color: string; bg: string }> = {
-  online:  { label: "Online",    color: "text-[#38BDF8]", bg: "bg-[#38BDF8]/10" },
-  offline: { label: "In-Person", color: "text-[#FF8A1F]", bg: "bg-[#FF8A1F]/10" },
+  online:  { label: "Online",    color: "text-[var(--cyan-strong)]", bg: "bg-[var(--cyan-strong)]/10" },
+  offline: { label: "In-Person", color: "text-[var(--orange-strong)]", bg: "bg-[var(--orange-strong)]/10" },
   hybrid:  { label: "Hybrid",    color: "text-purple-500", bg: "bg-purple-100" },
 };
 
@@ -97,12 +97,12 @@ function StudyExperience({ mode }: { mode: StudyMode }) {
   const features = STUDY_FEATURES[mode];
 
   return (
-    <div className="mt-6 border-t border-[#E2E8F0] pt-5">
+    <div className="mt-6 border-t border-[var(--border)] pt-5">
       <div className="mb-3 flex items-center gap-2">
         <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${meta.bg} ${meta.color}`}>
           {meta.label}
         </span>
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-[#94A3B8]">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
           Study Experience
         </span>
       </div>
@@ -110,7 +110,7 @@ function StudyExperience({ mode }: { mode: StudyMode }) {
         {features.map((f) => (
           <div key={f.label} className="flex items-center gap-2">
             <span className="text-base leading-none">{f.icon}</span>
-            <span className="text-[12px] font-medium text-[#475569]">{f.label}</span>
+            <span className="text-[12px] font-medium text-[var(--text-3)]">{f.label}</span>
           </div>
         ))}
       </div>
@@ -145,7 +145,7 @@ function BranchPanel({
     >
       {/* Image / placeholder */}
       <div
-        className="relative overflow-hidden rounded-2xl bg-[#0B1F3A]/6"
+        className="relative overflow-hidden rounded-[var(--radius-xl)] bg-[var(--navy)]/6"
         style={{ aspectRatio: "16/9" }}
       >
         {branch.image_url ? (
@@ -159,18 +159,18 @@ function BranchPanel({
         ) : online ? (
           /* Online branch placeholder */
           <div className="flex h-full flex-col items-center justify-center gap-3">
-            <svg viewBox="0 0 48 48" fill="none" className="h-12 w-12 text-[#38BDF8]/40">
+            <svg viewBox="0 0 48 48" fill="none" className="h-12 w-12 text-[var(--cyan-strong)]/40">
               <circle cx="24" cy="24" r="18" stroke="currentColor" strokeWidth="2" />
               <ellipse cx="24" cy="24" rx="8" ry="18" stroke="currentColor" strokeWidth="1.5" />
               <path d="M6 24h36M10 14h28M10 34h28" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
-            <span className="rounded-full bg-[#38BDF8]/10 px-3 py-1 text-[11px] font-semibold text-[#38BDF8]">
+            <span className="rounded-full bg-[var(--cyan-strong)]/10 px-3 py-1 text-[11px] font-semibold text-[var(--cyan-strong)]">
               Online
             </span>
           </div>
         ) : (
           <div className="flex h-full items-center justify-center">
-            <svg viewBox="0 0 48 48" fill="none" className="h-16 w-16 text-[#0B1F3A]/10">
+            <svg viewBox="0 0 48 48" fill="none" className="h-16 w-16 text-[var(--navy)]/10">
               <rect x="4" y="4" width="40" height="40" rx="8" stroke="currentColor" strokeWidth="2" />
               <path d="M4 32l10-10 8 8 8-12 14 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               <circle cx="16" cy="16" r="4" stroke="currentColor" strokeWidth="2" />
@@ -183,7 +183,7 @@ function BranchPanel({
       <div className="mt-6 flex-1 space-y-3">
         <div className="flex flex-wrap items-center gap-2">
           <h3
-            className="text-2xl font-bold text-[#0B1F3A] md:text-3xl"
+            className="text-2xl font-bold text-[var(--navy)] md:text-3xl"
             style={{ fontFamily: "var(--font-orbitron), sans-serif" }}
           >
             {branch.name}
@@ -196,16 +196,16 @@ function BranchPanel({
         {branch.phone && (
           <a
             href={`tel:${branch.phone}`}
-            className="flex items-center gap-2.5 text-[#334155] transition hover:text-[#38BDF8]"
+            className="flex items-center gap-2.5 text-[var(--text-2)] transition hover:text-[var(--cyan-strong)]"
           >
-            <span className="text-[#38BDF8]"><PhoneIcon /></span>
+            <span className="text-[var(--cyan-strong)]"><PhoneIcon /></span>
             <span className="text-sm font-medium">{branch.phone}</span>
           </a>
         )}
 
         {branch.location && (
-          <div className="flex items-start gap-2.5 text-[#334155]">
-            <span className="mt-0.5 text-[#FF8A1F]"><MapPinIcon /></span>
+          <div className="flex items-start gap-2.5 text-[var(--text-2)]">
+            <span className="mt-0.5 text-[var(--orange-strong)]"><MapPinIcon /></span>
             <span className="text-sm leading-snug">{branch.location}</span>
           </div>
         )}
@@ -222,7 +222,7 @@ function BranchPanel({
               href={buildWhatsAppUrl(branch.phone, null) ?? undefined}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(37,211,102,0.28)] transition hover:-translate-y-0.5 hover:brightness-110"
+              className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:brightness-110"
             >
               <WhatsAppIcon />
               WhatsApp
@@ -231,7 +231,7 @@ function BranchPanel({
             {/* Call — secondary */}
             <a
               href={`tel:${branch.phone}`}
-              className="inline-flex items-center gap-2 rounded-full border-2 border-[#E2E8F0] bg-white px-5 py-2.5 text-sm font-bold text-[#0B1F3A] transition hover:-translate-y-0.5 hover:border-[#38BDF8] hover:text-[#38BDF8]"
+              className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--border)] bg-white px-5 py-2.5 text-sm font-bold text-[var(--navy)] transition hover:-translate-y-0.5 hover:border-[var(--cyan-strong)] hover:text-[var(--cyan-strong)]"
             >
               <PhoneIcon />
               {t("branches.callNow")}
@@ -244,7 +244,7 @@ function BranchPanel({
             href={`https://maps.google.com/?q=${encodeURIComponent(branch.location)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border-2 border-[#E2E8F0] bg-white px-5 py-2.5 text-sm font-bold text-[#0B1F3A] transition hover:-translate-y-0.5 hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+            className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--border)] bg-white px-5 py-2.5 text-sm font-bold text-[var(--navy)] transition hover:-translate-y-0.5 hover:border-[var(--orange-strong)] hover:text-[var(--orange-strong)]"
           >
             <MapPinIcon />
             {t("branches.getDirections")}
@@ -275,12 +275,12 @@ function DesktopExplorer({
 
   return (
     <div
-      className={`hidden overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-xl lg:flex ${dir === "rtl" ? "flex-row-reverse" : ""}`}
+      className={`hidden overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-white shadow-[var(--shadow-card)] lg:flex ${dir === "rtl" ? "flex-row-reverse" : ""}`}
     >
       {/* Tab list */}
       <div
-        className="flex w-60 shrink-0 flex-col bg-[#F8FAFC]"
-        style={{ borderInlineEndWidth: "1px", borderColor: "#E2E8F0" }}
+        className="flex w-60 shrink-0 flex-col bg-[var(--bg)]"
+        style={{ borderInlineEndWidth: "1px", borderColor: "var(--border)" }}
       >
         {branches.map((b, i) => {
           const isActive = i === active;
@@ -292,14 +292,14 @@ function DesktopExplorer({
                 "relative flex items-center gap-3 px-5 py-4 transition-all duration-150",
                 dir === "rtl" ? "text-right flex-row-reverse" : "text-left",
                 isActive
-                  ? "bg-white text-[#0B1F3A]"
-                  : "text-[#64748B] hover:bg-white/70 hover:text-[#0B1F3A]",
+                  ? "bg-white text-[var(--navy)]"
+                  : "text-[var(--text-3)] hover:bg-white/70 hover:text-[var(--navy)]",
               ].join(" ")}
             >
               {/* Active indicator bar */}
               {isActive && (
                 <span
-                  className="absolute inset-y-0 w-0.75 rounded-full bg-[#FF8A1F]"
+                  className="absolute inset-y-0 w-0.75 rounded-full bg-[var(--orange-strong)]"
                   style={{ [dir === "rtl" ? "right" : "left"]: 0 }}
                 />
               )}
@@ -307,13 +307,13 @@ function DesktopExplorer({
               {/* Avatar */}
               <span
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition ${
-                  isActive ? "bg-[#FF8A1F] text-white" : "bg-[#E2E8F0] text-[#64748B]"
+                  isActive ? "bg-[var(--orange-strong)] text-white" : "bg-[var(--border)] text-[var(--text-3)]"
                 }`}
               >
                 {b.name.charAt(0)}
               </span>
 
-              <span className={`min-w-0 flex-1 truncate text-[13px] font-semibold leading-snug ${isActive ? "text-[#0B1F3A]" : ""}`}>
+              <span className={`min-w-0 flex-1 truncate text-[13px] font-semibold leading-snug ${isActive ? "text-[var(--navy)]" : ""}`}>
                 {b.name}
               </span>
             </button>
@@ -333,11 +333,11 @@ function DesktopExplorer({
               animate={{ opacity: 1 }}
               className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 text-center"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-[#CBD5E1]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-[var(--muted)]">
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
                 <circle cx="12" cy="9" r="2.5" />
               </svg>
-              <p className="text-sm font-medium text-[#94A3B8]">Select a branch to view details</p>
+              <p className="text-sm font-medium text-[var(--muted)]">Select a branch to view details</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -367,7 +367,7 @@ function MobileAccordion({
         return (
           <div
             key={b.id}
-            className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-sm"
+            className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-white shadow-sm"
           >
             <button
               onClick={() => setOpen(isOpen ? null : b.id)}
@@ -376,12 +376,12 @@ function MobileAccordion({
               <div className={`flex items-center gap-3 ${dir === "rtl" ? "flex-row-reverse" : ""}`}>
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold transition ${
-                    isOpen ? "bg-[#FF8A1F] text-white" : "bg-[#F1F5F9] text-[#64748B]"
+                    isOpen ? "bg-[var(--orange-strong)] text-white" : "bg-[var(--bg-muted)] text-[var(--text-3)]"
                   }`}
                 >
                   {b.name.charAt(0)}
                 </span>
-                <span className={`text-[14px] font-semibold ${isOpen ? "text-[#FF8A1F]" : "text-[#0B2341]"}`}>
+                <span className={`text-[14px] font-semibold ${isOpen ? "text-[var(--orange-strong)]" : "text-[var(--navy)]"}`}>
                   {b.name}
                 </span>
               </div>
@@ -389,7 +389,7 @@ function MobileAccordion({
               <motion.span
                 animate={{ rotate: isOpen ? 180 : 0 }}
                 transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                className={isOpen ? "text-[#FF8A1F]" : "text-[#94A3B8]"}
+                className={isOpen ? "text-[var(--orange-strong)]" : "text-[var(--muted)]"}
               >
                 <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -407,7 +407,7 @@ function MobileAccordion({
                   transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="border-t border-[#E2E8F0] p-5">
+                  <div className="border-t border-[var(--border)] p-5">
                     <BranchPanel branch={b} t={t} dir={dir} />
                   </div>
                 </motion.div>
@@ -442,8 +442,8 @@ export default function BranchesSection() {
     <section id="branches" className="relative z-10 overflow-hidden pb-16 md:pb-24">
 
       {/* Background decoration */}
-      <div className="pointer-events-none absolute right-0 top-0 h-96 w-96 rounded-full bg-[#38BDF8]/5 blur-3xl" />
-      <div className="pointer-events-none absolute left-0 bottom-0 h-80 w-80 rounded-full bg-[#0B1F3A]/4 blur-3xl" />
+      <div className="pointer-events-none absolute right-0 top-0 h-96 w-96 rounded-full bg-[var(--cyan-strong)]/5 blur-3xl" />
+      <div className="pointer-events-none absolute left-0 bottom-0 h-80 w-80 rounded-full bg-[var(--navy)]/4 blur-3xl" />
 
       <div className="relative mx-auto max-w-7xl px-6">
 
@@ -461,7 +461,7 @@ export default function BranchesSection() {
         {/* Content */}
         {loading ? (
           <div className="flex h-64 items-center justify-center">
-            <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
+            <div className="h-7 w-7 animate-spin rounded-full border-2 border-[var(--orange-strong)] border-t-transparent" />
           </div>
         ) : branches.length === 0 ? (
           <SectionEmptyState

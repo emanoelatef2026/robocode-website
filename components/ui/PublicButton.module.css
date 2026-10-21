@@ -1,0 +1,14 @@
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 12px 24px; border: 1px solid transparent; border-radius: 999px; font: inherit; font-size: 14px; font-weight: 700; line-height: 1.5; text-align: center; text-decoration: none; cursor: pointer; transition: background-color .18s, border-color .18s, color .18s, box-shadow .18s; }
+.primary { background: var(--orange-strong); color: white; box-shadow: var(--shadow-sm); }
+.primary:hover:not(:disabled) { background: var(--navy); color: white; }
+.secondary { border-color: var(--border); background: var(--bg-card); color: var(--navy); }
+.secondary:hover:not(:disabled) { border-color: var(--navy); background: var(--bg-muted); }
+.navy { background: var(--navy); color: white; }
+.navy:hover:not(:disabled) { background: var(--navy-light); }
+.ghost { color: var(--navy); background: transparent; }
+.ghost:hover:not(:disabled) { background: var(--bg-muted); }
+.inverse { border-color: rgb(255 255 255 / 40%); background: transparent; color: white; }
+.inverse:hover:not(:disabled) { background: rgb(255 255 255 / 12%); color: white; }
+.button:focus-visible { outline: 3px solid var(--cyan-strong); outline-offset: 4px; }
+.button:disabled { opacity: .6; cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) { .button { transition: none; } }

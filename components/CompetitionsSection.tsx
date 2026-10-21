@@ -49,13 +49,13 @@ const COMPETITIONS = [
 ];
 
 const BAR: Record<"orange" | "navy", string> = {
-  orange: "from-[#FF8A1F] to-[#FFB15A]",
-  navy:   "from-[#0B1F3A] to-[#163560]",
+  orange: "from-[var(--orange-strong)] to-[#FFB15A]",
+  navy:   "from-[var(--navy)] to-[var(--navy-light)]",
 };
 
 const HOVER_SHADOW: Record<"orange" | "navy", string> = {
-  orange: "hover:shadow-[0_12px_40px_rgba(255,138,31,0.14)]",
-  navy:   "hover:shadow-[0_12px_40px_rgba(11,31,58,0.10)]",
+  orange: "hover:shadow-[var(--shadow-card)]",
+  navy:   "hover:shadow-[var(--shadow-card)]",
 };
 
 export default function CompetitionsSection() {
@@ -80,22 +80,22 @@ export default function CompetitionsSection() {
                 ease: [0.22, 1, 0.36, 1],
               }}
               whileHover={{ y: -4, transition: { duration: 0.22, ease: "easeOut" } }}
-              className={`group relative overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white p-6 shadow-[0_2px_16px_rgba(11,31,58,0.05)] transition-shadow duration-300 md:rounded-3xl md:p-8 ${HOVER_SHADOW[accent]}`}
+              className={`group relative overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-white p-6 shadow-[var(--shadow-card)] transition-shadow duration-300 md:rounded-[var(--radius-xl)] md:p-8 ${HOVER_SHADOW[accent]}`}
             >
               {/* Accent bar — expands on hover */}
               <div
                 className={`mb-6 h-0.5 w-10 rounded-full bg-linear-to-r ${BAR[accent]} transition-all duration-300 group-hover:w-20`}
               />
 
-              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-[#94A3B8]">
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--muted)]">
                 {tag}
               </p>
 
-              <h3 className="text-lg font-bold leading-snug text-[#0F172A]">
+              <h3 className="text-lg font-bold leading-snug text-[var(--text)]">
                 {title}
               </h3>
 
-              <p className="mt-3 text-sm leading-relaxed text-[#334155]">
+              <p className="mt-3 text-sm leading-relaxed text-[var(--text-2)]">
                 {description}
               </p>
             </motion.div>

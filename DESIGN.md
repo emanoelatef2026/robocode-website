@@ -1,5 +1,11 @@
 # Robocode Design System
 
+**Public website update (2026-10-21):** The visitor-facing website now follows
+[`docs/design/public-site-identity.md`](docs/design/public-site-identity.md):
+accessible orange primary CTAs, concise Poppins/Cairo section headings, shared
+public controls and token-based surfaces. Those rules supersede the older
+marketing examples below; authenticated portal styling is unchanged.
+
 **Status:** Documents what's already shipped. This is not a proposal — it's a
 record of the visual language currently live across the marketing site and the
 LMS admin/portal platform, so future work stays consistent instead of drifting.

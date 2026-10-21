@@ -23,7 +23,7 @@ interface Project {
 // ── Difficulty style map ──────────────────────────────────────────────────────
 
 const DIFF_STYLE: Record<string, string> = {
-  Beginner:     "bg-[#E7F8EE] text-[#15803D] border-[#A7F3D0]",
+  Beginner:     "bg-[var(--green-soft)] text-[var(--green-dark)] border-[#A7F3D0]",
   Intermediate: "bg-sky-50 text-sky-700 border-sky-200",
   Advanced:     "bg-orange-50 text-orange-700 border-orange-200",
 };
@@ -32,13 +32,13 @@ const DIFF_STYLE: Record<string, string> = {
 
 function ProjectCard({ project, index }: { project: Project; index: number }) {
   const accentCyan   = index % 2 === 0;
-  const accentColor  = accentCyan ? "#38BDF8" : "#FF8A1F";
-  const gradientFrom = accentCyan ? "from-[#0B1F3A]" : "from-[#7C2D12]";
-  const gradientTo   = accentCyan ? "to-[#1E3A5F]"  : "to-[#C2410C]";
-  const chipBg       = accentCyan ? "bg-[#38BDF8]/10 text-[#0369A1]" : "bg-[#FF8A1F]/10 text-[#C2410C]";
+  const accentColor  = accentCyan ? "var(--cyan-strong)" : "var(--orange-strong)";
+  const gradientFrom = accentCyan ? "from-[var(--navy)]" : "from-[#7C2D12]";
+  const gradientTo   = accentCyan ? "to-[var(--navy-light)]"  : "to-[var(--orange-strong)]";
+  const chipBg       = accentCyan ? "bg-[var(--cyan-strong)]/10 text-[#0369A1]" : "bg-[var(--orange-strong)]/10 text-[var(--orange-strong)]";
 
   return (
-    <div className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_2px_12px_rgba(11,31,58,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_28px_rgba(11,31,58,0.11)]">
+    <div className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-white shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-card)]">
 
       {/* Image / placeholder */}
       <div className="relative h-44 shrink-0 overflow-hidden">
@@ -60,7 +60,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
               }}
             />
             <div
-              className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm"
+              className="relative z-10 flex h-14 w-14 items-center justify-center rounded-[var(--radius-xl)] bg-white/15 backdrop-blur-sm"
               style={{ boxShadow: `0 0 24px ${accentColor}50` }}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-7 w-7 opacity-80">
@@ -73,7 +73,7 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
         {/* Badges */}
         <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
           {project.difficulty && (
-            <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-semibold backdrop-blur-sm ${DIFF_STYLE[project.difficulty] ?? "bg-white/80 text-[#334155] border-white/40"}`}>
+            <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[10px] font-semibold backdrop-blur-sm ${DIFF_STYLE[project.difficulty] ?? "bg-white/80 text-[var(--text-2)] border-white/40"}`}>
               {project.difficulty}
             </span>
           )}
@@ -93,11 +93,11 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="text-[15px] font-extrabold leading-snug text-[#0F172A]">
+        <h3 className="text-[15px] font-extrabold leading-snug text-[var(--text)]">
           {project.title}
         </h3>
         {project.description && (
-          <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-[#64748B]">
+          <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-[var(--text-3)]">
             {project.description}
           </p>
         )}
@@ -154,7 +154,7 @@ export default function ProjectsSection() {
             <button
               onClick={() => scroll("prev")}
               aria-label="Previous"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E2E8F0] bg-white text-[#64748B] shadow-sm transition-all duration-200 hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-white text-[var(--text-3)] shadow-sm transition-all duration-200 hover:border-[var(--orange-strong)] hover:text-[var(--orange-strong)]"
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className={`h-4 w-4 ${dir === "rtl" ? "rotate-180" : ""}`}>
                 <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -163,7 +163,7 @@ export default function ProjectsSection() {
             <button
               onClick={() => scroll("next")}
               aria-label="Next"
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E2E8F0] bg-white text-[#64748B] shadow-sm transition-all duration-200 hover:border-[#FF8A1F] hover:text-[#FF8A1F]"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-white text-[var(--text-3)] shadow-sm transition-all duration-200 hover:border-[var(--orange-strong)] hover:text-[var(--orange-strong)]"
             >
               <svg viewBox="0 0 20 20" fill="currentColor" className={`h-4 w-4 ${dir === "rtl" ? "rotate-180" : ""}`}>
                 <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
@@ -176,7 +176,7 @@ export default function ProjectsSection() {
       {/* Content */}
       {loading ? (
         <div className="mt-10 flex h-48 items-center justify-center">
-          <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#FF8A1F] border-t-transparent" />
+          <div className="h-7 w-7 animate-spin rounded-full border-2 border-[var(--orange-strong)] border-t-transparent" />
         </div>
       ) : projects.length === 0 ? (
         <div className="mx-auto mt-10 max-w-7xl px-6">
@@ -189,7 +189,7 @@ export default function ProjectsSection() {
       ) : (
         <div className="relative mt-6">
           {/* Fade-out on trailing edge */}
-          <div className={`pointer-events-none absolute inset-y-0 z-10 w-20 ${dir === "rtl" ? "left-0 bg-linear-to-r" : "right-0 bg-linear-to-l"} from-[#F8FAFC] to-transparent`} />
+          <div className={`pointer-events-none absolute inset-y-0 z-10 w-20 ${dir === "rtl" ? "left-0 bg-linear-to-r" : "right-0 bg-linear-to-l"} from-[var(--bg)] to-transparent`} />
 
           <motion.div
             ref={trackRef}

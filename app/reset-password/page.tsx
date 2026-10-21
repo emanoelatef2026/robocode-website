@@ -53,70 +53,72 @@ export default function ResetPasswordPage() {
 
   if (sessionReady === null) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F4F7FB]">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#19C6F4] border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--cyan-strong)] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F4F7FB] px-4">
+    <div data-site-auth className="flex min-h-screen items-center justify-center bg-[var(--bg)] px-4">
       <div className="w-full max-w-sm">
-        <div className="rounded-2xl border border-[#F1F5F9] bg-white p-8 shadow-sm">
+        <div data-site-card className="p-6 sm:p-8">
           <div className="mb-8 flex justify-center">
             <Image src="/logo.png" alt="Robocode" width={140} height={60} className="h-auto w-28" />
           </div>
 
-          <h1 className="mb-1 text-center text-lg font-bold text-[#0B132B]">Set new password</h1>
-          <p className="mb-7 text-center text-[13px] text-[#9CA3AF]">
+          <h1 className="mb-1 text-center text-lg font-bold text-[var(--navy)]">Set new password</h1>
+          <p className="mb-7 text-center text-[13px] text-[var(--muted)]">
             Choose a new password for your account
           </p>
 
           {error && (
-            <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#EF4444]">
+            <div className="mb-4 rounded-lg bg-[var(--red-soft)] px-4 py-3 text-[13px] text-[var(--red-dark)]">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+              <label htmlFor="reset-password" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                 New password
               </label>
               <input
                 type="password"
+                id="reset-password"
                 name="password"
                 required
                 autoComplete="new-password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-muted)] px-4 py-3 text-[14px] text-[var(--navy)] outline-none transition focus:border-[var(--cyan-strong)] focus:ring-2 focus:ring-[var(--cyan-strong)]/20"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+              <label htmlFor="reset-confirm" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[var(--muted)]">
                 Confirm new password
               </label>
               <input
                 type="password"
                 name="confirm"
+                id="reset-confirm"
                 required
                 autoComplete="new-password"
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+                className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-muted)] px-4 py-3 text-[14px] text-[var(--navy)] outline-none transition focus:border-[var(--cyan-strong)] focus:ring-2 focus:ring-[var(--cyan-strong)]/20"
               />
             </div>
 
             <button
               type="submit"
               disabled={pending}
-              className="w-full rounded-lg bg-[#0B132B] py-3 text-[14px] font-semibold text-white transition hover:bg-[#19C6F4] disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded-lg bg-[var(--navy)] py-3 text-[14px] font-semibold text-white transition hover:bg-[var(--cyan-strong)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {pending ? 'Updating…' : 'Update password'}
             </button>
           </form>
         </div>
-        <p className="mt-4 text-center text-[12px] text-[#9CA3AF]">Robocode School · LMS</p>
+        <p className="mt-4 text-center text-[12px] text-[var(--muted)]">Robocode School · LMS</p>
       </div>
     </div>
   )

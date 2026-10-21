@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ButtonLink } from "./ui/Button";
 
 const fadeUp = (delay = 0) => ({
   initial:    { opacity: 0, y: 16 },
@@ -28,20 +28,19 @@ export default function Hero() {
   const CTA_BUTTONS = (
     <>
       {/* Primary CTA — orange */}
-      <Link
+      <ButtonLink
         href="/book-session"
-        className="rounded-full bg-[#FF8A1F] px-8 py-4 text-center text-sm font-bold text-white shadow-[0_4px_20px_rgba(255,138,31,0.36)] transition-all duration-300 hover:-translate-y-0.5 hover:brightness-110 hover:shadow-[0_8px_28px_rgba(255,138,31,0.46)]"
       >
         {t("hero.bookSession")}
-      </Link>
+      </ButtonLink>
 
       {/* Secondary CTA — navy outline */}
-      <a
+      <ButtonLink
         href="#programs"
-        className="rounded-full border-2 border-[#0B2341]/20 bg-white px-8 py-4 text-center text-sm font-bold text-[#0B2341] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#0B2341]/40 hover:shadow-[0_4px_16px_rgba(11,35,65,0.10)]"
+        variant="secondary"
       >
         {t("hero.explorePrograms")}
-      </a>
+      </ButtonLink>
     </>
   );
 
@@ -61,10 +60,10 @@ export default function Hero() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.75, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center text-3xl font-extrabold leading-[1.12] tracking-tight text-[#0B2341] sm:text-5xl lg:text-start lg:text-6xl"
+          className="text-center text-3xl font-extrabold leading-[1.12] tracking-tight text-[var(--navy)] sm:text-5xl lg:text-start lg:text-6xl"
         >
           {t("hero.heading1")}
-          <span className="mt-2 block text-[#FF8A1F]">
+          <span className="mt-2 block text-[var(--orange-strong)]">
             {t("hero.heading2")}
           </span>
         </motion.h1>
@@ -72,7 +71,7 @@ export default function Hero() {
         {/* Subtext — brand body gray */}
         <motion.p
           {...fadeUp(0.3)}
-          className="mt-5 max-w-md text-center text-base leading-relaxed text-[#64748B] lg:text-start"
+          className="mt-5 max-w-md text-center text-base leading-relaxed text-[var(--text-3)] lg:text-start"
         >
           {t("hero.subtext")}
         </motion.p>

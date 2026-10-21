@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Locale } from "@/lib/i18n";
+import { publicButtonClass } from "./ui/Button";
 
 const NAVBAR_OFFSET = 72;
 
@@ -16,23 +17,23 @@ function LangToggle({ compact = false }: { compact?: boolean }) {
   const { locale, setLocale } = useLanguage();
 
   const wrapCls = compact
-    ? "flex items-center overflow-hidden rounded-full border border-[#E2E8F0] text-[11px] font-bold"
-    : "flex w-full items-center overflow-hidden rounded-xl border border-[#E2E8F0] text-sm font-bold";
+    ? "flex items-center overflow-hidden rounded-full border border-[var(--border)] text-[11px] font-bold"
+    : "flex w-full items-center overflow-hidden rounded-xl border border-[var(--border)] text-sm font-bold";
 
   const btnCls = (active: boolean) =>
     [
       "transition-all duration-200",
-      compact ? "px-3 py-1.5" : "flex-1 py-2.5 text-center",
-      active ? "bg-[#0B2341] text-white" : "bg-white text-[#64748B] hover:text-[#0B2341]",
+      compact ? "min-h-11 min-w-11 px-3 py-1.5" : "min-h-11 flex-1 py-2.5 text-center",
+      active ? "bg-[var(--navy)] text-white" : "bg-white text-[var(--text-3)] hover:text-[var(--navy)]",
     ].join(" ");
 
   return (
     <div className={wrapCls}>
-      <button onClick={() => setLocale("en" as Locale)} className={btnCls(locale === "en")}>
+      <button aria-pressed={locale === "en"} onClick={() => setLocale("en" as Locale)} className={btnCls(locale === "en")}>
         EN
       </button>
-      <span className="h-4 w-px shrink-0 bg-[#E2E8F0]" />
-      <button onClick={() => setLocale("ar" as Locale)} className={btnCls(locale === "ar")}>
+      <span className="h-4 w-px shrink-0 bg-[var(--border)]" />
+      <button aria-pressed={locale === "ar"} onClick={() => setLocale("ar" as Locale)} className={btnCls(locale === "ar")}>
         AR
       </button>
     </div>
@@ -75,7 +76,7 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const handler = () => { if (window.innerWidth >= 768) setMenuOpen(false); };
+    const handler = () => { if (window.innerWidth >= 1024) setMenuOpen(false); };
     window.addEventListener("resize", handler, { passive: true });
     return () => window.removeEventListener("resize", handler);
   }, []);
@@ -121,11 +122,11 @@ export default function Navbar() {
       className={[
         "fixed inset-x-0 top-0 z-50 transition-[background,box-shadow,border-color] duration-300",
         scrolled
-          ? "border-b border-[#E2E8F0] bg-white/95 shadow-[0_1px_12px_rgba(11,35,65,0.07)] backdrop-blur-xl"
-          : "border-b border-transparent bg-transparent",
+          ? "border-b border-[var(--border)] bg-white/95 shadow-[var(--shadow-card)] backdrop-blur-xl"
+          : "border-b border-[var(--border-soft)] bg-white/95",
       ].join(" ")}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-3">
 
         {/* Logo */}
         <Link
@@ -145,29 +146,29 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav aria-label="Main navigation" className="hidden items-center gap-5 lg:flex">
           {NAV_LINKS.map(({ key, href }) => (
             <Link
               key={key}
               href={href}
               onClick={(e) => handleSectionClick(e, href)}
-              className="group relative text-[13px] font-semibold text-[#64748B] transition-colors duration-200 hover:text-[#0B2341]"
+              className="group relative text-[13px] font-semibold text-[var(--text-3)] transition-colors duration-200 hover:text-[var(--navy)]"
             >
               {t(key)}
-              <span className="absolute -bottom-0.5 inset-s-0 h-0.5 w-0 rounded-full bg-[#FF8A1F] transition-all duration-300 group-hover:w-full" />
+              <span className="absolute -bottom-0.5 inset-s-0 h-0.5 w-0 rounded-full bg-[var(--orange-strong)] transition-all duration-300 group-hover:w-full" />
             </Link>
           ))}
         </nav>
 
         {/* Right controls: lang toggle + Login + CTA */}
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           <LangToggle compact />
           <Link href="/login">
             <motion.span
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="inline-flex items-center rounded-full border border-[#0B2341]/25 px-5 py-2.5 text-[13px] font-bold text-[#0B2341] transition-all duration-200 hover:border-[#0B2341] hover:bg-[#0B2341] hover:text-white"
+              className={publicButtonClass("secondary")}
             >
               {t("nav.login")}
             </motion.span>
@@ -177,7 +178,7 @@ export default function Navbar() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="inline-flex items-center rounded-full bg-[#FF8A1F] px-5 py-2.5 text-[13px] font-bold text-white shadow-[0_2px_14px_rgba(255,138,31,0.30)] transition-all duration-300 hover:brightness-110 hover:shadow-[0_4px_20px_rgba(255,138,31,0.45)]"
+              className={publicButtonClass("primary")}
             >
               {t("nav.bookTrial")}
             </motion.span>
@@ -185,12 +186,12 @@ export default function Navbar() {
         </div>
 
         {/* Mobile right actions: Book Trial (primary) + Login + Hamburger */}
-        <div className="flex items-center gap-1.5 md:hidden">
+        <div className="flex items-center gap-1.5 lg:hidden">
           <Link href="/book-session">
             <motion.span
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="inline-flex min-h-11 items-center rounded-full bg-[#FF8A1F] px-3 text-[12px] font-bold text-white shadow-[0_2px_10px_rgba(255,138,31,0.28)]"
+              className={publicButtonClass("primary", "!min-h-11 !px-3 !text-xs")}
             >
               {t("nav.bookTrialShort")}
             </motion.span>
@@ -199,7 +200,7 @@ export default function Navbar() {
             <motion.span
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="inline-flex min-h-11 items-center rounded-full border border-[#0B2341]/25 px-3 text-[12px] font-bold text-[#0B2341]"
+              className={publicButtonClass("secondary", "!min-h-11 !px-3 !text-xs")}
             >
               {t("nav.login")}
             </motion.span>
@@ -208,22 +209,23 @@ export default function Navbar() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle navigation menu"
             aria-expanded={menuOpen}
+            aria-controls="public-mobile-menu"
             className="flex min-h-11 min-w-11 flex-col items-center justify-center gap-1.5 rounded-xl p-2"
           >
             <motion.span
               animate={menuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
               transition={{ duration: 0.22 }}
-              className="block h-0.5 w-5 origin-center rounded-full bg-[#0B2341]"
+              className="block h-0.5 w-5 origin-center rounded-full bg-[var(--navy)]"
             />
             <motion.span
               animate={menuOpen ? { opacity: 0, scaleX: 0 } : { opacity: 1, scaleX: 1 }}
               transition={{ duration: 0.18 }}
-              className="block h-0.5 w-5 rounded-full bg-[#0B2341]"
+              className="block h-0.5 w-5 rounded-full bg-[var(--navy)]"
             />
             <motion.span
               animate={menuOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
               transition={{ duration: 0.22 }}
-              className="block h-0.5 w-5 origin-center rounded-full bg-[#0B2341]"
+              className="block h-0.5 w-5 origin-center rounded-full bg-[var(--navy)]"
             />
           </button>
         </div>
@@ -233,12 +235,13 @@ export default function Navbar() {
       <AnimatePresence>
         {menuOpen && (
           <motion.div
+            id="public-mobile-menu"
             key="mobile-menu"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.24, ease: "easeInOut" }}
-            className="overflow-hidden border-t border-[#E2E8F0] bg-white/98 backdrop-blur-xl md:hidden"
+            className="max-h-[calc(100dvh-80px)] overflow-y-auto border-t border-[var(--border)] bg-white lg:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-4">
               {MOBILE_NAV_LINKS.map(({ key, href }) => (
@@ -249,7 +252,7 @@ export default function Navbar() {
                     handleSectionClick(e, href);
                     setMenuOpen(false);
                   }}
-                  className="rounded-xl px-4 py-3.5 text-[14px] font-semibold text-[#334155] transition-colors duration-150 hover:bg-[#FF8A1F]/8 hover:text-[#FF8A1F]"
+                  className="rounded-xl px-4 py-3.5 text-[14px] font-semibold text-[var(--text-2)] transition-colors duration-150 hover:bg-[var(--orange-strong)]/8 hover:text-[var(--orange-strong)]"
                 >
                   {t(key)}
                 </Link>
@@ -265,7 +268,7 @@ export default function Navbar() {
               <Link
                 href="/book-session"
                 onClick={() => setMenuOpen(false)}
-                className="mt-3 block w-full rounded-full bg-[#FF8A1F] py-4 text-center text-sm font-bold text-white shadow-[0_2px_14px_rgba(255,138,31,0.28)] transition duration-200 hover:brightness-110"
+                className={publicButtonClass("primary", "mt-3 w-full")}
               >
                 {t("nav.bookFreeTrial")}
               </Link>

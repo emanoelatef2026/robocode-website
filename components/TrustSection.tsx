@@ -43,10 +43,10 @@ function StarIcon() {
 // ── Data ──────────────────────────────────────────────────────────────────────
 
 const STATS = [
-  { value: "6+",     labelKey: "trust.yearsLabel",    iconColor: "text-[#38BDF8]", icon: <ClockIcon /> },
-  { value: "8000+",  labelKey: "trust.studentsLabel", iconColor: "text-[#38BDF8]", icon: <UsersIcon /> },
-  { value: "16000+", labelKey: "trust.parentsLabel",  iconColor: "text-[#FF8A1F]", icon: <HeartIcon /> },
-  { value: "4.9",    suffix: "/5", labelKey: "trust.ratingLabel", iconColor: "text-[#38BDF8]", icon: <StarIcon /> },
+  { value: "6+",     labelKey: "trust.yearsLabel",    iconColor: "text-[var(--cyan-strong)]", icon: <ClockIcon /> },
+  { value: "8000+",  labelKey: "trust.studentsLabel", iconColor: "text-[var(--cyan-strong)]", icon: <UsersIcon /> },
+  { value: "16000+", labelKey: "trust.parentsLabel",  iconColor: "text-[var(--orange-strong)]", icon: <HeartIcon /> },
+  { value: "4.9",    suffix: "/5", labelKey: "trust.ratingLabel", iconColor: "text-[var(--cyan-strong)]", icon: <StarIcon /> },
 ] as const;
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -60,21 +60,22 @@ export default function TrustSection() {
 
         {STATS.map(({ value, labelKey, iconColor, icon, ...rest }) => (
           <div
+            data-site-card
             key={labelKey}
-            className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-white/40 bg-white/70 px-4 py-6 shadow-xl backdrop-blur-xl transition hover:-translate-y-1 md:rounded-3xl md:py-8 md:hover:-translate-y-2"
+            className="flex flex-col items-center justify-center gap-3 rounded-[var(--radius-xl)] border border-white/40 bg-white/70 px-4 py-6 shadow-[var(--shadow-card)] backdrop-blur-xl transition hover:-translate-y-1 md:rounded-[var(--radius-xl)] md:py-8 md:hover:-translate-y-2"
           >
             <span className={iconColor}>{icon}</span>
 
-            <h2 className="text-4xl font-bold text-[#0F172A] md:text-5xl">
+            <h2 className="text-4xl font-bold text-[var(--text)] md:text-5xl">
               {value}
               {"suffix" in rest && rest.suffix && (
-                <span className="text-2xl font-semibold text-[#94A3B8] md:text-3xl">
+                <span className="text-2xl font-semibold text-[var(--muted)] md:text-3xl">
                   {rest.suffix}
                 </span>
               )}
             </h2>
 
-            <p className="text-center text-xs font-semibold text-[#334155] md:text-sm">
+            <p className="text-center text-xs font-semibold text-[var(--text-2)] md:text-sm">
               {t(labelKey)}
             </p>
           </div>

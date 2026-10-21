@@ -34,11 +34,11 @@ const DEFAULT_TABS: WhyTab[] = [
 function WhyPlaceholder() {
   return (
     <div className="flex h-full w-full flex-col items-center justify-center gap-3">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E2E8F0]">
+      <div className="flex h-14 w-14 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--border)]">
         <svg
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#94A3B8"
+          stroke="var(--muted)"
           strokeWidth="1.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -49,7 +49,7 @@ function WhyPlaceholder() {
           <circle cx="8.5" cy="8.5" r="1.5" />
         </svg>
       </div>
-      <p className="text-[12px] font-medium text-[#CBD5E1]">No image uploaded</p>
+      <p className="text-[12px] font-medium text-[var(--muted)]">No image uploaded</p>
     </div>
   );
 }
@@ -118,18 +118,18 @@ export default function WhySection() {
                 transition={{ duration: 0.5, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
                 onClick={() => { if (i !== activeIdx) setActiveIdx(i); }}
                 className={[
-                  "flex w-full items-center gap-5 rounded-2xl border px-6 py-5 text-left",
-                  "shadow-[0_2px_12px_rgba(11,31,58,0.05)] transition-all duration-300",
+                  "flex w-full items-center gap-5 rounded-[var(--radius-xl)] border px-6 py-5 text-left",
+                  "shadow-[var(--shadow-card)] transition-all duration-300",
                   i === activeIdx
-                    ? "border-[#FF8A1F] bg-white ring-2 ring-[#FF8A1F]/20"
-                    : "border-[#E2E8F0] bg-white hover:border-[#FF8A1F]/50",
+                    ? "border-[var(--orange-strong)] bg-white ring-2 ring-[var(--orange-strong)]/20"
+                    : "border-[var(--border)] bg-white hover:border-[var(--orange-strong)]/50",
                 ].join(" ")}
               >
                 {/* Accent bar */}
                 <div
                   className={[
                     "h-10 w-0.75 shrink-0 rounded-full transition-colors duration-300",
-                    i === activeIdx ? "bg-[#FF8A1F]" : "bg-[#E2E8F0]",
+                    i === activeIdx ? "bg-[var(--orange-strong)]" : "bg-[var(--border)]",
                   ].join(" ")}
                 />
 
@@ -139,8 +139,8 @@ export default function WhySection() {
                     "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
                     "text-[14px] font-bold transition-all duration-300",
                     i === activeIdx
-                      ? "bg-[#FF8A1F] text-white"
-                      : "bg-[#F1F5F9] text-[#94A3B8]",
+                      ? "bg-[var(--orange-strong)] text-white"
+                      : "bg-[var(--bg-muted)] text-[var(--muted)]",
                   ].join(" ")}
                 >
                   {i + 1}
@@ -150,7 +150,7 @@ export default function WhySection() {
                 <p
                   className={[
                     "flex-1 text-[15px] font-bold leading-snug transition-colors duration-200 md:text-[16px]",
-                    i === activeIdx ? "text-[#0F172A]" : "text-[#64748B]",
+                    i === activeIdx ? "text-[var(--text)]" : "text-[var(--text-3)]",
                   ].join(" ")}
                 >
                   {tab.tab_name}
@@ -161,7 +161,7 @@ export default function WhySection() {
                   <svg
                     viewBox="0 0 20 20"
                     fill="currentColor"
-                    className="h-4 w-4 shrink-0 text-[#FF8A1F]"
+                    className="h-4 w-4 shrink-0 text-[var(--orange-strong)]"
                   >
                     <path
                       fillRule="evenodd"
@@ -181,7 +181,7 @@ export default function WhySection() {
             object-contain keeps the full image visible without any cropping.
           */}
           <div className="w-full lg:w-1/2">
-            <div className="relative aspect-4/3 w-full overflow-hidden rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] shadow-[0_4px_32px_rgba(11,31,58,0.08)]">
+            <div className="relative aspect-4/3 w-full overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-[var(--bg)] shadow-[var(--shadow-card)]">
               <AnimatePresence mode="wait">
                 {activeTab?.image_url ? (
                   <motion.div

@@ -155,30 +155,29 @@ export default function LegalPageContent({ kind }: { kind: LegalKind }) {
   const isArabic = locale === "ar";
 
   return (
-    <main dir={isArabic ? "rtl" : "ltr"} className="min-h-screen bg-[#F8FAFC] px-5 pb-16 pt-32 text-[#0B2341] md:px-8 md:pt-40">
+    <main dir={isArabic ? "rtl" : "ltr"} className="min-h-screen bg-[var(--bg)] px-5 pb-16 pt-32 text-[var(--navy)] md:px-8 md:pt-40">
       <div className="mx-auto max-w-4xl">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-[#0E7490] transition hover:text-[#C2410C]">
+        <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--cyan-strong)] transition hover:text-[var(--orange-strong)]">
           <span aria-hidden>{isArabic ? "←" : "←"}</span>
           {isArabic ? "العودة إلى الرئيسية" : "Back to home"}
         </Link>
-        <header className="mt-8 rounded-3xl border border-[#D7E0EA] bg-white px-6 py-9 shadow-[0_12px_32px_rgba(11,31,58,0.06)] md:px-10 md:py-12">
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#C2410C]">{copy.eyebrow}</p>
-          <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-[#0B2341] md:text-5xl">{copy.title}</h1>
-          <p className="mt-5 max-w-2xl text-base leading-8 text-[#475569] md:text-lg">{copy.intro}</p>
-          <p className="mt-6 text-sm font-medium text-[#64748B]">{isArabic ? "آخر تحديث: سبتمبر 2026" : "Last updated: September 2026"}</p>
+        <header data-site-page-header data-site-card className="mt-8 px-6 py-9 md:px-10 md:py-12">
+          <h1>{copy.title}</h1>
+          <p className="mt-5 max-w-2xl text-base leading-8 text-[var(--text-3)] md:text-lg">{copy.intro}</p>
+          <p className="mt-6 text-sm font-medium text-[var(--text-3)]">{isArabic ? "آخر تحديث: سبتمبر 2026" : "Last updated: September 2026"}</p>
         </header>
 
         <div className="mt-6 space-y-5">
           {copy.sections.map((section, index) => (
-            <section key={section.title} className="rounded-2xl border border-[#D7E0EA] bg-white px-6 py-6 shadow-[0_4px_16px_rgba(11,31,58,0.035)] md:px-8">
+            <section data-site-card key={section.title} className="px-6 py-6 md:px-8">
               <div className="flex items-center gap-3">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#FFF1E5] text-xs font-extrabold text-[#C2410C]">{index + 1}</span>
-                <h2 className="text-lg font-bold text-[#0B2341] md:text-xl">{section.title}</h2>
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--bg-muted)] text-xs font-extrabold text-[var(--orange-strong)]">{index + 1}</span>
+                <h2 className="text-lg font-bold text-[var(--navy)] md:text-xl">{section.title}</h2>
               </div>
               <ul className="mt-4 space-y-3">
                 {section.items.map((item) => (
-                  <li key={item} className="flex gap-3 text-sm leading-7 text-[#475569] md:text-base">
-                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#10B6D3]" />
+                  <li key={item} className="flex gap-3 text-sm leading-7 text-[var(--text-3)] md:text-base">
+                    <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--cyan-strong)]" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -187,7 +186,7 @@ export default function LegalPageContent({ kind }: { kind: LegalKind }) {
           ))}
         </div>
 
-        <p className="mt-7 rounded-2xl border-s-4 border-[#FF8A1F] bg-[#FFF7ED] px-5 py-4 text-sm leading-7 text-[#7C2D12] md:text-base">{copy.closing}</p>
+        <p className="mt-7 rounded-[var(--radius-xl)] border-s-4 border-[var(--orange-strong)] bg-[var(--bg-muted)] px-5 py-4 text-sm leading-7 text-[var(--text-2)] md:text-base">{copy.closing}</p>
       </div>
     </main>
   );

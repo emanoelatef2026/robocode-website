@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/server";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { formatDateUS } from "@/lib/format-date";
+import PublicPageHeading from "@/components/public-site/PublicPageHeading";
 
 export const dynamic = "force-dynamic";
 
@@ -40,10 +41,10 @@ function PostCard({ post, featured = false }: { post: Post; featured?: boolean }
   return (
     <Link
       href={`/blog/${post.slug}`}
-      className={`group flex flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-[0_2px_12px_rgba(11,31,58,0.06)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_28px_rgba(11,31,58,0.11)] ${featured ? "md:flex-row" : ""}`}
+      className={`group flex flex-col overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-white shadow-[var(--shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-card)] ${featured ? "md:flex-row" : ""}`}
     >
       {/* Image */}
-      <div className={`relative shrink-0 overflow-hidden bg-[#E2E8F0] ${featured ? "h-52 md:h-auto md:w-80" : "h-44"}`}>
+      <div className={`relative shrink-0 overflow-hidden bg-[var(--border)] ${featured ? "h-52 md:h-auto md:w-80" : "h-44"}`}>
         {post.featured_image ? (
           <Image
             src={post.featured_image}
@@ -53,31 +54,31 @@ function PostCard({ post, featured = false }: { post: Post; featured?: boolean }
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#0B1F3A] to-[#1E3A5F]">
+          <div className="flex h-full items-center justify-center bg-gradient-to-br from-[var(--navy)] to-[var(--navy-light)]">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 opacity-30">
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
             </svg>
           </div>
         )}
-        <span className="absolute left-3 top-3 rounded-full bg-[#38BDF8]/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
+        <span className="absolute left-3 top-3 rounded-full bg-[var(--cyan-strong)]/90 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm">
           {post.category}
         </span>
       </div>
 
       {/* Content */}
       <div className="flex flex-1 flex-col p-5">
-        <p className="mb-1.5 text-[11px] font-semibold text-[#94A3B8]">
+        <p className="mb-1.5 text-[11px] font-semibold text-[var(--muted)]">
           {formatDateUS(post.published_at)} · {post.author}
         </p>
-        <h2 className={`font-extrabold leading-snug text-[#0F172A] group-hover:text-[#0B1F3A] ${featured ? "text-xl" : "text-[15px]"}`}>
+        <h2 className={`font-extrabold leading-snug text-[var(--text)] group-hover:text-[var(--navy)] ${featured ? "text-xl" : "text-[15px]"}`}>
           {post.title}
         </h2>
         {post.excerpt && (
-          <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-[#64748B]">
+          <p className="mt-2 line-clamp-3 text-[13px] leading-relaxed text-[var(--text-3)]">
             {post.excerpt}
           </p>
         )}
-        <div className="mt-auto flex items-center gap-1.5 pt-4 text-[12px] font-semibold text-[#38BDF8]">
+        <div className="mt-auto flex items-center gap-1.5 pt-4 text-[12px] font-semibold text-[var(--cyan-strong)]">
           Read article
           <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3 transition-transform duration-200 group-hover:translate-x-0.5">
             <path fillRule="evenodd" d="M6.293 4.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L8.586 8 6.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -108,29 +109,17 @@ export default async function BlogPage() {
 
   return (
     <>
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen bg-[var(--bg)]">
         <Navbar />
 
         <main className="mx-auto max-w-7xl px-6 pb-24 pt-28">
           {/* Header */}
-          <div className="mb-12 text-center">
-            <p className="text-[11px] font-bold uppercase tracking-[0.32em] text-[#38BDF8]">
-              Robocode Insights
-            </p>
-            <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-[#0F172A] md:text-5xl">
-              Tech Education{" "}
-              <span className="text-[#FF8A1F]">Blog</span>
-            </h1>
-            <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-[#64748B]">
-              Guides, insights, and ideas to help kids learn AI, robotics, and programming.
-            </p>
-            <div className="mx-auto mt-5 h-0.5 w-12 rounded-full bg-[#38BDF8]" />
-          </div>
+          <PublicPageHeading kind="blog" />
 
           {posts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0B1F3A]/6">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#38BDF8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--navy)]/6">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan-strong)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-8 w-8">
                   <path d="M14.5 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V7.5L14.5 2z" />
                   <polyline points="14 2 14 8 20 8" />
                   <line x1="16" y1="13" x2="8" y2="13" />
@@ -138,9 +127,9 @@ export default async function BlogPage() {
                   <polyline points="10 9 9 9 8 9" />
                 </svg>
               </div>
-              <p className="text-[15px] font-semibold text-[#0B1F3A]">Articles coming soon</p>
-              <p className="mt-2 text-[13px] text-[#94A3B8]">Our blog is being built. Check back soon for educational content.</p>
-              <div className="mx-auto mt-5 h-0.5 w-10 rounded-full bg-[#38BDF8]/30" />
+              <p className="text-[15px] font-semibold text-[var(--navy)]">Articles coming soon</p>
+              <p className="mt-2 text-[13px] text-[var(--muted)]">Our blog is being built. Check back soon for educational content.</p>
+              <div className="mx-auto mt-5 h-0.5 w-10 rounded-full bg-[var(--cyan-strong)]/30" />
             </div>
           ) : (
             <div className="space-y-10">

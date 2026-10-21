@@ -29,7 +29,7 @@
 .description { color: var(--text-2); font-size: 15px; line-height: 1.85; }
 .skills { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .skill { padding: 5px 9px; border-radius: var(--radius-sm); background: var(--bg-muted); color: var(--text-2); font-size: 12px; font-weight: 600; line-height: 1.6; }
-.action { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 12px 20px; border: 1px solid var(--border); border-radius: 999px; color: var(--navy); background: white; font-size: 14px; font-weight: 700; line-height: 1.5; text-align: center; text-decoration: none; cursor: pointer; transition: background-color .15s, border-color .15s, color .15s; }
+.action { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 12px 24px; border: 1px solid var(--border); border-radius: 999px; color: var(--navy); background: var(--bg-card); font-size: 14px; font-weight: 700; line-height: 1.5; text-align: center; text-decoration: none; cursor: pointer; transition: background-color .18s, border-color .18s, color .18s; }
 .action:hover { border-color: var(--navy); background: var(--bg-muted); }
 .action:focus-visible, .close:focus-visible { outline: 3px solid var(--cyan-strong); outline-offset: 4px; }
 .primary { border-color: var(--orange-strong); background: var(--orange-strong); color: white; }

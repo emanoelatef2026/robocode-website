@@ -113,14 +113,14 @@ export default async function BlogPostPage(
         dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
       />
 
-      <div className="min-h-screen bg-[#F8FAFC]">
+      <div className="min-h-screen bg-[var(--bg)]">
         <Navbar />
 
         <main className="mx-auto max-w-3xl px-6 pb-24 pt-28">
           {/* Back link */}
           <Link
             href="/blog"
-            className="mb-8 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[#64748B] transition-colors duration-200 hover:text-[#0B1F3A]"
+            className="mb-8 inline-flex items-center gap-1.5 text-[12px] font-semibold text-[var(--text-3)] transition-colors duration-200 hover:text-[var(--navy)]"
           >
             <svg viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
               <path fillRule="evenodd" d="M9.707 4.293a1 1 0 010 1.414L7.414 8l2.293 2.293a1 1 0 01-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -130,30 +130,30 @@ export default async function BlogPostPage(
 
           {/* Category + date */}
           <div className="mb-4 flex flex-wrap items-center gap-2">
-            <span className="rounded-full bg-[#38BDF8]/12 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-[#0B1F3A]">
+            <span className="rounded-full bg-[var(--cyan-strong)]/12 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-[var(--navy)]">
               {post.category}
             </span>
             {post.published_at && (
-              <span className="text-[12px] text-[#94A3B8]">
+              <span className="text-[12px] text-[var(--muted)]">
                 {new Date(post.published_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
               </span>
             )}
-            <span className="text-[12px] text-[#94A3B8]">By {post.author}</span>
+            <span className="text-[12px] text-[var(--muted)]">By {post.author}</span>
           </div>
 
           {/* Title */}
-          <h1 className="text-2xl font-extrabold leading-snug tracking-tight text-[#0F172A] md:text-4xl">
+          <h1 className="text-2xl font-extrabold leading-snug tracking-tight text-[var(--text)] md:text-4xl">
             {post.title}
           </h1>
 
           {/* Excerpt */}
           {post.excerpt && (
-            <p className="mt-4 text-[16px] leading-relaxed text-[#64748B]">{post.excerpt}</p>
+            <p className="mt-4 text-[16px] leading-relaxed text-[var(--text-3)]">{post.excerpt}</p>
           )}
 
           {/* Featured image */}
           {post.featured_image && (
-            <div className="relative mt-8 h-64 overflow-hidden rounded-2xl md:h-80">
+            <div className="relative mt-8 h-64 overflow-hidden rounded-[var(--radius-xl)] md:h-80">
               <Image
                 src={post.featured_image}
                 alt={post.title}
@@ -172,14 +172,14 @@ export default async function BlogPostPage(
           />
 
           {/* Bottom author card */}
-          <div className="mt-14 border-t border-[#E2E8F0] pt-8">
+          <div className="mt-14 border-t border-[var(--border)] pt-8">
             <div className="flex items-center gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#0B1F3A]/8 text-[14px] font-bold text-[#0B1F3A]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--navy)]/8 text-[14px] font-bold text-[var(--navy)]">
                 {post.author.charAt(0)}
               </div>
               <div>
-                <p className="text-[13px] font-bold text-[#0F172A]">{post.author}</p>
-                <p className="text-[12px] text-[#94A3B8]">Robocode School</p>
+                <p className="text-[13px] font-bold text-[var(--text)]">{post.author}</p>
+                <p className="text-[12px] text-[var(--muted)]">Robocode School</p>
               </div>
             </div>
           </div>
@@ -187,7 +187,7 @@ export default async function BlogPostPage(
           <div className="mt-8">
             <Link
               href="/blog"
-              className="inline-flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white px-5 py-2.5 text-[13px] font-semibold text-[#334155] shadow-sm transition-all duration-200 hover:border-[#38BDF8] hover:text-[#0B1F3A]"
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-white px-5 py-2.5 text-[13px] font-semibold text-[var(--text-2)] shadow-sm transition-all duration-200 hover:border-[var(--cyan-strong)] hover:text-[var(--navy)]"
             >
               ← More articles
             </Link>

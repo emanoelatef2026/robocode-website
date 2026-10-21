@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { publicButtonClass } from "./ui/Button";
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -27,19 +28,19 @@ const TIMES = buildTimes();
 // ── Shared style tokens ───────────────────────────────────────────────────────
 
 const inputCls =
-  "w-full rounded-xl border border-[#0B132B]/[0.08] bg-white/60 px-4 py-4 text-sm text-[#0B132B] placeholder:text-[#94A3B8] backdrop-blur-sm transition duration-200 focus:border-[#19C6F4] focus:outline-none focus:ring-2 focus:ring-[#19C6F4]/20 hover:border-[#0B132B]/[0.15]";
+  "w-full rounded-xl border border-[var(--navy)]/[0.08] bg-white/60 px-4 py-4 text-sm text-[var(--navy)] placeholder:text-[var(--muted)] backdrop-blur-sm transition duration-200 focus:border-[var(--cyan-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--cyan-strong)]/20 hover:border-[var(--navy)]/[0.15]";
 
 const labelCls =
-  "mb-3 block text-[13px] font-semibold text-[#0B132B]/80";
+  "mb-3 block text-[13px] font-semibold text-[var(--navy)]/80";
 
 const chipBase =
   "inline-flex min-h-[44px] items-center rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus:outline-none";
 
 const chipActive =
-  "bg-[#19C6F4] text-white shadow-[0_0_14px_rgba(25,198,244,0.4)]";
+  "bg-[var(--navy)] text-white shadow-[var(--shadow-card)]";
 
 const chipIdle =
-  "border border-[#0B132B]/10 bg-white/60 text-[#0B132B]/60 hover:border-[#19C6F4]/40 hover:bg-[#19C6F4]/5 hover:text-[#0B132B]";
+  "border border-[var(--navy)]/10 bg-white/60 text-[var(--navy)]/60 hover:border-[var(--cyan-strong)]/40 hover:bg-[var(--cyan-strong)]/5 hover:text-[var(--navy)]";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -113,13 +114,14 @@ export default function TrialForm() {
 
   return (
     <motion.div
+      data-site-card
       initial={{ opacity: 0, y: 28 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.65, delay: 0.15, ease: [0.22, 1, 0.36, 1] as const }}
-      className="relative w-full overflow-hidden rounded-3xl border border-white/60 bg-white/70 shadow-2xl backdrop-blur-xl"
+      className="relative w-full overflow-hidden"
     >
       {/* Brand dual-tone accent bar */}
-      <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-[#19C6F4] to-[#F97316]" />
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-[var(--cyan-strong)] to-[var(--orange-strong)]" />
 
       <div className="p-8 md:p-12">
         <AnimatePresence mode="wait">
@@ -134,8 +136,8 @@ export default function TrialForm() {
               transition={{ duration: 0.4, ease: "easeOut" }}
               className="flex flex-col items-center py-14 text-center"
             >
-              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#19C6F4]/10">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#19C6F4"
+              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[var(--cyan-strong)]/10">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan-strong)"
                   strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round"
                   className="h-9 w-9"
                 >
@@ -143,17 +145,17 @@ export default function TrialForm() {
                 </svg>
               </div>
 
-              <h3 className="text-2xl font-bold text-[#0B132B]">
+              <h3 className="text-2xl font-bold text-[var(--navy)]">
                 You&apos;re all set!
               </h3>
-              <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-[#475569]">
+              <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-[var(--text-3)]">
                 We received your trial session request. Our team will reach out
                 within 24 hours to confirm your booking.
               </p>
 
               <button
                 onClick={() => { setSubmitted(false); setForm(EMPTY); setShowErrors(false); setServerError(""); }}
-                className="mt-10 rounded-full border border-[#0B132B]/20 px-7 py-2.5 text-sm font-medium text-[#0B132B]/60 transition duration-200 hover:border-[#0B132B]/40 hover:text-[#0B132B]"
+                className="mt-10 rounded-full border border-[var(--navy)]/20 px-7 py-2.5 text-sm font-medium text-[var(--navy)]/60 transition duration-200 hover:border-[var(--navy)]/40 hover:text-[var(--navy)]"
               >
                 Book Another Session
               </button>
@@ -176,7 +178,7 @@ export default function TrialForm() {
               {/* Student Name */}
               <div>
                 <label htmlFor="name" className={labelCls}>
-                  Student Name <span className="text-[#19C6F4]">*</span>
+                  Student Name <span className="text-[var(--cyan-strong)]">*</span>
                 </label>
                 <input id="name" name="name" type="text" required
                   placeholder="e.g. Ahmed Mohamed"
@@ -189,7 +191,7 @@ export default function TrialForm() {
               <div className="grid gap-6 sm:grid-cols-2">
                 <div>
                   <label htmlFor="age" className={labelCls}>
-                    Age <span className="text-[#19C6F4]">*</span>
+                    Age <span className="text-[var(--cyan-strong)]">*</span>
                   </label>
                   <input id="age" name="age" type="number" required
                     min={4} max={18} placeholder="e.g. 10"
@@ -212,7 +214,7 @@ export default function TrialForm() {
                 <div>
                   <label htmlFor="phone" className={labelCls}>
                     Phone (Call &amp; WhatsApp){" "}
-                    <span className="text-[#19C6F4]">*</span>
+                    <span className="text-[var(--cyan-strong)]">*</span>
                   </label>
                   <input id="phone" name="phone" type="tel" required
                     placeholder="e.g. 01012345678"
@@ -235,7 +237,7 @@ export default function TrialForm() {
               {/* ── Preferred Day ── */}
               <div>
                 <label className={labelCls}>
-                  Preferred Day <span className="text-[#19C6F4]">*</span>
+                  Preferred Day <span className="text-[var(--cyan-strong)]">*</span>
                 </label>
 
                 <div className="flex flex-wrap gap-2.5">
@@ -254,7 +256,7 @@ export default function TrialForm() {
                 </div>
 
                 {showErrors && !form.day && (
-                  <p className="mt-2 text-xs font-medium text-rose-400">
+                  <p className="mt-2 text-xs font-medium text-[var(--red-dark)]">
                     Please select a preferred day.
                   </p>
                 )}
@@ -263,7 +265,7 @@ export default function TrialForm() {
               {/* ── Preferred Time — select dropdown ── */}
               <div>
                 <label htmlFor="time" className={labelCls}>
-                  Preferred Time <span className="text-[#19C6F4]">*</span>
+                  Preferred Time <span className="text-[var(--cyan-strong)]">*</span>
                 </label>
 
                 <div className="relative">
@@ -272,7 +274,7 @@ export default function TrialForm() {
                     name="time"
                     value={form.time}
                     onChange={(e) => set("time", e.target.value)}
-                    className="w-full appearance-none rounded-xl border border-[#0B132B]/[0.08] bg-white/60 px-4 py-4 pr-10 text-sm text-[#0B132B] backdrop-blur-sm transition duration-200 focus:border-[#19C6F4] focus:outline-none focus:ring-2 focus:ring-[#19C6F4]/20 hover:border-[#0B132B]/[0.15]"
+                    className="w-full appearance-none rounded-xl border border-[var(--navy)]/[0.08] bg-white/60 px-4 py-4 pr-10 text-sm text-[var(--navy)] backdrop-blur-sm transition duration-200 focus:border-[var(--cyan-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--cyan-strong)]/20 hover:border-[var(--navy)]/[0.15]"
                   >
                     <option value="" disabled>Select a preferred time...</option>
                     {TIMES.map((t) => (
@@ -281,7 +283,7 @@ export default function TrialForm() {
                   </select>
 
                   {/* Custom chevron */}
-                  <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#0B132B]/40">
+                  <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[var(--navy)]/40">
                     <svg width="12" height="8" viewBox="0 0 12 8" fill="none" aria-hidden="true">
                       <path
                         d="M1 1.5l5 5 5-5"
@@ -295,7 +297,7 @@ export default function TrialForm() {
                 </div>
 
                 {showErrors && !form.time && (
-                  <p className="mt-2 text-xs font-medium text-rose-400">
+                  <p className="mt-2 text-xs font-medium text-[var(--red-dark)]">
                     Please select a preferred time.
                   </p>
                 )}
@@ -317,15 +319,15 @@ export default function TrialForm() {
                   initial={{ opacity: 0, y: -6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="flex items-start gap-3 rounded-2xl border border-rose-200/70 bg-rose-50/70 px-5 py-4 backdrop-blur-sm"
+                  className="flex items-start gap-3 rounded-[var(--radius-xl)] border border-[var(--red)]/70 bg-[var(--red-soft)]/70 px-5 py-4 backdrop-blur-sm"
                 >
-                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-100">
-                    <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-rose-500">
+                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--red-soft)]">
+                    <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3 text-[var(--red-dark)]">
                       <path d="M8 5v4M8 11h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
                       <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
                     </svg>
                   </div>
-                  <p className="text-sm leading-relaxed text-rose-600">{serverError}</p>
+                  <p className="text-sm leading-relaxed text-[var(--red-dark)]">{serverError}</p>
                 </motion.div>
               )}
 
@@ -335,7 +337,7 @@ export default function TrialForm() {
                 disabled={loading}
                 whileHover={loading ? {} : { scale: 1.01 }}
                 whileTap={loading  ? {} : { scale: 0.99 }}
-                className="flex w-full items-center justify-center gap-2.5 rounded-full bg-[#19C6F4] py-4 text-sm font-semibold text-white shadow-[0_0_24px_rgba(25,198,244,0.38)] transition duration-300 hover:shadow-[0_0_36px_rgba(25,198,244,0.55)] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+                className={publicButtonClass("primary", "w-full")}
               >
                 {loading ? (
                   <>
@@ -347,7 +349,7 @@ export default function TrialForm() {
                 )}
               </motion.button>
 
-              <p className="text-center text-xs text-[#64748B]">
+              <p className="text-center text-xs text-[var(--text-3)]">
                 Free session &middot; No commitment &middot; We&apos;ll confirm within 24 hrs
               </p>
 

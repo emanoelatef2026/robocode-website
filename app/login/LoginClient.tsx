@@ -24,44 +24,45 @@ function LoginForm() {
 
   return (
     <>
-      <h1 className="mb-1 text-center text-lg font-bold text-[#0B132B]">Sign in to Robocode</h1>
-      <p className="mb-7 text-center text-[13px] text-[#9CA3AF]">
+      <h1 className="mb-1 text-center text-lg font-bold text-[var(--navy)]">Sign in to Robocode</h1>
+      <p className="mb-7 text-center text-[13px] text-[var(--muted)]">
         Enter your username and password to continue
       </p>
 
       {successMsg && (
-        <div className="mb-4 rounded-lg bg-[#E7F8EE] px-4 py-3 text-[13px] text-[#15803D]">
+        <div className="mb-4 rounded-lg bg-[var(--green-soft)] px-4 py-3 text-[13px] text-[var(--green-dark)]">
           {successMsg}
         </div>
       )}
 
       {routeMsg && !successMsg && (
-        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#EF4444]">
+        <div className="mb-4 rounded-lg bg-[var(--red-soft)] px-4 py-3 text-[13px] text-[var(--red-dark)]">
           {routeMsg}
         </div>
       )}
 
       {state?.error && (
-        <div className="mb-4 rounded-lg bg-[#FEE2E2] px-4 py-3 text-[13px] text-[#EF4444]">
+        <div className="mb-4 rounded-lg bg-[var(--red-soft)] px-4 py-3 text-[13px] text-[var(--red-dark)]">
           {state.error}
         </div>
       )}
 
       <form action={action} className="space-y-4">
         <div>
-          <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+          <label htmlFor="login-username" className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wide text-[var(--muted)]">
             Username
           </label>
-          <div className="flex items-stretch overflow-hidden rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] transition focus-within:border-[#19C6F4] focus-within:ring-2 focus-within:ring-[#19C6F4]/20">
+          <div dir="ltr" className="flex flex-col items-stretch overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-muted)] transition focus-within:border-[var(--cyan-strong)] focus-within:ring-2 focus-within:ring-[var(--cyan-strong)]/20 sm:flex-row">
             <input
               type="text"
+              id="login-username"
               name="email"
               required
               autoComplete="username"
               placeholder="e.g. e.atef"
-              className="min-w-0 flex-1 bg-transparent px-4 py-3 text-[14px] text-[#0B132B] outline-none"
+              className="min-w-0 flex-1 bg-transparent px-4 py-3 text-[14px] text-[var(--navy)] outline-none"
             />
-            <span className="flex items-center whitespace-nowrap border-l border-[#E2E8F0] bg-[#F1F5F9] px-3 text-[13px] text-[#9CA3AF]">
+            <span className="flex items-center justify-center whitespace-nowrap border-t border-[var(--border)] bg-[var(--bg-muted)] px-3 py-2 text-[13px] text-[var(--muted)] sm:border-s sm:border-t-0 sm:py-0">
               @robocodeschools.com
             </span>
           </div>
@@ -69,30 +70,31 @@ function LoginForm() {
 
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-[12px] font-semibold uppercase tracking-wide text-[#9CA3AF]">
+            <label htmlFor="login-password" className="text-[12px] font-semibold uppercase tracking-wide text-[var(--muted)]">
               Password
             </label>
             <Link
               href="/forgot-password"
-              className="text-[12px] text-[#19C6F4] hover:underline"
+              className="text-[12px] text-[var(--cyan-strong)] hover:underline"
             >
               Forgot password?
             </Link>
           </div>
           <input
             type="password"
+            id="login-password"
             name="password"
             required
             autoComplete="current-password"
             placeholder="••••••••"
-            className="w-full rounded-lg border border-[#E2E8F0] bg-[#F9FAFB] px-4 py-3 text-[14px] text-[#0B132B] outline-none transition focus:border-[#19C6F4] focus:ring-2 focus:ring-[#19C6F4]/20"
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg-muted)] px-4 py-3 text-[14px] text-[var(--navy)] outline-none transition focus:border-[var(--cyan-strong)] focus:ring-2 focus:ring-[var(--cyan-strong)]/20"
           />
         </div>
 
         <button
           type="submit"
           disabled={pending}
-          className="w-full rounded-lg bg-[#0B132B] py-3 text-[14px] font-semibold text-white transition hover:bg-[#19C6F4] disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-lg bg-[var(--navy)] py-3 text-[14px] font-semibold text-white transition hover:bg-[var(--cyan-strong)] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {pending ? 'Signing in…' : 'Sign in'}
         </button>
@@ -103,17 +105,17 @@ function LoginForm() {
 
 export default function LoginClient() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F4F7FB] px-4">
+    <div data-site-auth className="flex min-h-screen items-center justify-center bg-[var(--bg)] px-4">
       <div className="w-full max-w-sm">
-        <div className="rounded-2xl border border-[#F1F5F9] bg-white p-8 shadow-sm">
+        <div data-site-card className="p-6 sm:p-8">
           <div className="mb-8 flex justify-center">
             <Image src="/logo.png" alt="Robocode" width={140} height={60} className="h-auto w-28" />
           </div>
-          <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-[#F9FAFB]" />}>
+          <Suspense fallback={<div className="h-32 animate-pulse rounded-lg bg-[var(--bg-muted)]" />}>
             <LoginForm />
           </Suspense>
         </div>
-        <p className="mt-4 text-center text-[12px] text-[#9CA3AF]">Robocode School · LMS</p>
+        <p className="mt-4 text-center text-[12px] text-[var(--muted)]">Robocode School · LMS</p>
       </div>
     </div>
   )
