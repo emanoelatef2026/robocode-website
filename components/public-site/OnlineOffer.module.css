@@ -19,8 +19,6 @@
 .cover { position: relative; aspect-ratio: 3 / 2; overflow: hidden; background: var(--bg-muted); }
 .coverImage { object-fit: cover; }
 .coverTools { position: absolute; bottom: 12px; inset-inline-end: 12px; display: flex; gap: 6px; }
-.coverTools span { display: grid; place-items: center; width: 54px; height: 44px; padding: 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); box-shadow: var(--shadow-sm); }
-.coverTools img { width: 100%; height: 100%; object-fit: contain; }
 .agePill { position: absolute; inset-inline-start: 14px; top: 14px; display: flex; gap: 5px; align-items: center; padding: 7px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-card); color: var(--navy); font-size: 14px; font-weight: 700; box-shadow: var(--shadow-sm); }
 .cardBody { display: flex; flex: 1; flex-direction: column; gap: 12px; padding: 22px; }
 .cardBody .action { margin-top: auto; width: 100%; }
@@ -41,19 +39,22 @@
 .dialogHeader { position: sticky; top: 0; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px; border-bottom: 1px solid var(--border); background: var(--bg-card); }
 .close { display: inline-flex; flex: 0 0 44px; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 50%; background: white; color: var(--navy); font-size: 26px; cursor: pointer; }
 .dialogBody { padding: 24px; }
-.dialogCover { position: relative; height: 220px; overflow: hidden; margin-bottom: 20px; border-radius: var(--radius-md); background: var(--bg-muted); }
-.dialogCover .coverImage { object-position: center 35%; }
+.dialogCover { position: relative; width: 100%; max-width: 480px; aspect-ratio: 3 / 2; overflow: hidden; margin: 0 auto 20px; border-radius: var(--radius-md); background: var(--bg-muted); }
+.dialogCoverImage { object-fit: contain; object-position: center; }
 .studyLine { margin-top: 12px; color: var(--navy); font-size: 13px; font-weight: 600; }
 .roadmap { display: grid; gap: 12px; margin: 24px 0; padding: 0; list-style: none; }
-.roadmapItem { display: flex; gap: 16px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg); }
+.roadmapItem { display: flex; min-width: 0; gap: 16px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg); }
 .stepNumber { display: grid; flex: 0 0 36px; place-items: center; height: 36px; border-radius: 50%; background: var(--navy); color: white; font-weight: 700; }
 .stepTitle { font-size: 16px; font-weight: 700; line-height: 1.7; color: var(--navy); }
 .stepLabel { display: block; color: var(--cyan-strong); font-size: 12px; font-weight: 600; }
 .roadmapItem > div { flex: 1; min-width: 0; }
 .toolList { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.toolBadge { display: inline-flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-card); color: var(--navy); font-size: 12px; font-weight: 600; }
-.toolLogo { display: grid; place-items: center; width: 60px; height: 44px; padding: 4px; border-radius: var(--radius-sm); }
-.toolLogo img { width: 100%; height: 100%; object-fit: contain; }
+.toolBadge { display: grid; flex: 0 0 auto; place-items: center; width: 80px; max-width: 100%; height: 72px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-card); }
+.toolBadgeWide { width: 160px; }
+.toolBadgeCompact { width: 52px; height: 44px; padding: 6px; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); }
+.toolBadgeCompact.toolBadgeWide { width: 76px; }
+.toolLogo { position: relative; display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: hidden; border-radius: var(--radius-sm); }
+.toolLogoImage { object-fit: contain; object-position: center; }
 .toolLogoDark { background: var(--navy); }
 .small { color: var(--text-3); font-size: 13px; line-height: 1.8; }
 .dialogFooter { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 24px; }

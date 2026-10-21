@@ -8,12 +8,13 @@ import styles from "./OnlineOffer.module.css";
 import PublicSectionTitle from "./PublicSectionTitle";
 import { PATHWAY_TOOLS, PATHWAY_VISUALS, type PathwayToolId } from "@/lib/public-site/pathway-visuals";
 
-function ToolBadge({ id }: { id: PathwayToolId }) {
+function ToolBadge({ id, compact = false }: { id: PathwayToolId; compact?: boolean }) {
   const tool = PATHWAY_TOOLS[id];
+  const wide = id === "scratchjr" || id === "scratch" || id === "mblock";
   return (
-    <span className={styles.toolBadge} title={tool.name}>
+    <span className={`${styles.toolBadge} ${wide ? styles.toolBadgeWide : ""} ${compact ? styles.toolBadgeCompact : ""}`} title={tool.name}>
       <span className={`${styles.toolLogo} ${tool.dark ? styles.toolLogoDark : ""}`}>
-        <Image src={`/images/pathways/tools/${tool.image}`} alt={tool.name} width={68} height={44} unoptimized />
+        <Image src={`/images/pathways/tools/${tool.image}`} alt={tool.name} fill className={styles.toolLogoImage} unoptimized />
       </span>
     </span>
   );
@@ -58,7 +59,7 @@ export default function ProgramsSection() {
               <Image src={visual.image} alt={visual.alt[locale]} fill sizes="(min-width: 1200px) 290px, (min-width: 640px) 50vw, 100vw" className={styles.coverImage} />
               <p className={styles.agePill}><bdi dir="ltr">{program.ages[0]}–{program.ages[1]}</bdi> {copy.years}</p>
               <div className={styles.coverTools} aria-hidden="true">
-                {visual.coverTools.map((id) => <span key={id}><Image src={`/images/pathways/tools/${PATHWAY_TOOLS[id].image}`} alt="" width={44} height={32} unoptimized /></span>)}
+                {visual.coverTools.map((id) => <ToolBadge key={id} id={id} compact />)}
               </div>
             </div>
             <div className={styles.cardBody}>
@@ -104,7 +105,7 @@ export default function ProgramsSection() {
             </header>
             <div className={styles.dialogBody}>
               <div className={styles.dialogCover}>
-                <Image src={PATHWAY_VISUALS[selected.id].image} alt={PATHWAY_VISUALS[selected.id].alt[locale]} fill sizes="(min-width: 800px) 660px, 90vw" className={styles.coverImage} />
+                <Image src={PATHWAY_VISUALS[selected.id].image} alt={PATHWAY_VISUALS[selected.id].alt[locale]} fill sizes="(min-width: 560px) 480px, calc(100vw - 68px)" className={styles.dialogCoverImage} />
               </div>
               <p className={styles.description}>{selected.description[locale]}</p>
               <p className={styles.studyLine}>{copy.format}</p>
