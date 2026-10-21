@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import SectionTitle from "./ui/SectionTitle";
+import PublicSectionTitle from "./public-site/PublicSectionTitle";
 import SectionEmptyState from "./ui/SectionEmptyState";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -146,10 +146,7 @@ export default function ProjectsSection() {
 
       {/* Header */}
       <div className="mx-auto max-w-7xl px-6">
-        <SectionTitle
-          heading={<>{t("projects.heading1")} <span className="text-[#FF8A1F]">{t("projects.heading2")}</span></>}
-          body={t("projects.body")}
-        />
+        <PublicSectionTitle section="projects" />
 
         {/* Arrow controls */}
         {!loading && projects.length > 0 && (

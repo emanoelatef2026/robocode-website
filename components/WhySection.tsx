@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Reveal from "./Reveal";
+import PublicSectionTitle from "./public-site/PublicSectionTitle";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -56,9 +57,8 @@ function WhyPlaceholder() {
 // ── Section ───────────────────────────────────────────────────────────────────
 
 export default function WhySection() {
-  const { t, dir } = useLanguage();
+  const { dir } = useLanguage();
 
-  const [settings,  setSettings]  = useState<WhySettings | null>(null);
   const [tabs,      setTabs]      = useState<WhyTab[]>(DEFAULT_TABS);
   const [activeIdx, setActiveIdx] = useState(0);
 
@@ -66,7 +66,6 @@ export default function WhySection() {
     fetch("/api/why-robocode")
       .then((r) => r.json())
       .then((d: { settings: WhySettings | null; tabs: WhyTab[] }) => {
-        if (d.settings) setSettings(d.settings);
         if (Array.isArray(d.tabs) && d.tabs.length > 0) {
           setTabs(d.tabs);
           setActiveIdx(0);
@@ -77,8 +76,6 @@ export default function WhySection() {
 
   const isRtl    = dir === "rtl";
   const activeTab = tabs[activeIdx];
-  const title    = settings?.section_title    || t("why.heading");
-  const subtitle = settings?.section_subtitle || t("why.body");
 
   return (
     <Reveal>
@@ -92,14 +89,7 @@ export default function WhySection() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="mb-10 text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight text-[#0B2341] md:text-4xl">
-            {title}
-          </h2>
-          {subtitle && (
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[#64748B]">
-              {subtitle}
-            </p>
-          )}
+          <PublicSectionTitle section="why" />
         </motion.div>
 
         {/* ── Two-column layout ─────────────────────────────────────────── */}

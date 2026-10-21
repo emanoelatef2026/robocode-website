@@ -1,0 +1,86 @@
+.section {
+  position: relative;
+  z-index: 10;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding: 40px 24px 64px;
+  scroll-margin-top: 136px;
+  color: var(--text);
+  font-family: var(--font-poppins), sans-serif;
+}
+
+:global([dir="rtl"]) .section { font-family: var(--font-cairo), sans-serif; }
+.section h2, .section h3, .section h4 { font-family: inherit; letter-spacing: normal; }
+.alias { display: block; scroll-margin-top: 136px; }
+.header { max-width: 780px; margin: 0 auto 32px; text-align: center; }
+.eyebrow { margin-bottom: 12px; color: var(--orange-strong); font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+.grid { display: grid; gap: 20px; }
+.card { display: flex; flex-direction: column; min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--bg-card); box-shadow: var(--shadow-card); }
+.ageVisual { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 124px; padding: 20px 24px; background: var(--navy); color: white; }
+.card:nth-child(2) .ageVisual { background: var(--cyan-strong); }
+.card:nth-child(3) .ageVisual { background: var(--navy-light); }
+.card:nth-child(4) .ageVisual { background: var(--orange-strong); }
+.ageLabel { display: grid; gap: 5px; font-size: 13px; font-weight: 500; }
+.ageNumber { font-size: 42px; font-weight: 700; line-height: 1.2; letter-spacing: -.04em; }
+.ageNumber bdi { display: block; }
+.ageUnit { display: block; margin-top: 6px; font-size: 13px; font-weight: 500; letter-spacing: normal; text-align: end; }
+.cardBody { display: flex; flex: 1; flex-direction: column; gap: 18px; padding: 24px; }
+.title { color: var(--navy); font-size: 20px; font-weight: 700; line-height: 1.5; text-wrap: balance; }
+.description { color: var(--text-2); font-size: 15px; line-height: 1.85; }
+.skills { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.skill { padding: 5px 9px; border-radius: var(--radius-sm); background: var(--bg-muted); color: var(--text-2); font-size: 12px; font-weight: 600; line-height: 1.6; }
+.action { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 12px 20px; border: 1px solid var(--border); border-radius: 999px; color: var(--navy); background: white; font-size: 14px; font-weight: 700; line-height: 1.5; text-align: center; text-decoration: none; cursor: pointer; transition: background-color .15s, border-color .15s, color .15s; }
+.action:hover { border-color: var(--navy); background: var(--bg-muted); }
+.action:focus-visible, .close:focus-visible { outline: 3px solid var(--cyan-strong); outline-offset: 4px; }
+.primary { border-color: var(--orange-strong); background: var(--orange-strong); color: white; }
+.primary:hover { border-color: var(--navy); background: var(--navy); color: white; }
+.navy { border-color: var(--navy); background: var(--navy); color: white; }
+.navy:hover { background: var(--navy-light); color: white; }
+.bottomLink { display: flex; justify-content: center; margin-top: 28px; }
+.dialog { width: min(720px, calc(100% - 32px)); max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--bg-card); color: var(--text); box-shadow: var(--shadow-lg); font-family: inherit; }
+.dialog::backdrop { background: rgb(7 24 45 / 65%); }
+.dialogHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px; border-bottom: 1px solid var(--border); }
+.close { display: inline-flex; flex: 0 0 44px; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 50%; background: white; color: var(--navy); font-size: 26px; cursor: pointer; }
+.dialogBody { padding: 24px; }
+.roadmap { display: grid; gap: 12px; margin: 24px 0; padding: 0; list-style: none; }
+.roadmapItem { display: flex; gap: 16px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg); }
+.stepNumber { display: grid; flex: 0 0 36px; place-items: center; height: 36px; border-radius: 50%; background: var(--navy); color: white; font-weight: 700; }
+.stepTitle { font-size: 16px; font-weight: 700; line-height: 1.7; color: var(--navy); }
+.stepLabel { display: block; color: var(--cyan-strong); font-size: 12px; font-weight: 600; }
+.small { color: var(--text-3); font-size: 13px; line-height: 1.8; }
+.dialogFooter { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 24px; }
+.pricePanel { padding: 32px 20px; border: 1px solid var(--border); border-radius: 28px; background: var(--bg-muted); }
+.priceGrid { display: grid; gap: 24px; max-width: 940px; margin-inline: auto; }
+.priceCard { display: flex; flex-direction: column; gap: 18px; min-width: 0; padding: 28px 24px; border: 1px solid var(--border); border-top: 4px solid var(--orange-strong); border-radius: var(--radius-xl); background: white; box-shadow: var(--shadow-sm); }
+.priceCard:nth-child(2) { border-top-color: var(--navy); }
+.badge { align-self: flex-start; padding: 6px 12px; border-radius: 999px; background: var(--bg-muted); color: var(--cyan-strong); font-size: 13px; font-weight: 600; }
+.price { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; color: var(--navy); }
+.priceAmount { font-size: clamp(40px, 5vw, 52px); font-weight: 700; line-height: 1.2; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.currency { font-size: 15px; font-weight: 600; }
+.priceUnit { margin-top: 8px; color: var(--text-3); font-size: 14px; font-weight: 500; }
+.included { display: grid; gap: 12px 24px; max-width: 940px; margin: 28px auto 0; padding: 0; list-style: none; }
+.included li { display: flex; align-items: flex-start; gap: 10px; color: var(--text-2); font-size: 14px; font-weight: 500; line-height: 1.8; }
+.check { flex-shrink: 0; width: 18px; height: 18px; margin-top: 3px; color: var(--green-dark); }
+.priceAction { margin-top: auto; }
+
+@media (max-width: 639px) {
+  .section { padding-inline: 16px; }
+  .cardBody { padding: 20px; }
+  .pricePanel { margin-inline: -8px; padding: 28px 12px; }
+  .priceCard { padding: 24px 20px; }
+  .dialogBody { padding: 20px 16px; }
+}
+@media (min-width: 640px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .section { padding-block: 48px 80px; }
+  .pricePanel { padding: 40px 32px; }
+}
+@media (min-width: 900px) {
+  .priceGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .included { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1200px) {
+  .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .cardBody .title { min-height: 120px; }
+}
+@media (prefers-reduced-motion: reduce) { .action { transition: none; } }

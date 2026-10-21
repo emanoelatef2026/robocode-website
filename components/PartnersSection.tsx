@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import SectionTitle from "@/components/ui/SectionTitle";
+import PublicSectionTitle from "./public-site/PublicSectionTitle";
 import LogoRail, { type LogoRailItem } from "@/components/ui/LogoRail";
 
 interface Partner {
@@ -13,7 +12,6 @@ interface Partner {
 }
 
 export default function PartnersSection() {
-  const { t }               = useLanguage();
   const [items,   setItems] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,14 +36,7 @@ export default function PartnersSection() {
   return (
     <section id="partners" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24">
 
-      <SectionTitle
-        heading={
-          <>{t("partners.heading1")}{" "}
-          <span className="text-[#FF8A1F]">{t("partners.heading2")}</span></>
-        }
-        body={t("partners.body")}
-        accent="orange"
-      />
+      <PublicSectionTitle section="partners" />
 
       <div className="mt-10 md:mt-16">
         <LogoRail items={rail} variant="partners" />

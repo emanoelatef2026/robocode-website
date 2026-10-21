@@ -28,7 +28,7 @@ export async function GET() {
 
     if (error) throw error;
 
-    return NextResponse.json(data ?? []);
+    return NextResponse.json(data ?? [], { headers: { "Cache-Control": "no-store, max-age=0" } });
   } catch (err) {
     console.error("[branches GET]", err);
     return NextResponse.json({ error: "Failed to fetch branches" }, { status: 500 });

@@ -3,8 +3,9 @@
 import Hero                    from "./Hero";
 import TrustSection            from "./TrustSection";
 import WhySection              from "./WhySection";
-import ProgramsSection         from "./ProgramsSection";
-import LearningJourneySection  from "./LearningJourneySection";
+import ProgramsSection         from "./public-site/ProgramsSection";
+import OnlinePricingSection    from "./public-site/OnlinePricingSection";
+import { resolveOnlineHomepageSections } from "@/lib/public-site/online-programs";
 import ProjectsSection         from "./ProjectsSection";
 import FeaturedStudentsSection from "./FeaturedStudentsSection";
 import CompetitionsSection     from "./CompetitionsSection";
@@ -24,7 +25,7 @@ const SECTION_MAP: Record<string, () => React.ReactNode> = {
   trust:             () => <TrustSection />,
   why:               () => <WhySection />,
   programs:          () => <ProgramsSection />,
-  learning_journey:  () => <Reveal><LearningJourneySection /></Reveal>,
+  online_pricing:    () => <OnlinePricingSection />,
   projects:          () => <Reveal><ProjectsSection /></Reveal>,
   featured_students: () => <Reveal><FeaturedStudentsSection /></Reveal>,
   competitions:      () => <CompetitionsSection />,
@@ -43,7 +44,7 @@ interface Props {
 export default function HomeSections({ sections }: Props) {
   return (
     <>
-      {sections.map((key) => {
+      {resolveOnlineHomepageSections(sections).map((key) => {
         const render = SECTION_MAP[key];
         if (!render) return null;
         return <div key={key}>{render()}</div>;

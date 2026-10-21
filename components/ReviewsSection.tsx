@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import SectionTitle from "@/components/ui/SectionTitle";
+import PublicSectionTitle from "./public-site/PublicSectionTitle";
 import SectionEmptyState from "@/components/ui/SectionEmptyState";
 
 interface Review {
@@ -119,10 +119,7 @@ export default function ReviewsSection() {
     <section id="reviews" className="relative z-10 pb-16 md:pb-24">
 
       <div className="mx-auto max-w-7xl px-6">
-        <SectionTitle
-          heading={<>{t("reviews.heading1")} <span className="text-[#FF8A1F]">{t("reviews.heading2")}</span></>}
-          body={t("reviews.body")}
-        />
+        <PublicSectionTitle section="reviews" />
 
         {!loading && reviews.length > 0 && (
           <div className="mt-8 flex items-center justify-end gap-2">

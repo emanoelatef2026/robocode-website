@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ButtonLink } from "@/components/ui/Button";
 import SectionEmptyState from "@/components/ui/SectionEmptyState";
+import { buildWhatsAppUrl } from "@/lib/contact-utils";
+import PublicSectionTitle from "./public-site/PublicSectionTitle";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -23,10 +25,6 @@ interface Branch {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-function toWhatsApp(phone: string): string {
-  return phone.replace(/[\s\-\(\)\+]/g, "");
-}
 
 function getStudyMode(b: Branch): StudyMode {
   if (b.study_mode) return b.study_mode;
@@ -221,7 +219,7 @@ function BranchPanel({
           <>
             {/* WhatsApp — primary */}
             <a
-              href={`https://wa.me/${toWhatsApp(branch.phone)}`}
+              href={buildWhatsAppUrl(branch.phone, null) ?? undefined}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_16px_rgba(37,211,102,0.28)] transition hover:-translate-y-0.5 hover:brightness-110"
@@ -430,7 +428,7 @@ export default function BranchesSection() {
   const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
-    fetch("/api/branches")
+    fetch("/api/branches", { cache: "no-store" })
       .then((r) => {
         if (!r.ok) throw new Error(`branches API ${r.status}`);
         return r.json();
@@ -457,13 +455,7 @@ export default function BranchesSection() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="mb-10 text-center"
         >
-          <h2 className="text-3xl font-bold tracking-tight text-[#0B2341] md:text-4xl">
-            {t("branches.heading1")}{" "}
-            <span className="text-[#FF8A1F]">{t("branches.heading2")}</span>
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[#64748B]">
-            {t("branches.body")}
-          </p>
+          <PublicSectionTitle section="branches" />
         </motion.div>
 
         {/* Content */}

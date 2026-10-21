@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import SectionTitle from "@/components/ui/SectionTitle";
+import PublicSectionTitle from "./public-site/PublicSectionTitle";
 import SectionEmptyState from "@/components/ui/SectionEmptyState";
 
 const FAQ_CATEGORIES = [
@@ -119,10 +119,7 @@ export default function FAQSection() {
   return (
     <section id="faq" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24">
 
-      <SectionTitle
-        heading={<>{t("faq.heading1")} <span className="text-[#FF8A1F]">{t("faq.heading2")}</span></>}
-        body={t("faq.body")}
-      />
+      <PublicSectionTitle section="faq" />
 
       {loading ? (
         <div className="mt-10 flex h-40 items-center justify-center">

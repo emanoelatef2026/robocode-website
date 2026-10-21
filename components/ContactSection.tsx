@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { ACADEMY_PHONE, ACADEMY_TEL_URL, ACADEMY_WHATSAPP_URL } from "@/lib/public-site/contact";
+import PublicSectionTitle from "./public-site/PublicSectionTitle";
 
 export default function ContactSection() {
   const { t } = useLanguage();
@@ -21,16 +23,9 @@ export default function ContactSection() {
         <div className="pointer-events-none absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#FF8A1F]/12 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 right-0 h-48 w-48 translate-x-1/4 translate-y-1/4 rounded-full bg-[#FF8A1F]/8 blur-3xl" />
 
-        <h2 className="relative text-3xl font-bold text-white md:text-4xl">
-          Ready to Start Your{" "}
-          <span className="text-[#FF8A1F]">Tech Journey?</span>
-        </h2>
+        <PublicSectionTitle section="contact" inverse />
 
-        <p className="relative mx-auto mt-4 max-w-lg text-base leading-relaxed text-white/60">
-          Book a free trial session and discover what Robocode can unlock for your child.
-        </p>
-
-        <div className="relative mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+        <div className="relative mt-8 flex flex-col flex-wrap items-center justify-center gap-4 sm:flex-row">
           {/* Primary CTA — orange */}
           <Link
             href="/book-session"
@@ -44,7 +39,7 @@ export default function ContactSection() {
 
           {/* Secondary CTA — white outline */}
           <a
-            href="https://wa.me/201234567890"
+            href={ACADEMY_WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/8 px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
@@ -53,13 +48,13 @@ export default function ContactSection() {
           </a>
 
           <a
-            href="tel:01285864902"
+            href={ACADEMY_TEL_URL}
             className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/8 px-8 py-3.5 text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 4.5A2.25 2.25 0 014.5 2.25h2.386c.968 0 1.806.657 2.036 1.596l.969 3.95a2.25 2.25 0 01-1.125 2.54l-1.47.735a11.25 11.25 0 005.625 5.625l.735-1.47a2.25 2.25 0 012.54-1.125l3.95.969a2.25 2.25 0 011.596 2.036V19.5a2.25 2.25 0 01-2.25 2.25h-1.5C9.387 21.75 2.25 14.613 2.25 5.25V4.5z" />
             </svg>
-            01285864902
+            {ACADEMY_PHONE}
           </a>
 
           <a

@@ -1,4 +1,5 @@
 "use client";
+import PublicSectionTitle from "./public-site/PublicSectionTitle";
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
@@ -136,13 +137,7 @@ export default function FeaturedStudentsSection() {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
         className="mx-auto mb-10 max-w-7xl px-6 text-center"
       >
-        <h2 className="text-3xl font-bold tracking-tight text-[#0B2341] md:text-4xl">
-          {t("featuredStudents.heading1")}{" "}
-          <span className="text-[#FF8A1F]">{t("featuredStudents.heading2")}</span>
-        </h2>
-        <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-[#64748B]">
-          {t("featuredStudents.body")}
-        </p>
+        <PublicSectionTitle section="students" />
       </motion.div>
 
       {/* Marquee */}

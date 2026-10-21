@@ -141,24 +141,6 @@ export default function Footer() {
 
         </div>
 
-        {/* CTA banner */}
-        <div className="mt-12 flex flex-col items-center justify-between gap-6 rounded-2xl border border-white/10 bg-white/4 px-6 py-8 md:mt-16 md:flex-row md:rounded-3xl md:px-10 md:py-10">
-          <div className="border-s-2 border-[#FF8A1F]/50 ps-5 text-center md:text-start">
-            <h3 className="text-lg font-bold md:text-2xl">
-              {t("footer.ctaHeading")}
-            </h3>
-            <p className="mt-2 text-sm text-white/55">
-              {t("footer.ctaSubtext")}
-            </p>
-          </div>
-          <Link
-            href="/book-session"
-            className="shrink-0 rounded-full bg-[#FF8A1F] px-8 py-3 text-sm font-bold text-white shadow-[0_4px_20px_rgba(255,138,31,0.35)] transition duration-200 hover:brightness-110 hover:shadow-[0_8px_28px_rgba(255,138,31,0.45)]"
-          >
-            {t("footer.ctaButton")}
-          </Link>
-        </div>
-
         {/* Bottom bar */}
         <div className="mt-12 border-t border-white/[0.07] pt-6">
           <div className="flex flex-col items-center justify-between gap-2 text-center text-xs text-white/35 md:flex-row">

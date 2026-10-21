@@ -1,8 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import SectionTitle from "./ui/SectionTitle";
-import { useLanguage } from "@/contexts/LanguageContext";
+import PublicSectionTitle from "./public-site/PublicSectionTitle";
 
 const COMPETITIONS = [
   {
@@ -60,17 +59,12 @@ const HOVER_SHADOW: Record<"orange" | "navy", string> = {
 };
 
 export default function CompetitionsSection() {
-  const { t } = useLanguage();
-
   return (
     <section
       id="competitions"
       className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24"
     >
-        <SectionTitle
-          heading={<>{t("competitions.heading1")} <span className="text-[#FF8A1F]">{t("competitions.heading2")}</span></>}
-          body={t("competitions.body")}
-        />
+        <PublicSectionTitle section="competitions" />
 
         {/* Cards */}
         <div className="mt-10 grid gap-4 md:mt-16 md:gap-6 md:grid-cols-2 lg:grid-cols-3">

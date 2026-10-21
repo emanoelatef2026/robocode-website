@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useLanguage } from "@/contexts/LanguageContext";
-import SectionTitle from "@/components/ui/SectionTitle";
+import PublicSectionTitle from "./public-site/PublicSectionTitle";
 
 interface Accreditation {
   id:           string;
@@ -13,7 +12,6 @@ interface Accreditation {
 }
 
 export default function AccreditationsSection() {
-  const { t }               = useLanguage();
   const [items,   setItems] = useState<Accreditation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,13 +28,7 @@ export default function AccreditationsSection() {
   return (
     <section id="accreditations" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24">
 
-      <SectionTitle
-        heading={
-          <>{t("accreditations.heading1")}{" "}
-          <span className="text-[#FF8A1F]">{t("accreditations.heading2")}</span></>
-        }
-        body={t("accreditations.body")}
-      />
+      <PublicSectionTitle section="accreditations" />
 
       {/* Static grid: 2-col mobile → 4-col desktop. No carousel, no animation. */}
       <div className="mt-10 grid grid-cols-2 items-center justify-items-center gap-8 md:mt-14 md:gap-10 lg:grid-cols-4 lg:gap-16">

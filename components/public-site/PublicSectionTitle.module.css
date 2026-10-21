@@ -1,0 +1,13 @@
+.title {
+  margin: 0;
+  color: var(--navy);
+  font-family: var(--font-poppins), sans-serif;
+  font-size: clamp(26px, 2.8vw, 36px);
+  font-weight: 700;
+  line-height: 1.4;
+  letter-spacing: -.02em;
+  text-align: center;
+  text-wrap: balance;
+}
+:global([dir="rtl"]) .title { font-family: var(--font-cairo), sans-serif; letter-spacing: normal; }
+.inverse { color: white; }
