@@ -1,10 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { ONLINE_COPY, ONLINE_PROGRAMS, type OnlineProgram } from "@/lib/public-site/online-programs";
 import styles from "./OnlineOffer.module.css";
 import PublicSectionTitle from "./PublicSectionTitle";
+import { PATHWAY_TOOLS, PATHWAY_VISUALS, type PathwayToolId } from "@/lib/public-site/pathway-visuals";
+
+function ToolBadge({ id }: { id: PathwayToolId }) {
+  const tool = PATHWAY_TOOLS[id];
+  return (
+    <span className={styles.toolBadge} title={tool.name}>
+      <span className={`${styles.toolLogo} ${tool.dark ? styles.toolLogoDark : ""}`}>
+        <Image src={`/images/pathways/tools/${tool.image}`} alt={tool.name} width={68} height={44} unoptimized />
+      </span>
+    </span>
+  );
+}
 
 export default function ProgramsSection() {
   const { locale, dir } = useLanguage();
@@ -37,18 +50,20 @@ export default function ProgramsSection() {
       </header>
 
       <div className={styles.grid}>
-        {ONLINE_PROGRAMS.map((program) => (
+        {ONLINE_PROGRAMS.map((program) => {
+          const visual = PATHWAY_VISUALS[program.id];
+          return (
           <article key={program.id} className={styles.card} aria-labelledby={`${program.id}-title`}>
-            <div className={styles.ageVisual}>
-              <div className={styles.ageLabel}>{copy.ages}</div>
-              <p className={styles.ageNumber}><bdi dir="ltr">{program.ages[0]}–{program.ages[1]}</bdi><span className={styles.ageUnit}>{copy.years}</span></p>
+            <div className={styles.cover}>
+              <Image src={visual.image} alt={visual.alt[locale]} fill sizes="(min-width: 1200px) 290px, (min-width: 640px) 50vw, 100vw" className={styles.coverImage} />
+              <p className={styles.agePill}><bdi dir="ltr">{program.ages[0]}–{program.ages[1]}</bdi> {copy.years}</p>
+              <div className={styles.coverTools} aria-hidden="true">
+                {visual.coverTools.map((id) => <span key={id}><Image src={`/images/pathways/tools/${PATHWAY_TOOLS[id].image}`} alt="" width={44} height={32} unoptimized /></span>)}
+              </div>
             </div>
             <div className={styles.cardBody}>
-              <h3 id={`${program.id}-title`} className={styles.title}>{program.title[locale]}</h3>
-              <p className={styles.description}>{program.description[locale]}</p>
-              <ul className={styles.skills} aria-label={copy.skills}>
-                {program.skills.map((skill) => <li key={skill.en} className={styles.skill}>{skill[locale]}</li>)}
-              </ul>
+              <h3 id={`${program.id}-title`} className={styles.title}>{visual.title[locale]}</h3>
+              <p className={styles.cardSummary}>{visual.summary[locale]}</p>
               <button
                 type="button"
                 className={styles.action}
@@ -61,7 +76,7 @@ export default function ProgramsSection() {
               </button>
             </div>
           </article>
-        ))}
+        );})}
       </div>
 
       <dialog
@@ -88,7 +103,11 @@ export default function ProgramsSection() {
               <button type="button" className={styles.close} aria-label={copy.close} onClick={closeDetails}>×</button>
             </header>
             <div className={styles.dialogBody}>
+              <div className={styles.dialogCover}>
+                <Image src={PATHWAY_VISUALS[selected.id].image} alt={PATHWAY_VISUALS[selected.id].alt[locale]} fill sizes="(min-width: 800px) 660px, 90vw" className={styles.coverImage} />
+              </div>
               <p className={styles.description}>{selected.description[locale]}</p>
+              <p className={styles.studyLine}>{copy.format}</p>
               <ol className={styles.roadmap}>
                 {selected.semesters.map((semester, index) => (
                   <li key={semester.title.en} className={styles.roadmapItem}>
@@ -97,6 +116,9 @@ export default function ProgramsSection() {
                       <span className={styles.stepLabel}>{copy.semester} {index + 1}</span>
                       <h4 className={styles.stepTitle}>{semester.title[locale]}</h4>
                       <p className={styles.small}>{semester.description[locale]}</p>
+                      <div className={styles.toolList}>
+                        {PATHWAY_VISUALS[selected.id].semesterTools[index].map((id) => <ToolBadge key={id} id={id} />)}
+                      </div>
                     </div>
                   </li>
                 ))}

@@ -60,7 +60,7 @@ describe("homepage pathway cards", () => {
     language.locale = "ar";
     const { container } = render(<ProgramsSection />);
     expect(container.querySelector("section")).toHaveAttribute("dir", "rtl");
-    expect(screen.getByRole("heading", { name: "رحلتهم الأولى في عالم البرمجة" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "أول خطوة في البرمجة" })).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /^تفاصيل المرحلة:/ })).toHaveLength(4);
     expect(container.querySelector('bdi[dir="ltr"]')).toHaveTextContent("6–8");
     fireEvent.click(screen.getByRole("button", { name: "تفاصيل المرحلة: من البرمجة إلى الذكاء الاصطناعي" }));
@@ -77,21 +77,58 @@ describe("homepage online prices", () => {
     expect(screen.getByText("2,800")).toBeInTheDocument();
     expect(screen.getByText("5,200")).toBeInTheDocument();
     expect(container.querySelector("section")).toHaveAttribute("dir", locale === "ar" ? "rtl" : "ltr");
-    expect(screen.getAllByText(locale === "ar" ? "للطالب / للسيمستر" : "per student / per semester")).toHaveLength(2);
-    expect(screen.getAllByText(locale === "ar" ? "ساعة ونصف للحصة" : "90 minutes per class")).toHaveLength(1);
-    expect(screen.getAllByText(locale === "ar" ? "12 حصة خلال 3 شهور" : "12 classes over 3 months")).toHaveLength(1);
+    expect(screen.getAllByText(locale === "ar" ? "للطالب · سيمستر واحد أونلاين" : "per student · one online semester")).toHaveLength(2);
+    expect(screen.getAllByText(locale === "ar" ? /ساعة ونصف للحصة/ : /90 minutes per class/)).toHaveLength(2);
+    expect(screen.getAllByText(locale === "ar" ? "12 حصة خلال 3 شهور" : "12 classes over 3 months")).toHaveLength(2);
     expect(screen.getByText(locale === "ar" ? "من 2 إلى 4 طلاب" : "2–4 students")).toBeInTheDocument();
     expect(container.textContent).not.toContain("payments are not collected");
     expect(container.textContent).not.toContain("لا يتم تحصيل مدفوعات");
     expect(container.querySelector("header")?.children).toHaveLength(1);
     expect(container.querySelector("form")).toBeNull();
     expect(container.querySelector('a[href*="checkout"],a[href*="payment"]')).toBeNull();
+    for (const card of screen.getAllByRole("article")) {
+      expect(within(card).getAllByRole("listitem")).toHaveLength(7);
+      expect(within(card).getByText(locale === "ar" ? /شهادة معتمدة من STEM/ : /STEM-accredited certificate/)).toBeInTheDocument();
+    }
   });
   it("uses real contact anchors for enquiries, not fake purchase actions", () => {
     render(<OnlinePricingSection />);
     for (const link of screen.getAllByRole("link")) {
       expect(link).toHaveAttribute("href", "#contact");
       expect(link).toHaveTextContent("Enquire");
+    }
+  });
+});
+
+describe("pathway imagery and reference-backed roadmap", () => {
+  it("keeps the homepage cards concise with one cover, title and short summary", () => {
+    render(<ProgramsSection />);
+    for (const card of screen.getAllByRole("article")) {
+      expect(within(card).getAllByRole("img")).toHaveLength(1);
+      expect(within(card).getByRole("img")).toHaveAttribute("alt", expect.stringContaining("AI-generated"));
+      expect(within(card).queryByRole("list")).not.toBeInTheDocument();
+    }
+  });
+  it("shows only original tool logos with accessible names and no program links", () => {
+    render(<ProgramsSection />);
+    fireEvent.click(screen.getByRole("button", { name: "View pathway details: First Steps into Coding" }));
+    const dialog = screen.getByRole("dialog");
+    for (const name of ["Code.org", "ScratchJr", "Scratch", "Kodu"]) {
+      expect(within(dialog).getAllByRole("img", { name }).length).toBeGreaterThan(0);
+    }
+    expect(dialog.querySelectorAll("ol img")).toHaveLength(5);
+    expect(dialog.querySelector("ol a, a[target='_blank']")).toBeNull();
+    expect(within(dialog).getByRole("link", { name: "Book an Online Trial" })).toHaveAttribute("href", "/book-session");
+  });
+  it.each(["en", "ar"] as const)("never makes tool badges clickable in any roadmap in %s", (locale) => {
+    language.locale = locale;
+    render(<ProgramsSection />);
+    for (const details of screen.getAllByRole("button", { name: locale === "en" ? /^View pathway details:/ : /^تفاصيل المرحلة:/ })) {
+      fireEvent.click(details);
+      const dialog = screen.getByRole("dialog");
+      expect(dialog.querySelector("ol a, ol button, ol [tabindex]")).toBeNull();
+      expect(dialog.querySelectorAll("ol img").length).toBeGreaterThanOrEqual(4);
+      fireEvent.click(within(dialog).getByRole("button", { name: locale === "en" ? "Close details" : "إغلاق التفاصيل" }));
     }
   });
 });

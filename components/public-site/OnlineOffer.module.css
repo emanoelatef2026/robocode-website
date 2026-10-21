@@ -16,15 +16,15 @@
 .eyebrow { margin-bottom: 12px; color: var(--orange-strong); font-size: 12px; font-weight: 700; letter-spacing: .08em; }
 .grid { display: grid; gap: 20px; }
 .card { display: flex; flex-direction: column; min-width: 0; overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--bg-card); box-shadow: var(--shadow-card); }
-.ageVisual { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 124px; padding: 20px 24px; background: var(--navy); color: white; }
-.card:nth-child(2) .ageVisual { background: var(--cyan-strong); }
-.card:nth-child(3) .ageVisual { background: var(--navy-light); }
-.card:nth-child(4) .ageVisual { background: var(--orange-strong); }
-.ageLabel { display: grid; gap: 5px; font-size: 13px; font-weight: 500; }
-.ageNumber { font-size: 42px; font-weight: 700; line-height: 1.2; letter-spacing: -.04em; }
-.ageNumber bdi { display: block; }
-.ageUnit { display: block; margin-top: 6px; font-size: 13px; font-weight: 500; letter-spacing: normal; text-align: end; }
-.cardBody { display: flex; flex: 1; flex-direction: column; gap: 18px; padding: 24px; }
+.cover { position: relative; aspect-ratio: 3 / 2; overflow: hidden; background: var(--bg-muted); }
+.coverImage { object-fit: cover; }
+.coverTools { position: absolute; bottom: 12px; inset-inline-end: 12px; display: flex; gap: 6px; }
+.coverTools span { display: grid; place-items: center; width: 54px; height: 44px; padding: 6px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-card); box-shadow: var(--shadow-sm); }
+.coverTools img { width: 100%; height: 100%; object-fit: contain; }
+.agePill { position: absolute; inset-inline-start: 14px; top: 14px; display: flex; gap: 5px; align-items: center; padding: 7px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-card); color: var(--navy); font-size: 14px; font-weight: 700; box-shadow: var(--shadow-sm); }
+.cardBody { display: flex; flex: 1; flex-direction: column; gap: 12px; padding: 22px; }
+.cardBody .action { margin-top: auto; width: 100%; }
+.cardSummary { color: var(--text-2); font-size: 14px; line-height: 1.8; margin-bottom: 8px; }
 .title { color: var(--navy); font-size: 20px; font-weight: 700; line-height: 1.5; text-wrap: balance; }
 .description { color: var(--text-2); font-size: 15px; line-height: 1.85; }
 .skills { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
@@ -36,19 +36,28 @@
 .primary:hover { border-color: var(--navy); background: var(--navy); color: white; }
 .navy { border-color: var(--navy); background: var(--navy); color: white; }
 .navy:hover { background: var(--navy-light); color: white; }
-.dialog { width: min(720px, calc(100% - 32px)); max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--bg-card); color: var(--text); box-shadow: var(--shadow-lg); font-family: inherit; }
+.dialog { width: min(760px, calc(100% - 32px)); max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--bg-card); color: var(--text); box-shadow: var(--shadow-lg); font-family: inherit; }
 .dialog::backdrop { background: rgb(7 24 45 / 65%); }
-.dialogHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px; border-bottom: 1px solid var(--border); }
+.dialogHeader { position: sticky; top: 0; z-index: 2; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px; border-bottom: 1px solid var(--border); background: var(--bg-card); }
 .close { display: inline-flex; flex: 0 0 44px; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid var(--border); border-radius: 50%; background: white; color: var(--navy); font-size: 26px; cursor: pointer; }
 .dialogBody { padding: 24px; }
+.dialogCover { position: relative; height: 220px; overflow: hidden; margin-bottom: 20px; border-radius: var(--radius-md); background: var(--bg-muted); }
+.dialogCover .coverImage { object-position: center 35%; }
+.studyLine { margin-top: 12px; color: var(--navy); font-size: 13px; font-weight: 600; }
 .roadmap { display: grid; gap: 12px; margin: 24px 0; padding: 0; list-style: none; }
 .roadmapItem { display: flex; gap: 16px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg); }
 .stepNumber { display: grid; flex: 0 0 36px; place-items: center; height: 36px; border-radius: 50%; background: var(--navy); color: white; font-weight: 700; }
 .stepTitle { font-size: 16px; font-weight: 700; line-height: 1.7; color: var(--navy); }
 .stepLabel { display: block; color: var(--cyan-strong); font-size: 12px; font-weight: 600; }
+.roadmapItem > div { flex: 1; min-width: 0; }
+.toolList { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.toolBadge { display: inline-flex; align-items: center; gap: 8px; min-height: 56px; padding: 6px 10px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-card); color: var(--navy); font-size: 12px; font-weight: 600; }
+.toolLogo { display: grid; place-items: center; width: 60px; height: 44px; padding: 4px; border-radius: var(--radius-sm); }
+.toolLogo img { width: 100%; height: 100%; object-fit: contain; }
+.toolLogoDark { background: var(--navy); }
 .small { color: var(--text-3); font-size: 13px; line-height: 1.8; }
 .dialogFooter { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin-top: 24px; }
-.pricePanel { padding: 32px 20px; border: 1px solid var(--border); border-radius: 28px; background: var(--bg-muted); }
+.pricePanel { padding: 32px 20px; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--bg-muted); }
 .priceGrid { display: grid; gap: 24px; max-width: 940px; margin-inline: auto; }
 .priceCard { display: flex; flex-direction: column; gap: 18px; min-width: 0; padding: 28px 24px; border: 1px solid var(--border); border-top: 4px solid var(--orange-strong); border-radius: var(--radius-xl); background: white; box-shadow: var(--shadow-sm); }
 .priceCard:nth-child(2) { border-top-color: var(--navy); }
@@ -57,8 +66,8 @@
 .priceAmount { font-size: clamp(40px, 5vw, 52px); font-weight: 700; line-height: 1.2; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
 .currency { font-size: 15px; font-weight: 600; }
 .priceUnit { margin-top: 8px; color: var(--text-3); font-size: 14px; font-weight: 500; }
-.included { display: grid; gap: 12px 24px; max-width: 940px; margin: 28px auto 0; padding: 0; list-style: none; }
-.included li { display: flex; align-items: flex-start; gap: 10px; color: var(--text-2); font-size: 14px; font-weight: 500; line-height: 1.8; }
+.planBenefits { display: grid; gap: 13px; margin: 4px 0 10px; padding: 22px 0 0; border-top: 1px solid var(--border); list-style: none; }
+.planBenefits li { display: flex; align-items: flex-start; gap: 10px; color: var(--text-2); font-size: 14px; font-weight: 500; line-height: 1.8; }
 .check { flex-shrink: 0; width: 18px; height: 18px; margin-top: 3px; color: var(--green-dark); }
 .priceAction { margin-top: auto; }
 
@@ -76,10 +85,10 @@
 }
 @media (min-width: 900px) {
   .priceGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .included { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (min-width: 1200px) {
   .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .cardBody .title { min-height: 120px; }
+  .cardBody .title { min-height: 60px; font-size: 18px; }
+  .cardSummary { min-height: 51px; }
 }
 @media (prefers-reduced-motion: reduce) { .action { transition: none; } }
