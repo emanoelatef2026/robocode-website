@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Locale } from "@/lib/i18n";
 import { publicButtonClass } from "./ui/Button";
+import { PUBLIC_NAV_LINKS } from "@/lib/public-site/navigation";
 
 const NAVBAR_OFFSET = 72;
 
@@ -47,27 +48,6 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
-
-  const NAV_LINKS = [
-    { key: "nav.home",         href: "/"              },
-    { key: "nav.programs",     href: "/#programs"     },
-    { key: "nav.projects",     href: "/#projects"     },
-    { key: "nav.competitions", href: "/#competitions" },
-    { key: "nav.branches",     href: "/#branches"     },
-  ];
-
-  const MOBILE_NAV_LINKS = [
-    { key: "nav.home",             href: "/"                    },
-    { key: "nav.why",              href: "/#why"                },
-    { key: "nav.programs",         href: "/#programs"           },
-    { key: "nav.learningJourney",  href: "/#learning-journey"   },
-    { key: "nav.projects",         href: "/#projects"           },
-    { key: "nav.competitions",     href: "/#competitions"       },
-    { key: "nav.featuredStudents", href: "/#featured-students"  },
-    { key: "nav.accreditations",   href: "/#accreditations"     },
-    { key: "nav.partners",         href: "/#partners"           },
-    { key: "nav.branches",         href: "/#branches"           },
-  ];
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 16);
@@ -147,7 +127,7 @@ export default function Navbar() {
 
         {/* Desktop nav */}
         <nav aria-label="Main navigation" className="hidden items-center gap-5 lg:flex">
-          {NAV_LINKS.map(({ key, href }) => (
+          {PUBLIC_NAV_LINKS.map(({ key, href }) => (
             <Link
               key={key}
               href={href}
@@ -244,7 +224,7 @@ export default function Navbar() {
             className="max-h-[calc(100dvh-80px)] overflow-y-auto border-t border-[var(--border)] bg-white lg:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-4">
-              {MOBILE_NAV_LINKS.map(({ key, href }) => (
+              {PUBLIC_NAV_LINKS.map(({ key, href }) => (
                 <Link
                   key={key}
                   href={href}

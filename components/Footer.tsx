@@ -32,7 +32,6 @@ export default function Footer() {
   const COMPANY_LINKS = [
     { key: "footer.linkAbout",        href: "/#why"          },
     { key: "footer.linkBranches",     href: "/#branches"     },
-    { key: "footer.linkCompetitions", href: "/#competitions" },
     { key: "footer.linkContact",      href: "/#contact"      },
   ];
 
