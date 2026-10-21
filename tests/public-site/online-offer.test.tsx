@@ -23,7 +23,7 @@ describe("homepage pathway cards", () => {
     expect(screen.getAllByRole("button", { name: /^View pathway details:/ })).toHaveLength(4);
     expect(container.querySelectorAll('a[href^="/programs/"]')).toHaveLength(0);
     expect(document.getElementById("learning-journey")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Explore online prices/ })).toHaveAttribute("href", "#pricing");
+    expect(screen.queryByRole("link", { name: /Explore online prices/ })).not.toBeInTheDocument();
   });
   it("opens useful details without navigation and restores body scrolling on close", async () => {
     const user = userEvent.setup();

@@ -39,13 +39,13 @@ describe("approved online offer", () => {
 });
 
 describe("homepage section integration", () => {
-  it("adds the approved offer after trust even when the legacy catalog is hidden", () => {
+  it("places Why Robocode before the approved offer even when the legacy catalog is hidden", () => {
     expect(resolveOnlineHomepageSections(["hero", "trust", "why", "learning_journey", "branches", "contact"]))
-      .toEqual(["hero", "trust", "programs", "online_pricing", "why", "branches", "contact"]);
+      .toEqual(["hero", "trust", "why", "programs", "online_pricing", "branches", "contact"]);
   });
   it("removes only the redundant old roadmap and does not enable hidden unrelated content", () => {
     const result = resolveOnlineHomepageSections(["hero", "why", "learning_journey", "faq"]);
-    expect(result).toEqual(["hero", "programs", "online_pricing", "why", "faq"]);
+    expect(result).toEqual(["hero", "why", "programs", "online_pricing", "faq"]);
     expect(result).not.toContain("projects");
     expect(result).not.toContain("competitions");
   });
@@ -57,5 +57,14 @@ describe("homepage section integration", () => {
   });
   it("works with an empty section configuration", () => {
     expect(resolveOnlineHomepageSections([])).toEqual(["programs", "online_pricing"]);
+  });
+  it("keeps hidden Why Robocode hidden and falls back to the trust strip", () => {
+    expect(resolveOnlineHomepageSections(["hero", "trust", "branches"]))
+      .toEqual(["hero", "trust", "programs", "online_pricing", "branches"]);
+  });
+  it("preserves the requested order on repeated resolution", () => {
+    const result = resolveOnlineHomepageSections(["hero", "trust", "programs", "online_pricing", "why", "faq"]);
+    expect(result.indexOf("why")).toBeLessThan(result.indexOf("programs"));
+    expect(resolveOnlineHomepageSections(result)).toEqual(result);
   });
 });

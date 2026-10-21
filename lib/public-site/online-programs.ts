@@ -105,7 +105,8 @@ export function formatOnlinePrice(amount: number, locale: Locale): string {
 export function resolveOnlineHomepageSections(sections: readonly string[]): string[] {
   const legacyKeys = new Set(["programs", "learning_journey", "online_pricing"]);
   const remaining = [...new Set(sections)].filter((key) => !legacyKeys.has(key));
-  const anchor = remaining.includes("trust") ? remaining.indexOf("trust") : remaining.indexOf("hero");
+  const anchorKey = ["why", "trust", "hero"].find((key) => remaining.includes(key));
+  const anchor = anchorKey ? remaining.indexOf(anchorKey) : -1;
   remaining.splice(anchor + 1, 0, "programs", "online_pricing");
   return remaining;
 }

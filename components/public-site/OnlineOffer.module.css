@@ -36,7 +36,6 @@
 .primary:hover { border-color: var(--navy); background: var(--navy); color: white; }
 .navy { border-color: var(--navy); background: var(--navy); color: white; }
 .navy:hover { background: var(--navy-light); color: white; }
-.bottomLink { display: flex; justify-content: center; margin-top: 28px; }
 .dialog { width: min(720px, calc(100% - 32px)); max-height: calc(100dvh - 32px); margin: auto; padding: 0; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--bg-card); color: var(--text); box-shadow: var(--shadow-lg); font-family: inherit; }
 .dialog::backdrop { background: rgb(7 24 45 / 65%); }
 .dialogHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px; border-bottom: 1px solid var(--border); }

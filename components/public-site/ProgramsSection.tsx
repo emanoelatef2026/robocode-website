@@ -63,7 +63,6 @@ export default function ProgramsSection() {
           </article>
         ))}
       </div>
-      <div className={styles.bottomLink}><a href="#pricing" className={styles.action}>{copy.seePrices}<span aria-hidden="true">↓</span></a></div>
 
       <dialog
         id="online-pathway-preview"
