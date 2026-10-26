@@ -15,7 +15,6 @@ export default function OnlinePricingSection() {
 
   return (
     <section id="pricing" aria-labelledby="online-pricing-heading" className={styles.section} dir={dir}>
-      <div className={styles.pricePanel}>
         <header className={styles.header}>
           <PublicSectionTitle section="pricing" id="online-pricing-heading" />
         </header>
@@ -54,7 +53,6 @@ export default function OnlinePricingSection() {
             );
           })}
         </div>
-      </div>
     </section>
   );
 }

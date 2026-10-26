@@ -140,7 +140,7 @@ describe("minimal public section headings", () => {
     const header = container.querySelector("section > header")!;
     expect(header.children).toHaveLength(1);
     expect(header.firstElementChild?.tagName).toBe("H2");
-    expect(header).toHaveTextContent(locale === "ar" ? "المراحل التعليمية" : "Learning Pathways");
+    expect(header).toHaveTextContent(locale === "ar" ? "المسار التعليمي لكل مرحلة" : "Learning Pathways for Every Stage");
     expect(header.querySelector("p")).toBeNull();
   });
 });

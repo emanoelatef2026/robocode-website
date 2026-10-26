@@ -104,10 +104,12 @@ export function formatOnlinePrice(amount: number, locale: Locale): string {
 // every unrelated CMS visibility decision, without mutating production settings.
 export function resolveOnlineHomepageSections(sections: readonly string[]): string[] {
   const legacyKeys = new Set(["programs", "learning_journey", "online_pricing"]);
+  const moveAccreditations = sections.includes("why") && sections.includes("accreditations");
+  if (moveAccreditations) legacyKeys.add("accreditations");
   const remaining = [...new Set(sections)].filter((key) => !legacyKeys.has(key));
   const anchorKey = ["why", "trust", "hero"].find((key) => remaining.includes(key));
   const anchor = anchorKey ? remaining.indexOf(anchorKey) : -1;
-  remaining.splice(anchor + 1, 0, "programs", "online_pricing");
+  remaining.splice(anchor + 1, 0, ...(moveAccreditations ? ["accreditations"] : []), "programs", "online_pricing");
   return remaining;
 }
 
@@ -118,10 +120,10 @@ export const ONLINE_COPY = {
     ages: "الفئة العمرية", years: "سنة", live: "أونلاين مباشر", details: "تفاصيل المرحلة", tools: "أدوات المسار", skills: "المهارات", close: "إغلاق التفاصيل",
     preview: "نظرة على المسار", semester: "السيمستر", roadmapNote: "توضح الرودماب تسلسل التعلّم. قد تختلف وتيرة التقدّم حسب مستوى الطالب وتطوّره.",
     format: `${ONLINE_STUDY.classes} حصة لكل سيمستر · ${ONLINE_STUDY.minutes} دقيقة للحصة`,
-    seePrices: "استعرض أسعار الأونلاين", trial: "احجز تجربة أونلاين", pricingEyebrow: "نظام الدراسة والأسعار",
-    pricingHeading: "أسعار الأونلاين، واضحة من البداية.",
+    seePrices: "استعرض باقات الأونلاين", trial: "احجز تجربة أونلاين", pricingEyebrow: "نظام الدراسة والأسعار",
+    pricingHeading: "باقات الأونلاين",
     pricingIntro: "نفس المسار التعليمي، بطريقتين للدراسة. اختر مجموعة صغيرة أو حصصًا فردية مع المدرب.",
-    groupTitle: "أونلاين جماعي", individualTitle: "أونلاين فردي", groupDescription: "يتعلّم طفلك ويطبّق مع زملائه ضمن مجموعة صغيرة.",
+    groupTitle: "حصص جماعية", individualTitle: "حصص فردية", groupDescription: "يتعلّم طفلك ويطبّق مع زملائه ضمن مجموعة صغيرة.",
     individualDescription: "حصص فردية لطالب واحد مع المدرب.", groupSize: `من ${ONLINE_STUDY.groupMin} إلى ${ONLINE_STUDY.groupMax} طلاب`, individualSize: "طالب واحد مع المدرب",
     currency: "جنيه مصري", perStudent: "للطالب / للسيمستر",
     schedule: `${ONLINE_STUDY.classes} حصة خلال ${ONLINE_STUDY.months} شهور`, weekly: "حصة واحدة كل أسبوع", duration: "ساعة ونصف للحصة",
@@ -137,10 +139,10 @@ export const ONLINE_COPY = {
     ages: "Age group", years: "years", live: "Live online", details: "View pathway details", tools: "Pathway tools", skills: "Skills", close: "Close details",
     preview: "Pathway preview", semester: "Semester", roadmapNote: "The roadmap shows the learning sequence. Progress may vary with the student's level and development.",
     format: `${ONLINE_STUDY.classes} classes per semester · ${ONLINE_STUDY.minutes} minutes per class`,
-    seePrices: "Explore online prices", trial: "Book an Online Trial", pricingEyebrow: "Study format & prices",
-    pricingHeading: "Online prices, clear from the start.",
+    seePrices: "Explore Online Packages", trial: "Book an Online Trial", pricingEyebrow: "Study format & prices",
+    pricingHeading: "Online Packages",
     pricingIntro: "The same learning pathway, with two ways to study. Choose a small group or one-to-one classes with the instructor.",
-    groupTitle: "Online Group Classes", individualTitle: "Online One-to-One Classes", groupDescription: "Your child learns and builds alongside others in a small group.",
+    groupTitle: "Group Classes", individualTitle: "One-to-One Classes", groupDescription: "Your child learns and builds alongside others in a small group.",
     individualDescription: "Individual classes for one student with the instructor.", groupSize: `${ONLINE_STUDY.groupMin}–${ONLINE_STUDY.groupMax} students`, individualSize: "One student with the instructor",
     currency: "EGP", perStudent: "per student / per semester",
     schedule: `${ONLINE_STUDY.classes} classes over ${ONLINE_STUDY.months} months`, weekly: "One class every week", duration: "90 minutes per class",

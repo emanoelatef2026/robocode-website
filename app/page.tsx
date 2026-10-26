@@ -53,14 +53,7 @@ export default async function Home() {
 
   return (
     <>
-      <main className="relative min-h-screen overflow-hidden bg-[var(--bg)] text-[var(--text)]">
-
-        {/* Background glow — orange primary, very subtle */}
-
-        {/* Decorative navy bloom — bottom right */}
-
-        {/* Subtle grid */}
-
+      <main className="relative min-h-screen overflow-hidden text-[var(--text)]">
         <Navbar />
         <HomeSections sections={sectionKeys} />
       </main>

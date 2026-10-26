@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import PublicSectionTitle from "./public-site/PublicSectionTitle";
+import { mapHomepageLearningLogos } from "@/lib/public-site/learning-logos";
+import styles from "./public-site/LearningLogoFrame.module.css";
 
 interface Accreditation {
   id:           string;
@@ -18,7 +20,7 @@ export default function AccreditationsSection() {
   useEffect(() => {
     fetch("/api/accreditations")
       .then((r) => r.json())
-      .then((d) => setItems(Array.isArray(d) ? d : []))
+      .then((d) => setItems(Array.isArray(d) ? mapHomepageLearningLogos(d) : []))
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -26,44 +28,31 @@ export default function AccreditationsSection() {
   if (loading || items.length === 0) return null;
 
   return (
-    <section id="accreditations" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24">
-
-      <PublicSectionTitle section="accreditations" />
-
-      {/* Static grid: 2-col mobile → 4-col desktop. No carousel, no animation. */}
-      <div className="mt-10 grid grid-cols-2 items-center justify-items-center gap-8 md:mt-14 md:gap-10 lg:grid-cols-4 lg:gap-16">
+    <section id="accreditations" aria-labelledby="learning-logos-heading" className={styles.section}>
+      <div className={styles.frame}>
+      <PublicSectionTitle section="accreditations" id="learning-logos-heading" />
+      <div className={styles.grid}>
         {items.map((item) => {
           const logo = (
-            <div className="relative h-20 w-full max-w-44 transition-opacity duration-200 hover:opacity-80">
+            <div className={styles.artwork}>
               <Image
                 src={item.logo_url}
                 alt={item.name}
                 fill
-                sizes="(max-width: 1024px) 45vw, 20vw"
+                sizes="(max-width: 639px) 120px, 160px"
                 className="object-contain object-center"
               />
             </div>
           );
 
-          return item.website_url ? (
-            <a
-              key={item.id}
-              href={item.website_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={item.name}
-              className="flex w-full justify-center"
-            >
-              {logo}
-            </a>
-          ) : (
-            <div key={item.id} className="flex w-full justify-center">
+          return (
+            <div key={item.id} className={styles.card} data-logo-kind={item.name.toLowerCase().includes("stem") ? "stem" : item.name.toLowerCase().includes("code.org") ? "square" : "wide"}>
               {logo}
             </div>
           );
         })}
       </div>
-
+      </div>
     </section>
   );
 }

@@ -102,8 +102,8 @@ export default function Navbar() {
       className={[
         "fixed inset-x-0 top-0 z-50 transition-[background,box-shadow,border-color] duration-300",
         scrolled
-          ? "border-b border-[var(--border)] bg-white/95 shadow-[var(--shadow-card)] backdrop-blur-xl"
-          : "border-b border-[var(--border-soft)] bg-white/95",
+          ? "border-b border-[var(--border)] bg-[var(--bg)] shadow-[var(--shadow-card)]"
+          : "border-b border-[var(--border-soft)] bg-[var(--bg)]",
       ].join(" ")}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-3">
@@ -221,7 +221,7 @@ export default function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.24, ease: "easeInOut" }}
-            className="max-h-[calc(100dvh-80px)] overflow-y-auto border-t border-[var(--border)] bg-white lg:hidden"
+            className="max-h-[calc(100dvh-80px)] overflow-y-auto border-t border-[var(--border)] bg-[var(--bg)] lg:hidden"
           >
             <div className="flex flex-col gap-1 px-4 py-4">
               {PUBLIC_NAV_LINKS.map(({ key, href }) => (

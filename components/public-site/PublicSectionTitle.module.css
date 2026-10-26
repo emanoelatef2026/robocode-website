@@ -8,6 +8,7 @@
   letter-spacing: -.02em;
   text-align: center;
   text-wrap: balance;
+  white-space: pre-line;
 }
 :global([dir="rtl"]) .title { font-family: var(--font-cairo), sans-serif; letter-spacing: normal; }
 .inverse { color: white; }

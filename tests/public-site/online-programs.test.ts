@@ -39,6 +39,11 @@ describe("approved online offer", () => {
 });
 
 describe("homepage section integration", () => {
+  it("places the existing accreditation gallery immediately after Why Robocode without duplicates", () => {
+    const result = resolveOnlineHomepageSections(["hero", "trust", "why", "programs", "branches", "accreditations", "accreditations", "contact"]);
+    expect(result).toEqual(["hero", "trust", "why", "accreditations", "programs", "online_pricing", "branches", "contact"]);
+    expect(resolveOnlineHomepageSections(result)).toEqual(result);
+  });
   it("places Why Robocode before the approved offer even when the legacy catalog is hidden", () => {
     expect(resolveOnlineHomepageSections(["hero", "trust", "why", "learning_journey", "branches", "contact"]))
       .toEqual(["hero", "trust", "why", "programs", "online_pricing", "branches", "contact"]);

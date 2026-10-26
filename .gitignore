@@ -65,3 +65,12 @@ backfill-org-emails-*.csv
 /.claude/skills/*
 !/.claude/skills/graphify/
 .gstack/
+
+# Local design previews and superseded certificate experiment (not site content)
+/output/
+/tmp/
+/public/documents/robocode-stem-accreditation.pdf
+/public/images/accreditation/
+/scripts/inspect-accreditation.py
+/scripts/prepare-accreditation.mjs
+/docs/design/accreditation.md

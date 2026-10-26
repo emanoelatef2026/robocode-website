@@ -4,14 +4,17 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import styles from "./PublicSectionTitle.module.css";
 
 export const PUBLIC_HEADINGS = {
-  programs: { ar: "المراحل التعليمية", en: "Learning Pathways" },
-  pricing: { ar: "أسعار الأونلاين", en: "Online Prices" },
+  programs: { ar: "المسار التعليمي لكل مرحلة", en: "Learning Pathways for Every Stage" },
+  pricing: { ar: "باقات الأونلاين", en: "Online Packages" },
   why: { ar: "لماذا Robocode؟", en: "Why Robocode?" },
   projects: { ar: "مشروعات الطلاب", en: "Student Projects" },
   students: { ar: "طلابنا", en: "Our Students" },
   competitions: { ar: "المسابقات", en: "Competitions" },
   branches: { ar: "فروعنا", en: "Our Branches" },
-  accreditations: { ar: "الاعتمادات", en: "Accreditations" },
+  accreditations: {
+    ar: "برامج تعليمية معتمدة دوليا مصممة لطلاب المدارس\nفي البرمجة والذكاء الاصطناعي",
+    en: "Internationally accredited programs designed for school students\nin coding and artificial intelligence",
+  },
   partners: { ar: "شركاؤنا", en: "Our Partners" },
   reviews: { ar: "آراء أولياء الأمور", en: "Parent Reviews" },
   faq: { ar: "الأسئلة الشائعة", en: "Frequently Asked Questions" },

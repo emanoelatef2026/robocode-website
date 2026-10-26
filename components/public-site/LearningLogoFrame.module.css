@@ -1,0 +1,21 @@
+.section { position: relative; z-index: 10; max-width: 1280px; margin-inline: auto; padding-inline: var(--site-gutter, 24px); scroll-margin-top: 120px; }
+.frame { padding: 28px 20px; border: 1px solid color-mix(in srgb, var(--cyan-strong) 18%, var(--border)); border-radius: 24px; background: color-mix(in srgb, var(--cyan-strong) 8%, var(--bg-card)); }
+.frame h2 { max-width: 880px; margin-inline: auto; font-size: clamp(21px, 2.3vw, 30px); line-height: 1.6; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; max-width: 960px; margin: 24px auto 0; }
+.card { display: flex; justify-content: center; align-items: center; min-width: 0; height: 96px; padding: 16px; background: transparent; }
+.artwork { position: relative; width: 100%; max-width: 160px; height: 56px; }
+.card[data-logo-kind="square"] .artwork { max-width: 60px; height: 60px; }
+.card[data-logo-kind="stem"] .artwork { max-width: 96px; height: 72px; }
+@media (min-width: 640px) {
+  .frame { padding: 36px 32px; }
+  .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+  .card { height: 112px; }
+  .artwork { height: 64px; }
+  .card[data-logo-kind="square"] .artwork { max-width: 64px; height: 64px; }
+  .card[data-logo-kind="stem"] .artwork { height: 80px; }
+}
+@media (min-width: 1024px) {
+  .frame { padding: 40px 48px; }
+  :global([dir="ltr"]) .frame h2 { max-width: 1080px; font-size: clamp(22px, 2vw, 28px); text-wrap: initial; }
+  .grid { gap: 20px; }
+}

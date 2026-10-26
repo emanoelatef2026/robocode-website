@@ -1,13 +1,20 @@
 .site {
   min-height: 100dvh;
-  background: var(--bg);
+  --site-grid-size: 60px;
+  --site-grid-line: color-mix(in srgb, var(--navy) 5%, transparent);
+  --site-grid-image: linear-gradient(var(--site-grid-line) 1px, transparent 1px), linear-gradient(90deg, var(--site-grid-line) 1px, transparent 1px);
+  background-color: var(--bg);
+  background-image: var(--site-grid-image);
+  background-size: var(--site-grid-size) var(--site-grid-size);
   color: var(--text);
   font-family: var(--font-poppins), sans-serif;
   font-size: 16px;
   line-height: 1.75;
   --site-gutter: clamp(20px, 4vw, 32px);
-  --site-section-gap: clamp(56px, 7vw, 88px);
+  --site-section-gap: clamp(48px, 5vw, 64px);
 }
+/* Keep the grid on the page canvas, never on cards, forms, dialogs or portals. */
+.site > :where(main, div) { background-color: transparent; }
 :global([dir="rtl"]) .site { font-family: var(--font-cairo), sans-serif; }
 .site :where(h1) { font-family: var(--font-orbitron), sans-serif; color: var(--navy); text-wrap: balance; }
 .site :where(h2, h3, h4) { font-family: var(--font-poppins), sans-serif; text-wrap: balance; }
@@ -52,7 +59,11 @@
 .site :global(footer a):hover { color: white; }
 .site :global(footer [data-site-footer-label]) { color: white; font-size: 13px; letter-spacing: normal; font-weight: 700; text-transform: none; }
 .site :global(footer [data-site-footer-bottom]) { color: #CBD5E1; }
-.site :global(main section[id]) { padding-bottom: var(--site-section-gap); }
+/* One page-level gap, never accumulated section top/bottom paddings. Empty CMS
+   sections reserve no gap. Hero/header clearance and inner cards stay intact. */
+.site :global([data-home-section]:has(section[id])) { padding-bottom: var(--site-section-gap); }
+.site :global([data-home-section] section[id]) { padding-block: 0; margin-block: 0; padding-inline: var(--site-gutter); }
+.site :global([data-home-section="trust"] > div) { margin-bottom: var(--site-section-gap); }
 @media (prefers-reduced-motion: reduce) {
   .site *, .site *::before, .site *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }

@@ -17,9 +17,10 @@
   },
   "hero": {
     "eyebrow": "The Future of Education",
-    "heading1": "We Don't Teach Kids To Use Technology",
-    "heading2": "We Teach Them To Build It",
-    "subtext": "AI · Robotics · Game Dev · Programming — For Ages 6–17",
+    "heading1": "Learn to Code.",
+    "heading2": "Bring Ideas to Life.",
+    "subtext": "Live online coding and AI classes for ages 6–17.",
+    "imageAlt": "Robocode School students",
     "bookSession": "Book Online Trial",
     "explorePrograms": "Explore Programs",
     "statAiProjects": "AI Projects",
@@ -32,6 +33,12 @@
     "ratingLabel": "Average Rating"
   },
   "why": {
+    "compact": {
+      "projects": { "title": "Learn by building", "description": "Projects your child creates.", "imageAlt": "Illustration of a coding project and game controller" },
+      "attention": { "title": "Personal attention", "description": "Small groups of 2–4 students.", "imageAlt": "Illustration of a small live online class" },
+      "progress": { "title": "Visible progress", "description": "Evaluations parents can follow.", "imageAlt": "Illustration of learning progress and a checklist" },
+      "pathway": { "title": "The right pathway", "description": "Steps matched to age and level.", "imageAlt": "Illustration of a step-by-step technology learning pathway" }
+    },
     "eyebrow": "WHY ROBOCODE",
     "heading": "Built For Future Innovators",
     "body": "Every program at Robocode is engineered to develop four critical dimensions — personalized growth, real-world application, competitive excellence, and human leadership.",

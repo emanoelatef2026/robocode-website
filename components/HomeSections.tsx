@@ -47,7 +47,7 @@ export default function HomeSections({ sections }: Props) {
       {resolveOnlineHomepageSections(sections).map((key) => {
         const render = SECTION_MAP[key];
         if (!render) return null;
-        return <div key={key}>{render()}</div>;
+        return <div key={key} data-home-section={key}>{render()}</div>;
       })}
     </>
   );

@@ -1,47 +1,44 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import PublicSectionTitle from "./public-site/PublicSectionTitle";
-import LogoRail, { type LogoRailItem } from "@/components/ui/LogoRail";
+import styles from "./public-site/HomepageSupport.module.css";
 
-interface Partner {
-  id:          string;
-  name:        string;
-  logo_url:    string;
-  website_url: string | null;
-}
+interface Partner { id: string; name: string; logo_url: string; website_url: string | null; }
 
 export default function PartnersSection() {
-  const [items,   setItems] = useState<Partner[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [items, setItems] = useState<Partner[]>([]);
+  const [failedImages, setFailedImages] = useState<ReadonlySet<string>>(new Set());
 
   useEffect(() => {
-    fetch("/api/partners")
-      .then((r) => r.json())
-      .then((d) => setItems(Array.isArray(d) ? d : []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const controller = new AbortController();
+    fetch("/api/partners", { signal: controller.signal })
+      .then(response => { if (!response.ok) throw new Error("Partners unavailable"); return response.json(); })
+      .then(data => { if (Array.isArray(data)) setItems(Array.from(new Map(data.map((item: Partner) => [item.id, item])).values())); })
+      .catch(error => { if (error.name !== "AbortError") console.error(error); });
+    return () => controller.abort();
   }, []);
 
-  // Hide entirely when loading or empty — no empty container rendered
-  if (loading || items.length === 0) return null;
-
-  const rail: LogoRailItem[] = items.map((p) => ({
-    id:       p.id,
-    name:     p.name,
-    logo_url: p.logo_url,
-    href:     p.website_url,
-  }));
+  if (items.length === 0) return null;
 
   return (
-    <section id="partners" className="relative z-10 mx-auto max-w-7xl px-6 pb-16 md:pb-24">
-
-      <PublicSectionTitle section="partners" />
-
-      <div className="mt-10 md:mt-16">
-        <LogoRail items={rail} variant="partners" />
+    <section id="partners" aria-labelledby="partners-heading" className={styles.section}>
+      <div className={styles.partnerFrame}>
+      <PublicSectionTitle section="partners" id="partners-heading" />
+      <ul className={styles.partners} role="list">
+        {items.map(partner => {
+          const logo = failedImages.has(partner.id) ? <span className={styles.partnerName}>{partner.name}</span> : (
+            <span className={styles.partnerArtwork}><Image src={partner.logo_url} alt={partner.name} fill sizes="(max-width: 639px) 144px, 200px" className="object-contain" onError={() => setFailedImages(current => new Set(current).add(partner.id))} /></span>
+          );
+          return (
+            <li key={partner.id} className={styles.partner}>
+              {partner.website_url ? <a href={partner.website_url} target="_blank" rel="noopener noreferrer" aria-label={partner.name} className={styles.partnerContent}>{logo}</a> : <div className={styles.partnerContent}>{logo}</div>}
+            </li>
+          );
+        })}
+      </ul>
       </div>
-
     </section>
   );
 }
