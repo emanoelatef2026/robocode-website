@@ -55,16 +55,21 @@ export default function ProgramsSection() {
           const visual = PATHWAY_VISUALS[program.id];
           return (
           <article key={program.id} className={styles.card} aria-labelledby={`${program.id}-title`}>
+            <div className={styles.cardIntro}>
             <div className={styles.cover}>
-              <Image src={visual.image} alt={visual.alt[locale]} fill sizes="(min-width: 1200px) 290px, (min-width: 640px) 50vw, 100vw" className={styles.coverImage} />
+              <Image src={visual.image} alt={visual.alt[locale]} fill sizes="(min-width: 1200px) 290px, (min-width: 640px) 50vw, 96px" className={styles.coverImage} />
               <p className={styles.agePill}><bdi dir="ltr">{program.ages[0]}–{program.ages[1]}</bdi> {copy.years}</p>
               <div className={styles.coverTools} aria-hidden="true">
                 {visual.coverTools.map((id) => <ToolBadge key={id} id={id} compact />)}
               </div>
             </div>
             <div className={styles.cardBody}>
+              <p className={styles.mobileAge}><bdi dir="ltr">{program.ages[0]}–{program.ages[1]}</bdi> {copy.years}</p>
               <h3 id={`${program.id}-title`} className={styles.title}>{visual.title[locale]}</h3>
               <p className={styles.cardSummary}>{visual.summary[locale]}</p>
+            </div>
+            </div>
+            <div className={styles.cardActions}>
               <button
                 type="button"
                 className={styles.action}

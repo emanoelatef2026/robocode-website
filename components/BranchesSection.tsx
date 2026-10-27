@@ -1,486 +1,131 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ButtonLink } from "@/components/ui/Button";
-import SectionEmptyState from "@/components/ui/SectionEmptyState";
-import { buildWhatsAppUrl } from "@/lib/contact-utils";
+import { ACADEMY_WHATSAPP_URL } from "@/lib/public-site/contact";
 import PublicSectionTitle from "./public-site/PublicSectionTitle";
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type StudyMode = "online" | "offline" | "hybrid";
+import styles from "./public-site/BranchesSection.module.css";
 
 interface Branch {
-  id:         string;
-  name:       string;
-  phone:      string | null;
-  location:   string | null;
-  image_url:  string | null;
-  active:     boolean;
-  sort_order: number;
-  study_mode: StudyMode | null;
+  id: string;
+  name: string;
+  location: string | null;
+  active: boolean;
+  study_mode?: "online" | "offline" | "hybrid" | null;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function getStudyMode(b: Branch): StudyMode {
-  if (b.study_mode) return b.study_mode;
-  return !b.location && !b.phone ? "online" : "offline";
-}
-
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
-function PhoneIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
-      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-    </svg>
-  );
-}
-
-function MapPinIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4 shrink-0">
-      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-function WhatsAppIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4 shrink-0">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-    </svg>
-  );
-}
-
-// ── Study experience ──────────────────────────────────────────────────────────
-
-const STUDY_FEATURES: Record<StudyMode, { icon: string; label: string }[]> = {
-  online: [
-    { icon: "🎥", label: "Live sessions" },
-    { icon: "📹", label: "Recorded replay" },
-    { icon: "🌍", label: "Global mentors" },
-    { icon: "💬", label: "24/7 support" },
-    { icon: "🏅", label: "Digital certificates" },
-    { icon: "⌨️", label: "Coding platform" },
-  ],
-  offline: [
-    { icon: "🏫", label: "Physical labs" },
-    { icon: "👩‍🏫", label: "Face-to-face mentoring" },
-    { icon: "🤖", label: "Hardware kits" },
-    { icon: "🤝", label: "Team projects" },
-    { icon: "🚌", label: "Field trips" },
-    { icon: "🎉", label: "On-site events" },
-  ],
-  hybrid: [
-    { icon: "🔄", label: "Flexible scheduling" },
-    { icon: "🏫", label: "Attend in-person or online" },
-    { icon: "📚", label: "Same curriculum" },
-    { icon: "💻", label: "Lab & digital access" },
-    { icon: "🌐", label: "Community platform" },
-    { icon: "📊", label: "Progress tracking" },
-  ],
+// Public display names only; portal names and branch records stay unchanged.
+const BRANCH_NAMES: Record<string, { ar: string; en: string; area: { ar: string; en: string } }> = {
+  "madinty sports club": { ar: "نادي مدينتي الرياضي", en: "Madinaty Sports Club", area: { ar: "مدينتي", en: "Madinaty" } },
+  "elshrouk city": { ar: "الشروق", en: "El Shorouk", area: { ar: "مدينة الشروق", en: "El Shorouk City" } },
+  "badr city": { ar: "بدر", en: "Badr", area: { ar: "مدينة بدر", en: "Badr City" } },
+  "5th setlement": { ar: "التجمع الخامس", en: "Fifth Settlement", area: { ar: "القاهرة الجديدة", en: "New Cairo" } },
 };
 
-const STUDY_MODE_META: Record<StudyMode, { label: string; color: string; bg: string }> = {
-  online:  { label: "Online",    color: "text-[var(--cyan-strong)]", bg: "bg-[var(--cyan-strong)]/10" },
-  offline: { label: "In-Person", color: "text-[var(--orange-strong)]", bg: "bg-[var(--orange-strong)]/10" },
-  hybrid:  { label: "Hybrid",    color: "text-purple-500", bg: "bg-purple-100" },
-};
-
-function StudyExperience({ mode }: { mode: StudyMode }) {
-  const meta     = STUDY_MODE_META[mode];
-  const features = STUDY_FEATURES[mode];
-
+function BranchIcon({ name }: { name: string }) {
+  const key = name.trim().toLowerCase();
+  const paths: Record<string, string> = {
+    "madinty sports club": "M3 21h18M5 21V10h14v11M9 21v-5h6v5M8 10V6h8v4M12 6V2l5 1.5L12 5M8 13h1m6 0h1",
+    "elshrouk city": "M3 17h18M5 21h14M7 17a5 5 0 0 1 10 0M12 3v3M4.2 7.2l2.1 2.1M19.8 7.2l-2.1 2.1M2 12h2m16 0h2",
+    "5th setlement": "M2 21h20M4 21V11l4-4 4 4v10M12 21V6l4-3 4 3v15M7 21v-5h2v5M15 8h2m-2 4h2m-2 4h2",
+  };
   return (
-    <div className="mt-6 border-t border-[var(--border)] pt-5">
-      <div className="mb-3 flex items-center gap-2">
-        <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${meta.bg} ${meta.color}`}>
-          {meta.label}
-        </span>
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--muted)]">
-          Study Experience
-        </span>
-      </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
-        {features.map((f) => (
-          <div key={f.label} className="flex items-center gap-2">
-            <span className="text-base leading-none">{f.icon}</span>
-            <span className="text-[12px] font-medium text-[var(--text-3)]">{f.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={paths[key] ?? "M4 21V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v16M2 21h20M9 21v-4h6v4M8 7h2m4 0h2M8 11h2m4 0h2"} />
+    </svg>
   );
 }
 
-// ── Detail panel ──────────────────────────────────────────────────────────────
-
-function BranchPanel({
-  branch,
-  t,
-  dir,
-}: {
-  branch: Branch;
-  t: (k: string) => string;
-  dir: string;
-}) {
-  const mode    = getStudyMode(branch);
-  const online  = mode === "online";
-  const xIn     = dir === "rtl" ? -16 : 16;
-  const xOut    = dir === "rtl" ? 16 : -16;
-
-  return (
-    <motion.div
-      key={branch.id}
-      initial={{ opacity: 0, x: xIn }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: xOut }}
-      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-      className="flex h-full flex-col"
-    >
-      {/* Image / placeholder */}
-      <div
-        className="relative overflow-hidden rounded-[var(--radius-xl)] bg-[var(--navy)]/6"
-        style={{ aspectRatio: "16/9" }}
-      >
-        {branch.image_url ? (
-          <Image
-            src={branch.image_url}
-            alt={branch.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 640px"
-          />
-        ) : online ? (
-          /* Online branch placeholder */
-          <div className="flex h-full flex-col items-center justify-center gap-3">
-            <svg viewBox="0 0 48 48" fill="none" className="h-12 w-12 text-[var(--cyan-strong)]/40">
-              <circle cx="24" cy="24" r="18" stroke="currentColor" strokeWidth="2" />
-              <ellipse cx="24" cy="24" rx="8" ry="18" stroke="currentColor" strokeWidth="1.5" />
-              <path d="M6 24h36M10 14h28M10 34h28" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
-            <span className="rounded-full bg-[var(--cyan-strong)]/10 px-3 py-1 text-[11px] font-semibold text-[var(--cyan-strong)]">
-              Online
-            </span>
-          </div>
-        ) : (
-          <div className="flex h-full items-center justify-center">
-            <svg viewBox="0 0 48 48" fill="none" className="h-16 w-16 text-[var(--navy)]/10">
-              <rect x="4" y="4" width="40" height="40" rx="8" stroke="currentColor" strokeWidth="2" />
-              <path d="M4 32l10-10 8 8 8-12 14 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="16" cy="16" r="4" stroke="currentColor" strokeWidth="2" />
-            </svg>
-          </div>
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="mt-6 flex-1 space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3
-            className="text-2xl font-bold text-[var(--navy)] md:text-3xl"
-            style={{ fontFamily: "var(--font-orbitron), sans-serif" }}
-          >
-            {branch.name}
-          </h3>
-          <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${STUDY_MODE_META[mode].bg} ${STUDY_MODE_META[mode].color}`}>
-            {STUDY_MODE_META[mode].label}
-          </span>
-        </div>
-
-        {branch.phone && (
-          <a
-            href={`tel:${branch.phone}`}
-            className="flex items-center gap-2.5 text-[var(--text-2)] transition hover:text-[var(--cyan-strong)]"
-          >
-            <span className="text-[var(--cyan-strong)]"><PhoneIcon /></span>
-            <span className="text-sm font-medium">{branch.phone}</span>
-          </a>
-        )}
-
-        {branch.location && (
-          <div className="flex items-start gap-2.5 text-[var(--text-2)]">
-            <span className="mt-0.5 text-[var(--orange-strong)]"><MapPinIcon /></span>
-            <span className="text-sm leading-snug">{branch.location}</span>
-          </div>
-        )}
-
-        <StudyExperience mode={mode} />
-      </div>
-
-      {/* CTAs */}
-      <div className="mt-8 flex flex-wrap gap-3">
-        {branch.phone && (
-          <>
-            {/* WhatsApp — primary */}
-            <a
-              href={buildWhatsAppUrl(branch.phone, null) ?? undefined}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:brightness-110"
-            >
-              <WhatsAppIcon />
-              WhatsApp
-            </a>
-
-            {/* Call — secondary */}
-            <a
-              href={`tel:${branch.phone}`}
-              className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--border)] bg-white px-5 py-2.5 text-sm font-bold text-[var(--navy)] transition hover:-translate-y-0.5 hover:border-[var(--cyan-strong)] hover:text-[var(--cyan-strong)]"
-            >
-              <PhoneIcon />
-              {t("branches.callNow")}
-            </a>
-          </>
-        )}
-
-        {branch.location && (
-          <a
-            href={`https://maps.google.com/?q=${encodeURIComponent(branch.location)}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--border)] bg-white px-5 py-2.5 text-sm font-bold text-[var(--navy)] transition hover:-translate-y-0.5 hover:border-[var(--orange-strong)] hover:text-[var(--orange-strong)]"
-          >
-            <MapPinIcon />
-            {t("branches.getDirections")}
-          </a>
-        )}
-
-        <ButtonLink href="/book-session" variant="navy" className="!px-5 !py-2.5 !text-sm">
-          {t("branches.bookTrialHere")}
-        </ButtonLink>
-      </div>
-    </motion.div>
-  );
+function ChatIcon() {
+  return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4 8.5 8.5 0 0 1 17 0Z" /><path d="M8 11h8M8 14h5" /></svg>;
 }
 
-// ── Desktop tab explorer ───────────────────────────────────────────────────────
-
-function DesktopExplorer({
-  branches,
-  t,
-  dir,
-}: {
-  branches: Branch[];
-  t: (k: string) => string;
-  dir: string;
-}) {
-  const [active, setActive] = useState<number | null>(null);
-  const branch = active !== null ? branches[active] : null;
-
-  return (
-    <div
-      className={`hidden overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-white shadow-[var(--shadow-card)] lg:flex ${dir === "rtl" ? "flex-row-reverse" : ""}`}
-    >
-      {/* Tab list */}
-      <div
-        className="flex w-60 shrink-0 flex-col bg-[var(--bg)]"
-        style={{ borderInlineEndWidth: "1px", borderColor: "var(--border)" }}
-      >
-        {branches.map((b, i) => {
-          const isActive = i === active;
-          return (
-            <button
-              key={b.id}
-              onClick={() => setActive(i)}
-              className={[
-                "relative flex items-center gap-3 px-5 py-4 transition-all duration-150",
-                dir === "rtl" ? "text-right flex-row-reverse" : "text-left",
-                isActive
-                  ? "bg-white text-[var(--navy)]"
-                  : "text-[var(--text-3)] hover:bg-white/70 hover:text-[var(--navy)]",
-              ].join(" ")}
-            >
-              {/* Active indicator bar */}
-              {isActive && (
-                <span
-                  className="absolute inset-y-0 w-0.75 rounded-full bg-[var(--orange-strong)]"
-                  style={{ [dir === "rtl" ? "right" : "left"]: 0 }}
-                />
-              )}
-
-              {/* Avatar */}
-              <span
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold transition ${
-                  isActive ? "bg-[var(--orange-strong)] text-white" : "bg-[var(--border)] text-[var(--text-3)]"
-                }`}
-              >
-                {b.name.charAt(0)}
-              </span>
-
-              <span className={`min-w-0 flex-1 truncate text-[13px] font-semibold leading-snug ${isActive ? "text-[var(--navy)]" : ""}`}>
-                {b.name}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Detail panel */}
-      <div className="flex-1 p-8">
-        <AnimatePresence mode="wait">
-          {branch ? (
-            <BranchPanel key={branch.id} branch={branch} t={t} dir={dir} />
-          ) : (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex h-full min-h-[280px] flex-col items-center justify-center gap-3 text-center"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-[var(--muted)]">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" />
-                <circle cx="12" cy="9" r="2.5" />
-              </svg>
-              <p className="text-sm font-medium text-[var(--muted)]">Select a branch to view details</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
+function OnlineIcon() {
+  return <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="13" rx="2" /><path d="M8 21h8M12 16v5M8 8l-2 2 2 2m8-4 2 2-2 2m-3-5-2 6" /></svg>;
 }
-
-// ── Mobile accordion ──────────────────────────────────────────────────────────
-
-function MobileAccordion({
-  branches,
-  t,
-  dir,
-}: {
-  branches: Branch[];
-  t: (k: string) => string;
-  dir: string;
-}) {
-  const [open, setOpen] = useState<string | null>(null);
-
-  return (
-    <div className="flex flex-col gap-3 lg:hidden">
-      {branches.map((b) => {
-        const isOpen = open === b.id;
-
-        return (
-          <div
-            key={b.id}
-            className="overflow-hidden rounded-[var(--radius-xl)] border border-[var(--border)] bg-white shadow-sm"
-          >
-            <button
-              onClick={() => setOpen(isOpen ? null : b.id)}
-              className={`flex w-full items-center justify-between gap-3 px-5 py-4 ${dir === "rtl" ? "flex-row-reverse text-right" : "text-left"}`}
-            >
-              <div className={`flex items-center gap-3 ${dir === "rtl" ? "flex-row-reverse" : ""}`}>
-                <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold transition ${
-                    isOpen ? "bg-[var(--orange-strong)] text-white" : "bg-[var(--bg-muted)] text-[var(--text-3)]"
-                  }`}
-                >
-                  {b.name.charAt(0)}
-                </span>
-                <span className={`text-[14px] font-semibold ${isOpen ? "text-[var(--orange-strong)]" : "text-[var(--navy)]"}`}>
-                  {b.name}
-                </span>
-              </div>
-
-              <motion.span
-                animate={{ rotate: isOpen ? 180 : 0 }}
-                transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                className={isOpen ? "text-[var(--orange-strong)]" : "text-[var(--muted)]"}
-              >
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
-                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </motion.span>
-            </button>
-
-            <AnimatePresence initial={false}>
-              {isOpen && (
-                <motion.div
-                  key="body"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                  className="overflow-hidden"
-                >
-                  <div className="border-t border-[var(--border)] p-5">
-                    <BranchPanel branch={b} t={t} dir={dir} />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── Section ───────────────────────────────────────────────────────────────────
 
 export default function BranchesSection() {
-  const { t, dir }             = useLanguage();
+  const { locale, dir } = useLanguage();
   const [branches, setBranches] = useState<Branch[]>([]);
-  const [loading,  setLoading]  = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const ar = locale === "ar";
 
   useEffect(() => {
-    fetch("/api/branches", { cache: "no-store" })
-      .then((r) => {
-        if (!r.ok) throw new Error(`branches API ${r.status}`);
-        return r.json();
+    const controller = new AbortController();
+    fetch("/api/branches", { cache: "no-store", signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Branches unavailable");
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error("Invalid branches response");
+        if (!controller.signal.aborted) setBranches(data.filter((branch: Branch) => branch.active !== false));
       })
-      .then((d) => { setBranches(Array.isArray(d) ? d : []); })
-      .catch(() => { setBranches([]); })
-      .finally(() => setLoading(false));
-  }, []);
+      .catch(() => { if (!controller.signal.aborted) setFailed(true); })
+      .finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    return () => controller.abort();
+  }, [attempt]);
+
+  const isOnline = (branch: Branch) => branch.study_mode === "online" || (!branch.study_mode && /^(online|أونلاين)$/i.test(branch.name.trim()));
+  const physicalBranches = branches.filter((branch) => !isOnline(branch));
+  const hasOnline = branches.some(isOnline);
 
   return (
-    <section id="branches" className="relative z-10 overflow-hidden pb-16 md:pb-24">
-
-      {/* Background decoration */}
-      <div className="pointer-events-none absolute right-0 top-0 h-96 w-96 rounded-full bg-[var(--cyan-strong)]/5 blur-3xl" />
-      <div className="pointer-events-none absolute left-0 bottom-0 h-80 w-80 rounded-full bg-[var(--navy)]/4 blur-3xl" />
-
-      <div className="relative mx-auto max-w-7xl px-6">
-
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-10 text-center"
-        >
-          <PublicSectionTitle section="branches" />
-        </motion.div>
-
-        {/* Content */}
-        {loading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="h-7 w-7 animate-spin rounded-full border-2 border-[var(--orange-strong)] border-t-transparent" />
-          </div>
-        ) : branches.length === 0 ? (
-          <SectionEmptyState
-            variant="branches"
-            heading="Locations coming soon"
-            subtext="We're expanding! Check back soon for Robocode branches near you."
-          />
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-60px" }}
-            transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <DesktopExplorer branches={branches} t={t} dir={dir} />
-            <MobileAccordion branches={branches} t={t} dir={dir} />
-          </motion.div>
-        )}
-      </div>
+    <section id="branches" aria-labelledby="branches-heading" className={styles.section} dir={dir}>
+      <div className={styles.header}><PublicSectionTitle section="branches" id="branches-heading" /></div>
+      {loading ? (
+        <p className={styles.status} role="status">{ar ? "جارٍ تحميل الفروع…" : "Loading branches…"}</p>
+      ) : failed ? (
+        <div className={styles.status} role="status">
+          <p>{ar ? "تعذّر تحميل الفروع." : "Branches could not be loaded."}</p>
+          <button className={styles.action} onClick={() => { setFailed(false); setLoading(true); setAttempt((value) => value + 1); }}>
+            {ar ? "حاول مرة أخرى" : "Try again"}
+          </button>
+        </div>
+      ) : (
+        <>
+          {physicalBranches.length > 0 ? (
+            <div className={styles.grid}>
+              {physicalBranches.map((branch) => {
+                const display = BRANCH_NAMES[branch.name.trim().toLowerCase()];
+                const name = display?.[locale] ?? branch.name;
+                // Legacy location fields may contain map URLs rather than addresses.
+                const address = branch.location?.trim();
+                const readableAddress = address && !/(?:https?:\/\/|www\.|maps\.app|share\.google)/i.test(address) ? address : display?.area[locale];
+                const message = ar ? `مرحبًا، أود الاستفسار عن الدراسة في فرع ${name}.` : `Hello, I'd like to enquire about classes at the ${name} branch.`;
+                return (
+                  <article key={branch.id} className={styles.card}>
+                    <span className={styles.icon}><BranchIcon name={branch.name} /></span>
+                    <div className={styles.details}>
+                      <h3>{name}</h3>
+                      {readableAddress && <p className={styles.address}>{readableAddress}</p>}
+                    </div>
+                    <a className={styles.action} href={`${ACADEMY_WHATSAPP_URL}?text=${encodeURIComponent(message)}`} target="_blank" rel="noopener noreferrer" aria-label={ar ? `استفسر عن فرع ${name} عبر واتساب` : `Enquire about ${name} on WhatsApp`}>
+                      <ChatIcon /><span>{ar ? "استفسر عن الفرع" : "Enquire about branch"}</span>
+                    </a>
+                  </article>
+                );
+              })}
+            </div>
+          ) : !hasOnline && (
+            <p className={styles.status}>{ar ? "تفاصيل الفروع ستتوفر قريبًا." : "Branch details will be available soon."}</p>
+          )}
+          {hasOnline && (
+            <article className={styles.online}>
+              <div className={styles.onlineIntro}>
+                <span className={styles.onlineIcon}><OnlineIcon /></span>
+                <div>
+                  <h3>{ar ? "حصص أونلاين" : "Online Classes"}</h3>
+                  <p>{ar ? "تعلّم البرمجة والذكاء الاصطناعي من بيتك." : "Learn coding and AI from home."}</p>
+                </div>
+              </div>
+              <a className={styles.onlineLink} href={`${ACADEMY_WHATSAPP_URL}?text=${encodeURIComponent(ar ? "مرحبًا، أود الاستفسار عن حصص الأونلاين في Robocode School." : "Hello, I'd like to enquire about online classes at Robocode School.")}`} target="_blank" rel="noopener noreferrer" aria-label={ar ? "استفسر عن الأونلاين عبر واتساب" : "Enquire about online classes on WhatsApp"}>
+                <ChatIcon /><span>{ar ? "استفسر عن الأونلاين" : "Enquire about online classes"}</span>
+              </a>
+            </article>
+          )}
+        </>
+      )}
     </section>
   );
 }

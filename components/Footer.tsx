@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/contexts/LanguageContext";
+import styles from "./public-site/PublicFooter.module.css";
 
 const SOCIALS = [
   { label: "Facebook",  short: "Fb", href: "https://www.facebook.com/RobocodeSchool" },
@@ -46,27 +47,31 @@ export default function Footer() {
   };
 
   return (
-    <footer className="relative z-10 bg-[var(--navy)] text-white">
-      <div className="mx-auto max-w-7xl px-6 pb-8 pt-14 md:pt-20">
+    <footer className={styles.footer}>
+      <div className={styles.inner}>
 
         {/* Top grid */}
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-5">
+        <div className={styles.grid}>
 
           {/* Brand */}
-          <div className="lg:col-span-2">
+          <div className={styles.brand}>
+            <div className={styles.logoPlate}>
             <Image
               src="/logo.png"
               alt="Robocode Logo"
-              width={140}
-              height={60}
-              className="h-auto w-28 brightness-0 invert"
+              width={112}
+              height={112}
+              sizes="(max-width: 639px) 68px, 96px"
+              className={styles.logo}
             />
+            </div>
 
-            <p className="mt-6 max-w-xs text-sm leading-relaxed text-white/60">
+            <p className={styles.tagline}>
               {t("footer.tagline")}
             </p>
+            <p className={styles.mobileTagline}>{locale === "ar" ? "برمجة وذكاء اصطناعي للأعمار من 6 إلى 17 سنة." : "Coding and AI for ages 6–17."}</p>
 
-            <div className="mt-8 flex gap-3">
+            <div className={styles.socials}>
               {SOCIALS.map(({ label, short, href }) => (
                 <a
                   key={label}
@@ -83,11 +88,11 @@ export default function Footer() {
           </div>
 
           {/* Programs */}
-          <div>
+          <div className={styles.linkGroup}>
             <p data-site-footer-label>
               {t("footer.programsHeading")}
             </p>
-            <ul className="mt-5 space-y-3">
+            <ul className={styles.links}>
               {PROGRAM_LINKS.map(({ key, href }) => (
                 <li key={key}>
                   <a
@@ -103,11 +108,11 @@ export default function Footer() {
           </div>
 
           {/* Company */}
-          <div>
+          <div className={styles.linkGroup}>
             <p data-site-footer-label>
               {t("footer.companyHeading")}
             </p>
-            <ul className="mt-5 space-y-3">
+            <ul className={styles.links}>
               {COMPANY_LINKS.map(({ key, href }) => (
                 <li key={key}>
                   <a
@@ -123,11 +128,11 @@ export default function Footer() {
           </div>
 
           {/* Legal */}
-          <div>
+          <div className={`${styles.linkGroup} ${styles.legal}`}>
             <p data-site-footer-label>
               {locale === "ar" ? "السياسات" : "Policies"}
             </p>
-            <ul className="mt-5 space-y-3">
+            <ul className={styles.links}>
               {LEGAL_LINKS.map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-sm text-white/65 transition duration-200 hover:text-[var(--orange-strong)]">
@@ -141,10 +146,10 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-12 border-t border-white/[0.07] pt-6">
+        <div className={styles.bottom}>
           <div data-site-footer-bottom className="flex flex-col items-center justify-between gap-2 text-center text-xs md:flex-row">
             <span>{t("footer.copyright")}</span>
-            <span>{t("footer.poweredBy")}</span>
+            <span className={styles.poweredBy}>{t("footer.poweredBy")}</span>
           </div>
         </div>
 

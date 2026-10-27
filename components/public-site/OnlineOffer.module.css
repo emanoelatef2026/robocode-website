@@ -20,8 +20,11 @@
 .coverImage { object-fit: cover; }
 .coverTools { position: absolute; bottom: 12px; inset-inline-end: 12px; display: flex; gap: 6px; }
 .agePill { position: absolute; inset-inline-start: 14px; top: 14px; display: flex; gap: 5px; align-items: center; padding: 7px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-card); color: var(--navy); font-size: 14px; font-weight: 700; box-shadow: var(--shadow-sm); }
-.cardBody { display: flex; flex: 1; flex-direction: column; gap: 12px; padding: 22px; }
-.cardBody .action { margin-top: auto; width: 100%; }
+.cardIntro { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.cardBody { display: flex; flex: 1; flex-direction: column; gap: 12px; padding: 22px 22px 0; min-width: 0; }
+.cardActions { padding: 12px 22px 22px; margin-top: auto; }
+.cardActions .action { width: 100%; }
+.mobileAge { display: none; }
 .cardSummary { color: var(--text-2); font-size: 14px; line-height: 1.8; margin-bottom: 8px; }
 .title { color: var(--navy); font-size: 20px; font-weight: 700; line-height: 1.5; text-wrap: balance; }
 .description { color: var(--text-2); font-size: 15px; line-height: 1.85; }
@@ -73,13 +76,27 @@
 
 @media (max-width: 639px) {
   .section { padding-inline: 16px; }
-  .cardBody { padding: 20px; }
+  .grid { gap: 12px; }
+  .cardIntro { flex-direction: row; align-items: center; gap: 12px; padding: 16px 16px 0; }
+  .cardIntro .cover { flex: 0 0 96px; width: 96px; height: 96px; aspect-ratio: 1; border-radius: 12px; }
+  .cardIntro .agePill, .cardIntro .coverTools { display: none; }
+  .cardBody { padding: 0; gap: 4px; }
+  .mobileAge { display: block; margin: 0; color: var(--cyan-strong); font-size: 12px; font-weight: 600; line-height: 1.5; }
+  .cardBody .title { margin: 0; font-size: 16px; line-height: 1.5; }
+  .cardSummary { margin: 0; font-size: 12px; line-height: 1.7; }
+  .cardActions { padding: 12px 16px 16px; }
+  .cardActions .action { min-height: 44px; padding: 10px 16px; font-size: 13px; }
   .priceCard { padding: 24px 20px; }
   .dialogBody { padding: 20px 16px; }
 }
 @media (min-width: 640px) {
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .section { padding-block: 48px 80px; }
+}
+@media (max-width: 359px) {
+  .cardIntro { gap: 10px; padding-inline: 12px; }
+  .cardIntro .cover { flex-basis: 80px; width: 80px; height: 88px; }
+  .cardActions { padding-inline: 12px; }
 }
 @media (min-width: 900px) {
   .priceGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
