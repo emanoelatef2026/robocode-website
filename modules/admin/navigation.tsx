@@ -73,6 +73,7 @@ export const ADMIN_SECTIONS: AdminNavSection[] = [
     title: 'System',
     items: [
       { label: 'Branches',             href: '/admin/branches',             icon: <Icons.branches />,  superAdminOnly: true },
+      { label: 'Activity Center',      href: '/admin/activity',             icon: <Icons.comms />,     superAdminOnly: true },
       { label: 'System Health',        href: '/admin/system-health',        icon: <Icons.health />,    superAdminOnly: true },
       { label: 'Production Readiness', href: '/admin/production-readiness', icon: <Icons.readiness />, superAdminOnly: true },
       { label: 'Recovery',             href: '/admin/recovery',             icon: <Icons.health />,    superAdminOnly: true },
@@ -123,6 +124,7 @@ const MORE_ITEMS: AdminNavItem[] = [
   { label: 'Semesters',     href: '/admin/semesters',      icon: <Icons.semesters className="h-6 w-6" /> },
   { label: 'Recovery',      href: '/admin/recovery',       icon: <Icons.health className="h-6 w-6" />,         superAdminOnly: true },
   { label: 'System Events', href: '/admin/system-events',  icon: <Icons.health className="h-6 w-6" />,         superAdminOnly: true },
+  { label: 'Activity Center', href: '/admin/activity', icon: <Icons.comms className="h-6 w-6" />, superAdminOnly: true },
 ]
 
 function filterItems(items: AdminNavItem[], role: string, permissions: string[]): BottomNavItem[] {

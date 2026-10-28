@@ -8,7 +8,7 @@ export async function getNotificationFeed(userId: string): Promise<NotificationF
 
   const { data: rows, error: feedError } = await db
     .from('notifications')
-    .select('id, type, title, body, href, created_at')
+    .select('id, type, title, body, href, created_at, data')
     .eq('recipient_id', userId)
     .order('created_at', { ascending: false })
     .limit(30)
@@ -37,9 +37,12 @@ export async function getNotificationFeed(userId: string): Promise<NotificationF
     href:       r.href    ?? null,
     created_at: r.created_at,
     is_read:    readSet.has(r.id),
+    priority: r.data?.priority,
+    bundle_count: Number(r.data?.count ?? 1),
+    requires_action: r.data?.requires_action === true,
   }))
 
-  const unread_count = notifications.filter((n) => !n.is_read).length
+  const unread_count = await getUnreadNotificationCount(userId)
 
   return { notifications, unread_count }
 }
@@ -48,19 +51,9 @@ export async function getNotificationFeed(userId: string): Promise<NotificationF
 export async function getUnreadNotificationCount(userId: string): Promise<number> {
   const db = createServiceClient()
 
-  const { count: total } = await db
-    .from('notifications')
-    .select('id', { count: 'exact', head: true })
-    .eq('recipient_id', userId)
-
-  if (!total) return 0
-
-  const { count: readCount } = await db
-    .from('notification_reads')
-    .select('notification_id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-
-  return Math.max(0, (total ?? 0) - (readCount ?? 0))
+  const {data,error}=await db.rpc('notification_unread_count',{p_user:userId})
+  if(error || data == null || !Number.isFinite(Number(data))) throw new Error('Unable to count unread notifications.')
+  return Number(data)
 }
 
 // ── Recipient resolution — shared by every student-domain notification ───────

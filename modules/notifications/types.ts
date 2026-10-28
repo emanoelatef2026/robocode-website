@@ -20,6 +20,7 @@ export type NotificationType =
   | 'NEW_SESSION_RESOURCES'
   | 'ATTENDANCE_RECORDED'
   | 'PAYMENT_RECORDED'
+  | 'ADMIN_ACTIVITY'
 
 export interface Notification {
   id:           string
@@ -29,6 +30,9 @@ export interface Notification {
   href:         string | null
   created_at:   string
   is_read:      boolean
+  priority?: 'urgent' | 'action' | 'info'
+  bundle_count?: number
+  requires_action?: boolean
 }
 
 export interface NotificationFeed {

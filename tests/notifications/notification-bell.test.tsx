@@ -17,13 +17,20 @@ const feed: NotificationFeed = {
 const tick = async (ms = 30_000) => { await act(async () => { vi.advanceTimersByTime(ms) }) }
 
 describe('Notification bell staff refresh', () => {
+  it('shows grouped urgent activity and the activity-center link only when enabled',async()=>{
+    vi.mocked(fetchNotificationFeed).mockResolvedValue({notifications:[{...feed.notifications[0],type:'ADMIN_ACTIVITY',priority:'urgent',bundle_count:8}],unread_count:41})
+    render(<NotificationBell initialUnreadCount={41} activityCenter />)
+    await act(async()=>{fireEvent.click(screen.getByRole('button',{name:'Notifications'}))})
+    expect(screen.getByText('Urgent · 8 updates')).toBeTruthy()
+    expect(screen.getByRole('link',{name:'Open Activity Center'})).toHaveAttribute('href','/admin/activity')
+  })
   beforeEach(() => {
     vi.useFakeTimers()
     vi.clearAllMocks()
     Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' })
     vi.mocked(fetchNotificationFeed).mockResolvedValue(feed)
     vi.mocked(markAllNotificationsRead).mockResolvedValue(undefined)
-    vi.mocked(markNotificationRead).mockResolvedValue(undefined)
+    vi.mocked(markNotificationRead).mockResolvedValue(true)
   })
   afterEach(() => { cleanup(); vi.useRealTimers() })
 

@@ -6,6 +6,7 @@ import { ROLE_PORTAL_MAP } from '@/types/enums'
 import type { PermissionName, PermissionCheckOptions } from './types'
 import type { AppUser } from '@/types/app'
 import type { RoleName } from '@/types/enums'
+import { logSecurityDenial } from '@/modules/observability'
 
 // ── Core: read verified session ───────────────────────────────────────────────
 
@@ -48,12 +49,14 @@ export async function requirePermission(
   const user = await requireAuth()
 
   if (!user.permissions.includes(permission)) {
+    await logSecurityDenial('permissions',user.id,permission)
     // Redirect to their portal with a forbidden flag rather than exposing what was needed
     redirect(`${ROLE_PORTAL_MAP[user.globalRole]}?error=forbidden`)
   }
 
   if (options?.branchId && user.globalRole !== 'super_admin') {
     if (!user.branchIds.includes(options.branchId)) {
+      await logSecurityDenial('branch-access',user.id,permission,options.branchId)
       redirect(`${ROLE_PORTAL_MAP[user.globalRole]}?error=forbidden`)
     }
   }

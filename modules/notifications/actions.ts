@@ -9,42 +9,27 @@ import { getNotificationFeed } from './queries'
 
 export async function fetchNotificationFeed(): Promise<NotificationFeed> {
   const user = await requireAuth()
+  if(user.globalRole==='super_admin') await createServiceClient().rpc('refresh_admin_activity',{p_actor:user.id})
   return getNotificationFeed(user.id)
 }
 
 // ── Mark read ─────────────────────────────────────────────────────────────────
 
-export async function markNotificationRead(notificationId: string): Promise<void> {
+export async function markNotificationRead(notificationId: string, expectedAt?:string): Promise<boolean> {
   const user = await requireAuth()
   const db   = createServiceClient()
 
-  await db
-    .from('notification_reads')
-    .upsert(
-      { notification_id: notificationId, user_id: user.id },
-      { onConflict: 'notification_id,user_id', ignoreDuplicates: true }
-    )
+  const {data,error}=await db.rpc('mark_admin_notification_read',{p_user:user.id,p_notification:notificationId,p_expected_at:expectedAt ?? null})
+  if(error) throw new Error('Unable to mark notification read.')
+  return data===true
 }
 
 export async function markAllNotificationsRead(): Promise<void> {
   const user = await requireAuth()
   const db   = createServiceClient()
 
-  const { data: rows } = await db
-    .from('notifications')
-    .select('id')
-    .eq('recipient_id', user.id)
-
-  if (!rows || rows.length === 0) return
-
-  const inserts = (rows as any[]).map((r) => ({
-    notification_id: r.id as string,
-    user_id:         user.id,
-  }))
-
-  await db
-    .from('notification_reads')
-    .upsert(inserts, { onConflict: 'notification_id,user_id', ignoreDuplicates: true })
+  const {error}=await db.rpc('mark_all_admin_notifications_read',{p_user:user.id})
+  if(error) throw new Error('Unable to mark notifications read.')
 }
 
 // ── Seed helpers (called from server-side on dashboard load) ─────────────────

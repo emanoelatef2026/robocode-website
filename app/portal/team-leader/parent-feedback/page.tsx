@@ -9,6 +9,7 @@ import {
 import type { MessageStatus, MessageCategory } from '@/modules/parent-messages/queries'
 import MessageActions                 from './MessageActions'
 import Link                           from 'next/link'
+import { createServiceClient } from '@/lib/supabase/service'
 
 type Tab = 'messages' | 'satisfaction' | 'followups' | 'complaints' | 'suggestions'
 
@@ -73,7 +74,12 @@ export default async function TLParentFeedbackPage({ searchParams }: Props) {
   const user       = await requirePortalRole('team_leader')
   const VALID_TABS: Tab[] = ['messages', 'satisfaction', 'followups', 'complaints', 'suggestions']
   const activeTab  = (VALID_TABS.includes(tab as Tab) ? tab : 'messages') as Tab
-  const branchIds  = user.branchIds
+  let branchIds  = user.branchIds
+  if (user.globalRole==='super_admin') {
+    const {data,error}=await createServiceClient().from('branches').select('id')
+    if(error)throw new Error('Unable to load feedback branches.')
+    branchIds=(data??[]).map(branch=>branch.id as string)
+  }
 
   // Map virtual tabs to category filters
   const categoryOverride =

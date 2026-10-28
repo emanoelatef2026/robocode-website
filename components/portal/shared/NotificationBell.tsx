@@ -36,11 +36,12 @@ function timeAgo(iso: string): string {
 interface Props {
   initialUnreadCount: number
   autoRefresh?: boolean
+  activityCenter?: boolean
 }
 
 const CACHE_TTL_MS = 60_000
 
-export default function NotificationBell({ initialUnreadCount, autoRefresh = false }: Props) {
+export default function NotificationBell({ initialUnreadCount, autoRefresh = false, activityCenter = false }: Props) {
   const [open,         setOpen]         = useState(false)
   const [unread,       setUnread]       = useState(initialUnreadCount)
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -100,14 +101,15 @@ export default function NotificationBell({ initialUnreadCount, autoRefresh = fal
   const handleRead = useCallback(async (n: Notification) => {
     if (!n.is_read) {
       try {
-        await markNotificationRead(n.id)
+        const read=await markNotificationRead(n.id,n.created_at)
+        if(read===false) { await refreshFeed(false); return }
         feedVersion.current += 1
         setNotifications((prev) => prev.map((x) => x.id === n.id ? { ...x, is_read: true } : x))
         setUnread((u) => Math.max(0, u - 1))
       } catch { setError('Unable to mark this notification read.') }
     }
     if (n.href) window.location.href = n.href
-  }, [])
+  }, [refreshFeed])
 
   const handleMarkAll = useCallback(async () => {
     try {
@@ -149,7 +151,7 @@ export default function NotificationBell({ initialUnreadCount, autoRefresh = fal
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[320px] overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-lg">
+        <div className="absolute right-0 top-[calc(100%+8px)] z-50 w-[min(380px,calc(100vw-24px))] overflow-hidden rounded-xl border border-[#E2E8F0] bg-white shadow-lg">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-[#F1F5F9] px-4 py-3">
             <span className="text-sm font-semibold text-[#0B1F3A]">Notifications</span>
@@ -165,7 +167,7 @@ export default function NotificationBell({ initialUnreadCount, autoRefresh = fal
 
           {/* List */}
           {error && <div role="alert" className="p-3 text-sm font-medium text-red-700">{error}<button type="button" onClick={() => void refreshFeed(true)} className="ml-2 min-h-11 underline">Retry</button></div>}
-          <div className="max-h-[380px] overflow-y-auto">
+          <div className="max-h-[min(380px,calc(100dvh-190px))] overflow-y-auto">
             {loading ? (
               <div className="space-y-3 p-4">
                 {[0, 1, 2].map((i) => (
@@ -190,7 +192,7 @@ export default function NotificationBell({ initialUnreadCount, autoRefresh = fal
                       !n.is_read ? 'bg-[#FFFBEB]' : ''
                     }`}
                   >
-                    <span className="mt-0.5 text-[18px] shrink-0">{TYPE_ICON[n.type] ?? '🔔'}</span>
+                    <span className={`mt-0.5 shrink-0 ${n.priority==='urgent'?'text-red-700':n.priority==='action'?'text-amber-700':'text-sky-700'}`} aria-hidden="true">{n.type==='ADMIN_ACTIVITY'?<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5m0 3v1"/></svg>:TYPE_ICON[n.type] ?? '🔔'}</span>
                     <div className="min-w-0 flex-1">
                       <p className={`text-xs leading-tight ${!n.is_read ? 'font-semibold text-[#0B1F3A]' : 'text-[#0B1F3A]'}`}>
                         {n.title}
@@ -198,6 +200,7 @@ export default function NotificationBell({ initialUnreadCount, autoRefresh = fal
                       {n.body && (
                         <p className="mt-0.5 truncate text-[11px] text-[#64748B]">{n.body}</p>
                       )}
+                      {(!!n.priority||(n.bundle_count??1)>1)&&<p className="mt-1 text-[11px] font-semibold">{n.priority==='urgent'?'Urgent':n.requires_action?'Needs action':'Activity'}{n.bundle_count&&n.bundle_count>1?` · ${n.bundle_count} updates`:''}</p>}
                       <p className="mt-1 text-[10px] text-[#94A3B8]">{timeAgo(n.created_at)}</p>
                     </div>
                     {!n.is_read && (
@@ -208,6 +211,7 @@ export default function NotificationBell({ initialUnreadCount, autoRefresh = fal
               </div>
             )}
           </div>
+          {activityCenter&&<a href="/admin/activity" className="flex min-h-11 items-center justify-center border-t border-(--border) px-4 text-sm font-semibold text-(--cyan-strong)">Open Activity Center</a>}
         </div>
       )}
     </div>

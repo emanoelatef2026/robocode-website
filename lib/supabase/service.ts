@@ -7,6 +7,7 @@
 
 import 'server-only'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createActivityFetch } from './activity-fetch'
 
 let _client: SupabaseClient | undefined
 
@@ -23,6 +24,7 @@ export function createServiceClient(): SupabaseClient {
   if (!_client) {
     _client = createClient(url, key, {
       auth: { autoRefreshToken: false, persistSession: false },
+      global: { fetch: createActivityFetch() },
     })
   }
 
