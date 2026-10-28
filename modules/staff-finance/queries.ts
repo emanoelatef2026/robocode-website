@@ -92,9 +92,10 @@ export async function getLiveInstructorFinance(
     .from('session_instructors')
     .select('session_id, instructor_id, submitted_at')
     .in('session_id', allScheduleIds)
-  const sharedParticipation = await db.from('session_participations').select('session_id').in('session_id', allScheduleIds)
+  const sharedParticipation = await db.from('session_participations').select('session_id,instructor_id,state,agreed_rate').in('session_id', allScheduleIds)
   if (sharedParticipation.error) throw new Error('Unable to verify shared teaching participation.')
   const sharedClasses = new Set((sharedParticipation.data ?? []).map(r => r.session_id))
+  const agreedRates = new Map((sharedParticipation.data ?? []).filter(r => r.state === 'confirmed' && r.agreed_rate != null).map(r => [`${r.instructor_id}:${r.session_id}`, Number(r.agreed_rate)]))
 
   // Build set of session_ids that have session_instructors records
   const siBySession = new Map<string, string[]>()
@@ -206,7 +207,7 @@ export async function getLiveInstructorFinance(
       const groupId   = schedGroupMap.get(schedId) ?? ''
       const overrideR = overrideByKey.get(`${instructorId}:${schedId}`) ?? null
       const groupR    = groupRateByKey.get(`${instructorId}:${groupId}`) ?? null
-      session_earnings += overrideR ?? groupR ?? baseRate
+      session_earnings += overrideR ?? agreedRates.get(`${instructorId}:${schedId}`) ?? groupR ?? baseRate
     }
 
     const sessions_count = entry.schedule_ids.length
@@ -676,9 +677,10 @@ export async function getInstructorSessionsDetail(
     .from('session_instructors')
     .select('session_id, instructor_id, submitted_at')
     .in('session_id', allScheduleIds)
-  const sharedParticipation = await db.from('session_participations').select('session_id').in('session_id', allScheduleIds)
+  const sharedParticipation = await db.from('session_participations').select('session_id,instructor_id,state,agreed_rate').in('session_id', allScheduleIds)
   if (sharedParticipation.error) throw new Error('Unable to verify shared teaching participation.')
   const sharedClasses = new Set((sharedParticipation.data ?? []).map(r => r.session_id))
+  const agreedRates = new Map((sharedParticipation.data ?? []).filter(r => r.state === 'confirmed' && r.agreed_rate != null).map(r => [`${r.instructor_id}:${r.session_id}`, Number(r.agreed_rate)]))
 
   const siBySession = new Map<string, string[]>()
   for (const si of (siData ?? []) as any[]) {
@@ -755,7 +757,7 @@ export async function getInstructorSessionsDetail(
     const att       = attMap.get(s.id) ?? { total: 0, present: 0 }
     const override  = overrideMap.get(s.id) ?? null
     const groupRate = groupRateByKey.get(`${instructorId}:${gc.group_id}`) ?? null
-    const finalRate = override?.rate ?? groupRate ?? baseRate
+    const finalRate = override?.rate ?? agreedRates.get(`${instructorId}:${s.id}`) ?? groupRate ?? baseRate
 
     return {
       schedule_id:      s.id,

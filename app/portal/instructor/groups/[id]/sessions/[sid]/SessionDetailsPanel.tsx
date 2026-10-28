@@ -23,6 +23,8 @@ interface Props {
   activeSection?: 'attendance' | 'content' | 'homework' | 'notes'
   busy?: boolean
   onBusyChange?: (busy: boolean) => void
+  reviewMode?: boolean
+  readOnly?: boolean
 }
 
 function withSaveError<T>(action: (previous: ActionResult<T> | null, data: FormData) => Promise<ActionResult<T>>) {
@@ -85,7 +87,7 @@ function SectionCard({ title, children, defaultOpen = true, hidden = false }: {
   )
 }
 
-export default function SessionDetailsPanel({ session, groupId, activeSection = 'content', busy = false, onBusyChange }: Props) {
+export default function SessionDetailsPanel({ session, groupId, activeSection = 'content', busy = false, onBusyChange, reviewMode = false, readOnly = false }: Props) {
   const [isPending, startTransition] = useTransition()
 
   const cls = 'ds-input min-h-11 w-full'
@@ -158,7 +160,8 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
   useEffect(() => { onBusyChange?.(operationPending) }, [operationPending, onBusyChange])
 
   return (
-    <fieldset disabled={busy || operationPending || isCancelled} className="min-w-0 space-y-4">
+    <fieldset disabled={busy || operationPending || isCancelled || readOnly} className="min-w-0 space-y-4">
+      {reviewMode && <p className="text-xs font-semibold text-(--amber-dark)">All changes here are submitted to the lead instructor for review before publishing.</p>}
 
       {/* ── Cancelled / Postponed State Banner ─────────────────────────────── */}
       {isCancelled && (
@@ -192,7 +195,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
           <div className="min-h-11 mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#DC2626]">{detailState.error.message}</div>
         )}
         {detailState?.success && (
-          <div className="min-h-11 mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#15803D]">Saved.</div>
+          <div className="min-h-11 mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#15803D]">{reviewMode ? 'Submitted for lead review.' : 'Saved.'}</div>
         )}
 
         <form action={detailAction} className="space-y-3">
@@ -211,7 +214,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
 
           <button type="submit" disabled={isPending}
             className="min-h-11 rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#9A3412] disabled:opacity-60 transition">
-            Save session notes
+            {reviewMode ? 'Submit session notes for review' : 'Save session notes'}
           </button>
         </form>
       </SectionCard>
@@ -245,7 +248,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
                   <div className="grid grid-cols-2 gap-2"><input name="due_at" type="date" defaultValue={hw.due_at?.slice(0, 10) ?? ''} className={cls} /><input name="max_score" type="number" min={1} defaultValue={hw.max_score} className={cls} /></div>
                   <input type="hidden" name="type" value={hw.type} /><input type="hidden" name="submission_type" value={hw.submission_type} />
                   {editHomeworkState && !editHomeworkState.success && <p className="text-xs text-[#DC2626]">{editHomeworkState.error.message}</p>}
-                  <button type="submit" className="min-h-11 rounded-lg bg-[#C2410C] px-3 py-1.5 text-sm font-medium text-white">Save homework</button>
+                    <button type="submit" className="min-h-11 rounded-lg bg-[#C2410C] px-3 py-1.5 text-sm font-medium text-white">{reviewMode ? 'Submit homework changes' : 'Save homework'}</button>
                 </form>
               )}
               </div>
@@ -257,7 +260,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
           <div className="min-h-11 mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#EF4444]">{hwState.error.message}</div>
         )}
         {hwState?.success && (
-          <div className="min-h-11 mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#10B981]">Homework created and published.</div>
+          <div className="min-h-11 mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#10B981]">{reviewMode ? 'Homework submitted for lead review. Not yet published.' : 'Homework created and published.'}</div>
         )}
 
         {!hwOpen ? (
@@ -341,7 +344,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
             <div className="flex gap-2">
               <button type="submit"
                 className="min-h-11 flex-1 rounded-lg bg-[#C2410C] py-2 text-sm font-medium text-white hover:bg-[#9A3412] transition">
-                Create &amp; Publish
+                {reviewMode ? 'Submit homework for review' : 'Create & publish'}
               </button>
               <button type="button" onClick={() => setHwOpen(false)}
                 className="min-h-11 rounded-lg border border-[#E2E8F0] px-3 py-2 text-sm text-[#64748B] hover:bg-[#F8FAFC] transition">
@@ -377,7 +380,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
             placeholder="Label (optional)" className={cls} />
           <button type="button" onClick={handleAddResource} disabled={isPending}
             className="min-h-11 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm font-medium text-[#0B1F3A] hover:border-[#C2410C] hover:text-[#9A3412] disabled:opacity-60 transition">
-            Add Resource
+            {reviewMode ? 'Propose resource' : 'Add resource'}
           </button>
         </div>
       </SectionCard>
@@ -410,7 +413,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
           <p className="mb-2 text-xs text-[#EF4444]">{recState.error.message}</p>
         )}
         {recState?.success && (
-          <p className="mb-2 text-xs text-[#10B981]">Recording added.</p>
+          <p className="mb-2 text-xs text-[#10B981]">{reviewMode ? 'Recording submitted for lead review.' : 'Recording added.'}</p>
         )}
 
         <form action={recAction} className="space-y-2">
@@ -421,13 +424,13 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
           <input name="title" placeholder="Label (optional)" className={cls} />
           <button type="submit"
             className="min-h-11 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm font-medium text-[#0B1F3A] hover:border-[#C2410C] hover:text-[#9A3412] transition">
-            Add Recording
+            {reviewMode ? 'Propose recording' : 'Add recording'}
           </button>
         </form>
       </SectionCard>
 
       {/* ── Session Actions ───────────────────────────────────────────────────── */}
-      {!isTerminal && activeSection === 'attendance' && (
+      {!isTerminal && !reviewMode && !readOnly && activeSection === 'attendance' && (
         <SectionCard title="Session Actions">
           {/* Postpone */}
           {!showCancelForm && (

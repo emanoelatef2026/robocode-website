@@ -53,6 +53,8 @@ export async function createInstructorModalAction(formData: FormData): Promise<A
   if (!branch_id) return { success: false, error: { code: 'VALIDATION', message: 'At least one branch is required.' } }
 
   const user = await requirePermission('manage_instructors', { branchId: branch_id })
+  const rawAssistantRate = formData.get('assistant_salary_per_session')
+  if (rawAssistantRate && (!Number.isFinite(Number(rawAssistantRate)) || Number(rawAssistantRate)<0)) return { success: false, error: { code: 'VALIDATION', message: 'Assistant rate must be a non-negative number.' } }
   const db   = createServiceClient()
 
   const password   = formData.get('password') as string
@@ -133,6 +135,11 @@ export async function createInstructorModalAction(formData: FormData): Promise<A
     currency:        (formData.get('currency') as string) || 'EGP',
   }
   if (salaryRaw) instructorInsert.salary_per_session = Number(salaryRaw)
+  const assistantSalary = formData.get('assistant_salary_per_session')
+  if (assistantSalary !== null && assistantSalary !== '') {
+    if (!Number.isFinite(Number(assistantSalary)) || Number(assistantSalary) < 0) return { success: false, error: { code: 'VALIDATION', message: 'Assistant rate must be a non-negative number.' } }
+    instructorInsert.assistant_salary_per_session = Number(assistantSalary)
+  }
 
   const { data: instructor, error: instructorError } = await db
     .from('instructors')
@@ -277,6 +284,11 @@ export async function updateInstructorModalAction(formData: FormData): Promise<A
     currency:        (formData.get('currency') as string) || 'EGP',
   }
   if (salaryRaw) updates.salary_per_session = Number(salaryRaw)
+  if (formData.has('assistant_salary_per_session')) {
+    const assistantSalary = formData.get('assistant_salary_per_session')
+    if (assistantSalary !== '' && (!Number.isFinite(Number(assistantSalary)) || Number(assistantSalary) < 0)) return { success: false, error: { code: 'VALIDATION', message: 'Assistant rate must be a non-negative number.' } }
+    updates.assistant_salary_per_session = assistantSalary === '' ? null : Number(assistantSalary)
+  }
   // Remove undefined values
   Object.keys(updates).forEach(k => updates[k] === undefined && delete updates[k])
 

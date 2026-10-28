@@ -159,7 +159,7 @@ export default async function MySessionsPage({ searchParams }: Props) {
                           </span>
                         )}
                       </div>
-                      <StatusBadge status={s.status} dot />
+                      <div><StatusBadge status={s.status} dot />{s.participation_state === 'requested' && <p className="text-xs font-semibold text-(--amber-dark)">Assistant · Awaiting administration approval</p>}</div>
                     </div>
                     <div className="mt-1 flex items-baseline gap-1.5 min-w-0">
                       <p className="text-[13px] font-bold text-[#0B1F3A] truncate leading-tight">{s.group_name}</p>
@@ -213,7 +213,7 @@ export default async function MySessionsPage({ searchParams }: Props) {
                     ) : (
                       <span className="text-[13px] text-[#CBD5E1]">—</span>
                     )}
-                    <StatusBadge status={s.status} dot />
+                    <div><StatusBadge status={s.status} dot />{s.participation_state === 'requested' && <p className="text-xs font-semibold text-(--amber-dark)">Awaiting administration approval</p>}</div>
                   </div>
 
                 </Link>

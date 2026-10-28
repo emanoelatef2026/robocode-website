@@ -11,7 +11,7 @@ import { listProjectsForInstructorReview } from '@/modules/portfolio/queries'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import SharedSessionHub from './SharedSessionHub'
-import { loadSharedSessions } from '@/modules/instructor-portal/shared-queries'
+import { loadSharedSessionSnapshot } from '@/modules/instructor-portal/shared-queries'
 import InstructorCoursePanel from './InstructorCoursePanel'
 
 interface Props { params: Promise<{ id: string }> }
@@ -41,7 +41,7 @@ export default async function GroupDetailPage({ params }: Props) {
   const pendingReviewCount = pendingHomework.length + pendingProjects.length
 
   const isActive = !!group.group_course_id
-  const sharedSessions = await loadSharedSessions(id, instructor.id)
+  const { sessions: sharedSessions, workflowReady } = await loadSharedSessionSnapshot(id, instructor.id)
 
   const totalPct =
     group.total_sessions != null && group.total_sessions > 0
@@ -126,7 +126,7 @@ export default async function GroupDetailPage({ params }: Props) {
         </div>
       )}
 
-      {isActive && <SharedSessionHub groupId={id} courseId={group.group_course_id} sessions={sharedSessions} />}
+      {isActive && <SharedSessionHub groupId={id} courseId={group.group_course_id} sessions={sharedSessions} workflowReady={workflowReady} />}
       {pendingReviewCount > 0 && <Link href={`/portal/instructor/review?groupId=${id}`} className="inline-flex min-h-11 items-center font-semibold text-(--cyan-strong)">{pendingReviewCount} submissions to review →</Link>}
 
       {/* ── 4. COURSE CONTENT (accordion, collapsed by default) ──────────────── */}

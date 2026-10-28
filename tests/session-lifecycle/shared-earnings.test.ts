@@ -6,6 +6,20 @@ import { getLiveInstructorFinance } from '@/modules/staff-finance/queries'
 vi.mock('@/lib/supabase/service', () => ({ createServiceClient: vi.fn() }))
 beforeEach(() => vi.clearAllMocks())
 describe('shared class earnings attribution', () => {
+  it.each([['requested', null, 0], ['confirmed', 80, 80]] as const)('uses %s participation with the approved snapshot rather than the lead group rate', async (state, rate, expected) => {
+    const ok = (data: unknown) => ({ data, error: null })
+    const db = createMockDb({
+      instructors: [ok({ salary_per_session: 200 })],
+      group_courses: [ok([{ id: 'gc', group_id: 'g' }])],
+      group_instructors: [ok([])],
+      session_participations: [ok([{ session_id: 'class', state, teaching_role: 'assistant', agreed_rate: rate }]), ok([{ session_id: 'class' }])],
+      session_instructors: [ok(state === 'confirmed' ? [{ session_id: 'class', submitted_at: '2026-10-28' }] : [])],
+      schedules: [ok([]), ok([{ id: 'class', group_course_id: 'gc', status: 'completed', scheduled_at: '2026-10-28T12:00:00Z' }])],
+      groups: [ok([{ id: 'g', name: 'Synthetic group' }])],
+    })
+    vi.mocked(createServiceClient).mockReturnValue(db as never)
+    expect(await getInstructorSessionEarnings('lead', ['branch'])).toMatchObject([{ amount: expected, participation_state: state, teaching_role: 'assistant' }])
+  })
   it('the management payroll report also excludes an unconfirmed shared preassignment', async () => {
     const db = createMockDb({
       schedules: [{ data: [{ id: 'class', branch_id: 'branch', group_course_id: 'gc' }], error: null }],
@@ -49,7 +63,7 @@ describe('shared class earnings attribution', () => {
       group_instructors: [{ data: [], error: null }],
       session_instructors: [{ data: [], error: null }, { data: [], error: null }],
       schedules: [{ data: [{ id: 'class', group_course_id: 'gc', status: 'completed' }], error: null }],
-      session_participations: [{ data: [{ session_id: 'class' }], error: null }],
+      session_participations: [{ data: [], error: null },{ data: [{ session_id: 'class' }], error: null }],
     })
     vi.mocked(createServiceClient).mockReturnValue(db as never)
     expect(await getInstructorSessionEarnings('lead', ['branch'])).toEqual([])

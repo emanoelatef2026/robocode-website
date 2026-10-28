@@ -20,7 +20,7 @@ describe('shared participation actions', () => {
   it('passes expected class identities so stale clients cannot create the next class', async () => {
     const d = db(); d.rpc.mockResolvedValue({ data: { sessionId: id, groupId: id }, error: null })
     await openSharedSession(id, id, null, 'Loops')
-    expect(d.rpc).toHaveBeenCalledWith('open_shared_instructor_session', expect.objectContaining({ p_expected_session: id, p_expected_previous: null }))
+    expect(d.rpc).toHaveBeenCalledWith('open_role_instructor_session', expect.objectContaining({ p_expected_session: id, p_expected_previous: null, p_role: 'lead' }))
   })
   it('denies instructor self-approval even if a stale token contains the management permission', async () => {
     const d = db()

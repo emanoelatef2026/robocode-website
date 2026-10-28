@@ -28,6 +28,8 @@ export const PREFERRED_METHOD_OPTIONS: { value: InstructorPreferredMethod; label
 // ── Session-level earning row (Session Breakdown table) ───────────────────────
 
 export interface InstructorSessionEarning {
+  participation_state?: string | null
+  teaching_role?: string | null
   schedule_id:   string
   scheduled_at:  string
   session_type:  SessionEarningType

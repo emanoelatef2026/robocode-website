@@ -7,6 +7,7 @@ export const createEvaluationSchema = z
   .object({
     student_id:         z.string().uuid(),
     group_id:           z.string().uuid().optional(),
+    schedule_id:        z.string().uuid().nullable().optional(),
     enrollment_id:       z.string().uuid().nullable().optional(),
     course_id:           z.string().uuid().nullable().optional(),
     branch_id:           z.string().uuid(),

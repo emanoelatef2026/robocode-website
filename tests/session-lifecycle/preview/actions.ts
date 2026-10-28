@@ -31,3 +31,4 @@ export const cancelSession = (...args: unknown[]) => perform('cancelSession', ar
 export const postponeSession = (...args: unknown[]) => perform('postponeSession', args)
 export const createStudentNote = (...args: unknown[]) => perform('createStudentNote', args)
 export const createInstructorEvaluation = (...args: unknown[]) => perform('createInstructorEvaluation', args)
+export const createInstructorEvaluationBatch = (...args: unknown[]) => perform('createInstructorEvaluationBatch', args)

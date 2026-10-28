@@ -45,6 +45,7 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
   const [facebook, setFacebook]         = useState(instructor?.facebook_url ?? '')
   const [whatsapp, setWhatsapp]         = useState(instructor?.whatsapp_number ?? '')
   const [salary, setSalary]             = useState(instructor?.salary_per_session?.toString() ?? '')
+  const [assistantSalary, setAssistantSalary] = useState(instructor?.assistant_salary_per_session?.toString() ?? '')
   const [currency, setCurrency]         = useState(instructor?.currency ?? 'EGP')
   const [paymentMethod, setPaymentMethod] = useState(instructor?.payment_method ?? '')
   const [wallet, setWallet]             = useState(instructor?.wallet_number ?? '')
@@ -93,6 +94,7 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
     fd.append('facebook_url', facebook)
     fd.append('whatsapp_number', whatsapp)
     fd.append('salary_per_session', salary)
+    fd.append('assistant_salary_per_session', assistantSalary)
     fd.append('currency', currency)
     fd.append('payment_method', paymentMethod)
     fd.append('wallet_number', wallet)
@@ -232,7 +234,8 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
           {section === 'financial' && (
             <>
               <div className="grid grid-cols-2 gap-4">
-                <FormField label="Salary per Session" type="number" value={salary} onChange={setSalary} />
+                <FormField label="Lead rate per session" type="number" value={salary} onChange={setSalary} />
+                <FormField label="Assistant rate per session" type="number" value={assistantSalary} onChange={setAssistantSalary} />
                 <div>
                   <label className="mb-1.5 block text-[13px] font-medium text-[#374151]">Currency</label>
                   <select value={currency} onChange={e => setCurrency(e.target.value)} className="w-full rounded-lg border border-[#E2E8F0] px-3 py-2 text-[13px] outline-none focus:border-[#0E7490]">

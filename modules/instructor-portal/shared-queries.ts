@@ -6,17 +6,32 @@ export interface SharedSessionItem {
   status: string; topic: string | null; attendance_revision: number; ended_at: string | null;
   participants: { instructor_id: string; name: string; state: string; joined_at: string | null }[];
   myState: string | null; joined: boolean;
+  leadInstructorId?: string | null; isLead?: boolean; myRole?: 'lead' | 'assistant' | null;
 }
 // Called only AFTER the page's group/session access check. Never a Server Action.
 export async function loadSharedSessions(groupId: string, instructorId: string): Promise<SharedSessionItem[]> {
+  return (await loadSharedSessionSnapshot(groupId, instructorId)).sessions
+}
+
+export async function loadSharedSessionSnapshot(groupId: string, instructorId: string): Promise<{ sessions: SharedSessionItem[]; workflowReady: boolean }> {
   const db = createServiceClient()
   const courses = await db.from('group_courses').select('id').eq('group_id', groupId)
   if (courses.error) throw new Error('Unable to load group courses. Please retry.')
-  if (!courses.data?.length) return []
-  const sessions = await db.from('schedules').select('id,group_course_id,session_number,scheduled_at,status,topic,attendance_revision,ended_at')
-    .in('group_course_id', courses.data.map(c => c.id)).order('scheduled_at', { ascending: false })
+  const fields = 'id,group_course_id,session_number,scheduled_at,status,topic,attendance_revision,ended_at'
+  const courseIds = (courses.data ?? []).map(c => c.id)
+  let workflowReady = true
+  let sessions = await db.from('schedules').select(`${fields},lead_instructor_id`)
+    .in('group_course_id', courseIds).order('scheduled_at', { ascending: false })
+  // A code preview can run against the previous schema. Preserve read access,
+  // but never fall back to legacy writes that bypass the new role safeguards.
+  if (sessions.error?.code === '42703' && sessions.error.message.includes('lead_instructor_id')) {
+    workflowReady = false
+    const legacySessions = await db.from('schedules').select(fields)
+      .in('group_course_id', courseIds).order('scheduled_at', { ascending: false })
+    sessions = { ...legacySessions, data: legacySessions.data?.map(row => ({ ...row, lead_instructor_id: null })) ?? null } as typeof sessions
+  }
   if (sessions.error) throw new Error('Unable to load shared sessions. Please retry.')
-  if (!sessions.data?.length) return []
+  if (!sessions.data?.length) return { sessions: [], workflowReady }
   const ids = sessions.data.map(s => s.id)
   const [participants, legacy] = await Promise.all([
     db.from('session_participations').select('session_id,instructor_id,state,joined_at').in('session_id', ids),
@@ -33,10 +48,11 @@ export async function loadSharedSessions(groupId: string, instructorId: string):
       names.set(i.id, [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Instructor')
     }
   }
-  return sessions.data.map(s => {
+  const rows = sessions.data.map<SharedSessionItem>(s => {
     const people = (participants.data ?? []).filter(p => p.session_id === s.id).map(p => ({ ...p, name: names.get(p.instructor_id) ?? 'Instructor' }))
     for (const p of legacy.data ?? []) if (p.session_id === s.id && p.submitted_at && !people.some(x => x.instructor_id === p.instructor_id)) people.push({ ...p, joined_at: null, state: 'confirmed', name: names.get(p.instructor_id) ?? 'Instructor' })
     const mine = people.find(p => p.instructor_id === instructorId)
-    return { ...s, participants: people, myState: mine?.state ?? null, joined: !!mine?.joined_at }
+    return { ...s, participants: people, myState: mine?.state ?? null, joined: !!mine?.joined_at, leadInstructorId: s.lead_instructor_id, isLead: s.lead_instructor_id === instructorId, myRole: s.lead_instructor_id === instructorId ? 'lead' : mine ? 'assistant' : null }
   })
+  return { sessions: rows, workflowReady }
 }

@@ -5,8 +5,11 @@ import Link from 'next/link'
 import SessionWorkspace from './SessionWorkspace'
 import StartSessionButton from './StartSessionButton'
 import { scheduleSessionEffects } from '@/modules/instructor-portal/session-effects'
-import { loadSharedSessions } from '@/modules/instructor-portal/shared-queries'
+import { loadSharedSessionSnapshot } from '@/modules/instructor-portal/shared-queries'
 import SessionParticipation from '@/components/portal/instructor/SessionParticipation'
+import styles from './SessionWorkspace.module.css'
+import { getSessionChangeRequests } from '@/modules/instructor-portal/change-queries'
+import SessionChangeReview from '@/components/portal/instructor/SessionChangeReview'
 
 interface Props { params: Promise<{ id: string; sid: string }> }
 
@@ -36,7 +39,11 @@ export default async function SessionDetailPage({ params }: Props) {
 
   const session = await getSessionDetail(sid, instructor.id)
   if (!session || session.group_id !== id) notFound()
-  const shared = (await loadSharedSessions(id, instructor.id)).find(s => s.id === sid)
+  const { sessions, workflowReady } = await loadSharedSessionSnapshot(id, instructor.id)
+  const shared = sessions.find(s => s.id === sid)
+  const isLead = shared?.isLead === true
+  const canPropose = workflowReady && !isLead && !!shared && ['requested','confirmed'].includes(shared.myState ?? '')
+  const changes = workflowReady ? await getSessionChangeRequests(sid,instructor.id,isLead) : []
   // A revisited completed session can resume its already-queued background job.
   // The database lease and unique award events make this safe alongside cron.
   if (session.status === 'completed') scheduleSessionEffects(sid)
@@ -45,10 +52,10 @@ export default async function SessionDetailPage({ params }: Props) {
   const isPostponed   = session.status === 'postponed'
 
   return (
-    <div className="space-y-5">
-      {shared && ['ongoing', 'completed'].includes(session.status) && <SessionParticipation key={`${sid}-${shared.myState}`} session={shared} />}
+    <div className={styles.page}>
+      {!workflowReady && <p role="status" className="rounded-lg border border-(--border) bg-(--amber-soft) p-3 text-sm font-semibold text-(--amber-dark)">Session workflow update is pending. Class details and attendance are available to view; changes will be enabled after the database update.</p>}
       {/* ── Breadcrumb ───────────────────────────────────────────────────────── */}
-      <div>
+      <div className={styles.sessionHeader}>
         <Link href={`/portal/instructor/groups/${id}`}
           className="text-sm text-[#64748B] hover:text-[#0B1F3A] transition">
           ← {session.group_name}
@@ -57,9 +64,6 @@ export default async function SessionDetailPage({ params }: Props) {
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <h1 className="text-xl font-bold text-[#0B1F3A]">
             Session {session.current_session_num}
-            {session.topic && (
-              <span className="ml-2 font-normal text-[#64748B]">· {session.topic}</span>
-            )}
           </h1>
           <span className={`rounded-full border px-2.5 py-0.5 text-xs font-medium ${STATUS_COLORS[session.status] ?? 'bg-[#F3F4F6] text-[#4B5563] border-[#E2E8F0]'}`}>
             {STATUS_LABELS[session.status] ?? session.status}
@@ -71,19 +75,23 @@ export default async function SessionDetailPage({ params }: Props) {
           )}
         </div>
         <p className="mt-0.5 text-sm text-[#64748B]">{session.course_title}</p>
+        <dl className={styles.meta}>
+          {[
+            { label: 'Date', value: new Date(session.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) },
+            { label: 'Time', value: new Date(session.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) },
+            { label: 'Duration', value: `${session.duration_minutes} min` },
+            { label: 'Delivery', value: session.delivery === 'offline' ? 'In person' : session.delivery === 'online' ? 'Online' : session.delivery ?? '—' },
+            ...(session.started_at ? [{ label: 'Started', value: new Date(session.started_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) }] : []),
+            ...(session.ended_at ? [{ label: 'Ended', value: new Date(session.ended_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) }] : []),
+          ].map(({ label, value }) => <div key={label} className={styles.metaItem}><dt>{label}</dt><dd>{value}</dd></div>)}
+        </dl>
+        {workflowReady && shared && ['ongoing', 'completed'].includes(session.status) && <SessionParticipation key={`${sid}-${shared.myState}`} session={shared} />}
       </div>
 
       {/* ── Curriculum Progress ──────────────────────────────────────────────── */}
       {session.progress.length > 0 && (
-        <div className="ds-card px-5 py-4">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#94A3B8]">
-              Curriculum Progress
-            </p>
-            <p className="text-xs text-[#64748B]">
-              {session.progress.filter((p) => p.status === 'completed').length} / {session.progress.length} completed
-            </p>
-          </div>
+        <details className={styles.progress}>
+          <summary>Curriculum progress · {session.progress.filter((p) => p.status === 'completed').length}/{session.progress.length} completed</summary>
           <div className="flex gap-1.5 overflow-x-auto pb-1">
             {session.progress.map((p) => {
               const isCurrent  = p.id === session.id
@@ -110,11 +118,11 @@ export default async function SessionDetailPage({ params }: Props) {
               )
             })}
           </div>
-        </div>
+        </details>
       )}
 
       {/* ── Start Session banner (only when scheduled) ──────────────────────── */}
-      {session.status === 'scheduled' && (
+      {workflowReady && session.status === 'scheduled' && (
         <div className="rounded-xl border-2 border-[#A7F3D0] bg-[#E7F8EE] p-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -158,21 +166,6 @@ export default async function SessionDetailPage({ params }: Props) {
       )}
 
       {/* ── Session meta chips ──────────────────────────────────────────────── */}
-      <div className="flex flex-wrap gap-x-6 gap-y-2 rounded-xl border border-(--border-soft) bg-(--bg-card) px-4 py-3">
-        {[
-          { label: 'Date',     value: new Date(session.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) },
-          { label: 'Time',     value: new Date(session.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) },
-          { label: 'Duration', value: `${session.duration_minutes} min` },
-          { label: 'Delivery', value: session.delivery ?? '—' },
-          ...(session.started_at ? [{ label: 'Started', value: new Date(session.started_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) }] : []),
-          ...(session.ended_at   ? [{ label: 'Ended',   value: new Date(session.ended_at).toLocaleTimeString('en-GB',   { hour: '2-digit', minute: '2-digit' }) }] : []),
-        ].map(({ label, value }) => (
-          <div key={label} className="flex items-baseline gap-2">
-            <p className="text-xs text-[#94A3B8]">{label}</p>
-            <p className="mt-0.5 text-sm font-medium text-[#0B1F3A]">{value}</p>
-          </div>
-        ))}
-      </div>
 
       {session.meeting_url && (
         <a href={session.meeting_url} target="_blank" rel="noopener noreferrer"
@@ -185,7 +178,8 @@ export default async function SessionDetailPage({ params }: Props) {
         </a>
       )}
 
-      <SessionWorkspace key={`${session.id}-${session.status}`} session={session} groupId={id} />
+      <SessionChangeReview requests={changes} isLead={isLead} students={session.attendance} participants={shared?.participants ?? []} />
+      <SessionWorkspace key={`${session.id}-${session.status}`} session={session} groupId={id} isLead={isLead} canPropose={canPropose} />
     </div>
   )
 }

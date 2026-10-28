@@ -4,11 +4,12 @@ import { useEffect, useId, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
 /** Portalled outside the roster form: neither HTML forms nor submit events nest. */
-export default function StudentSessionDialog({ title, studentName, onClose, children }: {
+export default function StudentSessionDialog({ title, studentName, onClose, children, wide = false }: {
   title: string
   studentName: string
   onClose: () => void
   children: React.ReactNode
+  wide?: boolean
 }) {
   const titleId = useId()
   const panelRef = useRef<HTMLDivElement>(null)
@@ -25,7 +26,7 @@ export default function StudentSessionDialog({ title, studentName, onClose, chil
       onSubmit={event => event.stopPropagation()}
       onMouseDown={event => { if (event.target === event.currentTarget) closeRef.current() }}>
       <div ref={panelRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
-        className="lms-shell ds-modal-panel max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto p-5 outline-none"
+        className={`lms-shell ds-modal-panel max-h-[calc(100dvh-2rem)] w-full ${wide ? 'max-w-xl' : 'max-w-md'} overflow-y-auto p-5 outline-none`}
         onKeyDown={event => {
           if (event.key === 'Escape') { event.stopPropagation(); closeRef.current(); return }
           if (event.key !== 'Tab') return

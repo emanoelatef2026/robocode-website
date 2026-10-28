@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { createStudentNote, createInstructorEvaluation } from '@/modules/instructor-portal/actions'
+import { createStudentNote, createInstructorEvaluationBatch } from '@/modules/instructor-portal/actions'
 import StudentNoteModal from '@/components/portal/instructor/StudentNoteModal'
 import StudentEvaluationModal from '@/components/portal/instructor/StudentEvaluationModal'
 
-vi.mock('@/modules/instructor-portal/actions', () => ({ createStudentNote: vi.fn(), createInstructorEvaluation: vi.fn() }))
+vi.mock('@/modules/instructor-portal/actions', () => ({ createStudentNote: vi.fn(), createInstructorEvaluationBatch: vi.fn() }))
 afterEach(cleanup)
 
 describe.each([
@@ -36,11 +36,12 @@ describe.each([
   it('submits only its own action, never the attendance form', async () => {
     const submit = vi.fn((event: React.FormEvent) => event.preventDefault())
     vi.mocked(createStudentNote).mockResolvedValue({ success: true, data: undefined } as never)
-    vi.mocked(createInstructorEvaluation).mockResolvedValue({ success: true, data: undefined } as never)
+    vi.mocked(createInstructorEvaluationBatch).mockResolvedValue({ success: true, data: { evaluationIds: ['test-evaluation'] } })
     render(<form onSubmit={submit}><Component studentId="test-student" studentName="Test Student" groupId="test-group" /></form>)
     fireEvent.click(screen.getByRole('button', { name: trigger }))
     if (_name === 'note') fireEvent.change(screen.getByPlaceholderText('Note about Test Student…'), { target: { value: 'Test note' } })
-    fireEvent.click(screen.getByRole('button', { name: _name === 'note' ? 'Add Note' : 'Add Evaluation' }))
+    else fireEvent.click(screen.getByRole('radio', { name: 'Understanding & application: 4 stars' }))
+    fireEvent.click(screen.getByRole('button', { name: _name === 'note' ? 'Add Note' : 'Save evaluation' }))
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(submit).not.toHaveBeenCalled()
   })

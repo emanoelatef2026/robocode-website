@@ -86,6 +86,7 @@ export interface InstructorOperationalRow {
   last_name: string | null
   phone: string | null
   salary_per_session: number | null
+  assistant_salary_per_session?: number | null
   created_at: string
   // Computed
   group_count: number
@@ -117,6 +118,7 @@ export interface FullInstructor {
   facebook_url: string | null
   whatsapp_number: string | null
   salary_per_session: number | null
+  assistant_salary_per_session?: number | null
   currency: string
   payment_method: string | null
   wallet_number: string | null

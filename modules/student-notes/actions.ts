@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requireAuth, requirePermission } from '@/modules/rbac/guards'
 import { getInstructorByUserId } from '@/modules/instructor-portal/queries'
+import { queueSessionChange } from '@/modules/instructor-portal/session-changes'
 import { logTimelineEvent } from '@/lib/timeline'
 import {
   seedStudentNoteNotification,
@@ -113,6 +114,13 @@ export async function createStudentNote(
   }
 
   const visibility: NoteVisibility = d.is_private ? 'PRIVATE_INSTRUCTOR' : 'INTERNAL_STAFF'
+
+  if (d.schedule_id && !d.is_private) {
+    const queued = await queueSessionChange(user.id, instructor.id, d.schedule_id, d.group_id, 'student_note', {
+      student_id: d.student_id, content: d.content, category: d.category, severity: d.severity, visibility,
+    })
+    if (queued) return queued.success ? { success: true, data: { noteId: queued.data.changeId } } : queued
+  }
 
   const { data: note, error: noteErr } = await db
     .from('student_notes')

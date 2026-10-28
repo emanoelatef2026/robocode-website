@@ -9,6 +9,8 @@ import { createEvaluationSchema, updateEvaluationSchema } from './schemas'
 import { EVALUATION_CRITERION_LABELS } from './types'
 import type { EvaluationCriterion } from './types'
 import type { ActionResult } from '@/types/app'
+import { z } from 'zod'
+import { queueSessionChange } from '@/modules/instructor-portal/session-changes'
 
 async function notifyEvaluationAudience(
   evaluationId: string,
@@ -17,9 +19,10 @@ async function notifyEvaluationAudience(
   customLabel: string | null | undefined,
   visibleToStudent: boolean,
   visibleToParent: boolean,
+  summaryLabel?: string,
 ): Promise<void> {
   try {
-    const label = criterion === 'CUSTOM' ? (customLabel ?? 'Custom') : EVALUATION_CRITERION_LABELS[criterion]
+    const label = summaryLabel ?? (criterion === 'CUSTOM' ? (customLabel ?? 'Custom') : EVALUATION_CRITERION_LABELS[criterion])
     if (visibleToStudent) {
       const studentUserId = await getStudentUserId(studentId)
       if (studentUserId) await seedEvaluationPublishedNotification(studentUserId, evaluationId, label)
@@ -36,18 +39,32 @@ async function notifyEvaluationAudience(
 export async function createStudentEvaluation(
   input: unknown
 ): Promise<ActionResult<{ evaluationId: string }>> {
-  const parsed = createEvaluationSchema.safeParse(input)
+  const result = await persistStudentEvaluations([input], false)
+  return result.success ? { success: true, data: { evaluationId: result.data.evaluationIds[0] } } : result
+}
+
+export async function createStudentEvaluationBatch(inputs: unknown): Promise<ActionResult<{ evaluationIds: string[] }>> {
+  return persistStudentEvaluations(inputs, true)
+}
+
+async function persistStudentEvaluations(inputs: unknown, batch: boolean): Promise<ActionResult<{ evaluationIds: string[] }>> {
+  const parsed = z.array(createEvaluationSchema).min(1).max(14).safeParse(inputs)
   if (!parsed.success) {
     return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
   }
-  const d = parsed.data
+  const entries = parsed.data
+  const d = entries[0]
+  if (entries.some(entry => entry.student_id !== d.student_id || entry.branch_id !== d.branch_id || entry.group_id !== d.group_id || entry.course_id !== d.course_id || entry.enrollment_id !== d.enrollment_id || entry.schedule_id !== d.schedule_id)
+    || new Set(entries.map(entry => entry.criterion)).size !== entries.length) {
+    return { success: false, error: { code: 'VALIDATION', message: 'Use unique criteria for one student and group.' } }
+  }
 
   const user = await requirePermission('manage_evaluations')
   const db = createServiceClient()
 
   if (user.globalRole === 'instructor') {
     // Assignment permits this group's students, never all students in its branch.
-    const forbidden: ActionResult<{ evaluationId: string }> = {
+    const forbidden: ActionResult<{ evaluationIds: string[] }> = {
       success: false, error: { code: 'FORBIDDEN', message: 'You cannot evaluate this student in this group.' },
     }
     if (!d.group_id) return forbidden
@@ -69,16 +86,24 @@ export async function createStudentEvaluation(
       const { data, error } = await db.from('student_enrollments').select('id').eq('id', d.enrollment_id).eq('student_id', d.student_id).eq('group_id', d.group_id).maybeSingle()
       if (error || !data) return forbidden
     }
+    if (d.schedule_id) {
+      if (entries.some(entry => entry.rating == null)) return { success: false, error: { code: 'VALIDATION', message: 'Session evaluations require star ratings.' } }
+      const queued = await queueSessionChange(user.id, teacher.data.id, d.schedule_id, d.group_id, 'evaluation', {
+        student_id: d.student_id, ratings: entries.map(entry => ({ criterion: entry.criterion, rating: entry.rating })),
+        custom_label: d.custom_label, feedback: d.feedback, visible_to_student: d.visible_to_student, visible_to_parent: d.visible_to_parent,
+      })
+      if (queued) return queued.success ? { success: true, data: { evaluationIds: [queued.data.changeId] } } : queued
+    }
   } else {
     await requirePermission('manage_evaluations', { branchId: d.branch_id })
   }
 
-  const { data: row, error } = await db
-    .from('student_evaluations')
-    .insert({
+  const payload = entries.map(d => ({
       student_id:         d.student_id,
-      enrollment_id:      d.enrollment_id ?? null,
+      group_id:           d.group_id ?? null,
+      schedule_id:        d.schedule_id ?? null,
       course_id:          d.course_id ?? null,
+      enrollment_id:      d.enrollment_id ?? null,
       branch_id:          d.branch_id,
       criterion:          d.criterion,
       custom_label:       d.custom_label ?? null,
@@ -89,31 +114,35 @@ export async function createStudentEvaluation(
       visible_to_student: d.visible_to_student,
       visible_to_parent:  d.visible_to_parent,
       evaluated_at:       d.evaluated_at ?? undefined,
-    })
-    .select('id')
-    .single()
+    }))
+  const query = db.from('student_evaluations').insert(batch ? payload : payload[0])
+  // One multi-row INSERT is atomic: a failed criterion cannot leave a partial evaluation.
+  const { data, error } = batch ? await query.select('id, criterion') : await query.select('id, criterion').single()
+  const savedRows = Array.isArray(data) ? data : data ? [data] : []
 
-  if (error || !row) {
+  if (error || savedRows.length !== entries.length) {
     return { success: false, error: { code: 'DB_ERROR', message: error?.message ?? 'Failed to save evaluation.' } }
   }
 
-  const evaluationId = (row as any).id as string
-  const label = d.criterion === 'CUSTOM' ? (d.custom_label ?? 'Custom') : EVALUATION_CRITERION_LABELS[d.criterion as EvaluationCriterion]
+  for (const [index, row] of savedRows.entries()) {
+    const d = batch ? entries.find(entry => entry.criterion === row.criterion)! : entries[index]
+    const label = d.criterion === 'CUSTOM' ? (d.custom_label ?? 'Custom') : EVALUATION_CRITERION_LABELS[d.criterion as EvaluationCriterion]
 
-  void logTimelineEvent({
-    student_id: d.student_id,
-    event_type: 'EVALUATION_RECORDED',
-    notes:      `${label}${d.score != null ? ` — ${d.score}` : ''}${d.rating != null ? ` — ${d.rating}★` : ''}`,
-    created_by: user.id,
-    branch_id:  d.branch_id,
-  }).catch(() => {})
-
+    void logTimelineEvent({
+      student_id: d.student_id,
+      event_type: 'EVALUATION_RECORDED',
+      notes:      `${label}${d.score != null ? ` — ${d.score}` : ''}${d.rating != null ? ` — ${d.rating}★` : ''}`,
+      created_by: user.id,
+      branch_id:  d.branch_id,
+    }).catch(() => {})
+  }
+  // One announcement per submission, rather than one notification for every skill.
   void notifyEvaluationAudience(
-    evaluationId, d.student_id, d.criterion as EvaluationCriterion, d.custom_label,
-    d.visible_to_student, d.visible_to_parent
+    savedRows[0].id, d.student_id, d.criterion as EvaluationCriterion, d.custom_label,
+    d.visible_to_student, d.visible_to_parent, batch ? 'Skills evaluation' : undefined,
   )
 
-  return { success: true, data: { evaluationId } }
+  return { success: true, data: { evaluationIds: savedRows.map(row => row.id as string) } }
 }
 
 export async function updateStudentEvaluation(input: unknown): Promise<ActionResult<void>> {

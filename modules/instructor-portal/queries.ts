@@ -1481,6 +1481,9 @@ export async function listSessionHistory(
 
   // Enrich with topic via separate safe query
   const sessionIds = baseSessions.map((s: any) => s.id as string)
+  const participationResult = await db.from('session_participations').select('session_id,state,teaching_role').eq('instructor_id',instructorId).in('session_id',sessionIds)
+  if (participationResult.error) throw new Error('Unable to verify teaching participation status.')
+  const myParticipation = new Map((participationResult.data ?? []).map(row=>[row.session_id,row]))
   const topicMap = new Map<string, string | null>()
   const { data: enrichRows } = await db
     .from('schedules')
@@ -1576,6 +1579,8 @@ export async function listSessionHistory(
     const att   = attCounts.get(s.id) ?? { present: 0, absent: 0, late: 0 }
     const total = info ? (groupStudentCount.get(info.groupId) ?? 0) : 0
     return {
+      participation_state: myParticipation.get(s.id)?.state ?? null,
+      teaching_role: myParticipation.get(s.id)?.teaching_role ?? null,
       session_id:      s.id,
       session_type:    'primary',
       session_num:     sessionNumMap.get(s.id) ?? 0,

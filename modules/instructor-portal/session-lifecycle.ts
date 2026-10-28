@@ -6,6 +6,7 @@ import { requirePermission } from '@/modules/rbac/guards'
 import { getInstructorByUserId } from './queries'
 import { scheduleSessionEffects } from './session-effects'
 import type { ActionResult } from '@/types/app'
+import { queueSessionChange, assertSessionLead } from './session-changes'
 
 const identity = z.object({ sessionId: z.string().uuid(), groupId: z.string().uuid() })
 const attendance = z.array(z.object({
@@ -38,6 +39,13 @@ export async function persistInstructorSession(
   const rawRevision = form.get('attendance_revision')
   const revision = rawRevision === null ? null : Number(rawRevision)
   if (revision !== null && (!Number.isSafeInteger(revision) || revision < 0)) return { success: false, error: { code: 'VALIDATION', message: 'Invalid attendance revision.' } }
+  if (complete) {
+    const lead = await assertSessionLead(user.id, instructor.id, sessionId, groupId)
+    if (!lead.success) return lead
+  } else {
+    const queued = await queueSessionChange(user.id, instructor.id, sessionId, groupId, 'attendance', { attendance: rows?.success ? rows.data : null, topic, expected_revision: revision })
+    if (queued) return queued.success ? { success: true, data: { attendanceRevision: revision ?? 0 } } : queued
+  }
   const { data, error } = await createServiceClient().rpc('save_shared_instructor_session', {
     p_actor_id: user.id, p_instructor_id: instructor.id,
     p_session_id: sessionId, p_group_id: groupId, p_complete: complete,

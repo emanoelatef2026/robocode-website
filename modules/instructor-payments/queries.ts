@@ -129,6 +129,9 @@ export async function getInstructorSessionEarnings(
     gcMap.set(gc.id, gc.group_id)
   }
   const gcIds = [...gcMap.keys()]
+  const participationResult = await db.from('session_participations').select('session_id,state,teaching_role,agreed_rate').eq('instructor_id',instructorId)
+  if (participationResult.error) throw new Error('Unable to load teaching approval status.')
+  const myParticipation = new Map((participationResult.data ?? []).map(row => [row.session_id,row]))
   const historicalLeadGroups = new Set((giRows ?? []).filter((r: any) => r.role === 'lead').map((r: any) => r.group_id))
   const directCourseIds = new Set((gcDirect ?? []).map((r: any) => r.id))
 
@@ -143,7 +146,7 @@ export async function getInstructorSessionEarnings(
     if (shared.error) throw new Error('Unable to verify confirmed teaching participation.')
     sharedDirectIds = new Set((shared.data ?? []).map(r => r.session_id))
   }
-  const directSessionIds = new Set<string>((siRows ?? []).filter(r => !sharedDirectIds.has(r.session_id) || r.submitted_at != null).map(r => r.session_id))
+  const directSessionIds = new Set<string>([...(siRows ?? []).filter(r => !sharedDirectIds.has(r.session_id) || r.submitted_at != null).map(r => r.session_id), ...[...myParticipation.values()].filter(row=>row.state==='requested').map(row=>row.session_id)])
 
   // 4. Fallback: regular sessions attributed via group_courses (historical, no session_instructors row)
   let fallbackSchedules: any[] = []
@@ -207,7 +210,8 @@ export async function getInstructorSessionEarnings(
     const groupId    = s.group_course_id ? (gcMap.get(s.group_course_id) ?? null) : null
     const groupRate  = groupId ? (groupRateMap.get(groupId) ?? null) : null
     const overrideR  = overrideMap.get(s.id) ?? null
-    const amount     = overrideR ?? groupRate ?? baseRate
+    const participation = myParticipation.get(s.id)
+    const amount = participation?.state === 'requested' || participation?.state === 'rejected' ? 0 : overrideR ?? (participation?.agreed_rate != null ? Number(participation.agreed_rate) : null) ?? groupRate ?? baseRate
 
     return {
       schedule_id:  s.id,
@@ -218,6 +222,8 @@ export async function getInstructorSessionEarnings(
       topic:        s.topic ?? null,
       amount,
       status:       s.status,
+      participation_state: participation?.state ?? null,
+      teaching_role: participation?.teaching_role ?? null,
     } satisfies InstructorSessionEarning
   }).sort((a, b) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime())
 }

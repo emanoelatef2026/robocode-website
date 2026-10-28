@@ -67,12 +67,12 @@ export default function OverviewTab({ overview, breakdown, filters }: Props) {
                       <span className="text-[13px] font-semibold text-[#0B1F3A]">{SESSION_TYPE_LABELS[s.session_type]}</span>
                       <span className="text-[13px] text-[#64748B] truncate">{s.group_name}</span>
                       <span className="text-[13px] font-bold text-[#0B1F3A]">{fmtEGP(s.amount)}</span>
-                      <StatusBadge status={s.status} dot />
+                      <div><StatusBadge status={s.status} dot />{s.participation_state === 'requested' && <p className="text-xs font-semibold text-(--amber-dark)">Awaiting approval · Not payable</p>}</div>
                     </div>
                     <div className="lg:hidden">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-[12px] text-[#94A3B8]">{dateFull}</span>
-                        <StatusBadge status={s.status} dot />
+                        <div><StatusBadge status={s.status} dot />{s.participation_state === 'requested' && <p className="text-xs font-semibold text-(--amber-dark)">Awaiting approval · Not payable</p>}</div>
                       </div>
                       <div className="mt-1 flex items-baseline justify-between gap-2">
                         <p className="truncate text-[13px] font-semibold text-[#0B1F3A]">{s.topic ?? s.group_name}</p>

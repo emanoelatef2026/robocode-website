@@ -10,7 +10,7 @@ vi.mock('@/modules/notifications/queries', () => ({
 }))
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission } from '@/modules/rbac/guards'
-import { createStudentEvaluation } from '@/modules/student-evaluations/actions'
+import { createStudentEvaluation, createStudentEvaluationBatch } from '@/modules/student-evaluations/actions'
 
 const student = '11111111-1111-4111-8111-111111111111'
 const branch = '22222222-2222-4222-8222-222222222222'
@@ -40,6 +40,13 @@ describe('Assigned instructor legacy evaluation access', () => {
     expect(db.rpc).toHaveBeenCalledWith('instructor_can_teach_group', {
       p_actor: 'teacher-1', p_instructor: 'instructor-1', p_group: group, p_permission: 'manage_evaluations',
     })
+  })
+  it('stages session evaluations and never publishes an assistant proposal directly', async () => {
+    const db = setup()
+    db.rpc.mockImplementation(async (name: string) => name === 'stage_session_change' ? { data: { direct: false, changeId: 'request-1' }, error: null } : { data: true, error: null })
+    const result = await createStudentEvaluationBatch([{ ...input, rating: 4, schedule_id: course }])
+    expect(result).toEqual({ success: true, data: { evaluationIds: ['request-1'] } })
+    expect(db.from).not.toHaveBeenCalledWith('student_evaluations')
   })
   it('requires a group context for instructors', async () => {
     const db = setup()
@@ -81,5 +88,30 @@ describe('Assigned instructor legacy evaluation access', () => {
     expect((await createStudentEvaluation({ ...input, group_id: undefined })).success).toBe(true)
     expect(requirePermission).toHaveBeenCalledWith('manage_evaluations', { branchId: branch })
     expect(db.rpc).not.toHaveBeenCalled()
+  })
+  it('saves every criterion in one insert after checking student membership', async () => {
+    const db = setup({ student_evaluations: [ok([{ id: 'evaluation-2', criterion: 'LOGIC' }, { id: 'evaluation-1', criterion: 'PROGRAMMING' }])] })
+    const result = await createStudentEvaluationBatch([{ ...input, rating: 4 }, { ...input, criterion: 'LOGIC', rating: 5 }])
+    expect(result.success).toBe(true)
+    expect(db.from.mock.calls.filter(([table]) => table === 'student_evaluations')).toHaveLength(1)
+    expect(db.rpc).toHaveBeenCalledOnce()
+  })
+  it('rejects an invalid later criterion, duplicates, or mixed students before any writes', async () => {
+    const db = setup()
+    for (const second of [{ ...input, criterion: 'LOGIC', rating: 6 }, input, { ...input, criterion: 'LOGIC', student_id: course }]) {
+      expect((await createStudentEvaluationBatch([input, second])).success).toBe(false)
+    }
+    expect(db.from).not.toHaveBeenCalled()
+  })
+  it('denies an entire batch for a student outside the group', async () => {
+    const db = setup({ group_students: [ok(null)] })
+    expect((await createStudentEvaluationBatch([input, { ...input, criterion: 'LOGIC', rating: 5 }])).success).toBe(false)
+    expect(db.from).not.toHaveBeenCalledWith('student_evaluations')
+  })
+  it('reports a failed batch insert without writing criteria individually', async () => {
+    const db = setup({ student_evaluations: [{ data: null, error: { message: 'Insert failed' } }] })
+    const result = await createStudentEvaluationBatch([input, { ...input, criterion: 'LOGIC', rating: 5 }])
+    expect(result.success).toBe(false)
+    expect(db.from.mock.calls.filter(([table]) => table === 'student_evaluations')).toHaveLength(1)
   })
 })

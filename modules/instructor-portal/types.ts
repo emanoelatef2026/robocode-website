@@ -216,6 +216,8 @@ export interface InstructorDashboardStats {
 }
 
 export interface SessionHistoryItem {
+  participation_state?: string | null
+  teaching_role?: string | null
   session_id:       string
   session_type:     'primary' | 'trial' | 'makeup'
   session_num:      number

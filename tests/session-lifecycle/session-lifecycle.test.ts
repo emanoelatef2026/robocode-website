@@ -7,6 +7,7 @@ import type { MockResult } from '../helpers/mock-db'
 vi.mock('server-only', () => ({}))
 vi.mock('next/server', () => ({ after: vi.fn() }))
 vi.mock('next/cache',      () => ({ revalidatePath: vi.fn() }))
+vi.mock('@/modules/instructor-portal/session-changes', () => ({ queueSessionChange: vi.fn().mockResolvedValue(null), assertSessionLead: vi.fn().mockResolvedValue({success:true,data:undefined}) }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 
 vi.mock('@/lib/supabase/service', () => ({ createServiceClient: vi.fn() }))

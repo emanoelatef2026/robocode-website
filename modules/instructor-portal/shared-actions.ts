@@ -14,6 +14,9 @@ function invalidate(data: SharedResult) {
   revalidatePath('/admin/instructors')
   revalidatePath('/portal/team-leader/instructors')
   revalidatePath('/admin/staff-finance')
+  revalidatePath('/portal/instructor/history')
+  revalidatePath('/portal/instructor/payments')
+  revalidatePath('/portal/instructor/homework')
 }
 function failure(error: { code?: string; message: string } | null): ActionResult<SharedResult> {
   return { success: false, error: {
@@ -33,16 +36,26 @@ export async function changeParticipation(sessionId: string, mode: 'join' | 'con
   invalidate(data)
   return { success: true, data }
 }
-export async function openSharedSession(courseId: string, expectedSession: string | null, expectedPrevious: string | null, topic: string): Promise<ActionResult<SharedResult>> {
+export async function openSharedSession(courseId: string, expectedSession: string | null, expectedPrevious: string | null, topic: string, role: 'lead' | 'assistant' = 'lead'): Promise<ActionResult<SharedResult>> {
   const user = await requirePermission('manage_attendance')
   const uuid = z.string().uuid()
-  if (!uuid.safeParse(courseId).success || !uuid.nullable().safeParse(expectedSession).success || !uuid.nullable().safeParse(expectedPrevious).success || !topic.trim() || topic.trim().toLowerCase() === 'no topic') return failure(null)
+  if (!uuid.safeParse(courseId).success || !uuid.nullable().safeParse(expectedSession).success || !uuid.nullable().safeParse(expectedPrevious).success || !['lead','assistant'].includes(role) || !topic.trim() || topic.trim().toLowerCase() === 'no topic') return failure(null)
   const instructor = await getInstructorByUserId(user.id)
   if (!instructor) return failure(null)
-  const { data, error } = await createServiceClient().rpc('open_shared_instructor_session', {
+  const { data, error } = await createServiceClient().rpc('open_role_instructor_session', {
     p_actor: user.id, p_instructor: instructor.id, p_course: courseId,
-    p_expected_session: expectedSession, p_expected_previous: expectedPrevious, p_topic: topic.trim(),
+    p_expected_session: expectedSession, p_expected_previous: expectedPrevious, p_topic: topic.trim(), p_role: role,
   })
+  if (error || !data?.sessionId) return failure(error)
+  invalidate(data)
+  return { success: true, data }
+}
+export async function reviewSessionChange(requestId: string, approve: boolean): Promise<ActionResult<SharedResult>> {
+  const user = await requirePermission('manage_attendance')
+  if (!z.string().uuid().safeParse(requestId).success || typeof approve !== 'boolean') return failure(null)
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) return failure(null)
+  const { data, error } = await createServiceClient().rpc('review_session_change', { p_actor: user.id, p_instructor: instructor.id, p_request: requestId, p_approve: approve })
   if (error || !data?.sessionId) return failure(error)
   invalidate(data)
   return { success: true, data }

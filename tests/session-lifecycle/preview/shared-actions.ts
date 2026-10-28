@@ -2,7 +2,7 @@
 const notify = (sessionId: string, state: string) => window.dispatchEvent(new CustomEvent('synthetic-shared', { detail: { sessionId, state } }))
 export async function changeParticipation(sessionId: string, mode: string, _reason?: string) {
   await new Promise(resolve => setTimeout(resolve, 300))
-  const state = mode === 'join' ? 'joined' : mode === 'request' ? 'requested' : 'confirmed'
+  const state = 'requested'
   notify(sessionId, state)
   return { success: true as const, data: { sessionId, groupId: 'synthetic-group', state } }
 }
@@ -12,4 +12,7 @@ export async function openSharedSession(_course: string, expected: string | null
 }
 export async function reviewParticipation(sessionId: string, _instructor: string, approve: boolean) {
   return { success: true as const, data: { sessionId, groupId: 'synthetic-group', state: approve ? 'confirmed' : 'rejected' } }
+}
+export async function reviewSessionChange(_requestId: string, approve: boolean) {
+  return { success: true as const, data: { sessionId: 'synthetic-session-1', groupId: 'synthetic-group-1', state: approve ? 'approved' : 'rejected' } }
 }

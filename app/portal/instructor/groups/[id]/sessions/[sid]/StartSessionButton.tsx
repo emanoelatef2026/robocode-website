@@ -15,9 +15,10 @@ export default function StartSessionButton({
   const [error, setError]            = useState<string | null>(null)
   const router = useRouter()
   const starting = useRef(false)
+  const [role,setRole] = useState<'lead'|'assistant'>('lead')
 
   const handleStart = () => {
-    if (starting.current) return
+    if (starting.current || role !== 'lead') return
     starting.current = true
     setError(null)
     startTransition(async () => {
@@ -33,10 +34,12 @@ export default function StartSessionButton({
 
   return (
     <div className="flex flex-col items-end gap-1.5">
+      <label className="text-sm font-semibold">Your role<select aria-label="Your role in this class" value={role} disabled={isPending} onChange={event=>setRole(event.target.value as 'lead'|'assistant')} className="ds-input ml-2"><option value="lead">Lead instructor</option><option value="assistant">Assistant instructor</option></select></label>
+      {role==='assistant' && <p role="alert" className="max-w-md text-sm text-(--amber-dark)">Ask the lead instructor to start this class, or select Lead instructor if you are replacing them. Your lead rate will apply.</p>}
       <button
         type="button"
         onClick={handleStart}
-        disabled={isPending}
+        disabled={isPending || role==='assistant'}
         className="rounded-lg bg-[#059669] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#047857] disabled:opacity-60"
       >
         {isPending ? 'Starting…' : 'Start Session'}

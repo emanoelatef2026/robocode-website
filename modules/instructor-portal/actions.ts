@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { canEditSessionContent } from './session-content'
 import { persistInstructorSession } from './session-lifecycle'
+import { queueSessionChange, assertSessionLead } from './session-changes'
 import { createServiceClient } from '@/lib/supabase/service'
 import { requirePermission, requireAuth } from '@/modules/rbac/guards'
 import { getInstructorByUserId } from './queries'
@@ -26,7 +27,8 @@ import {
   updateStudentNote as sharedUpdateStudentNote,
   deleteStudentNote as sharedDeleteStudentNote,
 } from '@/modules/student-notes/actions'
-import { createStudentEvaluation } from '@/modules/student-evaluations/actions'
+import { createStudentEvaluation, createStudentEvaluationBatch } from '@/modules/student-evaluations/actions'
+import { EVALUATION_CRITERIA } from '@/modules/student-evaluations/types'
 import type { EvaluationCriterion } from '@/modules/student-evaluations/types'
 import type { ActionResult } from '@/types/app'
 
@@ -268,6 +270,9 @@ export async function updateSession(
   if (d.room             !== undefined) updates.room             = d.room         || null
   if (d.duration_minutes !== undefined) updates.duration_minutes = d.duration_minutes
 
+  const queued = await queueSessionChange(user.id, instructor.id, d.session_id, d.group_id, 'session_details', updates)
+  if (queued) return queued.success ? { success: true, data: undefined } : queued
+
   const { error: updateErr } = await db.from('schedules').update(updates).eq('id', d.session_id)
   if (updateErr) {
     return { success: false, error: { code: 'DB_ERROR', message: updateErr.message } }
@@ -363,6 +368,8 @@ export async function addSessionRecording(
   const ctx = await getSessionAccessContext(d.session_id, instructor.id, db)
   if (!ctx) return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
 
+  const queued = await queueSessionChange(user.id, instructor.id, d.session_id, d.group_id, 'recording_add', { external_url: d.external_url, title: d.title || null, provider: detectProvider(d.external_url) })
+  if (queued) return queued.success ? { success: true, data: { id: queued.data.changeId } } : queued
   const { data: rec, error } = await db
     .from('session_recordings')
     .insert({
@@ -394,7 +401,9 @@ export async function removeSessionRecording(
   if (!instructor) return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
 
   const db = createServiceClient()
-  const { error } = await db.from('session_recordings').delete().eq('id', recordingId).eq('recorded_by', user.id)
+  const queued = await queueSessionChange(user.id, instructor.id, sessionId, groupId, 'recording_remove', { recording_id: recordingId })
+  if (queued) return queued.success ? { success: true, data: undefined } : queued
+  const { error } = await db.from('session_recordings').delete().eq('id', recordingId).eq('schedule_id', sessionId)
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
 
   revalidatePath(`/portal/instructor/groups/${groupId}/sessions/${sessionId}`)
@@ -465,6 +474,12 @@ export async function updateSessionResources(
 
   let resources: unknown[]
   try { resources = JSON.parse(d.resources_json) } catch { return { success: false, error: { code: 'VALIDATION', message: 'Invalid resources format.' } } }
+  const validatedResources = z.array(z.object({ title: z.string().trim().min(1).max(200), url: z.string().url().refine(value => /^https?:\/\//i.test(value), 'Use an HTTP or HTTPS link.') })).max(100).safeParse(resources)
+  if (!validatedResources.success) return { success: false, error: { code: 'VALIDATION', message: 'Resources must contain a title and a valid HTTP or HTTPS link.' } }
+  resources = validatedResources.data
+
+  const queued = await queueSessionChange(user.id, instructor.id, d.session_id, d.group_id, 'resources', { resources })
+  if (queued) return queued.success ? { success: true, data: undefined } : queued
 
   const { error } = await db.from('schedules').update({ resources_links: resources }).eq('id', d.session_id)
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
@@ -533,6 +548,8 @@ export async function createSessionHomework(
   const ctx = await getSessionAccessContext(d.session_id, instructor.id, db)
   if (!ctx) return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
 
+  const queued = await queueSessionChange(user.id, instructor.id, d.session_id, d.group_id, 'homework_create', d)
+  if (queued) return queued.success ? { success: true, data: { assignmentId: queued.data.changeId } } : queued
   const { data: assignment, error } = await db
     .from('assignments')
     .insert({
@@ -593,12 +610,14 @@ export async function updateSessionHomework(
   if (!ctx) return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this session.' } }
   const { data: session } = await db.from('schedules').select('status').eq('id', d.session_id).maybeSingle()
   if (!session || !canEditSessionContent((session as any).status)) return { success: false, error: { code: 'VALIDATION', message: 'Cancelled sessions cannot be edited.' } }
+  const queued = await queueSessionChange(user.id, instructor.id, d.session_id, d.group_id, 'homework_update', d)
+  if (queued) return queued.success ? { success: true, data: undefined } : queued
   const { error } = await db.from('assignments').update({
     module_id: d.module_id || null, title: d.title, description: d.description || null, instructions: d.instructions || null,
     type: d.type, submission_type: d.submission_type, max_score: d.max_score, due_at: d.due_at ? new Date(d.due_at).toISOString() : null,
     allow_late: d.allow_late, resubmission_allowed: d.resubmission_allowed, max_resubmissions: d.max_resubmissions,
     portfolio_eligible: d.portfolio_eligible,
-  }).eq('id', d.assignment_id).eq('schedule_id', d.session_id).eq('created_by', user.id)
+  }).eq('id', d.assignment_id).eq('schedule_id', d.session_id)
   if (error) return { success: false, error: { code: 'DB_ERROR', message: error.message } }
   revalidatePath(`/portal/instructor/groups/${d.group_id}/sessions/${d.session_id}`)
   revalidatePath('/portal/instructor/homework')
@@ -663,6 +682,8 @@ export async function cancelSession(
   if (currentStatus === 'completed') {
     return { success: false, error: { code: 'VALIDATION', message: 'Cannot cancel a completed session.' } }
   }
+  const lead = await assertSessionLead(user.id, instructor.id, d.session_id, d.group_id)
+  if (!lead.success) return lead
 
   const now = new Date().toISOString()
   let makeupSessionId: string | undefined
@@ -779,6 +800,8 @@ export async function postponeSession(
   if ((sessRow as any)?.status === 'completed') {
     return { success: false, error: { code: 'VALIDATION', message: 'Completed sessions cannot be postponed.' } }
   }
+  const lead = await assertSessionLead(user.id, instructor.id, d.session_id, d.group_id)
+  if (!lead.success) return lead
 
   const updates: Record<string, unknown> = {
     status:           'postponed',
@@ -941,5 +964,39 @@ export async function createInstructorEvaluation(
   if (result.success) {
     revalidatePath(`/portal/instructor/groups/${d.group_id}/students/${d.student_id}`)
   }
+  return result
+}
+
+export async function createInstructorEvaluationBatch(_prevState: unknown, formData: FormData): Promise<ActionResult<{ evaluationIds: string[] }>> {
+  const user = await requirePermission('manage_evaluations')
+  let ratings: unknown
+  try { ratings = JSON.parse(String(formData.get('ratings') ?? '[]')) }
+  catch { return { success: false, error: { code: 'VALIDATION', message: 'Invalid ratings.' } } }
+  const parsed = z.object({
+    student_id: z.string().uuid(),
+    group_id: z.string().uuid(),
+    schedule_id: z.string().uuid().optional(),
+    ratings: z.array(z.object({ criterion: z.enum(EVALUATION_CRITERIA), rating: z.number().int().min(1).max(5) })).min(1, 'Rate at least one criterion.').max(14),
+    custom_label: z.string().max(150).optional(),
+    feedback: z.string().max(5000),
+  }).safeParse({ student_id: formData.get('student_id'), group_id: formData.get('group_id'), schedule_id: formData.get('schedule_id') || undefined, ratings, custom_label: formData.get('custom_label') || undefined, feedback: formData.get('feedback') ?? '' })
+  if (!parsed.success) return { success: false, error: { code: 'VALIDATION', message: parsed.error.issues[0].message } }
+  const d = parsed.data
+  const instructor = await getInstructorByUserId(user.id)
+  if (!instructor) return { success: false, error: { code: 'FORBIDDEN', message: 'Instructor record not found.' } }
+  const db = createServiceClient()
+  if (!await hasInstructorGroupAccess(d.group_id, instructor.id, db)) return { success: false, error: { code: 'FORBIDDEN', message: 'You are not assigned to this group.' } }
+  const { data: group, error } = await db.from('groups').select('branch_id').eq('id', d.group_id).is('deleted_at', null).maybeSingle()
+  if (error || !group?.branch_id) return { success: false, error: { code: 'NOT_FOUND', message: 'Group not found.' } }
+  const result = await createStudentEvaluationBatch(d.ratings.map(item => ({
+    student_id: d.student_id, group_id: d.group_id, branch_id: group.branch_id,
+    schedule_id: d.schedule_id,
+    criterion: item.criterion, rating: item.rating, score: item.rating * 20,
+    custom_label: item.criterion === 'CUSTOM' ? d.custom_label?.trim() || null : null,
+    feedback: d.feedback.trim() || null,
+    visible_to_student: formData.get('visible_to_student') === 'true',
+    visible_to_parent: formData.get('visible_to_parent') === 'true',
+  })))
+  if (result.success) revalidatePath(`/portal/instructor/groups/${d.group_id}/students/${d.student_id}`)
   return result
 }

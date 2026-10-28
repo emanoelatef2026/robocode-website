@@ -30,6 +30,21 @@ beforeEach(() => { vi.clearAllMocks(); mocks.save.mockResolvedValue({ success: t
 afterEach(cleanup)
 
 describe('session attendance workspace', () => {
+  it('lets an assistant propose attendance but never offers to end the class', async () => {
+    const user = userEvent.setup()
+    render(<AttendanceForm sessionId="session" groupId="group" rows={rows} currentTopic="Loops" sessionStatus="ongoing" isLead={false} canPropose />)
+    expect(screen.queryByRole('button', { name: 'Save & end session' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Ada: Absent' }))
+    await user.click(screen.getByRole('button', { name: 'Submit attendance for review' }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    expect(screen.getByRole('status')).toHaveTextContent('Not published')
+    expect(mocks.end).not.toHaveBeenCalled()
+  })
+  it('keeps a non-participating instructor read-only', () => {
+    render(<AttendanceForm sessionId="session" groupId="group" rows={rows} currentTopic="Loops" sessionStatus="ongoing" isLead={false} canPropose={false} />)
+    expect(screen.getByRole('button', { name: 'Ada: Present' })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: /Submit attendance|Save attendance|Save & end/ })).not.toBeInTheDocument()
+  })
   it('requires starting a scheduled session before recording attendance', () => {
     setup('scheduled')
     expect(screen.getByRole('button', { name: 'Ada: Present' })).toBeDisabled()
@@ -118,7 +133,7 @@ describe('session attendance workspace', () => {
     const user = userEvent.setup()
     const session = { id: 'session', status: 'ongoing', topic: 'Loops', attendance: rows, notes: null, resources_links: [], recordings: [], course_modules: [], session_homework: [] } as unknown as SessionDetail
     const { container } = render(<SessionWorkspace session={session} groupId="group" />)
-    await user.click(screen.getAllByRole('button', { name: 'Add attendance note' })[0])
+    await user.click(screen.getByRole('button', { name: 'Add attendance note for Ada' }))
     await user.type(screen.getByLabelText('Attendance note for Ada'), 'Bring workbook')
     await user.click(screen.getByRole('tab', { name: 'Session content' }))
     expect(screen.getByLabelText('Session topic')).toHaveValue('Loops')
@@ -155,5 +170,46 @@ describe('session attendance workspace', () => {
     cleanup()
     setup('scheduled')
     expect(screen.queryByRole('button', { name: 'Save & end session' })).not.toBeInTheDocument()
+  })
+
+  it('shows all five statuses directly and keeps the entire register visible', async () => {
+    const user = setup()
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Attendance for Ada' }).querySelectorAll('button')).toHaveLength(5)
+    expect(screen.getByRole('link', { name: 'Lin' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Ada: Present' }))
+    expect(screen.getByRole('link', { name: 'Ada' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Lin' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Save attendance' }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    const fd = mocks.save.mock.calls[0][1] as FormData
+    expect(fd.getAll('student_ids[]')).toEqual(['s1', 's2'])
+    expect(fd.get('status_s1')).toBe('present')
+    expect(fd.get('status_s2')).toBe('late')
+    expect(fd.get('notes_s2')).toBe('Traffic')
+    expect(screen.getByRole('button', { name: 'Ada: Present' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('saves an excused status directly without changing other students', async () => {
+    const user = setup()
+    await user.click(screen.getByRole('button', { name: 'Ada: Excused' }))
+    await user.click(screen.getByRole('button', { name: 'Save attendance' }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
+    const fd = mocks.save.mock.calls[0][1] as FormData
+    expect(fd.get('status_s1')).toBe('excused')
+    expect(fd.get('status_s2')).toBe('late')
+  })
+
+  it('requires confirmation before bulk absent replaces attendance', async () => {
+    const confirmation = vi.spyOn(window, 'confirm').mockReturnValue(false)
+    const user = setup()
+    const bulk = screen.getByRole('button', { name: 'Mark all absent' })
+    await user.click(bulk)
+    expect(screen.getByRole('button', { name: 'Lin: Late' })).toHaveAttribute('aria-pressed', 'true')
+    confirmation.mockReturnValue(true)
+    await user.click(bulk)
+    expect(screen.getByRole('button', { name: 'Ada: Absent' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Lin: Absent' })).toHaveAttribute('aria-pressed', 'true')
+    confirmation.mockRestore()
   })
 })

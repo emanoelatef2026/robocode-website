@@ -27,6 +27,7 @@ interface RawInstructorRow {
   employee_id: string | null; hire_date: string | null
   instructor_code: string | null; status: string
   specializations: string[] | null; salary_per_session: number | null
+  assistant_salary_per_session?: number | null
   bio: string | null; alt_phone: string | null
   instagram_url: string | null; facebook_url: string | null
   whatsapp_number: string | null; currency: string | null
@@ -128,7 +129,7 @@ export async function listInstructorsOperational(
     .from('instructors')
     .select(
       `id, user_id, branch_id, employee_id, hire_date, instructor_code, status, specializations,
-       salary_per_session, created_at,
+       salary_per_session, assistant_salary_per_session, created_at,
        users!instructors_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name)),
        branches!instructors_branch_id_fkey(name)`
     )
@@ -176,6 +177,7 @@ export async function listInstructorsOperational(
     last_name:            row.users?.profiles?.last_name ?? null,
     phone:                row.users?.phone ?? null,
     salary_per_session:   row.salary_per_session ?? null,
+    assistant_salary_per_session: row.assistant_salary_per_session ?? null,
     created_at:           row.created_at,
     group_count:          0,
     student_count:        0,
@@ -312,7 +314,7 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
     .select(
       `id, user_id, branch_id, employee_id, hire_date, instructor_code, status, specializations,
        bio, alt_phone, instagram_url, facebook_url, whatsapp_number,
-       salary_per_session, currency, payment_method, wallet_number, bank_account_number,
+       salary_per_session, assistant_salary_per_session, currency, payment_method, wallet_number, bank_account_number,
        instapay_number, payment_link, payment_notes, working_days, max_weekly_load, internal_notes,
        created_at, updated_at,
        users!instructors_user_id_fkey(email, phone, profiles!profiles_user_id_fkey(first_name, last_name)),
@@ -369,6 +371,7 @@ export async function getInstructorDetailData(instructorId: string): Promise<Ins
     facebook_url:       instrRow.facebook_url ?? null,
     whatsapp_number:    instrRow.whatsapp_number ?? null,
     salary_per_session: instrRow.salary_per_session ?? null,
+    assistant_salary_per_session: instrRow.assistant_salary_per_session ?? null,
     currency:           instrRow.currency ?? 'EGP',
     payment_method:     instrRow.payment_method ?? null,
     wallet_number:      instrRow.wallet_number ?? null,

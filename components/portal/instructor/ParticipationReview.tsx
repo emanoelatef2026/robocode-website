@@ -23,8 +23,8 @@ export default function ParticipationReview({ requests }: { requests: Request[] 
   }
   const visible = requests.filter(r => !resolved.includes(`${r.sessionId}:${r.instructorId}`))
   return <section id="participation-approvals" className="ds-card mb-5 scroll-mt-24 space-y-3 p-4" aria-label="Participation approvals">
-    <h2 className="text-lg font-bold text-(--navy)">Teaching participation approvals ({visible.length})</h2>
-    <p className="text-sm text-(--text-2)">Late claims for completed classes. Approval records this instructor only; it never adds a class or charges students again.</p>
+    <h2 className="text-lg font-bold text-(--navy)">Assistant participation approvals ({visible.length})</h2>
+    <p className="text-sm text-(--text-2)">Requests for ongoing or completed classes. Approval locks the assistant rate; earnings count after completion. Student attendance and contracts stay shared.</p>
     {visible.length === 0 && <p className="text-sm font-medium">No pending requests.</p>}
     {visible.map(r => <article key={`${r.sessionId}:${r.instructorId}`} className="flex flex-wrap items-center justify-between gap-3 border-t border-(--border) pt-3">
       <div className="min-w-0"><h3 className="font-semibold">{r.name} · {r.group}</h3><p className="text-sm">{r.topic} · {new Date(r.date).toLocaleDateString('en-GB')}</p><p className="mt-1 whitespace-pre-wrap break-words text-sm text-(--text-2)">{r.reason}</p></div>

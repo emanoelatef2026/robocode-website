@@ -8,15 +8,15 @@ export function FinanceTab({ detail }: { detail: InstructorDetailData }) {
   const { instructor, finance, attendance_stats } = detail
   const sessionsCompleted = attendance_stats.sessions_completed
   const salaryPerSession  = instructor.salary_per_session ?? 0
-  const estimatedPayout   = salaryPerSession * sessionsCompleted
+  const assistantRate     = instructor.assistant_salary_per_session
   const currency          = instructor.currency ?? 'EGP'
 
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-1.5 md:gap-3">
-        <StatCard label="Salary / Session" value={salaryPerSession > 0 ? fmtCurrency(salaryPerSession, currency) : '—'} accent />
+        <StatCard label="Lead rate / class" value={fmtCurrency(salaryPerSession, currency)} accent />
+        <StatCard label="Assistant rate / class" value={assistantRate != null ? fmtCurrency(assistantRate, currency) : 'Not configured'} accent />
         <StatCard label="Sessions Taught"  value={sessionsCompleted} />
-        <StatCard label="Estimated Payout" value={estimatedPayout > 0 ? fmtCurrency(estimatedPayout, currency) : '—'} accent />
         <StatCard label="Currency"         value={currency} />
       </div>
 
