@@ -9,6 +9,9 @@ import StudentNoteModal from '@/components/portal/instructor/StudentNoteModal'
 import StudentEvaluationModal from '@/components/portal/instructor/StudentEvaluationModal'
 import styles from './SessionWorkspace.module.css'
 import SessionIcon from './SessionIcon'
+import WorkflowNotice from '@/components/portal/instructor/WorkflowNotice'
+import WorkflowConfirm from '@/components/portal/instructor/WorkflowConfirm'
+import { instructorError, needsAttendanceReload } from '@/modules/instructor-portal/ux'
 
 export type WorkspaceSection = 'attendance' | 'content' | 'homework' | 'notes'
 interface Props {
@@ -47,7 +50,7 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
   const topicInput = useRef<HTMLInputElement>(null)
   const container = useRef<HTMLDivElement>(null)
   const toolbar = useRef<HTMLDivElement>(null)
-  const confirmation = useRef<HTMLElement>(null)
+  const form = useRef<HTMLFormElement>(null)
   const [toolbarBounds, setToolbarBounds] = useState<{ left: number; width: number } | null>(null)
   const [toolbarHeight, setToolbarHeight] = useState(140)
   const [topic, setTopic] = useState(currentTopic ?? '')
@@ -62,6 +65,11 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
   const [completed, setCompleted] = useState(sessionStatus === 'completed' && !reviewMode)
   const [confirmEnd, setConfirmEnd] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
+  const [bulkAbsent, setBulkAbsent] = useState(false)
+  const [reloadConfirm, setReloadConfirm] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [topicError, setTopicError] = useState(false)
+  const [finishedElsewhere, setFinishedElsewhere] = useState(false)
   useEffect(() => {
     const measure = () => {
       const rect = container.current?.getBoundingClientRect()
@@ -76,11 +84,6 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
     return () => { observer?.disconnect(); window.removeEventListener('resize', measure) }
   }, [])
   useEffect(() => {
-    if (!confirmEnd) return
-    confirmation.current?.focus()
-    confirmation.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' })
-  }, [confirmEnd])
-  useEffect(() => {
     if (!hasChanges && !pending) return
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = '' }
     window.addEventListener('beforeunload', warn)
@@ -91,12 +94,26 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
   const validTopic = !!topic.trim() && topic.trim().toLowerCase() !== 'no topic'
   const marked = rows.filter(r => statuses[r.student_id]).length
   const summary = STATUSES.map(s => `${rows.filter(r => statuses[r.student_id] === s).length} ${s}`).join(' · ')
-  const dirty = () => { setHasChanges(true); setFeedback('Unsaved changes'); setError(null); setConfirmEnd(false) }
+  const dirty = () => { setHasChanges(true); setSaved(false); setFeedback('Unsaved changes'); setError(null); setTopicError(false); setConfirmEnd(false) }
+  function focusTopic() {
+    topicInput.current?.focus()
+    topicInput.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
+  }
+  function focusUnmarked() {
+    onSectionChange?.('attendance')
+    requestAnimationFrame(() => {
+      const missingStudent = rows.find(row => !statuses[row.student_id])
+      const missing = document.getElementById(`${formId}-${missingStudent?.student_id}-present`)
+      missing?.focus()
+      missing?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
+    })
+  }
 
   async function submit(data: FormData) {
     if (lock.current || externalBusy || !editable) return
     if (!validTopic) {
       setError('Enter a session topic before saving attendance.')
+      setTopicError(true)
       topicInput.current?.focus()
       topicInput.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
       return
@@ -111,19 +128,28 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
     try {
       const result = await (ending ? saveAndEndSession : saveAttendance)(null, data)
       if (!result.success) {
-        setError(result.error.message)
-        setFeedback('Error · Changes not saved. Your draft is kept.')
+        setError(instructorError(result.error, ending ? 'end this class' : 'save attendance'))
+        setConfirmEnd(false)
+        setFeedback('Save not confirmed · Review the message above')
         return
       }
       setConfirmEnd(false)
+      if (ending && result.data?.alreadyCompleted) {
+        setHasChanges(false)
+        setFinishedElsewhere(true)
+        router.refresh()
+        return
+      }
       if (result.data) setRevision(result.data.attendanceRevision)
       setHasChanges(false)
-      setFeedback(ending ? result.data?.alreadyCompleted ? 'Class was already completed. Shared attendance was not overwritten.' : 'Session completed · Saved' : reviewMode ? 'Submitted for lead review · Not published' : 'Saved')
+      setSaved(true)
+      setFeedback(ending ? result.data?.alreadyCompleted ? 'This class was already completed. Your entries were not applied.' : 'Session completed · Attendance saved' : reviewMode ? 'Submitted for lead review · Not published' : `Saved · Attendance for ${marked} of ${rows.length} students`)
       if (ending) { setCompleted(true); onCompleted?.() }
       router.refresh()
     } catch {
-      setError('Unable to save. Please try again. Your draft is kept.')
-      setFeedback('Error · Changes not saved')
+      setError(instructorError(null, ending ? 'end this class' : 'save attendance'))
+      setConfirmEnd(false)
+      setFeedback('Save not confirmed')
     } finally {
       lock.current = false
       setPending(false)
@@ -135,19 +161,14 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
     if (busy || lock.current) return
     if (!validTopic) {
       setError('Enter a session topic before completing the session.')
+      setTopicError(true)
       topicInput.current?.focus()
       topicInput.current?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
       return
     }
     if (marked < rows.length) {
-      setError('Mark attendance for every student before completing the session.')
-      onSectionChange?.('attendance')
-      requestAnimationFrame(() => {
-        const missingStudent = rows.find(row => !statuses[row.student_id])
-        const missing = document.getElementById(`${formId}-${missingStudent?.student_id}-present`)
-        missing?.focus()
-        missing?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
-      })
+      setError(`Choose an attendance status for the remaining ${rows.length - marked} student${rows.length - marked === 1 ? '' : 's'} before ending the class.`)
+      focusUnmarked()
       return
     }
     setError(null)
@@ -155,11 +176,18 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
   }
 
   const buttonClass = 'min-h-11 rounded-lg border border-(--border) px-4 py-2 text-sm font-medium transition hover:bg-(--bg-muted) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--cyan-strong) disabled:opacity-50'
+  if (finishedElsewhere) return <WorkflowNotice tone="warning" action={<button type="button" className="min-h-11 font-semibold underline" onClick={() => window.location.reload()}>Load completed record</button>}>This class was already completed. Your latest entries were not applied. Load the completed record to see the saved attendance.</WorkflowNotice>
   return (
     <div ref={container} className="space-y-4 text-(--text)" style={{ paddingBottom: editable ? toolbarHeight : 0 }}>
-      {reviewMode && <p className="rounded-lg border border-(--border) bg-(--amber-soft) p-3 text-sm text-(--amber-dark)">Assistant workspace: save proposed changes for the lead instructor to review. You cannot end this class. Participation approval is handled separately by administration.</p>}
-      {completed && <p role="status" className="rounded-xl border border-(--border) bg-(--bg-muted) p-3 text-sm font-medium">Completed class · attendance is read-only. Confirm your teaching participation separately above. Contact your administrator for attendance corrections.</p>}
-      <form id={formId} action={submit} onSubmit={event => {
+      {reviewMode && <WorkflowNotice tone="info">You are assisting this class. Submit changes for the lead to review; the lead ends the class. Your participation request is handled separately by administration.</WorkflowNotice>}
+      {completed && <WorkflowNotice tone="success">Class completed. Attendance is read-only. Contact your administrator if a correction is needed.</WorkflowNotice>}
+      {editable && <nav className={styles.steps} aria-label="Class checklist">
+        <button type="button" disabled={busy} onClick={focusTopic}><SessionIcon name={validTopic ? 'present' : 'notes'} /><span>Topic<small>{validTopic ? hasChanges ? 'Entered · save with attendance' : 'Entered' : 'Required'}</small></span></button>
+        <button type="button" disabled={busy} onClick={() => { onSectionChange?.('attendance'); if (marked < rows.length) focusUnmarked() }}><SessionIcon name="attendance" /><span>Attendance<small>{marked}/{rows.length} selected · {hasChanges ? 'Unsaved' : saved ? reviewMode ? 'Sent for review' : 'Saved' : 'Loaded record'}</small></span></button>
+        <button type="button" disabled={busy} onClick={() => onSectionChange?.('content')}><SessionIcon name="content" /><span>Content &amp; homework<small>Optional · saved separately</small></span></button>
+        {canEnd && <button type="button" disabled={busy} onClick={reviewEnd}><SessionIcon name="present" /><span>Finish<small>{validTopic && marked === rows.length ? 'Ready to review' : 'Complete topic & attendance'}</small></span></button>}
+      </nav>}
+      <form ref={form} id={formId} action={submit} onSubmit={event => {
         event.preventDefault()
         const submitter = (event.nativeEvent as SubmitEvent).submitter
         void submit(new FormData(event.currentTarget, submitter))
@@ -174,7 +202,8 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
         </div>)}
         <fieldset disabled={busy || !editable} className={styles.topic}>
           <label htmlFor={`${formId}-topic`}>Session topic</label>
-          <input ref={topicInput} id={`${formId}-topic`} name="topic" required value={topic} onChange={e => { setTopic(e.target.value); dirty() }} className="ds-input min-h-11 w-full" placeholder="What are students learning today?" />
+          <input ref={topicInput} id={`${formId}-topic`} name="topic" required onInvalid={() => setTopicError(true)} aria-invalid={topicError} aria-describedby={topicError ? `${formId}-topic-error` : undefined} value={topic} onChange={e => { setTopic(e.target.value); dirty() }} className="ds-input min-h-11 w-full" placeholder="For example: loops and a simple game" />
+          {topicError && <p id={`${formId}-topic-error`} className="text-sm font-semibold text-(--red-dark)">Enter a session topic before saving.</p>}
         </fieldset>
         {navigation}
         <fieldset disabled={busy || !editable} className="min-w-0">
@@ -184,13 +213,13 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
                 <h2><SessionIcon name="attendance" />Attendance <span>{marked}/{rows.length} marked</span></h2>
                 <div className={styles.counts}>
                   {STATUSES.filter(status => rows.some(row => statuses[row.student_id] === status)).map(status => <span key={status} className={selectedColors[status]}>{rows.filter(row => statuses[row.student_id] === status).length} {status}</span>)}
-                  <span>{rows.length - marked} unmarked</span>
+                  <span>{rows.length - marked} unmarked{hasChanges ? ' · Not saved yet' : ''}</span>
                 </div>
               </div>
               <div className={styles.headerActions}>
                 {rows.length > 0 && <>
                   <button type="button" className={styles.markAll} onClick={() => { setStatuses(Object.fromEntries(rows.map(row => [row.student_id, 'present']))); dirty() }}><SessionIcon name="present" />Mark all present</button>
-                  <button type="button" className={styles.markAllAbsent} onClick={() => { if (window.confirm('Mark every student absent? This replaces all current attendance choices.')) { setStatuses(Object.fromEntries(rows.map(row => [row.student_id, 'absent']))); dirty() } }}><SessionIcon name="absent" />Mark all absent</button>
+                  <button type="button" className={styles.markAllAbsent} onClick={() => setBulkAbsent(true)}><SessionIcon name="absent" />Mark all absent</button>
                 </>}
               </div>
             </div>
@@ -222,19 +251,19 @@ export default function AttendanceForm({ sessionId, groupId, rows, currentTopic,
       </section>
       {children}
       {editable && <div ref={toolbar} style={{ left: toolbarBounds?.left ?? '1rem', width: toolbarBounds?.width ?? 'calc(100% - 2rem)' }} className={`${styles.toolbar} fixed bottom-[calc(var(--bottom-nav-height)+var(--safe-bottom))] z-(--z-fab) max-h-[60dvh] overflow-y-auto rounded-xl border border-(--border) bg-(--bg-card) shadow-lg md:bottom-4`}>
-        {error && <div role="alert" className="mb-3 text-sm text-(--red-dark)">{error}<button type="button" className="ml-2 min-h-11 font-semibold underline" onClick={() => { if (window.confirm('Reload shared attendance? Your unsaved draft will be discarded.')) window.location.reload() }}>Reload latest attendance</button></div>}
-        {confirmEnd && canEnd && <section ref={confirmation} tabIndex={-1} role="region" aria-label="Confirm session completion" className="mb-4 space-y-2 border-b border-(--border) pb-4">
-          <h2 className="text-sm font-semibold">Complete this session?</h2>
-          <p className="text-sm text-(--text-2)">Topic: {topic || 'Missing topic'}</p>
-          <p className="text-sm text-(--text-3)">{summary} · {rows.length - marked} unmarked</p>
-          <p className="text-sm text-(--muted)">This will save student attendance, end the shared class for everyone, and automatically confirm that you taught it. Co-teachers confirm their own teaching separately; students are charged only once.</p>
-          <div className="flex flex-wrap gap-2"><button type="submit" form={formId} name="intent" value="end" disabled={busy} className={`${buttonClass} bg-(--navy) text-white hover:bg-(--navy-light)`}>Confirm save &amp; end</button><button type="button" disabled={busy} onClick={() => setConfirmEnd(false)} className={buttonClass}>Keep editing</button></div>
-        </section>}
+        {error && <WorkflowNotice tone="error" action={needsAttendanceReload(error) ? <button type="button" className="min-h-11 font-semibold underline" onClick={() => setReloadConfirm(true)}>Reload latest attendance</button> : undefined}>{error}</WorkflowNotice>}
         <div className={styles.toolbarContent}>
-          <p role="status" aria-live="polite" className={`${styles.feedback} ${error ? styles.feedbackError : busy ? styles.feedbackBusy : hasChanges ? styles.unsaved : feedback === 'Saved' ? styles.feedbackSaved : ''}`}>{externalBusy ? 'Saving session changes…' : feedback}</p>
+          <p role="status" aria-live="polite" className={`${styles.feedback} ${error ? styles.feedbackError : busy ? styles.feedbackBusy : hasChanges ? styles.unsaved : saved ? styles.feedbackSaved : ''}`}>{externalBusy ? 'Saving session changes…' : feedback}</p>
           <div className={styles.saveActions}><button type="submit" form={formId} name="intent" value="save" disabled={busy || rows.length === 0} className={buttonClass}><SessionIcon name="save" />{reviewMode ? 'Submit attendance for review' : 'Save attendance'}</button>{canEnd && <button type="submit" form={formId} name="intent" value="end" disabled={busy} onClick={event => { event.preventDefault(); reviewEnd() }} className={`${buttonClass} bg-(--navy) text-white hover:bg-(--navy-light)`}><SessionIcon name="present" />Save &amp; end session</button>}</div>
         </div>
       </div>}
+      {confirmEnd && canEnd && <WorkflowConfirm title="Complete this session?" confirmLabel="Confirm save & end" busy={busy} onCancel={() => setConfirmEnd(false)} onConfirm={() => { if (!form.current) return; const data = new FormData(form.current); data.set('intent', 'end'); void submit(data) }}>
+        <p className="font-semibold text-(--navy)">{topic}</p><p>{summary}</p>
+        <p>Save attendance and close this shared class for everyone. Students are charged once. Assistant requests remain subject to administration approval.</p>
+        {error && <WorkflowNotice tone="error">{error}</WorkflowNotice>}
+      </WorkflowConfirm>}
+      {bulkAbsent && <WorkflowConfirm title="Mark every student absent?" confirmLabel="Mark all absent" danger onCancel={() => setBulkAbsent(false)} onConfirm={() => { setStatuses(Object.fromEntries(rows.map(row => [row.student_id, 'absent']))); dirty(); setBulkAbsent(false) }}><p>This replaces the attendance choices for all {rows.length} students. Save attendance to apply the change.</p></WorkflowConfirm>}
+      {reloadConfirm && <WorkflowConfirm title="Reload the latest attendance?" confirmLabel="Discard draft & reload" danger onCancel={() => setReloadConfirm(false)} onConfirm={() => window.location.reload()}><p>Your unsaved attendance choices and topic edits will be discarded. The latest shared record will be loaded.</p></WorkflowConfirm>}
     </div>
   )
 }

@@ -9,6 +9,9 @@ import { PROJECT_STATUS_CONFIG } from '@/modules/portfolio/types'
 import Link from 'next/link'
 import EmptyState from '@/components/admin/EmptyState'
 import StatusBadge from '@/components/admin/StatusBadge'
+import SessionIcon from '@/app/portal/instructor/groups/[id]/sessions/[sid]/SessionIcon'
+import { getTeachingTasks } from '@/modules/instructor-portal/task-queries'
+import WorkflowNotice from '@/components/portal/instructor/WorkflowNotice'
 
 interface Props {
   searchParams: Promise<{ groupId?: string }>
@@ -29,20 +32,22 @@ export default async function ReviewCenterPage({ searchParams }: Props) {
 
   const { groupId } = await searchParams
 
-  const [homework, projects, missingEvaluations] = await Promise.all([
+  const [homework, projects, missingEvaluations, teachingTasks] = await Promise.all([
     listInboxSubmissions(instructor.id, 'pending', groupId, 8),
     listProjectsForInstructorReview(instructor.id, 'pending_review', groupId),
     getStudentsMissingEvaluation(instructor.id, 8),
+    getTeachingTasks(instructor.id).catch(() => null),
   ])
 
-  const totalPending = homework.length + projects.length + missingEvaluations.length
+  const assistantReviews = teachingTasks?.reviews.filter(task => !groupId || task.groupId === groupId) ?? []
+  const totalPending = homework.length + projects.length + missingEvaluations.length + assistantReviews.length
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-[#0B1F3A]">Review Center</h1>
+        <h1 className="flex items-center gap-2 text-xl font-bold text-(--navy)"><SessionIcon name="notes" />Review Center</h1>
         <p className="mt-0.5 text-sm text-[#64748B]">
-          Everything waiting on you, in one place — {totalPending} item{totalPending !== 1 ? 's' : ''}
+          Start with student submissions, then add feedback. Showing the latest items in each section.
         </p>
         {groupId && (
           <Link href="/portal/instructor/review" className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-[#C2410C] hover:underline">
@@ -51,13 +56,18 @@ export default async function ReviewCenterPage({ searchParams }: Props) {
         )}
       </div>
 
-      {totalPending === 0 ? (
+      {!teachingTasks && <WorkflowNotice tone="warning">Assistant changes could not be loaded. You can still review student work below. Check your groups for assistant changes.</WorkflowNotice>}
+      {totalPending === 0 && teachingTasks ? (
         <EmptyState
           title="All caught up"
-          description="No homework, portfolio projects, or evaluations are waiting on you right now."
+          description="No assistant changes, student submissions, or evaluations are waiting on you right now."
         />
       ) : (
         <div className="space-y-6">
+          {assistantReviews.length > 0 && <section aria-label="Assistant changes">
+            <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-(--navy)"><SessionIcon name="people" />Assistant changes</h2>
+            <div className="ds-card divide-y divide-(--border-soft)">{assistantReviews.map(task => <Link key={task.sessionId} href={`/portal/instructor/groups/${task.groupId}/sessions/${task.sessionId}#change-requests`} className="flex min-h-16 flex-wrap items-center justify-between gap-2 p-4 hover:bg-(--bg-muted)"><span><strong className="block text-sm text-(--navy)">{task.groupName}</strong><span className="text-xs text-(--text-2)">Review changes before applying them to the class</span></span><span className="text-sm font-semibold text-(--cyan-strong)">Review changes →</span></Link>)}</div>
+          </section>}
 
           {/* ── Homework ─────────────────────────────────────────────────── */}
           <section>

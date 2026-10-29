@@ -13,11 +13,13 @@ type FormSection = 'basic' | 'account' | 'financial' | 'social' | 'availability'
 const SECTIONS: { key: FormSection; label: string }[] = [
   { key: 'basic',        label: 'Basic'        },
   { key: 'account',      label: 'Account'      },
+  { key: 'financial',    label: 'Financial'    },
   { key: 'social',       label: 'Social'       },
   { key: 'availability', label: 'Availability' },
 ]
 
-export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
+export function InstructorFormModal({ instructor, options, onClose, onSaved, canManageRates = false }: {
+  canManageRates?:    boolean
   instructor:        FullInstructor | null
   options:           InstructorFormOptions
   defaultBranchIds?: string[]
@@ -66,6 +68,11 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
     if (!firstName.trim() || !lastName.trim()) { setError('Full name is required.'); return }
     if (!isEdit && !password.trim()) { setError('Password is required.'); return }
     if (branchIds.length === 0) { setError('Select at least one branch.'); return }
+    if (canManageRates && [salary, assistantSalary].some(rate => rate.trim() !== '' && (!Number.isFinite(Number(rate)) || Number(rate) < 0))) {
+      setSection('financial')
+      setError('Enter a valid rate of zero or more for each role.')
+      return
+    }
     if (paymentMethod) {
       const paymentError = validatePaymentMethodFields({
         payment_method:      paymentMethod,
@@ -93,8 +100,10 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
     fd.append('instagram_url', instagram)
     fd.append('facebook_url', facebook)
     fd.append('whatsapp_number', whatsapp)
-    fd.append('salary_per_session', salary)
-    fd.append('assistant_salary_per_session', assistantSalary)
+    if (canManageRates) {
+      fd.append('salary_per_session', salary)
+      fd.append('assistant_salary_per_session', assistantSalary)
+    }
     fd.append('currency', currency)
     fd.append('payment_method', paymentMethod)
     fd.append('wallet_number', wallet)
@@ -132,7 +141,7 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
         </div>
 
         <div className="flex border-b border-[#E2E8F0] px-2 md:px-4 shrink-0 overflow-x-auto">
-          {SECTIONS.map(s => (
+          {SECTIONS.filter(s => s.key !== 'financial' || canManageRates).map(s => (
             <button key={s.key} onClick={() => setSection(s.key)}
               className={`flex-1 md:flex-none px-2 md:px-3 py-2.5 text-[12px] md:text-[13px] font-medium border-b-2 transition whitespace-nowrap text-center ${section === s.key ? 'border-[#0E7490] text-[#C2410C]' : 'border-transparent text-[#64748B] hover:text-[#0B1F3A]'}`}>
               {s.label}
@@ -231,8 +240,9 @@ export function InstructorFormModal({ instructor, options, onClose, onSaved }: {
             </>
           )}
 
-          {section === 'financial' && (
+          {section === 'financial' && canManageRates && (
             <>
+              <p className="rounded-lg bg-(--bg-muted) p-3 text-sm font-medium text-(--text-2)">Set the amount paid per class for each teaching role. Assistant earnings require administration approval and a completed class.</p>
               <div className="grid grid-cols-2 gap-4">
                 <FormField label="Lead rate per session" type="number" value={salary} onChange={setSalary} />
                 <FormField label="Assistant rate per session" type="number" value={assistantSalary} onChange={setAssistantSalary} />

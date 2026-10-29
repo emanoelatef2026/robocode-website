@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import SessionIcon from '@/app/portal/instructor/groups/[id]/sessions/[sid]/SessionIcon'
 
 interface QuickStartSession {
   status:       string
@@ -20,12 +21,12 @@ interface Props {
   quickStart:           QuickStartSession | null
 }
 
-function StatChip({ icon, value, label }: { icon: string; value: string | number; label: string }) {
+function StatChip({ icon, value, label }: { icon: 'late' | 'notes' | 'save'; value: string | number; label: string }) {
   return (
     <div className="flex items-center gap-1 rounded-full border border-white/8 bg-white/10 px-2.5 py-[5px]">
-      <span className="text-[14px]">{icon}</span>
+      <SessionIcon name={icon} />
       <span className="text-[12px] font-bold text-white">{value}</span>
-      <span className="text-[11px] text-white/55">{label}</span>
+      <span className="text-[11px] text-white/80">{label}</span>
     </div>
   )
 }
@@ -36,7 +37,7 @@ export default function InstructorHero({
 }: Props) {
   const firstName = name.split(' ')[0] || 'Instructor'
   const initials   = name.split(' ').slice(0, 2).map(w => w[0]?.toUpperCase() ?? '').join('') || 'I'
-  const greeting   = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 18 ? 'Good afternoon' : 'Good evening'
+  const greeting   = Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Africa/Cairo' }).format(new Date())) < 12 ? 'Good morning' : Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Africa/Cairo' }).format(new Date())) < 18 ? 'Good afternoon' : 'Good evening'
 
   return (
     <div className="relative overflow-hidden rounded-2xl" style={{ background: 'linear-gradient(135deg, #0B1F3A 0%, #16304F 60%, #1E3A5F 100%)' }}>
@@ -57,10 +58,10 @@ export default function InstructorHero({
               <p className="truncate text-[20px] font-bold leading-tight tracking-[-0.02em] text-white">
                 {greeting}, {firstName}
               </p>
-              <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] text-white/55">
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] text-white/80">
                 {branchName && <span>{branchName}</span>}
                 <span>
-                  {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Africa/Cairo' })}
                 </span>
               </div>
             </div>
@@ -69,18 +70,18 @@ export default function InstructorHero({
             <div className="flex shrink-0 items-center gap-1 rounded-full border border-white/8 bg-white/10 px-2.5 py-1">
               <span className="text-[13px]">⭐</span>
               <span className="text-[13px] font-bold text-white">{ratingAvg.toFixed(1)}</span>
-              {ratingCount != null && <span className="text-[11px] text-white/55">({ratingCount})</span>}
+              {ratingCount != null && <span className="text-[11px] text-white/80">({ratingCount})</span>}
             </div>
           )}
         </div>
 
         {/* Stat chips */}
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <StatChip icon="📅" value={todaySessionCount} label={todaySessionCount === 1 ? 'session today' : 'sessions today'} />
+          <StatChip icon="late" value={todaySessionCount} label={todaySessionCount === 1 ? 'session today' : 'sessions today'} />
           {pendingReviewsCount > 0 && (
-            <StatChip icon="📝" value={pendingReviewsCount} label="to review" />
+            <StatChip icon="notes" value={pendingReviewsCount} label="to review" />
           )}
-          <StatChip icon="💰" value={thisMonthEarnings} label="this month" />
+          <StatChip icon="save" value={thisMonthEarnings} label="approved this month" />
         </div>
 
         {/* Quick-start CTA — the single most prominent action on the page */}
@@ -90,7 +91,7 @@ export default function InstructorHero({
               <p className="text-[12.5px] font-semibold text-white">
                 {quickStart.status === 'ongoing' ? 'Session in progress' : 'Next class ready'}
               </p>
-              <p className="mt-0.5 truncate text-[12px] text-white/65">
+              <p className="mt-0.5 truncate text-[12px] text-white/80">
                 {quickStart.group_name}{quickStart.course_title ? ` — ${quickStart.course_title}` : ''}
               </p>
             </div>

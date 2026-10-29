@@ -9,7 +9,7 @@
 .rejected { color: var(--red-dark); background: var(--red-soft); }
 .help { margin: 6px 0 0; color: var(--text-2); font-size: 12px; line-height: 1.7; }
 .actions:empty { display: none; }
-.button { min-height: 44px; padding: 9px 16px; border: 1px solid var(--cyan-strong); border-radius: 8px; background: color-mix(in srgb, var(--cyan-strong) 8%, white); color: var(--cyan-strong); font-size: 12px; font-weight: 600; cursor: pointer; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 9px 16px; border: 1px solid var(--cyan-strong); border-radius: 8px; background: color-mix(in srgb, var(--cyan-strong) 8%, white); color: var(--cyan-strong); font-size: 12px; font-weight: 600; cursor: pointer; }
 .button:hover { background: var(--cyan-strong); color: white; }
 .button:focus-visible, .participants summary:focus-visible { outline: 2px solid var(--cyan-strong); outline-offset: 3px; }
 .button:disabled { opacity: .55; cursor: not-allowed; }

@@ -4,6 +4,10 @@ import { startTransition, useActionState, useEffect, useId, useRef, useState } f
 import { createInstructorEvaluationBatch } from '@/modules/instructor-portal/actions'
 import type { EvaluationCriterion } from '@/modules/student-evaluations/types'
 import styles from './QuickEvaluation.module.css'
+import WorkflowNotice from './WorkflowNotice'
+import { recoverInstructorAction } from '@/modules/instructor-portal/ux'
+
+const saveEvaluation = recoverInstructorAction(createInstructorEvaluationBatch)
 
 // A short, subject-neutral rubric; keep existing criterion keys for historical compatibility.
 const QUICK_CRITERIA: readonly { criterion: EvaluationCriterion; title: string }[] = [
@@ -18,7 +22,7 @@ export function StarIcon({ filled = false }: { filled?: boolean }) {
 }
 
 export default function QuickEvaluationFields({ studentId, groupId, onSaved, scheduleId, reviewMode = false }: { studentId: string; groupId: string; onSaved?: () => void; scheduleId?: string; reviewMode?: boolean }) {
-  const [state, action, pending] = useActionState(createInstructorEvaluationBatch, null)
+  const [state, action, pending] = useActionState(saveEvaluation, null)
   const [ratings, setRatings] = useState<Partial<Record<EvaluationCriterion, number>>>({})
   const id = useId()
   const savedCallback = useRef(onSaved)
@@ -38,8 +42,8 @@ export default function QuickEvaluationFields({ studentId, groupId, onSaved, sch
     <input type="hidden" name="group_id" value={groupId} />
     {scheduleId && <input type="hidden" name="schedule_id" value={scheduleId} />}
     <input type="hidden" name="ratings" value={JSON.stringify(selected.map(criterion => ({ criterion, rating: ratings[criterion] })))} />
-    {state && !state.success && <p role="alert" className={styles.error}>{state.error.message}</p>}
-    {state?.success && !onSaved && <p role="status" className={styles.success}>Evaluation saved.</p>}
+    {state && !state.success && <WorkflowNotice tone="error">{state.error.message}</WorkflowNotice>}
+    {state?.success && !onSaved && <WorkflowNotice tone="success">{reviewMode ? 'Evaluation sent to the lead for review.' : 'Evaluation saved.'}</WorkflowNotice>}
     <p className={styles.hint}>{reviewMode ? 'Ratings will be submitted to the lead instructor for review before publishing.' : 'Four quick ratings for any class. Unrated items are excluded from the average.'}</p>
     <fieldset disabled={pending} className={styles.criteria}>
       <legend className="sr-only">Evaluation criteria</legend>
@@ -70,5 +74,6 @@ export default function QuickEvaluationFields({ studentId, groupId, onSaved, sch
       <fieldset disabled={pending} className={styles.visibility}><legend className="sr-only">Visible to</legend><label><input type="checkbox" name="visible_to_student" value="true" defaultChecked /> Student</label><label><input type="checkbox" name="visible_to_parent" value="true" defaultChecked /> Parent</label></fieldset>
       <button type="submit" disabled={pending || !selected.length} className={styles.save}>{pending ? 'Saving…' : reviewMode ? 'Submit evaluation for review' : 'Save evaluation'}</button>
     </div>
+    {!selected.length && <p className={styles.hint}>Choose at least one star rating to enable saving.</p>}
   </form>
 }

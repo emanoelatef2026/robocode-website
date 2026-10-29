@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import { changeParticipation } from '@/modules/instructor-portal/shared-actions'
 import type { SharedSessionItem } from '@/modules/instructor-portal/shared-queries'
 import styles from './SessionParticipation.module.css'
+import WorkflowNotice from './WorkflowNotice'
+import SessionIcon from '@/app/portal/instructor/groups/[id]/sessions/[sid]/SessionIcon'
+import { instructorError } from '@/modules/instructor-portal/ux'
 
 export default function SessionParticipation({ session }: { session: SharedSessionItem }) {
   const router = useRouter()
@@ -20,9 +23,9 @@ export default function SessionParticipation({ session }: { session: SharedSessi
     lock.current = true; setBusy(true); setError('')
     try {
       const result = await changeParticipation(session.id, mode, reason)
-      if (!result.success) setError(result.error.message)
+      if (!result.success) setError(instructorError(result.error, 'request participation'))
       else { setState(result.data.state ?? null); router.refresh() }
-    } catch { setError('Unable to save your participation. Please retry.') }
+    } catch { setError(instructorError(null, 'request participation')) }
     finally { lock.current = false; setBusy(false) }
   }
   const isLead = session.isLead === true
@@ -46,7 +49,7 @@ export default function SessionParticipation({ session }: { session: SharedSessi
           : 'Request participation once. The super admin or team leader approves your assistant earnings. The lead instructor ends the class.'}</p>
       </div>
       <div className={styles.actions}>
-        {canRequest && <button type="button" disabled={busy} onClick={() => void act('request')} className={styles.button}>Request assistant participation</button>}
+          {canRequest && <button type="button" disabled={busy} onClick={() => void act('request')} className={styles.button}><SessionIcon name="people" />{busy ? 'Sending request…' : 'Request assistant participation'}</button>}
       </div>
     </div>
     {participants.length > 0 && <details className={styles.participants}>
@@ -54,6 +57,6 @@ export default function SessionParticipation({ session }: { session: SharedSessi
       <ul>{participants.map(p => <li key={p.instructor_id}><span>{p.name}</span><span className={p.state === 'confirmed' ? styles.confirmed : styles.pending}>{p.instructor_id === session.leadInstructorId ? 'Lead instructor' : p.state === 'confirmed' ? 'Assistant · Approved' : 'Assistant · Awaiting administration approval'}</span></li>)}</ul>
     </details>}
     {busy && <p className={styles.help} aria-live="polite">Saving teaching record…</p>}
-    {error && <p role="alert" className={styles.error}>{error}</p>}
+    {error && <WorkflowNotice tone="error">{error}</WorkflowNotice>}
   </section>
 }

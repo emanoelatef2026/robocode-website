@@ -1,4 +1,11 @@
 .page { display: flex; flex-direction: column; gap: 12px; }
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); gap: 6px; padding: 8px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--bg-card); }
+.steps button { display: flex; align-items: center; gap: 9px; min-height: 52px; padding: 8px; border-radius: 8px; text-align: start; font-size: 13px; font-weight: 700; color: var(--navy); }
+.steps button:hover { background: var(--bg-muted); }
+.steps small { display: block; margin-top: 3px; font-size: 11px; font-weight: 500; color: var(--text-2); }
+.steps svg { flex-shrink: 0; color: var(--cyan-strong); }
+.steps button:focus-visible { outline: 2px solid var(--cyan-strong); outline-offset: 2px; }
+.steps button:disabled { opacity: .55; }
 .sessionHeader { padding: 16px 20px; border: 1px solid var(--border); border-radius: var(--radius-xl); background: var(--bg-card); }
 .meta { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border-soft); }
 .metaItem { display: flex; align-items: baseline; gap: 6px; font-size: 13px; color: var(--text-2); }
@@ -81,6 +88,9 @@
   .studentInfo, .rowActions { justify-content: space-between; }
 }
 @media (max-width: 639px) {
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .steps button { min-height: 48px; padding: 6px; font-size: 12px; align-items: flex-start; }
+  .steps small { font-size: 10px; }
   .sessionHeader { padding: 14px; }
   .meta { gap: 6px 12px; }
   .metaItem { font-size: 12px; }

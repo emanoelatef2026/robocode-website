@@ -43,7 +43,7 @@ describe('quick evaluation stars', () => {
     await user.type(screen.getByLabelText(/Feedback/), 'Keep building')
     await user.click(screen.getByRole('radio', { name: 'Focus & behavior: 5 stars' }))
     await user.click(screen.getByRole('button', { name: 'Save evaluation' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('Please retry')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Please try again')
     expect(screen.getByRole('radio', { name: 'Focus & behavior: 5 stars' })).toBeChecked()
     expect(screen.getByLabelText(/Feedback/)).toHaveValue('Keep building')
     expect(screen.getByLabelText('Overall average')).toHaveTextContent('5.0')

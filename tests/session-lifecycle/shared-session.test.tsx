@@ -21,7 +21,7 @@ describe('role-based shared classes',()=>{
   it('preserves class details while blocking role-based writes when the database is not upgraded',()=>{
     render(<SharedSessionHub groupId="group" courseId="course" sessions={[item({status:'ongoing'}),item({id:'old',status:'completed'})]} workflowReady={false} />)
     expect(screen.getByRole('status')).toHaveTextContent('Session workflow update is pending')
-    expect(screen.getByRole('link',{name:'Open shared session'})).toBeInTheDocument()
+    expect(screen.getByRole('link',{name:'View shared class'})).toBeInTheDocument()
     expect(screen.queryByRole('button',{name:/Request assistant|Start|Create/})).not.toBeInTheDocument()
     expect(mocks.open).not.toHaveBeenCalled()
     expect(mocks.participation).not.toHaveBeenCalled()
@@ -75,7 +75,7 @@ describe('role-based shared classes',()=>{
     mocks.participation.mockRejectedValueOnce(new Error('Network'))
     const user=userEvent.setup();render(<SessionParticipation session={item({status:'completed'})} />)
     await user.click(screen.getByRole('button',{name:'Request assistant participation'}))
-    expect(await screen.findByRole('alert')).toHaveTextContent('Please retry')
+    expect(await screen.findByRole('alert')).toHaveTextContent('try again')
     await user.click(screen.getByRole('button',{name:'Request assistant participation'}))
     await waitFor(()=>expect(mocks.participation).toHaveBeenCalledTimes(2))
   })

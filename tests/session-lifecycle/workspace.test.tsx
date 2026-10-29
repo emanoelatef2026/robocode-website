@@ -1,5 +1,5 @@
 import React from 'react'
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import AttendanceForm from '@/app/portal/instructor/groups/[id]/sessions/[sid]/AttendanceForm'
@@ -30,6 +30,38 @@ beforeEach(() => { vi.clearAllMocks(); mocks.save.mockResolvedValue({ success: t
 afterEach(cleanup)
 
 describe('session attendance workspace', () => {
+  it('does not display a losing draft as saved when the class was completed elsewhere', async () => {
+    mocks.end.mockResolvedValueOnce({ success: true, data: { attendanceRevision: 3, alreadyCompleted: true } })
+    const user = setup()
+    await user.click(screen.getByRole('button', { name: 'Ada: Absent' }))
+    await user.click(screen.getByRole('button', { name: 'Save & end session' }))
+    await user.click(screen.getByRole('button', { name: 'Confirm save & end' }))
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Your latest entries were not applied'))
+    expect(screen.queryByRole('button', { name: 'Ada: Absent' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Load completed record' })).toBeInTheDocument()
+  })
+  it('distinguishes selected attendance from saved attendance in the checklist', async () => {
+    const user = setup()
+    const checklist = screen.getByRole('navigation', { name: 'Class checklist' })
+    expect(checklist).toHaveTextContent('1/2 selected · Loaded record')
+    await user.click(screen.getByRole('button', { name: 'Ada: Present' }))
+    expect(checklist).toHaveTextContent('2/2 selected · Unsaved')
+    await user.click(screen.getByRole('button', { name: 'Save attendance' }))
+    await waitFor(() => expect(checklist).toHaveTextContent('2/2 selected · Saved'))
+  })
+
+  it('offers reload only for a revision conflict and keeps the draft until explicitly discarded', async () => {
+    mocks.save.mockResolvedValueOnce({ success: false, error: { code: 'VALIDATION', message: 'Attendance changed. Reload the latest class before proposing changes.' } })
+    const user = setup()
+    await user.click(screen.getByRole('button', { name: 'Ada: Absent' }))
+    await user.click(screen.getByRole('button', { name: 'Save attendance' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Another instructor updated')
+    await user.click(screen.getByRole('button', { name: 'Reload latest attendance' }))
+    expect(screen.getByRole('dialog', { name: 'Reload the latest attendance?' })).toHaveTextContent('will be discarded')
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }))
+    expect(screen.getByRole('button', { name: 'Ada: Absent' })).toHaveAttribute('aria-pressed', 'true')
+    expect(mocks.end).not.toHaveBeenCalled()
+  })
   it('lets an assistant propose attendance but never offers to end the class', async () => {
     const user = userEvent.setup()
     render(<AttendanceForm sessionId="session" groupId="group" rows={rows} currentTopic="Loops" sessionStatus="ongoing" isLead={false} canPropose />)
@@ -37,7 +69,7 @@ describe('session attendance workspace', () => {
     await user.click(screen.getByRole('button', { name: 'Ada: Absent' }))
     await user.click(screen.getByRole('button', { name: 'Submit attendance for review' }))
     await waitFor(() => expect(mocks.save).toHaveBeenCalledOnce())
-    expect(screen.getByRole('status')).toHaveTextContent('Not published')
+    expect(screen.getAllByRole('status').at(-1)).toHaveTextContent('Not published')
     expect(mocks.end).not.toHaveBeenCalled()
   })
   it('keeps a non-participating instructor read-only', () => {
@@ -71,7 +103,7 @@ describe('session attendance workspace', () => {
     await user.type(screen.getByLabelText('Session topic'), 'Functions')
     await user.click(screen.getByRole('button', { name: 'Save & end session' }))
     expect(mocks.end).not.toHaveBeenCalled()
-    expect(screen.getByRole('region', { name: 'Confirm session completion' })).toHaveTextContent('1 absent')
+    expect(screen.getByRole('dialog', { name: 'Complete this session?' })).toHaveTextContent('1 absent')
     await user.click(screen.getByRole('button', { name: 'Confirm save & end' }))
     await waitFor(() => expect(mocks.refresh).toHaveBeenCalledOnce())
     const fd = mocks.end.mock.calls[0][1] as FormData
@@ -89,7 +121,7 @@ describe('session attendance workspace', () => {
     await user.click(screen.getByRole('button', { name: 'Ada: Present' }))
     await user.click(screen.getByRole('button', { name: 'Save & end session' }))
     await user.click(screen.getByRole('button', { name: 'Confirm save & end' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('Please review attendance.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('We could not confirm the result')
     expect(screen.getByRole('button', { name: 'Ada: Present' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.queryByText(/end anyway/i)).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Save attendance' }))
@@ -155,7 +187,7 @@ describe('session attendance workspace', () => {
     const user = setup()
     await user.click(screen.getByRole('button', { name: 'Ada: Makeup' }))
     await user.click(screen.getByRole('button', { name: 'Save attendance' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('Your draft is kept')
+    expect(await screen.findByRole('alert')).toHaveTextContent('try again')
     expect(screen.getByRole('button', { name: 'Ada: Makeup' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Save attendance' })).toBeEnabled()
   })
@@ -201,15 +233,16 @@ describe('session attendance workspace', () => {
   })
 
   it('requires confirmation before bulk absent replaces attendance', async () => {
-    const confirmation = vi.spyOn(window, 'confirm').mockReturnValue(false)
     const user = setup()
-    const bulk = screen.getByRole('button', { name: 'Mark all absent' })
-    await user.click(bulk)
+    await user.click(screen.getByRole('button', { name: 'Mark all absent' }))
+    expect(screen.getByRole('dialog', { name: 'Mark every student absent?' })).toHaveTextContent('all 2 students')
     expect(screen.getByRole('button', { name: 'Lin: Late' })).toHaveAttribute('aria-pressed', 'true')
-    confirmation.mockReturnValue(true)
-    await user.click(bulk)
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Mark all absent' }))
+    const dialog = screen.getByRole('dialog', { name: 'Mark every student absent?' })
+    await user.click(within(dialog).getByRole('button', { name: 'Mark all absent' }))
     expect(screen.getByRole('button', { name: 'Ada: Absent' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Lin: Absent' })).toHaveAttribute('aria-pressed', 'true')
-    confirmation.mockRestore()
   })
 })

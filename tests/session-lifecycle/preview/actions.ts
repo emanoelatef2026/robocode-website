@@ -15,7 +15,7 @@ async function perform(name: string, args: unknown[]): Promise<ActionResult<any>
   const detail: PreviewAction = { name, fields, completed: !failed && (name === 'saveAndEndSession' || name === 'endSession'), failed }
   window.dispatchEvent(new CustomEvent(PREVIEW_EVENT, { detail }))
   if (failed) return { success: false, error: { code: 'DB_ERROR', message: 'Synthetic save failed once. Your draft is kept; retry to save.' } }
-  return { success: true, data: { id: 'synthetic-created-1', assignmentId: 'synthetic-homework-1' } }
+  return { success: true, data: { id: 'synthetic-created-1', assignmentId: 'synthetic-homework-1', attendanceRevision: controls.calls } }
 }
 
 export const saveAttendance = (...args: unknown[]) => perform('saveAttendance', args)

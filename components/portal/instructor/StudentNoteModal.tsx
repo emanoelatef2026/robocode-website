@@ -1,8 +1,12 @@
 'use client'
 
-import { useState, useActionState, useEffect } from 'react'
+import { useState, useActionState, useEffect, startTransition } from 'react'
 import StudentSessionDialog from './StudentSessionDialog'
 import { createStudentNote } from '@/modules/instructor-portal/actions'
+import WorkflowNotice from './WorkflowNotice'
+import { recoverInstructorAction } from '@/modules/instructor-portal/ux'
+
+const saveNote = recoverInstructorAction(createStudentNote)
 
 const CATEGORIES = [
   { value: 'GENERAL',         label: 'General' },
@@ -25,7 +29,7 @@ interface Props {
 }
 
 function NoteForm({ studentId, studentName, groupId, scheduleId, onClose }: Props & { onClose: () => void }) {
-  const [state, action, pending] = useActionState(createStudentNote, null)
+  const [state, action, pending] = useActionState(saveNote, null)
   const [category, setCategory] = useState('GENERAL')
   const [severity, setSeverity] = useState('LOW')
 
@@ -34,7 +38,7 @@ function NoteForm({ studentId, studentName, groupId, scheduleId, onClose }: Prop
   }, [state?.success, onClose])
 
   return (
-    <form action={action} className="space-y-3">
+    <form onSubmit={event => { event.preventDefault(); if (pending) return; const data = new FormData(event.currentTarget); startTransition(() => action(data)) }} className="space-y-3">
       <input type="hidden" name="student_id"  value={studentId} />
       <input type="hidden" name="group_id"    value={groupId} />
       <input type="hidden" name="category"    value={category} />
@@ -42,9 +46,9 @@ function NoteForm({ studentId, studentName, groupId, scheduleId, onClose }: Prop
       {scheduleId && <input type="hidden" name="schedule_id" value={scheduleId} />}
 
       {state && !state.success && (
-        <p className="rounded-lg border border-[#FECACA] bg-[#FEE2E2] px-3 py-2 text-xs text-[#DC2626]">
+        <WorkflowNotice tone="error">
           {state.error.message}
-        </p>
+        </WorkflowNotice>
       )}
 
       {/* Category */}

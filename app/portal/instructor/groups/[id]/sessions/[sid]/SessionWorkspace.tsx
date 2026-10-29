@@ -31,7 +31,6 @@ export default function SessionWorkspace({ session, groupId, isLead = true, canP
       }} className={styles.tab}><SessionIcon name={section.id === 'content' ? 'content' : section.id === 'homework' ? 'homework' : section.id === 'notes' ? 'notes' : 'attendance'} />{section.label}</button>)}
     </div>
   return <div className="space-y-3 pb-4">
-    {ended && <p className="rounded-lg bg-(--green-soft) p-3 text-sm font-medium text-(--green-dark)">Session completed. Your attendance has been saved.</p>}
     <div id={`${id}-panel`} role="tabpanel" aria-labelledby={`${id}-${active}`}>
       <AttendanceForm isLead={isLead} canPropose={canPropose} navigation={navigation} sessionId={session.id} groupId={groupId} rows={session.attendance} currentTopic={session.topic} attendanceRevision={session.attendance_revision} sessionStatus={ended ? 'completed' : session.status} activeSection={active} onBusyChange={setAttendanceBusy} onCompleted={() => setEnded(true)} onSectionChange={setActive} externalBusy={panelBusy}>
         <SessionDetailsPanel reviewMode={!isLead && canPropose} readOnly={!isLead && !canPropose} session={ended ? { ...session, status: 'completed' } : session} groupId={groupId} activeSection={active} busy={attendanceBusy} onBusyChange={setPanelBusy} />

@@ -24,6 +24,8 @@ import InstructorGroupCard  from '@/components/portal/instructor/InstructorGroup
 import TodaySessionCard     from '@/components/portal/instructor/TodaySessionCard'
 import InstructorHero       from '@/components/portal/instructor/InstructorHero'
 import SectionPreviewCard   from '@/components/portal/student/SectionPreviewCard'
+import InstructorNextActions from '@/components/portal/instructor/InstructorNextActions'
+import { getTeachingTasks, type TeachingTasks } from '@/modules/instructor-portal/task-queries'
 
 function Chevron() {
   return (
@@ -62,8 +64,11 @@ export default async function InstructorDashboardPage() {
   let unreadNotifications = 0
   let thisMonthEarnings   = 0
   let notificationFeed: Awaited<ReturnType<typeof getNotificationFeed>> = { notifications: [], unread_count: 0 }
+  let teachingTasks: TeachingTasks = { ongoing: [], reviews: [], reviewCount: 0 }
+  let tasksUnavailable = true
 
   await Promise.allSettled([
+    getTeachingTasks(instructor.id).then(result => { teachingTasks = result; tasksUnavailable = false }),
     listInstructorGroups(instructor.id).then((r)               => { groups            = r }),
     listPendingSubmissions(instructor.id, 999).then((r)        => { pending           = r }),
     getStudentsRequiringAttention(instructor.id).then((r)      => { attention         = r }),
@@ -83,12 +88,6 @@ export default async function InstructorDashboardPage() {
   const totalCompleted = groups.reduce((sum, g) => sum + g.completed_sessions, 0)
   const branchName     = groups.find((g) => g.branch_name)?.branch_name ?? null
 
-  // Quick-start: the first actionable session (ongoing → scheduled → any)
-  const quickStart =
-    todaySessions.find((s) => s.status === 'ongoing') ??
-    todaySessions.find((s) => s.status === 'scheduled') ??
-    null
-
   return (
     <div>
 
@@ -100,8 +99,10 @@ export default async function InstructorDashboardPage() {
         thisMonthEarnings={fmtEGP(thisMonthEarnings)}
         ratingAvg={rating != null ? (rating as InstructorRatingSummary).avg_overall : null}
         ratingCount={rating != null ? (rating as InstructorRatingSummary).total_responses : null}
-        quickStart={quickStart}
+        quickStart={null}
       />
+
+      <InstructorNextActions tasks={teachingTasks} today={todaySessions} pendingReviews={pending.length + pendingProjects.length} unavailable={tasksUnavailable} />
 
       {/* ── TODAY'S SESSIONS ─────────────────────────────────────────────── */}
       <SectionDivider title="Today's Sessions" />

@@ -3,6 +3,9 @@
 import { useTransition, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { startSession } from '@/modules/instructor-portal/actions'
+import WorkflowNotice from '@/components/portal/instructor/WorkflowNotice'
+import SessionIcon from './SessionIcon'
+import { instructorError } from '@/modules/instructor-portal/ux'
 
 export default function StartSessionButton({
   sessionId,
@@ -25,9 +28,9 @@ export default function StartSessionButton({
       try {
         const res = await startSession(sessionId, groupId)
         if (res.success) { if (res.data?.sessionId && res.data.sessionId !== sessionId) router.push(`/portal/instructor/groups/${groupId}/sessions/${res.data.sessionId}`); else router.refresh() }
-        else setError(res.error.message)
+        else setError(instructorError(res.error, 'start this class'))
       } catch {
-        setError('Could not confirm the session started. Please try again; your session will not be duplicated.')
+        setError(instructorError(null, 'start this class'))
       } finally { starting.current = false }
     })
   }
@@ -40,11 +43,11 @@ export default function StartSessionButton({
         type="button"
         onClick={handleStart}
         disabled={isPending || role==='assistant'}
-        className="rounded-lg bg-[#059669] px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-[#047857] disabled:opacity-60"
+        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-(--navy) px-6 py-2.5 text-sm font-semibold text-white transition disabled:opacity-60"
       >
-        {isPending ? 'Starting…' : 'Start Session'}
+        <SessionIcon name="play" />{isPending ? 'Starting…' : 'Start as lead instructor'}
       </button>
-      {error && <p role="alert" className="text-sm font-medium text-[#B91C1C]">{error}</p>}
+      {error && <WorkflowNotice tone="error" action={<button type="button" className="min-h-11 font-semibold underline" onClick={() => router.push(`/portal/instructor/groups/${groupId}`)}>Check group sessions</button>}>{error}</WorkflowNotice>}
     </div>
   )
 }

@@ -16,6 +16,9 @@ import type {
   ResourceLink,
 } from '@/modules/instructor-portal/types'
 import type { ActionResult } from '@/types/app'
+import WorkflowNotice from '@/components/portal/instructor/WorkflowNotice'
+import SessionIcon from './SessionIcon'
+import { instructorError } from '@/modules/instructor-portal/ux'
 
 interface Props {
   session: SessionDetail
@@ -30,9 +33,10 @@ interface Props {
 function withSaveError<T>(action: (previous: ActionResult<T> | null, data: FormData) => Promise<ActionResult<T>>) {
   return async (previous: ActionResult<T> | null, data: FormData): Promise<ActionResult<T>> => {
     try {
-      return await action(previous, data)
+      const result = await action(previous, data)
+      return result.success ? result : { ...result, error: { ...result.error, message: instructorError(result.error) } }
     } catch {
-      return { success: false, error: { code: 'NETWORK_ERROR', message: 'Unable to save. Please try again.' } }
+      return { success: false, error: { code: 'NETWORK_ERROR', message: instructorError(null) } }
     }
   }
 }
@@ -79,7 +83,7 @@ function SectionCard({ title, children, defaultOpen = true, hidden = false }: {
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between px-5 py-3.5 text-left"
       >
-        <span className="text-sm font-semibold text-[#0B1F3A]">{title}</span>
+        <span className="flex items-center gap-2 text-sm font-semibold text-(--navy)"><SessionIcon name="content" />{title}</span>
         <span className={`text-xs text-(--muted) transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
       </button>
       {open && <div className="border-t border-[#F1F5F9] px-5 py-4">{children}</div>}
@@ -109,11 +113,12 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
   const [newResTitle, setNewResTitle] = useState('')
   const [newResUrl,   setNewResUrl]   = useState('')
   const [resError,    setResError]    = useState<string | null>(null)
+  const [recordingFeedback, setRecordingFeedback] = useState<{ success: boolean; message: string } | null>(null)
   const [resState, resAction, resPending] = useActionState<ActionResult<void> | null, FormData>(saveResources, null)
 
   const handleAddResource = () => {
-    if (!newResUrl.trim()) { setResError('URL is required.'); return }
-    try { new URL(newResUrl.trim()) } catch { setResError('Enter a valid URL.'); return }
+    if (!newResUrl.trim()) { setResError('Add the resource link first.'); return }
+    try { const url = new URL(newResUrl.trim()); if (!['http:', 'https:'].includes(url.protocol)) throw new Error('Invalid protocol') } catch { setResError('Enter a complete https:// link.'); return }
     setResError(null)
     const updated = [...resources, { title: newResTitle.trim() || newResUrl.trim(), url: newResUrl.trim() }]
     setResources(updated)
@@ -192,13 +197,13 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
       {/* ── Topic & Notes ─────────────────────────────────────────────────── */}
       <SectionCard hidden={activeSection !== 'notes'} title="Session notes">
         {detailState && !detailState.success && (
-          <div className="min-h-11 mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#DC2626]">{detailState.error.message}</div>
+          <WorkflowNotice tone="error">{detailState.error.message}</WorkflowNotice>
         )}
         {detailState?.success && (
-          <div className="min-h-11 mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#15803D]">{reviewMode ? 'Submitted for lead review.' : 'Saved.'}</div>
+          <WorkflowNotice tone="success">{reviewMode ? 'Session notes sent to the lead for review.' : 'Session notes saved.'}</WorkflowNotice>
         )}
 
-        <form action={detailAction} className="space-y-3">
+        <form onSubmit={event => { event.preventDefault(); if (operationPending) return; const fd = new FormData(event.currentTarget); startTransition(() => detailAction(fd)) }} className="space-y-3">
           <input type="hidden" name="session_id" value={session.id} />
           <input type="hidden" name="group_id"   value={groupId} />
 
@@ -212,7 +217,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
             <textarea name="notes" rows={3} defaultValue={session.notes ?? ''} placeholder="Observations about this session…" className={cls} />
           </div>
 
-          <button type="submit" disabled={isPending}
+          <button type="submit" disabled={operationPending}
             className="min-h-11 rounded-lg bg-[#C2410C] px-4 py-2 text-sm font-medium text-white hover:bg-[#9A3412] disabled:opacity-60 transition">
             {reviewMode ? 'Submit session notes for review' : 'Save session notes'}
           </button>
@@ -221,6 +226,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
 
       {/* ── Homework ─────────────────────────────────────────────────────────── */}
       <SectionCard hidden={activeSection !== 'homework'} title={`Homework ${session.session_homework.length > 0 ? `(${session.session_homework.length})` : ''}`}>
+        <p className="mb-3 text-sm text-(--text-2)">Optional. Create homework when students need practice after this class.</p>
         {/* Existing homework list */}
         {session.session_homework.length > 0 && (
           <div className="mb-4 space-y-2">
@@ -240,14 +246,15 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
                 <button type="button" onClick={() => setEditingHomeworkId(editingHomeworkId === hw.id ? null : hw.id)} className="text-sm font-medium text-[#C2410C] hover:underline">Edit</button>
               </div>
               {editingHomeworkId === hw.id && (
-                <form action={editHomeworkAction} className="mt-2 space-y-2 rounded-lg bg-[#F8FAFC] p-3">
+                <form onSubmit={event => { event.preventDefault(); if (operationPending) return; const fd = new FormData(event.currentTarget); startTransition(() => editHomeworkAction(fd)) }} className="mt-2 space-y-2 rounded-lg bg-[#F8FAFC] p-3">
                   <input type="hidden" name="assignment_id" value={hw.id} /><input type="hidden" name="session_id" value={session.id} /><input type="hidden" name="group_id" value={groupId} />
                   <input name="title" required defaultValue={hw.title} className={cls} />
                   <textarea name="description" defaultValue={hw.description ?? ''} placeholder="Description" rows={2} className={cls} />
                   <textarea name="instructions" defaultValue={hw.instructions ?? ''} placeholder="Instructions" rows={2} className={cls} />
                   <div className="grid grid-cols-2 gap-2"><input name="due_at" type="date" defaultValue={hw.due_at?.slice(0, 10) ?? ''} className={cls} /><input name="max_score" type="number" min={1} defaultValue={hw.max_score} className={cls} /></div>
                   <input type="hidden" name="type" value={hw.type} /><input type="hidden" name="submission_type" value={hw.submission_type} />
-                  {editHomeworkState && !editHomeworkState.success && <p className="text-xs text-[#DC2626]">{editHomeworkState.error.message}</p>}
+                  {editHomeworkState && !editHomeworkState.success && <WorkflowNotice tone="error">{editHomeworkState.error.message}</WorkflowNotice>}
+                  {editHomeworkState?.success && <WorkflowNotice tone="success">{reviewMode ? 'Homework changes sent to the lead for review.' : 'Homework changes saved.'}</WorkflowNotice>}
                     <button type="submit" className="min-h-11 rounded-lg bg-[#C2410C] px-3 py-1.5 text-sm font-medium text-white">{reviewMode ? 'Submit homework changes' : 'Save homework'}</button>
                 </form>
               )}
@@ -257,10 +264,10 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
         )}
 
         {hwState && !hwState.success && (
-          <div className="min-h-11 mb-3 rounded-lg bg-[#FEE2E2] px-3 py-2 text-xs text-[#EF4444]">{hwState.error.message}</div>
+          <WorkflowNotice tone="error">{hwState.error.message}</WorkflowNotice>
         )}
         {hwState?.success && (
-          <div className="min-h-11 mb-3 rounded-lg bg-[#E7F8EE] px-3 py-2 text-xs text-[#10B981]">{reviewMode ? 'Homework submitted for lead review. Not yet published.' : 'Homework created and published.'}</div>
+          <WorkflowNotice tone="success">{reviewMode ? 'Homework sent to the lead for review. Students cannot see it yet.' : 'Homework published. Students can now see it.'}</WorkflowNotice>
         )}
 
         {!hwOpen ? (
@@ -269,7 +276,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
             + Create Homework
           </button>
         ) : (
-          <form action={hwAction} className="space-y-3">
+          <form onSubmit={event => { event.preventDefault(); if (operationPending) return; const fd = new FormData(event.currentTarget); startTransition(() => hwAction(fd)) }} className="space-y-3">
             <input type="hidden" name="session_id" value={session.id} />
             <input type="hidden" name="group_id"   value={groupId} />
             {defaultModule && (
@@ -370,15 +377,16 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
           </div>
         )}
 
-        {resError && <p className="mb-2 text-xs text-[#EF4444]">{resError}</p>}
-        {resState && !resState.success && <p className="mb-2 text-xs text-[#EF4444]">{resState.error.message}</p>}
+        {resError && <WorkflowNotice tone="error">{resError}</WorkflowNotice>}
+        {resState?.success && <WorkflowNotice tone="success">{reviewMode ? 'Resources sent to the lead for review.' : 'Resources saved.'}</WorkflowNotice>}
+        {resState && !resState.success && <WorkflowNotice tone="error" action={<button type="button" disabled={operationPending} className="min-h-11 font-semibold underline" onClick={() => startTransition(() => { const fd = new FormData(); fd.set('session_id', session.id); fd.set('group_id', groupId); fd.set('resources_json', JSON.stringify(resources)); resAction(fd) })}>Retry saving resources</button>}>{resState.error.message}</WorkflowNotice>}
 
         <div className="space-y-2">
           <input value={newResUrl} onChange={(e) => setNewResUrl(e.target.value)}
             placeholder="URL (slides, drive folder, reference…)" type="url" className={cls} />
           <input value={newResTitle} onChange={(e) => setNewResTitle(e.target.value)}
             placeholder="Label (optional)" className={cls} />
-          <button type="button" onClick={handleAddResource} disabled={isPending}
+          <button type="button" onClick={handleAddResource} disabled={operationPending}
             className="min-h-11 rounded-lg border border-[#E2E8F0] px-3 py-1.5 text-sm font-medium text-[#0B1F3A] hover:border-[#C2410C] hover:text-[#9A3412] disabled:opacity-60 transition">
             {reviewMode ? 'Propose resource' : 'Add resource'}
           </button>
@@ -401,7 +409,14 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
                     <span className="rounded-full bg-[#EFF6FF] px-1.5 py-0.5 text-[11px] font-medium text-[#2563EB]">Students</span>
                   )}
                   <button type="button"
-                    onClick={() => startTransition(async () => { await removeSessionRecording(rec.id, session.id, groupId) })}
+                    aria-label={`Remove ${rec.title || 'recording'}`}
+                    onClick={() => startTransition(async () => {
+                      setRecordingFeedback(null)
+                      try {
+                        const result = await removeSessionRecording(rec.id, session.id, groupId)
+                        setRecordingFeedback({ success: result.success, message: result.success ? reviewMode ? 'Removal sent to the lead for review.' : 'Recording removed from this class.' : instructorError(result.error, 'remove the recording') })
+                      } catch { setRecordingFeedback({ success: false, message: instructorError(null, 'remove the recording') }) }
+                    })}
                     className="text-xs text-[#F87171] hover:text-[#EF4444] transition">✕</button>
                 </div>
               </div>
@@ -409,14 +424,15 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
           </div>
         )}
 
+        {recordingFeedback && <WorkflowNotice tone={recordingFeedback.success ? 'success' : 'error'}>{recordingFeedback.message}</WorkflowNotice>}
         {recState && !recState.success && (
-          <p className="mb-2 text-xs text-[#EF4444]">{recState.error.message}</p>
+          <WorkflowNotice tone="error">{recState.error.message}</WorkflowNotice>
         )}
         {recState?.success && (
-          <p className="mb-2 text-xs text-[#10B981]">{reviewMode ? 'Recording submitted for lead review.' : 'Recording added.'}</p>
+          <WorkflowNotice tone="success">{reviewMode ? 'Recording sent to the lead for review.' : 'Recording added.'}</WorkflowNotice>
         )}
 
-        <form action={recAction} className="space-y-2">
+        <form onSubmit={event => { event.preventDefault(); if (operationPending) return; const fd = new FormData(event.currentTarget); startTransition(() => recAction(fd)) }} className="space-y-2">
           <input type="hidden" name="session_id" value={session.id} />
           <input type="hidden" name="group_id"   value={groupId} />
           <input name="external_url" type="url" required
@@ -446,7 +462,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
                   <input type="hidden" name="group_id"   value={groupId} />
 
                   {postponeState && !postponeState.success && (
-                    <p className="text-xs text-[#EF4444]">{postponeState.error.message}</p>
+                    <WorkflowNotice tone="error">{postponeState.error.message}</WorkflowNotice>
                   )}
 
                   <div>
@@ -487,7 +503,7 @@ export default function SessionDetailsPanel({ session, groupId, activeSection = 
                   <input type="hidden" name="group_id"   value={groupId} />
 
                   {cancelState && !cancelState.success && (
-                    <p className="text-xs text-[#DC2626]">{cancelState.error.message}</p>
+                    <WorkflowNotice tone="error">{cancelState.error.message}</WorkflowNotice>
                   )}
 
                   <div>

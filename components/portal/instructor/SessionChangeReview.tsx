@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation'
 import { reviewSessionChange } from '@/modules/instructor-portal/shared-actions'
 import type { SessionChangeRequest } from '@/modules/instructor-portal/change-queries'
 import type { SessionAttendanceRow } from '@/modules/instructor-portal/types'
+import WorkflowNotice from './WorkflowNotice'
+import SessionIcon from '@/app/portal/instructor/groups/[id]/sessions/[sid]/SessionIcon'
+import { instructorError } from '@/modules/instructor-portal/ux'
 
 const labels: Record<string,string> = { attendance:'Attendance',session_details:'Session details',resources:'Resources',recording_add:'Add recording',recording_remove:'Remove recording',homework_create:'New homework',homework_update:'Edit homework',evaluation:'Student evaluation',student_note:'Student note' }
 export default function SessionChangeReview({ requests, isLead, students, participants }: { requests: SessionChangeRequest[]; isLead: boolean; students: SessionAttendanceRow[]; participants: { instructor_id: string; name: string }[] }) {
@@ -11,6 +14,7 @@ export default function SessionChangeReview({ requests, isLead, students, partic
   const lock = useRef(false)
   const [busy,setBusy] = useState<string | null>(null)
   const [error,setError] = useState('')
+  const [feedback,setFeedback] = useState('')
   const [resolved,setResolved] = useState<Record<string,string>>({})
   const pending = requests.filter(request => (resolved[request.id] ?? request.status)==='pending')
   async function review(id: string, approve: boolean) {
@@ -18,16 +22,17 @@ export default function SessionChangeReview({ requests, isLead, students, partic
     lock.current=true; setBusy(id); setError('')
     try {
       const result=await reviewSessionChange(id,approve)
-      if (!result.success) setError(result.error.message)
-      else { setResolved(prev=>({...prev,[id]:approve?'approved':'rejected'})); router.refresh() }
-    } catch { setError('Unable to review this request. Please retry.') }
+      if (!result.success) setError(instructorError(result.error, 'review these changes'))
+      else { setResolved(prev=>({...prev,[id]:approve?'approved':'rejected'})); setFeedback(approve ? 'Changes approved and applied to the class.' : 'Changes declined. The class record was not changed.'); router.refresh() }
+    } catch { setError(instructorError(null, 'review these changes')) }
     finally { lock.current=false; setBusy(null) }
   }
   if (!requests.length) return null
   return <section id="change-requests" aria-label="Class change requests" className="ds-card scroll-mt-24 p-4">
-    <h2 className="text-base font-bold text-(--navy)">{isLead ? 'Assistant changes to review' : 'My submitted changes'} <span className="text-sm text-(--amber-dark)">· {pending.length} pending</span></h2>
-    <p className="mt-1 text-xs text-(--text-2)">Participation approval and content approval are separate. Pending changes are not published to students or parents.</p>
-    {error && <p role="alert" className="mt-3 text-sm text-(--red-dark)">{error}</p>}
+    <h2 className="flex flex-wrap items-center gap-2 text-base font-bold text-(--navy)"><SessionIcon name="notes" />{isLead ? 'Assistant changes to review' : 'My submitted changes'} <span className="text-sm text-(--amber-dark)">· {pending.length} pending</span></h2>
+    <p className="mt-1 text-sm text-(--text-2)">{isLead ? 'Review each change before applying it to the class.' : 'Your changes appear in the class after the lead approves them.'} This does not approve assistant earnings.</p>
+    {error && <WorkflowNotice tone="error">{error}</WorkflowNotice>}
+    {feedback && <WorkflowNotice tone="success">{feedback}</WorkflowNotice>}
     <div className="mt-3 divide-y divide-(--border)">{requests.map(request=>{
       const state=resolved[request.id] ?? request.status
       const payload=request.payload

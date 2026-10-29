@@ -3,8 +3,8 @@ import StatusBadge from '@/components/admin/StatusBadge'
 import type { TodaySession } from '@/modules/instructor-portal/types'
 
 const STATUS_ACTION: Record<string, { label: string; style: string }> = {
-  scheduled:             { label: 'Start Session',     style: 'bg-[#0E7490] text-white hover:bg-[#155E75]' },
-  ongoing:               { label: 'Continue Session',  style: 'bg-[#C2410C] text-white hover:bg-[#9A3412]' },
+  scheduled:             { label: 'Open Class',        style: 'bg-[#0E7490] text-white hover:bg-[#155E75]' },
+  ongoing:               { label: 'Open shared class', style: 'bg-[#C2410C] text-white hover:bg-[#9A3412]' },
   completed:             { label: 'View Session',      style: 'bg-[#F1F5F9] text-[#0B1F3A] hover:bg-[#E2E8F0]' },
   postponed:             { label: 'View Details',      style: 'bg-[#F1F5F9] text-[#0B1F3A] hover:bg-[#E2E8F0]' },
   cancelled:             { label: 'View Session',      style: 'bg-[#F1F5F9] text-[#94A3B8] hover:bg-[#E2E8F0]' },
@@ -27,16 +27,16 @@ export default function TodaySessionCard({ session, groupId }: Props) {
   const gid       = groupId ?? session.group_id
   const href      = isSpecial
     ? `/portal/instructor/special-sessions/${session.id}`
-    : gid ? `/portal/instructor/groups/${gid}/sessions/${session.id}` : '/portal/instructor/groups'
+    : gid ? session.status === 'scheduled' ? `/portal/instructor/groups/${gid}` : `/portal/instructor/groups/${gid}/sessions/${session.id}` : '/portal/instructor/groups'
   const action    = STATUS_ACTION[session.status] ?? STATUS_ACTION.scheduled
   const typeBadge = SESSION_TYPE_BADGE[session.session_type ?? 'primary']
 
   const time = new Date(session.scheduled_at).toLocaleTimeString('en-GB', {
-    hour: '2-digit', minute: '2-digit',
+    hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo',
   })
   const endTime = new Date(
     new Date(session.scheduled_at).getTime() + session.duration_minutes * 60_000
-  ).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  ).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' })
 
   return (
     <div className="ds-card flex flex-col gap-3 p-4">

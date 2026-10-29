@@ -22,11 +22,13 @@ export default function InstructorsWorkspaceClient({
   options:     initialOptions,
   branchIds,
   canManage,
+  canManageRates = false,
 }: {
   instructors: InstructorOperationalRow[]
   options:     InstructorFormOptions
   branchIds:   string[]
   canManage:   boolean
+  canManageRates?: boolean
 }) {
   const [options] = useState(initialOptions)
   const state     = useInstructorState(initialInstructors, branchIds)
@@ -148,6 +150,7 @@ export default function InstructorsWorkspaceClient({
 
       {state.showForm && (
         <InstructorFormModal
+          canManageRates={canManageRates}
           instructor={state.editingInstructor}
           options={options}
           defaultBranchIds={branchIds}

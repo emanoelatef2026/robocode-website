@@ -33,6 +33,7 @@ export default async function AdminInstructorsPage() {
       options={options}
       branchIds={branchIds}
       canManage
+      canManageRates={isSuperAdmin}
     />
     </>
   )
